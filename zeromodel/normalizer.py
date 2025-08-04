@@ -7,7 +7,7 @@ viability of the zeromodel system as score distributions may change.
 """
 
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 class DynamicNormalizer:
     """

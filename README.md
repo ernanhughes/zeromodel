@@ -83,3 +83,19 @@ If you use zeromodel in your research, please cite:
 }
 ```
 
+
+## Running the test cases
+
+```bash
+# Create and activate a virtual environment (recommended)
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+
+
+# Install ZeroModel in editable mode with test dependencies
+pip install -e ".[dev]"
+
+
+# Run with detailed information about each test
+pytest tests/test_core.py --verbose
+```

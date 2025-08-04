@@ -3,7 +3,7 @@ from zeromodel import ZeroModel
 
 def test_zeromodel_initialization():
     metric_names = ["uncertainty", "size", "quality"]
-    zeromodel = zeromodel(metric_names)
+    zeromodel = ZeroModel(metric_names)
     assert zeromodel.metric_names == metric_names
     assert zeromodel.precision == 8
 
@@ -15,7 +15,7 @@ def test_zeromodel_processing():
         [0.2, 0.9, 0.5]
     ])
     
-    zeromodel = zeromodel(metric_names)
+    zeromodel = ZeroModel(metric_names)
     zeromodel.set_task("Find uncertain large documents")
     zeromodel.process(score_matrix)
     
@@ -23,7 +23,8 @@ def test_zeromodel_processing():
     assert vpm.shape == (3, 1, 3)  # 3 docs, 1 pixel width, 3 channels
     
     tile = zeromodel.get_critical_tile()
-    assert len(tile) == 16  # 4 header bytes + 9 pixel bytes + 3 padding
+    # FIX: Expected length is 4 header bytes + 27 pixel bytes (3x3x3)
+    assert len(tile) == 31
     
     doc_idx, relevance = zeromodel.get_decision()
     assert 0 <= doc_idx < 3

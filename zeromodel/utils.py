@@ -4,8 +4,10 @@ Utility Functions
 This module provides helper functions used throughout the zeromodel package.
 """
 
-import numpy as np
 from typing import Any
+
+import numpy as np
+
 
 def quantize(value: Any, precision: int) -> Any:
     """

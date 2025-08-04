@@ -15,9 +15,11 @@ Run this script to see zeromodel in action.
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from .core import ZeroModel
-from .transform import transform_vpm, get_critical_tile
+from typing import List, Tuple
 from .edge import EdgeProtocol
+# Add to the top of the file
+from .core import HierarchicalVPM, ZeroModel
+from .hierarchical_edge import HierarchicalEdgeProtocol
 
 def generate_synthetic_data(num_docs: int = 100, num_metrics: int = 50) -> Tuple[np.ndarray, List[str]]:
     """Generate synthetic score data for demonstration"""
@@ -87,7 +89,7 @@ def demo_zeromodel():
     
     # 2. Process with zeromodel
     print("\n2. Processing data with zeromodel...")
-    zeromodel = zeromodel(metric_names)
+    zeromodel = ZeroModel(metric_names)
     
     # Example task 1: Find uncertain large documents
     print("   Processing for task: 'Find uncertain large documents'")
@@ -125,5 +127,77 @@ def demo_zeromodel():
     print("\nzeromodel demonstration complete!")
     print("Check the 'demo' directory for visualizations.")
 
+
+# Add this function to the demo
+def demo_hierarchical_vpm():
+    """Demonstrate hierarchical Visual Policy Maps"""
+    print("\n" + "="*50)
+    print("Hierarchical Visual Policy Maps Demonstration")
+    print("="*50)
+    
+    # 1. Generate synthetic data
+    print("\n1. Generating synthetic policy evaluation data...")
+    score_matrix, metric_names = generate_synthetic_data(num_docs=100, num_metrics=20)
+    print(f"   Generated {score_matrix.shape[0]} documents × {score_matrix.shape[1]} metrics")
+    
+    # 2. Create hierarchical VPM
+    print("\n2. Creating hierarchical Visual Policy Map...")
+    hvpm = HierarchicalVPM(
+        metric_names=metric_names
+    )
+    hvpm.process(score_matrix, "Find uncertain large documents")
+    
+    # 3. Show level information
+    print("\n3. Hierarchical levels information:")
+    for i, level in enumerate(hvpm.levels):
+        meta = level["metadata"]
+        print(f"   Level {i} (Type: {level['type']}):")
+        print(f"      - {meta['documents']} documents")
+        print(f"      - {meta['metrics']} metrics")
+        print(f"      - VPM shape: {level['vpm'].shape}")
+    
+    # 4. Demonstrate hierarchical decision making
+    print("\n4. Hierarchical decision process:")
+    current_level = 0
+    doc_idx = 0
+    metric_idx = 0
+    
+    for step in range(3):
+        # Get decision at current level
+        level, doc_idx, relevance = hvpm.get_decision(current_level)
+        print(f"   Step {step+1}: Level {level} decision - Document #{doc_idx} (relevance: {relevance:.2f})")
+        
+        # Determine next level to zoom into
+        current_level = hvpm.zoom_in(current_level, doc_idx, metric_idx)
+        if current_level == level:
+            print("      Reached most detailed level")
+            break
+    
+    # 5. Edge device simulation
+    print("\n5. Edge device hierarchical interaction:")
+    # Level 0 tile (most abstract)
+    tile0 = hvpm.get_tile(0)
+    print(f"   Level 0 tile size: {len(tile0)} bytes")
+    
+    # Edge device processes tile and decides to zoom in
+    decision = HierarchicalEdgeProtocol.make_decision(tile0)
+    level = decision[2]
+    is_relevant = decision[3]
+    print(f"   Edge device decision (Level {level}): {'RELEVANT' if is_relevant else 'NOT RELEVANT'}")
+    
+    # Edge device requests zoom
+    zoom_request = HierarchicalEdgeProtocol.request_zoom(tile0, "in")
+    new_level = zoom_request[3]
+    print(f"   Edge device requests zoom to Level {new_level}")
+    
+    # Get tile for new level
+    tile1 = hvpm.get_tile(new_level)
+    print(f"   Level {new_level} tile size: {len(tile1)} bytes")
+    
+    print("\nHierarchical VPM demonstration complete!")
+   
+    # Add hierarchical demo
+
 if __name__ == "__main__":
     demo_zeromodel()
+    demo_hierarchical_vpm()

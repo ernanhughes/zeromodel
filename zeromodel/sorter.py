@@ -9,31 +9,116 @@ The key innovation: sorting happens during encoding, not at decision time,
 which enables zero-model intelligence at the edge.
 """
 
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
-from typing import List, Dict, Tuple
+
 
 class TaskSorter:
-    """
-    Task-agnostic sorter for Zero-Model Intelligence.
-    
-    This class handles sorting documents and metrics based on task relevance
-    with implementations optimized for both cloud and edge environments.
-    
-    For edge devices (<25KB memory), uses simple rule-based sorting.
-    For cloud systems, can incorporate learning from feedback.
-    """
-    
-    def __init__(self, metric_names: List[str], default_weights: Dict[str, float] = None):
+    def __init__(self, metric_names: List[str], config: Dict[str, Any]):
         """
-        Initialize the sorter with metric names.
+        Initialize with configuration.
         
         Args:
             metric_names: Names of all metrics being tracked
-            default_weights: Optional default weights for metrics
+            config: Configuration dictionary
         """
         self.metric_names = metric_names
-        self.weights = default_weights or self._auto_weights()
+        self.config = config
+        
+        # Get task sorter parameters
+        sorter_config = config.get('zeromodel', {}).get('task_sorter', {})
+        self.ib_threshold = sorter_config.get('ib_threshold', 0.7)
+        self.adaptive_threshold = sorter_config.get('adaptive_threshold', True)
+        self.semantic_groups = sorter_config.get('semantic_groups', {
+            "uncertainty": ["uncertainty", "confidence", "ambiguity", "doubt"],
+            "size": ["size", "length", "scale", "magnitude"],
+            "quality": ["quality", "score", "rating", "value"],
+            "novelty": ["novelty", "diversity", "originality", "innovation"]
+        })
+        
+        self.metric_embeddings = self._generate_metric_embeddings()
+        self.task_history = []
     
+    def _generate_metric_embeddings(self) -> Dict[str, np.ndarray]:
+        """Generate semantic embeddings with configuration-based approach"""
+        embeddings = {}
+        
+        # Use semantic groups from config
+        for metric in self.metric_names:
+            # Find semantic group
+            group_id = 0
+            for i, (group_name, keywords) in enumerate(self.semantic_groups.items()):
+                if any(keyword in metric.lower() for keyword in keywords):
+                    group_id = i + 1
+                    break
+            
+            # Create embedding based on semantic group
+            embeddings[metric] = np.array([
+                group_id / len(self.semantic_groups),  # Semantic group
+                len(metric) / 20.0,               # Metric length (proxy for complexity)
+                hash(metric) % 256 / 255.0,       # Unique identifier
+                1.0                               # Constant dimension
+            ])
+        
+        # Normalize embeddings
+        for metric in embeddings:
+            norm = np.linalg.norm(embeddings[metric])
+            if norm > 0:
+                embeddings[metric] = embeddings[metric] / norm
+        
+        return embeddings
+    
+    def update_weights(self, task_description: str, feedback: Dict[str, float] = None):
+        """
+        Update weights using Information Bottleneck principles with config options.
+        """
+        # Generate task embedding
+        task_embedding = self._generate_task_embedding(task_description)
+        
+        # Calculate information retention for each metric
+        weights = {}
+        for metric, embedding in self.metric_embeddings.items():
+            # Calculate similarity (mutual information proxy)
+            similarity = np.dot(task_embedding, embedding) / (
+                np.linalg.norm(task_embedding) * np.linalg.norm(embedding) + 1e-10
+            )
+            
+            # Apply thresholding based on config
+            if self.config.get('zeromodel', {}).get('task_sorter', {}).get('soft_thresholding', True):
+                # Soft thresholding (sigmoid function)
+                threshold = self.ib_threshold
+                weights[metric] = 1.0 / (1.0 + np.exp(-10.0 * (similarity - threshold)))
+            else:
+                # Hard thresholding
+                weights[metric] = similarity if similarity > self.ib_threshold else 0.0
+        
+        # Normalize weights
+        max_weight = max(weights.values()) if weights else 1.0
+        if max_weight > 0:
+            for metric in weights:
+                weights[metric] /= max_weight
+        
+        # Incorporate feedback if available
+        if feedback:
+            for metric, score in feedback.items():
+                if metric in weights:
+                    weights[metric] = 0.7 * weights[metric] + 0.3 * score
+        
+        self.weights = weights
+        self.task_history.append((task_description, weights.copy()))
+    
+    def _generate_task_embedding(self, task_description: str) -> np.ndarray:
+        """Generate lightweight embedding for task description"""
+        # Simple hash-based embedding for edge compatibility
+        hash_val = hash(task_description) % (2**32)
+        return np.array([
+            (hash_val >> 24) & 0xFF,
+            (hash_val >> 16) & 0xFF,
+            (hash_val >> 8) & 0xFF,
+            hash_val & 0xFF
+        ]) / 255.0
+        
     def _auto_weights(self) -> Dict[str, float]:
         """Generate reasonable default weights based on metric properties"""
         weights = {}
@@ -51,55 +136,6 @@ class TaskSorter:
                 weights[metric] = 0.5  # Neutral default
         return weights
     
-    def update_weights(self, task_description: str, feedback: Dict[str, float] = None):
-        """
-        Update weights based on task description and optional feedback.
-        
-        Args:
-            task_description: Natural language description of the task
-            feedback: Optional feedback on previous decisions
-        """
-        # Simple rule-based approach (works on edge devices)
-        task_lower = task_description.lower()
-        
-        # Reset to defaults
-        self.weights = self._auto_weights()
-        
-        # Apply task-specific adjustments
-        if "uncertainty" in task_lower or "confidence" in task_lower:
-            for metric in self.metric_names:
-                if "uncertainty" in metric.lower():
-                    self.weights[metric] = 1.0
-                elif "confidence" in metric.lower():
-                    self.weights[metric] = 1.0
-        
-        if "large" in task_lower or "big" in task_lower or "size" in task_lower:
-            for metric in self.metric_names:
-                if "size" in metric.lower() or "length" in metric.lower():
-                    self.weights[metric] = 0.8
-        
-        if "quality" in task_lower or "good" in task_lower or "best" in task_lower:
-            for metric in self.metric_names:
-                if "quality" in metric.lower() or "score" in metric.lower():
-                    self.weights[metric] = 0.9
-        
-        if "novel" in task_lower or "new" in task_lower or "diverse" in task_lower:
-            for metric in self.metric_names:
-                if "novelty" in metric.lower() or "diversity" in metric.lower():
-                    self.weights[metric] = 0.7
-        
-        # Incorporate feedback if available (cloud only)
-        if feedback:
-            for metric, score in feedback.items():
-                if metric in self.weights:
-                    # Adjust weight based on feedback (0-1 scale)
-                    self.weights[metric] = 0.7 * self.weights[metric] + 0.3 * score
-            
-            # Normalize weights to 0-1 range
-            max_weight = max(self.weights.values()) if self.weights else 1.0
-            if max_weight > 0:
-                for metric in self.weights:
-                    self.weights[metric] /= max_weight
     
     def sort_matrix(self, score_matrix: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """

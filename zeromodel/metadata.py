@@ -7,7 +7,8 @@ for the self-describing nature of zeromodel maps.
 """
 
 import struct
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
 
 def encode_metadata(task_weights: Dict[str, float], 
                    metric_names: List[str],

@@ -30,12 +30,18 @@ setup(
     python_requires=">=3.7",
     install_requires=[
         "numpy>=1.20.0",
+        "PyWavelets>=1.1.1",
+        "pyyaml",
     ],
     extras_require={
         "dev": [
             "pytest>=6.0",
             "matplotlib>=3.4.0",
             "imageio>=2.9.0",
+            "scikit-learn>=0.24.0",
+            "pandas>=1.2.0",
+            "ipykernel>=5.3.0",
+            
         ],
     },
     entry_points={

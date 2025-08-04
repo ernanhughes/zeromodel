@@ -6,8 +6,10 @@ of scores to handle value drift over time. This is critical for long-term
 viability of the zeromodel system as score distributions may change.
 """
 
+from typing import Dict, List, Tuple
+
 import numpy as np
-from typing import List, Dict, Tuple
+
 
 class DynamicNormalizer:
     """

@@ -9,7 +9,8 @@ protocol for edge devices with <25KB memory. It handles:
 """
 
 import struct
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
+
 
 class EdgeProtocol:
     """

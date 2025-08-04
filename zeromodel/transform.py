@@ -6,9 +6,12 @@ to prioritize specific metrics for different tasks. This enables the same
 underlying data to be used for multiple decision contexts.
 """
 
+from typing import Any, Dict, List, Tuple
+
 import numpy as np
-from typing import List, Tuple, Dict, Any
+
 from .utils import quantize
+
 
 def transform_vpm(vpm: np.ndarray, 
                  metric_names: List[str],

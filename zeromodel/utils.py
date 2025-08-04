@@ -1,7 +1,7 @@
 """
 Utility Functions
 
-This module provides helper functions used throughout the ZeroMI package.
+This module provides helper functions used throughout the zeromodel package.
 """
 
 import numpy as np

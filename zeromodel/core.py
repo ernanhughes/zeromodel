@@ -5,7 +5,7 @@ This module provides the core functionality for transforming high-dimensional
 policy evaluation data into spatially-optimized visual maps where the
 intelligence is in the data structure itself, not in processing.
 
-The ZeroMI class:
+The zeromodel class:
 - Encodes score matrices into visual policy maps (VPMs)
 - Handles task-aware sorting of documents and metrics
 - Provides critical tile extraction for edge devices
@@ -13,16 +13,16 @@ The ZeroMI class:
 
 Example:
     # Initialize with metric names
-    zeromi = ZeroMI(metric_names=["uncertainty", "size", "quality", ...])
+    zeromodel = zeromodel(metric_names=["uncertainty", "size", "quality", ...])
     
     # Process score matrix (documents × metrics)
-    zeromi.process(score_matrix)
+    zeromodel.process(score_matrix)
     
     # Get visual policy map
-    vpm = zeromi.encode()
+    vpm = zeromodel.encode()
     
     # For edge devices: get critical tile
-    tile = zeromi.get_critical_tile()
+    tile = zeromodel.get_critical_tile()
 """
 
 import numpy as np
@@ -31,7 +31,7 @@ from .sorter import TaskSorter
 from .normalizer import DynamicNormalizer
 from .utils import quantize
 
-class ZeroMI:
+class ZeroModel:
     """
     Zero-Model Intelligence encoder/decoder - completely standalone
     
@@ -46,7 +46,7 @@ class ZeroMI:
     
     def __init__(self, metric_names: List[str], precision: int = 8):
         """
-        Initialize ZeroMI encoder.
+        Initialize zeromodel encoder.
         
         Args:
             metric_names: Names of all metrics being tracked

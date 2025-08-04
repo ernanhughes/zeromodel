@@ -1,15 +1,15 @@
-# Zero-Model Intelligence (ZeroMI)
+# Zero-Model Intelligence (ZeroModel)
 
-[![PyPI version](https://badge.fury.io/py/zeromi.svg)](https://badge.fury.io/py/zeromi)
+[![PyPI version](https://badge.fury.io/py/zeromodel.svg)](https://badge.fury.io/py/zeromodel)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Zero-Model Intelligence** is a paradigm-shifting approach that embeds decision logic into data structure itself. Instead of making models smarter, ZeroMI makes data structures intelligent.
+**Zero-Model Intelligence** is a paradigm-shifting approach that embeds decision logic into data structure itself. Instead of making models smarter, zeromodel makes data structures intelligent.
 
 > **The intelligence isn't in the processing—it's in the data structure itself.**
 
 ## 🧠 Core Concept
 
-ZeroMI transforms high-dimensional policy evaluation data into spatially-optimized visual maps where:
+zeromodel transforms high-dimensional policy evaluation data into spatially-optimized visual maps where:
 
 - **Position = Importance** (top-left = most relevant)
 - **Color = Value** (darker = higher priority)
@@ -20,32 +20,32 @@ This enables **zero-model intelligence** on devices with <25KB memory.
 ## 🚀 Quick Start
 
 ```bash
-pip install zeromi
+pip install zeromodel
 ```
 
 ```python
-from zeromi import ZeroMI
+from zeromodel import ZeroModel
 import numpy as np
 
 # Initialize with metric names
 metric_names = ["uncertainty", "size", "quality", "novelty", "coherence"]
-zeromi = ZeroMI(metric_names)
+zeromodel = ZeroModel(metric_names)
 
 # Generate or load your score matrix (documents × metrics)
 score_matrix = np.random.rand(100, 5)  # Example data
 
 # Process for a specific task
-zeromi.set_task("Find uncertain large documents")
-zeromi.process(score_matrix)
+zeromodel.set_task("Find uncertain large documents")
+zeromodel.process(score_matrix)
 
 # Get visual policy map
-vpm = zeromi.encode()
+vpm = zeromodel.encode()
 
 # For edge devices: get critical tile
-tile = zeromi.get_critical_tile()
+tile = zeromodel.get_critical_tile()
 
 # Get top decision
-doc_idx, relevance = zeromi.get_decision()
+doc_idx, relevance = zeromodel.get_decision()
 ```
 
 📚 Documentation
@@ -72,10 +72,10 @@ end
 Check out our website at [zeromi.org](https://zeromi.org) for tutorials, examples, and community resources.
 
 📄 Citation
-If you use ZeroMI in your research, please cite:
+If you use zeromodel in your research, please cite:
 
 ```text
-@article{zeromi2025,
+@article{zeromodel2025,
   title={Zero-Model Intelligence: Spatially-Optimized Decision Maps for Resource-Constrained AI},
   author={Ernan Hughes},
   journal={arXiv preprint arXiv:XXXX.XXXXX},

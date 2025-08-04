@@ -4,14 +4,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="zeromi",
+    name="ZeroModel",
     version="1.0.0",
     author="Ernan Hughes",
     author_email="ernanhughes@gmail.com",
     description="Zero-Model Intelligence: Spatially-optimized visual policy maps",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ernanhughes/zeromi",
+    url="https://github.com/ernanhughes/zeromodel",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -40,7 +40,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "zeromi-demo=zeromi.demo:demo_zeromi",
+            "zeromodel-demo=zeromodel.demo:demo_zeromodel",
         ],
     },
 )

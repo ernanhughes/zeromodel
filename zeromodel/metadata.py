@@ -3,7 +3,7 @@ Compact Metadata Handling
 
 This module provides functions for encoding and decoding metadata in a compact
 binary format that survives image processing operations. This is critical
-for the self-describing nature of ZeroMI maps.
+for the self-describing nature of zeromodel maps.
 """
 
 import struct

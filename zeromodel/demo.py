@@ -1,21 +1,21 @@
 """
-ZeroMI Demonstration Script
+zeromodel Demonstration Script
 
-This script demonstrates the complete ZeroMI workflow:
+This script demonstrates the complete zeromodel workflow:
 1. Generate synthetic score data
-2. Process with ZeroMI
+2. Process with zeromodel
 3. Encode as visual policy map
 4. Transform for specific task
 5. Extract critical tile for edge device
 6. Make decision
 
-Run this script to see ZeroMI in action.
+Run this script to see zeromodel in action.
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from .core import ZeroMI
+from .core import ZeroModel
 from .transform import transform_vpm, get_critical_tile
 from .edge import EdgeProtocol
 
@@ -74,10 +74,10 @@ def visualize_vpm(vpm: np.ndarray, title: str, output_path: str = None):
         plt.show()
     plt.close()
 
-def demo_zeromi():
-    """Run the complete ZeroMI demonstration"""
+def demo_zeromodel():
+    """Run the complete zeromodel demonstration"""
     print("="*50)
-    print("Zero-Model Intelligence (ZeroMI) Demonstration")
+    print("Zero-Model Intelligence (zeromodel) Demonstration")
     print("="*50)
     
     # 1. Generate synthetic data
@@ -85,21 +85,21 @@ def demo_zeromi():
     score_matrix, metric_names = generate_synthetic_data(num_docs=100, num_metrics=20)
     print(f"   Generated {score_matrix.shape[0]} documents × {score_matrix.shape[1]} metrics")
     
-    # 2. Process with ZeroMI
-    print("\n2. Processing data with ZeroMI...")
-    zeromi = ZeroMI(metric_names)
+    # 2. Process with zeromodel
+    print("\n2. Processing data with zeromodel...")
+    zeromodel = zeromodel(metric_names)
     
     # Example task 1: Find uncertain large documents
     print("   Processing for task: 'Find uncertain large documents'")
-    zeromi.set_task("Find uncertain large documents")
-    zeromi.process(score_matrix)
-    vpm1 = zeromi.encode()
+    zeromodel.set_task("Find uncertain large documents")
+    zeromodel.process(score_matrix)
+    vpm1 = zeromodel.encode()
     
     # Example task 2: Find high-quality novel documents
     print("   Processing for task: 'Find high-quality novel documents'")
-    zeromi.set_task("Find high-quality novel documents")
-    zeromi.process(score_matrix)
-    vpm2 = zeromi.encode()
+    zeromodel.set_task("Find high-quality novel documents")
+    zeromodel.process(score_matrix)
+    vpm2 = zeromodel.encode()
     
     # 3. Visualize results
     print("\n3. Visualizing results...")
@@ -108,7 +108,7 @@ def demo_zeromi():
     
     # 4. Edge device simulation
     print("\n4. Simulating edge device decision making...")
-    tile = zeromi.get_critical_tile()
+    tile = zeromodel.get_critical_tile()
     print(f"   Critical tile size: {len(tile)} bytes")
     
     # Edge device would run minimal code like:
@@ -119,11 +119,11 @@ def demo_zeromi():
     print(f"   Edge device decision: {'RELEVANT' if is_relevant else 'NOT RELEVANT'}")
     
     # 5. Get top decision
-    doc_idx, relevance = zeromi.get_decision()
+    doc_idx, relevance = zeromodel.get_decision()
     print(f"\n5. Top decision: Document #{doc_idx} with relevance {relevance:.2f}")
     
-    print("\nZeroMI demonstration complete!")
+    print("\nzeromodel demonstration complete!")
     print("Check the 'demo' directory for visualizations.")
 
 if __name__ == "__main__":
-    demo_zeromi()
+    demo_zeromodel()

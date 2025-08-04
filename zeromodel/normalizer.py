@@ -3,7 +3,7 @@ Dynamic Range Adaptation
 
 This module provides the DynamicNormalizer class which handles normalization
 of scores to handle value drift over time. This is critical for long-term
-viability of the ZeroMI system as score distributions may change.
+viability of the zeromodel system as score distributions may change.
 """
 
 import numpy as np

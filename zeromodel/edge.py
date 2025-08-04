@@ -13,7 +13,7 @@ from typing import Tuple, Dict, Any
 
 class EdgeProtocol:
     """
-    Communication protocol for ZeroMI edge devices with <25KB memory.
+    Communication protocol for zeromodel edge devices with <25KB memory.
     
     This implements a minimal protocol that:
     - Works with tiny memory constraints

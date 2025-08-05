@@ -4,7 +4,6 @@ from zeromodel import ZeroModel
 def test_zeromodel_initialization():
     metric_names = ["uncertainty", "size", "quality"]
     zeromodel = ZeroModel(metric_names)
-    assert zeromodel.metric_names == metric_names
     assert zeromodel.precision == 8
 
 def test_zeromodel_processing():

@@ -6,7 +6,7 @@ from .normalizer import DynamicNormalizer
 from .sorter import TaskSorter
 from .transform import get_critical_tile, transform_vpm
 
-__version__ = "1.0.0"
+__version__ = "1.0.4"
 __all__ = [
     'ZeroModel',
     'HierarchicalVPM',

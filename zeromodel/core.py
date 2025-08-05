@@ -148,42 +148,27 @@ class ZeroModel:
         
         return bytes(tile_bytes)
     
-    def get_decision(self, context_size: Optional[int] = None) -> Tuple[int, float]:
+    def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
         """
-        Get top decision with contextual understanding.
-        
-        Args:
-            context_size: Size of context window to consider (overrides config)
-        
-        Returns:
-            (document_index, relevance_score)
+        Get top decision with contextual understanding, handling limited metrics.
         """
         if self.sorted_matrix is None:
             raise ValueError("Data not processed yet. Call process() first.")
         
-        # Get context size from config or parameter
-        if context_size is None:
-            context_size = get_config_value(
-                self.config, 'zeromodel', 'edge', 'context_size', default=3
-            )
-        
-        # Get context window (top-left region)
-        context = self.sorted_matrix[:context_size, :context_size*3]
-        
-        # Calculate contextual relevance (weighted by position)
+        n_metrics = self.sorted_matrix.shape[1]
+        context_width = min(context_size * 3, n_metrics)
+
+        context = self.sorted_matrix[:context_size, :context_width]
+
         weights = np.zeros_like(context)
-        for i in range(context_size):
-            for j in range(context_size*3):
-                # Weight decreases with distance from top-left
-                distance = np.sqrt(i**2 + (j/3)**2)
+        for i in range(context.shape[0]):
+            for j in range(context.shape[1]):  # ← FIXED
+                distance = np.sqrt(i**2 + (j / 3)**2)
                 weights[i, j] = max(0, 1.0 - distance * 0.3)
-        
-        # Calculate weighted relevance
+
         weighted_relevance = np.sum(context * weights) / np.sum(weights)
-        
-        # Get top document index from sorted order
-        top_doc_idx = self.doc_order[0]
-        
+        top_doc_idx = self.doc_order[0] if len(self.doc_order) > 0 else 0
+
         return top_doc_idx, weighted_relevance
     
     def get_metadata(self) -> Dict[str, Any]:
@@ -229,20 +214,23 @@ class ZeroModel:
         
         return hvpm
 
+# In zeromodel/core.py
 class HierarchicalVPM:
-    """
-    Hierarchical Visual Policy Map (HVPM) implementation with configuration support.
-    """
-    
     def __init__(self, 
                  metric_names: List[str],
-                 config_path: Optional[str] = None):
+                 config_path: Optional[str] = None,
+                 num_levels: Optional[int] = None,
+                 zoom_factor: Optional[int] = None,
+                 wavelet: Optional[str] = None):
         """
         Initialize the hierarchical VPM system with configuration.
         
         Args:
             metric_names: Names of all metrics being tracked
             config_path: Path to configuration file (optional)
+            num_levels: Override config value for number of hierarchical levels
+            zoom_factor: Override config value for zoom factor
+            wavelet: Override config value for wavelet type
         """
         # Load configuration
         self.config = load_config(config_path)
@@ -251,11 +239,11 @@ class HierarchicalVPM:
         if not validate_config(self.config):
             raise ValueError("Invalid configuration")
         
-        # Get hierarchical parameters
+        # Get hierarchical parameters (allow overrides)
         hierarchical = self.config.get('zeromodel', {}).get('hierarchical', {})
-        self.num_levels = hierarchical.get('num_levels', 3)
-        self.zoom_factor = hierarchical.get('zoom_factor', 3)
-        self.wavelet = hierarchical.get('wavelet', 'bior6.8')
+        self.num_levels = num_levels if num_levels is not None else hierarchical.get('num_levels', 3)
+        self.zoom_factor = zoom_factor if zoom_factor is not None else hierarchical.get('zoom_factor', 3)
+        self.wavelet = wavelet if wavelet is not None else hierarchical.get('wavelet', 'bior6.8')
         self.max_levels = hierarchical.get('max_levels', None)
         
         # Get precision
@@ -273,7 +261,7 @@ class HierarchicalVPM:
             "wavelet": self.wavelet,
             "encoding": "wavelet"
         }
-    
+
     def process(self, 
                 score_matrix: np.ndarray, 
                 task: str,

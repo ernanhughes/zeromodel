@@ -41,7 +41,9 @@ setup(
             "scikit-learn>=0.24.0",
             "pandas>=1.2.0",
             "ipykernel>=5.3.0",
-            
+            "scikit-learn",
+            "imageio[ffmpeg]>=2.9.0",
+            "tensorflow>=2.4.0",
         ],
     },
     entry_points={

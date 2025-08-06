@@ -149,7 +149,7 @@ class HierarchicalVPM:
             logger.debug(f"Clustered data shape: {clustered_data.shape}")
 
             # Create the level data structure
-            # Pass the base task config to potentially influence higher level sorting
+            # Pass the base task config I to potentially influence higher level sorting
             level_data = self._create_level(clustered_data, level_index, base_zeromodel.task_config)
             # Insert at the beginning of the list to maintain order [L0, L1, L2, ...]
             self.levels.insert(0, level_data) 

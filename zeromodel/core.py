@@ -60,18 +60,14 @@ class ZeroModel:
         self.duckdb_conn: duckdb.DuckDBPyConnection = self._init_duckdb()
         logger.info(f"ZeroModel initialized with {len(self.metric_names)} metrics.")
 
-    # --- Inside the ZeroModel class definition ---
-
-    # 1. Modify _init_duckdb to just create the table structure
     def _init_duckdb(self) -> duckdb.DuckDBPyConnection:
-        """Initialize DuckDB connection with virtual index table structure."""
-        logger.debug("Initializing DuckDB connection for ZeroModel.")
-        conn = duckdb.connect(database=":memory:")
-        # Create virtual index table schema for metric ordering analysis
-        # Do NOT pre-populate with [0, 1, 2, ...] here.
+        conn = duckdb.connect(database=':memory:')
         columns = ", ".join([f'"{col}" FLOAT' for col in self.metric_names])
         conn.execute(f"CREATE TABLE virtual_index (row_id INTEGER, {columns})")
-        logger.debug("DuckDB virtual_index table schema created.")
+        # Insert a single row with index values (0, 1, 2, ...)
+        values = [0] + list(range(len(self.metric_names))) # For 4 metrics: [0, 0, 1, 2, 3]
+        placeholders = ", ".join(["?"] * (len(self.metric_names) + 1))
+        conn.execute(f"INSERT INTO virtual_index VALUES ({placeholders})", values) # <-- This line should insert the row
         return conn
 
     def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
@@ -270,33 +266,6 @@ class ZeroModel:
         self.task = "sql_task"
         self.task_config = {"sql_query": sql_query, "analysis": analysis}
         logger.debug(f"SQL task set. Analysis: {analysis}")
-
-    def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
-        """
-        Analyze SQL query by running it against DuckDB virtual index tables.
-
-        This directly gives us the ordering we need for spatial organization.
-        """
-        # First, analyze metric ordering using the virtual index table
-        try:
-            # Execute query against virtual index table
-            result = self.duckdb_conn.execute(sql_query).fetchone()
-
-            if result is None:
-                raise ValueError("Query returned no results")
-
-            # Extract column ordering from the result
-            # The result contains [row_id, col1, col2, ...]
-            # Where the values are the indices that would produce the ordering
-            column_indices = list(result[1:])  # Skip row_id
-
-            # Determine metric ordering (which columns are most important)
-            metric_order = np.argsort(column_indices).tolist()
-
-            return {"metric_order": metric_order, "original_query": sql_query}
-
-        except Exception as e:
-            raise ValueError(f"Invalid SQL query: {str(e)}") from e
 
     def process(self, score_matrix: np.ndarray) -> None:
         """
@@ -701,6 +670,14 @@ class ZeroModel:
                 "doc_order is not available or empty. Defaulting top document index to 0."
             )
 
+
+        # Print top 5 rows of sorted matrix and doc order for debugging
+        logger.debug("Top 5 rows of sorted_matrix:")
+        for i, row in enumerate(self.sorted_matrix[:5]):
+            logger.debug(f"Row {i}: {row.tolist()}")
+
+        logger.debug(f"Top 5 document indices (doc_order): {self.doc_order[:5].tolist()}")
+
         logger.info(
             f"Decision made: Document index {top_doc_idx_in_original}, Relevance {weighted_relevance:.4f}"
         )
@@ -722,6 +699,27 @@ class ZeroModel:
         }
         logger.debug(f"Metadata retrieved: {metadata}")
         return metadata
+
+    def _apply_default_organization(self, score_matrix: np.ndarray):
+        """
+        Apply default ordering to the score matrix:
+        - Documents in original order
+        - Metrics in original order
+        """
+        logger.info("Applying default organization: preserving original order.")
+
+        self.sorted_matrix = score_matrix.copy()
+        self.metric_order = np.arange(score_matrix.shape[1])  # [0, 1, 2, ...]
+        self.doc_order = np.arange(score_matrix.shape[0])     # [0, 1, 2, ...]
+
+        # Optionally update metadata if needed
+        self.metadata = {
+            "task": "default",
+            "precision": self.precision,
+            "metric_names": self.metric_names,
+            "metric_order": self.metric_order.tolist(),
+            "doc_order": self.doc_order.tolist()
+        }
 
 
 # --- Example usage or test code (optional, remove or comment out for library module) ---

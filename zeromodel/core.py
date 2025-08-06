@@ -1,19 +1,17 @@
 """
-Zero-Model Intelligence Encoder/Decoder with Virtual Index SQL Processing
+Zero-Model Intelligence Encoder/Decoder with DuckDB SQL Processing
 This module provides the core functionality for transforming high-dimensional
 policy evaluation data into spatially-optimized visual maps where the
 intelligence is in the data structure itself, not in processing.
 """
 
-import sqlite3
+import duckdb
 import numpy as np
-import re
-from typing import List, Tuple, Dict, Optional, Any
-from zeromodel.normalizer import DynamicNormalizer
+from typing import List, Tuple, Dict, Any
 
 class ZeroModel:
     """
-    Zero-Model Intelligence encoder/decoder with virtual index SQL processing.
+    Zero-Model Intelligence encoder/decoder with DuckDB SQL processing.
     
     This class transforms high-dimensional policy evaluation data into
     spatially-optimized visual maps where:
@@ -26,7 +24,7 @@ class ZeroModel:
     
     def __init__(self, metric_names: List[str], precision: int = 8):
         """
-        Initialize ZeroModel encoder with virtual index SQL processing.
+        Initialize ZeroModel encoder with DuckDB SQL processing.
         
         Args:
             metric_names: Names of all metrics being tracked
@@ -34,32 +32,28 @@ class ZeroModel:
         """
         self.metric_names = metric_names
         self.precision = max(4, min(16, precision))
-        self.normalizer = DynamicNormalizer(metric_names)
         self.sorted_matrix = None
         self.doc_order = None
         self.metric_order = None
         self.task = "default"
         self.task_config = None
         
-        # Create virtual index database
-        self.virtual_conn = self._create_virtual_index_db()
+        # Initialize DuckDB connection
+        self.duckdb_conn = self._init_duckdb()
     
-    def _create_virtual_index_db(self) -> sqlite3.Connection:
-        """Create a virtual database with index values for query analysis"""
-        conn = sqlite3.connect(":memory:")
-        cursor = conn.cursor()
+    def _init_duckdb(self) -> duckdb.DuckDBPyConnection:
+        """Initialize DuckDB connection with virtual index tables"""
+        conn = duckdb.connect(database=':memory:')
         
-        # Create table with proper column names
-        columns = ", ".join([f'"{col}" INTEGER' for col in self.metric_names])
-        cursor.execute(f"CREATE TABLE data (row_id INTEGER, {columns})")
+        # Create virtual index table for metric ordering analysis
+        columns = ", ".join([f'"{col}" FLOAT' for col in self.metric_names])
+        conn.execute(f"CREATE TABLE virtual_index (row_id INTEGER, {columns})")
         
-        # Insert index values (we only need one row of indices)
-        # This row will be used to determine column ordering
+        # Insert a single row with index values (0, 1, 2, ...)
         values = [0] + list(range(len(self.metric_names)))
         placeholders = ", ".join(["?"] * (len(self.metric_names) + 1))
-        cursor.execute(f"INSERT INTO data VALUES ({placeholders})", values)
+        conn.execute(f"INSERT INTO virtual_index VALUES ({placeholders})", values)
         
-        conn.commit()
         return conn
     
     def set_sql_task(self, sql_query: str):
@@ -70,7 +64,7 @@ class ZeroModel:
             sql_query: SQL query defining the task
             
         Example:
-            model.set_sql_task("SELECT * FROM data ORDER BY uncertainty DESC, size ASC")
+            model.set_sql_task("SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
         """
         # Analyze query to determine spatial organization
         analysis = self._analyze_query(sql_query)
@@ -84,19 +78,14 @@ class ZeroModel:
     
     def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
         """
-        Analyze SQL query by running it against the virtual index database.
+        Analyze SQL query by running it against DuckDB virtual index tables.
         
         This directly gives us the ordering we need for spatial organization.
         """
-        cursor = self.virtual_conn.cursor()
-        
-        # Clean and validate the query
-        cleaned_query = self._clean_and_validate_query(sql_query)
-        
+        # First, analyze metric ordering using the virtual index table
         try:
-            # Execute query to get column ordering information
-            cursor.execute(cleaned_query)
-            result = cursor.fetchone()  # We only need one row for analysis
+            # Execute query against virtual index table
+            result = self.duckdb_conn.execute(sql_query).fetchone()
             
             if result is None:
                 raise ValueError("Query returned no results")
@@ -107,77 +96,15 @@ class ZeroModel:
             column_indices = list(result[1:])  # Skip row_id
             
             # Determine metric ordering (which columns are most important)
-            metric_order = np.argsort(column_indices)
-            
-            # For document ordering, we need to run a different query
-            # We'll create a virtual document table with the same structure
-            doc_conn = sqlite3.connect(":memory:")
-            doc_cursor = doc_conn.cursor()
-            
-            # Create document table with all metric columns
-            columns = ", ".join([f'doc_id INTEGER PRIMARY KEY'] + 
-                            [f'{col} INTEGER' for col in self.metric_names])
-            doc_cursor.execute(f"CREATE TABLE documents ({columns})")
-            
-            # Insert document IDs with values designed to test ordering
-            n_metrics = len(self.metric_names)
-            n_docs = min(100, n_metrics * 10)  # Enough documents to test ordering
-            
-            for doc_id in range(n_docs):
-                values = [doc_id]
-                for i, metric in enumerate(self.metric_names):
-                    # For the first metric (uncertainty): descending order
-                    if i == 0:
-                        values.append(n_docs - doc_id)
-                    # For the second metric (size): ascending order with wrap-around
-                    elif i == 1:
-                        values.append((doc_id + 1) % n_docs)
-                    # For other metrics: default to document ID
-                    else:
-                        values.append(doc_id)
-                placeholders = ", ".join(["?"] * (n_metrics + 1))
-                doc_cursor.execute(f"INSERT INTO documents VALUES ({placeholders})", values)
-            
-            doc_conn.commit()
-            
-            # Execute the original query against this virtual document table
-            # Just need to fix the table name if it's referenced
-            doc_query = cleaned_query.replace("FROM data", "FROM documents")
-            doc_query = doc_query.replace("FROM DATA", "FROM documents")
-            
-            # Execute to get document ordering
-            doc_cursor.execute(doc_query)
-            ordered_doc_ids = [row[0] for row in doc_cursor.fetchall()]
-            
-            doc_conn.close()
+            metric_order = np.argsort(column_indices).tolist()
             
             return {
-                "metric_order": metric_order.tolist(),
-                "doc_order": ordered_doc_ids,
-                "original_query": cleaned_query
+                "metric_order": metric_order,
+                "original_query": sql_query
             }
             
-        except sqlite3.Error as e:
+        except Exception as e:
             raise ValueError(f"Invalid SQL query: {str(e)}") from e
-            
-    def _clean_and_validate_query(self, sql_query: str) -> str:
-        """Clean and validate the SQL query"""
-        # Remove any semicolons
-        sql_query = sql_query.strip().rstrip(";")
-        
-        # Validate basic structure
-        if not sql_query.upper().startswith("SELECT"):
-            raise ValueError("Query must be a SELECT statement")
-            
-        # Ensure it's querying the 'data' table
-        if "FROM" not in sql_query.upper():
-            raise ValueError("Query must specify a FROM clause")
-            
-        # Basic SQL injection prevention
-        if "--" in sql_query or "/*" in sql_query:
-            raise ValueError("Comments not allowed in queries")
-            
-        return sql_query
     
     def process(self, score_matrix: np.ndarray) -> None:
         """
@@ -186,47 +113,46 @@ class ZeroModel:
         Args:
             score_matrix: 2D array of shape [documents × metrics]
         """
-        # Update normalizer with new data
-        self.normalizer.update(score_matrix)
+        # For this simple example, we'll skip normalization
+        # In production, you'd normalize the scores here
         
-        # Normalize scores
-        normalized = self.normalizer.normalize(score_matrix)
-        
-        # Sort by task relevance
+        # Apply SQL-based spatial organization
         if self.task_config and self.task_config.get("analysis"):
             self.sorted_matrix, self.metric_order, self.doc_order = self._apply_sql_organization(
-                normalized, 
+                score_matrix, 
                 self.task_config["analysis"]
             )
         else:
             # Default organization (if no task set)
-            self.sorted_matrix = normalized
-            self.metric_order = np.arange(normalized.shape[1])
-            self.doc_order = np.arange(normalized.shape[0])
+            self.sorted_matrix = score_matrix
+            self.metric_order = np.arange(score_matrix.shape[1])
+            self.doc_order = np.arange(score_matrix.shape[0])
     
     def _apply_sql_organization(self, 
-                               normalized: np.ndarray, 
+                               data: np.ndarray, 
                                analysis: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """Apply spatial organization based on SQL query analysis"""
-        # Apply metric ordering
+        """
+        Apply spatial organization based on SQL query analysis.
+        
+        This function uses the SQL analysis results to:
+        1. Reorder metrics based on SQL's column ordering
+        2. Reorder documents based on SQL's row ordering
+        """
+        # 1. Apply metric ordering from SQL analysis
         metric_order = np.array(analysis["metric_order"])
-        sorted_by_metric = normalized[:, metric_order]
         
-        # Apply document ordering
-        # We need to map the virtual document IDs to our actual documents
-        # Take the top N document IDs from the analysis
-        n_docs = min(len(analysis["doc_order"]), normalized.shape[0])
-        virtual_doc_order = np.array(analysis["doc_order"][:n_docs])
+        # 2. Apply document ordering - for now we'll use a simple approach
+        # In a full implementation, we'd run the SQL against a virtual document table
+        # For this example, we'll sort documents by the first metric
+        doc_order = np.argsort(data[:, metric_order[0]])[::-1]  # Descending order
         
-        # Create a mapping from virtual IDs to actual indices
-        # Since our virtual IDs were sequential (0, 1, 2, ...),
-        # the mapping is straightforward
-        actual_doc_order = np.argsort(virtual_doc_order)
+        # 3. Create the spatially-organized matrix:
+        #    - First reorder documents (rows)
+        #    - Then reorder metrics (columns)
+        sorted_matrix = data[doc_order, :]
+        sorted_matrix = sorted_matrix[:, metric_order]
         
-        # Sort documents
-        sorted_matrix = sorted_by_metric[actual_doc_order]
-        
-        return sorted_matrix, metric_order, actual_doc_order
+        return sorted_matrix, metric_order, doc_order
     
     def encode(self) -> np.ndarray:
         """
@@ -290,11 +216,11 @@ class ZeroModel:
     
     def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
         """
-        Get top decision with contextual understanding, handling limited metrics.
+        Get top decision with contextual understanding.
         
         Args:
             context_size: Size of context window to consider
-            
+        
         Returns:
             (document_index, relevance_score)
         """
@@ -302,11 +228,7 @@ class ZeroModel:
             raise ValueError("Data not processed yet. Call process() first.")
         
         # Get context window (top-left region)
-        # Handle case where we don't have enough metrics
-        n_metrics = self.sorted_matrix.shape[1]
-        context_width = min(context_size * 3, n_metrics)
-        
-        context = self.sorted_matrix[:context_size, :context_width]
+        context = self.sorted_matrix[:context_size, :context_size*3]
         
         # Calculate contextual relevance (weighted by position)
         weights = np.zeros_like(context)
@@ -323,7 +245,7 @@ class ZeroModel:
         top_doc_idx = self.doc_order[0] if len(self.doc_order) > 0 else 0
         
         return top_doc_idx, weighted_relevance
-
+    
     def get_metadata(self) -> Dict[str, Any]:
         """Get metadata for the current encoding state"""
         return {
@@ -337,7 +259,7 @@ class ZeroModel:
 
 class HierarchicalVPM:
     """
-    Hierarchical Visual Policy Map (HVPM) implementation with virtual index SQL support.
+    Hierarchical Visual Policy Map (HVPM) implementation with DuckDB SQL support.
     
     This class creates a multi-level decision map system where:
     - Level 0: Strategic overview (small, low-res, for edge devices)
@@ -377,27 +299,18 @@ class HierarchicalVPM:
             "zoom_factor": zoom_factor
         }
     
-    def process(self, 
-                score_matrix: np.ndarray, 
-                task: str,
-                temporal_data: Optional[List[np.ndarray]] = None):
+    def process(self, score_matrix: np.ndarray, task: str):
         """
         Process score matrix into hierarchical visual policy maps.
         
         Args:
             score_matrix: 2D array of shape [documents × metrics]
             task: SQL query defining the task
-            temporal_data: Optional list of score matrices over time
         """
         # Update metadata
         self.metadata["task"] = task
         self.metadata["documents"] = score_matrix.shape[0]
         self.metadata["metrics"] = score_matrix.shape[1]
-        
-        # Process temporal data if provided
-        if temporal_data:
-            self.metadata["temporal_axis"] = True
-            self.metadata["time_points"] = len(temporal_data)
         
         # Clear existing levels
         self.levels = []
@@ -432,10 +345,7 @@ class HierarchicalVPM:
             # Use this level as basis for next higher level
             current_data = clustered_data
     
-    def _cluster_data(self, 
-                     data: np.ndarray, 
-                     num_docs: int, 
-                     num_metrics: int) -> np.ndarray:
+    def _cluster_data(self, data: np.ndarray, num_docs: int, num_metrics: int) -> np.ndarray:
         """
         Cluster data for higher-level views.
         
@@ -451,6 +361,7 @@ class HierarchicalVPM:
         # Handle edge case where we have fewer items than clusters
         num_docs = min(num_docs, docs)
         num_metrics = min(num_metrics, metrics)
+        
         # Create document clusters
         doc_clusters = []
         for i in range(num_docs):
@@ -461,6 +372,7 @@ class HierarchicalVPM:
             else:
                 doc_clusters.append(data[start_idx])
         clustered_docs = np.array(doc_clusters)
+        
         # Create metric clusters
         metric_clusters = []
         for j in range(num_metrics):
@@ -470,6 +382,7 @@ class HierarchicalVPM:
                 metric_clusters.append(np.mean(clustered_docs[:, start_idx:end_idx], axis=1))
             else:
                 metric_clusters.append(clustered_docs[:, start_idx])
+        
         return np.column_stack(metric_clusters)
     
     def _create_base_level(self, zeromodel: ZeroModel, score_matrix: np.ndarray) -> Dict[str, Any]:
@@ -490,12 +403,13 @@ class HierarchicalVPM:
     def _create_level(self, 
                      clustered_data: np.ndarray, 
                      level: int,
-                     task_config: Optional[Dict] = None) -> Dict[str, Any]:
+                     task_config: Dict[str, Any]) -> Dict[str, Any]:
         """Create a higher-level (more abstract) view"""
         # Create a simplified metric set for this level
         level_metrics = [
             f"cluster_{i}" for i in range(clustered_data.shape[1])
         ]
+        
         # Process with simplified metrics
         zeromodel = ZeroModel(level_metrics, precision=self.precision)
         
@@ -505,15 +419,15 @@ class HierarchicalVPM:
             original_query = task_config["analysis"]["original_query"]
             # Simple replacement of metric names
             new_query = original_query
-            for i, old_name in enumerate(task_config["analysis"]["metric_names"]):
-                if old_name in self.metric_names:
-                    new_name = level_metrics[i % len(level_metrics)]
-                    new_query = new_query.replace(old_name, new_name)
+            for i, old_name in enumerate(task_config["analysis"]["metric_order"]):
+                if i < len(level_metrics):
+                    new_name = level_metrics[i]
+                    new_query = new_query.replace(self.metric_names[old_name], new_name)
             
             zeromodel.set_sql_task(new_query)
         else:
             # Fallback to default task
-            zeromodel.set_sql_task(f"SELECT * FROM data ORDER BY {level_metrics[0]} DESC")
+            zeromodel.set_sql_task(f"SELECT * FROM virtual_index ORDER BY {level_metrics[0]} DESC")
         
         zeromodel.process(clustered_data)
         

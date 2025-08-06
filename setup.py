@@ -32,6 +32,7 @@ setup(
         "numpy>=1.20.0",
         "PyWavelets>=1.1.1",
         "pyyaml",
+        "duckdb>=0.6.2",
     ],
     extras_require={
         "dev": [

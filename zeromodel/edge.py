@@ -213,18 +213,3 @@ class EdgeProtocol:
         )
         logger.debug(f"Error message created, size: {len(error_message)} bytes")
         return error_message
-
-# --- Configure logging for this module ---
-# This should ideally be done once in your main application.
-# Placing it here ensures logs appear if this script is run directly.
-if __name__ == "__main__":
-    # Example configuration - adjust as needed for your application
-    logging.basicConfig(
-        level=logging.DEBUG, # Adjust level (DEBUG, INFO, WARNING, ERROR)
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler() # Output to console
-            # logging.FileHandler('edge_protocol.log') # Optional: Output to a file
-        ]
-    )
-    logger.info("Logging configured for EdgeProtocol module.")

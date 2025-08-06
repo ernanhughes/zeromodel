@@ -13,6 +13,7 @@ from typing import List, Tuple, Dict, Any, Optional
 
 import duckdb
 import numpy as np
+from zeromodel.normalizer import DynamicNormalizer
 
 # Import the package logger
 logger = logging.getLogger(__name__)  # This will be 'zeromodel.core'
@@ -58,6 +59,7 @@ class ZeroModel:
         self.task_config: Optional[Dict[str, Any]] = None
         # Initialize DuckDB connection
         self.duckdb_conn: duckdb.DuckDBPyConnection = self._init_duckdb()
+        self.normalizer = DynamicNormalizer(metric_names)
         logger.info(f"ZeroModel initialized with {len(self.metric_names)} metrics.")
 
     def _init_duckdb(self) -> duckdb.DuckDBPyConnection:
@@ -69,6 +71,164 @@ class ZeroModel:
         placeholders = ", ".join(["?"] * (len(self.metric_names) + 1))
         conn.execute(f"INSERT INTO virtual_index VALUES ({placeholders})", values) # <-- This line should insert the row
         return conn
+
+    def normalize(self, score_matrix: np.ndarray) -> np.ndarray:
+        """
+        Normalize the score matrix using the DynamicNormalizer.
+
+        Args:
+            score_matrix: 2D NumPy array of shape [documents x metrics].
+
+        Returns:
+            np.ndarray: Normalized score matrix.
+        """
+        logger.debug(f"Normalizing score matrix with shape {score_matrix.shape}")
+        return self.normalizer.normalize(score_matrix)
+
+    def prepare(self, score_matrix: np.ndarray, sql_query: str) -> None:
+        """
+        Public entry point to prepare the ZeroModel with data and task in one step.
+
+        This function handles updating the normalizer with the new data's range,
+        normalizing the data, loading it into DuckDB, setting the SQL task,
+        analyzing the query based on the loaded data, and applying the spatial
+        organization. It uses the metric_names provided during ZeroModel initialization.
+
+        Args:
+            score_matrix: A 2D NumPy array of shape [documents x metrics]
+                        containing the raw score data. It will be normalized in-place.
+                        The number of columns (metrics) must match the length of
+                        the metric_names list provided during ZeroModel initialization.
+            sql_query: A string containing the SQL query. This query MUST operate
+                    on a table named 'virtual_index' and should reference the
+                    column names provided in self.metric_names (set during __init__).
+                    Example: "SELECT * FROM virtual_index ORDER BY metric_a DESC"
+
+        Raises:
+            ValueError: If inputs are invalid (None, wrong shapes, mismatched dimensions).
+            Exception: If there's an error during any preparation step.
+        """
+        logger.info(f"Preparing ZeroModel with data shape {score_matrix.shape} and query: '{sql_query}'")
+        metric_names = self.metric_names # Use the instance's metric names
+
+        # --- Input Validation ---
+        if score_matrix is None:
+            error_msg = "score_matrix cannot be None."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        if score_matrix.ndim != 2:
+            error_msg = f"score_matrix must be 2D, got shape {score_matrix.shape}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        # Check if the number of columns in score_matrix matches the initialized metric count
+        if score_matrix.shape[1] != len(metric_names):
+            error_msg = (f"Number of columns in score_matrix ({score_matrix.shape[1]}) must match "
+                        f"the number of metrics initialized ({len(metric_names)}).")
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        if not sql_query or not isinstance(sql_query, str):
+            error_msg = "sql_query must be a non-empty string."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        # --- End Input Validation ---
+
+        # --- 1. Dynamic Normalization ---
+        try:
+            logger.debug("Updating DynamicNormalizer with new data ranges.")
+            # Update the normalizer's internal min/max based on this batch
+            self.normalizer.update(score_matrix)
+            logger.debug("Normalizer updated. Applying normalization to the data.")
+            # Normalize the score_matrix using the (potentially updated) min/max values
+            score_matrix = self.normalizer.normalize(score_matrix)
+            logger.debug("Data normalized successfully.")
+        except Exception as e:
+            logger.error(f"Failed during normalization step: {e}")
+            raise Exception(f"Error during data normalization: {e}") from e
+        # --- End Dynamic Normalization ---
+
+        # --- 2. Ensure DuckDB table schema matches self.metric_names ---
+        # Check if the DuckDB table schema matches the expected metric names.
+        # If not, recreate the table. This handles potential schema drift or initial setup.
+        try:
+            current_schema_cursor = self.duckdb_conn.execute("PRAGMA table_info(virtual_index)")
+            current_columns_info = current_schema_cursor.fetchall()
+            # Expected columns based on instance metric_names: row_id, metric1, metric2, ...
+            expected_columns = ["row_id"] + list(metric_names)
+            current_column_names = [col_info[1] for col_info in current_columns_info] # col_info[1] is name
+
+            if current_column_names != expected_columns:
+                logger.debug(f"DuckDB schema mismatch. Expected: {expected_columns}, Found: {current_column_names}. Recreating virtual_index table.")
+                self.duckdb_conn.execute("DROP TABLE IF EXISTS virtual_index")
+                columns_def = ", ".join([f'"{col}" FLOAT' for col in metric_names])
+                self.duckdb_conn.execute(f"CREATE TABLE virtual_index (row_id INTEGER, {columns_def})")
+                logger.debug(f"Recreated virtual_index table with schema: {expected_columns}")
+            else:
+                logger.debug("DuckDB virtual_index schema matches self.metric_names.")
+        except Exception as e:
+            logger.error(f"Error checking or recreating DuckDB schema: {e}")
+            raise Exception(f"Failed to ensure DuckDB schema: {e}") from e
+        # --- End Schema Check ---
+
+        # --- 3. Load NORMALIZED data into DuckDB ---
+        logger.debug("Loading NORMALIZED score_matrix data into DuckDB virtual_index table.")
+        try:
+            # Clear any existing data in the table to ensure a clean state for this preparation
+            self.duckdb_conn.execute("DELETE FROM virtual_index")
+
+            # Prepare the SQL INSERT statement using the instance's metric names
+            metric_columns_str = ", ".join([f'"{name}"' for name in metric_names])
+            placeholders_str = ", ".join(["?"] * len(metric_names))
+            insert_sql = f"INSERT INTO virtual_index (row_id, {metric_columns_str}) VALUES (?, {placeholders_str})"
+
+            # Insert the NORMALIZED data row by row
+            # Consider using executemany for potentially better performance on large datasets
+            for row_id, row_data in enumerate(score_matrix):
+                self.duckdb_conn.execute(insert_sql, [row_id] + row_data.tolist())
+
+            logger.debug(f"Successfully loaded {score_matrix.shape[0]} normalized rows into DuckDB.")
+        except Exception as e:
+            logger.error(f"Failed to load NORMALIZED data into DuckDB: {e}")
+            raise Exception(f"Error loading data into DuckDB: {e}") from e
+        # --- End Data Loading ---
+
+        # --- 4. Set SQL Task ---
+        logger.debug("Setting SQL task.")
+        try:
+            # This will call _analyze_query.
+            # Because we just loaded the data, the analysis should work correctly on the
+            # loaded, normalized data, determining the correct doc_order and metric_order.
+            self._set_sql_task(sql_query)
+            logger.debug("SQL task set successfully.")
+        except Exception as e:
+            logger.error(f"Failed to set SQL task: {e}")
+            raise Exception(f"Error setting SQL task: {e}") from e
+        # --- End Set Task ---
+
+        # --- 5. Apply Spatial Organization ---
+        logger.debug("Applying spatial organization based on SQL analysis.")
+        try:
+            # After set_sql_task, self.task_config should contain the analysis results.
+            if self.task_config and "analysis" in self.task_config:
+                analysis = self.task_config["analysis"]
+                # Apply the organization logic (sorting documents/metrics) using the
+                # analysis results and the NORMALIZED score_matrix.
+                # This populates self.sorted_matrix, self.doc_order, self.metric_order.
+                self.sorted_matrix, self.metric_order, self.doc_order = self._apply_sql_organization(
+                    score_matrix, # Pass the normalized matrix that was loaded into DuckDB
+                    analysis
+                )
+                logger.debug("Spatial organization applied successfully.")
+            else:
+                error_msg = "Task configuration or analysis missing after set_sql_task. This indicates a problem with the task setup or analysis phase."
+                logger.error(error_msg)
+                raise Exception(error_msg)
+        except Exception as e:
+            logger.error(f"Failed to apply spatial organization: {e}")
+            raise Exception(f"Error applying spatial organization: {e}") from e
+        # --- End Apply Organization ---
+
+        logger.info("ZeroModel preparation complete. Ready for encode/get_decision/get_critical_tile/etc.")
+
 
     def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
         """
@@ -98,12 +258,12 @@ class ZeroModel:
                 self.duckdb_conn.execute("DELETE FROM virtual_index")
 
                 # Insert test data: Row i highlights metric i
-                insert_sql = f"INSERT INTO virtual_index VALUES (?, {', '.join(['?'] * metric_count)})"
-                for i in range(metric_count):
-                    # Create a row with 1.0 in the i-th metric column, 0.1 elsewhere
-                    row_data = [0.1] * metric_count
-                    row_data[i] = 1.0  # Highlight this metric
-                    self.duckdb_conn.execute(insert_sql, [i] + row_data)  # row_id = i
+                # In prepare
+                data_for_db = [(i, *row) for i, row in enumerate(metric_count)]
+                self.duckdb_conn.executemany(
+                    "INSERT INTO virtual_index VALUES (?, " + ", ".join(["?"]*len(self.metric_names)) + ")",
+                    data_for_db
+                )
 
                 # Execute the user's query against this test data
                 # We only care about the order of rows returned, which reflects the ORDER BY logic
@@ -248,6 +408,7 @@ class ZeroModel:
         )
         return final_sorted_matrix, np.array(valid_metric_order), doc_order
 
+    @DeprecationWarning
     def set_sql_task(self, sql_query: str):
         """
         Set task using SQL query for spatial organization.
@@ -267,6 +428,28 @@ class ZeroModel:
         self.task_config = {"sql_query": sql_query, "analysis": analysis}
         logger.debug(f"SQL task set. Analysis: {analysis}")
 
+
+    def _set_sql_task(self, sql_query: str):
+        """
+        Set task using SQL query for spatial organization.
+
+        Args:
+            sql_query: SQL query defining the task (e.g., sorting criteria).
+                       Example: "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC"
+
+        Raises:
+            ValueError: If the SQL query is invalid or cannot be analyzed.
+        """
+        logger.info(f"Setting SQL task: {sql_query}")
+        # Analyze query to determine spatial organization
+        analysis = self._analyze_query(sql_query)
+        # Store task configuration
+        self.task = "sql_task"
+        self.task_config = {"sql_query": sql_query, "analysis": analysis}
+        logger.debug(f"SQL task set. Analysis: {analysis}")
+
+
+    @DeprecationWarning
     def process(self, score_matrix: np.ndarray) -> None:
         """
         Process a score matrix to prepare for encoding.
@@ -507,23 +690,12 @@ class ZeroModel:
         width = (n_metrics + 2) // 3
         logger.debug(f"Calculated VPM width: {width} pixels")
 
-        # Create image array (ensure correct dtype)
-        img = np.zeros((n_docs, width, 3), dtype=np.uint8)
-        logger.debug(f"Created VPM image array of shape {img.shape}")
-
-        # Fill pixels with normalized scores (0-255)
-        # Assuming self.sorted_matrix values are already in [0, 1] range.
-        # If not, normalization should happen before this step (e.g., in process or via DynamicNormalizer)
-        for i in range(n_docs):
-            for j in range(n_metrics):
-                pixel_x = j // 3
-                channel = j % 3
-                if pixel_x < width:  # Should always be true given width calculation
-                    # Clamp to [0, 1] before converting to [0, 255] to be safe
-                    normalized_value = np.clip(self.sorted_matrix[i, j], 0.0, 1.0)
-                    img[i, pixel_x, channel] = int(normalized_value * 255)
-        logger.info(f"VPM encoded successfully. Shape: {img.shape}")
-        return img
+        # Pad to multiple of 3
+        padded = np.pad(self.sorted_matrix, ((0,0), (0, (3 - n_metrics % 3) % 3)))
+        
+        # Reshape directly to image format
+        img = padded.reshape(n_docs, -1, 3)
+        return (img * 255).astype(np.uint8)
 
     def get_critical_tile(self, tile_size: int = 3) -> bytes:
         """

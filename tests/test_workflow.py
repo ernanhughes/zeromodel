@@ -14,11 +14,7 @@ def test_complete_zeromodel_workflow():
     # 2. Process with zeromodel
     zeromodel = ZeroModel(metric_names)
     # Set task
-    zeromodel.set_sql_task(
-        "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC"
-    )
-    # MUST CALL PROCESS - this is the key fix
-    zeromodel.process(score_matrix)  # <-- Add this line
+    zeromodel.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
 
     # 3. Encode as visual policy map
     vpm = zeromodel.encode()

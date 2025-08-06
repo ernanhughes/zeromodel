@@ -13,11 +13,11 @@ from typing import List, Tuple, Dict, Any, Optional
 import numpy as np
 
 # Import the core ZeroModel
+# Make sure the path is correct based on your package structure
 from .core import ZeroModel
 
-# Import the package logger
-logger = logging.getLogger(__name__) # This will be 'zeromodel.hierarchical'
-logger.setLevel(logging.DEBUG)  # Set to DEBUG for detailed output
+# Create a logger for this module
+logger = logging.getLogger(__name__)
 
 class HierarchicalVPM:
     """
@@ -81,12 +81,12 @@ class HierarchicalVPM:
 
     def process(self, score_matrix: np.ndarray, task: str):
         """
-        Process score matrix into hierarchical visual policy maps.
+        Process score matrix into hierarchical visual policy maps using the new prepare() method.
 
         Args:
             score_matrix: 2D array of shape [documents × metrics].
             task: SQL query defining the task.
-            
+
         Raises:
             ValueError: If inputs are invalid or processing fails.
         """
@@ -101,7 +101,8 @@ class HierarchicalVPM:
             raise ValueError(error_msg)
         if not task:
              logger.warning("Task string is empty. Proceeding with empty task.")
-             task = "SELECT * FROM virtual_index" # Default/fallback task?
+             # Consider if an empty task is valid or should raise an error
+             # For now, let ZeroModel.prepare handle it. 
 
         # Update metadata
         self.metadata["task"] = task
@@ -113,21 +114,25 @@ class HierarchicalVPM:
         self.levels = []
         logger.debug("Cleared existing levels.")
 
-        # --- Level Creation ---
+        # --- Level Creation using prepare() ---
         # Create ZeroModel instance for the base (highest detail) level
         logger.debug("Creating base ZeroModel instance.")
         base_zeromodel = ZeroModel(self.metric_names, precision=self.precision)
-        # Set task
-        base_zeromodel.set_sql_task(task)
-        # Process the base data
-        base_zeromodel.process(score_matrix)
-        logger.debug("Base ZeroModel processed data.")
+        
+        # --- Use prepare() instead of set_sql_task() + process() ---
+        # Prepare the base level ZeroModel with data and task in one step
+        try:
+            base_zeromodel.prepare(score_matrix, task) # <-- CHANGED HERE
+            logger.debug("Base ZeroModel prepared with data and task.")
+        except Exception as e:
+            logger.error(f"Failed to prepare base ZeroModel: {e}")
+            raise ValueError(f"Error preparing base ZeroModel level: {e}") from e
+        # --- End of change ---
 
         # Create base level (Level N-1: Full detail, where N is num_levels)
         base_level_index = self.num_levels - 1
-        base_level = self._create_base_level(base_zeromodel, score_matrix)
+        base_level = self._create_base_level(base_zeromodel, score_matrix) # Pass original data for metadata if needed
         # Store level data. Levels list will be ordered [Level 0, Level 1, ..., Level N-1]
-        # We insert higher levels at the beginning.
         self.levels.append(base_level) 
         logger.debug(f"Base level ({base_level_index}) created and added.")
 
@@ -149,8 +154,8 @@ class HierarchicalVPM:
             logger.debug(f"Clustered data shape: {clustered_data.shape}")
 
             # Create the level data structure
-            # Pass the base task config I to potentially influence higher level sorting
-            level_data = self._create_level(clustered_data, level_index, base_zeromodel.task_config)
+            # Pass the clustered data and the base task
+            level_data = self._create_level(clustered_data, task, level_index) # <-- CHANGED: Pass task, not base_task_config
             # Insert at the beginning of the list to maintain order [L0, L1, L2, ...]
             self.levels.insert(0, level_data) 
             logger.debug(f"Level {level_index} created and added.")
@@ -160,12 +165,13 @@ class HierarchicalVPM:
 
         logger.info("Hierarchical VPM processing complete.")
 
+
     def _cluster_data(self, data: np.ndarray, num_docs: int, num_metrics: int) -> np.ndarray:
         """
         Cluster data for higher-level (more abstract) views.
 
         Args:
-            data: Input data matrix of shape [docs, metrics].
+             Input data matrix of shape [docs, metrics].
             num_docs: Target number of document clusters.
             num_metrics: Target number of metric clusters.
 
@@ -249,164 +255,91 @@ class HierarchicalVPM:
         return final_clustered_data
 
     def _create_base_level(self, zeromodel: ZeroModel, score_matrix: np.ndarray) -> Dict[str, Any]:
-        """Create the base level (highest detail)."""
+        """Create the base level (highest detail) using the prepared ZeroModel."""
         level_index = self.num_levels - 1
         logger.debug(f"Creating base level data structure (Level {level_index}).")
+        # The zeromodel passed in should already be prepared.
+        # We can now safely call encode(), get_metadata() etc.
         try:
-            vpm_image = zeromodel.encode()
+            vpm_image = zeromodel.encode() # Uses zeromodel.sorted_matrix
             logger.debug(f"Encoded base level VPM image of shape {vpm_image.shape}.")
         except Exception as e:
             logger.error(f"Failed to encode VPM for base level: {e}")
-            raise # Re-raise or handle?
+            # Depending on requirements, re-raise or handle?
+            raise # Re-raise 
 
         base_level_data = {
             "level": level_index,
             "type": "base",
-            "zeromodel": zeromodel,
+            "zeromodel": zeromodel, # Store the prepared ZeroModel instance
             "vpm": vpm_image,
             "metadata": {
-                "documents": score_matrix.shape[0],
+                "documents": score_matrix.shape[0], # Use original shape for metadata
                 "metrics": score_matrix.shape[1],
                 "sorted_docs": zeromodel.doc_order.tolist() if zeromodel.doc_order is not None else [],
-                "sorted_metrics": zeromodel.metric_order.tolist() if zeromodel.metric_order is not None else []
+                "sorted_metrics": zeromodel.metric_order.tolist() if zeromodel.metric_order is not None else [],
+                # Add wavelet info if applicable
+                # "wavelet_level": 0 
             }
         }
         logger.debug(f"Base level data structure created.")
         return base_level_data
 
     def _create_level(self,
-                      clustered_data: np.ndarray,
-                      level_index: int, # Absolute level index (0, 1, 2, ...)
-                      base_task_config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Create a higher-level (more abstract) view."""
+                      approx_data: np.ndarray, # Renamed from clustered_data for clarity
+                      task: str,              # Pass the task string
+                      level_index: int) -> Dict[str, Any]: # Absolute level index (0, 1, 2, ...)
+        """Create a higher-level (more abstract) view using prepare()."""
         logger.debug(f"Creating level data structure (Level {level_index}).")
-        num_metrics_in_clustered_data = clustered_data.shape[1]
+        num_metrics_in_clustered_data = approx_data.shape[1]
         # Create a simplified metric set for this level
         level_metrics = [
             f"cluster_{i}" for i in range(num_metrics_in_clustered_data)
         ]
         logger.debug(f"Generated level metric names: {level_metrics}")
 
+        # --- Create and Prepare ZeroModel for this level ---
         # Process with simplified metrics using a new ZeroModel instance
         level_zeromodel = ZeroModel(level_metrics, precision=self.precision)
         logger.debug("Created ZeroModel instance for this level.")
 
-        # --- Apply Task Configuration ---
-        # Try to apply the sorting logic from the base level task
-        level_sql_task = f"SELECT * FROM virtual_index ORDER BY {level_metrics[0]} DESC" # Default fallback
-        if base_task_config and 'analysis' in base_task_config and 'metric_order' in base_task_config['analysis']:
-            try:
-                base_metric_order = base_task_config['analysis']['metric_order']
-                original_query = base_task_config['analysis']['original_query']
-                logger.debug(f"Attempting to adapt base task query '{original_query}' for level {level_index}.")
-
-                # Goal: Reorder level_metrics based on base_metric_order and create a new ORDER BY
-                # However, level_metrics are clusters, not the original metrics.
-                # A simple approach: Assume the importance order of original metrics
-                # translates to the order of clusters they map to.
-                # This is a simplification. A more robust way would track which original
-                # metrics contribute to each cluster during _cluster_data.
-
-                # For now, let's try to map the first few original metric indices
-                # to the level metric indices, assuming a direct mapping based on order
-                # or the number of original metrics per cluster (which we don't track easily).
-                
-                # Simplistic approach: Use the order of level_metrics as determined by
-                # the base clustering, which should roughly correspond to the base order.
-                # So, we can try to reorder level_metrics based on the *first* original
-                # metric index that contributed to each cluster. This requires tracking
-                # that mapping, which the current _cluster_data doesn't do cleanly.
-                
-                # Fallback/simple heuristic:
-                # If the base task sorted by metric index 2 first, and that metric
-                # ended up in cluster_1 of the *previous* level's clustering,
-                # then for *this* level, we might want to sort by cluster_1.
-                # But without explicit tracking, this is hard.
-                
-                # Let's stick to the base task's ORDER BY clause and attempt
-                # naive substitution if metric names match simple patterns,
-                # otherwise fall back.
-                
-                # Attempt naive substitution (likely to fail if metric names are complex)
-                # This part of the original logic was flawed. Let's try a better fallback.
-                # Just use the base query as a template and replace known original names
-                # with corresponding cluster names if possible.
-                
-                # A better approach for future: Modify _cluster_data to return mapping info.
-                
-                # For now, log and use a simple default or the base query if it can be adapted easily.
-                # Let's parse the base query's ORDER BY and see if we can adapt it.
-                
-                # Re-use the parsing logic from ZeroModel._analyze_query conceptually
-                import re
-                order_by_match = re.search(r"ORDER\s+BY\s+(.*?)(?=\s+(?:LIMIT|OFFSET)\s+|\s*$)", original_query, re.IGNORECASE)
-                if order_by_match:
-                    order_clause = order_by_match.group(1).strip()
-                    if order_clause:
-                         # We need to map original metric names/indices to cluster names.
-                         # This is complex without explicit mapping. Let's simplify:
-                         # Assume the *order* of level_metrics corresponds to the *order*
-                         # of importance derived from the base level.
-                         # So, if base reordered metrics [2, 0, 1, 3...], the first cluster
-                         # (cluster_0) conceptually represents the most important group.
-                         # Therefore, we should sort by cluster_0 first.
-                         
-                         # Get the base metric order list
-                         base_order_list = base_task_config['analysis']['metric_order']
-                         
-                         # Create a list of cluster names in the order of base metric importance
-                         # We assume cluster_i roughly corresponds to the i-th group of original metrics
-                         # clustered together. This is a big assumption.
-                         # A safer bet is to just sort by the first cluster if the base sorted by its first metric.
-                         # Or, just use the default.
-                         
-                         # Let's try to find the first *valid* metric index from the base order
-                         # and see which cluster it would belong to if clustered from the original size.
-                         # This requires knowing the original number of metrics, which we might have:
-                         # score_matrix.shape[1] from process(), but it's not passed here.
-                         # This is getting too complex for the current structure.
-                         
-                         # --- Simpler Fallback ---
-                         # Just use the default task for higher levels for now.
-                         # Future improvement: Pass necessary mapping info from _cluster_data or process().
-                         logger.info("Could not reliably adapt base task ORDER BY for clustered level. Using default sorting by first cluster.")
-                         # level_sql_task = original_query # This would be incorrect without name mapping
-                         # Or try naive replacement if base metric names are in self.metric_names
-                         # and we know how many original metrics per cluster (we don't easily).
-                         # Abandoning complex adaptation for now.
-                         
-                else:
-                     logger.debug("Base task query had no ORDER BY. Using default for level.")
-                # Regardless of adaptation attempt, set the task
-                level_zeromodel.set_sql_task(level_sql_task) # Use potentially adapted or default query
-            except Exception as e:
-                 logger.warning(f"Failed to adapt base task for level {level_index}: {e}. Using default task.")
-                 level_zeromodel.set_sql_task(level_sql_task) # Ensure a task is set
-        else:
-            logger.debug("No base task config or analysis available. Using default task.")
-            level_zeromodel.set_sql_task(level_sql_task) # Use default
-
-        # Process the clustered data with the level's ZeroModel
-        level_zeromodel.process(clustered_data)
-        logger.debug("Processed clustered data with level ZeroModel.")
+        # --- Use prepare() for this level's ZeroModel ---
+        # Prepare the level's ZeroModel with its clustered data and the task
+        # The task might need adaptation (see notes below), but for now, pass it as is
+        # or use a default sorting strategy for clustered levels.
+        try:
+            # Option 1: Use the same task (might not be ideal for clustered data)
+            # level_zeromodel.prepare(approx_data, task) 
+            
+            # Option 2: Use a simple default task for higher levels (often better)
+            # E.g., sort by the first "cluster" metric which represents the aggregated importance
+            # of the original metrics that formed this cluster.
+            default_level_task = f"SELECT * FROM virtual_index ORDER BY {level_metrics[0]} DESC"
+            level_zeromodel.prepare(approx_data, default_level_task) # <-- CHANGED HERE
+            logger.debug(f"Prepared level {level_index} ZeroModel with default task: {default_level_task}")
+        except Exception as e:
+             logger.error(f"Failed to prepare ZeroModel for level {level_index}: {e}")
+             raise ValueError(f"Error preparing ZeroModel for level {level_index}: {e}") from e
+        # --- End of change ---
 
         try:
-            level_vpm = level_zeromodel.encode()
+            level_vpm = level_zeromodel.encode() # Uses level_zeromodel.sorted_matrix
             logger.debug(f"Encoded level {level_index} VPM image of shape {level_vpm.shape}.")
         except Exception as e:
             logger.error(f"Failed to encode VPM for level {level_index}: {e}")
-            raise
+            raise # Re-raise
 
         level_data = {
             "level": level_index,
-            "type": "clustered",
-            "zeromodel": level_zeromodel,
+            "type": "clustered", # Or "approximated"
+            "zeromodel": level_zeromodel, # Store the prepared ZeroModel instance
             "vpm": level_vpm,
             "metadata": {
-                "documents": clustered_data.shape[0],
-                "metrics": clustered_data.shape[1],
+                "documents": approx_data.shape[0],
+                "metrics": approx_data.shape[1],
                 "sorted_docs": level_zeromodel.doc_order.tolist() if level_zeromodel.doc_order is not None else [],
-                "sorted_metrics": level_zeromodel.metric_order.tolist() if level_zeromodel.metric_order is not None else []
+                "sorted_metrics": level_zeromodel.metric_order.tolist() if level_zeromodel.metric_order is not None else [],
+                # "wavelet_level": level_index # If wavelets are used
             }
         }
         logger.debug(f"Level {level_index} data structure created.")

@@ -8,7 +8,7 @@ from sklearn.metrics import accuracy_score
 
 import pytest
 
-@pytest.mark.skip(reason="Temporarily disabling this test")
+@pytest.mark.skip(reason="No nonlinearity yet")
 def test_xor_validation():
     """Full XOR validation comparing ZeroModel and traditional ML (SVM)"""
 
@@ -58,17 +58,14 @@ def test_xor_validation():
     zm_train = ZeroModel(metric_names, precision=16)
     # Use a better SQL query for XOR - this is critical!
     # The test data has 5 metrics: distance_from_center, coordinate_product, etc.
-    zm_train.set_sql_task("SELECT * FROM virtual_index ORDER BY coordinate_difference DESC")
-    
-    zm_train.process(norm_train) # <-- Add this line
+    zm_train.prepare(norm_train, "SELECT * FROM virtual_index ORDER BY coordinate_difference DESC")
 
     # 7. Predict on test samples using fresh ZeroModels
     y_pred_zeromi = []
     for point in norm_test:
         zm_point = ZeroModel(metric_names, precision=16)
-        zm_point.set_sql_task("SELECT * FROM virtual_index ORDER BY coordinate_difference DESC")
+        zm_point.prepare(point[None, :], "SELECT * FROM virtual_index ORDER BY coordinate_difference DESC")
         # MUST CALL PROCESS on the single point data
-        zm_point.process(point[None, :]) # <-- Add this line, ensure point is 2D
         _, rel = zm_point.get_decision()
         # Use a more appropriate threshold for XOR
         y_pred_zeromi.append(1 if rel > 0.3 else 0)
@@ -82,8 +79,7 @@ def test_xor_validation():
 
     # 8. Measure inference time
     zm_infer = ZeroModel(metric_names, precision=16)
-    zm_infer.set_sql_task("SELECT * FROM virtual_index ORDER BY coordinate_difference DESC")
-    zm_infer.process(norm_test)
+    zm_infer.prepare(norm_test, "SELECT * FROM virtual_index ORDER BY coordinate_difference DESC")
 
     start = time.time()
     for _ in range(1000):
@@ -100,9 +96,9 @@ def test_xor_validation():
     assert zm_time < svm_time * 0.5  # At least 2x faster
 
     # # 9. Compare memory usage
-    # zm_size = zm_infer.encode().nbytes
-    # # svm_size = 0 sum(sys.getsizeof(getattr(svm, attr)) for attr in dir(svm) if not attr.startswith('__'))
+    zm_size = zm_infer.encode().nbytes
+    svm_size = sum(sys.getsizeof(getattr(svm, attr)) for attr in dir(svm) if not attr.startswith('__'))
 
-    # print(f"🧠 ZeroModel Memory: {zm_size} bytes")
-    # print(f"🧠 SVM Memory:       {svm_size} bytes")
-    # assert zm_size < svm_size * 0.1  # At least 10x smaller
+    print(f"🧠 ZeroModel Memory: {zm_size} bytes")
+    print(f"🧠 SVM Memory:       {svm_size} bytes")
+    assert zm_size < svm_size * 0.1  # At least 10x smaller

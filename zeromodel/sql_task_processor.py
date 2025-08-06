@@ -133,6 +133,60 @@ class SQLTaskProcessor:
             
         return sql_query
     
+
+    def _analyze_query_weights(self, sql_query: str) -> Dict[str, float]:
+        """Analyze SQL query to determine spatial organization weights"""
+        order_by = self._extract_order_by(sql_query)
+        where_cols = self._extract_where_columns(sql_query)
+        select_cols = self._extract_select_columns(sql_query)
+        
+        # Store analysis results for later reference
+        self.last_analysis = {
+            "order_by_columns": order_by,
+            "where_columns": where_cols,
+            "select_columns": select_cols,
+            "original_query": sql_query
+        }
+        
+        return self._calculate_column_weights(order_by, where_cols, select_cols)
+
+    def _calculate_column_weights(self, 
+                                order_by: List[Tuple[str, str]], 
+                                where_cols: List[str],
+                                select_cols: List[str]) -> Dict[str, float]:
+        """
+        Calculate column importance weights based on query structure.
+        
+        Importance hierarchy:
+        1. ORDER BY columns (highest priority)
+        2. WHERE clause columns (medium priority)
+        3. SELECT columns (baseline priority)
+        """
+        weights = {col: 0.0 for col in self.metric_names}
+        
+        # ORDER BY columns get highest priority
+        for i, (col, direction) in enumerate(order_by):
+            # Weight decreases with position in ORDER BY
+            weights[col] = 0.7 * (1.0 - i * 0.1)
+        
+        # WHERE clause columns get medium priority
+        for col in where_cols:
+            if col in weights:  # Ensure column exists
+                weights[col] = max(weights[col], 0.3)
+        
+        # SELECT columns get baseline priority
+        for col in select_cols:
+            if col in weights:  # Ensure column exists
+                weights[col] = max(weights[col], 0.1)
+        
+        # Normalize weights to sum to 1.0
+        total = sum(weights.values())
+        if total > 0:
+            for col in weights:
+                weights[col] = weights[col] / total
+        
+        return weights
+
     def _extract_order_by(self, sql_query: str) -> List[Tuple[str, str]]:
         """Extract ORDER BY columns and directions"""
         order_by_match = re.search(r"ORDER BY\s+([^(;]+)", sql_query, re.IGNORECASE)
@@ -323,7 +377,7 @@ class SQLTaskProcessor:
         return cls(column_names=data["column_names"])
 
 
-class HierarchicalSQLTaskProcessor:
+class HierarchicalSQLTaskProcessor(SQLTaskProcessor):
     """
     Process hierarchical SQL queries to determine spatial organization at each level.
     
@@ -331,15 +385,6 @@ class HierarchicalSQLTaskProcessor:
     - Level 0 (Strategic): Broad categorization (e.g., document types)
     - Level 1 (Tactical): Intermediate organization (e.g., topics/themes)
     - Level 2 (Operational): Detailed sorting (e.g., specific attributes)
-    
-    Example usage:
-        processor = HierarchicalSQLTaskProcessor(column_names)
-        task = processor.create_task({
-            0: "SELECT * FROM data ORDER BY document_type ASC",
-            1: "SELECT * FROM data ORDER BY topic DESC",
-            2: "SELECT * FROM data ORDER BY uncertainty DESC, size ASC"
-        })
-        zeromodel.process_with_task(score_matrix, task)
     """
     
     def __init__(self, column_names: List[str], num_levels: int = 3):
@@ -350,9 +395,8 @@ class HierarchicalSQLTaskProcessor:
             column_names: List of column names from your data source
             num_levels: Number of hierarchical levels (default: 3)
         """
-        self.column_names = column_names
+        super().__init__(column_names)
         self.num_levels = num_levels
-        self.virtual_conn = self._create_virtual_table(len(column_names))
         self.level_processors = {}
         
         # Create processors for each level
@@ -431,4 +475,4 @@ class HierarchicalSQLTaskProcessor:
                     "doc_order": np.arange(current_data.shape[0])
                 })
         
-        return level_results
+        return level_results    

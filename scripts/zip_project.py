@@ -1,7 +1,7 @@
 import os
 import zipfile
 
-EXCLUDE_DIRS = {"venv", "__pycache__", ".pytest_cache", ".git", ".github", "tests", "docs", "examples", "build", "dist"}
+EXCLUDE_DIRS = {"venv", "__pycache__", ".pytest_cache", ".git", ".github", "docs", "examples", "build", "dist"}
 EXCLUDE_SUFFIXES = (".pyc", ".egg-info", ".zip", ".tar.gz", ".whl", ".pyo", ".pyd", ".png")
 EXCLUDE_FILES = (".DS_Store", "Thumbs.db", "README.md", "setup.py", "requirements.txt", "LICENSE")
 
@@ -38,4 +38,5 @@ def zip_project_directory(source_dir: str, output_filename: str = "zeromodel.zip
 if __name__ == "__main__":
     # To zip everything: zip_project_directory(".")
     # To zip only a subfolder (e.g. "zeromodel"): zip_project_directory(".", subfolder="zeromodel")
-    zip_project_directory(".", subfolder="zeromodel")
+    zip_project_directory(".")
+    # zip_project_directory(".", subfolder="zeromodel")

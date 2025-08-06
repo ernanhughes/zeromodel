@@ -5,6 +5,7 @@ from .core import HierarchicalVPM, ZeroModel
 from .normalizer import DynamicNormalizer
 from .sorter import TaskSorter
 from .transform import get_critical_tile, transform_vpm
+from .sql_task_processor import SQLTaskProcessor, HierarchicalSQLTaskProcessor
 
 __version__ = "1.0.4"
 __all__ = [
@@ -16,7 +17,9 @@ __all__ = [
     'get_critical_tile',
     'load_config',
     'get_config_value',
-    'validate_config'
+    'validate_config',
+    'SQLTaskProcessor',
+    'HierarchicalSQLTaskProcessor'
 ]
 
 __version__ = "1.0.0"

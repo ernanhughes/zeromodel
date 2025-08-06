@@ -140,7 +140,8 @@ class ZeroModel:
         """
         # 1. Apply metric ordering from SQL analysis
         metric_order = np.array(analysis["metric_order"])
-        
+        valid_metric_order = metric_order[metric_order < data.shape[1]]
+
         # 2. Apply document ordering - for now we'll use a simple approach
         # In a full implementation, we'd run the SQL against a virtual document table
         # For this example, we'll sort documents by the first metric
@@ -150,7 +151,7 @@ class ZeroModel:
         #    - First reorder documents (rows)
         #    - Then reorder metrics (columns)
         sorted_matrix = data[doc_order, :]
-        sorted_matrix = sorted_matrix[:, metric_order]
+        sorted_matrix = sorted_matrix[:, valid_metric_order]
         
         return sorted_matrix, metric_order, doc_order
     
@@ -331,18 +332,14 @@ class HierarchicalVPM:
         # Create higher levels (Level 1, Level 0)
         current_data = score_matrix
         for level in range(1, self.num_levels):
-            # Reduce resolution by zoom factor
-            num_docs = max(5, current_data.shape[0] // self.zoom_factor)
-            num_metrics = max(3, current_data.shape[1] // self.zoom_factor)
-            
-            # Generate clustered data for this level
+            num_docs = max(1, int(np.ceil(current_data.shape[0] / self.zoom_factor)))
+            num_metrics = max(1, int(np.ceil(current_data.shape[1] / self.zoom_factor)))
+
             clustered_data = self._cluster_data(current_data, num_docs, num_metrics)
-            
-            # Create level with same task configuration
+
             level_data = self._create_level(clustered_data, level, zeromodel.task_config)
-            self.levels.insert(0, level_data)  # Insert at beginning (Level 0 first)
-            
-            # Use this level as basis for next higher level
+            self.levels.insert(0, level_data)
+
             current_data = clustered_data
     
     def _cluster_data(self, data: np.ndarray, num_docs: int, num_metrics: int) -> np.ndarray:

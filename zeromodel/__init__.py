@@ -19,12 +19,3 @@ __all__ = [
     "EdgeProtocol",
 ]
 
-__version__ = "1.0.0"
-__all__ = [
-    "ZeroModel",
-    "HierarchicalVPM",
-    "DynamicNormalizer",
-    "transform_vpm",
-    "get_critical_tile",
-    "EdgeProtocol",
-]

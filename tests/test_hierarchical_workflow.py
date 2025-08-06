@@ -50,7 +50,7 @@ def test_hierarchical_vpm_workflow():
     
     # 2. Create hierarchical VPM
     hvpm = HierarchicalVPM(metric_names=metric_names)
-    hvpm.process(score_matrix, "Find uncertain large documents")
+    hvpm.process(score_matrix, "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
     
     # Verify hierarchical structure
     assert len(hvpm.levels) == 3

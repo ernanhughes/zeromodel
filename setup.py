@@ -45,6 +45,7 @@ setup(
             "scikit-learn",
             "imageio[ffmpeg]>=2.9.0",
             "tensorflow>=2.4.0",
+            "seaborn>=0.11.0",
         ],
     },
     entry_points={

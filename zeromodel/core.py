@@ -1,503 +1,730 @@
+# zeromodel/core.py
 """
-Zero-Model Intelligence Encoder/Decoder with DuckDB SQL Processing
+Zero-Model Intelligence Encoder/Decoder with DuckDB SQL Processing.
+
 This module provides the core functionality for transforming high-dimensional
 policy evaluation data into spatially-optimized visual maps where the
 intelligence is in the data structure itself, not in processing.
 """
 
-from typing import Any, Dict, List, Tuple
+import logging
+import re
+from typing import List, Tuple, Dict, Any, Optional
 
 import duckdb
 import numpy as np
 
+# Import the package logger
+logger = logging.getLogger(__name__)  # This will be 'zeromodel.core'
+logger.setLevel(logging.DEBUG)  # Set to DEBUG for detailed output
 
 class ZeroModel:
     """
     Zero-Model Intelligence encoder/decoder with DuckDB SQL processing.
-    
+
     This class transforms high-dimensional policy evaluation data into
     spatially-optimized visual maps where:
     - Position = Importance (top-left = most relevant)
     - Color = Value (darker = higher priority)
     - Structure = Task logic
-    
+
     The intelligence is in the data structure itself, not in processing.
     """
-    
+
     def __init__(self, metric_names: List[str], precision: int = 8):
         """
         Initialize ZeroModel encoder with DuckDB SQL processing.
-        
+
         Args:
-            metric_names: Names of all metrics being tracked
-            precision: Bit precision for encoding (4-16)
+            metric_names: Names of all metrics being tracked.
+            precision: Bit precision for encoding (4-16).
+
+        Raises:
+            ValueError: If metric_names is empty or precision is invalid.
         """
-        self.metric_names = metric_names
+        logger.debug(
+            f"Initializing ZeroModel with metrics: {metric_names}, precision: {precision}"
+        )
+        if not metric_names:
+            error_msg = "metric_names list cannot be empty."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        self.metric_names = list(metric_names)  # Ensure it's a list
         self.precision = max(4, min(16, precision))
-        self.sorted_matrix = None
-        self.doc_order = None
-        self.metric_order = None
-        self.task = "default"
-        self.task_config = None
-        
+        self.sorted_matrix: Optional[np.ndarray] = None
+        self.doc_order: Optional[np.ndarray] = None
+        self.metric_order: Optional[np.ndarray] = None
+        self.task: str = "default"
+        self.task_config: Optional[Dict[str, Any]] = None
         # Initialize DuckDB connection
-        self.duckdb_conn = self._init_duckdb()
-    
+        self.duckdb_conn: duckdb.DuckDBPyConnection = self._init_duckdb()
+        logger.info(f"ZeroModel initialized with {len(self.metric_names)} metrics.")
+
+    # --- Inside the ZeroModel class definition ---
+
+    # 1. Modify _init_duckdb to just create the table structure
     def _init_duckdb(self) -> duckdb.DuckDBPyConnection:
-        """Initialize DuckDB connection with virtual index tables"""
-        conn = duckdb.connect(database=':memory:')
-        
-        # Create virtual index table for metric ordering analysis
+        """Initialize DuckDB connection with virtual index table structure."""
+        logger.debug("Initializing DuckDB connection for ZeroModel.")
+        conn = duckdb.connect(database=":memory:")
+        # Create virtual index table schema for metric ordering analysis
+        # Do NOT pre-populate with [0, 1, 2, ...] here.
         columns = ", ".join([f'"{col}" FLOAT' for col in self.metric_names])
         conn.execute(f"CREATE TABLE virtual_index (row_id INTEGER, {columns})")
-        
-        # Insert a single row with index values (0, 1, 2, ...)
-        values = [0] + list(range(len(self.metric_names)))
-        placeholders = ", ".join(["?"] * (len(self.metric_names) + 1))
-        conn.execute(f"INSERT INTO virtual_index VALUES ({placeholders})", values)
-        
+        logger.debug("DuckDB virtual_index table schema created.")
         return conn
-    
+
+    def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
+        """
+        Analyze SQL query using DuckDB to determine sorting orders.
+
+        This determines:
+        1. Metric Order: The sequence of columns based on ORDER BY.
+        2. Primary Sort Metric: The first metric used for row sorting.
+        """
+        logger.debug(f"Analyzing SQL query for spatial organization: {sql_query}")
+
+        # --- Metric Order Analysis (using a robust DuckDB method) ---
+        # Strategy: Insert test data into virtual_index such that running the
+        # user's query reveals the column order.
+        # We'll insert N rows, where N = number of metrics.
+        # Row i will have a high value (e.g., 1.0) in metric column i, and low/zero elsewhere.
+        # When the query (e.g., ORDER BY metric1 DESC, metric2 ASC) runs,
+        # the order of the returned row_ids will tell us the importance/sort order of columns.
+
+        metric_count = len(self.metric_names)
+        if metric_count == 0:
+            logger.warning("No metrics provided for analysis. Using default order.")
+            metric_order = []
+        else:
+            try:
+                # Clear any existing data in virtual_index for clean analysis
+                self.duckdb_conn.execute("DELETE FROM virtual_index")
+
+                # Insert test data: Row i highlights metric i
+                insert_sql = f"INSERT INTO virtual_index VALUES (?, {', '.join(['?'] * metric_count)})"
+                for i in range(metric_count):
+                    # Create a row with 1.0 in the i-th metric column, 0.1 elsewhere
+                    row_data = [0.1] * metric_count
+                    row_data[i] = 1.0  # Highlight this metric
+                    self.duckdb_conn.execute(insert_sql, [i] + row_data)  # row_id = i
+
+                # Execute the user's query against this test data
+                # We only care about the order of rows returned, which reflects the ORDER BY logic
+                result_cursor = self.duckdb_conn.execute(sql_query)
+                result_rows = result_cursor.fetchall()
+
+                # Extract the row_id sequence from the results (first column)
+                # This sequence indicates the order in which metrics (represented by rows)
+                # should be prioritized according to the ORDER BY clause.
+                returned_row_ids = [row[0] for row in result_rows]
+
+                # The order of row_ids IS the metric order.
+                metric_order = returned_row_ids
+
+                logger.debug(
+                    f"Metric order determined by DuckDB analysis: {metric_order}"
+                )
+
+                # Cleanup test data
+                self.duckdb_conn.execute("DELETE FROM virtual_index")
+
+            except Exception as e:
+                logger.error(f"Error during DuckDB-based metric order analysis: {e}")
+                # Fallback to default order (original sequence) if analysis fails
+                metric_order = list(range(metric_count))
+                logger.warning(f"Falling back to default metric order: {metric_order}")
+
+        # --- Primary Sort Metric Analysis (Simpler) ---
+        # Identify the first metric in the ORDER BY clause for document sorting.
+        # A simple regex can often work for this specific, limited purpose.
+        # It's less brittle than full parsing because we only need the FIRST metric name.
+        primary_sort_metric_index = None
+        primary_sort_metric_name = None
+        order_by_match = re.search(r"ORDER\s+BY\s+(\w+)", sql_query, re.IGNORECASE)
+        if order_by_match:
+            first_metric_in_order_by = order_by_match.group(1)
+            try:
+                primary_sort_metric_index = self.metric_names.index(
+                    first_metric_in_order_by
+                )
+                primary_sort_metric_name = first_metric_in_order_by
+                logger.debug(
+                    f"Primary sort metric identified: '{primary_sort_metric_name}' (index {primary_sort_metric_index})"
+                )
+            except ValueError:
+                logger.warning(
+                    f"Metric '{first_metric_in_order_by}' from ORDER BY not found in metric_names. Document sorting might be incorrect."
+                )
+        else:
+            logger.info(
+                "No ORDER BY clause found or first metric could not be parsed. Using first metric for document sorting."
+            )
+            if metric_count > 0:
+                primary_sort_metric_index = 0
+                primary_sort_metric_name = self.metric_names[0]
+
+        analysis_result = {
+            "metric_order": metric_order,
+            "primary_sort_metric_index": primary_sort_metric_index,
+            "primary_sort_metric_name": primary_sort_metric_name,
+            "original_query": sql_query,
+        }
+        logger.info(f"SQL query analysis complete: {analysis_result}")
+        return analysis_result
+
+    # 3. Revise _apply_sql_organization to use the analysis results correctly
+    def _apply_sql_organization(
+        self, data: np.ndarray, analysis: Dict[str, Any]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Apply spatial organization based on SQL query analysis results from DuckDB.
+
+        Args:
+            data: The input score matrix (normalized).
+            analysis: The result dictionary from `_analyze_query`.
+
+        Returns:
+            Tuple of (sorted_matrix, metric_order, doc_order)
+        """
+        logger.debug(f"Applying SQL-based organization. Data shape: {data.shape}")
+        metric_count = data.shape[1]
+
+        # --- 1. Apply Metric Ordering ---
+        raw_metric_order = analysis.get("metric_order", [])
+        # Ensure indices are valid
+        valid_metric_order = [
+            idx for idx in raw_metric_order if 0 <= idx < metric_count
+        ]
+        # Handle potential mismatch (e.g., analysis returned fewer indices)
+        if len(valid_metric_order) != metric_count:
+            logger.warning(
+                f"Analysis metric order ({valid_metric_order}) length mismatch. Appending remaining metrics."
+            )
+            remaining_indices = [
+                i for i in range(metric_count) if i not in valid_metric_order
+            ]
+            valid_metric_order.extend(remaining_indices)
+
+        if not valid_metric_order:
+            logger.info("No valid metric order from analysis. Using default order.")
+            valid_metric_order = list(range(metric_count))
+
+        logger.debug(f"Final validated metric order: {valid_metric_order}")
+        # Reorder columns (metrics)
+        sorted_matrix_by_metrics = data[:, valid_metric_order]
+
+        # --- 2. Apply Document Ordering ---
+        primary_sort_idx = analysis.get("primary_sort_metric_index")
+        doc_order = np.arange(data.shape[0])  # Default order
+
+        if primary_sort_idx is not None and 0 <= primary_sort_idx < metric_count:
+            # Map the primary sort index to the new column order
+            try:
+                # Find the new column index corresponding to the primary sort metric
+                new_column_index_for_primary_sort = valid_metric_order.index(
+                    primary_sort_idx
+                )
+                logger.debug(
+                    f"Sorting documents by metric index {primary_sort_idx} which is now column {new_column_index_for_primary_sort}"
+                )
+                # Sort rows (documents) by the value in this column (descending)
+                doc_order = np.argsort(
+                    sorted_matrix_by_metrics[:, new_column_index_for_primary_sort]
+                )[::-1]
+                logger.debug(
+                    f"Document order indices calculated: {doc_order[:10]}..."
+                )  # Log first 10
+            except ValueError:
+                logger.error(
+                    f"Failed to find primary sort metric index {primary_sort_idx} in reordered metric list. Using default doc order."
+                )
+        else:
+            logger.warning(
+                "Primary sort metric index invalid or not found. Using default document order."
+            )
+
+        # Reorder rows (documents)
+        final_sorted_matrix = sorted_matrix_by_metrics[doc_order, :]
+
+        logger.info(
+            f"SQL-based organization applied. Final matrix shape: {final_sorted_matrix.shape}"
+        )
+        return final_sorted_matrix, np.array(valid_metric_order), doc_order
+
     def set_sql_task(self, sql_query: str):
         """
         Set task using SQL query for spatial organization.
-        
+
         Args:
-            sql_query: SQL query defining the task
-            
-        Example:
-            model.set_sql_task("SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
+            sql_query: SQL query defining the task (e.g., sorting criteria).
+                       Example: "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC"
+
+        Raises:
+            ValueError: If the SQL query is invalid or cannot be analyzed.
         """
+        logger.info(f"Setting SQL task: {sql_query}")
         # Analyze query to determine spatial organization
         analysis = self._analyze_query(sql_query)
-        
         # Store task configuration
         self.task = "sql_task"
-        self.task_config = {
-            "sql_query": sql_query,
-            "analysis": analysis
-        }
-    
+        self.task_config = {"sql_query": sql_query, "analysis": analysis}
+        logger.debug(f"SQL task set. Analysis: {analysis}")
+
     def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
         """
         Analyze SQL query by running it against DuckDB virtual index tables.
-        
+
         This directly gives us the ordering we need for spatial organization.
         """
         # First, analyze metric ordering using the virtual index table
         try:
             # Execute query against virtual index table
             result = self.duckdb_conn.execute(sql_query).fetchone()
-            
+
             if result is None:
                 raise ValueError("Query returned no results")
-            
+
             # Extract column ordering from the result
             # The result contains [row_id, col1, col2, ...]
             # Where the values are the indices that would produce the ordering
             column_indices = list(result[1:])  # Skip row_id
-            
+
             # Determine metric ordering (which columns are most important)
             metric_order = np.argsort(column_indices).tolist()
-            
-            return {
-                "metric_order": metric_order,
-                "original_query": sql_query
-            }
-            
+
+            return {"metric_order": metric_order, "original_query": sql_query}
+
         except Exception as e:
             raise ValueError(f"Invalid SQL query: {str(e)}") from e
-    
+
     def process(self, score_matrix: np.ndarray) -> None:
         """
         Process a score matrix to prepare for encoding.
+        This involves loading the data into DuckDB and applying SQL-based organization.
+
+        Args:
+            score_matrix: 2D array of shape [documents × metrics]. Should be normalized.
+        """
+        logger.info(f"Processing score matrix of shape: {score_matrix.shape}")
+        if score_matrix is None:
+            error_msg = "score_matrix cannot be None."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        if score_matrix.ndim != 2:
+            error_msg = f"score_matrix must be 2D, got shape {score_matrix.shape}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        if score_matrix.shape[1] != len(self.metric_names):
+            error_msg = (f"score_matrix column count ({score_matrix.shape[1]}) "
+                        f"must match metric_names count ({len(self.metric_names)}).")
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        if score_matrix.size == 0:
+            logger.warning("Received empty score_matrix. Result will be empty.")
+            self.sorted_matrix = np.empty((0, 0))
+            self.metric_order = np.array([], dtype=int)
+            self.doc_order = np.array([], dtype=int)
+            return
+
+        # --- Load data into DuckDB ---
+        logger.debug("Loading score_matrix data into DuckDB virtual_index table.")
+        try:
+            # 1. Clear any existing data (including the initial test row)
+            self.duckdb_conn.execute("DELETE FROM virtual_index")
+            
+            # 2. Prepare INSERT statement
+            metric_columns = ", ".join([f'"{name}"' for name in self.metric_names])
+            placeholders = ", ".join(["?"] * len(self.metric_names))
+            insert_sql = f"INSERT INTO virtual_index (row_id, {metric_columns}) VALUES (?, {placeholders})"
+            
+            # 3. Insert data row by row
+            # Using executemany might be more efficient for large datasets
+            # data_for_db = [(i, *row) for i, row in enumerate(score_matrix)]
+            # self.duckdb_conn.executemany(insert_sql, data_for_db)
+            # For clarity and potential logging, inserting one by one or in small batches might be better initially
+            for row_id, row_data in enumerate(score_matrix):
+                # Ensure row_data is a list or tuple for DuckDB
+                self.duckdb_conn.execute(insert_sql, [row_id] + row_data.tolist())
+            
+            logger.debug(f"Loaded {score_matrix.shape[0]} rows into DuckDB.")
+        except Exception as e:
+            logger.error(f"Failed to load data into DuckDB: {e}")
+            raise ValueError(f"Error loading data into DuckDB: {e}") from e
+
+        # --- Apply SQL-based spatial organization ---
+        doc_order = None
+        metric_order = None # Or default order if no specific reordering is derived
+        
+        if self.task_config and self.task_config.get("analysis"):
+            logger.warning("task_config.analysis found, but data is now in DuckDB. Re-analyzing based on DuckDB query results.")
+            # The analysis might have been done earlier, but now we have data.
+            # We should re-run the analysis or adjust the logic.
+            # Let's assume set_sql_task was called and we have the SQL query.
+            sql_query = self.task_config.get("sql_query")
+            if sql_query:
+                logger.debug("Re-analyzing SQL task with data loaded.")
+                analysis = self._analyze_query(sql_query) # This will now work on real data
+                # _apply_sql_organization will use this analysis
+                self.sorted_matrix, self.metric_order, self.doc_order = self._apply_sql_organization(
+                    score_matrix, # Pass the original matrix
+                    analysis
+                )
+            else:
+                logger.error("SQL task set but no query found in task_config.")
+                # Fall back to default
+                self._apply_default_organization(score_matrix)
+        elif self.task_config and self.task_config.get("sql_query"):
+            # SQL task was set, but analysis wasn't run or stored correctly
+            # Let's run analysis and apply organization now that data is loaded
+            sql_query = self.task_config["sql_query"]
+            logger.info(f"Applying SQL task: {sql_query} to loaded data.")
+            try:
+                analysis = self._analyze_query(sql_query)
+                self.sorted_matrix, self.metric_order, self.doc_order = self._apply_sql_organization(
+                    score_matrix, # Pass the original matrix
+                    analysis
+                )
+            except Exception as e:
+                logger.error(f"Failed to apply SQL task during processing: {e}")
+                # Fall back to default organization
+                self._apply_default_organization(score_matrix)
+        else:
+            logger.info("No SQL task set. Using default organization.")
+            self._apply_default_organization(score_matrix)
+            
+        logger.debug(f"Processing complete. Sorted matrix shape: {self.sorted_matrix.shape}")
+
+
+    def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
+        """
+        Analyze SQL query by running it against DuckDB virtual_index table *with data*.
+        This determines the actual sorting order of documents based on the query.
+        """
+        logger.debug(f"Analyzing SQL query with data: {sql_query}")
+        try:
+            # Execute query against virtual index table which now contains the actual data
+            # We need to get the row_id to know the order
+            # Modify the query to select row_id first if it's a SELECT *
+            # A more robust way is to explicitly select row_id
+            if sql_query.strip().upper().startswith("SELECT *"):
+                # Simple replacement - assumes no complex SELECT clauses
+                modified_query = sql_query.replace("SELECT *", "SELECT row_id", 1)
+            else:
+                # If not SELECT *, assume row_id is accessible or construct a way to get it
+                # This is trickier. Let's assume the user's query implicitly sorts the data
+                # and we just run it and hope the order of results corresponds to row_id order.
+                # Or, we could wrap it: SELECT row_id FROM (user_query)
+                modified_query = f"SELECT row_id FROM ({sql_query}) AS user_sorted_view"
+            
+            logger.debug(f"Executing modified query for analysis: {modified_query}")
+            result_cursor = self.duckdb_conn.execute(modified_query)
+            result_rows = result_cursor.fetchall()
+            
+            # Extract the row_id sequence from the results
+            # This sequence indicates the order in which documents should be arranged.
+            doc_order_from_query = [row[0] for row in result_rows] 
+            
+            logger.debug(f"Document order determined by DuckDB query execution: {doc_order_from_query[:10]}...") # Log first 10
+            
+            # For metric ordering, if the original logic required it from the dummy row,
+            # and we are not changing column order based on the query (which is complex),
+            # we can default to the original metric order or derive it simply.
+            # Let's default to original order for now, or try to parse the first ORDER BY metric.
+            import re
+            metric_order_indices = list(range(len(self.metric_names))) # Default
+            primary_sort_metric_name = None
+            primary_sort_metric_index = None
+            order_by_match = re.search(r"ORDER\s+BY\s+(\w+)", sql_query, re.IGNORECASE)
+            if order_by_match:
+                first_metric_in_order_by = order_by_match.group(1)
+                try:
+                    primary_sort_metric_index = self.metric_names.index(first_metric_in_order_by)
+                    primary_sort_metric_name = first_metric_in_order_by
+                    logger.debug(f"Primary sort metric identified from query: '{primary_sort_metric_name}' (index {primary_sort_metric_index})")
+                    # If you *did* want to reorder columns based on this, you'd set metric_order_indices
+                    # But let's keep it simple and assume column order is fixed by input.
+                except ValueError:
+                    logger.warning(f"Metric '{first_metric_in_order_by}' from ORDER BY not found in metric_names.")
+
+            analysis_result = {
+                "doc_order": doc_order_from_query,
+                "metric_order": metric_order_indices, # Keep original column order for now
+                "primary_sort_metric_index": primary_sort_metric_index,
+                "primary_sort_metric_name": primary_sort_metric_name,
+                "original_query": sql_query
+            }
+            logger.info(f"SQL query analysis (with data) complete.")
+            return analysis_result
+        except Exception as e:
+            logger.error(f"Error during DuckDB-based query analysis: {e}")
+            # Re-raise to be caught by process
+            raise ValueError(f"Invalid SQL query execution: {str(e)}") from e
+
+
+    def _apply_sql_organization(self,
+                            data: np.ndarray,
+                            analysis: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Apply spatial organization based on SQL query analysis results from DuckDB (with data).
         
         Args:
-            score_matrix: 2D array of shape [documents × metrics]
+            The original input score matrix.
+            analysis: The result dictionary from `_analyze_query` (now based on real data).
+            
+        Returns:
+            Tuple of (sorted_matrix, metric_order, doc_order)
         """
-        # For this simple example, we'll skip normalization
-        # In production, you'd normalize the scores here
+        logger.debug(f"Applying SQL-based organization (with data). Data shape: {data.shape}")
         
-        # Apply SQL-based spatial organization
-        if self.task_config and self.task_config.get("analysis"):
-            self.sorted_matrix, self.metric_order, self.doc_order = self._apply_sql_organization(
-                score_matrix, 
-                self.task_config["analysis"]
-            )
-        else:
-            # Default organization (if no task set)
-            self.sorted_matrix = score_matrix
-            self.metric_order = np.arange(score_matrix.shape[1])
-            self.doc_order = np.arange(score_matrix.shape[0])
-    
-    def _apply_sql_organization(self, 
-                               data: np.ndarray, 
-                               analysis: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Apply spatial organization based on SQL query analysis.
-        
-        This function uses the SQL analysis results to:
-        1. Reorder metrics based on SQL's column ordering
-        2. Reorder documents based on SQL's row ordering
-        """
-        # 1. Apply metric ordering from SQL analysis
-        metric_order = np.array(analysis["metric_order"])
-        valid_metric_order = metric_order[metric_order < data.shape[1]]
+        # --- 1. Apply Document Ordering ---
+        doc_order_list = analysis.get("doc_order", [])
+        # Validate doc_order indices
+        num_docs = data.shape[0]
+        valid_doc_order = [idx for idx in doc_order_list if 0 <= idx < num_docs]
+        # Handle potential mismatch (e.g., analysis returned fewer/more indices)
+        # DuckDB should return all row_ids if the query selects all, sorted.
+        # If it returns a subset, that's the subset we want.
+        # If it returns duplicates or extras, we filter.
+        if not valid_doc_order:
+            logger.warning("Document order from analysis is empty or invalid. Using default order.")
+            valid_doc_order = list(range(num_docs))
+            
+        logger.debug(f"Final validated document order (first 10): {valid_doc_order[:10]}...")
+        # Reorder rows (documents)
+        sorted_matrix_by_docs = data[valid_doc_order, :]
 
-        # 2. Apply document ordering - for now we'll use a simple approach
-        # In a full implementation, we'd run the SQL against a virtual document table
-        # For this example, we'll sort documents by the first metric
-        doc_order = np.argsort(data[:, metric_order[0]])[::-1]  # Descending order
+        # --- 2. Apply Metric Ordering (if needed) ---
+        # For now, assuming metric/column order is fixed by the input and analysis
+        # just provides the doc order. Metric reordering based on complex SQL on columns
+        # is complex. Let's keep columns in original order unless analysis explicitly provides a different order.
+        raw_metric_order = analysis.get("metric_order", list(range(data.shape[1])))
+        metric_count = data.shape[1]
+        valid_metric_order = [idx for idx in raw_metric_order if 0 <= idx < metric_count]
+        if len(valid_metric_order) != metric_count:
+            logger.warning(f"Analysis metric order length mismatch. Appending remaining metrics.")
+            remaining_indices = [i for i in range(metric_count) if i not in valid_metric_order]
+            valid_metric_order.extend(remaining_indices)
+        if not valid_metric_order:
+            logger.info("No valid metric order from analysis. Using default order.")
+            valid_metric_order = list(range(metric_count))
+            
+        logger.debug(f"Final validated metric order: {valid_metric_order}")
+        # Reorder columns (metrics) - apply to the already row-sorted matrix
+        final_sorted_matrix = sorted_matrix_by_docs[:, valid_metric_order]
         
-        # 3. Create the spatially-organized matrix:
-        #    - First reorder documents (rows)
-        #    - Then reorder metrics (columns)
-        sorted_matrix = data[doc_order, :]
-        sorted_matrix = sorted_matrix[:, valid_metric_order]
-        
-        return sorted_matrix, metric_order, doc_order
-    
+        logger.info(f"SQL-based organization (with data) applied. Final matrix shape: {final_sorted_matrix.shape}")
+        return final_sorted_matrix, np.array(valid_metric_order), np.array(valid_doc_order)
+
     def encode(self) -> np.ndarray:
         """
         Encode the processed data into a full visual policy map.
-        
+
         Returns:
-            RGB image array of shape [height, width, 3]
+            RGB image array of shape [height, width, 3].
+
+        Raises:
+            ValueError: If `process` has not been called successfully yet.
         """
+        logger.debug("Encoding VPM...")
         if self.sorted_matrix is None:
-            raise ValueError("Data not processed yet. Call process() first.")
-        
+            error_msg = "Data not processed yet. Call process() first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
         n_docs, n_metrics = self.sorted_matrix.shape
-        
-        # Calculate required width (3 metrics per pixel)
-        width = (n_metrics + 2) // 3  # Ceiling division
-        
-        # Create image array
+        logger.debug(f"Encoding matrix of shape {n_docs}x{n_metrics}")
+        # Calculate required width (3 metrics per pixel, ceiling division)
+        width = (n_metrics + 2) // 3
+        logger.debug(f"Calculated VPM width: {width} pixels")
+
+        # Create image array (ensure correct dtype)
         img = np.zeros((n_docs, width, 3), dtype=np.uint8)
-        
+        logger.debug(f"Created VPM image array of shape {img.shape}")
+
         # Fill pixels with normalized scores (0-255)
+        # Assuming self.sorted_matrix values are already in [0, 1] range.
+        # If not, normalization should happen before this step (e.g., in process or via DynamicNormalizer)
         for i in range(n_docs):
             for j in range(n_metrics):
                 pixel_x = j // 3
                 channel = j % 3
-                img[i, pixel_x, channel] = int(self.sorted_matrix[i, j] * 255)
-        
+                if pixel_x < width:  # Should always be true given width calculation
+                    # Clamp to [0, 1] before converting to [0, 255] to be safe
+                    normalized_value = np.clip(self.sorted_matrix[i, j], 0.0, 1.0)
+                    img[i, pixel_x, channel] = int(normalized_value * 255)
+        logger.info(f"VPM encoded successfully. Shape: {img.shape}")
         return img
-    
+
     def get_critical_tile(self, tile_size: int = 3) -> bytes:
         """
         Get critical tile for edge devices (top-left section).
-        
+
         Args:
-            tile_size: Size of tile to extract (default 3x3)
-        
+            tile_size: Size of tile to extract (default 3x3).
+
         Returns:
-            Compact byte representation of the tile
+            Compact byte representation of the tile.
+
+        Raises:
+            ValueError: If `process` has not been called successfully yet.
         """
+        logger.debug(f"Extracting critical tile of size {tile_size}x{tile_size}")
         if self.sorted_matrix is None:
-            raise ValueError("Data not processed yet. Call process() first.")
-        
+            error_msg = "Data not processed yet. Call process() first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        if tile_size <= 0:
+            error_msg = f"tile_size must be positive, got {tile_size}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        n_docs, n_metrics = self.sorted_matrix.shape
+        # Determine actual tile dimensions (cannot exceed matrix dimensions)
+        actual_tile_height = min(tile_size, n_docs)
+        actual_tile_width_metrics = min(
+            tile_size * 3, n_metrics
+        )  # Width in terms of metrics
+        # Calculate width in pixels
+        actual_tile_width_pixels = (actual_tile_width_metrics + 2) // 3
+        logger.debug(
+            f"Actual tile dimensions: {actual_tile_height} docs x {actual_tile_width_pixels} pixels ({actual_tile_width_metrics} metrics)"
+        )
+
         # Get top-left section (most relevant documents & metrics)
-        tile_data = self.sorted_matrix[:tile_size, :tile_size*3]
-        
+        # Note: The original code used tile_size*3 for columns, which might be incorrect
+        # if n_metrics < tile_size*3. We use actual_tile_width_metrics.
+        tile_data = self.sorted_matrix[:actual_tile_height, :actual_tile_width_metrics]
+        logger.debug(f"Extracted tile data shape: {tile_data.shape}")
+
         # Convert to compact byte format
         tile_bytes = bytearray()
-        tile_bytes.append(tile_size)  # Width
-        tile_bytes.append(tile_size)  # Height
-        tile_bytes.append(0)  # X offset
-        tile_bytes.append(0)  # Y offset
-        
+        tile_bytes.append(actual_tile_width_pixels & 0xFF)  # Actual width in pixels
+        tile_bytes.append(actual_tile_height & 0xFF)  # Actual height in docs
+        tile_bytes.append(0 & 0xFF)  # X offset (always 0 for top-left)
+        tile_bytes.append(0 & 0xFF)  # Y offset (always 0 for top-left)
+        logger.debug("Appended tile header bytes.")
+
         # Add pixel data (1 byte per channel)
-        for i in range(tile_size):
-            for j in range(tile_size * 3):  # 3 channels per pixel
+        # Iterate based on the actual extracted data dimensions
+        for i in range(actual_tile_height):
+            for j in range(actual_tile_width_metrics):  # Iterate through metrics
+                pixel_x = j // 3
+                channel = j % 3
                 if i < tile_data.shape[0] and j < tile_data.shape[1]:
-                    tile_bytes.append(int(tile_data[i, j] * 255))
+                    # Clamp and convert value (assuming [0,1] input)
+                    normalized_value = np.clip(tile_data[i, j], 0.0, 1.0)
+                    byte_value = int(normalized_value * 255) & 0xFF
+                    tile_bytes.append(byte_value)
                 else:
+                    # This case should ideally not happen with the slicing above,
+                    # but added for robustness.
                     tile_bytes.append(0)  # Padding
-        
+                    logger.warning(
+                        f"Padding added at pixel ({i}, metric {j}) during tile extraction."
+                    )
+        logger.info(f"Critical tile extracted. Size: {len(tile_bytes)} bytes.")
         return bytes(tile_bytes)
-    
+
     def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
         """
         Get top decision with contextual understanding.
-        
+
         Args:
-            context_size: Size of context window to consider
-        
+            context_size: Size of context window to consider (NxN metrics area).
+
         Returns:
-            (document_index, relevance_score)
+            Tuple of (document_index, relevance_score).
+
+        Raises:
+            ValueError: If `process` has not been called successfully yet.
         """
+        logger.debug(f"Making decision with context size {context_size}")
         if self.sorted_matrix is None:
-            raise ValueError("Data not processed yet. Call process() first.")
-        
+            error_msg = "Data not processed yet. Call process() first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        if context_size <= 0:
+            error_msg = f"context_size must be positive, got {context_size}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        n_docs, n_metrics = self.sorted_matrix.shape
+        # Determine actual context window size
+        actual_context_docs = min(context_size, n_docs)
+        actual_context_metrics = min(context_size * 3, n_metrics)  # Width in metrics
+        logger.debug(
+            f"Actual decision context: {actual_context_docs} docs x {actual_context_metrics} metrics"
+        )
+
         # Get context window (top-left region)
-        context = self.sorted_matrix[:context_size, :context_size*3]
-        
+        context = self.sorted_matrix[:actual_context_docs, :actual_context_metrics]
+        logger.debug(f"Context data shape for decision: {context.shape}")
+
         # Calculate contextual relevance (weighted by position)
-        weights = np.zeros_like(context)
-        for i in range(context.shape[0]):
-            for j in range(context.shape[1]):
-                # Weight decreases with distance from top-left
-                distance = np.sqrt(i**2 + (j/3)**2)
-                weights[i, j] = max(0, 1.0 - distance * 0.3)
-        
+        weights = np.zeros_like(
+            context, dtype=np.float64
+        )  # Use float64 for calculation
+        for i in range(context.shape[0]):  # Iterate through rows (docs)
+            for j in range(context.shape[1]):  # Iterate through columns (metrics)
+                # Weight decreases with distance from top-left (0,0)
+                # j represents metric index, so j/3 gives approximate pixel x-coordinate
+                pixel_x_coord = j / 3.0
+                distance = np.sqrt(float(i) ** 2 + pixel_x_coord**2)
+                # Example weight function: linear decrease
+                weight = max(0.0, 1.0 - distance * 0.3)
+                weights[i, j] = weight
+        logger.debug("Calculated positional weights for context.")
+
         # Calculate weighted relevance
-        weighted_relevance = np.sum(context * weights) / np.sum(weights)
-        
-        # Get top document index from sorted order
-        top_doc_idx = self.doc_order[0] if len(self.doc_order) > 0 else 0
-        
-        return top_doc_idx, weighted_relevance
-    
+        # Use np.sum with dtype=np.float64 for precision in summation
+        sum_weights = np.sum(weights, dtype=np.float64)
+        if sum_weights > 0.0:
+            weighted_sum = np.sum(context * weights, dtype=np.float64)
+            weighted_relevance = weighted_sum / sum_weights
+        else:
+            logger.warning("Sum of weights is zero. Assigning relevance score 0.0.")
+            weighted_relevance = 0.0
+        weighted_relevance = float(weighted_relevance)  # Ensure it's a standard float
+        logger.debug(f"Calculated weighted relevance score: {weighted_relevance:.4f}")
+
+        # Get top document index from the *original* order
+        # self.doc_order[0] is the index of the document that ended up in the first row
+        # after sorting.
+        top_doc_idx_in_original = 0
+        if self.doc_order is not None and len(self.doc_order) > 0:
+            top_doc_idx_in_original = int(self.doc_order[0])
+        else:
+            logger.warning(
+                "doc_order is not available or empty. Defaulting top document index to 0."
+            )
+
+        logger.info(
+            f"Decision made: Document index {top_doc_idx_in_original}, Relevance {weighted_relevance:.4f}"
+        )
+        return top_doc_idx_in_original, weighted_relevance
+
     def get_metadata(self) -> Dict[str, Any]:
-        """Get metadata for the current encoding state"""
-        return {
+        """Get metadata for the current encoding state."""
+        logger.debug("Retrieving metadata.")
+        metadata = {
             "task": self.task,
             "task_config": self.task_config,
-            "metric_order": self.metric_order.tolist() if self.metric_order is not None else [],
+            "metric_order": self.metric_order.tolist()
+            if self.metric_order is not None
+            else [],
             "doc_order": self.doc_order.tolist() if self.doc_order is not None else [],
             "metric_names": self.metric_names,
-            "precision": self.precision
+            "precision": self.precision,
+            # Add more metadata if needed
         }
+        logger.debug(f"Metadata retrieved: {metadata}")
+        return metadata
 
-class HierarchicalVPM:
-    """
-    Hierarchical Visual Policy Map (HVPM) implementation with DuckDB SQL support.
-    
-    This class creates a multi-level decision map system where:
-    - Level 0: Strategic overview (small, low-res, for edge devices)
-    - Level 1: Tactical view (medium resolution)
-    - Level 2: Operational detail (full resolution)
-    
-    The hierarchical structure enables:
-    - Efficient decision-making at multiple abstraction levels
-    - Resource-adaptive processing (edge vs cloud)
-    - Multi-stage decision pipelines
-    - Visual exploration of policy landscapes
-    """
-    
-    def __init__(self, 
-                 metric_names: List[str],
-                 num_levels: int = 3,
-                 zoom_factor: int = 3,
-                 precision: int = 8):
-        """
-        Initialize the hierarchical VPM system.
-        
-        Args:
-            metric_names: Names of all metrics being tracked
-            num_levels: Number of hierarchical levels (default 3)
-            zoom_factor: Zoom factor between levels (default 3)
-            precision: Bit precision for encoding (4-16)
-        """
-        self.metric_names = metric_names
-        self.num_levels = num_levels
-        self.zoom_factor = zoom_factor
-        self.precision = precision
-        self.levels = []
-        self.metadata = {
-            "version": "1.0",
-            "temporal_axis": False,
-            "levels": num_levels,
-            "zoom_factor": zoom_factor
-        }
-    
-    def process(self, score_matrix: np.ndarray, task: str):
-        """
-        Process score matrix into hierarchical visual policy maps.
-        
-        Args:
-            score_matrix: 2D array of shape [documents × metrics]
-            task: SQL query defining the task
-        """
-        # Update metadata
-        self.metadata["task"] = task
-        self.metadata["documents"] = score_matrix.shape[0]
-        self.metadata["metrics"] = score_matrix.shape[1]
-        
-        # Clear existing levels
-        self.levels = []
-        
-        # Create ZeroModel instance
-        zeromodel = ZeroModel(self.metric_names, precision=self.precision)
-        
-        # Set task
-        zeromodel.set_sql_task(task)
-        
-        # Process the base data
-        zeromodel.process(score_matrix)
-        
-        # Create base level (Level 2: Full detail)
-        base_level = self._create_base_level(zeromodel, score_matrix)
-        self.levels.append(base_level)
-        
-        # Create higher levels (Level 1, Level 0)
-        current_data = score_matrix
-        for level in range(1, self.num_levels):
-            num_docs = max(1, int(np.ceil(current_data.shape[0] / self.zoom_factor)))
-            num_metrics = max(1, int(np.ceil(current_data.shape[1] / self.zoom_factor)))
 
-            clustered_data = self._cluster_data(current_data, num_docs, num_metrics)
-
-            level_data = self._create_level(clustered_data, level, zeromodel.task_config)
-            self.levels.insert(0, level_data)
-
-            current_data = clustered_data
-    
-    def _cluster_data(self, data: np.ndarray, num_docs: int, num_metrics: int) -> np.ndarray:
-        """
-        Cluster data for higher-level views.
-        
-        Args:
-            data: Input data matrix
-            num_docs: Target number of document clusters
-            num_metrics: Target number of metric clusters
-        
-        Returns:
-            Clustered data matrix
-        """
-        docs, metrics = data.shape
-        # Handle edge case where we have fewer items than clusters
-        num_docs = min(num_docs, docs)
-        num_metrics = min(num_metrics, metrics)
-        
-        # Create document clusters
-        doc_clusters = []
-        for i in range(num_docs):
-            start_idx = i * docs // num_docs
-            end_idx = (i + 1) * docs // num_docs
-            if start_idx < end_idx:  # Ensure we have data to average
-                doc_clusters.append(np.mean(data[start_idx:end_idx], axis=0))
-            else:
-                doc_clusters.append(data[start_idx])
-        clustered_docs = np.array(doc_clusters)
-        
-        # Create metric clusters
-        metric_clusters = []
-        for j in range(num_metrics):
-            start_idx = j * metrics // num_metrics
-            end_idx = (j + 1) * metrics // num_metrics
-            if start_idx < end_idx:  # Ensure we have data to average
-                metric_clusters.append(np.mean(clustered_docs[:, start_idx:end_idx], axis=1))
-            else:
-                metric_clusters.append(clustered_docs[:, start_idx])
-        
-        return np.column_stack(metric_clusters)
-    
-    def _create_base_level(self, zeromodel: ZeroModel, score_matrix: np.ndarray) -> Dict[str, Any]:
-        """Create the base level (highest detail)"""
-        return {
-            "level": self.num_levels - 1,
-            "type": "base",
-            "zeromodel": zeromodel,
-            "vpm": zeromodel.encode(),
-            "metadata": {
-                "documents": score_matrix.shape[0],
-                "metrics": score_matrix.shape[1],
-                "sorted_docs": zeromodel.doc_order.tolist(),
-                "sorted_metrics": zeromodel.metric_order.tolist()
-            }
-        }
-    
-    def _create_level(self, 
-                     clustered_data: np.ndarray, 
-                     level: int,
-                     task_config: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a higher-level (more abstract) view"""
-        # Create a simplified metric set for this level
-        level_metrics = [
-            f"cluster_{i}" for i in range(clustered_data.shape[1])
-        ]
-        
-        # Process with simplified metrics
-        zeromodel = ZeroModel(level_metrics, precision=self.precision)
-        
-        # Apply the same task configuration
-        if task_config:
-            # We need to recreate the SQL task with the new metric names
-            original_query = task_config["analysis"]["original_query"]
-            # Simple replacement of metric names
-            new_query = original_query
-            for i, old_name in enumerate(task_config["analysis"]["metric_order"]):
-                if i < len(level_metrics):
-                    new_name = level_metrics[i]
-                    new_query = new_query.replace(self.metric_names[old_name], new_name)
-            
-            zeromodel.set_sql_task(new_query)
-        else:
-            # Fallback to default task
-            zeromodel.set_sql_task(f"SELECT * FROM virtual_index ORDER BY {level_metrics[0]} DESC")
-        
-        zeromodel.process(clustered_data)
-        
-        return {
-            "level": level,
-            "type": "clustered",
-            "zeromodel": zeromodel,
-            "vpm": zeromodel.encode(),
-            "metadata": {
-                "documents": clustered_data.shape[0],
-                "metrics": clustered_data.shape[1],
-                "sorted_docs": zeromodel.doc_order.tolist(),
-                "sorted_metrics": zeromodel.metric_order.tolist()
-            }
-        }
-    
-    def get_level(self, level: int) -> Dict[str, Any]:
-        """Get data for a specific level"""
-        if level < 0 or level >= self.num_levels:
-            raise ValueError(f"Level must be between 0 and {self.num_levels-1}")
-        return self.levels[level]
-    
-    def get_tile(self, 
-                level: int, 
-                x: int = 0, 
-                y: int = 0, 
-                width: int = 3, 
-                height: int = 3) -> bytes:
-        """
-        Get a tile from a specific level for edge devices.
-        
-        Args:
-            level: Hierarchical level (0 = most abstract)
-            x, y: Top-left corner of tile
-            width, height: Dimensions of tile
-        
-        Returns:
-            Compact byte representation of the tile
-        """
-        level_data = self.get_level(level)
-        zeromodel = level_data["zeromodel"]
-        # Get critical tile
-        return zeromodel.get_critical_tile(tile_size=max(width, height))
-    
-    def get_decision(self, level: int) -> Tuple[int, float, int]:
-        """
-        Get top decision from a specific level.
-        
-        Returns:
-            (level, document_index, relevance_score)
-        """
-        level_data = self.get_level(level)
-        doc_idx, relevance = level_data["zeromodel"].get_decision()
-        return (level, doc_idx, relevance)
-    
-    def zoom_in(self, level: int, doc_idx: int, metric_idx: int) -> int:
-        """
-        Determine the next level to zoom into based on current selection.
-        
-        Args:
-            level: Current hierarchical level
-            doc_idx: Selected document index
-            metric_idx: Selected metric index
-        
-        Returns:
-            Next level to zoom into (level+1, or same level if already at base)
-        """
-        if level >= self.num_levels - 1:
-            return level  # Already at most detailed level
-        return level + 1
-    
-    def get_metadata(self) -> Dict[str, Any]:
-        """Get complete metadata for the hierarchical map"""
-        return self.metadata
+# --- Example usage or test code (optional, remove or comment out for library module) ---
+# if __name__ == "__main__":
+#     # This would typically be in a separate test or example script
+#     pass

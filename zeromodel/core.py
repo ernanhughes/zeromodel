@@ -5,9 +5,11 @@ policy evaluation data into spatially-optimized visual maps where the
 intelligence is in the data structure itself, not in processing.
 """
 
+from typing import Any, Dict, List, Tuple
+
 import duckdb
 import numpy as np
-from typing import List, Tuple, Dict, Any
+
 
 class ZeroModel:
     """

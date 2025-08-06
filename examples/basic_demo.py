@@ -1,25 +1,12 @@
-"""
-zeromodel Demonstration Script
-
-This script demonstrates the complete zeromodel workflow:
-1. Generate synthetic score data
-2. Process with zeromodel
-3. Encode as visual policy map
-4. Transform for specific task
-5. Extract critical tile for edge device
-6. Make decision
-
-Run this script to see zeromodel in action.
-"""
-
+# examples/basic_demo.py
 import numpy as np
 import matplotlib.pyplot as plt
 import os
 from typing import List, Tuple
-from .edge import EdgeProtocol
+from zeromodel.edge import EdgeProtocol
 # Add to the top of the file
-from .core import HierarchicalVPM, ZeroModel
-from .hierarchical_edge import HierarchicalEdgeProtocol
+from zeromodel.core import HierarchicalVPM, ZeroModel
+from zeromodel.hierarchical_edge import HierarchicalEdgeProtocol
 
 def generate_synthetic_data(num_docs: int = 100, num_metrics: int = 50) -> Tuple[np.ndarray, List[str]]:
     """Generate synthetic score data for demonstration"""
@@ -93,13 +80,13 @@ def demo_zeromodel():
     
     # Example task 1: Find uncertain large documents
     print("   Processing for task: 'Find uncertain large documents'")
-    zeromodel.set_task("Find uncertain large documents")
+    zeromodel.set_sql_task("SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
     zeromodel.process(score_matrix)
     vpm1 = zeromodel.encode()
     
     # Example task 2: Find high-quality novel documents
     print("   Processing for task: 'Find high-quality novel documents'")
-    zeromodel.set_task("Find high-quality novel documents")
+    zeromodel.set_sql_task("SELECT * FROM virtual_index ORDER BY quality DESC, novelty DESC")
     zeromodel.process(score_matrix)
     vpm2 = zeromodel.encode()
     
@@ -145,7 +132,7 @@ def demo_hierarchical_vpm():
     hvpm = HierarchicalVPM(
         metric_names=metric_names
     )
-    hvpm.process(score_matrix, "Find uncertain large documents")
+    hvpm.process(score_matrix, "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
     
     # 3. Show level information
     print("\n3. Hierarchical levels information:")

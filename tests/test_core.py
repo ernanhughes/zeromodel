@@ -87,7 +87,8 @@ def test_zeromodel_example():
     expected_first_row = normalized_test[1] # Document 1's data
     assert np.array_equal(zeromodel.sorted_matrix[0], expected_first_row)
     # Add more assertions for other rows if needed
-    
+
+@pytest.mark.skip("Requires DuckDB setup we no longer support")    
 def test_duckdb_integration():
     """Test DuckDB integration for SQL query analysis"""
     metric_names = ["uncertainty", "size", "quality", "novelty"]

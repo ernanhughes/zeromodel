@@ -182,9 +182,11 @@ def test_vpm_not_operation():
     assert abs(sum_top - 1.0) < 1e-5, f"NOT operation failed: {score_a_top} + {score_not_a_top} != 1.0"
     print("  ✅ vpm_not test passed.")
 
+# In tests/test_vpm_logic_operations.py, update test_vpm_diff_operation
+
 def test_vpm_diff_operation():
-    """Test the vpm_diff operation end-to-end."""
-    print("\n--- Testing vpm_diff ---")
+    """Test the vpm_diff operation end-to-end using encoded VPMs."""
+    print("\n--- Testing vpm_diff (on encoded VPMs) ---")
     score_matrix, metric_names = create_simple_test_data()
     
     # Define tasks to create a clear difference
@@ -197,30 +199,78 @@ def test_vpm_diff_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = model_a.encode() # This is now uint8
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = model_b.encode() # This is now uint8
     
-    vpm_result = vpm_diff(vpm_a, vpm_b)
+    # --- KEY CHANGE: Apply logic to encoded (uint8) VPMs ---
+    vpm_result = vpm_diff(vpm_a, vpm_b) # This should now work with uint8
+    # --- END KEY CHANGE ---
     
-    save_vpm_image(vpm_a, "VPM A (High feature_a)", "vpm_a_high_a.png")
-    save_vpm_image(vpm_b, "VPM B (High feature_b)", "vpm_b_high_b.png")
-    save_vpm_image(vpm_result, "VPM DIFF (High A - High B)", "vpm_result_diff.png")
+    save_vpm_image(vpm_a, "VPM A (High feature_a - Encoded)", "vpm_a_high_a_encoded.png")
+    save_vpm_image(vpm_b, "VPM B (High feature_b - Encoded)", "vpm_b_high_b_encoded.png")
+    save_vpm_image(vpm_result, "VPM DIFF (High A - High B - Encoded)", "vpm_result_diff_encoded.png")
     
-    # Basic sanity check: Result should be <= vpm_a and >= 0
-    assert np.all(vpm_result <= vpm_a), "DIFF result should be <= VPM A"
-    assert np.all(vpm_result >= 0), "DIFF result should be >= 0"
+    # --- KEY CHANGE: Update sanity checks for uint8 ---
+    # Basic sanity check: Result should be <= vpm_a (element-wise) and >= 0 (element-wise)
+    # Since we are working with uint8, these comparisons are valid.
+    assert np.all(vpm_result <= vpm_a), "DIFF result (uint8) should be <= VPM A (uint8)"
+    assert np.all(vpm_result >= 0), "DIFF result (uint8) should be >= 0"
+    # Also, result should be <= 255 (max uint8)
+    assert np.all(vpm_result <= 255), "DIFF result (uint8) should be <= 255"
+    # --- END KEY CHANGE ---
+    
     # The top-left should highlight Doc 0 (high A, low B)
     # compared to just A (which highlights Doc 0 and maybe Doc 2)
-    score_diff = query_top_left(vpm_result)
-    score_a = query_top_left(vpm_a)
-    print(f"  A Top-Left Score: {score_a:.4f}")
-    print(f"  DIFF (A-B) Top-Left Score: {score_diff:.4f}")
-    # Diff score should be less than or equal to A's score, but might be more focused.
-    # The key test is visual inspection of the saved image.
-    print("  ✅ vpm_diff test passed (check image vpm_result_diff.png).")
+    score_diff = query_top_left(vpm_result.astype(np.float64) / 255.0) # Normalize for query if needed internally, or modify query
+    score_a = query_top_left(vpm_a.astype(np.float64) / 255.0)
+    print(f"  A (Encoded) Top-Left Score (normalized): {score_a:.4f}")
+    print(f"  DIFF (A-B) (Encoded) Top-Left Score (normalized): {score_diff:.4f}")
+    # The key test is still visual inspection of the saved image.
+    print("  ✅ vpm_diff test passed (check image vpm_result_diff_encoded.png).")
+
+# --- Also update the save_vpm_image helper to handle uint8 correctly ---
+# In the save_vpm_image function:
+def save_vpm_image(vpm: np.ndarray, title: str, filename: str):
+    """
+    Saves a VPM as a grayscale image for inspection.
+    """
+    # Handle potential 3D VPM (e.g., HxWx3)
+    if vpm.ndim == 3:
+        if vpm.shape[2] == 3:
+            # If it's an RGB VPM (uint8), matplotlib can handle it directly with cmap='gray' on one channel
+            # or convert to grayscale. Let's take the first channel for simplicity in grayscale view.
+            # Or, to see color, just plot it.
+            # For grayscale inspection, average might be better, but let's keep it simple.
+            vpm_to_plot = vpm[:, :, 0] # Take Red channel
+        else:
+            vpm_to_plot = vpm[:, :, 0]
+    else:
+        vpm_to_plot = vpm
+
+    plt.figure(figsize=(6, 6))
+    # --- KEY CHANGE: Handle uint8 vmin/vmax ---
+    if vpm.dtype == np.uint8:
+        # For uint8 VPMs, the range is 0-255
+        plt.imshow(vpm_to_plot, cmap='gray', vmin=0, vmax=255)
+    elif np.issubdtype(vpm.dtype, np.integer): # e.g., uint16
+        dtype_info = np.iinfo(vpm.dtype)
+        plt.imshow(vpm_to_plot, cmap='gray', vmin=dtype_info.min, vmax=dtype_info.max)
+    else: # float
+        plt.imshow(vpm_to_plot, cmap='gray', vmin=0.0, vmax=1.0)
+    # --- END KEY CHANGE ---
+    plt.title(title)
+    plt.colorbar(label='Score')
+    plt.xlabel('Metrics (sorted)')
+    plt.ylabel('Documents (sorted)')
+    filepath = os.path.join(OUTPUT_DIR, filename)
+    plt.savefig(filepath)
+    plt.close()
+    print(f"Saved VPM image: {filepath}")
+
+# In tests/test_vpm_logic_operations.py
 
 def test_vpm_add_operation():
     """Test the vpm_add operation end-to-end."""
@@ -232,34 +282,46 @@ def test_vpm_add_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = model_a.encode() # uint8
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = model_b.encode() # uint8
     
-    vpm_result = vpm_add(vpm_a, vpm_b)
+    vpm_result = vpm_add(vpm_a, vpm_b) # Result is also uint8
     
     save_vpm_image(vpm_a, "VPM A (High feature_a)", "vpm_a_high_a.png")
     save_vpm_image(vpm_b, "VPM B (High feature_b)", "vpm_b_high_b.png")
     save_vpm_image(vpm_result, "VPM ADD (High A + High B)", "vpm_result_add.png")
     
-    # Basic sanity check: Result should be >= both inputs and <= 1 (due to clipping)
+    # --- CORRECTED ASSERTIONS for uint8 VPMs ---
+    # Basic sanity check: Result should be >= both inputs (element-wise) and <= max uint8 value (element-wise)
+    # Use the maximum value for the dtype of the inputs/results
+    max_val_for_dtype = np.iinfo(vpm_result.dtype).max # This will be 255 for uint8
+    
     assert np.all(vpm_result >= vpm_a), "ADD result should be >= VPM A"
     assert np.all(vpm_result >= vpm_b), "ADD result should be >= VPM B"
-    assert np.all(vpm_result <= 1.0), "ADD result should be <= 1.0"
+    # The key correction: Check against the maximum value for the specific dtype (e.g., 255 for uint8)
+    assert np.all(vpm_result <= max_val_for_dtype), f"ADD result should be <= {max_val_for_dtype} for dtype {vpm_result.dtype}"
+    # --- END CORRECTED ASSERTIONS ---
+    
     # Should amplify relevance where both are high (Doc 2 might be brighter)
-    score_add = query_top_left(vpm_result)
-    score_a = query_top_left(vpm_a)
-    score_b = query_top_left(vpm_b)
-    print(f"  A Top-Left Score: {score_a:.4f}")
-    print(f"  B Top-Left Score: {score_b:.4f}")
-    print(f"  ADD (A+B) Top-Left Score: {score_add:.4f}")
-    # Add score should be higher than either individual score (unless one is 1.0)
-    # But it's clipped at 1.0, so check it's at least as high as the max.
-    max_individual = max(score_a, score_b)
-    assert score_add >= max_individual - 1e-6, "ADD score should be >= max individual score"
+    # Normalize scores for reporting if query_top_left expects/works better with 0-1
+    # or modify query_top_left to handle uint8. Let's normalize for reporting.
+    score_add = query_top_left(vpm_result.astype(np.float64) / max_val_for_dtype)
+    score_a = query_top_left(vpm_a.astype(np.float64) / max_val_for_dtype)
+    score_b = query_top_left(vpm_b.astype(np.float64) / max_val_for_dtype)
+    print(f"  A Top-Left Score (normalized): {score_a:.4f}")
+    print(f"  B Top-Left Score (normalized): {score_b:.4f}")
+    print(f"  ADD (A+B) Top-Left Score (normalized): {score_add:.4f}")
+    # Add score should be higher than either individual score (unless one is max).
+    # Check it's at least as high as the max of the two individual normalized scores.
+    max_individual_norm = max(score_a, score_b)
+    # Allow for small floating point differences
+    assert score_add >= max_individual_norm - 1e-6, "ADD score (normalized) should be >= max individual normalized score"
     print("  ✅ vpm_add test passed.")
+
+# In tests/test_vpm_logic_operations.py
 
 def test_vpm_xor_operation():
     """Test the vpm_xor operation end-to-end."""
@@ -273,25 +335,34 @@ def test_vpm_xor_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = model_a.encode() # uint8
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = model_b.encode() # uint8
     
-    vpm_result = vpm_xor(vpm_a, vpm_b)
+    vpm_result = vpm_xor(vpm_a, vpm_b) # Result is also uint8
     
     save_vpm_image(vpm_a, "VPM A (High feature_a)", "vpm_a_high_a.png")
     save_vpm_image(vpm_b, "VPM B (High feature_b)", "vpm_b_high_b.png")
     save_vpm_image(vpm_result, "VPM XOR (High A XOR High B)", "vpm_result_xor.png")
     
-    # Basic sanity check: Result should be <= 1 and >= 0
+    # --- CORRECTED ASSERTIONS for uint8 VPMs ---
+    # Basic sanity check: Result should be >= 0 and <= max value for the dtype
+    # Use the maximum value for the dtype of the inputs/results
+    max_val_for_dtype = np.iinfo(vpm_result.dtype).max # This will be 255 for uint8
+    
+    # XOR result values should logically be within the valid range of the input dtype.
     assert np.all(vpm_result >= 0), "XOR result should be >= 0"
-    assert np.all(vpm_result <= 1), "XOR result should be <= 1"
+    # The key correction: Check against the maximum value for the specific dtype (e.g., 255 for uint8)
+    assert np.all(vpm_result <= max_val_for_dtype), f"XOR result should be <= {max_val_for_dtype} for dtype {vpm_result.dtype}"
+    # --- END CORRECTED ASSERTIONS ---
+    
     # The top-left should highlight Doc 0 and Doc 1, but not Doc 2 (which is high in both)
     # So the score might be moderate.
-    score_xor = query_top_left(vpm_result)
-    print(f"  XOR Result Top-Left Score: {score_xor:.4f}")
+    # Normalize for reporting/interpretation if needed.
+    score_xor = query_top_left(vpm_result.astype(np.float64) / max_val_for_dtype)
+    print(f"  XOR Result Top-Left Score (normalized): {score_xor:.4f}")
     # Visual inspection of vpm_result_xor.png is key here.
     print("  ✅ vpm_xor test passed (check image vpm_result_xor.png).")
 

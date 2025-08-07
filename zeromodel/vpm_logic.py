@@ -15,23 +15,23 @@ This is not just fuzzy logic. This is **Visual Symbolic Math**.
 
 import numpy as np
 import logging
-from typing import Union, Optional
 
 logger = logging.getLogger(__name__)
 
+# --- Core VPM Logic Operations (Fuzzy Logic Interpretations) ---
 
 def vpm_or(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Performs a logical OR operation (fuzzy union) on two VPMs.
     The result highlights areas relevant to EITHER input VPM by taking the element-wise maximum.
-    Assumes VPMs are normalized to the range [0, 1].
+    Assumes VPMs are normalized to the range [0, 1] (float) or [0, 255] (uint8/uint16).
 
     Args:
-        a (np.ndarray): First VPM (2D or 3D array, values in [0, 1]).
-        b (np.ndarray): Second VPM (same shape as a).
+        a (np.ndarray): First VPM.
+        b (np.ndarray): Second VPM (same shape and dtype as a).
 
     Returns:
-        np.ndarray: The resulting VPM from the OR operation.
+        np.ndarray: The resulting VPM from the OR operation (same dtype as inputs).
     
     Raises:
         ValueError: If VPMs have mismatched shapes.
@@ -48,14 +48,14 @@ def vpm_and(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Performs a logical AND operation (fuzzy intersection) on two VPMs.
     The result highlights areas relevant to BOTH input VPMs by taking the element-wise minimum.
-    Assumes VPMs are normalized to the range [0, 1].
+    Assumes VPMs are normalized to the range [0, 1] (float) or [0, 255] (uint8/uint16).
 
     Args:
         a (np.ndarray): First VPM.
-        b (np.ndarray): Second VPM (same shape as a).
+        b (np.ndarray): Second VPM (same shape and dtype as a).
 
     Returns:
-        np.ndarray: The resulting VPM from the AND operation.
+        np.ndarray: The resulting VPM from the AND operation (same dtype as inputs).
     
     Raises:
         ValueError: If VPMs have mismatched shapes.
@@ -71,26 +71,31 @@ def vpm_and(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 def vpm_not(a: np.ndarray) -> np.ndarray:
     """
     Performs a logical NOT operation on a VPM.
-    Inverts the relevance/priority represented in the VPM by subtracting each value from 1.0.
-    Assumes VPMs are normalized to the range [0, 1].
+    Inverts the relevance/priority represented in the VPM.
+    Assumes VPMs are normalized to the range [0, 1] (float) or [0, 255] (uint8/uint16).
 
     Args:
         a (np.ndarray): Input VPM.
 
     Returns:
-        np.ndarray: The resulting inverted VPM.
+        np.ndarray: The resulting inverted VPM (same dtype as input).
     """
-    logger.debug(f"Performing VPM NOT operation on shape {a.shape}")
-    result = 1.0 - a
+    logger.debug(f"Performing VPM NOT operation on shape {a.shape} with dtype {a.dtype}")
+    # Use the maximum value of the input dtype for inversion
+    if np.issubdtype(a.dtype, np.integer):
+        dtype_info = np.iinfo(a.dtype)
+    else: # floating point
+        dtype_info = np.finfo(a.dtype)
+    max_val = dtype_info.max
+    result = max_val - a
     logger.debug("VPM NOT operation completed.")
     return result
 
 def vpm_diff(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Performs a logical difference operation (A - B) on two VPMs.
-    Result highlights areas important to A but NOT to B. This is functionally
-    equivalent to `vpm_and(a, vpm_not(b))`.
-    Assumes VPMs are normalized to the range [0, 1].
+    Result highlights areas important to A but NOT to B.
+    Assumes VPMs are normalized to the range [0, 1] (float) or [0, 255] (uint8).
 
     Args:
         a (np.ndarray): First VPM (minuend).
@@ -100,22 +105,45 @@ def vpm_diff(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         np.ndarray: The resulting VPM from the difference operation.
 
     Raises:
-        ValueError: If VPMs have mismatched shapes.
+        ValueError: If VPMs have mismatched shapes or dtypes.
     """
     logger.debug(f"Performing VPM DIFF (A - B) operation on shapes {a.shape} and {b.shape}")
     if a.shape != b.shape:
         logger.error(f"VPM DIFF: Shape mismatch. a: {a.shape}, b: {b.shape}")
         raise ValueError(f"VPMs must have the same shape for DIFF. Got {a.shape} and {b.shape}")
-    # Subtract and clip to [0, 1] to ensure valid range
-    result = np.clip(a - b, 0.0, 1.0)
+    if a.dtype != b.dtype:
+         logger.warning(f"VPM DIFF: Dtype mismatch. a: {a.dtype}, b: {b.dtype}. Proceeding, but results may vary.")
+
+    # Handle potential underflow by casting to a wider integer type for subtraction
+    # This works for both float and integer types.
+    common_dtype = a.dtype # Assume inputs are the same dtype
+    if np.issubdtype(common_dtype, np.integer):
+        # Use a wider integer type for calculation
+        calc_dtype = np.int16 if common_dtype != np.int16 else np.int32
+    else: # floating point
+        calc_dtype = common_dtype # Usually float64 or float32 is fine
+
+    # Perform subtraction in the calculation dtype, then clip and cast back
+    diff_temp = a.astype(calc_dtype) - b.astype(calc_dtype)
+    
+    # Determine clipping bounds based on the original dtype
+    if np.issubdtype(common_dtype, np.integer):
+        dtype_info = np.iinfo(common_dtype)
+    else:
+        dtype_info = np.finfo(common_dtype)
+        
+    min_val = dtype_info.min
+    max_val = dtype_info.max
+    
+    result = np.clip(diff_temp, min_val, max_val).astype(common_dtype)
     logger.debug("VPM DIFF operation completed.")
     return result
 
 def vpm_add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Performs a simple additive operation on two VPMs (A + B), clipping the result
-    to ensure it remains in the [0, 1] range. This operation can be used to
-    amplify relevance when both VPMs are active.
+    to ensure it remains in the valid range for the input dtype.
+    This operation can be used to amplify relevance when both VPMs are active.
 
     Args:
         a (np.ndarray): First VPM.
@@ -131,8 +159,22 @@ def vpm_add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     if a.shape != b.shape:
         logger.error(f"VPM ADD: Shape mismatch. a: {a.shape}, b: {b.shape}")
         raise ValueError(f"VPMs must have the same shape for ADD. Got {a.shape} and {b.shape}")
-    # Add and clip to [0, 1]
-    result = np.clip(a + b, 0.0, 1.0)
+    
+    # Add and clip to the valid range of the input dtype
+    common_dtype = a.dtype
+    if np.issubdtype(common_dtype, np.integer):
+        dtype_info = np.iinfo(common_dtype)
+    else: # floating point
+        dtype_info = np.finfo(common_dtype)
+        
+    min_val = dtype_info.min
+    max_val = dtype_info.max
+
+    # Perform addition in a wider type to prevent overflow, then clip and cast back
+    calc_dtype = np.int32 if np.issubdtype(common_dtype, np.integer) else common_dtype
+    add_temp = a.astype(calc_dtype) + b.astype(calc_dtype)
+    result = np.clip(add_temp, min_val, max_val).astype(common_dtype)
+    
     logger.debug("VPM ADD operation completed.")
     return result
 
@@ -158,8 +200,9 @@ def vpm_xor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         raise ValueError(f"VPMs must have the same shape for XOR. Got {a.shape} and {b.shape}")
     
     # Calculate (A AND NOT B) OR (B AND NOT A)
-    a_and_not_b = vpm_diff(a, b)
-    b_and_not_a = vpm_diff(b, a)
+    # Using the updated vpm_diff and vpm_not which handle dtypes
+    a_and_not_b = vpm_diff(a, b) # This is A - B, which is close to A AND NOT B in fuzzy logic
+    b_and_not_a = vpm_diff(b, a) # This is B - A
     result = vpm_or(a_and_not_b, b_and_not_a)
     
     logger.debug("VPM XOR operation completed.")
@@ -249,6 +292,13 @@ def query_top_left(vpm: np.ndarray, context_size: int = 1) -> float:
     
     top_left_region = vpm[:actual_context_h, :actual_context_w]
     # Simple aggregation: mean. Could be max, weighted, etc.
-    score = np.mean(top_left_region)
+    # If the VPM is uint8, convert to float for calculation to get a 0-1 score
+    if np.issubdtype(top_left_region.dtype, np.integer):
+        dtype_info = np.iinfo(top_left_region.dtype)
+        max_val = dtype_info.max
+        score = np.mean(top_left_region.astype(np.float64) / max_val)
+    else:
+        score = np.mean(top_left_region)
+        
     logger.debug(f"Top-left query score (mean of {actual_context_h}x{actual_context_w} region): {score:.4f}")
     return score

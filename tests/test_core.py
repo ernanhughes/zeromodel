@@ -88,45 +88,93 @@ def test_zeromodel_example():
     assert np.array_equal(zeromodel.sorted_matrix[0], expected_first_row)
     # Add more assertions for other rows if needed
 
-@pytest.mark.skip("Requires DuckDB setup we no longer support")    
-def test_duckdb_integration():
-    """Test DuckDB integration for SQL query analysis"""
+
+def test_duckdb_integration_and_data_loading():
+    """Test DuckDB integration and data loading within the prepare() workflow."""
+    # 1. Setup
     metric_names = ["uncertainty", "size", "quality", "novelty"]
     zeromodel = ZeroModel(metric_names)
     
-    # Verify DuckDB connection is properly initialized
+    # 2. Verify DuckDB connection and initial schema (without data row)
+    # ... (this part remains the same) ...
     assert zeromodel.duckdb_conn is not None
     
-    # Test virtual index table structure
-    result = zeromodel.duckdb_conn.execute(
-        "PRAGMA table_info(virtual_index)"
-    ).fetchall()
-    
-    # Should have row_id + all metric columns
+    result = zeromodel.duckdb_conn.execute("PRAGMA table_info(virtual_index)").fetchall()
     assert len(result) == len(metric_names) + 1
-    assert result[0][1] == "row_id"  # First column is row_id
+    assert result[0][1] == "row_id"
     for i, col_name in enumerate(metric_names):
         assert result[i+1][1] == col_name
-    
-    # Test virtual index table content
-    result = zeromodel.duckdb_conn.execute(
-        "SELECT * FROM virtual_index"
-    ).fetchone()
-    
-    # Should contain row_id (0) followed by metric indices (0, 1, 2, 3)
-    assert result[0] == 0
-    for i in range(len(metric_names)):
-        assert result[i+1] == i
-    
-    # Test DuckDB query execution
-    analysis = zeromodel._analyze_query(
-        "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC"
-    )
-    assert "metric_order" in analysis
-    assert len(analysis["metric_order"]) == len(metric_names)
-    # Uncertainty should be first, size second
-    assert analysis["metric_order"][0] == 0
-    assert analysis["metric_order"][1] == 1
+
+    result = zeromodel.duckdb_conn.execute("SELECT * FROM virtual_index").fetchone()
+    assert result is None, "virtual_index table should be empty after initialization."
+    # --- End of part that remains the same ---
+
+    # 3. Prepare some test data
+    # Create a small, simple score matrix
+    score_matrix = np.array([
+        [0.8, 0.4, 0.9, 0.1],  # Document 0
+        [0.6, 0.7, 0.3, 0.8],  # Document 1
+        [0.2, 0.9, 0.5, 0.6],  # Document 2
+    ])
+    # Simple SQL query
+    sql_query = "SELECT * FROM virtual_index ORDER BY uncertainty DESC"
+
+    # --- KEY CHANGE 1: Normalize the data the same way ZeroModel.prepare will ---
+    # To correctly test the data loading, we need to compare against the data
+    # that is actually loaded into DuckDB, which is the normalized data.
+    # We simulate the normalization process that happens inside prepare().
+    from zeromodel.normalizer import DynamicNormalizer # Adjust import path if needed
+    # Create a normalizer with the same metric names
+    test_normalizer = DynamicNormalizer(metric_names)
+    # Update its internal min/max with the test data (as prepare does)
+    test_normalizer.update(score_matrix)
+    # Get the normalized data that prepare() will load (as prepare does)
+    expected_normalized_data = test_normalizer.normalize(score_matrix)
+    print(f"DEBUG: Original score_matrix:\n{score_matrix}")
+    print(f"DEBUG: Expected normalized data loaded to DuckDB:\n{expected_normalized_data}")
+    # --- END KEY CHANGE 1 ---
+
+    # 4. Use prepare() to load data and process
+    zeromodel.prepare(score_matrix, sql_query) # No hint for this test
+
+    # 5. Verify data was loaded correctly
+    # Check number of rows
+    count_result = zeromodel.duckdb_conn.execute("SELECT COUNT(*) FROM virtual_index").fetchone()
+    assert count_result[0] == score_matrix.shape[0], f"Expected {score_matrix.shape[0]} rows in virtual_index, found {count_result[0]}"
+
+    # Check content of the table (order might differ from insertion, but data should match)
+    # Fetch all data, ordered by row_id for easy comparison
+    table_data_result = zeromodel.duckdb_conn.execute("SELECT * FROM virtual_index ORDER BY row_id").fetchall()
+    # --- KEY CHANGE 2: Compare against expected_normalized_data ---
+    for i in range(expected_normalized_data.shape[0]): # Use expected_normalized_data.shape
+        row_from_db = table_data_result[i]
+        row_id_from_db = row_from_db[0]
+        metrics_from_db = np.array(row_from_db[1:]) # Exclude row_id, convert to np array for easier handling
+        
+        assert row_id_from_db == i, f"Row ID mismatch at index {i}: expected {i}, got {row_id_from_db}"
+        
+        # Compare the metrics loaded into DB with the EXPECTED NORMALIZED data
+        expected_metrics_for_row = expected_normalized_data[i] # Get the normalized row
+        print(f"DEBUG: Comparing DB row {i}: {metrics_from_db} vs Expected Norm: {expected_metrics_for_row}")
+        
+        # Use np.allclose for robust floating point comparison
+        assert np.allclose(metrics_from_db, expected_metrics_for_row, atol=1e-6), \
+            f"Metric data mismatch for row {i}.\nExpected (normalized): {expected_metrics_for_row}\nGot from DB: {metrics_from_db}"
+        # --- END KEY CHANGE 2 ---
+
+    # 6. Test with nonlinearity hint (if enabled in ZeroModel)
+    # ... (The rest of this part of the test can remain similar, but also needs
+    # to account for normalization if checking raw data values) ...
+    # For brevity, let's focus on the core data loading part first.
+    # You can apply similar normalization logic if you extend this part later.
+
+    # 7. Verify internal state reflects processing (basic check)
+    assert zeromodel.sorted_matrix is not None
+    expected_rows = score_matrix.shape[0]
+    expected_cols = score_matrix.shape[1] # No hint in this part of the test
+    assert zeromodel.sorted_matrix.shape == (expected_rows, expected_cols), f"sorted_matrix shape mismatch. Expected ({expected_rows}, {expected_cols}), got {zeromodel.sorted_matrix.shape}"
+
+    print("test_duckdb_integration_and_data_loading passed!")
 
 def test_normalization_quantization():
     """Test normalization and quantization behavior with different precision levels"""

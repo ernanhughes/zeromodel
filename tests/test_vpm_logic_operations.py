@@ -15,6 +15,8 @@ This provides a comprehensive, visual demonstration of the VPM logic system.
 
 import numpy as np
 import pytest
+import matplotlib
+matplotlib.use('Agg')  # Use non-GUI backend to avoid TclError
 import matplotlib.pyplot as plt
 import os
 from zeromodel.core import ZeroModel
@@ -270,7 +272,7 @@ def save_vpm_image(vpm: np.ndarray, title: str, filename: str):
     plt.close()
     print(f"Saved VPM image: {filepath}")
 
-# In tests/test_vpm_logic_operations.py
+# tests/test_vpm_logic_operations.py
 
 def test_vpm_add_operation():
     """Test the vpm_add operation end-to-end."""
@@ -282,46 +284,50 @@ def test_vpm_add_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode() # uint8
+    # --- KEY CHANGE 1: Get encoded VPMs (which are now float32 by default likely) ---
+    # The test needs to be clear about the dtype it's working with.
+    # If the test wants to work with uint8 VPMs, it needs to request them.
+    # Let's assume for this test, we work with the default float32 VPMs from encode().
+    vpm_a = model_a.encode() # This is now a normalized float32 VPM by default (from recent changes)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode() # uint8
+    vpm_b = model_b.encode() # This is now a normalized float32 VPM by default
     
-    vpm_result = vpm_add(vpm_a, vpm_b) # Result is also uint8
+    # --- KEY CHANGE 2: vpm_add now produces normalized float32 output ---
+    vpm_result = vpm_add(vpm_a, vpm_b) # Result is now normalized float32
     
     save_vpm_image(vpm_a, "VPM A (High feature_a)", "vpm_a_high_a.png")
     save_vpm_image(vpm_b, "VPM B (High feature_b)", "vpm_b_high_b.png")
     save_vpm_image(vpm_result, "VPM ADD (High A + High B)", "vpm_result_add.png")
     
-    # --- CORRECTED ASSERTIONS for uint8 VPMs ---
-    # Basic sanity check: Result should be >= both inputs (element-wise) and <= max uint8 value (element-wise)
-    # Use the maximum value for the dtype of the inputs/results
-    max_val_for_dtype = np.iinfo(vpm_result.dtype).max # This will be 255 for uint8
-    
-    assert np.all(vpm_result >= vpm_a), "ADD result should be >= VPM A"
-    assert np.all(vpm_result >= vpm_b), "ADD result should be >= VPM B"
-    # The key correction: Check against the maximum value for the specific dtype (e.g., 255 for uint8)
-    assert np.all(vpm_result <= max_val_for_dtype), f"ADD result should be <= {max_val_for_dtype} for dtype {vpm_result.dtype}"
-    # --- END CORRECTED ASSERTIONS ---
+    # --- KEY CHANGE 3: Update assertions for normalized float32 output ---
+    # Basic sanity check: Result values should be in the valid normalized range [0.0, 1.0]
+    # and should be >= individual inputs (element-wise) due to addition.
+    assert np.all(vpm_result >= 0.0), "ADD result should be >= 0.0"
+    assert np.all(vpm_result <= 1.0), "ADD result should be <= 1.0 (normalized)" # <-- CHANGED ASSERTION
+    assert np.all(vpm_result >= vpm_a), "ADD result should be >= VPM A (element-wise)"
+    assert np.all(vpm_result >= vpm_b), "ADD result should be >= VPM B (element-wise)"
+    # The result dtype should be float32 (normalized output)
+    assert vpm_result.dtype == np.float32, f"ADD result dtype should be float32, got {vpm_result.dtype}" # <-- CHANGED ASSERTION
+    # --- END KEY CHANGE 3 ---
     
     # Should amplify relevance where both are high (Doc 2 might be brighter)
-    # Normalize scores for reporting if query_top_left expects/works better with 0-1
-    # or modify query_top_left to handle uint8. Let's normalize for reporting.
-    score_add = query_top_left(vpm_result.astype(np.float64) / max_val_for_dtype)
-    score_a = query_top_left(vpm_a.astype(np.float64) / max_val_for_dtype)
-    score_b = query_top_left(vpm_b.astype(np.float64) / max_val_for_dtype)
+    # Use query_top_left which now handles normalized floats correctly
+    score_add = query_top_left(vpm_result) # Works on normalized float32
+    score_a = query_top_left(vpm_a)
+    score_b = query_top_left(vpm_b)
     print(f"  A Top-Left Score (normalized): {score_a:.4f}")
     print(f"  B Top-Left Score (normalized): {score_b:.4f}")
     print(f"  ADD (A+B) Top-Left Score (normalized): {score_add:.4f}")
-    # Add score should be higher than either individual score (unless one is max).
+    # Add score should be higher than either individual score (unless one is 1.0).
     # Check it's at least as high as the max of the two individual normalized scores.
     max_individual_norm = max(score_a, score_b)
     # Allow for small floating point differences
     assert score_add >= max_individual_norm - 1e-6, "ADD score (normalized) should be >= max individual normalized score"
     print("  ✅ vpm_add test passed.")
 
-# In tests/test_vpm_logic_operations.py
+# tests/test_vpm_logic_operations.py
 
 def test_vpm_xor_operation():
     """Test the vpm_xor operation end-to-end."""
@@ -335,36 +341,39 @@ def test_vpm_xor_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode() # uint8
+    # --- KEY CHANGE 1: Get encoded VPMs (which are now float32 by default likely) ---
+    vpm_a = model_a.encode() # This is now a normalized float32 VPM by default (from recent changes)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode() # uint8
+    vpm_b = model_b.encode() # This is now a normalized float32 VPM by default
     
-    vpm_result = vpm_xor(vpm_a, vpm_b) # Result is also uint8
+    # --- KEY CHANGE 2: vpm_xor now produces normalized float32 output ---
+    vpm_result = vpm_xor(vpm_a, vpm_b) # Result is now normalized float32
     
     save_vpm_image(vpm_a, "VPM A (High feature_a)", "vpm_a_high_a.png")
     save_vpm_image(vpm_b, "VPM B (High feature_b)", "vpm_b_high_b.png")
     save_vpm_image(vpm_result, "VPM XOR (High A XOR High B)", "vpm_result_xor.png")
     
-    # --- CORRECTED ASSERTIONS for uint8 VPMs ---
-    # Basic sanity check: Result should be >= 0 and <= max value for the dtype
-    # Use the maximum value for the dtype of the inputs/results
-    max_val_for_dtype = np.iinfo(vpm_result.dtype).max # This will be 255 for uint8
-    
-    # XOR result values should logically be within the valid range of the input dtype.
-    assert np.all(vpm_result >= 0), "XOR result should be >= 0"
-    # The key correction: Check against the maximum value for the specific dtype (e.g., 255 for uint8)
-    assert np.all(vpm_result <= max_val_for_dtype), f"XOR result should be <= {max_val_for_dtype} for dtype {vpm_result.dtype}"
-    # --- END CORRECTED ASSERTIONS ---
+    # --- KEY CHANGE 3: Update assertions for normalized float32 output ---
+    # Basic sanity check: Result values should be in the valid normalized range [0.0, 1.0]
+    # and should be >= 0 and <= 1.
+    assert np.all(vpm_result >= 0.0), "XOR result should be >= 0.0"
+    assert np.all(vpm_result <= 1.0), "XOR result should be <= 1.0 (normalized)" # <-- CHANGED ASSERTION
+    # The result dtype should be float32 (normalized output)
+    assert vpm_result.dtype == np.float32, f"XOR result dtype should be float32, got {vpm_result.dtype}" # <-- CHANGED ASSERTION
+    # --- END KEY CHANGE 3 ---
     
     # The top-left should highlight Doc 0 and Doc 1, but not Doc 2 (which is high in both)
     # So the score might be moderate.
     # Normalize for reporting/interpretation if needed.
-    score_xor = query_top_left(vpm_result.astype(np.float64) / max_val_for_dtype)
+    score_xor = query_top_left(vpm_result) # query_top_left handles float32 VPMs
     print(f"  XOR Result Top-Left Score (normalized): {score_xor:.4f}")
     # Visual inspection of vpm_result_xor.png is key here.
+    # A basic check: score should be > 0 and <= 1.0
+    assert 0.0 <= score_xor <= 1.0, f"XOR score should be in [0.0, 1.0], got {score_xor}"
     print("  ✅ vpm_xor test passed (check image vpm_result_xor.png).")
+
 
 def test_vpm_nand_operation():
     """Test the vpm_nand operation end-to-end."""

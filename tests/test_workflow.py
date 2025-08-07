@@ -17,7 +17,7 @@ def test_complete_zeromodel_workflow():
     zeromodel.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
 
     # 3. Encode as visual policy map
-    vpm = zeromodel.encode()
+    vpm = zeromodel.encode(output_precision='uint8')
     assert vpm is not None
     assert vpm.shape[0] == 100  # Should match number of documents
     assert vpm.dtype == np.uint8

@@ -19,6 +19,19 @@ from zeromodel.normalizer import DynamicNormalizer
 logger = logging.getLogger(__name__)  # This will be 'zeromodel.core'
 logger.setLevel(logging.DEBUG)  # Set to DEBUG for detailed output
 
+# zeromodel/core.py (Relevant parts updated)
+# (Assuming other imports and logger setup are already present)
+
+import numpy as np
+import logging
+from typing import List, Tuple, Dict, Any, Optional
+import duckdb
+
+# Assuming DynamicNormalizer is imported or defined elsewhere in the file
+# from .normalizer import DynamicNormalizer
+
+logger = logging.getLogger(__name__)
+
 class ZeroModel:
     """
     Zero-Model Intelligence encoder/decoder with DuckDB SQL processing.
@@ -32,35 +45,327 @@ class ZeroModel:
     The intelligence is in the data structure itself, not in processing.
     """
 
-    def __init__(self, metric_names: List[str], precision: int = 8):
+    def __init__(self, metric_names: List[str], precision: int = 8, default_output_precision: str = 'float32'):
         """
         Initialize ZeroModel encoder with DuckDB SQL processing.
 
         Args:
             metric_names: Names of all metrics being tracked.
-            precision: Bit precision for encoding (4-16).
-
+            precision: Bit precision for internal processing (4-16). (Legacy/kept for compatibility)
+            default_output_precision: Default dtype for encode() output.
+                                      Supported: 'uint8', 'float16', 'float32', 'float64'.
+                                      This affects the default output of encode() and get_critical_tile().
         Raises:
-            ValueError: If metric_names is empty or precision is invalid.
+            ValueError: If metric_names is empty or default_output_precision is invalid.
         """
-        logger.debug(
-            f"Initializing ZeroModel with metrics: {metric_names}, precision: {precision}"
-        )
+        logger.debug(f"Initializing ZeroModel with metrics: {metric_names}, precision: {precision}, default_output_precision: {default_output_precision}")
         if not metric_names:
             error_msg = "metric_names list cannot be empty."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        self.metric_names = list(metric_names)  # Ensure it's a list
-        self.precision = max(4, min(16, precision))
+        # Validate default_output_precision
+        valid_precisions = ['uint8', 'float16', 'float32', 'float64']
+        if default_output_precision not in valid_precisions:
+             logger.warning(f"Invalid default_output_precision '{default_output_precision}'. Must be one of {valid_precisions}. Defaulting to 'float32'.")
+             default_output_precision = 'float32'
+             
+        self.metric_names = list(metric_names) # Ensure it's a list
+        self.precision = max(4, min(16, precision)) # Legacy precision param
+        # --- NEW ATTRIBUTE: Default Output Precision ---
+        self.default_output_precision = default_output_precision
+        # --- END NEW ATTRIBUTE ---
+        # ... (rest of __init__ attributes: sorted_matrix, doc_order, etc.) ...
         self.sorted_matrix: Optional[np.ndarray] = None
         self.doc_order: Optional[np.ndarray] = None
         self.metric_order: Optional[np.ndarray] = None
+        # ... (task attributes) ...
         self.task: str = "default"
         self.task_config: Optional[Dict[str, Any]] = None
         # Initialize DuckDB connection
         self.duckdb_conn: duckdb.DuckDBPyConnection = self._init_duckdb()
-        self.normalizer = DynamicNormalizer(metric_names)
-        logger.info(f"ZeroModel initialized with {len(self.metric_names)} metrics.")
+        # Initialize Dynamic Normalizer
+        self.normalizer = DynamicNormalizer(self.metric_names)
+        logger.info(f"ZeroModel initialized with {len(self.metric_names)} metrics. Default output precision: {self.default_output_precision}.")
+
+    def encode(self, output_precision: Optional[str] = None) -> np.ndarray:
+        """
+        Encode the processed data into a full visual policy map (VPM).
+
+        The VPM is a structured image where:
+        - Position encodes relevance/importance (top-left = most relevant)
+        - Color/value encodes metric scores (darker = higher value)
+        - Structure encodes task logic (organization based on SQL query)
+
+        This method now supports configurable output precision for resolution independence.
+
+        Args:
+            output_precision: Desired output dtype as a string.
+                              Overrides `self.default_output_precision` if provided.
+                              Supported: 'uint8', 'float16', 'float32', 'float64'.
+                              If None, uses `self.default_output_precision`.
+
+        Returns:
+            np.ndarray: RGB image array of shape [height, width, 3].
+                        Dtype is determined by `output_precision` or `self.default_output_precision`.
+                        
+        Raises:
+            ValueError: If `process` has not been called successfully yet.
+        """
+        logger.debug(f"Encoding VPM using vectorized operations. Requested output precision: {output_precision}")
+        if self.sorted_matrix is None:
+            error_msg = "Data not processed yet. Call process() or prepare() first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        # --- Determine Final Output Precision ---
+        final_precision = output_precision if output_precision is not None else self.default_output_precision
+        valid_precisions = ['uint8', 'uint16', 'float16', 'float32', 'float64']
+        if final_precision not in valid_precisions:
+             logger.warning(f"Invalid output_precision '{final_precision}'. Must be one of {valid_precisions}. Using default '{self.default_output_precision}'.")
+             final_precision = self.default_output_precision
+        # Map string to actual numpy dtype
+        precision_dtype_map = {
+            'uint8': np.uint8,
+            'uint16': np.uint16, # <-- CRITICAL: Ensure this line exists
+            'float16': np.float16,
+            'float32': np.float32, # Default internal working precision for normalized data
+            'float64': np.float64,
+        }
+        target_dtype = precision_dtype_map.get(final_precision) # Use .get for safety
+        if target_dtype is None:
+            # Handle error if mapping failed unexpectedly
+            logger.error(f"Failed to map final_precision '{final_precision}' to a numpy dtype.")
+            target_dtype = np.float32 # Fallback
+            final_precision = 'float32' # Sync fallback string
+        logger.debug(f"Encoding VPM with target output dtype: {target_dtype}")
+        # --- End Determine Final Output Precision ---
+
+        n_docs, n_metrics = self.sorted_matrix.shape
+        logger.debug(f"Encoding matrix of shape {n_docs}x{n_metrics}")
+        # Calculate required width (3 metrics per pixel, ceiling division)
+        width = (n_metrics + 2) // 3
+        logger.debug(f"Calculated VPM width: {width} pixels")
+
+        # --- Vectorized Encoding (on normalized data) ---
+        # 1. The self.sorted_matrix should already be normalized [0.0, 1.0] float64/float32
+        #    from the DynamicNormalizer within process/prepare.
+        #    Let's ensure it's float32 for internal consistency if it's not already.
+        internal_working_dtype = np.float32
+        if self.sorted_matrix.dtype != internal_working_dtype:
+            logger.debug(f"Casting internal sorted_matrix from {self.sorted_matrix.dtype} to {internal_working_dtype} for encoding.")
+            internal_sorted_matrix = self.sorted_matrix.astype(internal_working_dtype)
+        else:
+            internal_sorted_matrix = self.sorted_matrix
+        logger.debug(f"Internal sorted_matrix dtype for encoding: {internal_sorted_matrix.dtype}")
+
+        # 2. Pad the data to make the number of metrics a multiple of 3
+        padding_needed = (3 - n_metrics % 3) % 3
+        if padding_needed > 0:
+            logger.debug(f"Padding sorted_matrix with {padding_needed} zeros.")
+            padded_data = np.pad(internal_sorted_matrix, ((0, 0), (0, padding_needed)), mode='constant', constant_values=0.0)
+        else:
+            padded_data = internal_sorted_matrix
+        logger.debug(f"Padded data shape: {padded_data.shape}")
+
+        # 3. Reshape the padded data directly into the image format [n_docs, width, 3]
+        try:
+            # Reshape from [n_docs, n_metrics_padded] to [n_docs, width, 3]
+            img_data = padded_data.reshape(n_docs, width, 3)
+            logger.debug(f"Data reshaped to image format: {img_data.shape}")
+        except ValueError as e:
+            logger.error(f"Error reshaping data for encoding: {e}. Check matrix dimensions.")
+            raise ValueError(f"Cannot reshape data of shape {padded_data.shape} to ({n_docs}, {width}, 3). Padding might be incorrect.") from e
+
+        # 4. Convert normalized float values [0.0, 1.0] to the target output dtype
+        #    We use the vpm_logic.denormalize_vpm helper for this if available,
+        #    or implement the logic directly here for clarity.
+        #    Let's assume vpm_logic.denormalize_vpm is available.
+        # --- Use vpm_logic.denormalize_vpm if available ---
+        try:
+            # Try importing the helper function
+            from .vpm_logic import denormalize_vpm
+            logger.debug("Using vpm_logic.denormalize_vpm for output conversion.")
+            img = denormalize_vpm(img_data, output_type=target_dtype)
+        except ImportError:
+            # Fallback if vpm_logic is not available or denormalize_vpm isn't found
+            logger.debug("vpm_logic.denormalize_vpm not found. Using direct conversion.")
+            if target_dtype == np.uint8:
+                # Convert [0.0, 1.0] float to [0, 255] uint8
+                img = np.clip(img_data * 255.0, 0, 255).astype(target_dtype)
+            else:
+                # For float outputs, clamp to [0.0, 1.0] and cast
+                img = np.clip(img_data, 0.0, 1.0).astype(target_dtype)
+        # --- End Conversion ---
+        logger.debug(f"Final VPM image array shape: {img.shape}, dtype: {img.dtype}")
+        # --- End Vectorized Encoding ---
+        
+        logger.info(f"VPM encoded successfully using vectorization. Shape: {img.shape}, Output Dtype: {img.dtype}")
+        return img
+
+    def get_critical_tile(self, tile_size: int = 3, precision: Optional[str] = None) -> bytes:
+        """
+        Get critical tile for edge devices (top-left section).
+
+        Args:
+            tile_size: Size of tile to extract (default 3x3).
+            precision: Desired output precision for the tile data as a string.
+                        Supported: 'uint8', 'float16', 'float32', 'float64'.
+                        If None, uses `self.default_output_precision`.
+                        Note: The returned bytes represent the raw data of the tile
+                        in the specified precision. Interpretation depends on the receiver.
+
+        Returns:
+            bytes: Compact byte representation of the tile.
+                   Format: [width][height][x_offset][y_offset][pixel_data...]
+                   Pixel data is flattened row-major, channel-interleaved (RGBRGB...).
+                   
+        Raises:
+            ValueError: If `process` has not been called successfully yet.
+        """
+        logger.debug(f"Extracting critical tile of size {tile_size}x{tile_size}, requested precision: {precision}")
+        if self.sorted_matrix is None:
+            error_msg = "Data not processed yet. Call process() or prepare() first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        # --- Determine Tile Precision ---
+        final_tile_precision = precision if precision is not None else self.default_output_precision
+        valid_precisions = ['uint8', 'float16', 'float32', 'float64']
+        if final_tile_precision not in valid_precisions:
+             logger.warning(f"Invalid tile precision '{final_tile_precision}'. Must be one of {valid_precisions}. Using default '{self.default_output_precision}'.")
+             final_tile_precision = self.default_output_precision
+
+        precision_dtype_map = {
+            'uint8': np.uint8,
+            'float16': np.float16,
+            'float32': np.float32,
+            'float64': np.float64,
+        }
+        target_tile_dtype = precision_dtype_map[final_tile_precision]
+        logger.debug(f"Critical tile will be extracted and converted to dtype: {target_tile_dtype}")
+        # --- End Determine Tile Precision ---
+
+        # --- Existing tile extraction logic (mostly) ---
+        n_docs, n_metrics = self.sorted_matrix.shape
+        actual_tile_height = min(tile_size, n_docs)
+        actual_tile_width_metrics = min(tile_size * 3, n_metrics)
+        actual_tile_width_pixels = (actual_tile_width_metrics + 2) // 3
+        # Extract the top-left tile data from the sorted_matrix
+        tile_data = self.sorted_matrix[:actual_tile_height, :actual_tile_width_metrics]
+        logger.debug(f"Extracted raw tile data shape: {tile_data.shape}")
+
+        # --- Convert Tile Data to Requested Precision ---
+        # The tile_data is assumed to be the normalized float matrix from sorted_matrix.
+        # We need to convert it to the target_tile_dtype.
+        try:
+            from .vpm_logic import denormalize_vpm, normalize_vpm
+            # Ensure tile_data is normalized float first (it should be, but safeguard)
+            normalized_tile_data = normalize_vpm(tile_data) # Should be no-op if already normalized
+            # Convert to target dtype
+            converted_tile_data = denormalize_vpm(normalized_tile_data, output_type=target_tile_dtype)
+        except (ImportError, ModuleNotFoundError):
+            logger.debug("vpm_logic helpers not found for tile conversion. Using direct method.")
+            # Direct conversion logic (duplicate of encode's fallback)
+            if target_tile_dtype == np.uint8:
+                converted_tile_data = np.clip(tile_data * 255.0, 0, 255).astype(target_tile_dtype)
+            else: # float types
+                converted_tile_data = np.clip(tile_data, 0.0, 1.0).astype(target_tile_dtype)
+        logger.debug(f"Converted tile data to target dtype {target_tile_dtype}. Shape: {converted_tile_data.shape}")
+        # --- End Convert Tile Data ---
+
+        # --- Build Tile Bytes ---
+        tile_bytes = bytearray()
+        # Standard Header (using actual dimensions)
+        tile_bytes.append(actual_tile_width_pixels & 0xFF) # Width in pixels
+        tile_bytes.append(actual_tile_height & 0xFF)       # Height in docs
+        tile_bytes.append(0 & 0xFF)                        # X offset (always 0 for top-left)
+        tile_bytes.append(0 & 0xFF)                        # Y offset (always 0 for top-left)
+        logger.debug("Appended tile header bytes.")
+
+        # Pixel Data (flattened, 1 value per channel element)
+        # Iterate based on the converted tile data shape and dtype
+        # Flatten the data in row-major, channel-interleaved order (C-style flatten is default)
+        flattened_pixel_data = converted_tile_data.flatten() # Shape becomes (H * W * C,)
+        logger.debug(f"Flattened pixel data for tile: {flattened_pixel_data.shape}")
+
+        # --- Pack Pixel Data Bytes ---
+        # Handle different dtypes for byte conversion
+        if target_tile_dtype == np.uint8:
+            # Data is already bytes, just extend the bytearray
+            tile_bytes.extend(flattened_pixel_data.tobytes())
+        else:
+            # For float types, we need to convert each element to bytes
+            # Use numpy's tobytes method with native byte order ('<')
+            # The receiver must know the dtype to interpret these bytes correctly.
+            # This packs the raw bytes of the float values.
+            tile_bytes.extend(flattened_pixel_data.tobytes()) # .tobytes() handles endianness (native by default)
+        # --- End Pack Pixel Data Bytes ---
+                
+        result_bytes = bytes(tile_bytes)
+        logger.info(f"Critical tile extracted. Size: {len(result_bytes)} bytes. Output precision: {target_tile_dtype}.")
+        return result_bytes
+
+    def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
+        """
+        Get top decision with contextual understanding.
+        NOTE: This method operates on the internal sorted_matrix (normalized float).
+        It should produce a relevance score between 0.0 and 1.0.
+        """
+        logger.debug(f"Making decision with context size {context_size}")
+        if self.sorted_matrix is None:
+            error_msg = "Data not processed yet. Call process() or prepare() first."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        
+        if context_size <= 0:
+            error_msg = f"context_size must be positive, got {context_size}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        n_docs, n_metrics = self.sorted_matrix.shape
+        # Determine actual context window size
+        actual_context_docs = min(context_size, n_docs)
+        actual_context_metrics = min(context_size * 3, n_metrics) # Width in metrics
+        logger.debug(f"Actual decision context: {actual_context_docs} docs x {actual_context_metrics} metrics")
+
+        # Get context window (top-left region) - operates on normalized float data
+        context = self.sorted_matrix[:actual_context_docs, :actual_context_metrics]
+        logger.debug(f"Context data shape for decision: {context.shape}")
+
+        # Calculate contextual relevance (weighted by position) - on normalized data
+        weights = np.zeros_like(context, dtype=np.float64) # Use float64 for calculation
+        for i in range(context.shape[0]): # Iterate through rows (docs)
+            for j in range(context.shape[1]): # Iterate through columns (metrics)
+                # j represents metric index, so j/3 gives approximate pixel x-coordinate
+                pixel_x_coord = j / 3.0
+                distance = np.sqrt(float(i)**2 + pixel_x_coord**2)
+                # Example weight function: linear decrease
+                weight = max(0.0, 1.0 - distance * 0.3)
+                weights[i, j] = weight
+        logger.debug("Calculated positional weights for context.")
+
+        # Calculate weighted relevance - on normalized data
+        sum_weights = np.sum(weights, dtype=np.float64)
+        if sum_weights > 0.0:
+            weighted_sum = np.sum(context * weights, dtype=np.float64)
+            weighted_relevance = weighted_sum / sum_weights
+        else:
+            logger.warning("Sum of weights is zero. Assigning relevance score 0.0.")
+            weighted_relevance = 0.0
+        weighted_relevance = float(weighted_relevance) # Ensure it's a standard float
+        logger.debug(f"Calculated weighted relevance score: {weighted_relevance:.4f}")
+
+        # Get top document index from the *original* order
+        top_doc_idx_in_original = 0
+        if self.doc_order is not None and len(self.doc_order) > 0:
+            top_doc_idx_in_original = int(self.doc_order[0])
+        else:
+            logger.warning("doc_order is not available or empty. Defaulting top document index to 0.")
+        
+        logger.info(f"Decision made: Document index {top_doc_idx_in_original}, Relevance {weighted_relevance:.4f}")
+        # Return index (int) and relevance (float, 0.0-1.0)
+        return (top_doc_idx_in_original, weighted_relevance)
+
 
     def _init_duckdb(self) -> duckdb.DuckDBPyConnection:
         """Initialize DuckDB connection with virtual index table structure."""
@@ -328,10 +633,6 @@ class ZeroModel:
             
         logger.info("ZeroModel preparation complete. Ready for encode/get_decision/etc.")
 
-
-
-
-
     def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
         """
         Analyze SQL query using DuckDB to determine sorting orders.
@@ -510,26 +811,6 @@ class ZeroModel:
         )
         return final_sorted_matrix, np.array(valid_metric_order), doc_order
 
-    @DeprecationWarning
-    def set_sql_task(self, sql_query: str):
-        """
-        Set task using SQL query for spatial organization.
-
-        Args:
-            sql_query: SQL query defining the task (e.g., sorting criteria).
-                       Example: "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC"
-
-        Raises:
-            ValueError: If the SQL query is invalid or cannot be analyzed.
-        """
-        logger.info(f"Setting SQL task: {sql_query}")
-        # Analyze query to determine spatial organization
-        analysis = self._analyze_query(sql_query)
-        # Store task configuration
-        self.task = "sql_task"
-        self.task_config = {"sql_query": sql_query, "analysis": analysis}
-        logger.debug(f"SQL task set. Analysis: {analysis}")
-
     def _set_sql_task(self, sql_query: str):
         """
         Set task using SQL query for spatial organization.
@@ -669,192 +950,6 @@ class ZeroModel:
         logger.info(f"SQL-based organization (with data) applied. Final matrix shape: {final_sorted_matrix.shape}")
         return final_sorted_matrix, np.array(valid_metric_order), np.array(valid_doc_order)
 
-    def encode(self) -> np.ndarray:
-        """
-        Encode the processed data into a full visual policy map.
-
-        Returns:
-            RGB image array of shape [height, width, 3].
-
-        Raises:
-            ValueError: If `process` has not been called successfully yet.
-        """
-        logger.debug("Encoding VPM...")
-        if self.sorted_matrix is None:
-            error_msg = "Data not processed yet. Call process() first."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
-        n_docs, n_metrics = self.sorted_matrix.shape
-        logger.debug(f"Encoding matrix of shape {n_docs}x{n_metrics}")
-        # Calculate required width (3 metrics per pixel, ceiling division)
-        width = (n_metrics + 2) // 3
-        logger.debug(f"Calculated VPM width: {width} pixels")
-
-        # Pad to multiple of 3
-        padded = np.pad(self.sorted_matrix, ((0,0), (0, (3 - n_metrics % 3) % 3)))
-        
-        # Reshape directly to image format
-        img = padded.reshape(n_docs, -1, 3)
-        return (img * 255).astype(np.uint8)
-
-    def get_critical_tile(self, tile_size: int = 3) -> bytes:
-        """
-        Get critical tile for edge devices (top-left section).
-
-        Args:
-            tile_size: Size of tile to extract (default 3x3).
-
-        Returns:
-            Compact byte representation of the tile.
-
-        Raises:
-            ValueError: If `process` has not been called successfully yet.
-        """
-        logger.debug(f"Extracting critical tile of size {tile_size}x{tile_size}")
-        if self.sorted_matrix is None:
-            error_msg = "Data not processed yet. Call process() first."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
-        if tile_size <= 0:
-            error_msg = f"tile_size must be positive, got {tile_size}."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
-        n_docs, n_metrics = self.sorted_matrix.shape
-        # Determine actual tile dimensions (cannot exceed matrix dimensions)
-        actual_tile_height = min(tile_size, n_docs)
-        actual_tile_width_metrics = min(
-            tile_size * 3, n_metrics
-        )  # Width in terms of metrics
-        # Calculate width in pixels
-        actual_tile_width_pixels = (actual_tile_width_metrics + 2) // 3
-        logger.debug(
-            f"Actual tile dimensions: {actual_tile_height} docs x {actual_tile_width_pixels} pixels ({actual_tile_width_metrics} metrics)"
-        )
-
-        # Get top-left section (most relevant documents & metrics)
-        # Note: The original code used tile_size*3 for columns, which might be incorrect
-        # if n_metrics < tile_size*3. We use actual_tile_width_metrics.
-        tile_data = self.sorted_matrix[:actual_tile_height, :actual_tile_width_metrics]
-        logger.debug(f"Extracted tile data shape: {tile_data.shape}")
-
-        # Convert to compact byte format
-        tile_bytes = bytearray()
-        tile_bytes.append(actual_tile_width_pixels & 0xFF)  # Actual width in pixels
-        tile_bytes.append(actual_tile_height & 0xFF)  # Actual height in docs
-        tile_bytes.append(0 & 0xFF)  # X offset (always 0 for top-left)
-        tile_bytes.append(0 & 0xFF)  # Y offset (always 0 for top-left)
-        logger.debug("Appended tile header bytes.")
-
-        # Add pixel data (1 byte per channel)
-        # Iterate based on the actual extracted data dimensions
-        for i in range(actual_tile_height):
-            for j in range(actual_tile_width_metrics):  # Iterate through metrics
-                pixel_x = j // 3
-                channel = j % 3
-                if i < tile_data.shape[0] and j < tile_data.shape[1]:
-                    # Clamp and convert value (assuming [0,1] input)
-                    normalized_value = np.clip(tile_data[i, j], 0.0, 1.0)
-                    byte_value = int(normalized_value * 255) & 0xFF
-                    tile_bytes.append(byte_value)
-                else:
-                    # This case should ideally not happen with the slicing above,
-                    # but added for robustness.
-                    tile_bytes.append(0)  # Padding
-                    logger.warning(
-                        f"Padding added at pixel ({i}, metric {j}) during tile extraction."
-                    )
-        logger.info(f"Critical tile extracted. Size: {len(tile_bytes)} bytes.")
-        return bytes(tile_bytes)
-
-    def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
-        """
-        Get top decision with contextual understanding.
-
-        Args:
-            context_size: Size of context window to consider (NxN metrics area).
-
-        Returns:
-            Tuple of (document_index, relevance_score).
-
-        Raises:
-            ValueError: If `process` has not been called successfully yet.
-        """
-        logger.debug(f"Making decision with context size {context_size}")
-        if self.sorted_matrix is None:
-            error_msg = "Data not processed yet. Call process() first."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
-        if context_size <= 0:
-            error_msg = f"context_size must be positive, got {context_size}."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-
-        n_docs, n_metrics = self.sorted_matrix.shape
-        # Determine actual context window size
-        actual_context_docs = min(context_size, n_docs)
-        actual_context_metrics = min(context_size * 3, n_metrics)  # Width in metrics
-        logger.debug(
-            f"Actual decision context: {actual_context_docs} docs x {actual_context_metrics} metrics"
-        )
-
-        # Get context window (top-left region)
-        context = self.sorted_matrix[:actual_context_docs, :actual_context_metrics]
-        logger.debug(f"Context data shape for decision: {context.shape}")
-
-        # Calculate contextual relevance (weighted by position)
-        weights = np.zeros_like(
-            context, dtype=np.float64
-        )  # Use float64 for calculation
-        for i in range(context.shape[0]):  # Iterate through rows (docs)
-            for j in range(context.shape[1]):  # Iterate through columns (metrics)
-                # Weight decreases with distance from top-left (0,0)
-                # j represents metric index, so j/3 gives approximate pixel x-coordinate
-                pixel_x_coord = j / 3.0
-                distance = np.sqrt(float(i) ** 2 + pixel_x_coord**2)
-                # Example weight function: linear decrease
-                weight = max(0.0, 1.0 - distance * 0.3)
-                weights[i, j] = weight
-        logger.debug("Calculated positional weights for context.")
-
-        # Calculate weighted relevance
-        # Use np.sum with dtype=np.float64 for precision in summation
-        sum_weights = np.sum(weights, dtype=np.float64)
-        if sum_weights > 0.0:
-            weighted_sum = np.sum(context * weights, dtype=np.float64)
-            weighted_relevance = weighted_sum / sum_weights
-        else:
-            logger.warning("Sum of weights is zero. Assigning relevance score 0.0.")
-            weighted_relevance = 0.0
-        weighted_relevance = float(weighted_relevance)  # Ensure it's a standard float
-        logger.debug(f"Calculated weighted relevance score: {weighted_relevance:.4f}")
-
-        # Get top document index from the *original* order
-        # self.doc_order[0] is the index of the document that ended up in the first row
-        # after sorting.
-        top_doc_idx_in_original = 0
-        if self.doc_order is not None and len(self.doc_order) > 0:
-            top_doc_idx_in_original = int(self.doc_order[0])
-        else:
-            logger.warning(
-                "doc_order is not available or empty. Defaulting top document index to 0."
-            )
-
-
-        # Print top 5 rows of sorted matrix and doc order for debugging
-        logger.debug("Top 5 rows of sorted_matrix:")
-        for i, row in enumerate(self.sorted_matrix[:5]):
-            logger.debug(f"Row {i}: {row.tolist()}")
-
-        logger.debug(f"Top 5 document indices (doc_order): {self.doc_order[:5].tolist()}")
-
-        logger.info(
-            f"Decision made: Document index {top_doc_idx_in_original}, Relevance {weighted_relevance:.4f}"
-        )
-        return top_doc_idx_in_original, weighted_relevance
 
     # Inside the get_metadata method
     def get_metadata(self) -> Dict[str, Any]:

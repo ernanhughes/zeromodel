@@ -8,29 +8,22 @@ intelligence is in the data structure itself, not in processing.
 """
 
 import logging
-import re
 from typing import List, Tuple, Dict, Any, Optional
 
 import duckdb
 import numpy as np
 from zeromodel.normalizer import DynamicNormalizer
 
-# Import the package logger
-logger = logging.getLogger(__name__)  # This will be 'zeromodel.core'
-logger.setLevel(logging.DEBUG)  # Set to DEBUG for detailed output
+logger = logging.getLogger(__name__)  
+logger.setLevel(logging.DEBUG) 
 
-# zeromodel/core.py (Relevant parts updated)
-# (Assuming other imports and logger setup are already present)
-
-import numpy as np
-import logging
-from typing import List, Tuple, Dict, Any, Optional
-import duckdb
-
-# Assuming DynamicNormalizer is imported or defined elsewhere in the file
-# from .normalizer import DynamicNormalizer
-
-logger = logging.getLogger(__name__)
+precision_dtype_map = {
+    'uint8': np.uint8,
+    'uint16': np.uint16, 
+    'float16': np.float16,
+    'float32': np.float32, 
+    'float64': np.float64,
+}
 
 class ZeroModel:
     """
@@ -68,8 +61,9 @@ class ZeroModel:
         if default_output_precision not in valid_precisions:
              logger.warning(f"Invalid default_output_precision '{default_output_precision}'. Must be one of {valid_precisions}. Defaulting to 'float32'.")
              default_output_precision = 'float32'
-             
-        self.metric_names = list(metric_names) # Ensure it's a list
+
+        self.metric_names = metric_names  # Store original metric names     
+        self.effective_metric_names = list(metric_names) # Ensure it's a list
         self.precision = max(4, min(16, precision)) # Legacy precision param
         # --- NEW ATTRIBUTE: Default Output Precision ---
         self.default_output_precision = default_output_precision
@@ -84,8 +78,8 @@ class ZeroModel:
         # Initialize DuckDB connection
         self.duckdb_conn: duckdb.DuckDBPyConnection = self._init_duckdb()
         # Initialize Dynamic Normalizer
-        self.normalizer = DynamicNormalizer(self.metric_names)
-        logger.info(f"ZeroModel initialized with {len(self.metric_names)} metrics. Default output precision: {self.default_output_precision}.")
+        self.normalizer = DynamicNormalizer(self.effective_metric_names)
+        logger.info(f"ZeroModel initialized with {len(self.effective_metric_names)} metrics. Default output precision: {self.default_output_precision}.")
 
     def encode(self, output_precision: Optional[str] = None) -> np.ndarray:
         """
@@ -123,14 +117,6 @@ class ZeroModel:
         if final_precision not in valid_precisions:
              logger.warning(f"Invalid output_precision '{final_precision}'. Must be one of {valid_precisions}. Using default '{self.default_output_precision}'.")
              final_precision = self.default_output_precision
-        # Map string to actual numpy dtype
-        precision_dtype_map = {
-            'uint8': np.uint8,
-            'uint16': np.uint16, # <-- CRITICAL: Ensure this line exists
-            'float16': np.float16,
-            'float32': np.float32, # Default internal working precision for normalized data
-            'float64': np.float64,
-        }
         target_dtype = precision_dtype_map.get(final_precision) # Use .get for safety
         if target_dtype is None:
             # Handle error if mapping failed unexpectedly
@@ -234,13 +220,6 @@ class ZeroModel:
         if final_tile_precision not in valid_precisions:
              logger.warning(f"Invalid tile precision '{final_tile_precision}'. Must be one of {valid_precisions}. Using default '{self.default_output_precision}'.")
              final_tile_precision = self.default_output_precision
-
-        precision_dtype_map = {
-            'uint8': np.uint8,
-            'float16': np.float16,
-            'float32': np.float32,
-            'float64': np.float64,
-        }
         target_tile_dtype = precision_dtype_map[final_tile_precision]
         logger.debug(f"Critical tile will be extracted and converted to dtype: {target_tile_dtype}")
         # --- End Determine Tile Precision ---
@@ -263,7 +242,7 @@ class ZeroModel:
             normalized_tile_data = normalize_vpm(tile_data) # Should be no-op if already normalized
             # Convert to target dtype
             converted_tile_data = denormalize_vpm(normalized_tile_data, output_type=target_tile_dtype)
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             logger.debug("vpm_logic helpers not found for tile conversion. Using direct method.")
             # Direct conversion logic (duplicate of encode's fallback)
             if target_tile_dtype == np.uint8:
@@ -288,18 +267,7 @@ class ZeroModel:
         flattened_pixel_data = converted_tile_data.flatten() # Shape becomes (H * W * C,)
         logger.debug(f"Flattened pixel data for tile: {flattened_pixel_data.shape}")
 
-        # --- Pack Pixel Data Bytes ---
-        # Handle different dtypes for byte conversion
-        if target_tile_dtype == np.uint8:
-            # Data is already bytes, just extend the bytearray
-            tile_bytes.extend(flattened_pixel_data.tobytes())
-        else:
-            # For float types, we need to convert each element to bytes
-            # Use numpy's tobytes method with native byte order ('<')
-            # The receiver must know the dtype to interpret these bytes correctly.
-            # This packs the raw bytes of the float values.
-            tile_bytes.extend(flattened_pixel_data.tobytes()) # .tobytes() handles endianness (native by default)
-        # --- End Pack Pixel Data Bytes ---
+        tile_bytes.extend(flattened_pixel_data.tobytes()) # .tobytes() handles endianness (native by default)
                 
         result_bytes = bytes(tile_bytes)
         logger.info(f"Critical tile extracted. Size: {len(result_bytes)} bytes. Output precision: {target_tile_dtype}.")
@@ -325,34 +293,36 @@ class ZeroModel:
         n_docs, n_metrics = self.sorted_matrix.shape
         # Determine actual context window size
         actual_context_docs = min(context_size, n_docs)
-        actual_context_metrics = min(context_size * 3, n_metrics) # Width in metrics
+        actual_context_metrics = min(context_size * 3, n_metrics)  # Width in metrics
         logger.debug(f"Actual decision context: {actual_context_docs} docs x {actual_context_metrics} metrics")
 
         # Get context window (top-left region) - operates on normalized float data
         context = self.sorted_matrix[:actual_context_docs, :actual_context_metrics]
         logger.debug(f"Context data shape for decision: {context.shape}")
 
-        # Calculate contextual relevance (weighted by position) - on normalized data
-        weights = np.zeros_like(context, dtype=np.float64) # Use float64 for calculation
-        for i in range(context.shape[0]): # Iterate through rows (docs)
-            for j in range(context.shape[1]): # Iterate through columns (metrics)
-                # j represents metric index, so j/3 gives approximate pixel x-coordinate
-                pixel_x_coord = j / 3.0
-                distance = np.sqrt(float(i)**2 + pixel_x_coord**2)
-                # Example weight function: linear decrease
-                weight = max(0.0, 1.0 - distance * 0.3)
-                weights[i, j] = weight
-        logger.debug("Calculated positional weights for context.")
+        if context.size == 0:
+            logger.warning("Empty context window. Returning default decision (0, 0.0).")
+            top_doc_idx_in_original = int(self.doc_order[0]) if (self.doc_order is not None and len(self.doc_order) > 0) else 0
+            return (top_doc_idx_in_original, 0.0)
 
-        # Calculate weighted relevance - on normalized data
-        sum_weights = np.sum(weights, dtype=np.float64)
+        # Vectorized positional weight calculation
+        # Rows (docs) indices
+        row_indices = np.arange(actual_context_docs, dtype=np.float64).reshape(-1, 1)
+        # Column (metric) indices -> convert to approximate pixel x-coordinate (metric groups of 3)
+        col_indices = np.arange(actual_context_metrics, dtype=np.float64)
+        pixel_x_coords = col_indices / 3.0
+        # Broadcast to grid
+        distances = np.sqrt(row_indices**2 + pixel_x_coords**2)
+        weights = np.clip(1.0 - distances * 0.3, 0.0, None)
+
+        sum_weights = weights.sum(dtype=np.float64)
         if sum_weights > 0.0:
             weighted_sum = np.sum(context * weights, dtype=np.float64)
-            weighted_relevance = weighted_sum / sum_weights
+            weighted_relevance = float(weighted_sum / sum_weights)
         else:
-            logger.warning("Sum of weights is zero. Assigning relevance score 0.0.")
+            logger.warning("Sum of weights is zero after vectorized computation. Assigning relevance score 0.0.")
             weighted_relevance = 0.0
-        weighted_relevance = float(weighted_relevance) # Ensure it's a standard float
+
         logger.debug(f"Calculated weighted relevance score: {weighted_relevance:.4f}")
 
         # Get top document index from the *original* order
@@ -372,7 +342,7 @@ class ZeroModel:
         logger.debug("Initializing DuckDB connection for ZeroModel.")
         conn = duckdb.connect(database=':memory:')
         # Create virtual index table schema based on initial metric names
-        columns = ", ".join([f'"{col}" FLOAT' for col in self.metric_names])
+        columns = ", ".join([f'"{col}" FLOAT' for col in self.effective_metric_names])
         conn.execute(f"CREATE TABLE virtual_index (row_id INTEGER, {columns})")
         # The analysis logic needs to work with real data.
         logger.debug("DuckDB virtual_index table schema created.")
@@ -391,31 +361,18 @@ class ZeroModel:
         logger.debug(f"Normalizing score matrix with shape {score_matrix.shape}")
         return self.normalizer.normalize(score_matrix)
 
-    def prepare(self, score_matrix: np.ndarray, sql_query: str, nonlinearity_hint: Optional[str] = None) -> None:
-        """
-        Public entry point to prepare the ZeroModel with data and task in one step.
-        Optionally applies specific non-linear feature transformations based on a hint.
+    def _validate_prepare_inputs(self, score_matrix: np.ndarray, sql_query: str) -> List[str]:
+        """Validate inputs for prepare() and return original metric names.
 
-        Args:
-            score_matrix: A 2D NumPy array of shape [documents x metrics].
-            sql_query: A string containing the SQL query for sorting.
-            nonlinearity_hint: An optional string hint specifying the type of non-linearity
-                            to apply. Supported hints:
-                            - None (default): No additional features.
-                            - 'auto': Apply a standard set of common non-linear features 
-                                        (products, differences, squares).
-                            - 'xor': Apply features specifically helpful for XOR-like problems
-                                        (product of first two metrics, absolute difference).
-                            - 'radial': Apply features helpful for radial/distance-based problems
-                                        (distance from center, angle).
-                            Example: prepare(data, "SELECT ...", nonlinearity_hint='xor')
+        Raises ValueError with descriptive message on failure.
         """
-        logger.info(f"Preparing ZeroModel with data shape {score_matrix.shape}, query: '{sql_query}', nonlinearity_hint: {nonlinearity_hint}")
-        original_metric_names = self.metric_names
-
-        # --- Input Validation ---
+        original_metric_names = self.effective_metric_names
         if score_matrix is None:
             error_msg = "score_matrix cannot be None."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        if not isinstance(score_matrix, np.ndarray):
+            error_msg = f"score_matrix must be a NumPy ndarray, got {type(score_matrix)}."
             logger.error(error_msg)
             raise ValueError(error_msg)
         if score_matrix.ndim != 2:
@@ -424,14 +381,31 @@ class ZeroModel:
             raise ValueError(error_msg)
         if score_matrix.shape[1] != len(original_metric_names):
             error_msg = (f"Number of columns in score_matrix ({score_matrix.shape[1]}) must match "
-                        f"the number of metrics initialized ({len(original_metric_names)}).")
+                         f"the number of metrics initialized ({len(original_metric_names)}).")
             logger.error(error_msg)
             raise ValueError(error_msg)
         if not sql_query or not isinstance(sql_query, str):
             error_msg = "sql_query must be a non-empty string."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        # --- End Input Validation ---
+        # Finite value check (NaN/inf)
+        if not np.isfinite(score_matrix).all():
+            nan_count = int(np.isnan(score_matrix).sum())
+            pos_inf_count = int(np.isposinf(score_matrix).sum())
+            neg_inf_count = int(np.isneginf(score_matrix).sum())
+            error_msg = (
+                "score_matrix contains non-finite values: "
+                f"NaN={nan_count}, +inf={pos_inf_count}, -inf={neg_inf_count}. "
+                "Clean or impute these values before calling prepare()."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+        return original_metric_names
+
+    def prepare(self, score_matrix: np.ndarray, sql_query: str, nonlinearity_hint: Optional[str] = None) -> None:
+        """Prepare model with data, optional feature engineering, and SQL-driven organization."""
+        logger.info(f"Preparing ZeroModel with data shape {score_matrix.shape}, query: '{sql_query}', nonlinearity_hint: {nonlinearity_hint}")
+        original_metric_names = self._validate_prepare_inputs(score_matrix, sql_query)
 
         # --- 1. Dynamic Normalization ---
         try:
@@ -442,7 +416,7 @@ class ZeroModel:
             logger.debug("Data normalized successfully.")
         except Exception as e:
             logger.error(f"Failed during normalization step: {e}")
-            raise Exception(f"Error during data normalization: {e}") from e
+            raise RuntimeError(f"Error during data normalization: {e}") from e
         # --- End Dynamic Normalization ---
 
         # --- 2. Hint-Based Feature Engineering ---
@@ -478,9 +452,9 @@ class ZeroModel:
                         distance = np.sqrt((x - center_x)**2 + (y - center_y)**2)
                         angle = np.arctan2(y - center_y, x - center_x)
                         engineered_features.append(distance)
-                        engineered_names.append(f"hint_radial_distance")
+                        engineered_names.append("hint_radial_distance")
                         engineered_features.append(angle)
-                        engineered_names.append(f"hint_radial_angle")
+                        engineered_names.append("hint_radial_angle")
                         logger.debug("Added radial features (distance, angle).")
 
                         # Inside zeromodel/core.py -> ZeroModel.prepare()
@@ -595,9 +569,9 @@ class ZeroModel:
         # parts of the class that rely on self.metric_names are consistent with the
         # data that was actually processed and sorted.
         # Store the original names in case they are needed
-        self._original_metric_names = self.metric_names
-        self.metric_names = effective_metric_names
-        logger.debug(f"Updated instance metric_names to reflect processed features: {len(self.metric_names)} metrics.")
+        self._original_metric_names = self.effective_metric_names
+        self.effective_metric_names = effective_metric_names
+        logger.debug(f"Updated instance metric_names to reflect processed features: {len(self.effective_metric_names)} metrics.")
         # --- End Update Instance Metric Names ---
 
         # --- 5. Set SQL Task ---
@@ -632,184 +606,6 @@ class ZeroModel:
         # --- End Apply Organization ---
             
         logger.info("ZeroModel preparation complete. Ready for encode/get_decision/etc.")
-
-    def _analyze_query(self, sql_query: str) -> Dict[str, Any]:
-        """
-        Analyze SQL query using DuckDB to determine sorting orders.
-
-        This determines:
-        1. Metric Order: The sequence of columns based on ORDER BY.
-        2. Primary Sort Metric: The first metric used for row sorting.
-        """
-        logger.debug(f"Analyzing SQL query for spatial organization: {sql_query}")
-
-        # --- Metric Order Analysis (using a robust DuckDB method) ---
-        # Strategy: Insert test data into virtual_index such that running the
-        # user's query reveals the column order.
-        # We'll insert N rows, where N = number of metrics.
-        # Row i will have a high value (e.g., 1.0) in metric column i, and low/zero elsewhere.
-        # When the query (e.g., ORDER BY metric1 DESC, metric2 ASC) runs,
-        # the order of the returned row_ids will tell us the importance/sort order of columns.
-
-        metric_count = len(self.metric_names)
-        if metric_count == 0:
-            logger.warning("No metrics provided for analysis. Using default order.")
-            metric_order = []
-        else:
-            try:
-                # Clear any existing data in virtual_index for clean analysis
-                self.duckdb_conn.execute("DELETE FROM virtual_index")
-
-                # Insert test data: Row i highlights metric i
-                # In prepare
-                data_for_db = [(i, *row) for i, row in enumerate(metric_count)]
-                self.duckdb_conn.executemany(
-                    "INSERT INTO virtual_index VALUES (?, " + ", ".join(["?"]*len(self.metric_names)) + ")",
-                    data_for_db
-                )
-
-                # Execute the user's query against this test data
-                # We only care about the order of rows returned, which reflects the ORDER BY logic
-                result_cursor = self.duckdb_conn.execute(sql_query)
-                result_rows = result_cursor.fetchall()
-
-                # Extract the row_id sequence from the results (first column)
-                # This sequence indicates the order in which metrics (represented by rows)
-                # should be prioritized according to the ORDER BY clause.
-                returned_row_ids = [row[0] for row in result_rows]
-
-                # The order of row_ids IS the metric order.
-                metric_order = returned_row_ids
-
-                logger.debug(
-                    f"Metric order determined by DuckDB analysis: {metric_order}"
-                )
-
-                # Cleanup test data
-                self.duckdb_conn.execute("DELETE FROM virtual_index")
-
-            except Exception as e:
-                logger.error(f"Error during DuckDB-based metric order analysis: {e}")
-                # Fallback to default order (original sequence) if analysis fails
-                metric_order = list(range(metric_count))
-                logger.warning(f"Falling back to default metric order: {metric_order}")
-
-        # --- Primary Sort Metric Analysis (Simpler) ---
-        # Identify the first metric in the ORDER BY clause for document sorting.
-        # A simple regex can often work for this specific, limited purpose.
-        # It's less brittle than full parsing because we only need the FIRST metric name.
-        primary_sort_metric_index = None
-        primary_sort_metric_name = None
-        order_by_match = re.search(r"ORDER\s+BY\s+(\w+)", sql_query, re.IGNORECASE)
-        if order_by_match:
-            first_metric_in_order_by = order_by_match.group(1)
-            try:
-                primary_sort_metric_index = self.metric_names.index(
-                    first_metric_in_order_by
-                )
-                primary_sort_metric_name = first_metric_in_order_by
-                logger.debug(
-                    f"Primary sort metric identified: '{primary_sort_metric_name}' (index {primary_sort_metric_index})"
-                )
-            except ValueError:
-                logger.warning(
-                    f"Metric '{first_metric_in_order_by}' from ORDER BY not found in metric_names. Document sorting might be incorrect."
-                )
-        else:
-            logger.info(
-                "No ORDER BY clause found or first metric could not be parsed. Using first metric for document sorting."
-            )
-            if metric_count > 0:
-                primary_sort_metric_index = 0
-                primary_sort_metric_name = self.metric_names[0]
-
-        analysis_result = {
-            "metric_order": metric_order,
-            "primary_sort_metric_index": primary_sort_metric_index,
-            "primary_sort_metric_name": primary_sort_metric_name,
-            "original_query": sql_query,
-        }
-        logger.info(f"SQL query analysis complete: {analysis_result}")
-        return analysis_result
-
-    # 3. Revise _apply_sql_organization to use the analysis results correctly
-    def _apply_sql_organization(
-        self, data: np.ndarray, analysis: Dict[str, Any]
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Apply spatial organization based on SQL query analysis results from DuckDB.
-
-        Args:
-            data: The input score matrix (normalized).
-            analysis: The result dictionary from `_analyze_query`.
-
-        Returns:
-            Tuple of (sorted_matrix, metric_order, doc_order)
-        """
-        logger.debug(f"Applying SQL-based organization. Data shape: {data.shape}")
-        metric_count = data.shape[1]
-
-        # --- 1. Apply Metric Ordering ---
-        raw_metric_order = analysis.get("metric_order", [])
-        # Ensure indices are valid
-        valid_metric_order = [
-            idx for idx in raw_metric_order if 0 <= idx < metric_count
-        ]
-        # Handle potential mismatch (e.g., analysis returned fewer indices)
-        if len(valid_metric_order) != metric_count:
-            logger.warning(
-                f"Analysis metric order ({valid_metric_order}) length mismatch. Appending remaining metrics."
-            )
-            remaining_indices = [
-                i for i in range(metric_count) if i not in valid_metric_order
-            ]
-            valid_metric_order.extend(remaining_indices)
-
-        if not valid_metric_order:
-            logger.info("No valid metric order from analysis. Using default order.")
-            valid_metric_order = list(range(metric_count))
-
-        logger.debug(f"Final validated metric order: {valid_metric_order}")
-        # Reorder columns (metrics)
-        sorted_matrix_by_metrics = data[:, valid_metric_order]
-
-        # --- 2. Apply Document Ordering ---
-        primary_sort_idx = analysis.get("primary_sort_metric_index")
-        doc_order = np.arange(data.shape[0])  # Default order
-
-        if primary_sort_idx is not None and 0 <= primary_sort_idx < metric_count:
-            # Map the primary sort index to the new column order
-            try:
-                # Find the new column index corresponding to the primary sort metric
-                new_column_index_for_primary_sort = valid_metric_order.index(
-                    primary_sort_idx
-                )
-                logger.debug(
-                    f"Sorting documents by metric index {primary_sort_idx} which is now column {new_column_index_for_primary_sort}"
-                )
-                # Sort rows (documents) by the value in this column (descending)
-                doc_order = np.argsort(
-                    sorted_matrix_by_metrics[:, new_column_index_for_primary_sort]
-                )[::-1]
-                logger.debug(
-                    f"Document order indices calculated: {doc_order[:10]}..."
-                )  # Log first 10
-            except ValueError:
-                logger.error(
-                    f"Failed to find primary sort metric index {primary_sort_idx} in reordered metric list. Using default doc order."
-                )
-        else:
-            logger.warning(
-                "Primary sort metric index invalid or not found. Using default document order."
-            )
-
-        # Reorder rows (documents)
-        final_sorted_matrix = sorted_matrix_by_metrics[doc_order, :]
-
-        logger.info(
-            f"SQL-based organization applied. Final matrix shape: {final_sorted_matrix.shape}"
-        )
-        return final_sorted_matrix, np.array(valid_metric_order), doc_order
 
     def _set_sql_task(self, sql_query: str):
         """
@@ -866,14 +662,14 @@ class ZeroModel:
             # we can default to the original metric order or derive it simply.
             # Let's default to original order for now, or try to parse the first ORDER BY metric.
             import re
-            metric_order_indices = list(range(len(self.metric_names))) # Default
+            metric_order_indices = list(range(len(self.effective_metric_names))) # Default
             primary_sort_metric_name = None
             primary_sort_metric_index = None
             order_by_match = re.search(r"ORDER\s+BY\s+(\w+)", sql_query, re.IGNORECASE)
             if order_by_match:
                 first_metric_in_order_by = order_by_match.group(1)
                 try:
-                    primary_sort_metric_index = self.metric_names.index(first_metric_in_order_by)
+                    primary_sort_metric_index = self.effective_metric_names.index(first_metric_in_order_by)
                     primary_sort_metric_name = first_metric_in_order_by
                     logger.debug(f"Primary sort metric identified from query: '{primary_sort_metric_name}' (index {primary_sort_metric_index})")
                     # If you *did* want to reorder columns based on this, you'd set metric_order_indices
@@ -888,7 +684,7 @@ class ZeroModel:
                 "primary_sort_metric_name": primary_sort_metric_name,
                 "original_query": sql_query
             }
-            logger.info(f"SQL query analysis (with data) complete.")
+            logger.info("SQL query analysis (with data) complete.")
             return analysis_result
         except Exception as e:
             logger.error(f"Error during DuckDB-based query analysis: {e}")
@@ -936,7 +732,7 @@ class ZeroModel:
         metric_count = data.shape[1]
         valid_metric_order = [idx for idx in raw_metric_order if 0 <= idx < metric_count]
         if len(valid_metric_order) != metric_count:
-            logger.warning(f"Analysis metric order length mismatch. Appending remaining metrics.")
+            logger.warning("Analysis metric order length mismatch. Appending remaining metrics.")
             remaining_indices = [i for i in range(metric_count) if i not in valid_metric_order]
             valid_metric_order.extend(remaining_indices)
         if not valid_metric_order:
@@ -961,7 +757,7 @@ class ZeroModel:
             "metric_order": self.metric_order.tolist() if self.metric_order is not None else [],
             "doc_order": self.doc_order.tolist() if self.doc_order is not None else [],
             # --- Use the potentially updated self.metric_names ---
-            "metric_names": self.metric_names, # This should now be effective_metric_names after prepare()
+            "metric_names": self.effective_metric_names, # This should now be effective_metric_names after prepare()
             "precision": self.precision,
         }
         logger.debug(f"Metadata retrieved: {metadata}")
@@ -983,7 +779,7 @@ class ZeroModel:
         self.metadata = {
             "task": "default",
             "precision": self.precision,
-            "metric_names": self.metric_names,
+            "metric_names": self.effective_metric_names,
             "metric_order": self.metric_order.tolist(),
             "doc_order": self.doc_order.tolist()
         }

@@ -12,7 +12,7 @@ def test_prepare_with_auto_hint():
     zeromodel = ZeroModel(metric_names)
     # --- Add Debug Check ---
     # Verify the initial state of the fresh instance
-    initial_metric_count = len(zeromodel.metric_names)
+    initial_metric_count = len(zeromodel.effective_metric_names)
     print(f"\nDEBUG: Fresh ZeroModel created. Initial metric_names count: {initial_metric_count}")
     assert initial_metric_count == 3, f"Fresh ZeroModel should have 3 initial metrics, got {initial_metric_count}"
     # --- End Debug Check ---

@@ -42,14 +42,12 @@ class ZeroModel:
 
     def __init__(
         self,
-        metric_names: List[str],
-        precision: int = 8
+        metric_names: List[str]
     ):
         """Initialize the ZeroModel core components."""
         logger.debug(
-            "Initializing ZeroModel with metrics: %s, precision: %s",
-            metric_names,
-            precision
+            "Initializing ZeroModel with metrics: %s, config: %s",
+            metric_names, str(get_config("core"))
         )
         if not metric_names:
             raise ValueError("metric_names list cannot be empty.")
@@ -57,10 +55,12 @@ class ZeroModel:
         # Core attributes
         self.metric_names = list(metric_names)
         self.effective_metric_names = list(metric_names)
-        self.precision = max(4, min(16, precision))
+        self.precision = get_config("core").get("precision", 8)
+        assert 4 <= self.precision <= 16, "Precision must be between 4 and 16."
         self.default_output_precision = get_config("core").get("default_output_precision", "float32")
         assert self.default_output_precision in precision_dtype_map, \
             f"Invalid default_output_precision '{self.default_output_precision}'. Must be one of {list(precision_dtype_map.keys())}."
+
         self.sorted_matrix: Optional[np.ndarray] = None
         self.doc_order: Optional[np.ndarray] = None
         self.metric_order: Optional[np.ndarray] = None

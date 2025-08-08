@@ -82,7 +82,9 @@ def define_and_process_task(score_matrix, metric_names, task_description, task_s
     # 1. Initialize ZeroModel
     # Precision determines internal bit depth, default is usually fine (e.g., 8 or 16).
     # default_output_precision='float32' makes the VPM a float32 array by default.
-    zeromodel = ZeroModel(metric_names, precision=16)
+    get_config("core").update({"precision": 16})
+    zeromodel = ZeroModel(metric_names)
+    get_config("core").update({"precision": 8})
     print(f"Initialized ZeroModel with metrics: {metric_names}")
 
     # 2. Prepare the data using the SQL task

@@ -13,9 +13,9 @@ from typing import List, Tuple, Dict, Any, Optional
 import duckdb
 import numpy as np
 from zeromodel.normalizer import DynamicNormalizer
+from zeromodel.config import init_config
 
 logger = logging.getLogger(__name__)  
-logger.setLevel(logging.DEBUG) 
 
 precision_dtype_map = {
     'uint8': np.uint8,
@@ -24,6 +24,8 @@ precision_dtype_map = {
     'float32': np.float32, 
     'float64': np.float64,
 }
+
+init_config()
 
 class ZeroModel:
     """

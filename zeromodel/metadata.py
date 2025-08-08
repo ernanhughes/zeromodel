@@ -1,3 +1,4 @@
+# zeromodel/metadata.py
 """
 Compact Metadata Handling
 

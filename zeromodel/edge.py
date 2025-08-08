@@ -1,3 +1,4 @@
+# zeromodel/edge.py
 """
 Edge Device Protocol
 
@@ -12,7 +13,6 @@ import struct
 import logging
 from typing import Tuple
 
-# Create a logger for this module
 logger = logging.getLogger(__name__)
 
 class EdgeProtocol:

@@ -1,3 +1,4 @@
+# zeromodel/hierarchical_edge.py
 """
 Hierarchical Edge Device Protocol
 
@@ -7,13 +8,8 @@ to interact with hierarchical visual policy maps.
 
 import struct
 import logging
-from typing import Any, Dict, Tuple
+from typing import Tuple
 
-# Assuming EdgeProtocol is in the same package/directory
-# If not, adjust the import path accordingly
-from .edge import EdgeProtocol # Might be used for constants or shared logic if needed
-
-# Create a logger for this module
 logger = logging.getLogger(__name__)
 
 class HierarchicalEdgeProtocol:

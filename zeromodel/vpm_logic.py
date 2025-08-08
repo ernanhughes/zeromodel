@@ -18,31 +18,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# --- Core VPM Logic Operations (Fuzzy Logic Interpretations) ---
-
-# zeromodel/vpm_logic.py
-"""
-Visual Policy Maps enable a new kind of symbolic mathematics.
-
-Each VPM is a spatially organized array of scalar values encoding task-relevant priorities.
-By composing them using logical operators (AND, OR, NOT, NAND, etc.), we form a new symbolic system
-where reasoning becomes image composition, and meaning is distributed across space.
-
-These operators allow tiny edge devices to perform sophisticated reasoning by querying
-regions of interest in precomputed VPMs. Just like NAND gates enable classical computation,
-VPM logic gates enable distributed visual intelligence.
-
-This is not just fuzzy logic. This is **Visual Symbolic Math**.
-"""
-
-import numpy as np
-import logging
-from typing import Union
-from scipy.ndimage import zoom # Add scipy dependency for resize
-
-logger = logging.getLogger(__name__)
-
 # --- Core VPM Logic Operations (Fuzzy Logic Interpretations, Resolution Independent) ---
+
 
 def normalize_vpm(vpm: np.ndarray) -> np.ndarray:
     """
@@ -57,15 +34,18 @@ def normalize_vpm(vpm: np.ndarray) -> np.ndarray:
         min_val = dtype_info.min
         # Handle signed integers if necessary, but VPMs are typically unsigned
         if min_val < 0:
-            logger.warning(f"VPM dtype {vpm.dtype} is signed. Normalizing assuming 0-min_val range.")
+            logger.warning(
+                f"VPM dtype {vpm.dtype} is signed. Normalizing assuming 0-min_val range."
+            )
             range_val = max_val - min_val
             return ((vpm.astype(np.float64) - min_val) / range_val).astype(np.float32)
         else:
             # Unsigned integer
             return (vpm.astype(np.float64) / max_val).astype(np.float32)
-    else: # Floating point types
+    else:  # Floating point types
         # Assume already in [0, 1] or close enough. Clip for safety.
         return np.clip(vpm, 0.0, 1.0).astype(np.float32)
+
 
 def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8) -> np.ndarray:
     """
@@ -79,13 +59,11 @@ def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8) -> np.ndarray:
         # Scale and clip
         scaled_vpm = np.clip(vpm * max_val, min_val, max_val)
         return scaled_vpm.astype(output_type)
-    else: # Float output types
+    else:  # Float output types
         # Ensure it's in [0, 1] and convert dtype
         clipped_vpm = np.clip(vpm, 0.0, 1.0)
         return clipped_vpm.astype(output_type)
 
-# --- Updated Core Logic Operations ---
-# These now work on normalized inputs and produce normalized outputs.
 
 def vpm_or(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
@@ -103,13 +81,16 @@ def vpm_or(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     logger.debug(f"Performing VPM OR operation on shapes {a.shape} and {b.shape}")
     if a.shape != b.shape:
         logger.error(f"VPM OR: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(f"VPMs must have the same shape for OR. Got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"VPMs must have the same shape for OR. Got {a.shape} and {b.shape}"
+        )
     # Normalize inputs to ensure consistency
     a_norm = normalize_vpm(a)
     b_norm = normalize_vpm(b)
     result = np.maximum(a_norm, b_norm)
     logger.debug("VPM OR operation completed.")
-    return result # Already normalized float32
+    return result  # Already normalized float32
+
 
 def vpm_and(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
@@ -127,13 +108,16 @@ def vpm_and(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     logger.debug(f"Performing VPM AND operation on shapes {a.shape} and {b.shape}")
     if a.shape != b.shape:
         logger.error(f"VPM AND: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(f"VPMs must have the same shape for AND. Got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"VPMs must have the same shape for AND. Got {a.shape} and {b.shape}"
+        )
     # Normalize inputs to ensure consistency
     a_norm = normalize_vpm(a)
     b_norm = normalize_vpm(b)
     result = np.minimum(a_norm, b_norm)
     logger.debug("VPM AND operation completed.")
-    return result # Already normalized float32
+    return result  # Already normalized float32
+
 
 def vpm_not(a: np.ndarray) -> np.ndarray:
     """
@@ -147,15 +131,17 @@ def vpm_not(a: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: The resulting inverted VPM (normalized float).
     """
-    logger.debug(f"Performing VPM NOT operation on shape {a.shape} with dtype {a.dtype}")
+    logger.debug(
+        f"Performing VPM NOT operation on shape {a.shape} with dtype {a.dtype}"
+    )
     # Normalize input to ensure consistency
     a_norm = normalize_vpm(a)
     # Invert: 1.0 - value
     result = 1.0 - a_norm
     logger.debug("VPM NOT operation completed.")
-    return result # Already normalized float32
+    return result  # Already normalized float32
 
-# --- Add vpm_subtract (equivalent to original vpm_diff logic) ---
+
 def vpm_subtract(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Performs a logical difference operation (A - B) on two VPMs.
@@ -169,20 +155,22 @@ def vpm_subtract(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: The resulting VPM from the difference operation (normalized float).
     """
-    logger.debug(f"Performing VPM SUBTRACT (A - B) operation on shapes {a.shape} and {b.shape}")
+    logger.debug(
+        f"Performing VPM SUBTRACT (A - B) operation on shapes {a.shape} and {b.shape}"
+    )
     if a.shape != b.shape:
         logger.error(f"VPM SUBTRACT: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(f"VPMs must have the same shape for SUBTRACT. Got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"VPMs must have the same shape for SUBTRACT. Got {a.shape} and {b.shape}"
+        )
     # Normalize inputs to ensure consistency
     a_norm = normalize_vpm(a)
     b_norm = normalize_vpm(b)
     # Subtract and clip to [0, 1] to ensure valid range
     result = np.clip(a_norm - b_norm, 0.0, 1.0)
     logger.debug("VPM SUBTRACT operation completed.")
-    return result # Already normalized float32
+    return result
 
-# Alias vpm_diff to vpm_subtract for backward compatibility or semantic clarity
-vpm_diff = vpm_subtract
 
 def vpm_add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
@@ -196,17 +184,22 @@ def vpm_add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: The resulting VPM from the additive operation (normalized float).
     """
-    logger.debug(f"Performing VPM ADD (A + B) operation on shapes {a.shape} and {b.shape}")
+    logger.debug(
+        f"Performing VPM ADD (A + B) operation on shapes {a.shape} and {b.shape}"
+    )
     if a.shape != b.shape:
         logger.error(f"VPM ADD: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(f"VPMs must have the same shape for ADD. Got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"VPMs must have the same shape for ADD. Got {a.shape} and {b.shape}"
+        )
     # Normalize inputs to ensure consistency
     a_norm = normalize_vpm(a)
     b_norm = normalize_vpm(b)
     # Add and clip to [0, 1]
     result = np.clip(a_norm + b_norm, 0.0, 1.0)
     logger.debug("VPM ADD operation completed.")
-    return result # Already normalized float32
+    return result
+
 
 def vpm_xor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
@@ -224,16 +217,19 @@ def vpm_xor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     logger.debug(f"Performing VPM XOR operation on shapes {a.shape} and {b.shape}")
     if a.shape != b.shape:
         logger.error(f"VPM XOR: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(f"VPMs must have the same shape for XOR. Got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"VPMs must have the same shape for XOR. Got {a.shape} and {b.shape}"
+        )
     # Normalize inputs to ensure consistency
     a_norm = normalize_vpm(a)
     b_norm = normalize_vpm(b)
     # Calculate (A AND NOT B) OR (B AND NOT A)
-    a_and_not_b = vpm_subtract(a_norm, b_norm) # Use normalized inputs
+    a_and_not_b = vpm_subtract(a_norm, b_norm)  # Use normalized inputs
     b_and_not_a = vpm_subtract(b_norm, a_norm)
-    result = vpm_or(a_and_not_b, b_and_not_a) # vpm_or also uses normalized inputs
+    result = vpm_or(a_and_not_b, b_and_not_a)  # vpm_or also uses normalized inputs
     logger.debug("VPM XOR operation completed.")
-    return result # Already normalized float32 (from vpm_or)
+    return result
+
 
 def vpm_nand(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
@@ -248,6 +244,7 @@ def vpm_nand(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     b_norm = normalize_vpm(b)
     return vpm_not(vpm_and(a_norm, b_norm))
 
+
 def vpm_nor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """
     Performs a NOR operation: NOT(OR(a, b)).
@@ -261,49 +258,53 @@ def vpm_nor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     b_norm = normalize_vpm(b)
     return vpm_not(vpm_or(a_norm, b_norm))
 
-# --- New Resolution-Independent VPM Manipulation Functions ---
 
-def vpm_resize(vpm: np.ndarray, new_shape: tuple) -> np.ndarray:
+def vpm_resize(img, target_shape):
     """
-    Resize VPM to new dimensions using bilinear interpolation.
-    Preserves the normalized [0, 1] float range.
-
-    Args:
-        vpm (np.ndarray): Input VPM (assumed normalized float).
-        new_shape (tuple): Target shape (height, width). Channels are preserved.
-
-    Returns:
-        np.ndarray: Resized VPM (normalized float, new_shape + (channels,)).
+    Drop-in replacement for scipy.ndimage.zoom(img, zoom=(h/w), order=1),
+    for 2D or 3D (HWC) images using bilinear interpolation.
     """
-    logger.debug(f"Resizing VPM from {vpm.shape} to {new_shape}")
-    if len(new_shape) != 2:
-        raise ValueError("new_shape must be a tuple of (height, width)")
-    if vpm.ndim < 2:
-        raise ValueError("Input VPM must be at least 2D")
+    import numpy as np
 
-    # Normalize input to ensure consistency
-    vpm_norm = normalize_vpm(vpm)
+    in_h, in_w = img.shape[:2]
+    out_h, out_w = target_shape
+    channels = img.shape[2] if img.ndim == 3 else 1
 
-    # Calculate zoom factors for each dimension
-    # zoom factors = new_size / old_size
-    zoom_factors = (
-        new_shape[0] / vpm_norm.shape[0],
-        new_shape[1] / vpm_norm.shape[1],
-    )
-    # If VPM has a channel dimension, keep it unchanged (zoom factor = 1)
-    if vpm_norm.ndim == 3:
-        zoom_factors = zoom_factors + (1.0,)
+    scale_h = in_h / out_h
+    scale_w = in_w / out_w
 
-    # Apply zoom and clip to maintain [0,1] range
-    resized = zoom(vpm_norm, zoom_factors, order=1)  # Bilinear interpolation
-    # Ensure output shape matches exactly (zoom might be slightly off due to rounding)
-    # Clip is mainly for safety.
-    result = resized[:new_shape[0], :new_shape[1]] # Crop/Pad if needed (simple crop here)
-    if vpm_norm.ndim == 3 and result.ndim == 3:
-        result = result[:, :, :vpm_norm.shape[2]] # Ensure channels match if cropped
-    result = np.clip(result, 0.0, 1.0)
-    logger.debug(f"VPM resized to {result.shape}")
-    return result # Already normalized float32
+    # Match scipy.ndimage.zoom coordinate mapping
+    row_idx = np.arange(out_h) * scale_h
+    col_idx = np.arange(out_w) * scale_w
+
+    row0 = np.floor(row_idx).astype(int)
+    col0 = np.floor(col_idx).astype(int)
+    row1 = np.clip(row0 + 1, 0, in_h - 1)
+    col1 = np.clip(col0 + 1, 0, in_w - 1)
+
+    wy = (row_idx - row0).reshape(-1, 1)
+    wx = (col_idx - col0).reshape(1, -1)
+
+    row0 = np.clip(row0, 0, in_h - 1)
+    col0 = np.clip(col0, 0, in_w - 1)
+
+    if img.ndim == 2:
+        img = img[:, :, None]
+
+    out = np.empty((out_h, out_w, channels), dtype=np.float32)
+
+    for c in range(channels):
+        I00 = img[row0[:, None], col0[None, :], c]
+        I01 = img[row0[:, None], col1[None, :], c]
+        I10 = img[row1[:, None], col0[None, :], c]
+        I11 = img[row1[:, None], col1[None, :], c]
+
+        top = I00 * (1 - wx) + I01 * wx
+        bottom = I10 * (1 - wx) + I11 * wx
+        out[..., c] = top * (1 - wy) + bottom * wy
+
+    return out if channels > 1 else out[..., 0]
+
 
 def vpm_concat_horizontal(vpm1: np.ndarray, vpm2: np.ndarray) -> np.ndarray:
     """
@@ -317,7 +318,9 @@ def vpm_concat_horizontal(vpm1: np.ndarray, vpm2: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Horizontally concatenated VPM (normalized float).
     """
-    logger.debug(f"Horizontally concatenating VPMs of shapes {vpm1.shape} and {vpm2.shape}")
+    logger.debug(
+        f"Horizontally concatenating VPMs of shapes {vpm1.shape} and {vpm2.shape}"
+    )
     # Normalize inputs
     v1 = normalize_vpm(vpm1)
     v2 = normalize_vpm(vpm2)
@@ -331,10 +334,11 @@ def vpm_concat_horizontal(vpm1: np.ndarray, vpm2: np.ndarray) -> np.ndarray:
     try:
         result = np.concatenate((v1_crop, v2_crop), axis=1)
         logger.debug(f"Horizontal concatenation result shape: {result.shape}")
-        return result # Already normalized float32
+        return result  # Already normalized float32
     except ValueError as e:
         logger.error(f"Failed to concatenate VPMs horizontally: {e}")
         raise ValueError(f"VPMs could not be concatenated horizontally: {e}") from e
+
 
 def vpm_concat_vertical(vpm1: np.ndarray, vpm2: np.ndarray) -> np.ndarray:
     """
@@ -348,7 +352,9 @@ def vpm_concat_vertical(vpm1: np.ndarray, vpm2: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Vertically concatenated VPM (normalized float).
     """
-    logger.debug(f"Vertically concatenating VPMs of shapes {vpm1.shape} and {vpm2.shape}")
+    logger.debug(
+        f"Vertically concatenating VPMs of shapes {vpm1.shape} and {vpm2.shape}"
+    )
     # Normalize inputs
     v1 = normalize_vpm(vpm1)
     v2 = normalize_vpm(vpm2)
@@ -362,12 +368,12 @@ def vpm_concat_vertical(vpm1: np.ndarray, vpm2: np.ndarray) -> np.ndarray:
     try:
         result = np.concatenate((v1_crop, v2_crop), axis=0)
         logger.debug(f"Vertical concatenation result shape: {result.shape}")
-        return result # Already normalized float32
+        return result  # Already normalized float32
     except ValueError as e:
         logger.error(f"Failed to concatenate VPMs vertically: {e}")
         raise ValueError(f"VPMs could not be concatenated vertically: {e}") from e
 
-# --- Updated/Resolution-Independent Query Function ---
+
 def query_top_left(vpm: np.ndarray, context_size: int = 1) -> float:
     """
     Queries the top-left region of a VPM for a relevance score.
@@ -384,15 +390,19 @@ def query_top_left(vpm: np.ndarray, context_size: int = 1) -> float:
     """
     # Normalize input to ensure consistency for internal processing
     vpm_norm = normalize_vpm(vpm)
-    logger.debug(f"Querying top-left region of VPM (shape: {vpm_norm.shape}) with context size {context_size}")
+    logger.debug(
+        f"Querying top-left region of VPM (shape: {vpm_norm.shape}) with context size {context_size}"
+    )
     if vpm_norm.ndim < 2:
         logger.error("VPM must be at least 2D for top-left query.")
         raise ValueError("VPM must be at least 2D.")
     if not isinstance(context_size, int) or context_size <= 0:
-        logger.error(f"Invalid context_size: {context_size}. Must be a positive integer.")
+        logger.error(
+            f"Invalid context_size: {context_size}. Must be a positive integer."
+        )
         raise ValueError("context_size must be a positive integer.")
 
-    height, width = vpm_norm.shape[:2] # Handle both 2D and 3D (H, W) or (H, W, C)
+    height, width = vpm_norm.shape[:2]  # Handle both 2D and 3D (H, W) or (H, W, C)
     # Make context_size relative and bounded
     actual_context_h = min(context_size, height)
     actual_context_w = min(context_size, width)
@@ -400,11 +410,15 @@ def query_top_left(vpm: np.ndarray, context_size: int = 1) -> float:
     top_left_region = vpm_norm[:actual_context_h, :actual_context_w]
     # Simple aggregation: mean. Could be max, weighted, etc.
     score = np.mean(top_left_region)
-    logger.debug(f"Top-left query score (mean of {actual_context_h}x{actual_context_w} region): {score:.4f}")
-    return float(score) # Ensure float return type
+    logger.debug(
+        f"Top-left query score (mean of {actual_context_h}x{actual_context_w} region): {score:.4f}"
+    )
+    return float(score)
 
 
-def create_interesting_map(quality_vpm: np.ndarray, novelty_vpm: np.ndarray, uncertainty_vpm: np.ndarray) -> np.ndarray:
+def create_interesting_map(
+    quality_vpm: np.ndarray, novelty_vpm: np.ndarray, uncertainty_vpm: np.ndarray
+) -> np.ndarray:
     """
     Creates a composite 'interesting' VPM based on the logic:
     (Quality AND NOT Uncertainty) OR (Novelty AND NOT Uncertainty)
@@ -425,9 +439,7 @@ def create_interesting_map(quality_vpm: np.ndarray, novelty_vpm: np.ndarray, unc
         exploratory_map = vpm_and(novelty_vpm, anti_uncertainty)
         interesting_map = vpm_or(good_map, exploratory_map)
         logger.info("'Interesting' VPM created successfully.")
-        return interesting_map # Already normalized float32
+        return interesting_map
     except Exception as e:
         logger.error(f"Failed to create 'interesting' VPM: {e}")
         raise
-
-

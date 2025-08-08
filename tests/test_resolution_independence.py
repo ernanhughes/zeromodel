@@ -5,11 +5,9 @@ Test cases for resolution independence and precision control features in ZeroMod
 
 import numpy as np
 import pytest
-from scipy.ndimage import zoom # Assuming this dependency is acceptable
 from zeromodel.core import ZeroModel
 from zeromodel.vpm_logic import (
-    vpm_and, vpm_or, vpm_not, vpm_add, vpm_subtract, # or vpm_diff
-    normalize_vpm, denormalize_vpm,
+    vpm_and, vpm_or, vpm_not, normalize_vpm, denormalize_vpm,
     vpm_resize, vpm_concat_horizontal, vpm_concat_vertical,
     query_top_left
 )
@@ -147,8 +145,6 @@ def test_zero_model_encode_precision_control():
     # assert vpm_f16.dtype == np.float16
     # assert np.all(vpm_f16 >= 0.0) and np.all(vpm_f16 <= 1.0)
 
-# tests/test_resolution_independence.py
-
 def test_vpm_resize_functionality():
     """Test vpm_resize changes dimensions correctly."""
     original_shape = (10, 10, 3)
@@ -196,10 +192,12 @@ def test_vpm_resize_functionality():
     # Check if it's reasonably close to the top-left (e.g., within the first 20% of height/width)
     # This is a heuristic.
     tolerance_fraction = 0.2
-    tol_h = int(new_height * tolerance_fraction)
-    tol_w = int(new_width * tolerance_fraction)
-    assert max_loc[0] < tol_h and max_loc[1] < tol_w, f"Bright pixel influence not near top-left after resize. Max at {max_loc}, tolerance zone <{tol_h}, <{tol_w}."
-
+    tol_h = max(1, int(new_height * tolerance_fraction))
+    tol_w = max(1, int(new_width * tolerance_fraction))
+    assert max_loc[0] < tol_h and max_loc[1] < tol_w, (
+        f"Bright pixel influence not near top-left after resize. "
+        f"Max at {max_loc}, tolerance zone <{tol_h}, <{tol_w}."
+    )
     print("test_vpm_resize_functionality passed.")
 
 # tests/test_resolution_independence.py

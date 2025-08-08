@@ -21,8 +21,8 @@ import matplotlib.pyplot as plt
 import os
 from zeromodel.core import ZeroModel
 from zeromodel.vpm_logic import (
-    vpm_and, vpm_or, vpm_not, vpm_diff, vpm_add, vpm_xor,
-    vpm_nand, vpm_nor, query_top_left
+    vpm_and, vpm_or, vpm_not, vpm_add, vpm_xor,
+    vpm_nand, vpm_nor, query_top_left, vpm_subtract
 )
 
 # --- Test Configuration ---
@@ -184,11 +184,9 @@ def test_vpm_not_operation():
     assert abs(sum_top - 1.0) < 1e-5, f"NOT operation failed: {score_a_top} + {score_not_a_top} != 1.0"
     print("  ✅ vpm_not test passed.")
 
-# In tests/test_vpm_logic_operations.py, update test_vpm_diff_operation
-
-def test_vpm_diff_operation():
-    """Test the vpm_diff operation end-to-end using encoded VPMs."""
-    print("\n--- Testing vpm_diff (on encoded VPMs) ---")
+def test_vpm_subtract_operation():
+    """Test the vpm_subtract operation end-to-end using encoded VPMs."""
+    print("\n--- Testing vpm_subtract (on encoded VPMs) ---")
     score_matrix, metric_names = create_simple_test_data()
     
     # Define tasks to create a clear difference
@@ -208,7 +206,7 @@ def test_vpm_diff_operation():
     vpm_b = model_b.encode() # This is now uint8
     
     # --- KEY CHANGE: Apply logic to encoded (uint8) VPMs ---
-    vpm_result = vpm_diff(vpm_a, vpm_b) # This should now work with uint8
+    vpm_result = vpm_subtract(vpm_a, vpm_b) # This should now work with uint8
     # --- END KEY CHANGE ---
     
     save_vpm_image(vpm_a, "VPM A (High feature_a - Encoded)", "vpm_a_high_a_encoded.png")

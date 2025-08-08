@@ -8,6 +8,10 @@ results.txt
 images/
 
 *.zip
+*.log
+*.png 
+
+
 # C extensions
 *.so
 

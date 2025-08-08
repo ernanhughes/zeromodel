@@ -362,9 +362,9 @@ class ZeroModel:
         return self.normalizer.normalize(score_matrix)
 
     def _validate_prepare_inputs(self, score_matrix: np.ndarray, sql_query: str) -> List[str]:
-        """Validate inputs for prepare() and return original metric names.
+        """Validate inputs for prepare() and return (possibly updated) metric names.
 
-        Raises ValueError with descriptive message on failure.
+        If incoming 2D data has a different column count, auto-generate new metric names.
         """
         original_metric_names = self.effective_metric_names
         if score_matrix is None:
@@ -379,16 +379,32 @@ class ZeroModel:
             error_msg = f"score_matrix must be 2D, got shape {score_matrix.shape}."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        if score_matrix.shape[1] != len(original_metric_names):
-            error_msg = (f"Number of columns in score_matrix ({score_matrix.shape[1]}) must match "
-                         f"the number of metrics initialized ({len(original_metric_names)}).")
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+        n_docs, n_cols = score_matrix.shape
+
+        # If column count differs, adapt names minimally:
+        if n_cols != len(original_metric_names):
+            logger.warning(f"Column count mismatch: {len(original_metric_names)} vs {n_cols}.")
+            if n_cols > len(original_metric_names):
+                # Keep existing names; generate only the missing ones
+                logger.info(f"Expanding metric schema from {len(original_metric_names)} to {n_cols} columns. Generating names for new columns only.")
+                additional_names = [f"col_{i}" for i in range(len(original_metric_names), n_cols)]
+                new_metric_names = list(original_metric_names) + additional_names
+                self.effective_metric_names = new_metric_names
+                self.normalizer = DynamicNormalizer(new_metric_names)
+                original_metric_names = new_metric_names
+            else:
+                # Fewer columns provided than previously tracked: truncate
+                logger.info(f"Received fewer columns ({n_cols}) than existing metric names ({len(original_metric_names)}). Truncating to first {n_cols}.")
+                truncated_names = list(original_metric_names[:n_cols])
+                self.effective_metric_names = truncated_names
+                self.normalizer = DynamicNormalizer(truncated_names)
+                original_metric_names = truncated_names
+
         if not sql_query or not isinstance(sql_query, str):
             error_msg = "sql_query must be a non-empty string."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        # Finite value check (NaN/inf)
+
         if not np.isfinite(score_matrix).all():
             nan_count = int(np.isnan(score_matrix).sum())
             pos_inf_count = int(np.isposinf(score_matrix).sum())
@@ -400,6 +416,7 @@ class ZeroModel:
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
+
         return original_metric_names
 
     def prepare(self, score_matrix: np.ndarray, sql_query: str, nonlinearity_hint: Optional[str] = None) -> None:

@@ -15,11 +15,9 @@ This is not just fuzzy logic. This is **Visual Symbolic Math**.
 
 import numpy as np
 import logging
+from typing import Tuple
 
 logger = logging.getLogger(__name__)
-
-# --- Core VPM Logic Operations (Fuzzy Logic Interpretations, Resolution Independent) ---
-
 
 def normalize_vpm(vpm: np.ndarray) -> np.ndarray:
     """
@@ -47,22 +45,35 @@ def normalize_vpm(vpm: np.ndarray) -> np.ndarray:
         return np.clip(vpm, 0.0, 1.0).astype(np.float32)
 
 
-def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8) -> np.ndarray:
+def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8, assume_normalized: bool = True) -> np.ndarray:
+    """Convert a (normalized) VPM to a specified dtype.
+
+    Args:
+        vpm: Input VPM. If not already float in [0,1] set ``assume_normalized=False``.
+        output_type: Target numpy dtype.
+        assume_normalized: If False, will first run ``normalize_vpm``.
     """
-    Converts a normalized float VPM back to a specified output type.
-    """
-    logger.debug(f"Denormalizing VPM to dtype {output_type}")
+    logger.debug(f"Denormalizing VPM to dtype {output_type} (assume_normalized={assume_normalized})")
+    data = vpm if assume_normalized else normalize_vpm(vpm)
     if np.issubdtype(output_type, np.integer):
         dtype_info = np.iinfo(output_type)
         max_val = dtype_info.max
         min_val = dtype_info.min
-        # Scale and clip
-        scaled_vpm = np.clip(vpm * max_val, min_val, max_val)
+        scaled_vpm = np.clip(data * max_val, min_val, max_val)
         return scaled_vpm.astype(output_type)
-    else:  # Float output types
-        # Ensure it's in [0, 1] and convert dtype
-        clipped_vpm = np.clip(vpm, 0.0, 1.0)
-        return clipped_vpm.astype(output_type)
+    clipped_vpm = np.clip(data, 0.0, 1.0)
+    return clipped_vpm.astype(output_type)
+
+
+# ---------------- Internal Helpers ---------------- #
+def _ensure_same_shape(a: np.ndarray, b: np.ndarray, op: str) -> None:
+    if a.shape != b.shape:
+        logger.error(f"VPM {op}: Shape mismatch. a: {a.shape}, b: {b.shape}")
+        raise ValueError(f"VPMs must have the same shape for {op.upper()}. Got {a.shape} and {b.shape}")
+
+
+def _normalize_pair(a: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    return normalize_vpm(a), normalize_vpm(b)
 
 
 def vpm_or(a: np.ndarray, b: np.ndarray) -> np.ndarray:
@@ -79,14 +90,8 @@ def vpm_or(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         np.ndarray: The resulting VPM from the OR operation (normalized float).
     """
     logger.debug(f"Performing VPM OR operation on shapes {a.shape} and {b.shape}")
-    if a.shape != b.shape:
-        logger.error(f"VPM OR: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(
-            f"VPMs must have the same shape for OR. Got {a.shape} and {b.shape}"
-        )
-    # Normalize inputs to ensure consistency
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    _ensure_same_shape(a, b, "or")
+    a_norm, b_norm = _normalize_pair(a, b)
     result = np.maximum(a_norm, b_norm)
     logger.debug("VPM OR operation completed.")
     return result  # Already normalized float32
@@ -106,14 +111,8 @@ def vpm_and(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         np.ndarray: The resulting VPM from the AND operation (normalized float).
     """
     logger.debug(f"Performing VPM AND operation on shapes {a.shape} and {b.shape}")
-    if a.shape != b.shape:
-        logger.error(f"VPM AND: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(
-            f"VPMs must have the same shape for AND. Got {a.shape} and {b.shape}"
-        )
-    # Normalize inputs to ensure consistency
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    _ensure_same_shape(a, b, "and")
+    a_norm, b_norm = _normalize_pair(a, b)
     result = np.minimum(a_norm, b_norm)
     logger.debug("VPM AND operation completed.")
     return result  # Already normalized float32
@@ -158,14 +157,8 @@ def vpm_subtract(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     logger.debug(
         f"Performing VPM SUBTRACT (A - B) operation on shapes {a.shape} and {b.shape}"
     )
-    if a.shape != b.shape:
-        logger.error(f"VPM SUBTRACT: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(
-            f"VPMs must have the same shape for SUBTRACT. Got {a.shape} and {b.shape}"
-        )
-    # Normalize inputs to ensure consistency
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    _ensure_same_shape(a, b, "subtract")
+    a_norm, b_norm = _normalize_pair(a, b)
     # Subtract and clip to [0, 1] to ensure valid range
     result = np.clip(a_norm - b_norm, 0.0, 1.0)
     logger.debug("VPM SUBTRACT operation completed.")
@@ -187,14 +180,8 @@ def vpm_add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     logger.debug(
         f"Performing VPM ADD (A + B) operation on shapes {a.shape} and {b.shape}"
     )
-    if a.shape != b.shape:
-        logger.error(f"VPM ADD: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(
-            f"VPMs must have the same shape for ADD. Got {a.shape} and {b.shape}"
-        )
-    # Normalize inputs to ensure consistency
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    _ensure_same_shape(a, b, "add")
+    a_norm, b_norm = _normalize_pair(a, b)
     # Add and clip to [0, 1]
     result = np.clip(a_norm + b_norm, 0.0, 1.0)
     logger.debug("VPM ADD operation completed.")
@@ -215,14 +202,8 @@ def vpm_xor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         np.ndarray: The resulting VPM from the XOR operation (normalized float).
     """
     logger.debug(f"Performing VPM XOR operation on shapes {a.shape} and {b.shape}")
-    if a.shape != b.shape:
-        logger.error(f"VPM XOR: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(
-            f"VPMs must have the same shape for XOR. Got {a.shape} and {b.shape}"
-        )
-    # Normalize inputs to ensure consistency
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    _ensure_same_shape(a, b, "xor")
+    a_norm, b_norm = _normalize_pair(a, b)
     # Calculate (A AND NOT B) OR (B AND NOT A)
     a_and_not_b = vpm_subtract(a_norm, b_norm)  # Use normalized inputs
     b_and_not_a = vpm_subtract(b_norm, a_norm)
@@ -240,8 +221,7 @@ def vpm_nand(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         np.ndarray: Result of NAND (normalized float).
     """
     # Normalize inputs
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    a_norm, b_norm = _normalize_pair(a, b)
     return vpm_not(vpm_and(a_norm, b_norm))
 
 
@@ -254,8 +234,7 @@ def vpm_nor(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         np.ndarray: Result of NOR (normalized float).
     """
     # Normalize inputs
-    a_norm = normalize_vpm(a)
-    b_norm = normalize_vpm(b)
+    a_norm, b_norm = _normalize_pair(a, b)
     return vpm_not(vpm_or(a_norm, b_norm))
 
 

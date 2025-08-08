@@ -8,16 +8,19 @@ underlying data to be used for multiple decision contexts.
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
 
-# Create a logger for this module
 logger = logging.getLogger(__name__)
 
-def transform_vpm(vpm: np.ndarray, 
-                 metric_names: List[str],
-                 target_metrics: List[str]) -> np.ndarray:
+def transform_vpm(
+    vpm: np.ndarray,
+    metric_names: List[str],
+    target_metrics: List[str],
+    *,
+    return_mapping: bool = False,
+) -> np.ndarray | Tuple[np.ndarray, List[int], List[int]]:
     """
     Transform a Visual Policy Map (VPM) to prioritize specific metrics.
     
@@ -36,7 +39,10 @@ def transform_vpm(vpm: np.ndarray,
                         Metrics not found in `metric_names` are ignored.
 
     Returns:
-        np.ndarray: Transformed VPM (RGB image array of the same shape as input).
+        If return_mapping=False (default):
+            np.ndarray: Transformed VPM (RGB image array of the same shape as input).
+        If return_mapping=True:
+            (transformed_vpm, new_metric_order, sorted_row_indices)
         
     Raises:
         ValueError: If inputs are invalid (e.g., None, incorrect shapes, mismatched dimensions).
@@ -57,9 +63,9 @@ def transform_vpm(vpm: np.ndarray,
         error_msg = "metric_names cannot be None."
         logger.error(error_msg)
         raise ValueError(error_msg)
-    if target_metrics is None: # Allow empty list, but not None
-         target_metrics = []
-         logger.info("target_metrics was None, treating as empty list.")
+    if target_metrics is None:  # Allow empty list, but not None
+        target_metrics = []
+        logger.info("target_metrics was None, treating as empty list.")
 
     height, width, channels = vpm.shape
     if channels != 3:
@@ -85,17 +91,13 @@ def transform_vpm(vpm: np.ndarray,
         logger.info("No metrics to transform. Returning original VPM.")
         return vpm.copy() # Return a copy to avoid accidental mutation
 
-    # 1. Extract metrics from the VPM image
-    # Create an array to hold the normalized metric values [height, actual_metric_count]
-    metrics_normalized = np.zeros((height, actual_metric_count), dtype=np.float64)
-    for i in range(height):
-        for j in range(actual_metric_count):
-            pixel_x = j // 3
-            channel = j % 3
-            if pixel_x < width: # Should always be true given actual_metric_count calculation
-                # Normalize from 0-255 uint8 to 0.0-1.0 float
-                metrics_normalized[i, j] = vpm[i, pixel_x, channel] / 255.0 
-    logger.debug(f"Extracted metrics array shape: {metrics_normalized.shape}")
+    # 1. Extract metrics from the VPM image (vectorized)
+    # reshape vpm to (H, W*3) interleaving channels consistent with encoding assumption
+    flat_metrics = vpm.astype(np.float32).reshape(height, width * 3) / 255.0
+    metrics_normalized = flat_metrics[:, :actual_metric_count]
+    logger.debug(
+        f"Extracted metrics array shape: {metrics_normalized.shape} (vectorized)"
+    )
 
     # 2. Determine the new order of metrics
     # Find indices of target metrics within the available metrics
@@ -111,7 +113,6 @@ def transform_vpm(vpm: np.ndarray,
                 logger.warning(f"Target metric '{m}' (index {idx}) is beyond the metric count in VPM ({actual_metric_count}). Ignoring.")
         except ValueError:
             logger.warning(f"Target metric '{m}' not found in provided metric_names. Ignoring.")
-            # continue # Skip metrics not found
 
     # Create the new column order: prioritized metrics first, then the rest
     remaining_indices = [i for i in range(actual_metric_count) 
@@ -138,19 +139,30 @@ def transform_vpm(vpm: np.ndarray,
 
     # 5. Re-encode the transformed data back into an RGB image
     # Create output image array
-    transformed_vpm = np.zeros_like(vpm, dtype=np.uint8) # Ensure correct dtype
-    for i in range(height):
-        for j in range(actual_metric_count):
-            pixel_x = j // 3
-            channel = j % 3
-            if pixel_x < width: # Should always be true
-                # Denormalize from 0.0-1.0 float back to 0-255 uint8
-                value_0_255 = int(np.clip(transformed_metrics_normalized[i, j] * 255.0, 0, 255))
-                transformed_vpm[i, pixel_x, channel] = value_0_255
-    logger.info(f"VPM transformation complete. Output shape: {transformed_vpm.shape}")
+    # 5. Re-encode transformed metrics back to RGB layout
+    # Start from zeros; pad metrics if not multiple of 3 for safe reshape
+    padded_cols = int(np.ceil(actual_metric_count / 3) * 3)
+    pad_needed = padded_cols - actual_metric_count
+    if pad_needed:
+        pad_block = np.zeros((height, pad_needed), dtype=transformed_metrics_normalized.dtype)
+        metrics_padded = np.concatenate([transformed_metrics_normalized, pad_block], axis=1)
+    else:
+        metrics_padded = transformed_metrics_normalized
+    rgb = (np.clip(metrics_padded, 0.0, 1.0) * 255.0).round().astype(np.uint8)
+    transformed_vpm = rgb.reshape(height, -1, 3)[:, :width, :]
+    logger.info(
+        f"VPM transformation complete. Output shape: {transformed_vpm.shape}. Reordered {len(new_metric_order)} metrics."
+    )
+    if return_mapping:
+        return transformed_vpm, new_metric_order, sorted_row_indices.tolist()
     return transformed_vpm
 
-def get_critical_tile(vpm: np.ndarray, tile_size: int = 3) -> bytes:
+def get_critical_tile(
+    vpm: np.ndarray,
+    tile_size: int = 3,
+    *,
+    include_dtype: bool = False,
+) -> bytes:
     """
     Extract a critical tile (top-left section) from a visual policy map.
 
@@ -160,8 +172,8 @@ def get_critical_tile(vpm: np.ndarray, tile_size: int = 3) -> bytes:
 
     Returns:
         bytes: Compact byte representation of the tile.
-               Format: [width][height][x_offset][y_offset][pixel_data...]
-               where pixel_data is R,G,B values for each pixel in row-major order.
+               Format: [width][height][x_offset][y_offset][(dtype_code?)][pixel_data...]
+               If include_dtype=True, a 1-byte dtype code (0=uint8) is inserted after offsets.
                
     Raises:
         ValueError: If inputs are invalid (e.g., None VPM, negative tile_size).
@@ -193,21 +205,17 @@ def get_critical_tile(vpm: np.ndarray, tile_size: int = 3) -> bytes:
     tile_bytes = bytearray()
     tile_bytes.append(actual_tile_width & 0xFF)   # Width (1 byte)
     tile_bytes.append(actual_tile_height & 0xFF)  # Height (1 byte)
-    tile_bytes.append(0 & 0xFF)                   # X offset (1 byte, always 0 for top-left)
-    tile_bytes.append(0 & 0xFF)                   # Y offset (1 byte, always 0 for top-left)
+    tile_bytes.append(0)                          # X offset (1 byte, always 0 for top-left)
+    tile_bytes.append(0)                          # Y offset (1 byte, always 0 for top-left)
+    if include_dtype:
+        # Currently only uint8 supported (code 0). Extend mapping as needed.
+        tile_bytes.append(0)
     logger.debug("Appended tile header bytes.")
 
     # Add pixel data (1 byte per channel, R,G,B for each pixel)
     # Iterate over the actual tile area within VPM bounds
-    for y in range(actual_tile_height):
-        for x in range(actual_tile_width):
-            # VPM is [height, width, channels], so vpm[y, x, :] gives RGB for pixel (x,y)
-            r_value = vpm[y, x, 0]
-            g_value = vpm[y, x, 1]
-            b_value = vpm[y, x, 2]
-            tile_bytes.append(r_value & 0xFF)
-            tile_bytes.append(g_value & 0xFF)
-            tile_bytes.append(b_value & 0xFF)
+    sub = vpm[:actual_tile_height, :actual_tile_width, :].astype(np.uint8)
+    tile_bytes.extend(sub.flatten().tolist())
             # logger.debug(f"Added pixel ({x},{y}): R={r_value}, G={g_value}, B={b_value}") # Very verbose
 
     result_bytes = bytes(tile_bytes)

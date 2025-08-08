@@ -12,7 +12,6 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-# Create a logger for this module
 logger = logging.getLogger(__name__)
 
 class DynamicNormalizer:
@@ -28,7 +27,7 @@ class DynamicNormalizer:
     incrementally as new data arrives using exponential smoothing.
     """
     
-    def __init__(self, metric_names: List[str], alpha: float = 0.1):
+    def __init__(self, metric_names: List[str], alpha: float = 0.1, *, allow_non_finite: bool = False):
         """
         Initialize the normalizer.
         
@@ -53,6 +52,7 @@ class DynamicNormalizer:
             
         self.metric_names = list(metric_names) # Ensure it's a list
         self.alpha = float(alpha)  # Smoothing factor, ensure float
+        self.allow_non_finite = allow_non_finite
         # Initialize with values that will be updated on first data
         self.min_vals = {m: float('inf') for m in self.metric_names}
         self.max_vals = {m: float('-inf') for m in self.metric_names}
@@ -74,49 +74,56 @@ class DynamicNormalizer:
             logger.error(error_msg)
             raise ValueError(error_msg)
         if score_matrix.ndim != 2:
-             error_msg = f"score_matrix must be 2D, got {score_matrix.ndim}D shape {score_matrix.shape}."
-             logger.error(error_msg)
-             raise ValueError(error_msg)
+            error_msg = f"score_matrix must be 2D, got {score_matrix.ndim}D shape {score_matrix.shape}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         if score_matrix.shape[1] != len(self.metric_names):
             error_msg = (f"score_matrix column count ({score_matrix.shape[1]}) "
                          f"must match metric_names count ({len(self.metric_names)}).")
             logger.error(error_msg)
             raise ValueError(error_msg)
-        if score_matrix.size == 0: # Check for empty array
-             logger.warning("Received empty score_matrix. Skipping update.")
-             return
+        if score_matrix.size == 0:  # Empty array
+            logger.warning("Received empty score_matrix. Skipping update.")
+            return
+
+        # Validate finite values unless explicitly allowed
+        if not self.allow_non_finite and not np.isfinite(score_matrix).all():
+            nan_count = int(np.isnan(score_matrix).sum())
+            inf_count = int(np.isinf(score_matrix).sum())
+            error_msg = (
+                f"score_matrix contains non-finite values (NaN={nan_count}, Inf={inf_count}). "
+                "Set allow_non_finite=True or clean the data."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
         logger.debug(f"Updating normalizer with data shape: {score_matrix.shape}")
         num_docs = score_matrix.shape[0]
-        
-        for i, metric in enumerate(self.metric_names):
-            col = score_matrix[:, i]
-            # Handle potential NaNs or infs if present in data (optional, depends on requirements)
-            # col = col[np.isfinite(col)] # Uncomment if you want to ignore NaN/inf
-            if col.size == 0: # Check if column is empty after potential filtering
-                 logger.warning(f"Column for metric '{metric}' is empty (after filtering). Skipping update for this metric.")
-                 continue
 
-            current_min = np.min(col)
-            current_max = np.max(col)
-            
-            # Update with exponential smoothing
-            if np.isinf(self.min_vals[metric]): # First update for this metric
-                logger.debug(f"First update for metric '{metric}': min={current_min}, max={current_max}")
-                self.min_vals[metric] = float(current_min)
-                self.max_vals[metric] = float(current_max)
+        # Vectorized min/max across columns
+        col_mins = np.min(score_matrix, axis=0)
+        col_maxs = np.max(score_matrix, axis=0)
+
+        for i, metric in enumerate(self.metric_names):
+            current_min = float(col_mins[i])
+            current_max = float(col_maxs[i])
+            if np.isinf(self.min_vals[metric]):  # First observation
+                self.min_vals[metric] = current_min
+                self.max_vals[metric] = current_max
+                logger.debug(f"Initial range for metric '{metric}': [{current_min:.6f}, {current_max:.6f}]")
             else:
-                # Exponential smoothing update
                 old_min = self.min_vals[metric]
                 old_max = self.max_vals[metric]
                 self.min_vals[metric] = float((1 - self.alpha) * old_min + self.alpha * current_min)
                 self.max_vals[metric] = float((1 - self.alpha) * old_max + self.alpha * current_max)
-                logger.debug(f"Updated metric '{metric}': min {old_min:.6f}->{self.min_vals[metric]:.6f}, "
-                             f"max {old_max:.6f}->{self.max_vals[metric]:.6f} (data min={current_min:.6f}, max={current_max:.6f})")
+                logger.debug(
+                    f"Metric '{metric}' range update: min {old_min:.6f}->{self.min_vals[metric]:.6f}, "
+                    f"max {old_max:.6f}->{self.max_vals[metric]:.6f} (batch min={current_min:.6f}, max={current_max:.6f})"
+                )
         logger.info(f"Normalizer updated successfully with {num_docs} documents.")
 
     
-    def normalize(self, score_matrix: np.ndarray) -> np.ndarray:
+    def normalize(self, score_matrix: np.ndarray, *, as_float32: bool = False) -> np.ndarray:
         """
         Normalize scores to [0,1] range using current min/max.
         
@@ -136,9 +143,9 @@ class DynamicNormalizer:
             logger.error(error_msg)
             raise ValueError(error_msg)
         if score_matrix.ndim != 2:
-             error_msg = f"score_matrix must be 2D for normalization, got {score_matrix.ndim}D shape {score_matrix.shape}."
-             logger.error(error_msg)
-             raise ValueError(error_msg)
+            error_msg = f"score_matrix must be 2D for normalization, got {score_matrix.ndim}D shape {score_matrix.shape}."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
         if score_matrix.shape[1] != len(self.metric_names):
             error_msg = (f"score_matrix column count ({score_matrix.shape[1]}) "
                          f"must match metric_names count ({len(self.metric_names)}) for normalization.")
@@ -167,8 +174,8 @@ class DynamicNormalizer:
                      logger.debug(f"Metric '{metric}' has constant value ({min_val}). Assigned 0.5.")
         
         logger.info(f"Normalization completed for {num_docs} documents.")
-        # Return as float32 or float64 depending on downstream needs, or let caller cast.
-        # Assuming float64 is fine for precision. Can cast to float32 if needed.
+        if as_float32:
+            return normalized.astype(np.float32)
         return normalized 
     
     def get_ranges(self) -> Dict[str, Tuple[float, float]]:

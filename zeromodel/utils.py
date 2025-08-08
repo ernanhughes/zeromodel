@@ -9,87 +9,104 @@ from typing import Any
 
 import numpy as np
 
+__all__ = [
+    "quantize",
+    "dct",
+    "idct",
+]
+
+
+def _select_dtype_for_precision(precision: int):
+    """Return an integer dtype able to hold the given precision (bits)."""
+    if precision <= 8:
+        return np.uint8
+    if precision <= 16:
+        return np.uint16
+    if precision <= 32:
+        return np.uint32
+    return np.uint64
+
 
 def quantize(value: Any, precision: int) -> Any:
-    """
-    Quantize values to specified bit precision.
-    
+    """Quantize values to specified bit precision (assumes input in [0,1]).
+
+    Clamps input to [0,1] then scales to integer range. Chooses an appropriate
+    unsigned integer dtype based on precision.
+
     Args:
-        value: Value or array to quantize
-        precision: Bit precision (4-16)
-    
+        value: Scalar or ndarray of floats in any range (will be clipped to [0,1]).
+        precision: Bit precision (4-32 typical). Values <1 raise, >64 truncated to 64.
+
     Returns:
-        Quantized value(s)
+        Quantized integer array / scalar of appropriate dtype.
     """
-    max_val = (1 << precision) - 1
+    if not isinstance(precision, int):
+        raise TypeError("precision must be an int")
+    if precision < 1:
+        raise ValueError("precision must be >= 1")
+    if precision > 64:
+        precision = 64  # cap
+    dtype = _select_dtype_for_precision(precision)
+    max_val = (1 << precision) - 1 if precision < 64 else np.iinfo(dtype).max
     if isinstance(value, np.ndarray):
-        return np.round(value * max_val).astype(np.uint8)
-    else:
-        return int(value * max_val)
+        clipped = np.clip(value, 0.0, 1.0)
+        scaled = np.round(clipped * max_val)
+        return scaled.astype(dtype)
+    # Scalar path
+    v = float(value)
+    if v < 0.0:
+        v = 0.0
+    elif v > 1.0:
+        v = 1.0
+    return int(round(v * max_val))
 
 def dct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
+    """Compute a DCT-II along a chosen axis (minimal, SciPy-free).
+
+    Based on the standard definition:
+        X_n = sum_{k=0}^{N-1} x_k * cos[ pi/N * (k + 0.5) * n ]
+
+    Orthonormal scaling (norm='ortho') matches scipy.fft.dct(type=2, norm='ortho').
+
+    Complexity is O(N^2); intended for small edge scenarios.
     """
-    Discrete Cosine Transform (simplified implementation).
-    
-    Note: In production, use scipy.fft.dct for better performance.
-    This is a minimal implementation for edge compatibility.
-    
-    Args:
-        matrix: Input matrix
-        norm: Normalization mode
-        axis: Axis along which to compute DCT
-    
-    Returns:
-        DCT of input
-    """
-    # Simplified DCT implementation for edge compatibility
-    # In production, replace with scipy.fft.dct
-    n = matrix.shape[axis]
-    k = np.arange(n)
-    result = np.zeros_like(matrix)
-    
-    for i in range(n):
-        if axis == 0:
-            result[i] = np.sum(matrix * np.cos(np.pi * k * i / n), axis=0)
-        else:
-            result[:, i] = np.sum(matrix * np.cos(np.pi * k * i / n), axis=1)
-    
+    x = np.asarray(matrix, dtype=np.float64)
+    x = np.moveaxis(x, axis, -1)
+    N = x.shape[-1]
+    if N == 0:
+        return matrix.copy()
+    k = np.arange(N, dtype=np.float64)
+    n = k  # reuse variable for clarity
+    cos_table = np.cos(np.pi / N * (k + 0.5)[:, None] * n[None, :])  # shape (N,N)
+    # Perform tensordot over last axis of x with first axis of cos_table
+    out = np.tensordot(x, cos_table, axes=([-1], [0]))  # shape (..., N)
     if norm == 'ortho':
-        result[0] *= np.sqrt(0.5)
-        result[1:] *= 1.0
-    
-    return result
+        out[..., 0] *= np.sqrt(1.0 / N)
+        out[..., 1:] *= np.sqrt(2.0 / N)
+    out = np.moveaxis(out, -1, axis)
+    return out.astype(np.float32, copy=False)
 
 def idct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
+    """Compute an IDCT (inverse of DCT-II) aka DCT-III along axis.
+
+    For norm='ortho' this inverts ``dct(..., norm='ortho')`` numerically.
+    Complexity O(N^2); intended for small inputs.
     """
-    Inverse Discrete Cosine Transform (simplified implementation).
-    
-    Note: In production, use scipy.fft.idct for better performance.
-    This is a minimal implementation for edge compatibility.
-    
-    Args:
-        matrix: Input matrix
-        norm: Normalization mode
-        axis: Axis along which to compute IDCT
-    
-    Returns:
-        IDCT of input
-    """
-    # Simplified IDCT implementation for edge compatibility
-    # In production, replace with scipy.fft.idct
-    n = matrix.shape[axis]
-    k = np.arange(n)
-    result = np.zeros_like(matrix)
-    
-    for i in range(n):
-        if axis == 0:
-            result[i] = 0.5 * matrix[0] + np.sum(matrix[1:] * np.cos(np.pi * k[1:] * i / n), axis=0)
-        else:
-            result[:, i] = 0.5 * matrix[:, 0] + np.sum(matrix[:, 1:] * np.cos(np.pi * k[1:] * i / n), axis=1)
-    
-    result *= 2.0 / n
-    
+    X = np.asarray(matrix, dtype=np.float64)
+    X = np.moveaxis(X, axis, -1)
+    N = X.shape[-1]
+    if N == 0:
+        return matrix.copy()
+    n = np.arange(N, dtype=np.float64)
+    k = n  # reuse
+    cos_table = np.cos(np.pi / N * (n + 0.5)[:, None] * k[None, :])  # (N,N)
+    Y = X.copy()
     if norm == 'ortho':
-        result[0] *= np.sqrt(0.5)
-    
-    return result
+        Y[..., 0] *= np.sqrt(1.0 / N)
+        Y[..., 1:] *= np.sqrt(2.0 / N)
+    else:
+        # Undo scaling expected for unnormalized forward (approximate)
+        Y[..., 0] *= 1.0 / (N / 2.0)
+    out = np.tensordot(Y, cos_table.T, axes=([-1], [0]))  # shape (..., N)
+    out = np.moveaxis(out, -1, axis)
+    return out.astype(np.float32, copy=False)

@@ -14,8 +14,9 @@ This provides a comprehensive, visual demonstration of the VPM logic system.
 """
 
 import numpy as np
-import pytest
 import matplotlib
+
+from zeromodel.config import get_config
 matplotlib.use('Agg')  # Use non-GUI backend to avoid TclError
 import matplotlib.pyplot as plt
 import os
@@ -129,6 +130,7 @@ def test_vpm_or_operation():
     task_a = "SELECT * FROM virtual_index ORDER BY feature_a DESC"
     task_b = "SELECT * FROM virtual_index ORDER BY feature_b DESC"
     
+    get_config("core").update({"default_output_precision": "float32"})
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
     vpm_a = model_a.encode()

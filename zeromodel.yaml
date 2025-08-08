@@ -1,0 +1,155 @@
+# zeromodel.yaml
+#
+# Default configuration file for ZeroModel Intelligence.
+#
+# This file controls the behavior of the ZeroModel system.
+# Place this file in your project root, or one of these locations:
+# - ./zeromodel.yaml
+# - ./config/zeromodel.yaml
+# - ~/.zeromodel/config.yaml
+# - ~/zeromodel.yaml
+#
+# The system loads the first file it finds in this order.
+# Settings here override the hardcoded DEFAULT_CONFIG in zeromodel/config.py.
+
+# --- Core Processing Configuration ---
+# Controls the fundamental behavior of the ZeroModel engine.
+core:
+  # Whether to use DuckDB for complex SQL query processing.
+  # Set to false to bypass DuckDB for simpler, faster processing.
+  # Use 'auto' to let ZeroModel decide based on query complexity.
+  use_duckdb: false
+
+  # Threshold (in milliseconds) below which DuckDB processing is bypassed
+  # even if use_duckdb=true. Set to 0.0 to disable this bypass.
+  duckdb_bypass_threshold: 0.5
+
+  # Bit precision for internal processing (4-16).
+  # Higher precision offers more granularity but uses more memory.
+  precision: 8
+
+  # Whether to normalize input score matrices to [0, 1] range.
+  normalize_inputs: true
+
+  # How to handle non-linear feature generation.
+  # Options: 'auto' (detect), 'none' (disable), 'force' (always apply).
+  nonlinearity_handling: auto
+
+  # Whether to cache pre-processed VPMs for repeated tasks.
+  cache_preprocessed_vpm: true
+
+  # Maximum number of cached tasks.
+  max_cached_tasks: 100
+
+  # Default output precision for VPM encoding.
+  default_output_precision: float32
+
+# --- Edge Deployment Configuration ---
+# Settings for resource-constrained devices.
+edge:
+  # Enable/disable edge-specific optimizations.
+  enabled: false
+
+  # Default tile size for critical tile extraction on edge devices.
+  # Smaller tiles (e.g., 3) for extreme memory constraints.
+  # Larger tiles (e.g., 5) for more context.
+  default_tile_size: 3
+
+  # Maximum memory usage target for edge operations (in bytes).
+  # This is informational and guides internal optimizations.
+  max_memory_usage: 25600 # 25KB
+
+# --- Hierarchical VPM Configuration ---
+# Settings for multi-resolution VPMs.
+hierarchical:
+  # Number of hierarchical levels to generate.
+  # Level 0: Most abstract (smallest)
+  # Level N-1: Most detailed (largest, where N is num_levels)
+  num_levels: 3
+
+  # Zoom factor between hierarchical levels.
+  # E.g., Level 1 is zoom_factor times smaller than Level 2.
+  zoom_factor: 3
+
+  # Type of wavelet transform for hierarchical compression.
+  # Common options: 'haar', 'db2', 'sym4', etc.
+  # (Requires PyWavelets if wavelet_type is not 'haar')
+  wavelet_type: haar
+
+  # Maximum number of levels to generate.
+  # If null, defaults to num_levels.
+  max_levels: null
+
+# --- Logging Configuration ---
+# Controls how ZeroModel logs information.
+# This section configures the Python logging system used by ZeroModel.
+logging:
+  # Base logging level.
+  # Options (least to most verbose): 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'
+  level: INFO
+
+  # Log message format.
+  # See Python's logging module documentation for format specifiers.
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+  # Handlers define where log messages go.
+  handlers:
+    # Console handler for immediate feedback.
+    - type: console
+      # Minimum level for this handler.
+      level: INFO
+
+    # File handler for persistent logs.
+    - type: file
+      level: DEBUG
+      # Log file name.
+      filename: "zeromodel.log"
+      # Maximum size of log file before rotation (bytes).
+      max_bytes: 10485760 # 10 MB
+      # Number of backup log files to keep.
+      backup_count: 5
+
+# --- Advanced/Experimental Features ---
+# Configuration for cutting-edge or specialized functionalities.
+advanced:
+  # Enable/disable automatic metric discovery.
+  # If true, the system attempts to identify new relevant metrics.
+  metric_discovery: false
+
+  # Interval (in seconds) for metric discovery checks.
+  metric_discovery_interval: 3600 # 1 hour
+
+# --- Example: Edge Device Profile ---
+# Uncomment and use this section to quickly switch to edge-optimized settings.
+# profiles:
+#   edge_device:
+#     core:
+#       use_duckdb: false
+#       precision: 8
+#     edge:
+#       enabled: true
+#       default_tile_size: 3
+#       max_memory_usage: 25600
+#     logging:
+#       level: WARNING # Reduce log verbosity
+#       handlers:
+#         - type: console
+#           level: ERROR
+
+# --- Example: Cloud/Development Profile ---
+# Uncomment and use this section for cloud or development environments.
+# profiles:
+#   cloud_dev:
+#     core:
+#       use_duckdb: true
+#       precision: 16
+#     edge:
+#       enabled: false
+#     logging:
+#       level: DEBUG # More verbose for development
+#       handlers:
+#         - type: console
+#           level: INFO
+#         - type: file
+#           level: DEBUG
+#           filename: "zeromodel_dev.log"

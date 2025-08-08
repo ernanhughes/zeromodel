@@ -13,25 +13,17 @@ from __future__ import annotations
 import logging
 from typing import Optional
 import numpy as np
+from zeromodel.config import get_config
+from zeromodel.constants import precision_dtype_map
 
 logger = logging.getLogger(__name__)
 
-precision_dtype_map = {
-    'uint8': np.uint8,
-    'uint16': np.uint16,
-    'float16': np.float16,
-    'float32': np.float32,
-    'float64': np.float64,
-}
 
 class VPMEncoder:
     """Stateless encoder for turning normalized matrices into VPM images/tiles."""
-    def __init__(self, default_output_precision: str = 'float32'):
-        valid = set(precision_dtype_map.keys())
-        if default_output_precision not in valid:
-            logger.warning("Invalid default_output_precision '%s'. Falling back to 'float32'.", default_output_precision)
-            default_output_precision = 'float32'
-        self.default_output_precision = default_output_precision
+    def __init__(self):
+        self.default_output_precision = get_config("core").get("default_output_precision", "float32")
+        logger.debug("VPMEncoder initialized with default output precision: %s", self.default_output_precision)
 
     def encode(self, sorted_matrix: np.ndarray, output_precision: Optional[str] = None) -> np.ndarray:
         if sorted_matrix is None:

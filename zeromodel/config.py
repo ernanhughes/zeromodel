@@ -36,6 +36,7 @@ DEFAULT_CONFIG = {
         "nonlinearity_handling": "auto",  # Options: "auto", "none", "force"
         "cache_preprocessed_vpm": True,
         "max_cached_tasks": 100,
+        "default_output_precision": "float32"
     },
     
     # Edge deployment settings

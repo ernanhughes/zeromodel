@@ -11,8 +11,8 @@ The VPM image spatially organizes the data such that the most relevant documents
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
-from sklearn.preprocessing import StandardScaler # For optional data scaling demonstration
 from zeromodel.core import ZeroModel # Adjust import path if needed (e.g., from zeromodel import ZeroModel)
+from zeromodel.config import get_config
 
 def load_and_prepare_iris_data():
     """
@@ -82,7 +82,7 @@ def define_and_process_task(score_matrix, metric_names, task_description, task_s
     # 1. Initialize ZeroModel
     # Precision determines internal bit depth, default is usually fine (e.g., 8 or 16).
     # default_output_precision='float32' makes the VPM a float32 array by default.
-    zeromodel = ZeroModel(metric_names, precision=16, default_output_precision='float32')
+    zeromodel = ZeroModel(metric_names, precision=16)
     print(f"Initialized ZeroModel with metrics: {metric_names}")
 
     # 2. Prepare the data using the SQL task
@@ -155,7 +155,7 @@ def analyze_results(zeromodel, y_true, target_names, task_description):
         # Get the top decision from ZeroModel
         # This looks at the top-left region of the sorted_matrix/VPM.
         doc_index, relevance_score = zeromodel.get_decision()
-        print(f"ZeroModel Decision:")
+        print("ZeroModel Decision:")
         print(f"  - Top Document Index: {doc_index}")
         print(f"  - Relevance Score: {relevance_score:.4f} (Range: 0.0 to 1.0)")
         print(f"  - Interpreted as: The {task_description} is most likely document {doc_index}.")

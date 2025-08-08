@@ -1,5 +1,6 @@
 import numpy as np
 from zeromodel import ZeroModel, HierarchicalVPM
+from zeromodel.config import get_config
 
 def test_normalization_quantization():
     """Test normalization and quantization behavior with different precision levels"""
@@ -8,7 +9,8 @@ def test_normalization_quantization():
 
     # -- 8-bit test --
     # Explicitly request uint8 output to match the original test's expectation
-    zm_8bit = ZeroModel(metric_names, precision=8, default_output_precision='uint8') # Set default or...
+    get_config("core").update({"default_output_precision": "uint8"})
+    zm_8bit = ZeroModel(metric_names, precision=8) # Set default or...
     zm_8bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
 
     # Explicitly request uint8 output
@@ -22,7 +24,8 @@ def test_normalization_quantization():
 
     # -- 4-bit test (values should be multiples of 16) --
     # Explicitly request uint8 output for the 4-bit *simulation*
-    zm_4bit = ZeroModel(metric_names, precision=4, default_output_precision='uint8')
+    get_config("core").update({"default_output_precision": "uint8"})
+    zm_4bit = ZeroModel(metric_names, precision=4)
     zm_4bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
     # Explicitly request uint8 output
     vpm_4bit = zm_4bit.encode(output_precision='uint8')
@@ -36,7 +39,8 @@ def test_normalization_quantization():
 
     # -- 16-bit test --
     # Explicitly request uint16 output
-    zm_16bit = ZeroModel(metric_names, precision=16, default_output_precision='uint16') # Or request in encode
+    get_config("core").update({"default_output_precision": "uint16"})
+    zm_16bit = ZeroModel(metric_names, precision=16) # Or request in encode
     zm_16bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
     # Explicitly request uint16 output
     vpm_16bit = zm_16bit.encode(output_precision='uint16')
@@ -48,7 +52,7 @@ def test_normalization_quantization():
     # -- Test normalization with negative values --
     neg_matrix = np.array([[-0.2, 0.8],[0.0, 0.3],[0.9, -0.1]])
     # Use default float precision for internal processing, which is better for negatives
-    zm_neg = ZeroModel(metric_names, default_output_precision='float32') # Default float is good
+    zm_neg = ZeroModel(metric_names) # Default float is good
     zm_neg.prepare(neg_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
     # The internal sorted_matrix should handle negatives correctly (after normalization)
     # normalized = zm_neg.sorted_matrix # This is the normalized float matrix
@@ -67,6 +71,7 @@ def test_normalization_quantization_updated_defaults():
     score_matrix = np.array([[0.2, 0.8],[0.5, 0.3],[0.9, 0.1]])
 
     # Assume new default is float32 for encode()
+    get_config("core").update({"default_output_precision": "float32"})
     zm_default = ZeroModel(metric_names, precision=8) # default_output_precision defaults to 'float32'
     zm_default.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
 
@@ -283,6 +288,7 @@ def test_tile_processing():
         [0.1, 0.3, 0.9, 0.2]   # Document 3
     ])
 
+    get_config("core").update({"default_output_precision": "float32"})
     zeromodel = ZeroModel(metric_names)
     # Use prepare as intended by the new workflow
     zeromodel.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")

@@ -12,22 +12,16 @@ from typing import List, Tuple, Dict, Any, Optional
 
 import numpy as np
 from zeromodel.normalizer import DynamicNormalizer
-from zeromodel.config import init_config
+from zeromodel.config import init_config, get_config
 from zeromodel.encoder import VPMEncoder
 from zeromodel.feature_engineer import FeatureEngineer
 from zeromodel.duckdb_adapter import DuckDBAdapter
 from zeromodel.organization import SqlOrganizationStrategy, MemoryOrganizationStrategy
-from zeromodel.timing import timeit
+from zeromodel.timing import timeit   
+from zeromodel.constants import precision_dtype_map
 
 logger = logging.getLogger(__name__)  
 
-precision_dtype_map = {
-    'uint8': np.uint8,
-    'uint16': np.uint16,
-    'float16': np.float16,
-    'float32': np.float32,
-    'float64': np.float64,
-}
 
 init_config()
 
@@ -46,46 +40,38 @@ class ZeroModel:
     The intelligence is in the data structure itself, not in processing.
     """
 
-    @timeit
     def __init__(
         self,
         metric_names: List[str],
-        precision: int = 8,
-        default_output_precision: str = "float32",
+        precision: int = 8
     ):
         """Initialize the ZeroModel core components."""
         logger.debug(
-            "Initializing ZeroModel with metrics: %s, precision: %s, default_output_precision: %s",
+            "Initializing ZeroModel with metrics: %s, precision: %s",
             metric_names,
-            precision,
-            default_output_precision,
+            precision
         )
         if not metric_names:
             raise ValueError("metric_names list cannot be empty.")
-        valid_precisions = ["uint8", "uint16", "float16", "float32", "float64"]
-        if default_output_precision not in valid_precisions:
-            logger.warning(
-                "Invalid default_output_precision '%s'. Must be one of %s. Defaulting to 'float32'.",
-                default_output_precision,
-                valid_precisions,
-            )
-            default_output_precision = "float32"
 
         # Core attributes
         self.metric_names = list(metric_names)
         self.effective_metric_names = list(metric_names)
         self.precision = max(4, min(16, precision))
-        self.default_output_precision = default_output_precision
+        self.default_output_precision = get_config("core").get("default_output_precision", "float32")
+        assert self.default_output_precision in precision_dtype_map, \
+            f"Invalid default_output_precision '{self.default_output_precision}'. Must be one of {list(precision_dtype_map.keys())}."
         self.sorted_matrix: Optional[np.ndarray] = None
         self.doc_order: Optional[np.ndarray] = None
         self.metric_order: Optional[np.ndarray] = None
         self.task: str = "default"
         self.task_config: Optional[Dict[str, Any]] = None
+        
 
         # Components
         self.duckdb = DuckDBAdapter(self.effective_metric_names)
         self.normalizer = DynamicNormalizer(self.effective_metric_names)
-        self._encoder = VPMEncoder(default_output_precision)
+        self._encoder = VPMEncoder()
         self._feature_engineer = FeatureEngineer()
         # Default organization strategy is in-memory; may be upgraded later
         self._org_strategy = MemoryOrganizationStrategy()
@@ -96,7 +82,6 @@ class ZeroModel:
             self.default_output_precision,
         )
 
-    @timeit
     def encode(self, output_precision: Optional[str] = None) -> np.ndarray:
         if self.sorted_matrix is None:
             raise ValueError(DATA_NOT_PROCESSED_ERR)
@@ -107,7 +92,6 @@ class ZeroModel:
             raise ValueError(DATA_NOT_PROCESSED_ERR)
         return self._encoder.get_critical_tile(self.sorted_matrix, tile_size=tile_size, precision=precision)
 
-    @timeit
     def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
         """
         Get top decision with contextual understanding.
@@ -172,7 +156,6 @@ class ZeroModel:
         return (top_doc_idx_in_original, weighted_relevance)
 
 
-    @timeit
     def normalize(self, score_matrix: np.ndarray) -> np.ndarray:
         """
         Normalize the score matrix using the DynamicNormalizer.
@@ -221,7 +204,6 @@ class ZeroModel:
             self.effective_metric_names = new_names
             self.normalizer = DynamicNormalizer(new_names)
 
-    @timeit
     def prepare(self, score_matrix: np.ndarray, sql_query: str, nonlinearity_hint: Optional[str] = None) -> None:
         """Prepare model with data, optional feature engineering, and SQL-driven organization."""
         logger.info(
@@ -303,6 +285,7 @@ class ZeroModel:
             # --- Use the potentially updated self.metric_names ---
             "metric_names": self.effective_metric_names, # This should now be effective_metric_names after prepare()
             "precision": self.precision,
+            "default_output_precision": self.default_output_precision,
         }
         logger.debug(f"Metadata retrieved: {metadata}")
         return metadata

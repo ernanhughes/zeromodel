@@ -119,15 +119,15 @@ def test_duckdb_integration_and_data_loading():
     
     # 2. Verify DuckDB connection and initial schema (without data row)
     # ... (this part remains the same) ...
-    assert zeromodel.duckdb_conn is not None
-    
-    result = zeromodel.duckdb_conn.execute("PRAGMA table_info(virtual_index)").fetchall()
+    assert zeromodel.duckdb.connection is not None
+
+    result = zeromodel.duckdb.connection.execute("PRAGMA table_info(virtual_index)").fetchall()
     assert len(result) == len(metric_names) + 1
     assert result[0][1] == "row_id"
     for i, col_name in enumerate(metric_names):
         assert result[i+1][1] == col_name
 
-    result = zeromodel.duckdb_conn.execute("SELECT * FROM virtual_index").fetchone()
+    result = zeromodel.duckdb.connection.execute("SELECT * FROM virtual_index").fetchone()
     assert result is None, "virtual_index table should be empty after initialization."
     # --- End of part that remains the same ---
 
@@ -161,12 +161,12 @@ def test_duckdb_integration_and_data_loading():
 
     # 5. Verify data was loaded correctly
     # Check number of rows
-    count_result = zeromodel.duckdb_conn.execute("SELECT COUNT(*) FROM virtual_index").fetchone()
+    count_result = zeromodel.duckdb.connection.execute("SELECT COUNT(*) FROM virtual_index").fetchone()
     assert count_result[0] == score_matrix.shape[0], f"Expected {score_matrix.shape[0]} rows in virtual_index, found {count_result[0]}"
 
     # Check content of the table (order might differ from insertion, but data should match)
     # Fetch all data, ordered by row_id for easy comparison
-    table_data_result = zeromodel.duckdb_conn.execute("SELECT * FROM virtual_index ORDER BY row_id").fetchall()
+    table_data_result = zeromodel.duckdb.connection.execute("SELECT * FROM virtual_index ORDER BY row_id").fetchall()
     # --- KEY CHANGE 2: Compare against expected_normalized_data ---
     for i in range(expected_normalized_data.shape[0]): # Use expected_normalized_data.shape
         row_from_db = table_data_result[i]

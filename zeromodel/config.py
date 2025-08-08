@@ -29,11 +29,11 @@ logger.addHandler(logging.NullHandler())  # Prevent "no handler" warnings
 DEFAULT_CONFIG = {
     # Core processing configuration
     "core": {
-        "use_duckdb": True,
+        "use_duckdb": False,
         "duckdb_bypass_threshold": 0.5,  # ms
         "precision": 8,
         "normalize_inputs": True,
-        "nonlinearity_handling": "auto",
+        "nonlinearity_handling": "auto",  # Options: "auto", "none", "force"
         "cache_preprocessed_vpm": True,
         "max_cached_tasks": 100,
     },
@@ -55,7 +55,7 @@ DEFAULT_CONFIG = {
     
     # Logging configuration
     "logging": {
-        "level": "INFO",
+        "level": "DEBUG",
         "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         "handlers": [
             {

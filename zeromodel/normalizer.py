@@ -8,6 +8,7 @@ viability of the zeromodel system as score distributions may change.
 """
 
 import logging
+from timeit import timeit
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -122,7 +123,7 @@ class DynamicNormalizer:
                 )
         logger.info(f"Normalizer updated successfully with {num_docs} documents.")
 
-    
+
     def normalize(self, score_matrix: np.ndarray, *, as_float32: bool = False) -> np.ndarray:
         """
         Normalize scores to [0,1] range using current min/max.

@@ -30,7 +30,7 @@ def test_init_validation():
         ZeroMemory([], buffer_steps=16)
 
     with pytest.raises(ValueError):
-        ZeroMemory(METRICS, buffer_steps=0) All right I want to show rent to test
+        ZeroMemory(METRICS, buffer_steps=0)
 
     with pytest.raises(ValueError):
         ZeroMemory(METRICS, tile_size=0)

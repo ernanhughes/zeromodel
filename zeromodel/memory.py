@@ -295,10 +295,23 @@ class ZeroMemory:
                     joint_metric_series = metric_series[joint_finite_mask]
                     joint_target_series = target_series[joint_finite_mask]
                     # Pearson correlation
-                    corr = np.corrcoef(joint_metric_series, joint_target_series)[0, 1]
-                    if np.isfinite(corr):
-                        pred_score = np.abs(corr)
-            
+                    x = joint_metric_series.astype(np.float64)
+                    y = joint_target_series.astype(np.float64)
+
+                    x = x - x.mean()
+                    y = y - y.mean()
+
+                    sx = x.std()
+                    sy = y.std()
+
+                    if sx > 1e-12 and sy > 1e-12:
+                        # sample correlation (unbiased denom ~ (n-1)*sx*sy); np.dot uses sum(x*y)
+                        denom = (len(x) - 1) * sx * sy if len(x) > 1 else np.inf
+                        corr = float(np.dot(x, y) / denom) if denom > 0 else 0.0
+                    else:
+                        corr = 0.0
+
+                    pred_score = abs(corr)            
             # 4. Spikiness (short-term std / long-term std)
             if T_finite > 4:
                 short_window = max(2, T_finite // 4)

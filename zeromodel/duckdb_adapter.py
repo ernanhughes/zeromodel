@@ -1,7 +1,9 @@
 """DuckDB adapter encapsulating schema management, data loading, and query analysis."""
 from __future__ import annotations
+
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 import duckdb
 
 logger = logging.getLogger(__name__)

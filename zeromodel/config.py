@@ -16,11 +16,12 @@ The system is designed to be:
 - Extensible: Easy to add new configuration options
 """
 
-import os
 import logging
-import yaml
+import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import yaml
 
 # Initialize the base logger early so we can log config loading
 logger = logging.getLogger("zeromodel.config")

@@ -5,8 +5,10 @@ text specification, heuristic, etc.) can be swapped without changing the core
 ZeroModel pipeline.
 """
 from __future__ import annotations
-from typing import List, Tuple, Dict, Any, Optional
+
 import logging
+from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

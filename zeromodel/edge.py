@@ -9,8 +9,8 @@ protocol for edge devices with <25KB memory. It handles:
 - Sending back results with minimal overhead
 """
 
-import struct
 import logging
+import struct
 from typing import Tuple
 
 logger = logging.getLogger(__name__)

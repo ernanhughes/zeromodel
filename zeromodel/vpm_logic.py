@@ -13,9 +13,10 @@ VPM logic gates enable distributed visual intelligence.
 This is not just fuzzy logic. This is **Visual Symbolic Math**.
 """
 
-import numpy as np
 import logging
 from typing import Tuple
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 

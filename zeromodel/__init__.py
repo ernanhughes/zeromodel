@@ -3,10 +3,10 @@
 Zero-Model Intelligence (zeromodel) - Standalone package for cognitive compression
 """
 
-from .core import ZeroModel
 from .config import init_config
-from .hierarchical import HierarchicalVPM
+from .core import ZeroModel
 from .edge import EdgeProtocol
+from .hierarchical import HierarchicalVPM
 from .hierarchical_edge import HierarchicalEdgeProtocol
 from .normalizer import DynamicNormalizer
 from .transform import get_critical_tile, transform_vpm

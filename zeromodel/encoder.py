@@ -10,9 +10,12 @@ It deliberately knows nothing about DuckDB, feature engineering, or normalizatio
 pipelines; it operates purely on already-prepared numpy arrays.
 """
 from __future__ import annotations
+
 import logging
 from typing import Optional
+
 import numpy as np
+
 from zeromodel.config import get_config
 from zeromodel.constants import precision_dtype_map
 
@@ -48,7 +51,8 @@ class VPMEncoder:
         except ValueError as e:
             raise ValueError(f"Cannot reshape data of shape {matrix.shape} to ({n_docs}, {width}, 3).") from e
         try:
-            from .vpm_logic import denormalize_vpm  # local import to avoid cycle
+            from .vpm_logic import \
+                denormalize_vpm  # local import to avoid cycle
             img = denormalize_vpm(img_data, output_type=target_dtype)
         except Exception:
             if target_dtype == np.uint8:

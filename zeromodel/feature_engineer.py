@@ -4,8 +4,10 @@ Encapsulates hint-based non-linear feature generation so the core model
 remains focused on orchestration.
 """
 from __future__ import annotations
+
 import logging
-from typing import List, Optional, Tuple, Dict, Callable
+from typing import Callable, Dict, List, Optional, Tuple
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

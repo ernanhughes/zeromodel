@@ -6,8 +6,8 @@ This module provides the communication protocol for edge devices
 to interact with hierarchical visual policy maps.
 """
 
-import struct
 import logging
+import struct
 from typing import Tuple
 
 logger = logging.getLogger(__name__)

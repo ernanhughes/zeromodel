@@ -8,17 +8,19 @@ intelligence is in the data structure itself, not in processing.
 """
 
 import logging
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-from zeromodel.normalizer import DynamicNormalizer
-from zeromodel.config import init_config, get_config
+
+from zeromodel.config import get_config, init_config
+from zeromodel.constants import precision_dtype_map
+from zeromodel.duckdb_adapter import DuckDBAdapter
 from zeromodel.encoder import VPMEncoder
 from zeromodel.feature_engineer import FeatureEngineer
-from zeromodel.duckdb_adapter import DuckDBAdapter
-from zeromodel.organization import SqlOrganizationStrategy, MemoryOrganizationStrategy
-from zeromodel.timing import timeit   
-from zeromodel.constants import precision_dtype_map
+from zeromodel.normalizer import DynamicNormalizer
+from zeromodel.organization import (MemoryOrganizationStrategy,
+                                    SqlOrganizationStrategy)
+from zeromodel.timing import timeit
 
 logger = logging.getLogger(__name__)  
 
@@ -248,10 +250,10 @@ class ZeroModel:
 
         # --- 4. Set organization task & apply via strategy ---
         try:
+            use_duckdb = get_config("core").get("use_duckdb", True)
             # If user provided a full SQL SELECT, upgrade strategy to SQL-backed dynamically
-            if isinstance(sql_query, str) and sql_query.strip().lower().startswith("select "):
-                if not isinstance(self._org_strategy, SqlOrganizationStrategy):
-                    self._org_strategy = SqlOrganizationStrategy(self.duckdb)
+            if use_duckdb:
+                self._org_strategy = SqlOrganizationStrategy(self.duckdb)
             self._org_strategy.set_task(sql_query)
             logger.debug("Organization task set on strategy (%s). Executing organize().", self._org_strategy.name)
             final_matrix, metric_order, doc_order, analysis = self._org_strategy.organize(

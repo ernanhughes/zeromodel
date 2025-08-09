@@ -18,7 +18,7 @@ core:
   # Whether to use DuckDB for complex SQL query processing.
   # Set to false to bypass DuckDB for simpler, faster processing.
   # Use 'auto' to let ZeroModel decide based on query complexity.
-  use_duckdb: false
+  use_duckdb: true
 
   # Threshold (in milliseconds) below which DuckDB processing is bypassed
   # even if use_duckdb=true. Set to 0.0 to disable this bypass.

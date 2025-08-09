@@ -13,10 +13,10 @@ Key features:
 - Simple integration with existing logging system
 """
 
-import time
 import logging
+import time
 from functools import wraps
-from typing import Callable, TypeVar, Any
+from typing import Any, Callable, TypeVar
 
 T = TypeVar('T')
 logger = logging.getLogger(__name__)

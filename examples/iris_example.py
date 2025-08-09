@@ -101,7 +101,7 @@ def define_and_process_task(score_matrix, metric_names, task_description, task_s
     # The VPM is an image array where structure encodes task logic.
     # We request a float32 output for visualization clarity.
     try:
-        vpm_image = zeromodel.encode(output_precision='float32')
+        vpm_image = zeromodel.encode()
         print(f"VPM encoded successfully. Shape: {vpm_image.shape}, Dtype: {vpm_image.dtype}")
     except Exception as e:
         print(f"Error during VPM encoding: {e}")

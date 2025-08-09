@@ -4,8 +4,9 @@ Feature Engineering for ZeroModel to handle non-linear patterns.
 """
 
 import logging
+from typing import Any, Callable, Dict, List
+
 import numpy as np
-from typing import List, Dict, Callable, Any
 
 logger = logging.getLogger(__name__)
 

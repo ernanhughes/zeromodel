@@ -33,7 +33,7 @@ score_matrix = np.random.rand(100, 5)
 metric_names = ["uncertainty", "size", "quality", "novelty", "coherence"]
 
 # 2. Initialize ZeroModel
-zeromodel = ZeroModel(metric_names, precision=16)
+zeromodel = ZeroModel(metric_names)
 
 # 3. Define your task using SQL and process the data in one step
 # The intelligence comes from how you sort the data for your task.

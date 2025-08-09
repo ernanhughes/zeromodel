@@ -8,9 +8,11 @@ constraints (edge vs. cloud).
 """
 
 import logging
-from typing import List, Tuple, Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+
+from zeromodel.config import get_config
 
 # Import the core ZeroModel
 # Make sure the path is correct based on your package structure
@@ -38,8 +40,7 @@ class HierarchicalVPM:
     def __init__(self,
                  metric_names: List[str],
                  num_levels: int = 3,
-                 zoom_factor: int = 3,
-                 precision: int = 8):
+                 zoom_factor: int = 3):
         """
         Initialize the hierarchical VPM system.
 
@@ -61,14 +62,11 @@ class HierarchicalVPM:
              error_msg = f"zoom_factor must be greater than 1, got {zoom_factor}."
              logger.error(error_msg)
              raise ValueError(error_msg)
-        if precision < 4 or precision > 16:
-             logger.warning(f"Precision {precision} is outside recommended range 4-16. Clamping.")
-             precision = max(4, min(16, precision))
 
         self.metric_names = list(metric_names)
         self.num_levels = num_levels
         self.zoom_factor = zoom_factor
-        self.precision = precision
+        self.precision = get_config("core").get("precision", 8)
         self.levels: List[Dict[str, Any]] = [] # Store level data
         self.metadata: Dict[str, Any] = {
             "version": "1.0",
@@ -117,7 +115,8 @@ class HierarchicalVPM:
         # --- Level Creation using prepare() ---
         # Create ZeroModel instance for the base (highest detail) level
         logger.debug("Creating base ZeroModel instance.")
-        base_zeromodel = ZeroModel(self.metric_names, precision=self.precision)
+        base_zeromodel = ZeroModel(self.metric_names)
+        base_zeromodel.precision = self.precision  # Set precision for the base model
         
         # --- Use prepare() instead of set_sql_task() + process() ---
         # Prepare the base level ZeroModel with data and task in one step
@@ -300,7 +299,8 @@ class HierarchicalVPM:
 
         # --- Create and Prepare ZeroModel for this level ---
         # Process with simplified metrics using a new ZeroModel instance
-        level_zeromodel = ZeroModel(level_metrics, precision=self.precision)
+        level_zeromodel = ZeroModel(level_metrics)
+        level_zeromodel.precision = self.precision  # Set precision for this level
         logger.debug("Created ZeroModel instance for this level.")
 
         # --- Use prepare() for this level's ZeroModel ---

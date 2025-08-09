@@ -20,6 +20,13 @@ from sklearn.metrics import log_loss, accuracy_score
 
 from zeromodel.memory import ZeroMemory
 
+import numpy as np
+import matplotlib.pyplot as plt
+from io import BytesIO
+from PIL import Image
+
+
+
 class GIFLogger:
     """Tiny helper: collect RGB frames and save animated GIF."""
     def __init__(self, fps=5):
@@ -184,17 +191,27 @@ def test_gif_logging_with_zeromemory_improved(tmp_path, max_epochs):
                 try:
                     fig, ax = plt.subplots(figsize=(frame.shape[1]/100, frame.shape[0]/100), dpi=100)
                     ax.imshow(frame)
-                    ax.text(10, 10, f'Epoch: {epoch+1}/{max_epochs}', 
+                    ax.text(10, 10, f'Epoch: {epoch+1}/{max_epochs}',
                             bbox=dict(facecolor='white', alpha=0.8),
                             fontsize=8, color='black')
                     ax.axis('off')
+                    
+                    # New, non-deprecated method
+                    buf = BytesIO()
                     fig.canvas.draw()
-                    buf = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
-                    buf = buf.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-                    frame = buf
+                    fig.canvas.print_png(buf)
+                    
+                    # Use Pillow to read the image from the buffer and convert to a NumPy array
+                    buf.seek(0)
+                    pil_image = Image.open(buf)
+                    frame = np.array(pil_image)
+                    
                     plt.close(fig)
                 except Exception as e:
-                    pass # Silently fail if plotting fails
+                    # It's better to log the error than to fail silently
+                    print(f"Error during VPM plotting: {e}")
+                    # You may choose to re-raise the exception or handle it differently
+                    # raise e
                     
             gif.add(frame)
         else:

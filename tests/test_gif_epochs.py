@@ -76,7 +76,7 @@ def test_gif_training_epochs(tmp_path, epochs):
     zm = ZeroMemory(metric_names=metrics, buffer_steps=256, tile_size=8, selection_k=24)
 
     gif = GIFLogger(fps=6)
-    out_gif = os.path("training_epochs.gif")
+    out_gif = os.path.join(os.getcwd(), "training_epochs.gif")
 
     # --- 4) Training loop with epochs ---
     idx_all = np.arange(n)
@@ -124,8 +124,8 @@ def test_gif_training_epochs(tmp_path, epochs):
         gif.add(frame)
 
     # --- 5) Save GIF and assert basic sanity ---
-    gif.save(str(out_gif))
-    assert out_gif.exists() and os.path.getsize(out_gif) > 0
+    gif.save(out_gif)
+    assert os.path.exists(out_gif) and os.path.getsize(out_gif) > 0
 
     # Sanity: training should generally improve acc or lower loss
     # Not a strict guarantee, but usually true with RFF on moons

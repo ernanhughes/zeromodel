@@ -49,8 +49,8 @@ def test_gif_logging_with_zeromemory(tmp_path, epochs):
     zm = ZeroMemory(metric_names=metrics, buffer_steps=128, tile_size=8, selection_k=24)
 
     # --- 3) GIF logger ---
-    gif = GIFLogger(fps=6)
-    out_gif = "training.gif"
+    gif = GIFLogger(fps=6) 
+    out_gif = os.path.join(os.getcwd(), "training.gif")
 
     # Batch the training data for more realistic updates
     n = len(Xtr)
@@ -92,10 +92,10 @@ def test_gif_logging_with_zeromemory(tmp_path, epochs):
         gif.add(frame)
 
     # Save the animated GIF
-    gif.save(str(out_gif))
+    gif.save(out_gif)
 
     # --- 4) Assertions: file exists and is non-empty; sanity checks on final metrics ---
-    assert out_gif.exists(), "GIF file was not created"
+    assert os.path.exists(out_gif), "GIF file was not created"
     assert os.path.getsize(out_gif) > 0, "GIF file is empty"
 
     # Basic sanity: training should help a bit

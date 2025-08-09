@@ -468,3 +468,23 @@ class HierarchicalVPM:
         self.metadata["level_details"] = level_info
         logger.debug("Hierarchical VPM metadata retrieved.")
         return self.metadata
+
+
+    def hunt_target(self, 
+                    tau: float = 0.75, 
+                    max_steps: int = 6,
+                    initial_level: int = 0) -> Tuple[Tuple[int, int], float, List[Dict[str, Any]]]:
+        """
+        Hunt for a target using the heat-seeking VPM tuner.
+        
+        Args:
+            tau: Confidence threshold.
+            max_steps: Maximum search steps.
+            initial_level: Starting level for the hunt.
+            
+        Returns:
+            Tuple of ((level, doc_index), confidence, audit_trail).
+        """
+        from zeromodel.hunter import VPMHunter # Import here to avoid circular imports if needed
+        hunter = VPMHunter(self, tau=tau, max_steps=max_steps)
+        return hunter.hunt(initial_level=initial_level)

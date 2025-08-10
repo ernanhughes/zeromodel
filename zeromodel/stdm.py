@@ -121,12 +121,14 @@ def curvature_over_time(Ys: List[np.ndarray]) -> np.ndarray:
     """‖second finite difference‖_F per time; length T."""
     T = len(Ys)
     curv = np.zeros(T, dtype=np.float64)
-    if T < 3: return curv
+    if T < 3: 
+        return curv
     for t in range(1, T-1):
         curv[t] = np.linalg.norm(Ys[t+1] - 2*Ys[t] + Ys[t-1])
     return curv
 
 def critical_mask(Y: np.ndarray, theta: float = 0.8) -> np.ndarray:
     m = Y.max()
-    if m <= 0: return np.zeros_like(Y, dtype=bool)
+    if m <= 0: 
+        return np.zeros_like(Y, dtype=bool)
     return (Y >= theta * m)

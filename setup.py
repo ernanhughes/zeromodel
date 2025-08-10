@@ -33,6 +33,7 @@ setup(
         "PyWavelets>=1.1.1",
         "pyyaml",
         "duckdb>=0.6.2",
+        "pypng>=0.20210329"
     ],
     extras_require={
         "dev": [

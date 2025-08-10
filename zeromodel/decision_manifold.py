@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from scipy.sparse.csgraph import dijkstra
-from typing import Tuple, Dict, List, Callable
+from scipy.sparse import csr_matrix
+from typing import Tuple, Dict, List, Callable, Optional
 
 class DecisionManifold:
     """Represents the Spatial-Temporal Decision Manifold for ZeroModel."""
@@ -171,26 +172,48 @@ class DecisionManifold:
     def find_decision_rivers(self, t: int, num_rivers: int = 3) -> List[List[Tuple[int, int]]]:
         """
         Identify decision rivers (paths of steepest ascent) in the decision landscape.
+        
+        Args:
+            t: Time index
+            num_rivers: Number of rivers to identify
+            
+        Returns:
+            List of paths (each path is a list of (i,j) coordinates)
         """
-        M_star = self.get_M_star(t)
+        # Bounds checking
+        if t < 0 or t >= len(self.organized_series):
+            raise ValueError(f"Time index {t} out of bounds [0, {len(self.organized_series)-1}]")
+        
+        M_star = self.organized_series[t]
         dx, dy = np.gradient(M_star)
 
         # Create a cost matrix (lower cost = more relevant)
-        cost = np.sqrt(dx**2 + dy**2) + (1 - M_star / (np.max(M_star) + 1e-12))
+        max_val = np.max(M_star)
+        if max_val < 1e-10:  # Avoid division by zero
+            max_val = 1e-10
+        cost = np.sqrt(dx**2 + dy**2) + (1 - M_star / max_val)
 
         # Find local maxima (good seeds)
-        minima = []
+        maxima = []
         for i in range(1, M_star.shape[0]-1):
             for j in range(1, M_star.shape[1]-1):
                 if (M_star[i,j] > M_star[i-1,j] and
                     M_star[i,j] > M_star[i+1,j] and
                     M_star[i,j] > M_star[i,j-1] and
                     M_star[i,j] > M_star[i,j+1]):
-                    minima.append((i, j, M_star[i,j]))
+                    maxima.append((i, j, M_star[i,j]))
 
+        # Sort maxima by value (highest relevance first)
+        maxima.sort(key=lambda x: -x[2])
+        
+        # Keep only the top num_rivers maxima
+        maxima = maxima[:num_rivers]
+        
+        # If no maxima found, return empty list
+        if not maxima:
+            return []
+        
         # Build 4-neighbour sparse graph from the cost grid (required by dijkstra)
-        from scipy.sparse import csr_matrix
-        from scipy.sparse.csgraph import dijkstra
         H, W = cost.shape
         N = H * W
         rows = []
@@ -204,31 +227,44 @@ class DecisionManifold:
                 if i + 1 < H:
                     v = idx[i + 1, j]
                     w = 0.5 * (cu + cost[i + 1, j])
-                    rows += [u, v]; cols += [v, u]; data += [w, w]
+                    rows += [u, v]
+                    cols += [v, u]
+                    data += [w, w]
                 if j + 1 < W:
                     v = idx[i, j + 1]
                     w = 0.5 * (cu + cost[i, j + 1])
-                    rows += [u, v]; cols += [v, u]; data += [w, w]
+                    rows += [u, v]
+                    cols += [v, u]
+                    data += [w, w]
+        
         graph = csr_matrix((data, (rows, cols)), shape=(N, N))
 
         # For each seed, find the lowest-cost path to the global maximum
         rivers = []
-        max_node = int(np.argmax(M_star))
-        for si, sj, _ in minima:
-            start = int(si * W + sj)
-            _, predecessors = dijkstra(csgraph=graph, directed=False,
-                                    indices=start, return_predecessors=True)
+        max_node = np.argmax(M_star)
+        for si, sj, _ in maxima:
+            start = si * W + sj
+            _, predecessors = dijkstra(
+                csgraph=graph, 
+                directed=False,
+                indices=start, 
+                return_predecessors=True
+            )
+            
             # Reconstruct path start -> max
             path = []
             cur = max_node
             if predecessors[cur] == -9999:
                 # no path found (shouldn't happen on connected grid); skip
                 continue
+                
             while cur != -9999 and cur != start:
                 ci, cj = divmod(cur, W)
                 path.append((ci, cj))
                 cur = predecessors[cur]
+                
             si2, sj2 = divmod(start, W)
             path.append((si2, sj2))
             rivers.append(path[::-1])
+            
         return rivers

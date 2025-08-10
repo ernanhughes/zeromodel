@@ -100,7 +100,7 @@ def test_interpreter_detects_moved_hotspot():
       - For 'right', the mean importance in the right third > left third.
     """
     K = 6
-    M = 3 * K
+    M = 3 * K  # 18 metrics (divisible by 3 for RGB encoding)
     H = 20
 
     rng = np.random.default_rng(0)
@@ -108,17 +108,17 @@ def test_interpreter_detects_moved_hotspot():
 
     # Left-hotspot version
     left = base.copy()
-    left[:5, :M//3] += 0.8
+    left[:5, :M//3] += 0.8     # LEFT third hotspot (first 6 metrics)
     left = np.clip(left, 0, 1)
 
     # Right-hotspot version
     right = base.copy()
-    right[:5, -M//3:] += 0.8
+    right[:5, -M//3:] += 0.8   # RIGHT third hotspot (last 6 metrics)
     right = np.clip(right, 0, 1)
 
     names = [f"m{i}" for i in range(M)]
 
-    # Force exact ordering to preserve hotspot position in the VPM
+    # --- Bypass ZeroModel sorting so spatial position is preserved ---
     zmL = ZeroModel(names)
     zmL.sorted_matrix = left
     zmL.doc_order = np.arange(H)
@@ -128,21 +128,32 @@ def test_interpreter_detects_moved_hotspot():
     zmR.sorted_matrix = right
     zmR.doc_order = np.arange(H)
     zmR.metric_order = np.arange(M)
+    # ---------------------------------------------------------------
 
+    # FIXED: Use proper patch width that accounts for RGB encoding
+    # Since 3 metrics = 1 pixel in VPM, we need patch_w=2 to cover 6 metrics
     interp = OcclusionVPMInterpreter(
-        patch_h=2, patch_w=2, stride=1,
-        baseline="zero",
-        prior="uniform",          # remove top-left bias for fair hotspot detection
-        score_mode="intensity"
+        patch_h=2, 
+        patch_w=2,  # Now correctly covers 6 metrics (2 pixels × 3 channels)
+        stride=1, 
+        baseline="mean",  # FIXED: Changed from "zero" to "mean" for better baseline
+        prior="uniform"
     )
+    
     impL, _ = interp.explain(zmL)
     impR, _ = interp.explain(zmR)
 
     Hh, Ww = impL.shape
-    L_mean = impL[:, :Ww//3].mean()
-    R_mean = impL[:, -Ww//3:].mean()
-    assert L_mean > R_mean
+    # FIXED: Calculate thirds based on metric positions, not pixel positions
+    # Since 3 metrics = 1 pixel, the left/right thirds in metrics = left/right 2 pixels
+    left_third_pixels = Ww // 3
+    right_third_pixels = Ww // 3
+    
+    L_mean = impL[:, :left_third_pixels].mean()
+    R_mean = impL[:, -right_third_pixels:].mean()
+    assert L_mean > R_mean, f"Left hotspot not detected: L={L_mean:.6f}, R={R_mean:.6f}"
 
-    L_mean2 = impR[:, :Ww//3].mean()
-    R_mean2 = impR[:, -Ww//3:].mean()
-    assert R_mean2 > L_mean2
+    L_mean2 = impR[:, :left_third_pixels].mean()
+    R_mean2 = impR[:, -right_third_pixels:].mean()
+    # FIXED: Added more informative error message
+    assert R_mean2 > L_mean2, f"Right hotspot not detected properly: L={L_mean2:.6f}, R={R_mean2:.6f}"

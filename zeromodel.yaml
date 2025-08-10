@@ -105,7 +105,7 @@ logging:
       # Log file name.
       filename: "zeromodel.log"
       # Maximum size of log file before rotation (bytes).
-      max_bytes: 10485760 # 10 MB
+      max_bytes: 1048576000 # 1 GB
       # Number of backup log files to keep.
       backup_count: 5
 

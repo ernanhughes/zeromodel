@@ -116,7 +116,6 @@ def test_alert_underfitting():
     alerts = zm.get_alerts(window_size=32)
     assert alerts["underfitting"] is True
 
-@pytest.mark.skip("Needs work")
 def test_alert_saturation():
     zm = ZeroMemory(METRICS, buffer_steps=64)
     # many metrics constant (low variance)

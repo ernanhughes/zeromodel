@@ -1,33 +1,46 @@
-# tests/test_vpm_explain.py
 import numpy as np
 import pytest
 
 from zeromodel.core import ZeroModel
 from zeromodel.explain import OcclusionVPMInterpreter
 
+
 def build_synthetic_matrix(H=20, K=9):
     """
-    Build a matrix whose top-left K metrics & top rows are high;
-    interpreter should highlight that region.
+    Build a synthetic score matrix for VPM testing.
+
+    - Shape: H documents x (3*K) metrics.
+    - Values: small random noise + strong signal in the top-left block.
+    - The signal is injected into the first 5 rows and the first K pixels-worth
+      of metrics (i.e., 3*K metrics for RGB → K visible pixels).
+    - This simulates a case where the most important region is top-left.
     """
-    # docs x metrics (make 3*K metrics to fill K pixels in width)
-    M = 3*K
+    M = 3 * K  # number of metric columns
     mat = np.random.rand(H, M) * 0.1
-    # inject strong signal in top-left window (first 5 docs, first 3*K metrics)
+    # Inject strong signal in top-left window
     mat[:5, :M] += 0.8
-    # clamp
     mat = np.clip(mat, 0, 1)
     names = [f"m{i}" for i in range(M)]
     return mat, names
 
+
 def test_interpreter_highlights_top_left_region():
+    """
+    Test 1: Baseline occlusion test for top-left prior.
+    ---------------------------------------------------
+    We generate a matrix where the most important features are in the top-left.
+    Using prior="top_left", the interpreter's importance map should show a
+    higher average importance in the top-left region than in the bottom-right.
+    """
     score, names = build_synthetic_matrix(H=24, K=6)
     zm = ZeroModel(names)
-    # simple task: emphasize first metric descending
     zm.prepare(score, "SELECT * FROM virtual_index ORDER BY m0 DESC")
 
-
-    interp = OcclusionVPMInterpreter(patch_h=2, patch_w=2, stride=1, baseline="zero", prior="top_left")
+    interp = OcclusionVPMInterpreter(
+        patch_h=2, patch_w=2, stride=1,
+        baseline="zero",
+        prior="top_left"
+    )
     imp, meta = interp.explain(zm)
 
     # Sanity: importance map same height/width as VPM
@@ -40,27 +53,52 @@ def test_interpreter_highlights_top_left_region():
     br = imp[-H//3:, -W//3:].mean()
     assert tl > br, "Top-left should be more important in this synthetic setup"
 
+
 def test_interpreter_invariance_under_constant_shift():
-    # If we add constant brightness to whole VPM, relative importances shouldn't flip
+    """
+    Test 2: Invariance to uniform brightness shifts.
+    -------------------------------------------------
+    If we add a constant to all scores (i.e., uniformly brighten the VPM),
+    the *relative* importance structure should remain the same.
+
+    We check this by:
+      - Generating importance maps before and after adding a constant offset.
+      - Computing their correlation — should be high (>0.7).
+    """
     score, names = build_synthetic_matrix(H=20, K=5)
     zm1 = ZeroModel(names)
     zm1.prepare(score, "SELECT * FROM virtual_index ORDER BY m0 DESC")
-    interp = OcclusionVPMInterpreter(patch_h=2, patch_w=2, stride=2, baseline="mean")
+    interp = OcclusionVPMInterpreter(
+        patch_h=2, patch_w=2, stride=2,
+        baseline="mean"
+    )
     imp1, _ = interp.explain(zm1)
 
-    # Add a constant +0.1 to score (clipped); structure unchanged
+    # Add a constant +0.1 to all values; structure unchanged
     score2 = np.clip(score + 0.1, 0, 1)
     zm2 = ZeroModel(names)
     zm2.prepare(score2, "SELECT * FROM virtual_index ORDER BY m0 DESC")
     imp2, _ = interp.explain(zm2)
 
-    # Correlate maps — should be reasonably aligned
-    corr = np.corrcoef(imp1.flatten(), imp2.flatten())[0,1]
+    corr = np.corrcoef(imp1.flatten(), imp2.flatten())[0, 1]
     assert corr > 0.7
 
 
 def test_interpreter_detects_moved_hotspot():
-    # Two matrices with hotspot moved from left third to right third
+    """
+    Test 3: Sensitivity to hotspot location.
+    ----------------------------------------
+    We build two matrices:
+      - 'left': hotspot (high scores) in the left third of the VPM.
+      - 'right': hotspot in the right third of the VPM.
+
+    We bypass ZeroModel sorting so the spatial layout is preserved exactly.
+    The interpreter is run with prior='uniform' to remove positional bias.
+
+    Expectations:
+      - For 'left', the mean importance in the left third > right third.
+      - For 'right', the mean importance in the right third > left third.
+    """
     K = 6
     M = 3 * K
     H = 20
@@ -68,17 +106,19 @@ def test_interpreter_detects_moved_hotspot():
     rng = np.random.default_rng(0)
     base = rng.random((H, M)) * 0.1
 
+    # Left-hotspot version
     left = base.copy()
-    left[:5, :M//3] += 0.8     # LEFT third hotspot
+    left[:5, :M//3] += 0.8
     left = np.clip(left, 0, 1)
 
+    # Right-hotspot version
     right = base.copy()
-    right[:5, -M//3:] += 0.8   # RIGHT third hotspot
+    right[:5, -M//3:] += 0.8
     right = np.clip(right, 0, 1)
 
     names = [f"m{i}" for i in range(M)]
 
-    # --- Bypass ZeroModel sorting so spatial position is preserved ---
+    # Force exact ordering to preserve hotspot position in the VPM
     zmL = ZeroModel(names)
     zmL.sorted_matrix = left
     zmL.doc_order = np.arange(H)
@@ -88,9 +128,13 @@ def test_interpreter_detects_moved_hotspot():
     zmR.sorted_matrix = right
     zmR.doc_order = np.arange(H)
     zmR.metric_order = np.arange(M)
-    # ---------------------------------------------------------------
 
-    interp = OcclusionVPMInterpreter(patch_h=2, patch_w=2, stride=1, baseline="zero", prior="uniform")
+    interp = OcclusionVPMInterpreter(
+        patch_h=2, patch_w=2, stride=1,
+        baseline="zero",
+        prior="uniform",          # remove top-left bias for fair hotspot detection
+        score_mode="intensity"
+    )
     impL, _ = interp.explain(zmL)
     impR, _ = interp.explain(zmR)
 
@@ -101,4 +145,4 @@ def test_interpreter_detects_moved_hotspot():
 
     L_mean2 = impR[:, :Ww//3].mean()
     R_mean2 = impR[:, -Ww//3:].mean()
-    # assert R_mean2 > L_mean2  fails... return to Coming
+    assert R_mean2 > L_mean2

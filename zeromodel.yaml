@@ -86,7 +86,7 @@ hierarchical:
 logging:
   # Base logging level.
   # Options (least to most verbose): 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'
-  level: INFO
+  level: DEBUG
 
   # Log message format.
   # See Python's logging module documentation for format specifiers.

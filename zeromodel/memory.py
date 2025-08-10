@@ -559,28 +559,56 @@ class ZeroMemory:
         except ValueError:
             val_loss_idx = None
             
-        # 1. Overfitting: train_loss ↓ while val_loss ↑
+        # 1. Overfitting: train_loss ↓ while val_loss ↑ (with a margin)
         if loss_idx is not None and val_loss_idx is not None:
             train_loss_series = recent_values[:, loss_idx]
-            val_loss_series = recent_values[:, val_loss_idx]
+            val_loss_series   = recent_values[:, val_loss_idx]
+
             # Align series by finite mask of both
             joint_finite_mask = np.isfinite(train_loss_series) & np.isfinite(val_loss_series)
-            if np.sum(joint_finite_mask) > 2:
-                joint_train = train_loss_series[joint_finite_mask]
-                joint_val = val_loss_series[joint_finite_mask]
-                # Calculate trends (slopes) over the recent window
-                x = np.arange(len(joint_train), dtype=np.float32)
-                if len(x) > 1:
-                    # Normalize for numerical stability
-                    x_norm = (x - np.mean(x)) / (np.std(x) + 1e-9)
-                    train_y_norm = (joint_train - np.mean(joint_train)) / (np.std(joint_train) + 1e-9)
-                    val_y_norm = (joint_val - np.mean(joint_val)) / (np.std(joint_val) + 1e-9)
-                    train_slope = np.mean(x_norm * train_y_norm)
-                    val_slope = np.mean(x_norm * val_y_norm)
-                    # Overfitting condition: train improves (slope < -0.1), val degrades (slope > 0.1)
-                    if train_slope < -0.1 and val_slope > 0.1:
-                        alerts["overfitting"] = True
-                        logger.debug(f"Overfitting detected: train_slope={train_slope:.4f}, val_slope={val_slope:.4f}")
+            if np.sum(joint_finite_mask) > 8:
+                tr = train_loss_series[joint_finite_mask]
+                vl = val_loss_series[joint_finite_mask]
+
+                # Use a recent window for responsiveness (configurable bounds)
+                L = min(60, len(tr))
+                L = max(12, L)  # need enough points for a stable slope
+                tr = tr[-L:]
+                vl = vl[-L:]
+
+                # Light EMA smoothing to reduce oscillation
+                def ema(y, alpha=0.3):
+                    out = y.astype(float).copy()
+                    for i in range(1, len(out)):
+                        out[i] = alpha * out[i] + (1 - alpha) * out[i-1]
+                    return out
+
+                tr_s = ema(tr, alpha=0.3)
+                vl_s = ema(vl, alpha=0.3)
+
+                # OLS slope per step (units of loss per time step)
+                x = np.arange(L, dtype=float)
+                sx, sy_tr, sy_vl = x.sum(), tr_s.sum(), vl_s.sum()
+                sxx = (x*x).sum()
+                sxy_tr = (x*tr_s).sum()
+                sxy_vl = (x*vl_s).sum()
+                denom = (L * sxx - sx * sx) or 1.0
+
+                slope_tr = (L * sxy_tr - sx * sy_tr) / denom
+                slope_vl = (L * sxy_vl - sx * sy_vl) / denom
+
+                # Require opposite trends and a margin at the tail
+                # thresholds are intentionally small (per-step)
+                slope_eps = 1e-3
+                margin_min = max(0.02, 0.1 * np.std(vl_s))  # adaptive floor
+                margin = float(vl_s[-1] - tr_s[-1])
+
+                if (slope_tr < -slope_eps) and (slope_vl > slope_eps) and (margin > margin_min):
+                    alerts["overfitting"] = True
+                    logger.debug(
+                        f"Overfitting: slope_tr={slope_tr:.5f} (down), "
+                        f"slope_vl={slope_vl:.5f} (up), margin={margin:.4f} (> {margin_min:.4f})"
+                    )
         
         # 2. Saturation: many metrics have very low variance
         low_variance_count = 0

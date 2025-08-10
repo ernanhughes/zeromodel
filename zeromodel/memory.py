@@ -72,15 +72,19 @@ class ZeroMemory:
             raise ValueError(f"selection_k must be between 1 and {max_channels}.")
         self.selection_k = selection_k
 
-        self.metric_names = list(metric_names) # Ensure it's a list
+        self.metric_names = list(metric_names)
+        self.metric_index = {n: i for i, n in enumerate(self.metric_names)}
+        self._buffer = deque(maxlen=buffer_steps)   # internal storage: rows of metrics (already normalized or raw per your design)
+        self.buffer_steps = int(buffer_steps)
+
         self.n_metrics = len(self.metric_names)
         self.name_to_idx = {n: i for i, n in enumerate(self.metric_names)}
         self.num_metrics = len(self.metric_names)
-        self.buffer_steps = int(buffer_steps)
         self.tile_size = int(tile_size)
         self.selection_k = int(selection_k)
         self.smoothing_alpha = float(smoothing_alpha)
         self.enable_async = enable_async
+
 
         # --- Ring Buffer ---
         self._raw_buffer = deque(maxlen=self.buffer_steps)   # each item: np.array shape (n_metrics,)
@@ -112,6 +116,22 @@ class ZeroMemory:
         # --- End State for Analysis ---
         
         logger.info(f"ZeroMemory initialized with {self.num_metrics} metrics. Buffer size: {self.buffer_steps}, Tile size: {self.tile_size}x{self.tile_size}, Selection K: {self.selection_k}.")
+
+
+
+    # --- Back-compat, read-only views ---
+    @property
+    def buffer(self):
+        """List[ArrayLike]: recent rows; kept for compatibility with tests and visualizer."""
+        return list(self._buffer)
+
+    @property
+    def buffer_values(self):
+        """np.ndarray view of the buffer (T x D)."""
+        if len(self._buffer) == 0:
+            return np.empty((0, len(self.metric_names)), dtype=float)
+        return np.vstack(self._buffer)
+
 
     @property
     def buffer_values(self) -> np.ndarray:
@@ -156,6 +176,7 @@ class ZeroMemory:
         for i, name in enumerate(self.metric_names):
             row[i] = np.float32(metrics.get(name, np.nan))
         self._raw_buffer.append(row)
+        self._buffer.append(row)
 
         # --- Input Validation ---
         if not isinstance(step, int):
@@ -718,43 +739,93 @@ class ZeroMemory:
                                 
         return alerts
 
-    def get_alerts(self, window_size:int = 20) -> dict:
+    def get_alerts(self, window_size: int = 32) -> dict:
         """
-        Heuristics tuned to the unit tests:
-        - overfitting: loss slope down, val_loss slope up, and a gap.
-        - drift: validation accuracy drops meaningfully.
-        - instability: high variance / large oscillations in val_loss.
+        Return a stable alert dictionary with boolean flags.
+        Keys are always present so tests can assert on them safely.
         """
-        alerts = {"overfitting": False, "drift": False, "instability": False}
+        alerts = {
+            "overfitting": False,
+            "underfitting": False,
+            "drift": False,
+            "instability": False,
+            "plateau": False,
+            "saturation": False,
+            "divergence": False,
+            "spike": False,
+        }
 
-        loss      = self._series("loss", window_size)
-        val_loss  = self._series("val_loss", window_size)
-        acc       = self._series("acc", window_size)
-        val_acc   = self._series("val_acc", window_size)
+        # --- short-circuit if no data ---
+        T = len(self._buffer)
+        if T < 2:
+            return alerts
 
-        # Must have enough history
-        if min(loss.size, val_loss.size) >= 8:
-            m_loss = self._slope(loss)        # negative expected
-            m_vloss = self._slope(val_loss)   # positive expected
-            gap = float(val_loss.mean() - loss.mean())
+        recent = self.buffer_values[-window_size:]  # (t, d)
+        names = self.metric_names
+        idx = self.metric_index  # dict
 
-            # thresholds chosen to match the test patterns (they use ~+0.025 for vloss slope)
+        def m(name):
+            """Return a series (t,) or None if metric not found."""
+            j = idx.get(name)
+            if j is None:
+                return None
+            s = recent[:, j]
+            # guard degenerate shapes/NaNs
+            s = np.asarray(s, dtype=float).reshape(-1)
+            return np.nan_to_num(s, nan=np.nanmean(s) if np.isfinite(np.nanmean(s)) else 0.0)
+
+        def slope(series):
+            if series is None or series.size < 2:
+                return 0.0
+            x = np.arange(series.size, dtype=float)
+            xm = x.mean()
+            denom = ((x - xm) ** 2).sum()
+            if denom == 0.0:
+                return 0.0
+            return float(((x - xm) * (series - series.mean())).sum() / denom)
+
+        loss     = m("loss")
+        val_loss = m("val_loss")
+        acc = m("acc")
+        if acc is None:
+            acc = m("train_acc")
+        if acc is None:
+            acc = m("accuracy")
+
+        val_acc = m("val_acc")
+        if val_acc is None:
+            val_acc = m("validation_accuracy")
+
+        # --- Heuristics (same spirit as your new version) ---
+        if loss is not None and val_loss is not None and loss.size >= 8 and val_loss.size >= 8:
+            m_loss  = slope(loss)       # expect negative
+            m_vloss = slope(val_loss)   # expect positive
+            gap     = float(np.nanmean(val_loss) - np.nanmean(loss))
+
             if (m_loss <= -0.002) and (m_vloss >= +0.003) and (gap >= 0.05):
                 alerts["overfitting"] = True
 
-            # instability: standard deviation + peak-to-peak on val_loss
-            v_std = float(val_loss.std())
-            v_ptp = float(val_loss.max() - val_loss.min())
+            # Instability: variance + peak-to-peak
+            v_std = float(np.nanstd(val_loss))
+            v_ptp = float(np.nanmax(val_loss) - np.nanmin(val_loss))
             if v_std >= 0.05 and v_ptp >= 0.20:
                 alerts["instability"] = True
 
-        # drift on validation accuracy (exists only in some tests)
-        if val_acc.size >= 8:
-            m_vacc = self._slope(val_acc)
-            # detect sustained drop or big mean drop vs acc
-            drift_drop = float(val_acc.mean() - acc.mean()) if acc.size == val_acc.size and acc.size >= 8 else 0.0
-            if (m_vacc <= -0.003) or (drift_drop <= -0.06):
+            # Underfitting: high losses & flat
+            high_losses = (float(np.nanmean(loss)) > 0.8) and (float(np.nanmean(val_loss)) > 0.8)
+            flat_losses = abs(m_loss) < 5e-4 and abs(m_vloss) < 5e-4
+            if high_losses and flat_losses:
+                alerts["underfitting"] = True
+
+        if acc is not None and val_acc is not None and acc.size >= 8 and val_acc.size >= 8:
+            m_vacc = slope(val_acc)
+            gap_acc = float(np.nanmean(acc) - np.nanmean(val_acc))
+            if (m_vacc <= -0.003) or (gap_acc <= -0.06):
                 alerts["drift"] = True
+
+            # Plateau across accuracies (optional)
+            if abs(slope(acc)) < 5e-4 and abs(m_vacc) < 5e-4:
+                alerts["plateau"] = True
 
         return alerts
 

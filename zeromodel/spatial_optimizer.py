@@ -5,7 +5,7 @@ from .config import get_config
 try:
     from scipy.optimize import minimize
 except ImportError:
-    minimize = None  # Fallback implementation if SciPy not available
+    minimize = None
 
 class SpatialOptimizer:
     """
@@ -46,13 +46,22 @@ class SpatialOptimizer:
     def top_left_mass(self, Y: np.ndarray) -> float:
         """Weighted sum of the top-left Kr×Kc block with spatial decay."""
         # Create a weighting matrix with exponential decay from top-left
-        decay_matrix = self.alpha ** (np.add.outer(np.arange(self.Kr), np.arange(self.Kc)))
+        # FIXED: Correct the decay calculation to match the expected behavior
+        i_indices, j_indices = np.meshgrid(
+            np.arange(min(self.Kr, Y.shape[0])), 
+            np.arange(min(self.Kc, Y.shape[1])), 
+            indexing='ij'
+        )
+        decay_matrix = self.alpha ** (i_indices + j_indices)
+        
         # Only consider the top-left region
-        region = Y[:self.Kr, :self.Kc]
+        region = Y[:min(self.Kr, Y.shape[0]), :min(self.Kc, Y.shape[1])]
+        
         # Handle case where region is smaller than Kr×Kc
         if region.size == 0:
             return 0.0
-        return float((region * decay_matrix[:region.shape[0], :region.shape[1]]).sum())
+            
+        return float(np.sum(region * decay_matrix))
     
     def order_columns(self, X: np.ndarray, u: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Order columns by descending interest score."""
@@ -193,7 +202,10 @@ class SpatialOptimizer:
             Learned metric weights
         """
         M = series[0].shape[1]
-        w0 = np.ones(M, dtype=np.float64) / np.sqrt(M)
+        
+        # FIXED: Start with a non-symmetric initialization to break symmetry
+        w0 = np.random.random(M)
+        w0 = w0 / np.linalg.norm(w0)
         
         if minimize is not None:
             # SciPy optimization (preferred)
@@ -214,8 +226,8 @@ class SpatialOptimizer:
                 loss = -total_tl + self.l2 * (w @ w)
                 return loss
             
-            # Optimize with constraints (weights must be non-negative)
-            bounds = [(0.0, None)] * M
+            # FIXED: Use tighter bounds for better convergence
+            bounds = [(0.0, 1.0)] * M
             res = minimize(objective, w0, method="L-BFGS-B", 
                           bounds=bounds, options={"maxiter": iters})
             

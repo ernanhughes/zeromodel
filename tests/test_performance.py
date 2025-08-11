@@ -3,7 +3,7 @@ import numpy as np
 from zeromodel import ZeroModel, HierarchicalVPM  
 import time
 
-@pytest.mark.skip(reason="This test is for performance benchmarking and may take too long to run")
+@pytest.mark.skip(reason="This test is for performance benchmarking and takes a long time to run")
 def test_performance_scalability():
     """Test performance with large datasets and measure scalability"""
     # Test with medium dataset (1,000 documents × 20 metrics)

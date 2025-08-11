@@ -49,13 +49,13 @@ def test_normalize_denormalize_roundtrip():
     # If it's supposed to *ensure* [0,1], then it should pass.
     np.testing.assert_allclose(normalized_f, original_float, rtol=1e-6)
 
-@pytest.mark.skip("Skipping due to potential dependency issues with scipy.ndimage.zoom")
 def test_vpm_logic_resolution_independence():
     """Test that VPM logic functions work with different dtypes and produce normalized outputs."""
 
     # Correctly shape: 1x1x3 image (1 pixel, 3 channels)
     vpm1_u8 = np.array([[[255, 0, 128]]], dtype=np.uint8)
-    vpm2_u8 = np.array([[[255, 0, 128]]], dtype=np.uint8)
+    # Match the float32 pair [0.5, 1.0, 0.0] scaled to uint8
+    vpm2_u8 = np.array([[[128, 255, 0]]], dtype=np.uint8)
 
     vpm1_f32 = np.array([[[1.0, 0.0, 0.5]]], dtype=np.float32)
     vpm2_f32 = np.array([[[0.5, 1.0, 0.0]]], dtype=np.float32)

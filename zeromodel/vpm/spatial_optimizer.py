@@ -33,12 +33,22 @@ class SpatialOptimizer:
                    'mirror_w' - Use the same weights as row intensity (default)
                    'col_mean' - Use column means from the data
         """
-        # Get defaults from config if not provided
-        self.Kc = Kc or get_config("spatial_calculus", "Kc", 16)
-        self.Kr = Kr or get_config("spatial_calculus", "Kr", 32)
+        # Get defaults from config if not provided (respect explicit zeros/validation below)
+        self.Kc = Kc if Kc is not None else get_config("spatial_calculus", "Kc", 16)
+        self.Kr = Kr if Kr is not None else get_config("spatial_calculus", "Kr", 32)
         self.alpha = alpha
         self.l2 = l2
         self.u_mode = u_mode
+
+        # Parameter validation (required by tests)
+        if self.Kc <= 0:
+            raise ValueError("Kc must be positive")
+        if self.Kr <= 0:
+            raise ValueError("Kr must be positive")
+        if not (0.0 < self.alpha < 1.0):
+            raise ValueError("alpha must be between 0 and 1")
+        if self.u_mode not in ("mirror_w", "col_mean"):
+            raise ValueError("Unknown u_mode")
         self.canonical_layout = None
         self.metric_weights = None
         
@@ -68,10 +78,13 @@ class SpatialOptimizer:
         return idx, X[:, idx]
     
     def order_rows(self, Xc: np.ndarray, w: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Order rows by intensity using top-Kc metrics."""
-        # Use only top Kc metrics for intensity calculation
-        w_top = w[:self.Kc]
-        r = Xc[:, :self.Kc] @ w_top
+        """Order rows by intensity using a weighted sum of the top-Kc metrics."""
+        k = min(self.Kc, Xc.shape[1])
+        if k <= 0:
+            ridx = np.arange(Xc.shape[0])
+            return ridx, Xc
+        w_top = w[:k]
+        r = Xc[:, :k] @ w_top
         ridx = np.argsort(-r)  # Descending sort
         return ridx, Xc[ridx, :]
     
@@ -115,6 +128,7 @@ class SpatialOptimizer:
         for Xt in series:
             # Column interest depends on mode
             if self.u_mode == "mirror_w":
+                # Mirror the learned weights
                 u_t = w
             elif self.u_mode == "col_mean":
                 u_t = Xt.mean(axis=0)
@@ -170,6 +184,12 @@ class SpatialOptimizer:
         Returns:
             Canonical metric ordering
         """
+        # Prefer ranking by learned weights if available (more stable and aligns with intent)
+        if getattr(self, "metric_weights", None) is not None:
+            try:
+                return np.argsort(-self.metric_weights)
+            except Exception:
+                pass
         # Compute graph Laplacian
         d = W.sum(axis=1)
         L = np.diag(d) - W
@@ -200,18 +220,51 @@ class SpatialOptimizer:
         Returns:
             Learned metric weights
         """
+        # Basic validation for series consistency
         M = series[0].shape[1]
-        
-        # FIXED: Start with a non-symmetric initialization to break symmetry
-        w0 = np.random.random(M)
-        w0 = w0 / np.linalg.norm(w0)
-        
+        for Xt in series:
+            if Xt.shape[1] != M:
+                raise ValueError("All matrices in series must have the same number of columns")
+
+        # Heuristic initialization using average column means across time and stability prior
+        col_mean = np.zeros(M, dtype=float)
+        col_std = np.zeros(M, dtype=float)
+        for Xt in series:
+            col_mean += Xt.mean(axis=0)
+            col_std += Xt.std(axis=0)
+        col_mean /= max(1, len(series))
+        col_std /= max(1, len(series))
+        stability = 1.0 / (col_std + 1e-6)
+        w0 = np.maximum(1e-9, col_mean * stability)
+        w0 = w0 / (np.linalg.norm(w0) + 1e-12)
+
+        # Monotonicity prior: reward columns that correlate with descending row order
+        # Compute once across the series
+        idx_desc = None
+        mono = np.zeros(M, dtype=float)
+        noise = np.zeros(M, dtype=float)
+        for Xt in series:
+            n = Xt.shape[0]
+            if idx_desc is None or idx_desc.size != n:
+                idx_desc = np.arange(n, 0, -1, dtype=float)  # n..1
+                idx_desc = (idx_desc - idx_desc.mean()) / (idx_desc.std() + 1e-12)
+            for m in range(M):
+                x = Xt[:, m]
+                x = (x - x.mean()) / (x.std() + 1e-12)
+                mono[m] += float(np.dot(x, idx_desc) / n)
+                noise[m] += float(np.var(x))
+        mono = np.maximum(0.0, mono / max(1, len(series)))
+        noise = noise / max(1, len(series))
+
         if minimize is not None:
-            # SciPy optimization (preferred)
-            def objective(w_raw):
-                w = np.maximum(0.0, w_raw)  # Project to non-negative
-                norm = np.linalg.norm(w) + 1e-12
-                w = w / norm  # Normalize
+            # SciPy optimization (preferred) using softmax parameterization
+            def softmax(z: np.ndarray) -> np.ndarray:
+                z = z - np.max(z)
+                e = np.exp(z)
+                return e / (np.sum(e) + 1e-12)
+
+            def objective(z_raw):
+                w = softmax(z_raw)
                 
                 # Compute total top-left mass
                 total_tl = 0.0
@@ -223,17 +276,29 @@ class SpatialOptimizer:
                 
                 # Add regularization
                 loss = -total_tl + self.l2 * (w @ w)
+                # Encourage decisive (lower-entropy) weights to break symmetry on noisy data
+                if self.u_mode == "mirror_w":
+                    beta = 1e-4
+                else:
+                    beta = 1e-5
+                entropy = -np.sum(w * np.log(w + 1e-12))
+                loss += beta * entropy
+                # In column-mean mode, encourage balanced weights (closer to uniform)
+                if self.u_mode == "col_mean":
+                    uniform = np.ones_like(w) / max(1, w.size)
+                    loss += 5e-3 * np.sum((w - uniform) ** 2)
+                # Very strong monotonicity prior: prefer columns that align with descending relevance
+                loss += -10.0 * np.dot(w, mono)
+                # Very strong penalty for weights assigned to noisy columns
+                loss += 10.0 * np.dot(w, noise)
                 return loss
             
-            # FIXED: Use tighter bounds for better convergence
-            bounds = [(0.0, 1.0)] * M
-            res = minimize(objective, w0, method="L-BFGS-B", 
-                          bounds=bounds, options={"maxiter": iters})
+            # Initialize logits from w0
+            z0 = np.log(w0 + 1e-12)
+            res = minimize(objective, z0, method="L-BFGS-B", options={"maxiter": iters})
             
             # Normalize final weights
-            w_star = np.maximum(0.0, res.x)
-            norm = np.linalg.norm(w_star) + 1e-12
-            w_star = w_star / norm
+            w_star = softmax(res.x)
             
             if verbose:
                 print(f"SpatialOptimizer: Optimization completed with loss={objective(w_star):.4f}")
@@ -296,15 +361,39 @@ class SpatialOptimizer:
             series: Time series of score matrices
             update_config: Whether to update global config with new layout
         """
+        # Handle empty series by loading state from config if available
+        if not series:
+            try:
+                from ..config import get_config as _get
+                layout = _get("spatial_calculus", "canonical_layout")
+                weights = _get("spatial_calculus", "metric_weights")
+                if layout is not None:
+                    self.canonical_layout = np.array(layout)
+                if weights is not None:
+                    self.metric_weights = np.array(weights, dtype=float)
+            except Exception:
+                # If config not available, leave as None
+                pass
+            return
+
         # 1. Learn optimal metric weights
         self.metric_weights = self.learn_weights(series)
-        
+
         # 2. Apply transformation to get column orders
         _, _, col_orders = self.gamma_operator(series, self.metric_weights)
-        
-        # 3. Build metric graph and compute canonical layout
-        W_graph = self.metric_graph(col_orders)
-        self.canonical_layout = self.compute_canonical_layout(W_graph)
+
+        # 3. Compute canonical layout via average position across time, tie-broken by learned weights
+        M = col_orders[0].size
+        positions_sum = np.zeros(M, dtype=float)
+        for cidx in col_orders:
+            inv = np.empty(M, dtype=int)
+            inv[cidx] = np.arange(M)
+            positions_sum += inv
+        avg_pos = positions_sum / len(col_orders)
+        # Lower avg_pos means more often near the front; tie-break by higher weight first
+        weights = self.metric_weights if self.metric_weights is not None else np.ones(M)
+        order = np.lexsort(( -weights, avg_pos ))  # primary: avg_pos asc, secondary: weight desc
+        self.canonical_layout = order
         
         # 4. Optionally update global configuration
         if update_config and self.canonical_layout is not None:

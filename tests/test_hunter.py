@@ -1,38 +1,60 @@
 # tests/test_hunter.py
-from zeromodel import HierarchicalVPM, ZeroModel
-from zeromodel.vpm.hunter import VPMHunter
 import numpy as np
+import pytest
 
-def test_vpm_hunter_hierarchical_basic():
-    """Test basic VPM hunter functionality with HierarchicalVPM."""
-    metric_names = ["m1", "m2", "m3"]
-    score_matrix = np.random.rand(100, 3)
-    
-    hvpm = HierarchicalVPM(metric_names, num_levels=3)
-    hvpm.process(score_matrix, "SELECT * FROM virtual_index ORDER BY m1 DESC")
-    
-    hunter = VPMHunter(hvpm, tau=0.9, max_steps=5)
-    target_id, confidence, audit_trail = hunter.hunt()
-    
-    assert isinstance(target_id, tuple)
-    assert len(target_id) == 2 # (level, doc_idx)
-    assert 0 <= confidence <= 1.0
-    assert len(audit_trail) > 0
-    assert all("step" in step for step in audit_trail)
-    print("Hierarchical VPM Hunter test passed.")
+from zeromodel import ZeroModel, HierarchicalVPM
+from zeromodel.vpm.hunter import VPMHunter
 
-def test_vpm_hunter_base_zeromodel():
-    """Test VPM hunter functionality with base ZeroModel."""
-    metric_names = ["m1", "m2", "m3"]
-    score_matrix = np.random.rand(10, 3)
-    
-    zm = ZeroModel(metric_names)
-    zm.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY m1 DESC")
-    
-    hunter = VPMHunter(zm, tau=0.5, max_steps=4, aoi_size_sequence=(5, 3, 1))
-    target_id, confidence, audit_trail = hunter.hunt()
-    
-    assert isinstance(target_id, int) # doc_idx for base ZM
-    assert 0 <= confidence <= 1.0
-    assert len(audit_trail) > 0
-    print("Base ZeroModel Hunter test passed.")
+def test_hunter_zeromodel_ndarray_path(monkeypatch):
+    metrics = ["m1", "m2"]
+    X = np.random.rand(40, len(metrics)).astype(np.float32)
+    zm = ZeroModel(metrics)
+    zm.prepare(X, "SELECT * FROM virtual_index ORDER BY m1 DESC")
+
+    # Force a stable decision
+    monkeypatch.setattr(zm, "get_decision", lambda context_size=3: (5, 0.42))
+
+    hunter = VPMHunter(zm, tau=0.9, max_steps=3, aoi_size_sequence=(9, 5, 3))
+    target, conf, audit = hunter.hunt()
+
+    assert isinstance(target, int)
+    assert 0 <= conf <= 1
+    assert len(audit) == 3
+    # ndarray-only shapes
+    for step in audit:
+        assert "tile_shape" in step
+        assert isinstance(step["tile_shape"], tuple)
+        assert step["tile_shape"][2] == 3
+
+def test_hunter_stops_on_tau_first_step_zm(monkeypatch):
+    zm = ZeroModel(["m"])
+    X = np.random.rand(10, 1).astype(np.float32)
+    zm.prepare(X, "SELECT * FROM virtual_index ORDER BY m DESC")
+    monkeypatch.setattr(zm, "get_decision", lambda context_size=3: (0, 0.95))
+
+    hunter = VPMHunter(zm, tau=0.9, max_steps=5)
+    target, conf, audit = hunter.hunt()
+
+    assert conf >= 0.9
+    assert len(audit) == 1
+
+def test_hunter_hvpm_ndarray_path(monkeypatch):
+    hvpm = HierarchicalVPM(["m1", "m2"], num_levels=2)
+
+    class _DummyZM:
+        def get_decision(self, context_size=3):
+            return (7, 0.2)
+
+    # Provide the level API expected by hunter
+    monkeypatch.setattr(
+        hvpm, "get_level",
+        lambda level: {"vpm": np.zeros((8, 8, 3), dtype=np.uint16), "zeromodel": _DummyZM()}
+    )
+    # Return an ndarray tile
+    monkeypatch.setattr(hvpm, "get_tile", lambda level, width=3, height=3: np.zeros((8, 8, 3), dtype=np.uint16))
+
+    hunter = VPMHunter(hvpm, tau=0.8, max_steps=2)
+    target, conf, audit = hunter.hunt()
+
+    assert isinstance(target, tuple) and len(target) == 2
+    assert len(audit) == 2

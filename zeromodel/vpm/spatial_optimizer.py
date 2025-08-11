@@ -41,9 +41,9 @@ class SpatialOptimizer:
         self.u_mode = u_mode
 
         # Parameter validation (required by tests)
-        if self.Kc <= 0:
+        if self.Kc is None or self.Kc <= 0:
             raise ValueError("Kc must be positive")
-        if self.Kr <= 0:
+        if self.Kr is None or self.Kr <= 0:
             raise ValueError("Kr must be positive")
         if not (0.0 < self.alpha < 1.0):
             raise ValueError("alpha must be between 0 and 1")

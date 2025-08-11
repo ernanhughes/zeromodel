@@ -16,7 +16,7 @@ Key features:
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, TypeVar
+from typing import Callable, TypeVar
 
 T = TypeVar('T')
 logger = logging.getLogger(__name__)
@@ -65,6 +65,7 @@ def timeit(func: Callable[..., T]) -> Callable[..., T]:
             else:
                 time_str = f"{elapsed:.6f} seconds"
                 
-            logger.debug(f"⏱️ {class_name}{func.__name__} completed in {time_str}")
+            # Avoid non-ASCII emoji in logs for Windows consoles
+            logger.debug(f"Timer {class_name}{func.__name__} completed in {time_str}")
     
     return wrapper

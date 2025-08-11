@@ -118,15 +118,15 @@ send_to_edge_device(tile_bytes_level_0)
 
 # --- On the tiny edge device (e.g., microcontroller) ---
 def process_tile_simple(tile_bytes):
-    # Parse header (simplified)
-    # tile_data = parse_tile_protocol(tile_bytes)
-    # width, height, x, y, pixel_data = tile_data
-
-    # Simple decision: check the very first pixel's Red channel
-    # (Assumes pixel data is [R, G, B, R, G, B, ...])
-    first_pixel_red_value = tile_bytes[4] # 4 header bytes, 5th byte is first R
-    is_relevant = 1 if first_pixel_red_value < 128 else 0
-    return is_relevant
+  # Parse 4-byte header: 16-bit little-endian width, height
+  if len(tile_bytes) < 5:
+    return 0
+  width = tile_bytes[0] | (tile_bytes[1] << 8)
+  height = tile_bytes[2] | (tile_bytes[3] << 8)
+  # Simple decision: check the very first pixel's Red channel
+  # (Assumes uint8 RGB layout [R, G, B, R, G, B, ...])
+  first_pixel_red_value = tile_bytes[4]
+  return 1 if first_pixel_red_value < 128 else 0
 
 # result = process_tile_simple(received_tile_bytes)
 # if result == 1: perform_action()

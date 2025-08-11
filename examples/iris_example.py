@@ -174,10 +174,11 @@ def analyze_results(zeromodel, y_true, target_names, task_description):
         print("\nSimulating Edge Device Decision with Critical Tile:")
         # Get a small tile (e.g., 3x3 pixels) from the top-left
         tile_bytes = zeromodel.get_critical_tile(tile_size=3, precision='float32')
-        # The tile contains width, height, x/y offsets, and pixel data.
-        # An edge device would parse this.
-        tile_width = tile_bytes[0]
-        tile_height = tile_bytes[1]
+    # The tile begins with a 4-byte header: 16-bit little-endian width and height,
+    # followed by pixel data in the requested precision.
+    # An edge device would parse header as below:
+    tile_width = tile_bytes[0] | (tile_bytes[1] << 8)
+    tile_height = tile_bytes[2] | (tile_bytes[3] << 8)
         print(f"  - Retrieved Critical Tile: {tile_width}x{tile_height} pixels")
         print(f"  - Tile Data Size: {len(tile_bytes)} bytes")
         # A simple edge check: is the very first pixel (top-left of tile) "bright enough"?
@@ -194,7 +195,7 @@ def analyze_results(zeromodel, y_true, target_names, task_description):
             else:
                 print(f"  - Edge Decision: ❓ Weak signal (Relevance {relevance_score:.4f} <= {edge_decision_threshold}). Request higher resolution tile or cloud processing.")
         else:
-             print("  - Edge Decision: Insufficient tile data.")
+            print("  - Edge Decision: Insufficient tile data.")
         # --- End Edge Device Simulation ---
 
     except Exception as e:

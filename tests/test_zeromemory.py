@@ -84,9 +84,10 @@ def test_snapshot_vpm_and_tile_shapes():
     assert vpm.dtype == np.uint8
 
     tile = zm.snapshot_tile(tile_size=3, window_size=5)
-    # header: 4 bytes + 3x3 pixels x 3 channels
+    # header: 4 bytes (16-bit LE width, height) + 3x3 pixels x 3 channels
     assert isinstance(tile, (bytes, bytearray))
-    width, height, xoff, yoff = tile[0], tile[1], tile[2], tile[3]
+    width = tile[0] | (tile[1] << 8)
+    height = tile[2] | (tile[3] << 8)
     assert (width, height) == (3, 3)
     expected_len = 4 + width * height * 3
     assert len(tile) == expected_len

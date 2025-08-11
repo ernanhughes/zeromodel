@@ -322,11 +322,11 @@ def test_tile_processing():
     # Assert total size based on corrected calculation for float32
     assert len(tile) == expected_total_size, f"Expected tile size {expected_total_size}, got {len(tile)}"
 
-    # Assert header reports actual dimensions
-    assert tile[0] == expected_header_width_pixels, f"Expected width {expected_header_width_pixels}, got {tile[0]}" # Actual width in pixels
-    assert tile[1] == expected_header_height_docs, f"Expected height {expected_header_height_docs}, got {tile[1]}"  # Actual height in documents
-    assert tile[2] == 0 # X offset
-    assert tile[3] == 0 # Y offset
+    # Assert header reports actual dimensions (new 16-bit LE header)
+    width_le = tile[0] | (tile[1] << 8)
+    height_le = tile[2] | (tile[3] << 8)
+    assert width_le == expected_header_width_pixels, f"Expected width {expected_header_width_pixels}, got {width_le}"
+    assert height_le == expected_header_height_docs, f"Expected height {expected_header_height_docs}, got {height_le}"
 
     # --- END CORRECTED CALCULATION ---
 
@@ -365,8 +365,10 @@ def test_tile_processing():
     # Total size = 4 + 32 = 36
     expected_small_tile_size = 36
     assert len(small_tile) == expected_small_tile_size, f"Small tile: Expected size {expected_small_tile_size}, got {len(small_tile)}"
-    assert small_tile[0] == 2, f"Small tile: Expected width 2, got {small_tile[0]}" # Actual width
-    assert small_tile[1] == 2, f"Small tile: Expected height 2, got {small_tile[1]}" # Actual height
+    small_w = small_tile[0] | (small_tile[1] << 8)
+    small_h = small_tile[2] | (small_tile[3] << 8)
+    assert small_w == 2, f"Small tile: Expected width 2, got {small_w}"
+    assert small_h == 2, f"Small tile: Expected height 2, got {small_h}"
     # --- END Smaller tile size test ---
 
     # --- Test with tile size larger than data ---
@@ -381,8 +383,10 @@ def test_tile_processing():
     # Total size = 4 + 64 = 68
     expected_large_tile_size = 68
     assert len(large_tile) == expected_large_tile_size, f"Large tile: Expected size {expected_large_tile_size}, got {len(large_tile)}"
-    assert large_tile[0] == 2, f"Large tile: Expected width 2, got {large_tile[0]}" # Actual width
-    assert large_tile[1] == 4, f"Large tile: Expected height 4, got {large_tile[1]}" # Actual height
+    large_w = large_tile[0] | (large_tile[1] << 8)
+    large_h = large_tile[2] | (large_tile[3] << 8)
+    assert large_w == 2, f"Large tile: Expected width 2, got {large_w}"
+    assert large_h == 4, f"Large tile: Expected height 4, got {large_h}"
     # --- END Larger tile size test ---
 
     print("test_tile_processing assertions (size/dimensions) updated for float32 serialization.")

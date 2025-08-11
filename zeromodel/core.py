@@ -81,7 +81,7 @@ class ZeroModel:
         # Components
         self.duckdb = DuckDBAdapter(self.effective_metric_names)
         self.normalizer = DynamicNormalizer(self.effective_metric_names)
-        self._encoder = VPMEncoder()
+        self._encoder = VPMEncoder(get_config("core").get("default_output_precision", "float32"))
         self._feature_engineer = FeatureEngineer()
         self._org_strategy = MemoryOrganizationStrategy()
 

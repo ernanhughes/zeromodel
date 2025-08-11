@@ -85,7 +85,7 @@ class EdgeProtocol:
         Parse a tile message from the proxy.
         
         Args:
-            tile_data: Binary tile data (at least 4 bytes: width, height, x_offset, y_offset)
+            tile_data: Binary tile data (at least 4 bytes header: 16-bit LE width and height)
         
         Returns:
             Tuple containing (width, height, x_offset, y_offset, pixels_data)
@@ -99,13 +99,14 @@ class EdgeProtocol:
             error_msg = f"Invalid tile format: data too short (expected >= {header_size} bytes, got {len(tile_data)})."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        
-        width = tile_data[0]
-        height = tile_data[1]
-        x_offset = tile_data[2]
-        y_offset = tile_data[3]
-        pixels_data = tile_data[header_size:] # Remaining bytes are pixel data
-        
+
+        # 16-bit little-endian width and height
+        width = tile_data[0] | (tile_data[1] << 8)
+        height = tile_data[2] | (tile_data[3] << 8)
+        x_offset = 0
+        y_offset = 0
+        pixels_data = tile_data[header_size:]  # Remaining bytes are pixel data
+
         logger.debug(f"Parsed tile header: width={width}, height={height}, x_offset={x_offset}, y_offset={y_offset}")
 
         # Validate dimensions strictly based on protocol limits
@@ -121,10 +122,8 @@ class EdgeProtocol:
 
         if width > EdgeProtocol.MAX_TILE_WIDTH:
             logger.warning(f"Tile width ({width}) exceeds MAX_TILE_WIDTH ({EdgeProtocol.MAX_TILE_WIDTH}). Processing with max width.")
-            # width = EdgeProtocol.MAX_TILE_WIDTH # Original logic - commented for clarity on strictness
         if height > EdgeProtocol.MAX_TILE_HEIGHT:
             logger.warning(f"Tile height ({height}) exceeds MAX_TILE_HEIGHT ({EdgeProtocol.MAX_TILE_HEIGHT}). Processing with max height.")
-            # height = EdgeProtocol.MAX_TILE_HEIGHT # Original logic - commented for clarity on strictness
 
         # Optional: Check if the actual pixel data length matches the expected size
         # expected_pixel_count = width * height * 3 # Assuming 3 channels per pixel
@@ -156,7 +155,7 @@ class EdgeProtocol:
         """
         logger.debug(f"Making decision based on tile data ({len(tile_message_data)} bytes)")
         try:
-            width, height, x_offset, y_offset, pixels_data = EdgeProtocol.parse_tile(tile_message_data)
+            _, _, _, _, pixels_data = EdgeProtocol.parse_tile(tile_message_data)
         except ValueError as e:
             logger.error(f"Failed to parse tile for decision making: {e}")
             # Return an error message instead of raising, if the protocol expects messages back

@@ -6,10 +6,9 @@ Test cases for the ZeroMemory sidecar component.
 import numpy as np
 import pytest
 import logging
-from unittest.mock import patch
 
-from zeromodel.core import ZeroModel
-from zeromodel.hierarchical import HierarchicalVPM
+# from zeromodel.core import ZeroModel
+# from zeromodel.hierarchical import HierarchicalVPM
 from zeromodel.memory import ZeroMemory
 
 logger = logging.getLogger(__name__)
@@ -146,21 +145,17 @@ def test_zeromemory_tile_snapshot():
     # 2x2 tile = 4 pixels, 3 bytes per pixel = 12 bytes
     # Total = 4 + 12 = 16 bytes
     assert len(tile_bytes) == 16
-    # Check header
-    width = tile_bytes[0]
-    height = tile_bytes[1]
-    x_offset = tile_bytes[2]
-    y_offset = tile_bytes[3]
+    # Check header (16-bit little-endian width/height)
+    width = tile_bytes[0] | (tile_bytes[1] << 8)
+    height = tile_bytes[2] | (tile_bytes[3] << 8)
     assert width == 2
     assert height == 2
-    assert x_offset == 0
-    assert y_offset == 0
     # Check pixel data (basic sanity)
     # First pixel data starts at index 4
     # Pixel 0 (0,0): R, G, B
     r0, g0, b0 = tile_bytes[4], tile_bytes[5], tile_bytes[6]
     # Pixel 1 (0,1): R, G, B
-    r1, g1, b1 = tile_bytes[7], tile_bytes[8], tile_bytes[9]
+    _r1, _g1, _b1 = tile_bytes[7], tile_bytes[8], tile_bytes[9]
     # ... etc.
     # We can't easily assert exact values without knowing normalization details,
     # but we can check they are bytes.

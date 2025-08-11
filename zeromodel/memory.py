@@ -659,12 +659,12 @@ class ZeroMemory:
 
         tile_data = full_vpm[:tile_height, :tile_width, :]
 
-        # Create byte representation
+        # Create byte representation (new 16-bit LE header: width, height)
         tile_bytes = bytearray()
-        tile_bytes.append(tile_width & 0xFF)  # Width in pixels
-        tile_bytes.append(tile_height & 0xFF)  # Height in docs
-        tile_bytes.append(0 & 0xFF)  # X offset
-        tile_bytes.append(0 & 0xFF)  # Y offset
+        tile_bytes.append(tile_width & 0xFF)        # width LSB
+        tile_bytes.append((tile_width >> 8) & 0xFF) # width MSB
+        tile_bytes.append(tile_height & 0xFF)       # height LSB
+        tile_bytes.append((tile_height >> 8) & 0xFF)# height MSB
 
         # Add pixel data (R, G, B for each pixel)
         for h in range(tile_height):

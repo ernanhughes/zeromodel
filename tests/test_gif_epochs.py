@@ -48,7 +48,7 @@ def bce_loss(y_true, y_prob, eps=1e-9):
     return -np.mean(y_true * np.log(y_prob) + (1 - y_true) * np.log(1 - y_prob))
 
 
-@pytest.mark.parametrize("epochs", [20])
+@pytest.mark.parametrize("epochs", [200])
 def test_gif_training_epochs(tmp_path, epochs):
     # --- 1) Data ---
     X, y = make_moons(n_samples=1500, noise=0.25, random_state=42)

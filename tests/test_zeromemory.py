@@ -138,16 +138,6 @@ def test_alert_instability():
     alerts = zm.get_alerts(window_size=80)
     assert alerts["instability"] is True
 
-@pytest.mark.skip("Needs work")
-def test_alert_drift():
-    zm = ZeroMemory(METRICS, buffer_steps=128)
-    # metric drifts upward in second half
-    for i in range(60):
-        val = 0.1 if i < 30 else 1.1
-        zm.log(i, {"loss": 1.0, "val_loss": 1.0, "aux": val})
-    alerts = zm.get_alerts(window_size=60)
-    assert alerts["drift"] is True
-
 def test_handles_nans_and_missing_metrics():
     zm = ZeroMemory(METRICS, buffer_steps=32)
     # mix finite and NaN

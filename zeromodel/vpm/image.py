@@ -328,7 +328,7 @@ class VPMImageWriter:
         meta = np.zeros((h_meta, self.D, 3), dtype=np.uint16)
 
         # --- Row 0: Core metadata ---
-        # Magic number (ASCII 'PPM1')
+        # Magic number (ASCII 'VPM1')
         for i, v in enumerate(MAGIC):
             meta[0, i, 0] = v
         
@@ -692,16 +692,22 @@ class VPMImageReader:
         Returns:
             Image tile (height, width, 3) from the virtual view
         """
-        # Get document permutation
+        # Clamp to logical document count to ignore padded columns
+        d_eff = int(self.D_logical)
+        width_eff = max(0, min(width, max(0, d_eff - x)))
+
+        # Get document permutation (request only what we need)
         perm = self.virtual_order(
             metric_idx=metric_idx,
             weights=weights,
-            top_k=x+width,
+            top_k=min(self.D, x + width_eff),
             descending=descending
         )
-        
-        # Select columns in virtual order
-        cols = perm[x: x + width]
+        # Exclude padded columns beyond logical width
+        if d_eff < self.D:
+            perm = perm[perm < d_eff]
+        # Select columns in virtual order with effective width
+        cols = perm[x: x + width_eff]
         
         # Select rows (metrics)
         row_start = self.h_meta + y

@@ -24,13 +24,14 @@ from zeromodel.organization import (MemoryOrganizationStrategy,
 from zeromodel.timing import timeit
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
+from zeromodel.vpm.metadata import VPMMetadata, AggId
 
 logger = logging.getLogger(__name__)
 
 init_config()
 
 DATA_NOT_PROCESSED_ERR = "Data not processed yet. Call process() or prepare() first."
-PPM_IMAGE_NOT_READY_ERR = "PPM image not ready. Call prepare() first."
+VPM_IMAGE_NOT_READY_ERR = "VPM image not ready. Call prepare() first."
 
 
 class ZeroModel:
@@ -68,8 +69,8 @@ class ZeroModel:
 
         # VPM-IMG state (canonical memory image)
         self.canonical_matrix: Optional[np.ndarray] = None  # docs x metrics (float)
-        self.ppm_image_path: Optional[str] = None
-        self._ppm_reader: Optional[VPMImageReader] = None
+        self.vpm_image_path: Optional[str] = None
+        self._vpm_reader: Optional[VPMImageReader] = None
 
         # Legacy/compat state (virtual view matrix path)
         self.sorted_matrix: Optional[np.ndarray] = None
@@ -91,12 +92,12 @@ class ZeroModel:
             self.default_output_precision,
         )
 
-    def _get_ppm_reader(self) -> VPMImageReader:
-        if self.ppm_image_path is None:
-            raise ValueError(PPM_IMAGE_NOT_READY_ERR)
-        if self._ppm_reader is None:
-            self._ppm_reader = VPMImageReader(self.ppm_image_path)
-        return self._ppm_reader
+    def _get_vpm_reader(self) -> VPMImageReader:
+        if self.vpm_image_path is None:
+            raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+        if self._vpm_reader is None:
+            self._vpm_reader = VPMImageReader(self.vpm_image_path)
+        return self._vpm_reader
 
     @timeit
     def prepare(
@@ -104,7 +105,7 @@ class ZeroModel:
         score_matrix: np.ndarray,
         sql_query: str,
         nonlinearity_hint: Optional[str] = None,
-        ppm_output_path: Optional[str] = None,
+        vpm_output_path: Optional[str] = None,
     ) -> None:
         logger.info(
             "Preparing ZeroModel with data shape %s, query: '%s', nonlinearity_hint: %s",
@@ -162,24 +163,51 @@ class ZeroModel:
 
         # 4) Write canonical memory to VPM-IMG (metrics x docs)
         try:
-            if ppm_output_path is None:
-                ppm_output_path = os.path.join(os.getcwd(), "zeromodel_canonical.ppm.png")
+            if vpm_output_path is None:
+                vpm_output_path = os.path.join(os.getcwd(), "zeromodel_canonical.vpm.png")
             mx_d = self.canonical_matrix.T  # (metrics x docs)
+            logical_docs = int(mx_d.shape[1])
             # Ensure width meets VPM-IMG header minimum (META_MIN_COLS=12)
-            MIN_PPM_WIDTH = 12
-            if mx_d.shape[1] < MIN_PPM_WIDTH:
-                pad = MIN_PPM_WIDTH - mx_d.shape[1]
+            MIN_VPM_WIDTH = 12
+            if mx_d.shape[1] < MIN_VPM_WIDTH:
+                pad = MIN_VPM_WIDTH - mx_d.shape[1]
                 mx_d = np.pad(mx_d, ((0, 0), (0, pad)), mode="constant", constant_values=0.0)
+            # Build compact VMETA payload carrying the logical doc_count
+            try:
+                # Stable-ish 32-bit task hash from SQL query
+                import zlib
+                task_hash = zlib.crc32(sql_query.encode('utf-8')) & 0xFFFFFFFF
+            except Exception:
+                task_hash = 0
+            try:
+                tile_id = VPMMetadata.make_tile_id(f"{self.task}|{mx_d.shape}".encode('utf-8'))
+            except Exception:
+                tile_id = b"\x00" * 16
+            vmeta = VPMMetadata.for_tile(
+                level=0,
+                metric_count=int(mx_d.shape[0]),
+                doc_count=logical_docs,
+                doc_block_size=1,
+                agg_id=int(AggId.RAW),
+                metric_weights=None,
+                metric_names=self.effective_metric_names,
+                task_hash=int(task_hash),
+                tile_id=tile_id,
+                parent_id=b"\x00" * 16,
+            )
+            metadata_bytes = vmeta.to_bytes()
+
             writer = VPMImageWriter(
                 score_matrix=mx_d,
                 metric_names=self.effective_metric_names,
+                metadata_bytes=metadata_bytes,
                 store_minmax=True,
                 compression=6,
             )
-            writer.write(ppm_output_path)
-            self.ppm_image_path = ppm_output_path
-            self._ppm_reader = None
-            logger.info("VPM-IMG written to %s", ppm_output_path)
+            writer.write(vpm_output_path)
+            self.vpm_image_path = vpm_output_path
+            self._vpm_reader = None
+            logger.info("VPM-IMG written to %s", vpm_output_path)
         except Exception as e:  # noqa: broad-except
             logger.error("VPM-IMG write failed: %s", e)
             raise RuntimeError(f"Error writing VPM-IMG: {e}") from e
@@ -194,9 +222,9 @@ class ZeroModel:
         weights: Optional[Dict[int, float]] = None,
         top_k: Optional[int] = None,
     ) -> np.ndarray:
-        if self.ppm_image_path is None:
-            raise ValueError(PPM_IMAGE_NOT_READY_ERR)
-        reader = self._get_ppm_reader()
+        if self.vpm_image_path is None:
+            raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+        reader = self._get_vpm_reader()
         if metric_idx is not None:
             return reader.virtual_order(metric_idx=metric_idx, descending=True, top_k=top_k)
         if weights:
@@ -210,9 +238,9 @@ class ZeroModel:
         weights: Optional[Dict[int, float]] = None,
         size: int = 8,
     ) -> np.ndarray:
-        if self.ppm_image_path is None:
-            raise ValueError(PPM_IMAGE_NOT_READY_ERR)
-        reader = self._get_ppm_reader()
+        if self.vpm_image_path is None:
+            raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+        reader = self._get_vpm_reader()
         if metric_idx is not None:
             return reader.get_virtual_view(metric_idx=metric_idx, x=0, y=0, width=size, height=size)
         if weights:
@@ -220,9 +248,9 @@ class ZeroModel:
         raise ValueError("Provide either 'metric_idx' or 'weights'.")
 
     def get_decision_by_metric(self, metric_idx: int, context_size: int = 8) -> Tuple[int, float]:
-        if self.ppm_image_path is None:
-            raise ValueError(PPM_IMAGE_NOT_READY_ERR)
-        reader = self._get_ppm_reader()
+        if self.vpm_image_path is None:
+            raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+        reader = self._get_vpm_reader()
         perm = reader.virtual_order(metric_idx=metric_idx, descending=True, top_k=context_size)
         if len(perm) == 0:
             return (0, 0.0)
@@ -325,7 +353,7 @@ class ZeroModel:
             "metric_names": self.effective_metric_names,
             "precision": self.precision,
             "default_output_precision": self.default_output_precision,
-            "ppm_image_path": self.ppm_image_path,
+            "vpm_image_path": self.vpm_image_path,
         }
         logger.debug(f"Metadata retrieved: {metadata}")
         return metadata

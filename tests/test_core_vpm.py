@@ -1,4 +1,4 @@
-# test_zeromodel_ppm.py
+# test_core_vpm.py
 import os
 import tempfile
 import numpy as np
@@ -6,7 +6,7 @@ import pytest
 
 from zeromodel import ZeroModel
 
-def test_zero_model_ppm_view_compilation():
+def test_zero_model_vpm_view_compilation():
     """
     Test that ZeroModel can create a canonical VPM-IMG and compile
     different virtual views (sort orders) from it, producing distinct
@@ -38,18 +38,18 @@ def test_zero_model_ppm_view_compilation():
 
     # --- 2. Prepare ZeroModel (Creates VPM-IMG) ---
     with tempfile.TemporaryDirectory() as tmpdir:
-        ppm_path = os.path.join(os.getcwd(), "test_canonical.ppm.png")
+        vpm_path = os.path.join(os.getcwd(), "test_canonical.vpm.png")
 
         model = ZeroModel(metric_names=metric_names)
         model.prepare(
             score_matrix=score_matrix,
             sql_query=sql_query,
-            ppm_output_path=ppm_path
+            vpm_output_path=vpm_path
         )
 
         # --- 3. Validate VPM-IMG was created ---
-        assert os.path.exists(ppm_path), "VPM-IMG file was not created."
-        assert model.ppm_image_path == ppm_path, "Model's ppm_image_path not set correctly."
+        assert os.path.exists(vpm_path), "VPM-IMG file was not created."
+        assert model.vpm_image_path == vpm_path, "Model's vpm_image_path not set correctly."
         assert model.canonical_matrix is not None, "Canonical matrix should be stored."
         expected_width = max(score_matrix.shape[0], 12) # VPM-IMG minimum width
         expected_height = score_matrix.shape[1]

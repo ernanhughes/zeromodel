@@ -1,8 +1,5 @@
-# test_ppm_img_v1.py
-# pytest -q test_ppm_img_v1.py
-import os
+# test_vpm.py
 import math
-import tempfile
 import numpy as np
 
 # CHANGE THIS to your actual module path/name:
@@ -25,7 +22,7 @@ def test_roundtrip_base_image(tmp_path):
     M, D = 12, 512  # 12 metrics × 512 docs
     scores = _mk_scores(M, D)
 
-    png_path = tmp_path / "ppm_base.png"
+    png_path = tmp_path / "vpm_base.png"
     w = VPMImageWriter(
         score_matrix=scores,
         store_minmax=True,       # exercise in-image min/max headers
@@ -64,7 +61,7 @@ def test_roundtrip_base_image(tmp_path):
 def test_virtual_order_single_metric(tmp_path):
     M, D = 10, 512
     scores = _mk_scores(M, D, seed=13)
-    png_path = tmp_path / "ppm_order_single.png"
+    png_path = tmp_path / "vpm_order_single.png"
     VPMImageWriter(scores, store_minmax=False, compression=3, level=2).write(str(png_path))
     r = VPMImageReader(str(png_path))
 
@@ -82,7 +79,7 @@ def test_virtual_order_single_metric(tmp_path):
 def test_virtual_order_composite_and_view(tmp_path):
     M, D = 16, 512
     scores = _mk_scores(M, D, seed=23)
-    png_path = tmp_path / "ppm_order_composite.png"
+    png_path = tmp_path / "vpm_order_composite.png"
     VPMImageWriter(scores, store_minmax=False, compression=6, level=3).write(str(png_path))
     r = VPMImageReader(str(png_path))
 
@@ -107,11 +104,11 @@ def test_virtual_order_composite_and_view(tmp_path):
 def test_build_parent_level_and_properties(tmp_path):
     M, D = 8, 512
     scores = _mk_scores(M, D, seed=99)
-    child_path = tmp_path / "ppm_child.png"
+    child_path = tmp_path / "vpm_child.png"
     VPMImageWriter(scores, store_minmax=False, compression=6, level=4).write(str(child_path))
     child = VPMImageReader(str(child_path))
 
-    parent_path = tmp_path / "ppm_parent.png"
+    parent_path = tmp_path / "vpm_parent.png"
     K = 8  # aggregate 8 child columns per parent column
     build_parent_level_png(child, str(parent_path), K=K, agg_id=AGG_MAX, compression=6)
     parent = VPMImageReader(str(parent_path))

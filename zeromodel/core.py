@@ -113,6 +113,7 @@ class ZeroModel:
             sql_query,
             nonlinearity_hint,
         )
+
         self._validate_prepare_inputs(score_matrix, sql_query)
 
         # 1) Normalize to canonical matrix (docs x metrics)
@@ -123,6 +124,12 @@ class ZeroModel:
         except Exception as e:  # noqa: broad-except
             logger.error("Normalization failed: %s", e)
             raise RuntimeError(f"Error during data normalization: {e}") from e
+
+        logger.debug(
+            "normalize: mins[max]=(%s..%s)[%d], dtype=%s",
+            float(np.min(self.canonical_matrix)), float(np.max(self.canonical_matrix)),
+            self.canonical_matrix.size, self.canonical_matrix.dtype
+        )
 
         # 2) Optional feature engineering
         original_metric_names = list(self.effective_metric_names)
@@ -137,6 +144,14 @@ class ZeroModel:
             )
             self.canonical_matrix = processed_data
         self.effective_metric_names = effective_metric_names
+
+        logger.debug(
+            "org: metric_order len=%s, doc_order len=%s; top metric idx=%s, top doc idx=%s",
+            None if self.metric_order is None else len(self.metric_order),
+            None if self.doc_order is None else len(self.doc_order),
+            None if self.metric_order is None else int(self.metric_order[0]),
+            None if self.doc_order is None else int(self.doc_order[0]),
+        )
 
         # 3) Organization analysis (for metadata; we keep canonical unsorted)
         try:
@@ -160,6 +175,7 @@ class ZeroModel:
         # Legacy: materialize a sorted view for backward-compat APIs
         if self.doc_order is not None and self.metric_order is not None:
             self.sorted_matrix = self.canonical_matrix[self.doc_order][:, self.metric_order]
+
 
         # 4) Write canonical memory to VPM-IMG (metrics x docs)
         try:
@@ -196,6 +212,12 @@ class ZeroModel:
                 parent_id=b"\x00" * 16,
             )
             metadata_bytes = vmeta.to_bytes()
+
+            logger.debug(
+                "vpm write: mx_d shape=%s (metrics x docs), pad_to_min_width=%s",
+                getattr(mx_d, "shape", None),
+                mx_d.shape[1] < 12
+            )
 
             writer = VPMImageWriter(
                 score_matrix=mx_d,
@@ -240,7 +262,20 @@ class ZeroModel:
     ) -> np.ndarray:
         if self.vpm_image_path is None:
             raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+        logger.debug("extract_critical_tile(): metric_idx=%s weights=%s size=%s", metric_idx, None if weights is None else dict(weights), size)
         reader = self._get_vpm_reader()
+        if logger.isEnabledFor(logging.DEBUG):
+            try:
+                mb = reader.read_metadata_bytes()
+                if mb:
+                    md = VPMMetadata.from_bytes(mb)
+                    D_eff = int(md.doc_count) or None
+                    logger.debug(
+                        "vpm reader: level=%s, M=%s, D_phys=%s, D_eff(logical)=%s, h_meta=%s",
+                        reader.level, reader.M, reader.D, D_eff, reader.h_meta
+                    )
+            except Exception as e:
+                logger.debug("vpm metadata read failed (non-fatal): %s", e)
         if metric_idx is not None:
             return reader.get_virtual_view(metric_idx=metric_idx, x=0, y=0, width=size, height=size)
         if weights:
@@ -257,6 +292,13 @@ class ZeroModel:
         top_doc = int(perm[0])
         try:
             tile = reader.get_virtual_view(metric_idx=metric_idx, x=0, y=0, width=context_size, height=1)
+            logger.debug(
+                "tile: shape=%s dtype=%s R[min,max]=(%s,%s) G[min,max]=(%s,%s) B[min,max]=(%s,%s)",
+                getattr(tile, "shape", None), getattr(tile, "dtype", None),
+                int(tile[...,0].min()), int(tile[...,0].max()),
+                int(tile[...,1].min()), int(tile[...,1].max()),
+                int(tile[...,2].min()), int(tile[...,2].max())
+            )
             rel = float(np.mean(tile[0, :, 0]) / 65535.0) if tile.size > 0 else 0.0
         except Exception:
             rel = 0.0

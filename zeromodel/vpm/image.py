@@ -15,11 +15,12 @@ Key Features:
 - Efficient critical tile extraction
 """
 
-from typing import Dict, List, Optional, Tuple
-
+from typing import Dict, List, Optional, Tuple, Literal, Any
 import numpy as np
 import png
 from zeromodel.vpm.metadata import VPMMetadata
+import json
+from pathlib import Path
 
 # --- Constants ---
 DEFAULT_H_META_BASE = 2              # base meta rows (row0 + row1)
@@ -762,6 +763,282 @@ class VPMImageReader:
 
         return bytes(out)
 
+    def to_report(self) -> dict: 
+        """
+        Summarize this VPM-IMG into a JSON-serializable dict:
+          - header fields (VPM1 row-0 + flags)
+          - embedded VMETA bytes length + short hex preview
+          - physical vs logical width (padding-aware)
+          - per-channel stats (R/G/B)
+        """
+        H, W, _ = self.image.shape
+
+        # Try to decode embedded VMETA bytes (if present)
+        try:
+            meta_bytes = self.read_metadata_bytes()
+        except Exception:
+            meta_bytes = b""
+
+        # Logical width (VMETA.doc_count) if available
+        d_logical = self.D_logical
+
+        # Channel stats (uint16 → safe ints)
+        R = self.image[..., 0].astype(np.uint32)
+        G = self.image[..., 1].astype(np.uint32)
+        B = self.image[..., 2].astype(np.uint32)
+
+        def stats(ch):
+            return {
+                "min": int(ch.min()),
+                "p05": int(np.percentile(ch, 5)),
+                "median": int(np.median(ch)),
+                "p95": int(np.percentile(ch, 95)),
+                "max": int(ch.max()),
+                "mean": float(np.mean(ch)),
+            }
+
+        header = {
+            "magic": "VPM1",
+            "version": int(self.version),
+            "M": int(self.M),
+            "D_reported": int(self.D),
+            "h_meta": int(self.h_meta),
+            "level": int(self.level),
+            "doc_block_size": int(self.doc_block_size),
+            "agg_id": int(self.agg_id),
+            "store_minmax_flag": int(self.norm_flag),
+        }
+
+        return {
+            "path": str(self.file_path),
+            "shape": [int(H), int(W), 3],
+            "dtype": "uint16",
+            "header": header,
+            "vmeta": {
+                "embedded_metadata_len": len(meta_bytes),
+                "embedded_metadata_hex_preview": meta_bytes[:64].hex() if meta_bytes else "",
+            },
+            "logical_vs_physical": {
+                "logical_D": int(d_logical),
+                "physical_W": int(W),
+                "padded": bool(W != d_logical),
+            },
+            "stats": {"R": stats(R), "G": stats(G), "B": stats(B)},
+            "problems": [],
+        }
+
+    @staticmethod
+    def inspect(png_path: str | Path, dump_json_path: str | Path | None = None) -> dict:
+        """
+        Open a PNG and produce a report. If it's a valid VPM-IMG, we parse the header
+        and embedded VMETA. Otherwise we still return channel stats and note the issue.
+
+        Args:
+            png_path: path to PNG tile
+            dump_json_path: optional path to write the JSON report
+
+        Returns:
+            dict report
+        """
+        png_path = Path(png_path)
+
+        # First, try the strict VPM reader path
+        try:
+            rdr = VPMImageReader(str(png_path))
+            report = rdr.to_report()
+        except Exception as e:
+            # Fallback: generic PNG (e.g., 8-bit PNGs for mockups)
+            arr = VPMImageReader.read_png_as_array(png_path)
+            if arr.ndim == 2:
+                arr = arr[..., None].repeat(3, axis=-1)
+            if arr.shape[-1] == 4:
+                arr = arr[..., :3]
+            H, W, C = arr.shape
+            R = arr[..., 0].astype(np.uint32)
+            G = arr[..., 1].astype(np.uint32)
+            B = arr[..., 2].astype(np.uint32)
+
+            def stats(ch):
+                return {
+                    "min": int(ch.min()),
+                    "p05": int(np.percentile(ch, 5)),
+                    "median": int(np.median(ch)),
+                    "p95": int(np.percentile(ch, 95)),
+                    "max": int(ch.max()),
+                    "mean": float(np.mean(ch)),
+                }
+
+            report = {
+                "path": str(png_path),
+                "shape": [int(H), int(W), int(C)],
+                "dtype": str(arr.dtype),
+                "header": {"magic": "unknown"},
+                "vmeta": {"embedded_metadata_len": 0, "embedded_metadata_hex_preview": ""},
+                "logical_vs_physical": {"logical_D": int(W), "physical_W": int(W), "padded": False},
+                "stats": {"R": stats(R), "G": stats(G), "B": stats(B)},
+                "problems": [f"Not a VPM-IMG (or parse failed): {e}"],
+            }
+
+        if dump_json_path:
+            dump_json_path = Path(dump_json_path)
+            dump_json_path.write_text(json.dumps(report, indent=2))
+        return report
+
+    @staticmethod
+    def read_png_as_array(file_path: str) -> np.ndarray:
+        reader = png.Reader(file_path)
+        w, h, rows, meta = reader.read()
+        arr = np.vstack(list(rows)).astype(np.uint16)
+        if meta.get("planes", 1) > 1:
+            arr = arr.reshape((h, w, meta["planes"]))
+        return arr
+    
+    def to_json(
+        self,
+        *,
+        include_data: bool = True,
+        data_mode: Literal["normalized", "original", "raw_u16"] = "normalized",
+        include_channels: Literal["R", "RG", "RGB"] = "RGB",
+        max_docs: Optional[int] = None,   # cap width to avoid huge JSON
+        downsample: Optional[int] = None, # e.g. 4 -> take every 4th doc
+        pretty: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Build a full JSON-serializable dict of this VPM-IMG.
+
+        data_mode:
+          - "normalized": R in [0,1], G/B in [0,1]
+          - "original":   R denormalized using stored min/max when available
+          - "raw_u16":    raw 0..65535 for all channels
+
+        include_channels: choose which channels to include.
+        max_docs: optional hard cap on logical width exported.
+        downsample: stride > 1 to thin columns (after logical trim & cap).
+        """
+        # --- header & basics ---
+        d_logical = int(self.D_logical)
+        width = d_logical
+        if max_docs is not None:
+            width = min(width, int(max_docs))
+
+        stride = int(downsample) if (downsample and downsample > 1) else 1
+        sel = np.arange(0, width, stride, dtype=np.int32)
+
+        # pull embedded VMETA (if present)
+        vmeta_bytes = self.read_metadata_bytes()
+        vmeta: Dict[str, Any] = {}
+        if vmeta_bytes:
+            try:
+                md = VPMMetadata.from_bytes(vmeta_bytes)
+                vmeta = {
+                    "version": md.version,
+                    "kind": int(md.kind),
+                    "level": md.level,
+                    "agg_id": md.agg_id,
+                    "metric_count": md.metric_count,
+                    "doc_count": md.doc_count,
+                    "doc_block_size": md.doc_block_size,
+                    "task_hash": md.task_hash,
+                    "tile_id_hex": md.tile_id.hex(),
+                    "parent_id_hex": md.parent_id.hex(),
+                    "step_id": md.step_id,
+                    "parent_step_id": md.parent_step_id,
+                    "timestamp_ns": md.timestamp_ns,
+                    "weights_len": len(md.weights_nibbles),
+                    "ptr_count": len(md.pointers),
+                }
+            except Exception as e:
+                vmeta = {"error": f"failed_to_parse_vmeta: {type(e).__name__}: {e}"}
+
+        report: Dict[str, Any] = {
+            "file_path": self.file_path,
+            "format": "VPM-IMG/v1",
+            "magic": "VPM1",
+            "version": self.version,
+            "M": self.M,
+            "D_physical": self.D,
+            "D_logical": d_logical,
+            "h_meta": self.h_meta,
+            "level": self.level,
+            "doc_block_size": self.doc_block_size,
+            "agg_id": self.agg_id,
+            "normalized_flag": self.norm_flag,
+            "min_vals": self.min_vals.tolist() if self.min_vals is not None else None,
+            "max_vals": self.max_vals.tolist() if self.max_vals is not None else None,
+            "vmeta": vmeta,
+        }
+
+        if not include_data:
+            return report
+
+        # --- channel extraction helpers ---
+        def _to_norm_u01(u16: np.ndarray) -> np.ndarray:
+            return (u16.astype(np.float64) / 65535.0)
+
+        def _denorm_row(idx: int, row_u16: np.ndarray) -> np.ndarray:
+            # reconstruct original using per-metric min/max if we have them
+            if self.norm_flag == 1 and self.min_vals is not None and self.max_vals is not None:
+                lo = float(self.min_vals[idx])
+                hi = float(self.max_vals[idx])
+                span = hi - lo
+                if span == 0.0:
+                    return np.full(row_u16.shape[0], lo, dtype=np.float64)
+                return lo + _to_norm_u01(row_u16) * span
+            # fallback to normalized if no min/max
+            return _to_norm_u01(row_u16)
+
+        # which channels?
+        ch_R = "R" in include_channels
+        ch_G = "G" in include_channels
+        ch_B = "B" in include_channels or include_channels == "RGB"  # allow "RGB"
+
+        # build data block
+        data_out = []
+        for m in range(self.M):
+            row = self.get_metric_row_raw(m)   # (D, 3) u16
+            row = row[:d_logical]              # trim physical padding
+            row = row[sel]                     # apply selection
+
+            entry: Dict[str, Any] = {"metric_index": m}
+
+            if ch_R:
+                if data_mode == "raw_u16":
+                    R = row[:, 0].astype(np.uint16)
+                    entry["R"] = R.tolist()
+                elif data_mode == "normalized":
+                    entry["R"] = _to_norm_u01(row[:, 0]).tolist()
+                elif data_mode == "original":
+                    entry["R"] = _denorm_row(m, row[:, 0]).tolist()
+
+            if ch_G:
+                G = row[:, 1]
+                entry["G"] = (G.tolist() if data_mode == "raw_u16"
+                              else _to_norm_u01(G).tolist())
+
+            if ch_B:
+                B = row[:, 2]
+                entry["B"] = (B.tolist() if data_mode == "raw_u16"
+                              else _to_norm_u01(B).tolist())
+
+            data_out.append(entry)
+
+        report["data"] = {
+            "doc_indices": sel.tolist(),
+            "channels_included": include_channels,
+            "mode": data_mode,
+            "rows": data_out,
+        }
+        return report
+
+    @staticmethod
+    def save_json(report: Dict[str, Any], path: str, pretty: bool = False) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            if pretty:
+                json.dump(report, f, ensure_ascii=False, indent=2)
+            else:
+                json.dump(report, f, ensure_ascii=False, separators=(",", ":"))
+
+
 
 # --- Hierarchy Builder ---
 
@@ -871,3 +1148,4 @@ def build_parent_level_png(
             compression=compression,
             planes=3,
         ).write(f, rows.tolist())
+

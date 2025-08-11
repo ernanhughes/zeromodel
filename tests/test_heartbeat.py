@@ -9,7 +9,6 @@ from PIL import Image
 from zeromodel.memory import ZeroMemory
 from zeromodel.vpm.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
 
-@pytest.mark.skip("Needs work")
 def test_training_heartbeat_visualizer_full_cycle(tmp_path):
     """Test the complete workflow of the TrainingHeartbeatVisualizer with ZeroMemory."""
     
@@ -238,7 +237,6 @@ def test_visualizer_edge_cases(tmp_path):
     
     print("✅ TrainingHeartbeatVisualizer edge cases test completed")
 
-@pytest.mark.skip("Needs work")
 def test_visualizer_integration_with_training(tmp_path):
     """Test the visualizer integrated into a realistic training loop simulation."""
     
@@ -353,7 +351,6 @@ def test_visualizer_integration_with_training(tmp_path):
     
     print(f"✅ MLP training visualization test completed. GIF size: {os.path.getsize(gif_path)} bytes")
 
-@pytest.mark.skip("Needs work")
 def test_visualizer_with_alerts(tmp_path):
     """Test the visualizer's ability to correctly display alert markers."""
     

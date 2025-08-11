@@ -77,7 +77,10 @@ class DynamicNormalizer:
         # Initialize with extreme values to be replaced on first update
         self.min_vals = {m: float('inf') for m in metric_names}
         self.max_vals = {m: float('-inf') for m in metric_names}
-        logger.info(f"Normalizer initialized with α={alpha:.2f} for metrics: {metric_names}")
+        # Avoid non-ASCII characters in logs for Windows consoles
+        logger.info(
+            f"Normalizer initialized with alpha={alpha:.2f} for metrics: {metric_names}"
+        )
 
     def update(self, score_matrix: np.ndarray) -> None:
         """

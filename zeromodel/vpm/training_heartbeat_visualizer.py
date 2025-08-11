@@ -3,6 +3,7 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import imageio.v2 as imageio
+from PIL import Image
 import numpy as np
 
 log = logging.getLogger(__name__)
@@ -69,6 +70,15 @@ class TrainingHeartbeatVisualizer:
         # (Optional) We could draw overlays for alerts/timeline/metric names.
         # Tests mainly check that API accepts options and no exceptions are raised,
         # so we keep overlays as no-ops for now.
+        # However, to ensure GIF encoders don't collapse identical frames,
+        # embed a tiny per-frame marker using the step (if provided) or a sequence id.
+        step_id = None
+        if isinstance(metrics, dict) and ("step" in metrics):
+            try:
+                step_id = int(metrics["step"])  # best-effort
+            except Exception:
+                step_id = None
+        frame = self._apply_frame_marker(frame, step_id)
 
         self._push_frame(frame)
 
@@ -76,7 +86,33 @@ class TrainingHeartbeatVisualizer:
         if not self.frames:
             log.error("No frames to save - call add_frame() first")
             raise RuntimeError("No frames to save")
-        imageio.mimsave(path, self.frames, duration=max(1e-6, 1.0 / max(1, self.fps)))
+
+        # Use PIL to ensure all frames are preserved (some writers optimize away duplicates)
+        try:
+            # Convert each frame to palette mode with adaptive palette so the GIF encoder
+            # treats each as a full frame and avoids coalescing identical-looking frames.
+            pil_frames = [
+                Image.fromarray(f.astype(np.uint8), mode="RGB").convert("P", palette=Image.ADAPTIVE, colors=256)
+                for f in self.frames
+            ]
+            duration_ms = int(max(1, round(1000.0 / max(1, self.fps))))
+            pil_frames[0].save(
+                path,
+                save_all=True,
+                append_images=pil_frames[1:],
+                format="GIF",
+                duration=duration_ms,
+                loop=0,
+                optimize=False,
+                disposal=2,
+            )
+        except Exception:
+            # Fallback to imageio if PIL path fails for any reason
+            imageio.mimsave(
+                path,
+                self.frames,
+                duration=max(1e-6, 1.0 / max(1, self.fps)),
+            )
 
     # ----------------- internals -----------------
 
@@ -92,7 +128,7 @@ class TrainingHeartbeatVisualizer:
     def _frame_from_vpm(self, vpm_uint8: np.ndarray) -> np.ndarray:
         """Scale VPM to display size and add a simple footer strip."""
         vpm_uint8 = self._ensure_rgb_uint8(vpm_uint8)
-        H, W, _ = vpm_uint8.shape
+    # shape check not required; _ensure_rgb_uint8 guarantees HxWx3
 
         # nearest-neighbor scale
         scale = max(1, int(self.vpm_scale))
@@ -172,6 +208,32 @@ class TrainingHeartbeatVisualizer:
 
         vpm_uint8 = (rgb * 255.0).astype(np.uint8)
         return self._frame_from_vpm(vpm_uint8)
+
+    def _apply_frame_marker(self, frame: np.ndarray, step_id: Optional[int]) -> np.ndarray:
+        """Embed a tiny colored marker so successive frames are never bit-identical.
+        This avoids GIF encoders merging identical frames and reducing n_frames.
+        """
+        out = np.array(frame, copy=True)
+        h, w, _ = out.shape
+        # choose a color derived from step_id or from an internal counter
+        if not hasattr(self, "_seq_counter"):
+            self._seq_counter = 0
+        sid = step_id if step_id is not None else self._seq_counter
+        # simple hash to RGB
+        r = (sid * 67) % 256
+        g = (sid * 97) % 256
+        b = (sid * 131) % 256
+        # draw a 2x2 marker in the footer's top-left corner (bottom-left of full frame)
+        y0 = max(0, h - self.strip_height)
+        y1 = min(h, y0 + 2)
+        x0, x1 = 0, min(w, 2)
+        out[y0:y1, x0:x1, 0] = r
+        out[y0:y1, x0:x1, 1] = g
+        out[y0:y1, x0:x1, 2] = b
+        # bump counter for next call if we generated it
+        if step_id is None:
+            self._seq_counter += 1
+        return out
 
     @staticmethod
     def _ensure_rgb_uint8(arr: np.ndarray) -> np.ndarray:

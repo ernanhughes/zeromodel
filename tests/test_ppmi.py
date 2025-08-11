@@ -58,7 +58,7 @@ def test_roundtrip_base_image(tmp_path):
         dec = r.get_metric_values(m)
         # Since we normalized per-row to [0,1] with Q16 quantization and stored min/max,
         # allow a small absolute error for quantization.
-        mae = np.mean(np.abs((orig - orig.min()) / max(orig.ptp(), 1e-12) - dec))
+        mae = np.mean(np.abs((orig - orig.min()) / max(np.ptp(orig), 1e-12) - dec))
         assert mae < 5e-3  # ~0.5% tolerance is plenty for uint16 quantization
 
 def test_virtual_order_single_metric(tmp_path):

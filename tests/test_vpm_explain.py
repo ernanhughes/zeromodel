@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from zeromodel.core import ZeroModel
-from zeromodel.explain import OcclusionVPMInterpreter
+from zeromodel.vpm.explain import OcclusionVPMInterpreter
 
 
 def build_synthetic_matrix(H=20, K=9):

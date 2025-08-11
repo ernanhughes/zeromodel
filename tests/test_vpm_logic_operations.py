@@ -21,7 +21,7 @@ matplotlib.use('Agg')  # Use non-GUI backend to avoid TclError
 import matplotlib.pyplot as plt
 import os
 from zeromodel.core import ZeroModel
-from zeromodel.vpm_logic import (
+from zeromodel.vpm.logic import (
     vpm_and, vpm_or, vpm_not, vpm_add, vpm_xor,
     vpm_nand, vpm_nor, query_top_left, vpm_subtract
 )

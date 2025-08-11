@@ -1,5 +1,7 @@
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Dict
+import hashlib
+import struct
 
 def generate_synthetic_data(num_docs: int = 100, num_metrics: int = 50) -> Tuple[np.ndarray, List[str]]:
     """Generate synthetic score data for demonstration"""
@@ -38,3 +40,11 @@ def generate_synthetic_data(num_docs: int = 100, num_metrics: int = 50) -> Tuple
         metric_names.append(f"metric_{i}")
     
     return scores[:num_docs, :num_metrics], metric_names[:num_metrics]
+
+
+def compute_task_hash(metric_names: List[str], weights: Dict[str,float]) -> int:
+    h = hashlib.blake2s(digest_size=4)
+    for name in metric_names:
+        w = float(max(0.0, min(1.0, weights.get(name, 0.0))))
+        h.update(name.encode('utf-8') + b'\0' + struct.pack('>f', w))
+    return int.from_bytes(h.digest(), 'big')  # 32-bit

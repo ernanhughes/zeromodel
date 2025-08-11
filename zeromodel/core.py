@@ -9,20 +9,21 @@ layout and virtual views, not heavy processing.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
 import os
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
 from zeromodel.config import get_config, init_config
 from zeromodel.constants import precision_dtype_map
 from zeromodel.duckdb_adapter import DuckDBAdapter
-from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
-from zeromodel.organization import MemoryOrganizationStrategy, SqlOrganizationStrategy
+from zeromodel.organization import (MemoryOrganizationStrategy,
+                                    SqlOrganizationStrategy)
 from zeromodel.timing import timeit
-from zeromodel.vpm.image import VPMImageWriter, VPMImageReader
+from zeromodel.vpm.encoder import VPMEncoder
+from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
 
 logger = logging.getLogger(__name__)
 

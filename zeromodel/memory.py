@@ -9,10 +9,12 @@ It also emits actionable alerts based on simple heuristics applied to the
 spatially-organized metric data.
 """
 
-from collections import deque
 import logging
-import numpy as np
+from collections import deque
 from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+
 from .normalizer import DynamicNormalizer  # Reuse existing normalizer
 
 logger = logging.getLogger(__name__)

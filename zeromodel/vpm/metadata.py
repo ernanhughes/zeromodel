@@ -1,11 +1,12 @@
 # zeromodel/vpm/metadata.py
 from __future__ import annotations
-from dataclasses import dataclass, field
-from enum import IntEnum
-from typing import Dict, List, Iterable, Optional, Protocol, Tuple
-import struct
+
 import hashlib
 import math
+import struct
+from dataclasses import dataclass, field
+from enum import IntEnum
+from typing import Dict, Iterable, List, Optional, Protocol, Tuple
 
 # ---------- enums ----------
 
@@ -165,6 +166,8 @@ class VPMMetadata:
     weights_nibbles: bytes = b""
     pointers: List[RouterPointer] = field(default_factory=list)
 
+
+
     # ---------- convenience constructors ----------
 
     @staticmethod
@@ -297,3 +300,18 @@ class VPMMetadata:
     # file naming via resolvers
     def resolve_child_paths(self, resolver: TargetResolver) -> List[Tuple[RouterPointer, Optional[str]]]:
         return [(ptr, resolver.resolve(ptr.tile_id)) for ptr in self.pointers]
+
+    def validate(self) -> None:
+        if len(self.tile_id) != 16:
+            raise ValueError("tile_id must be 16 bytes")
+        if len(self.parent_id) != 16:
+            raise ValueError("parent_id must be 16 bytes")
+        if self.metric_count < 0 or self.doc_count < 0:
+            raise ValueError("metric_count/doc_count must be non-negative")
+        # if weights present, allow short (default-filled) but never longer than needed
+        max_len = (self.metric_count + 1) // 2
+        if self.weights_nibbles and len(self.weights_nibbles) > max_len:
+            raise ValueError("weights_nibbles longer than expected for metric_count")
+        for p in self.pointers:
+            if len(p.tile_id) != 16:
+                raise ValueError("router pointer tile_id must be 16 bytes")

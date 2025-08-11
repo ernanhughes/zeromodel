@@ -51,8 +51,7 @@ class VPMEncoder:
         except ValueError as e:
             raise ValueError(f"Cannot reshape data of shape {matrix.shape} to ({n_docs}, {width}, 3).") from e
         try:
-            from .logic import \
-                denormalize_vpm  # local import to avoid cycle
+            from .logic import denormalize_vpm  # local import to avoid cycle
             img = denormalize_vpm(img_data, output_type=target_dtype)
         except Exception:
             if target_dtype == np.uint8:

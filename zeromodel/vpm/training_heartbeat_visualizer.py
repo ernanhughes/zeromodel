@@ -1,6 +1,6 @@
 # zeromodel/training_heartbeat_visualizer.py
 import logging
-from typing import Optional, Dict, Any, Tuple, List
+from typing import Any, Dict, List, Optional, Tuple
 
 import imageio.v2 as imageio
 import numpy as np

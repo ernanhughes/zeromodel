@@ -1,8 +1,9 @@
 # zeromodel/hunter.py (or similar)
 
 import logging
-from typing import Tuple, List, Dict, Any, Union
-from zeromodel import ZeroModel, HierarchicalVPM
+from typing import Any, Dict, List, Tuple, Union
+
+from zeromodel import HierarchicalVPM, ZeroModel
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,10 @@
-import numpy as np
 from typing import List, Tuple
-from ..config import get_config
+
+import numpy as np
 from scipy.optimize import minimize
+
+from ..config import get_config
+
 
 class SpatialOptimizer:
     """

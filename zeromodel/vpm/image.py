@@ -15,15 +15,18 @@ Key Features:
 - Efficient critical tile extraction
 """
 
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import png
-from typing import Optional, Dict, Tuple, List
+from zeromodel.vpm.metadata import VPMMetadata
 
 # --- Constants ---
+DEFAULT_H_META_BASE = 2              # base meta rows (row0 + row1)
 MAGIC = [ord('V'), ord('P'), ord('M'), ord('1')]  # ASCII for 'VPM1'
-VERSION = 1                                      # Format version
+VERSION = np.uint16(1)
 META_MIN_COLS = 12                               # Minimum columns for metadata
-DEFAULT_H_META_BASE = 2                          # Base metadata rows (row0 + row1)
+
 
 # Aggregation types
 AGG_MAX = 0       # Maximum aggregation
@@ -67,7 +70,6 @@ class VPMImageWriter:
         doc_block_size (int): Documents aggregated per pixel at this level
         agg_id (int): Aggregation method (AGG_RAW, AGG_MAX, AGG_MEAN)
     """
-
     def __init__(
         self,
         score_matrix: np.ndarray,           # shape (M, D)
@@ -75,30 +77,135 @@ class VPMImageWriter:
         metadata_bytes: Optional[bytes] = None,
         store_minmax: bool = False,
         compression: int = 6,
-        # Hierarchy parameters:
-        level: int = 0,                     # 0 = coarsest level
-        doc_block_size: int = 1,            # Documents per pixel
-        agg_id: int = AGG_RAW,              # Aggregation method
+        level: int = 0,
+        doc_block_size: int = 1,
+        agg_id: int = AGG_RAW,
+        # NEW: accept doc_ids so callers can pass them without errors
+        doc_ids: Optional[list[str]] = None,
     ):
-        # Validate and store input parameters
         self.score_matrix = np.asarray(score_matrix, dtype=np.float64)
         self.metric_names = metric_names or []
+        self.doc_ids = doc_ids or []        # currently informational; not serialized in header
         self.store_minmax = store_minmax
         self.compression = int(compression)
         self.M, self.D = self.score_matrix.shape
         self.metadata_bytes = metadata_bytes or b""
-        
-        # Validate dimensions
+
         if self.M <= 0 or self.D <= 0:
             raise ValueError("Score matrix must be non-empty (M,D > 0)")
         if self.M > 65535 or self.D > 0xFFFFFFFF:
             raise ValueError("Dimensions exceed format limits (M≤65535, D≤2^32-1)")
         _check_header_width(self.D)
 
-        # Hierarchy configuration
         self.level = int(level)
         self.doc_block_size = int(doc_block_size)
         self.agg_id = int(agg_id)
+
+
+    def _assemble_header_rows(
+        self,
+        D_override: Optional[int] = None,
+        mins: Optional[np.ndarray] = None,
+        maxs: Optional[np.ndarray] = None,
+    ) -> tuple[int, np.ndarray]:
+        """
+        Build header/meta rows ONLY (no data channels). Returns (h_meta, meta_rows).
+        Uses self.metadata_bytes, store_minmax, level, doc_block_size, agg_id.
+
+        If mins/maxs are provided, they are written in Q16.16 as in write().
+        """
+        D = int(D_override) if (D_override is not None) else self.D
+
+        # rows for min/max if requested
+        minmax_rows = 0
+        if self.store_minmax and mins is not None and maxs is not None:
+            num_words = self.M * 2
+            minmax_rows = (num_words + D - 1) // D
+
+        extra_meta_rows = self._extra_meta_rows_needed(len(self.metadata_bytes), start_col=7)
+        h_meta = DEFAULT_H_META_BASE + minmax_rows + extra_meta_rows
+
+        meta = np.zeros((h_meta, D, 3), dtype=np.uint16)
+
+        # Row 0 core header
+        for i, v in enumerate(MAGIC):
+            meta[0, i, 0] = v
+        meta[0, 4, 0]  = VERSION
+        meta[0, 5, 0]  = np.uint16(self.M)
+        meta[0, 6, 0]  = np.uint16((D >> 16) & 0xFFFF)
+        meta[0, 7, 0]  = np.uint16(D & 0xFFFF)
+        meta[0, 8, 0]  = np.uint16(h_meta)
+        meta[0, 9, 0]  = np.uint16(self.level)
+        meta[0,10, 0]  = np.uint16(min(self.doc_block_size, 0xFFFF))
+        meta[0,11, 0]  = np.uint16(self.agg_id)
+
+        # Row 1: flags
+        meta[1, 0, 0] = 1 if (self.store_minmax and mins is not None and maxs is not None) else 0
+
+        # Optional min/max (Q16.16)
+        if self.store_minmax and mins is not None and maxs is not None:
+            mins_fixed = (np.asarray(mins) * 65536.0).astype(np.uint32)
+            maxs_fixed = (np.asarray(maxs) * 65536.0).astype(np.uint32)
+            for m in range(self.M):
+                # MIN at "word" index m*2
+                min_col = m * 2
+                min_row = 2 + (min_col // D)
+                min_col_in_row = min_col % D
+                meta[min_row, min_col_in_row, 0] = np.uint16(mins_fixed[m] >> 16)
+                meta[min_row, min_col_in_row, 1] = np.uint16(mins_fixed[m] & 0xFFFF)
+                # MAX at "word" index m*2 + 1
+                max_col = min_col + 1
+                max_row = 2 + (max_col // D)
+                max_col_in_row = max_col % D
+                meta[max_row, max_col_in_row, 0] = np.uint16(maxs_fixed[m] >> 16)
+                meta[max_row, max_col_in_row, 1] = np.uint16(maxs_fixed[m] & 0xFFFF)
+
+        # Embed arbitrary payload (VMETA blob, etc.)
+        self._embed_metadata_into_meta_rows(meta)
+        return h_meta, meta
+
+    def write_with_channels(
+        self,
+        file_path: str,
+        R_u16: np.ndarray,
+        G_u16: np.ndarray,
+        B_u16: np.ndarray,
+    ) -> None:
+        """
+        Write the three uint16 channels you provide, while still building and
+        embedding the correct VPM header (including metadata_bytes).
+        """
+        if not (R_u16.shape == G_u16.shape == B_u16.shape):
+            raise ValueError("R, G, B shapes must match")
+        if R_u16.dtype != np.uint16 or G_u16.dtype != np.uint16 or B_u16.dtype != np.uint16:
+            raise ValueError("R, G, B must be uint16")
+
+        M, D = R_u16.shape
+        if M != self.M or D != self.D:
+            # Keep it strict; you could relax if needed.
+            raise ValueError(f"Channel shape {R_u16.shape} does not match writer shape {(self.M, self.D)}")
+
+        # No min/max rows for this path unless you explicitly want to store them.
+        mins = maxs = None
+        if self.store_minmax:
+            # If you really want min/max with direct channels, provide arrays externally
+            # or derive from a float score matrix you trust. We'll omit by default.
+            pass
+
+        h_meta, meta_rows = self._assemble_header_rows(D_override=D, mins=mins, maxs=maxs)
+
+        full = np.vstack([meta_rows, np.stack([R_u16, G_u16, B_u16], axis=-1)])
+        rows = full.reshape(full.shape[0], -1)
+
+        with open(file_path, "wb") as f:
+            png.Writer(
+                width=D,
+                height=full.shape[0],
+                bitdepth=16,
+                greyscale=False,
+                compression=self.compression,
+                planes=3,
+            ).write(f, rows.tolist())
 
     def _meta_capacity_per_row(self, start_col: int) -> int:
         # 4 bytes/column using 16-bit G and B channels (2 bytes each)
@@ -355,6 +462,18 @@ class VPMImageReader:
         self.min_vals = None
         self.max_vals = None
         self._load_and_parse()
+
+    @property
+    def D_logical(self) -> int:
+        try:
+            mb = self.read_metadata_bytes()
+            if mb:
+                md = VPMMetadata.from_bytes(mb)
+                if md.doc_count:
+                    return int(md.doc_count)
+        except Exception:
+            pass
+        return self.D
 
     def _load_and_parse(self):
         """Load PNG file and parse metadata"""

@@ -1,7 +1,9 @@
 import time
+
+import imageio.v2 as imageio
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-import imageio.v2 as imageio
+
 
 class GifLogger:
     def __init__(self, max_frames=2000, vpm_scale=4, strip_h=40, bg=(10,10,12)):

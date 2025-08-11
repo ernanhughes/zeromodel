@@ -1,5 +1,7 @@
 import numpy as np
+
 from .image import VPMImageReader
+
 
 class VPMView:
     def __init__(self, reader: VPMImageReader): self.r = reader

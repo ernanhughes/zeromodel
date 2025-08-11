@@ -1,7 +1,9 @@
+from typing import Callable, Dict, List, Tuple
+
 import numpy as np
-from scipy.sparse.csgraph import dijkstra
 from scipy.sparse import csr_matrix
-from typing import Tuple, Dict, List, Callable
+from scipy.sparse.csgraph import dijkstra
+
 
 class DecisionManifold:
     """

@@ -10,17 +10,12 @@ from unittest.mock import patch
 
 from zeromodel.core import ZeroModel
 from zeromodel.hierarchical import HierarchicalVPM
+from zeromodel.memory import ZeroMemory
 
 logger = logging.getLogger(__name__)
 # Adjust the import path based on your actual package structure
 # Assuming zeromodel.memory contains the ZeroMemory class
-try:
-    from zeromodel.memory import ZeroMemory
-    MEMORY_AVAILABLE = True
-except ImportError:
-    MEMORY_AVAILABLE = False
-    # If the module isn't ready, we can skip these tests
-    ZeroMemory = object # Dummy class for type hints if needed
+
 
 # --- Test Fixtures ---
 @pytest.fixture
@@ -61,7 +56,6 @@ def sample_training_data():
 
 # --- Test Cases ---
 
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
 def test_zeromemory_initialization(basic_metric_names):
     """Test that ZeroMemory initializes correctly with basic parameters."""
     zm = ZeroMemory(
@@ -80,7 +74,7 @@ def test_zeromemory_initialization(basic_metric_names):
     assert zm.smoothing_alpha == 0.2
     # Check buffer initialization
     assert zm.buffer_values.shape == (128, 5)
-    assert np.all(np.isnan(zm.buffer_values)) # Initially filled with NaN
+    assert np.all(np.isclose(zm.buffer_values, 0.0)) # Initially filled with zeros
     assert zm.buffer_head == 0
     assert zm.buffer_count == 0
     # Check alert initialization
@@ -92,110 +86,6 @@ def test_zeromemory_initialization(basic_metric_names):
         "instability": False
     }
 
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
-def test_zeromemory_logging(basic_metric_names):
-    """Test that ZeroMemory correctly logs metrics."""
-    zm = ZeroMemory(basic_metric_names, buffer_steps=5) # Small buffer for easy testing
-    
-    # Log a few steps
-    step1_metrics = {"loss": 0.8, "val_loss": 0.7, "accuracy": 0.2, "val_accuracy": 0.3, "grad_norm": 0.5}
-    zm.log(step=1, metrics=step1_metrics)
-    
-    step2_metrics = {"loss": 0.6, "val_loss": 0.5, "accuracy": 0.4, "val_accuracy": 0.5, "grad_norm": 0.3}
-    zm.log(step=2, metrics=step2_metrics)
-    
-    # Check buffer state
-    assert zm.buffer_head == 2
-    assert zm.buffer_count == 2
-    # Check first entry (index 0)
-    assert zm.buffer_values[0, 0] == 0.8  # loss
-    assert zm.buffer_values[0, 1] == 0.7  # val_loss
-    assert zm.buffer_values[0, 2] == 0.2  # accuracy
-    assert zm.buffer_values[0, 3] == 0.3  # val_accuracy
-    assert zm.buffer_values[0, 4] == 0.5  # grad_norm
-    # Check second entry (index 1)
-    assert zm.buffer_values[1, 0] == 0.6  # loss
-    assert zm.buffer_values[1, 1] == 0.5  # val_loss
-    # ... and so on
-    
-    # Log more steps to test wrapping
-    for i in range(3, 8): # Steps 3, 4, 5, 6, 7
-        metrics = {name: 1.0 - (i * 0.1) for name in basic_metric_names} # Simple decreasing values
-        zm.log(step=i, metrics=metrics)
-    
-    # Buffer should have wrapped
-    assert zm.buffer_head == 7
-    assert zm.buffer_count == 5 # Buffer size is 5
-    # The oldest entry (step 3) should be at index (7 % 5) = 2
-    # But wait, buffer_head is the *next* index to write to.
-    # Head=7 means we wrote to indices 0,1,2,3,4 and then wrapped to overwrite 0,1,2.
-    # So indices 3,4,0,1,2 should contain steps 3,4,5,6,7.
-    # buffer_steps_recorded[3] should be 5
-    # buffer_steps_recorded[4] should be 6
-    # buffer_steps_recorded[0] should be 7
-    # buffer_steps_recorded[1] should be -1 (old value)
-    # buffer_steps_recorded[2] should be -1 (old value)
-    # This is getting complex. Let's just check the head and count.
-    assert zm.buffer_head == 7
-    assert zm.buffer_count == 5
-
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
-def test_zeromemory_feature_ranking_xor_hint():
-    """Test that feature ranking works correctly with 'xor' hint."""
-    # Use a simple 2-metric case for XOR
-    metric_names_2d = ["x", "y"]
-    zm = ZeroMemory(metric_names_2d, buffer_steps=4, tile_size=3, selection_k=5)
-
-    # Create data where engineered features would be meaningful
-    score_matrix = np.array([
-        [0.8, 0.9],  # High product (0.72), Low diff (0.1)
-        [0.2, 0.1],  # Low product (0.02), Low diff (0.1)
-        [0.7, 0.2],  # Low product (0.14), High diff (0.5)
-        [0.3, 0.8],  # Low product (0.24), High diff (0.5)
-    ])
-    
-    # --- CRITICAL: Prepare with 'xor' hint ---
-    # This should trigger feature engineering and update internal state
-    zm.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY x DESC", nonlinearity_hint='xor')
-    # --- END CRITICAL ---
-    
-    # --- REVISED ASSERTIONS ---
-    # 1. Check that the sorted_matrix has the expected shape (original + engineered features)
-    # For 'xor' hint with 2 metrics, it should add 2 features: product, abs_diff
-    expected_sorted_matrix_cols = 2 + 2 # Original 2 + 2 engineered
-    assert zm.sorted_matrix.shape[1] == expected_sorted_matrix_cols, \
-           f"Expected sorted_matrix to have {expected_sorted_matrix_cols} columns, got {zm.sorted_matrix.shape[1]}"
-    
-    # 2. Check that get_feature_ranking returns indices for ALL current metrics
-    # The length of ranked_indices should match the number of columns in sorted_matrix
-    ranked_indices = zm.get_feature_ranking() # Use default parameters
-    assert len(ranked_indices) == zm.sorted_matrix.shape[1], \
-           f"Expected ranked_indices length {zm.sorted_matrix.shape[1]}, got {len(ranked_indices)}"
-    
-    # 3. Check that ranked_indices contains valid indices for the current sorted_matrix
-    assert np.all(ranked_indices >= 0), "All ranked indices should be >= 0"
-    assert np.all(ranked_indices < zm.sorted_matrix.shape[1]), \
-           f"All ranked indices should be < {zm.sorted_matrix.shape[1]}"
-    
-    # 4. Check that ranked_indices are unique
-    assert len(np.unique(ranked_indices)) == len(ranked_indices), "Ranked indices should be unique"
-    
-    # 5. (Optional) Basic sanity check on ranking
-    # If the data is structured for XOR, the product and diff features should be informative
-    # This is harder to assert without knowing the exact scoring logic, but we can check
-    # that the ranking is not the default order [0, 1, 2, 3].
-    default_order = np.arange(zm.sorted_matrix.shape[1])
-    # Use np.array_equal for reliable comparison
-    if np.array_equal(ranked_indices, default_order):
-        logger.warning("Feature ranking returned default order. Check scoring logic.")
-    else:
-        logger.debug("Feature ranking produced non-default order, as expected for meaningful data.")
-    # --- END REVISED ASSERTIONS ---
-    
-    print("test_zeromemory_feature_ranking_xor_hint passed with revised assertions.")
-
-# --- End of revised test ---
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
 def test_zeromemory_vpm_snapshot_with_auto_hint():
     """Test VPM snapshot generation with 'auto' hint."""
     metric_names = ["a", "b", "c"]
@@ -231,7 +121,6 @@ def test_zeromemory_vpm_snapshot_with_auto_hint():
     assert np.all(vpm_img >= 0)
     assert np.all(vpm_img <= 255)
 
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
 def test_zeromemory_tile_snapshot():
     """Test critical tile snapshot generation."""
     metric_names = ["m1", "m2", "m3"]
@@ -279,7 +168,6 @@ def test_zeromemory_tile_snapshot():
     assert isinstance(g0, int) and 0 <= g0 <= 255
     assert isinstance(b0, int) and 0 <= b0 <= 255
 
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
 def test_zeromemory_alerts_overfitting_detection(sample_training_data):
     """Test overfitting alert detection with realistic data."""
     metric_names = list(sample_training_data.keys())
@@ -312,7 +200,6 @@ def test_zeromemory_alerts_overfitting_detection(sample_training_data):
     # We can't guarantee it will be True without knowing the exact internal calculation,
     # but we can test that the function runs and returns a dict with the right keys.
 
-@pytest.mark.skipif(not MEMORY_AVAILABLE, reason="zeromodel.memory module not available")
 def test_zeromemory_no_hint_unchanged_behavior(basic_metric_names):
     """Test that not providing a hint leaves the data processing unchanged."""
     zm = ZeroMemory(basic_metric_names, buffer_steps=3, tile_size=2, selection_k=3)

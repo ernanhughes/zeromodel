@@ -1,6 +1,7 @@
 # zeromodel/stdm.py
+from typing import Callable, List, Optional, Tuple
+
 import numpy as np
-from typing import List, Tuple, Callable, Optional
 
 # ---------- Core: ordering & scoring ----------
 

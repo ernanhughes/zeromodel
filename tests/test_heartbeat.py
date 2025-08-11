@@ -7,7 +7,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from zeromodel.memory import ZeroMemory
-from zeromodel.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
+from zeromodel.vpm.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
 
 @pytest.mark.skip("Needs work")
 def test_training_heartbeat_visualizer_full_cycle(tmp_path):

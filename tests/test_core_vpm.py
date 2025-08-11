@@ -8,7 +8,7 @@ from zeromodel import ZeroModel
 
 def test_zero_model_ppm_view_compilation():
     """
-    Test that ZeroModel can create a canonical PPM-IMG and compile
+    Test that ZeroModel can create a canonical VPM-IMG and compile
     different virtual views (sort orders) from it, producing distinct
     critical tiles. This test is robust to specific data values.
     """
@@ -36,7 +36,7 @@ def test_zero_model_ppm_view_compilation():
     # Simple SQL query for initial analysis (doesn't affect canonical sort)
     sql_query = "SELECT * FROM virtual_index" # Placeholder
 
-    # --- 2. Prepare ZeroModel (Creates PPM-IMG) ---
+    # --- 2. Prepare ZeroModel (Creates VPM-IMG) ---
     with tempfile.TemporaryDirectory() as tmpdir:
         ppm_path = os.path.join(os.getcwd(), "test_canonical.ppm.png")
 
@@ -47,11 +47,11 @@ def test_zero_model_ppm_view_compilation():
             ppm_output_path=ppm_path
         )
 
-        # --- 3. Validate PPM-IMG was created ---
-        assert os.path.exists(ppm_path), "PPM-IMG file was not created."
+        # --- 3. Validate VPM-IMG was created ---
+        assert os.path.exists(ppm_path), "VPM-IMG file was not created."
         assert model.ppm_image_path == ppm_path, "Model's ppm_image_path not set correctly."
         assert model.canonical_matrix is not None, "Canonical matrix should be stored."
-        expected_width = max(score_matrix.shape[0], 12) # PPM-IMG minimum width
+        expected_width = max(score_matrix.shape[0], 12) # VPM-IMG minimum width
         expected_height = score_matrix.shape[1]
         # Note: canonical_matrix might be padded, so check rows, cols separately if needed
         assert model.canonical_matrix.shape[0] == num_docs, "Canonical matrix doc count mismatch."
@@ -101,7 +101,7 @@ def test_zero_model_ppm_view_compilation():
         print(f"View 0 top-left R value: {tile_metric_0[0, 0, 0]}")
         print(f"View 1 top-left R value: {tile_metric_1[0, 0, 0]}")
 
-        # --- 6. Validate PPM-IMG Data Encoding (Basic Check) ---
+        # --- 6. Validate VPM-IMG Data Encoding (Basic Check) ---
         assert np.any(tile_metric_0[:, :, 0] > 0), "Metric 0 view tile R channel is completely blank."
         assert np.any(tile_metric_1[:, :, 0] > 0), "Metric 1 view tile R channel is completely blank."
 
@@ -119,6 +119,6 @@ def test_zero_model_ppm_view_compilation():
         assert 0.0 <= decision_rel_0 <= 1.0, f"Relevance for metric 0 is out of range: {decision_rel_0}"
         assert 0.0 <= decision_rel_1 <= 1.0, f"Relevance for metric 1 is out of range: {decision_rel_1}"
 
-        print("All PPM-IMG view compilation tests passed!")
+        print("All VPM-IMG view compilation tests passed!")
 
 

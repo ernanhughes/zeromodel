@@ -51,7 +51,7 @@ class VPMEncoder:
         except ValueError as e:
             raise ValueError(f"Cannot reshape data of shape {matrix.shape} to ({n_docs}, {width}, 3).") from e
         try:
-            from .vpm.logic import \
+            from .logic import \
                 denormalize_vpm  # local import to avoid cycle
             img = denormalize_vpm(img_data, output_type=target_dtype)
         except Exception:
@@ -82,7 +82,7 @@ class VPMEncoder:
         pixel_w = (tile_metrics_w + 2) // 3
         tile_slice = sorted_matrix[:actual_h, :tile_metrics_w].astype(np.float32, copy=False)
         try:
-            from .vpm.logic import denormalize_vpm, normalize_vpm
+            from .logic import denormalize_vpm, normalize_vpm
             tile_norm = normalize_vpm(tile_slice)
             tile_converted = denormalize_vpm(tile_norm, output_type=target_dtype)
         except Exception:

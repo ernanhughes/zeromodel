@@ -1,10 +1,10 @@
 # zeromodel/core.py
 """
-Zero-Model Intelligence core with pluggable organization and PPM-IMG support.
+Zero-Model Intelligence core with pluggable organization and VPM-IMG support.
 
 This module provides the core functionality for transforming high-dimensional
 policy evaluation data into spatially-optimized visual maps and a canonical
-Pixel-Parametric Memory Image (PPM-IMG). Intelligence emerges from the data
+Pixel-Parametric Memory Image (VPM-IMG). Intelligence emerges from the data
 layout and virtual views, not heavy processing.
 """
 
@@ -17,12 +17,12 @@ import numpy as np
 from zeromodel.config import get_config, init_config
 from zeromodel.constants import precision_dtype_map
 from zeromodel.duckdb_adapter import DuckDBAdapter
-from zeromodel.encoder import VPMEncoder
+from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
 from zeromodel.organization import MemoryOrganizationStrategy, SqlOrganizationStrategy
 from zeromodel.timing import timeit
-from zeromodel.ppmi import PPMImageWriter, PPMImageReader
+from zeromodel.vpm.image import VPMImageWriter, VPMImageReader
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,11 @@ PPM_IMAGE_NOT_READY_ERR = "PPM image not ready. Call prepare() first."
 
 class ZeroModel:
     """
-    Zero-Model Intelligence encoder/decoder with PPM-IMG support.
+    Zero-Model Intelligence encoder/decoder with VPM-IMG support.
 
     Workflow:
-    1. prepare() -> normalize, optional features, analyze org, write PPM-IMG
-    2. compile_view()/extract_critical_tile() -> use PPM-IMG reader for virtual addressing
+    1. prepare() -> normalize, optional features, analyze org, write VPM-IMG
+    2. compile_view()/extract_critical_tile() -> use VPM-IMG reader for virtual addressing
     """
 
     def __init__(self, metric_names: List[str]) -> None:
@@ -65,10 +65,10 @@ class ZeroModel:
                 f"Must be one of {list(precision_dtype_map.keys())}."
             )
 
-        # PPM-IMG state (canonical memory image)
+        # VPM-IMG state (canonical memory image)
         self.canonical_matrix: Optional[np.ndarray] = None  # docs x metrics (float)
         self.ppm_image_path: Optional[str] = None
-        self._ppm_reader: Optional[PPMImageReader] = None
+        self._ppm_reader: Optional[VPMImageReader] = None
 
         # Legacy/compat state (virtual view matrix path)
         self.sorted_matrix: Optional[np.ndarray] = None
@@ -90,11 +90,11 @@ class ZeroModel:
             self.default_output_precision,
         )
 
-    def _get_ppm_reader(self) -> PPMImageReader:
+    def _get_ppm_reader(self) -> VPMImageReader:
         if self.ppm_image_path is None:
             raise ValueError(PPM_IMAGE_NOT_READY_ERR)
         if self._ppm_reader is None:
-            self._ppm_reader = PPMImageReader(self.ppm_image_path)
+            self._ppm_reader = VPMImageReader(self.ppm_image_path)
         return self._ppm_reader
 
     @timeit
@@ -159,17 +159,17 @@ class ZeroModel:
         if self.doc_order is not None and self.metric_order is not None:
             self.sorted_matrix = self.canonical_matrix[self.doc_order][:, self.metric_order]
 
-        # 4) Write canonical memory to PPM-IMG (metrics x docs)
+        # 4) Write canonical memory to VPM-IMG (metrics x docs)
         try:
             if ppm_output_path is None:
                 ppm_output_path = os.path.join(os.getcwd(), "zeromodel_canonical.ppm.png")
             mx_d = self.canonical_matrix.T  # (metrics x docs)
-            # Ensure width meets PPM-IMG header minimum (META_MIN_COLS=12)
+            # Ensure width meets VPM-IMG header minimum (META_MIN_COLS=12)
             MIN_PPM_WIDTH = 12
             if mx_d.shape[1] < MIN_PPM_WIDTH:
                 pad = MIN_PPM_WIDTH - mx_d.shape[1]
                 mx_d = np.pad(mx_d, ((0, 0), (0, pad)), mode="constant", constant_values=0.0)
-            writer = PPMImageWriter(
+            writer = VPMImageWriter(
                 score_matrix=mx_d,
                 metric_names=self.effective_metric_names,
                 store_minmax=True,
@@ -178,14 +178,14 @@ class ZeroModel:
             writer.write(ppm_output_path)
             self.ppm_image_path = ppm_output_path
             self._ppm_reader = None
-            logger.info("PPM-IMG written to %s", ppm_output_path)
+            logger.info("VPM-IMG written to %s", ppm_output_path)
         except Exception as e:  # noqa: broad-except
-            logger.error("PPM-IMG write failed: %s", e)
-            raise RuntimeError(f"Error writing PPM-IMG: {e}") from e
+            logger.error("VPM-IMG write failed: %s", e)
+            raise RuntimeError(f"Error writing VPM-IMG: {e}") from e
 
-        logger.info("ZeroModel preparation complete. PPM-IMG is ready.")
+        logger.info("ZeroModel preparation complete. VPM-IMG is ready.")
 
-    # ---- PPM-IMG based operations ----
+    # ---- VPM-IMG based operations ----
     def compile_view(
         self,
         *,
@@ -240,7 +240,7 @@ class ZeroModel:
         return self._encoder.encode(self.sorted_matrix, output_precision)
 
     def get_critical_tile(self, tile_size: int = 3, precision: Optional[str] = None) -> bytes:
-        logger.warning("get_critical_tile is legacy. Prefer extract_critical_tile with PPM-IMG.")
+        logger.warning("get_critical_tile is legacy. Prefer extract_critical_tile with VPM-IMG.")
         if self.sorted_matrix is None:
             raise ValueError(DATA_NOT_PROCESSED_ERR)
         return self._encoder.get_critical_tile(self.sorted_matrix, tile_size=tile_size, precision=precision)

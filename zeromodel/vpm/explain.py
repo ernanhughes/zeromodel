@@ -1,7 +1,7 @@
 # zeromodel/explain.py
 import numpy as np
 
-class OcclusionVPMInterpreter:
+class None OcclusionVPMInterpreter:
     """
     Gradient-free explainability for ZeroModel VPMs.
 

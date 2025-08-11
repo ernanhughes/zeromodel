@@ -1,11 +1,7 @@
 import numpy as np
-from typing import List, Tuple, Callable, Optional
-from .config import get_config
-
-try:
-    from scipy.optimize import minimize
-except ImportError:
-    minimize = None
+from typing import List, Tuple
+from ..config import get_config
+from scipy.optimize import minimize
 
 class SpatialOptimizer:
     """
@@ -309,7 +305,7 @@ class SpatialOptimizer:
         
         # 4. Optionally update global configuration
         if update_config and self.canonical_layout is not None:
-            from .config import set_config
+            from ..config import set_config
             set_config(self.canonical_layout.tolist(), "spatial_calculus", "canonical_layout")
             if self.metric_weights is not None:
                 set_config(self.metric_weights.tolist(), "spatial_calculus", "metric_weights")

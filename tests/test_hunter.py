@@ -1,6 +1,6 @@
 # tests/test_hunter.py
 from zeromodel import HierarchicalVPM, ZeroModel
-from zeromodel.hunter import VPMHunter
+from zeromodel.vpm.hunter import VPMHunter
 import numpy as np
 
 def test_vpm_hunter_hierarchical_basic():

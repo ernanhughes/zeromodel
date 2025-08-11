@@ -1,7 +1,8 @@
+# zeromodel/vpm/image.py
 """
-PPM-IMG v1 — Image-only Pixel-Parametric Memory Implementation
+VPM-IMG v1 — Image-only Pixel-Parametric Memory Implementation
 
-This module implements the PPM-IMG v1 specification for storing multi-metric
+This module implements the VPM-IMG v1 specification for storing multi-metric
 score matrices in standard PNG files with built-in metadata and virtual reordering
 capabilities. The format enables efficient hierarchical aggregation and fast
 access to critical regions without modifying the original image.
@@ -19,7 +20,7 @@ import png
 from typing import Optional, Dict, Tuple, List
 
 # --- Constants ---
-MAGIC = [ord('P'), ord('P'), ord('M'), ord('1')]  # ASCII for 'PPM1'
+MAGIC = [ord('V'), ord('P'), ord('M'), ord('1')]  # ASCII for 'VPM1'
 VERSION = 1                                      # Format version
 META_MIN_COLS = 12                               # Minimum columns for metadata
 DEFAULT_H_META_BASE = 2                          # Base metadata rows (row0 + row1)
@@ -42,14 +43,14 @@ def _round_u16(a: np.ndarray) -> np.ndarray:
 def _check_header_width(D: int):
     """Validate image width meets metadata requirements"""
     if D < META_MIN_COLS:
-        raise ValueError(f"PPM-IMG requires width D≥{META_MIN_COLS} for header; got D={D}")
+        raise ValueError(f"VPM-IMG requires width D≥{META_MIN_COLS} for header; got D={D}")
 
 
 # --- Writer Class ---
 
-class PPMImageWriter:
+class VPMImageWriter:
     """
-    Writes multi-metric score matrices to PPM-IMG v1 format PNG files.
+    Writes multi-metric score matrices to VPM-IMG v1 format PNG files.
     
     Supports hierarchical storage with configurable aggregation methods:
     - Base level (AGG_RAW): Original document-level scores
@@ -71,6 +72,7 @@ class PPMImageWriter:
         self,
         score_matrix: np.ndarray,           # shape (M, D)
         metric_names: Optional[list[str]] = None,
+        metadata_bytes: Optional[bytes] = None,
         store_minmax: bool = False,
         compression: int = 6,
         # Hierarchy parameters:
@@ -84,6 +86,7 @@ class PPMImageWriter:
         self.store_minmax = store_minmax
         self.compression = int(compression)
         self.M, self.D = self.score_matrix.shape
+        self.metadata_bytes = metadata_bytes or b""
         
         # Validate dimensions
         if self.M <= 0 or self.D <= 0:
@@ -96,6 +99,71 @@ class PPMImageWriter:
         self.level = int(level)
         self.doc_block_size = int(doc_block_size)
         self.agg_id = int(agg_id)
+
+    def _meta_capacity_per_row(self, start_col: int) -> int:
+        # 4 bytes/column using 16-bit G and B channels (2 bytes each)
+        usable_cols = max(0, self.D - start_col)
+        return usable_cols * 4
+
+    def _extra_meta_rows_needed(self, payload_len: int, start_col: int = 7) -> int:
+        if payload_len <= 0:
+            return 0
+        first_row_cap = self._meta_capacity_per_row(start_col)
+        if payload_len <= first_row_cap:
+            return 0
+        # spill rows use full width starting at col 0
+        remaining = payload_len - first_row_cap
+        row_cap = self._meta_capacity_per_row(0)
+        return int(np.ceil(remaining / row_cap))
+
+    def _embed_metadata_into_meta_rows(self, meta: np.ndarray) -> None:
+        if not self.metadata_bytes:
+            return
+        payload = self.metadata_bytes
+        L = len(payload)
+
+        # Row 1 markers & length (R channel)
+        meta[1, 1, 0] = ord('M')
+        meta[1, 2, 0] = ord('E')
+        meta[1, 3, 0] = ord('T')
+        meta[1, 4, 0] = ord('A')
+        meta[1, 5, 0] = (L >> 16) & 0xFFFF
+        meta[1, 6, 0] = L & 0xFFFF
+
+        # pack bytes into 16-bit words: word = (hi<<8)|lo
+        def pack2(bi0, bi1):
+            hi = payload[bi0] if bi0 < L else 0
+            lo = payload[bi1] if bi1 < L else 0
+            return (hi << 8) | lo
+
+        # write Row 1 from col=7 using G (ch=1) and B (ch=2)
+        row = 1
+        col = 7
+        idx = 0
+        H = meta.shape[0]
+
+        def write_pair(r, c, w_g, w_b):
+            meta[r, c, 1] = w_g  # G channel
+            meta[r, c, 2] = w_b  # B channel
+
+        # first row (start at col 7)
+        while idx < L and col < self.D:
+            w_g = pack2(idx, idx+1); idx += 2
+            w_b = pack2(idx, idx+1); idx += 2
+            write_pair(row, col, w_g, w_b)
+            col += 1
+
+        # spill into extra meta rows, if any (start col 0)
+        r = 2
+        while idx < L and r < H:
+            c = 0
+            while idx < L and c < self.D:
+                w_g = pack2(idx, idx+1); idx += 2
+                w_b = pack2(idx, idx+1); idx += 2
+                write_pair(r, c, w_g, w_b)
+                c += 1
+            r += 1
+
 
     def _normalize_scores(self) -> Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]:
         """
@@ -195,7 +263,7 @@ class PPMImageWriter:
 
     def write(self, file_path: str) -> None:
         """
-        Write score matrix to PPM-IMG v1 PNG file.
+        Write score matrix to VPM-IMG v1 PNG file.
         
         Process:
         1. Normalize scores to [0,1]
@@ -213,15 +281,21 @@ class PPMImageWriter:
         percentile_chan = self._compute_percentiles(normalized)
         aux_chan = np.zeros_like(value_chan, dtype=np.uint16)  # B channel
 
-        # Step 2: Calculate metadata rows
+        # before assembling meta, compute extra rows if needed
         minmax_rows = 0
         if self.store_minmax:
             num_words = self.M * 2
-            minmax_rows = (num_words + self.D - 1) // self.D  # ceil division
-        h_meta = DEFAULT_H_META_BASE + minmax_rows
+            minmax_rows = (num_words + self.D - 1) // self.D
 
-        # Step 3: Assemble full image
+        # compute extra rows for metadata payload
+        extra_meta_rows = self._extra_meta_rows_needed(len(self.metadata_bytes), start_col=7)
+
+        h_meta = DEFAULT_H_META_BASE + minmax_rows + extra_meta_rows
         meta = self._assemble_metadata(h_meta, mins, maxs)
+
+        # finally embed metadata bytes into 'meta'
+        self._embed_metadata_into_meta_rows(meta)
+
         data = np.stack([value_chan, percentile_chan, aux_chan], axis=-1)
         full = np.vstack([meta, data])  # (h_meta + M, D, 3)
 
@@ -243,9 +317,9 @@ class PPMImageWriter:
 
 # --- Reader Class ---
 
-class PPMImageReader:
+class VPMImageReader:
     """
-    Reads and interprets PPM-IMG v1 files.
+    Reads and interprets VPM-IMG v1 files.
     
     Provides:
     - Metadata extraction
@@ -302,7 +376,7 @@ class PPMImageReader:
         
         # Magic number validation
         magic = bytes([row0[0], row0[1], row0[2], row0[3]]).decode("ascii")
-        if magic != "PPM1":
+        if magic != "VPM1":
             raise ValueError(f"Bad magic: {magic}")
 
         # Core metadata
@@ -517,11 +591,57 @@ class PPMImageReader:
         # Extract and return viewport
         return self.image[row_start:row_end, cols, :]
 
+    def read_metadata_bytes(self) -> bytes:
+        # Check marker
+        if self.image[1,1,0] != ord('M') or self.image[1,2,0] != ord('E') \
+        or self.image[1,3,0] != ord('T') or self.image[1,4,0] != ord('A'):
+            return b""
+
+        L = ((int(self.image[1,5,0]) << 16) | int(self.image[1,6,0]))
+        out = bytearray(L)
+
+        # unpack helper (reverse of pack2)
+        def unpack(word: int) -> tuple[int,int]:
+            hi = (word >> 8) & 0xFF
+            lo = word & 0xFF
+            return hi, lo
+
+        # Row 1 from col 7
+        row = 1
+        col = 7
+        idx = 0
+        H, W, _ = self.image.shape
+
+        while idx < L and col < W:
+            w_g = int(self.image[row, col, 1])
+            w_b = int(self.image[row, col, 2])
+            for b in unpack(w_g) + unpack(w_b):
+                if idx < L:
+                    out[idx] = b
+                    idx += 1
+            col += 1
+
+        # spill rows from row=2, col=0
+        r = 2
+        while idx < L and r < self.h_meta:
+            c = 0
+            while idx < L and c < W:
+                w_g = int(self.image[r, c, 1])
+                w_b = int(self.image[r, c, 2])
+                for b in unpack(w_g) + unpack(w_b):
+                    if idx < L:
+                        out[idx] = b
+                        idx += 1
+                c += 1
+            r += 1
+
+        return bytes(out)
+
 
 # --- Hierarchy Builder ---
 
 def build_parent_level_png(
-    child_reader: PPMImageReader,
+    child_reader: VPMImageReader,
     out_path: str,
     K: int = 8,
     agg_id: int = AGG_MAX,
@@ -598,7 +718,7 @@ def build_parent_level_png(
 
     # Create and configure parent writer
     store_minmax = (child_reader.norm_flag == 1)
-    writer = PPMImageWriter(
+    writer = VPMImageWriter(
         score_matrix=(R_parent / 65535.0),
         store_minmax=False,  # Parents don't store min/max
         compression=compression,

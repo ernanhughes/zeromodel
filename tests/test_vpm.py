@@ -7,8 +7,8 @@ import numpy as np
 
 # CHANGE THIS to your actual module path/name:
 from zeromodel import (
-    PPMImageWriter,
-    PPMImageReader,
+    VPMImageWriter,
+    VPMImageReader,
     build_parent_level_png,
     AGG_MAX,
 )
@@ -26,7 +26,7 @@ def test_roundtrip_base_image(tmp_path):
     scores = _mk_scores(M, D)
 
     png_path = tmp_path / "ppm_base.png"
-    w = PPMImageWriter(
+    w = VPMImageWriter(
         score_matrix=scores,
         store_minmax=True,       # exercise in-image min/max headers
         compression=6,
@@ -36,7 +36,7 @@ def test_roundtrip_base_image(tmp_path):
     w.write(str(png_path))
 
     # Read it back
-    r = PPMImageReader(str(png_path))
+    r = VPMImageReader(str(png_path))
 
     # Header checks
     assert r.version == 1
@@ -65,8 +65,8 @@ def test_virtual_order_single_metric(tmp_path):
     M, D = 10, 512
     scores = _mk_scores(M, D, seed=13)
     png_path = tmp_path / "ppm_order_single.png"
-    PPMImageWriter(scores, store_minmax=False, compression=3, level=2).write(str(png_path))
-    r = PPMImageReader(str(png_path))
+    VPMImageWriter(scores, store_minmax=False, compression=3, level=2).write(str(png_path))
+    r = VPMImageReader(str(png_path))
 
     m = 3  # pick a metric
     # True order (descending) from decoded values
@@ -83,8 +83,8 @@ def test_virtual_order_composite_and_view(tmp_path):
     M, D = 16, 512
     scores = _mk_scores(M, D, seed=23)
     png_path = tmp_path / "ppm_order_composite.png"
-    PPMImageWriter(scores, store_minmax=False, compression=6, level=3).write(str(png_path))
-    r = PPMImageReader(str(png_path))
+    VPMImageWriter(scores, store_minmax=False, compression=6, level=3).write(str(png_path))
+    r = VPMImageReader(str(png_path))
 
     # Composite weights on a few metrics
     weights = {1: 0.6, 7: 0.3, 12: 0.1}
@@ -108,13 +108,13 @@ def test_build_parent_level_and_properties(tmp_path):
     M, D = 8, 512
     scores = _mk_scores(M, D, seed=99)
     child_path = tmp_path / "ppm_child.png"
-    PPMImageWriter(scores, store_minmax=False, compression=6, level=4).write(str(child_path))
-    child = PPMImageReader(str(child_path))
+    VPMImageWriter(scores, store_minmax=False, compression=6, level=4).write(str(child_path))
+    child = VPMImageReader(str(child_path))
 
     parent_path = tmp_path / "ppm_parent.png"
     K = 8  # aggregate 8 child columns per parent column
     build_parent_level_png(child, str(parent_path), K=K, agg_id=AGG_MAX, compression=6)
-    parent = PPMImageReader(str(parent_path))
+    parent = VPMImageReader(str(parent_path))
 
     # Dimensions
     P = math.ceil(D / K)

@@ -6,7 +6,7 @@ from typing import List, Tuple
 from zeromodel.core import ZeroModel
 from zeromodel.memory import ZeroMemory
 
-from zeromodel.spatial_optimizer import SpatialOptimizer
+from zeromodel.vpm.spatial_optimizer import SpatialOptimizer
 
 @pytest.mark.skip("Needs work")
 class TestSpatialOptimizer:

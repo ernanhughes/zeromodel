@@ -1,5 +1,5 @@
 import numpy as np
-from zeromodel.stdm import learn_w, gamma_operator, top_left_mass, curvature_over_time
+from zeromodel.vpm.stdm import learn_w, gamma_operator, top_left_mass, curvature_over_time
 
 def _generate_series(T=6, N=800, M=32, sparsity=6, noise=0.5, drift=0.08, seed=7):
     rng = np.random.default_rng(seed)
@@ -45,7 +45,7 @@ def test_temporal_vpm_calculus_improves_tl_and_precision():
 
 def test_curvature_runs_without_error():
     series, _ = _generate_series()
-    from zeromodel.stdm import gamma_operator
+    from zeromodel.vpm.stdm import gamma_operator
     w_eq = np.ones(series[0].shape[1])/np.sqrt(series[0].shape[1])
     Ys, _, _ = gamma_operator(series, u_fn=lambda t,Xt: w_eq, w=w_eq, Kc=8)
     curv = curvature_over_time(Ys)

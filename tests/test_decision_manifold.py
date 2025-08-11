@@ -166,7 +166,6 @@ def visualize_decision_manifold():
     
     plt.tight_layout()
     plt.savefig('decision_manifold_visualization.png', dpi=300, bbox_inches='tight')
-    plt.show()
 
 def test_decision_manifold():
     """Comprehensive test of the DecisionManifold class."""

@@ -485,6 +485,6 @@ class HierarchicalVPM:
         Returns:
             Tuple of ((level, doc_index), confidence, audit_trail).
         """
-        from zeromodel.hunter import VPMHunter # Import here to avoid circular imports if needed
+        from zeromodel.vpm.hunter import VPMHunter # Import here to avoid circular imports if needed
         hunter = VPMHunter(self, tau=tau, max_steps=max_steps)
         return hunter.hunt(initial_level=initial_level)

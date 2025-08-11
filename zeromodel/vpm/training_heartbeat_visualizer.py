@@ -1,5 +1,4 @@
 # zeromodel/training_heartbeat_visualizer.py
-import io
 import logging
 from typing import Optional, Dict, Any, Tuple, List
 

@@ -9,9 +9,9 @@ from .edge import EdgeProtocol
 from .hierarchical import HierarchicalVPM
 from .hierarchical_edge import HierarchicalEdgeProtocol
 from .normalizer import DynamicNormalizer
-from .transform import get_critical_tile, transform_vpm
-from .ppmi import (    PPMImageWriter,
-    PPMImageReader,
+from .vpm.transform import get_critical_tile, transform_vpm
+from .vpm.image import (    VPMImageWriter,
+    VPMImageReader,
     build_parent_level_png,
     AGG_MAX,
 )
@@ -26,8 +26,8 @@ __all__ = [
     "get_critical_tile",
     "EdgeProtocol",
     "HierarchicalEdgeProtocol",
-    "PPMImageWriter",
-    "PPMImageReader",
+    "VPMImageWriter",
+    "VPMImageReader",
     "build_parent_level_png",
     "AGG_MAX",
 ]

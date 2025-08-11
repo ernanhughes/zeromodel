@@ -51,6 +51,7 @@ class GIFLogger:
                 imageio.imwrite(path, self.frames[idx])
 
 @pytest.mark.parametrize("max_epochs", [30]) # More epochs to see clear progress
+@pytest.mark.filterwarnings("ignore:.*hasn't converged yet.*:sklearn.exceptions.ConvergenceWarning")
 def test_gif_logging_with_zeromemory_improved(tmp_path, max_epochs):
     """Test GIF logging with ZeroMemory using a model that shows clear epoch-by-epoch progress."""
     

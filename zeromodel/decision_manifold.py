@@ -1,8 +1,7 @@
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
 from scipy.sparse.csgraph import dijkstra
 from scipy.sparse import csr_matrix
-from typing import Tuple, Dict, List, Callable, Optional
+from typing import Tuple, Dict, List, Callable
 
 class DecisionManifold:
     """

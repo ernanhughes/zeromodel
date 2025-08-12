@@ -150,7 +150,8 @@ def test_titanic_autotask():
         zm_te.prepare(te, build_sql(feat_names, weights))
     else:
         zm_te.prepare(te, build_json_task(feat_names, weights))
-    idx, rel = zm_te.get_decision()
+    # Use the first weighted metric as decision metric
+    idx, rel = zm_te.get_decision_by_metric(0)
     # Just sanity: the top test doc should have high male/pclass3/age
     test_top = te[idx]
     assert test_top[sex_cols].mean() >= global_mean_male * 0.8  # soft checks

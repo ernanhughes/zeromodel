@@ -111,13 +111,13 @@ class VPMHunter:
                 # Get ZeroModel instance for decision making
                 zm = self.vpm_source.get_level(level)["zeromodel"]
                 # Make decision using level-specific model
-                doc_idx, confidence = zm.get_decision()
+                doc_idx, confidence = zm.get_decision_by_metric(0)
             else:
                 # Base ZeroModel: Get critical tile from current AOI
                 size = self.aoi_size_sequence[min(steps, len(self.aoi_size_sequence)-1)]
                 tile = self.vpm_source.extract_critical_tile(metric_idx=0, size=size)
                 # Make decision using main model
-                doc_idx, confidence = self.vpm_source.get_decision()
+                doc_idx, confidence = self.vpm_source.get_decision_by_metric(0)
             
             # Update final state
             final_doc_idx = doc_idx

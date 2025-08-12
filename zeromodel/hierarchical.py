@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from zeromodel.config import get_config
+from zeromodel.vpm.encoder import VPMEncoder
 
 # Import the core ZeroModel
 # Make sure the path is correct based on your package structure
@@ -260,7 +261,10 @@ class HierarchicalVPM:
         # The zeromodel passed in should already be prepared.
         # We can now safely call encode(), get_metadata() etc.
         try:
-            vpm_image = zeromodel.encode() # Uses zeromodel.sorted_matrix
+            # Use VPMEncoder on the prepared ZeroModel's sorted_matrix (non-deprecated)
+            vpm_image = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(
+                zeromodel.sorted_matrix
+            )
             logger.debug(f"Encoded base level VPM image of shape {vpm_image.shape}.")
         except Exception as e:
             logger.error(f"Failed to encode VPM for base level: {e}")
@@ -281,7 +285,7 @@ class HierarchicalVPM:
                 # "wavelet_level": 0 
             }
         }
-        logger.debug(f"Base level data structure created.")
+        logger.debug("Base level data structure created.")
         return base_level_data
 
     def _create_level(self,
@@ -323,7 +327,9 @@ class HierarchicalVPM:
         # --- End of change ---
 
         try:
-            level_vpm = level_zeromodel.encode() # Uses level_zeromodel.sorted_matrix
+            level_vpm = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(
+                level_zeromodel.sorted_matrix
+            )
             logger.debug(f"Encoded level {level_index} VPM image of shape {level_vpm.shape}.")
         except Exception as e:
             logger.error(f"Failed to encode VPM for level {level_index}: {e}")
@@ -391,21 +397,20 @@ class HierarchicalVPM:
             ValueError: If level_index is invalid or tile parameters are bad.
         """
         logger.debug(f"Getting tile from level {level_index} (x={x}, y={y}, w={width}, h={height}).")
-        # Note: x, y are currently ignored by ZeroModel.get_critical_tile, which always gets top-left.
+        # Note: x, y are currently ignored by VPMEncoder.get_critical_tile, which always gets top-left.
         # Future enhancement could involve slicing the VPM image based on x,y.
-        
+
         level_data = self.get_level(level_index)
         zeromodel_instance: ZeroModel = level_data["zeromodel"]
-        
-        # Determine tile size - use the larger of width/height, or a specific logic
-        # The original code used max(width, height). Let's stick to that for now,
-        # though it might be better to get a width x height tile.
-        # get_critical_tile currently only takes one size parameter (square tile).
-        tile_size = max(width, height) 
+
+        # Determine tile size - use the larger of width/height for square critical tile
+        tile_size = max(width, height)
         logger.debug(f"Determined tile size for request: {tile_size}")
 
-        # Get critical tile (currently always top-left)
-        tile_bytes = zeromodel_instance.get_critical_tile(tile_size=tile_size)
+        # Get critical tile bytes using VPMEncoder on the level's sorted_matrix (top-left)
+        tile_bytes = VPMEncoder(get_config("core").get("default_output_precision", "float32")).get_critical_tile(
+            zeromodel_instance.sorted_matrix, tile_size=tile_size
+        )
         logger.info(f"Tile retrieved from level {level_index}. Size: {len(tile_bytes)} bytes.")
         return tile_bytes
 
@@ -429,7 +434,8 @@ class HierarchicalVPM:
 
         level_data = self.get_level(level_index)
         zeromodel_instance: ZeroModel = level_data["zeromodel"]
-        doc_idx, relevance = zeromodel_instance.get_decision()
+        # Use metric 0 by default for decision making in hierarchical context
+        doc_idx, relevance = zeromodel_instance.get_decision_by_metric(0)
         logger.info(f"Decision from level {level_index}: Doc {doc_idx}, Relevance {relevance:.4f}.")
         return (level_index, doc_idx, relevance)
 

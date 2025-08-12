@@ -1,6 +1,7 @@
 import numpy as np
 from zeromodel import ZeroModel, HierarchicalVPM
 from zeromodel.config import get_config
+from zeromodel.vpm.encoder import VPMEncoder
 
 def test_normalization_quantization():
     """Test normalization and quantization behavior with different precision levels"""
@@ -11,10 +12,10 @@ def test_normalization_quantization():
     # Explicitly request uint8 output to match the original test's expectation
     get_config("core").update({"default_output_precision": "uint8"})
     zm_8bit = ZeroModel(metric_names) # Set default or...
-    zm_8bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
+    vpm_8bit = zm_8bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
 
     # Explicitly request uint8 output
-    vpm_8bit = zm_8bit.encode(output_precision='uint8') # ...or request it here
+    vpm_8bit = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_8bit.sorted_matrix, output_precision='uint8') # ...or request it here
     # --- FIX: The assertion now matches the requested output type ---
     assert vpm_8bit.dtype == np.uint8 
     assert np.all(vpm_8bit >= 0) and np.all(vpm_8bit <= 255)
@@ -28,7 +29,7 @@ def test_normalization_quantization():
     zm_4bit = ZeroModel(metric_names)
     zm_4bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
     # Explicitly request uint8 output
-    vpm_4bit = zm_4bit.encode(output_precision='uint8')
+    vpm_4bit = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_4bit.sorted_matrix, output_precision='uint8')
     # --- FIX: The assertion now matches the requested output type ---
     assert vpm_4bit.dtype == np.uint8
     assert np.all(vpm_4bit >= 0) and np.all(vpm_4bit <= 255)
@@ -43,7 +44,7 @@ def test_normalization_quantization():
     zm_16bit = ZeroModel(metric_names)
     zm_16bit.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
     # Explicitly request uint16 output
-    vpm_16bit = zm_16bit.encode(output_precision='uint16')
+    vpm_16bit = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_16bit.sorted_matrix, output_precision='uint16')
     # --- FIX: The assertion now matches the requested output type ---
     assert vpm_16bit.dtype == np.uint16
     assert np.all(vpm_16bit >= 0) and np.all(vpm_16bit <= 65535)
@@ -58,7 +59,7 @@ def test_normalization_quantization():
     # The internal sorted_matrix should handle negatives correctly (after normalization)
     # normalized = zm_neg.sorted_matrix # This is the normalized float matrix
     # Encode to float32 if needed for output assertion
-    vpm_neg_float = zm_neg.encode(output_precision='float32')
+    vpm_neg_float = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_neg.sorted_matrix, output_precision='float32')
     assert vpm_neg_float.dtype == np.float32
     # Assertions on normalized data or float output can go here
     # ...
@@ -76,14 +77,14 @@ def test_normalization_quantization_updated_defaults():
     zm_default = ZeroModel(metric_names) # default_output_precision defaults to 'float32'
     zm_default.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
 
-    vpm_default = zm_default.encode() # Uses default_output_precision='float32'
+    vpm_default = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_default.sorted_matrix) # Uses default_output_precision='float32'
     # --- UPDATE: Expect float32 as the default output type ---
     assert vpm_default.dtype == np.float32 # <--- Changed expectation ---
     assert np.all(vpm_default >= 0.0) and np.all(vpm_default <= 1.0) # Float range
     # --- END UPDATE ---
 
     # Request uint8 explicitly if needed for specific checks
-    vpm_as_uint8 = zm_default.encode(output_precision='uint8')
+    vpm_as_uint8 = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_default.sorted_matrix, output_precision='uint8')
     assert vpm_as_uint8.dtype == np.uint8
     assert np.all(vpm_as_uint8 >= 0) and np.all(vpm_as_uint8 <= 255)
 
@@ -295,7 +296,7 @@ def test_tile_processing():
     zeromodel.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY metric1 DESC")
 
     # --- Test default critical tile (3x3 request, but constrained by data) ---
-    tile = zeromodel.get_critical_tile()
+    tile = VPMEncoder(get_config("core").get("default_output_precision", "float32")).get_critical_tile(zeromodel.sorted_matrix, precision='float32')
     print(f"DEBUG: Default tile bytes: {list(tile)}")
     print(f"DEBUG: Default tile length: {len(tile)}")
 
@@ -354,7 +355,7 @@ def test_tile_processing():
     # --- END PIXEL DATA VERIFICATION ---
 
     # --- Test with a smaller tile size ---
-    small_tile = zeromodel.get_critical_tile(tile_size=2)
+    small_tile = VPMEncoder(get_config("core").get("default_output_precision", "float32")).get_critical_tile(zeromodel.sorted_matrix, tile_size=2, precision='float32')
     print(f"DEBUG: Small tile (size=2) bytes: {list(small_tile)}")
     print(f"DEBUG: Small tile (size=2) length: {len(small_tile)}")
     # Recalculate expected size for tile_size=2 request with float32 data
@@ -372,7 +373,7 @@ def test_tile_processing():
     # --- END Smaller tile size test ---
 
     # --- Test with tile size larger than data ---
-    large_tile = zeromodel.get_critical_tile(tile_size=10)
+    large_tile = VPMEncoder(get_config("core").get("default_output_precision", "float32")).get_critical_tile(zeromodel.sorted_matrix, tile_size=10, precision='float32')
     print(f"DEBUG: Large tile (size=10) bytes: {list(large_tile)}")
     print(f"DEBUG: Large tile (size=10) length: {len(large_tile)}")
     # Recalculate expected size for tile_size=10 request with float32 data

@@ -12,6 +12,7 @@ Key Concepts:
 """
 
 import numpy as np
+from zeromodel.vpm.encoder import VPMEncoder
 
 
 class OcclusionVPMInterpreter:
@@ -247,8 +248,10 @@ class OcclusionVPMInterpreter:
         if getattr(zeromodel, "sorted_matrix", None) is None:
             raise ValueError("ZeroModel not prepared (sorted_matrix missing).")
 
-        # Get and normalize VPM image
-        vpm = zeromodel.encode()  # H x W x 3
+        # Get and normalize VPM image without using deprecated ZeroModel.encode()
+        if getattr(zeromodel, "sorted_matrix", None) is None:
+            raise ValueError("ZeroModel not prepared (sorted_matrix missing).")
+        vpm = VPMEncoder('float32').encode(zeromodel.sorted_matrix)
         vpm01 = self._ensure_float01(vpm)
         H, W, _ = vpm01.shape
 

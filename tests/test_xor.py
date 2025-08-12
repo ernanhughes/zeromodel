@@ -6,6 +6,7 @@ import time
 # Import the updated ZeroModel
 from zeromodel.config import get_config
 from zeromodel.core import ZeroModel # Adjust import path if your structure is different
+from zeromodel.vpm.encoder import VPMEncoder
 # If you have a hierarchical module and use it elsewhere in the file
 # from zeromodel.hierarchical import HierarchicalVPM
 
@@ -100,8 +101,8 @@ def test_xor_validation():
             nonlinearity_hint='xor' # <--- Add non-linear features
         )
         # --- END KEY CHANGE 2 ---
-
-        _, rel = zm_point.get_decision()
+        m_idx = metric_names.index(sorting_metric)
+        _, rel = zm_point.get_decision_by_metric(m_idx)
         # --- Using 0.5 threshold ---
         y_pred_zeromi.append(1 if rel > 0.5 else 0)
         # --- END Threshold ---
@@ -136,8 +137,9 @@ def test_xor_validation():
     # but use `sorting_metric` and `nonlinearity_hint='xor'` in `zm_infer.prepare` ) ...
     
     start = time.time()
+    m_idx = metric_names.index(sorting_metric)
     for _ in range(1000):
-        _ = zm_infer.get_decision()
+        _ = zm_infer.get_decision_by_metric(m_idx)
     zm_time = (time.time() - start) / 1000
 
     start = time.time()
@@ -149,7 +151,7 @@ def test_xor_validation():
     print(f"🐢 SVM Decision Time:       {svm_time:.6f}s")
     # assert zm_time < svm_time # At least faster (relaxing this a bit from 0.1)
 
-    zm_size = zm_infer.encode().nbytes
+    zm_size = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(zm_infer.sorted_matrix).nbytes
     svm_size = sys.getsizeof(svm) + sum(sys.getsizeof(getattr(svm, attr, None)) for attr in dir(svm) if not attr.startswith('_') and hasattr(svm, attr))
     print(f"🧠 ZeroModel Memory: {zm_size} bytes")
     print(f"🧠 SVM Memory:       {svm_size} bytes")

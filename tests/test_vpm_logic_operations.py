@@ -21,6 +21,7 @@ matplotlib.use('Agg')  # Use non-GUI backend to avoid TclError
 import matplotlib.pyplot as plt
 import os
 from zeromodel.core import ZeroModel
+from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.logic import (
     vpm_and, vpm_or, vpm_not, vpm_add, vpm_xor,
     vpm_nand, vpm_nor, query_top_left, vpm_subtract
@@ -32,7 +33,7 @@ OUTPUT_DIR = "images"
 os.makedirs(OUTPUT_DIR, exist_ok=True) # Create directory if it doesn't exist
 
 # --- Helper Function for Visualization ---
-def save_vpm_image(vpm: np.ndarray, title: str, filename: str):
+def save_vpm_image(vpm: np.ndarray, title: str, filename: str): 
     """
     Saves a VPM as a grayscale image for inspection.
     Assumes the VPM is 2D or 3D with a channel dimension.
@@ -95,11 +96,11 @@ def test_vpm_and_operation():
     # Generate VPMs
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     # Apply logic
     vpm_result = vpm_and(vpm_a, vpm_b)
@@ -133,11 +134,11 @@ def test_vpm_or_operation():
     get_config("core").update({"default_output_precision": "float32"})
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     vpm_result = vpm_or(vpm_a, vpm_b)
     
@@ -165,7 +166,7 @@ def test_vpm_not_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     vpm_result = vpm_not(vpm_a)
     
@@ -201,11 +202,11 @@ def test_vpm_subtract_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode() # This is now uint8
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode() # This is now uint8
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     # --- KEY CHANGE: Apply logic to encoded (uint8) VPMs ---
     vpm_result = vpm_subtract(vpm_a, vpm_b) # This should now work with uint8
@@ -235,42 +236,7 @@ def test_vpm_subtract_operation():
 
 # --- Also update the save_vpm_image helper to handle uint8 correctly ---
 # In the save_vpm_image function:
-def save_vpm_image(vpm: np.ndarray, title: str, filename: str):
-    """
-    Saves a VPM as a grayscale image for inspection.
-    """
-    # Handle potential 3D VPM (e.g., HxWx3)
-    if vpm.ndim == 3:
-        if vpm.shape[2] == 3:
-            # If it's an RGB VPM (uint8), matplotlib can handle it directly with cmap='gray' on one channel
-            # or convert to grayscale. Let's take the first channel for simplicity in grayscale view.
-            # Or, to see color, just plot it.
-            # For grayscale inspection, average might be better, but let's keep it simple.
-            vpm_to_plot = vpm[:, :, 0] # Take Red channel
-        else:
-            vpm_to_plot = vpm[:, :, 0]
-    else:
-        vpm_to_plot = vpm
-
-    plt.figure(figsize=(6, 6))
-    # --- KEY CHANGE: Handle uint8 vmin/vmax ---
-    if vpm.dtype == np.uint8:
-        # For uint8 VPMs, the range is 0-255
-        plt.imshow(vpm_to_plot, cmap='gray', vmin=0, vmax=255)
-    elif np.issubdtype(vpm.dtype, np.integer): # e.g., uint16
-        dtype_info = np.iinfo(vpm.dtype)
-        plt.imshow(vpm_to_plot, cmap='gray', vmin=dtype_info.min, vmax=dtype_info.max)
-    else: # float
-        plt.imshow(vpm_to_plot, cmap='gray', vmin=0.0, vmax=1.0)
-    # --- END KEY CHANGE ---
-    plt.title(title)
-    plt.colorbar(label='Score')
-    plt.xlabel('Metrics (sorted)')
-    plt.ylabel('Documents (sorted)')
-    filepath = os.path.join(OUTPUT_DIR, filename)
-    plt.savefig(filepath)
-    plt.close()
-    print(f"Saved VPM image: {filepath}")
+# (Removed duplicate save_vpm_image definition)
 
 # tests/test_vpm_logic_operations.py
 
@@ -288,11 +254,11 @@ def test_vpm_add_operation():
     # The test needs to be clear about the dtype it's working with.
     # If the test wants to work with uint8 VPMs, it needs to request them.
     # Let's assume for this test, we work with the default float32 VPMs from encode().
-    vpm_a = model_a.encode() # This is now a normalized float32 VPM by default (from recent changes)
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode() # This is now a normalized float32 VPM by default
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     # --- KEY CHANGE 2: vpm_add now produces normalized float32 output ---
     vpm_result = vpm_add(vpm_a, vpm_b) # Result is now normalized float32
@@ -342,11 +308,11 @@ def test_vpm_xor_operation():
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
     # --- KEY CHANGE 1: Get encoded VPMs (which are now float32 by default likely) ---
-    vpm_a = model_a.encode() # This is now a normalized float32 VPM by default (from recent changes)
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode() # This is now a normalized float32 VPM by default
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     # --- KEY CHANGE 2: vpm_xor now produces normalized float32 output ---
     vpm_result = vpm_xor(vpm_a, vpm_b) # Result is now normalized float32
@@ -385,11 +351,11 @@ def test_vpm_nand_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     # NAND is NOT(AND)
     vpm_and_result = vpm_and(vpm_a, vpm_b)
@@ -425,11 +391,11 @@ def test_vpm_nor_operation():
     
     model_a = ZeroModel(metric_names)
     model_a.prepare(score_matrix, task_a)
-    vpm_a = model_a.encode()
+    vpm_a = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_a.sorted_matrix)
     
     model_b = ZeroModel(metric_names)
     model_b.prepare(score_matrix, task_b)
-    vpm_b = model_b.encode()
+    vpm_b = VPMEncoder(get_config("core").get("default_output_precision", "float32")).encode(model_b.sorted_matrix)
     
     # NOR is NOT(OR)
     vpm_or_result = vpm_or(vpm_a, vpm_b)

@@ -1,6 +1,7 @@
 # tests/test_demo_workflow.py
 
 from zeromodel.core import ZeroModel
+from zeromodel.vpm.encoder import VPMEncoder
 from tests.utils import generate_synthetic_data
 import numpy as np
 
@@ -16,18 +17,18 @@ def test_complete_zeromodel_workflow():
     # Set task
     zeromodel.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY uncertainty DESC, size ASC")
 
-    # 3. Encode as visual policy map
-    vpm = zeromodel.encode(output_precision='uint8')
+    # 3. Encode as visual policy map (using encoder on sorted_matrix)
+    vpm = VPMEncoder('uint8').encode(zeromodel.sorted_matrix, output_precision='uint8')
     assert vpm is not None
     assert vpm.shape[0] == 100  # Should match number of documents
     assert vpm.dtype == np.uint8
 
-    # 4. Test critical tile extraction
-    tile = zeromodel.get_critical_tile()
+    # 4. Test critical tile extraction (encoder-based)
+    tile = VPMEncoder('float32').get_critical_tile(zeromodel.sorted_matrix)
     assert tile is not None
     assert len(tile) > 0
 
-    # 5. Test decision making
-    doc_idx, relevance = zeromodel.get_decision()
+    # 5. Test decision making (metric 0)
+    doc_idx, relevance = zeromodel.get_decision_by_metric(0)
     assert 0 <= doc_idx < 100
     assert 0 <= relevance <= 1.0

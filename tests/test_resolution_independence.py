@@ -131,12 +131,13 @@ def test_zero_model_encode_precision_control():
     zm.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY m1 DESC")
 
     # Test float32 output
-    vpm_f32 = zm.encode(output_precision='float32')
+    from zeromodel.vpm.encoder import VPMEncoder
+    vpm_f32 = VPMEncoder('float32').encode(zm.sorted_matrix, output_precision='float32')
     assert vpm_f32.dtype == np.float32
     assert np.all(vpm_f32 >= 0.0) and np.all(vpm_f32 <= 1.0)
 
     # Test uint8 output
-    vpm_u8 = zm.encode(output_precision='uint8')
+    vpm_u8 = VPMEncoder('uint8').encode(zm.sorted_matrix, output_precision='uint8')
     assert vpm_u8.dtype == np.uint8
     assert np.all(vpm_u8 >= 0) and np.all(vpm_u8 <= 255)
 

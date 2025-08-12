@@ -9,7 +9,6 @@ layout and virtual views, not heavy processing.
 """
 
 import logging
-import os
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -106,7 +105,7 @@ class ZeroModel:
         sql_query: str,
         nonlinearity_hint: Optional[str] = None,
         vpm_output_path: Optional[str] = None,
-    ) -> None:
+    ) -> VPMMetadata:
         logger.info(
             "Preparing ZeroModel with data shape %s, query: '%s', nonlinearity_hint: %s",
             getattr(score_matrix, "shape", None),
@@ -179,8 +178,6 @@ class ZeroModel:
 
         # 4) Write canonical memory to VPM-IMG (metrics x docs)
         try:
-            if vpm_output_path is None:
-                vpm_output_path = os.path.join(os.getcwd(), "zeromodel_canonical.vpm.png")
             mx_d = self.canonical_matrix.T  # (metrics x docs)
             logical_docs = int(mx_d.shape[1])
             # Ensure width meets VPM-IMG header minimum (META_MIN_COLS=12)
@@ -211,25 +208,29 @@ class ZeroModel:
                 tile_id=tile_id,
                 parent_id=b"\x00" * 16,
             )
-            metadata_bytes = vmeta.to_bytes()
 
-            logger.debug(
-                "vpm write: mx_d shape=%s (metrics x docs), pad_to_min_width=%s",
-                getattr(mx_d, "shape", None),
-                mx_d.shape[1] < 12
-            )
+            if vpm_output_path:
+                metadata_bytes = vmeta.to_bytes()
 
-            writer = VPMImageWriter(
-                score_matrix=mx_d,
-                metric_names=self.effective_metric_names,
-                metadata_bytes=metadata_bytes,
-                store_minmax=True,
-                compression=6,
-            )
-            writer.write(vpm_output_path)
-            self.vpm_image_path = vpm_output_path
-            self._vpm_reader = None
-            logger.info("VPM-IMG written to %s", vpm_output_path)
+                logger.debug(
+                    "vpm write: mx_d shape=%s (metrics x docs), pad_to_min_width=%s",
+                    getattr(mx_d, "shape", None),
+                    mx_d.shape[1] < 12
+                )
+
+                writer = VPMImageWriter(
+                    score_matrix=mx_d,
+                    metric_names=self.effective_metric_names,
+                    metadata_bytes=metadata_bytes,
+                    store_minmax=True,
+                    compression=6,
+                )
+                writer.write(vpm_output_path)
+                self.vpm_image_path = vpm_output_path
+                self._vpm_reader = None
+                logger.info("VPM-IMG written to %s", vpm_output_path)
+
+            return vmeta
         except Exception as e:  # noqa: broad-except
             logger.error("VPM-IMG write failed: %s", e)
             raise RuntimeError(f"Error writing VPM-IMG: {e}") from e
@@ -260,8 +261,23 @@ class ZeroModel:
         weights: Optional[Dict[int, float]] = None,
         size: int = 8,
     ) -> np.ndarray:
+        # If no VPM-IMG is present, fall back to encoding the in-memory sorted matrix.
         if self.vpm_image_path is None:
-            raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+            logger.debug("extract_critical_tile(): no VPM-IMG available, using encoder fallback. size=%s", size)
+            if self.sorted_matrix is None:
+                raise ValueError(DATA_NOT_PROCESSED_ERR)
+            # Encode full image (docs x width x 3) and slice the requested top-left tile
+            try:
+                img = self._encoder.encode(self.sorted_matrix, output_precision="uint16")
+            except Exception as e:
+                logger.error("Encoder fallback failed: %s", e)
+                raise
+            h = max(1, min(size, int(img.shape[0])))
+            w = max(1, min(size, int(img.shape[1])))
+            tile = img[:h, :w, :]
+            logger.debug("encoder fallback tile: shape=%s dtype=%s", getattr(tile, "shape", None), getattr(tile, "dtype", None))
+            return tile
+
         logger.debug("extract_critical_tile(): metric_idx=%s weights=%s size=%s", metric_idx, None if weights is None else dict(weights), size)
         reader = self._get_vpm_reader()
         if logger.isEnabledFor(logging.DEBUG):
@@ -283,8 +299,28 @@ class ZeroModel:
         raise ValueError("Provide either 'metric_idx' or 'weights'.")
 
     def get_decision_by_metric(self, metric_idx: int, context_size: int = 8) -> Tuple[int, float]:
+        # Fallback to in-memory path when no VPM-IMG is present
         if self.vpm_image_path is None:
-            raise ValueError(VPM_IMAGE_NOT_READY_ERR)
+            if self.sorted_matrix is None:
+                raise ValueError(DATA_NOT_PROCESSED_ERR)
+            n_docs, n_metrics = self.sorted_matrix.shape
+            # Map original metric_idx to column in sorted_matrix via metric_order if available
+            if self.metric_order is not None and 0 <= metric_idx < len(self.metric_order):
+                try:
+                    # Find position of metric_idx in the sorted order
+                    pos_arr = np.where(self.metric_order == metric_idx)[0]
+                    col_idx = int(pos_arr[0]) if pos_arr.size > 0 else int(min(metric_idx, n_metrics - 1))
+                except Exception:
+                    col_idx = int(min(metric_idx, n_metrics - 1))
+            else:
+                col_idx = int(min(metric_idx, n_metrics - 1))
+            top_doc = 0  # sorted_matrix already reflects doc_order (top candidate first)
+            h = int(max(1, min(context_size, n_docs)))
+            try:
+                rel = float(np.mean(self.sorted_matrix[:h, col_idx]))
+            except Exception:
+                rel = 0.0
+            return (top_doc, rel)
         reader = self._get_vpm_reader()
         perm = reader.virtual_order(metric_idx=metric_idx, descending=True, top_k=context_size)
         if len(perm) == 0:
@@ -303,50 +339,6 @@ class ZeroModel:
         except Exception:
             rel = 0.0
         return (top_doc, rel)
-
-    # ---- Legacy APIs retained for compatibility ----
-    @DeprecationWarning
-    def encode(self, output_precision: Optional[str] = None) -> np.ndarray:
-        if self.sorted_matrix is None:
-            raise ValueError(DATA_NOT_PROCESSED_ERR)
-        return self._encoder.encode(self.sorted_matrix, output_precision)
-
-    @DeprecationWarning
-    def get_critical_tile(self, tile_size: int = 3, precision: Optional[str] = None) -> bytes:
-        logger.warning("get_critical_tile is legacy. Prefer extract_critical_tile with VPM-IMG.")
-        if self.sorted_matrix is None:
-            raise ValueError(DATA_NOT_PROCESSED_ERR)
-        return self._encoder.get_critical_tile(self.sorted_matrix, tile_size=tile_size, precision=precision)
-
-    @DeprecationWarning
-    def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
-        logger.debug(f"Making decision with context size {context_size}")
-        if self.sorted_matrix is None:
-            raise ValueError(DATA_NOT_PROCESSED_ERR)
-
-        if context_size <= 0:
-            raise ValueError(f"context_size must be positive, got {context_size}.")
-
-        n_docs, n_metrics = self.sorted_matrix.shape
-        actual_context_docs = min(context_size, n_docs)
-        actual_context_metrics = min(context_size * 3, n_metrics)
-        context = self.sorted_matrix[:actual_context_docs, :actual_context_metrics]
-
-        if context.size == 0:
-            top_doc_idx_in_original = int(self.doc_order[0]) if (self.doc_order is not None and len(self.doc_order) > 0) else 0
-            return (top_doc_idx_in_original, 0.0)
-
-        row_indices = np.arange(actual_context_docs, dtype=np.float64).reshape(-1, 1)
-        col_indices = np.arange(actual_context_metrics, dtype=np.float64)
-        pixel_x_coords = col_indices / 3.0
-        distances = np.sqrt(row_indices ** 2 + pixel_x_coords ** 2)
-        weights = np.clip(1.0 - distances * 0.3, 0.0, None)
-        sum_weights = weights.sum(dtype=np.float64)
-        weighted_relevance = (
-            float(np.sum(context * weights, dtype=np.float64) / sum_weights) if sum_weights > 0.0 else 0.0
-        )
-        top_doc_idx_in_original = int(self.doc_order[0]) if (self.doc_order is not None and len(self.doc_order) > 0) else 0
-        return (top_doc_idx_in_original, weighted_relevance)
 
     # ---- Shared utilities from previous implementation ----
     def normalize(self, score_matrix: np.ndarray) -> np.ndarray:

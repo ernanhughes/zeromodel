@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 from zeromodel.core import ZeroModel
 from zeromodel.memory import ZeroMemory
-from scipy.optimize import minimize
 
 from zeromodel.tools.spatial_optimizer import SpatialOptimizer
 
@@ -317,7 +316,7 @@ class TestSpatialOptimizer:
         
         # Convert to score matrix
         score_matrix = np.array([list(current_metrics.values())])
-        
+
         # Prepare with optimized layout
         if optimizer.canonical_layout is not None:
             ordered_metrics = [metric_names[i] for i in optimizer.canonical_layout]
@@ -326,16 +325,17 @@ class TestSpatialOptimizer:
                 score_matrix=score_matrix,
                 sql_query=sql_query
             )
-        
-        # 7. Verify decision
-        doc_idx, confidence = zeromodel.get_decision()
+
+        # 7. Verify decision (metric 0)
+        doc_idx, confidence = zeromodel.get_decision_by_metric(0)
         assert doc_idx == 0, "Should select the only document"
         assert 0 <= confidence <= 1.0, "Confidence should be in [0,1]"
-        
-        # 8. Extract critical tile
-        tile = zeromodel.get_critical_tile(tile_size=3)
+
+        # 8. Extract critical tile via encoder
+        from zeromodel.vpm.encoder import VPMEncoder
+        tile = VPMEncoder('float32').get_critical_tile(zeromodel.sorted_matrix, tile_size=3)
         assert isinstance(tile, bytes), "Tile should be bytes"
         assert len(tile) > 4, "Tile should have header and data"
-        
+
         print("✅ Real-world integration test completed successfully")
 

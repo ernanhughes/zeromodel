@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 from zeromodel import ZeroModel, HierarchicalVPM  
+from zeromodel.vpm.encoder import VPMEncoder
 import time
 
 @pytest.mark.skip(reason="This test is for performance benchmarking and takes a long time to run")
@@ -50,7 +51,7 @@ def test_performance_scalability():
     
     # Test encoding performance
     start = time.time()
-    vpm = zeromodel.encode()
+    vpm = VPMEncoder('float32').encode(zeromodel.sorted_matrix)
     encode_time = time.time() - start
     
     # Verify encoding completed
@@ -60,7 +61,7 @@ def test_performance_scalability():
     
     # Test critical tile extraction
     start = time.time()
-    tile = zeromodel.get_critical_tile()
+    tile = VPMEncoder('float32').get_critical_tile(zeromodel.sorted_matrix)
     tile_time = time.time() - start
     
     # Verify tile extraction completed
@@ -69,7 +70,7 @@ def test_performance_scalability():
     
     # Test decision making performance
     start = time.time()
-    doc_idx, relevance = zeromodel.get_decision()
+    doc_idx, relevance = zeromodel.get_decision_by_metric(0)
     decision_time = time.time() - start
     
     # Verify decision making completed

@@ -3,6 +3,7 @@ import pytest
 
 from zeromodel.core import ZeroModel
 from zeromodel.vpm.explain import OcclusionVPMInterpreter
+from zeromodel.vpm.encoder import VPMEncoder
 
 
 def build_synthetic_matrix(H=20, K=9):
@@ -44,7 +45,8 @@ def test_interpreter_highlights_top_left_region():
     imp, meta = interp.explain(zm)
 
     # Sanity: importance map same height/width as VPM
-    vpm = zm.encode()
+    # Use encoder to get VPM shape without calling deprecated encode
+    vpm = VPMEncoder('float32').encode(zm.sorted_matrix)
     assert imp.shape == vpm.shape[:2]
 
     # Expect higher mean importance near the top-left than bottom-right

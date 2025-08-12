@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from zeromodel.memory import ZeroMemory
-from zeromodel.vpm.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
+from zeromodel.tools.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
 
 
 class TestTrainingHeartbeatVisualizer:

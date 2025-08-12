@@ -1,8 +1,7 @@
 import time
 
-import imageio.v2 as imageio
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 
 class GifLogger:

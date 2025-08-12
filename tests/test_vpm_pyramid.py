@@ -1,5 +1,4 @@
 # tests/test_vpm_pyramid.py
-from __future__ import annotations
 
 import math
 import numpy as np

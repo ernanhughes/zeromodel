@@ -7,7 +7,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from zeromodel.memory import ZeroMemory
-from zeromodel.vpm.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
+from zeromodel.tools.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
 
 def test_training_heartbeat_visualizer_full_cycle(tmp_path):
     """Test the complete workflow of the TrainingHeartbeatVisualizer with ZeroMemory."""

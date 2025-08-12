@@ -128,3 +128,26 @@ class VPMFinder:
                 "pointers": pointers,
                 "task_hash": getattr(meta, "task_hash", 0),
             }
+
+def hottest_child(meta: Dict[str, Any]) -> int:
+    """
+    Example policy: choose child with largest span (or any other hint you pack in pointers).
+    Return -1 to stop.
+    """
+    ptrs = meta.get("pointers", [])
+    if not ptrs:
+        return -1
+    # pick by span; replace with your own heuristic (e.g., position hint)
+    return max(range(len(ptrs)), key=lambda i: ptrs[i].get("span", 0))
+
+def id_to_path(tile_id: bytes) -> str:
+    # map tile_id -> file path (DictResolver / FilenameResolver / DB lookup)
+    hexid = tile_id.hex()
+    return f"/data/vpm/tiles/{hexid}.png"
+
+final_path, final_id, steps = VPMFinder.find_target(
+    start_path="/data/vpm/root.png",
+    resolver=id_to_path,
+    choose_child=hottest_child,
+    max_hops=64,
+)

@@ -4,7 +4,7 @@ from zeromodel.core import ZeroModel
 from zeromodel.memory import ZeroMemory
 from scipy.optimize import minimize
 
-from zeromodel.vpm.spatial_optimizer import SpatialOptimizer
+from zeromodel.tools.spatial_optimizer import SpatialOptimizer
 
 class TestSpatialOptimizer:
     """Test suite for the SpatialOptimizer class (ZeroModel's Spatial Calculus)."""

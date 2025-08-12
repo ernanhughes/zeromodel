@@ -15,14 +15,11 @@ The system enables:
 - Consistent tile identification across systems
 """
 
-from __future__ import annotations
-
 import hashlib
-import math
 import struct
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Dict, Iterable, List, Optional, Protocol, Tuple
+from typing import Dict, List, Optional, Protocol, Tuple
 
 # ---------- Enum Definitions ----------
 

@@ -305,17 +305,20 @@ class ZeroModel:
         return (top_doc, rel)
 
     # ---- Legacy APIs retained for compatibility ----
+    @DeprecationWarning
     def encode(self, output_precision: Optional[str] = None) -> np.ndarray:
         if self.sorted_matrix is None:
             raise ValueError(DATA_NOT_PROCESSED_ERR)
         return self._encoder.encode(self.sorted_matrix, output_precision)
 
+    @DeprecationWarning
     def get_critical_tile(self, tile_size: int = 3, precision: Optional[str] = None) -> bytes:
         logger.warning("get_critical_tile is legacy. Prefer extract_critical_tile with VPM-IMG.")
         if self.sorted_matrix is None:
             raise ValueError(DATA_NOT_PROCESSED_ERR)
         return self._encoder.get_critical_tile(self.sorted_matrix, tile_size=tile_size, precision=precision)
 
+    @DeprecationWarning
     def get_decision(self, context_size: int = 3) -> Tuple[int, float]:
         logger.debug(f"Making decision with context size {context_size}")
         if self.sorted_matrix is None:

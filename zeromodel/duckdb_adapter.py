@@ -1,5 +1,4 @@
 """DuckDB adapter encapsulating schema management, data loading, and query analysis."""
-from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List

@@ -327,29 +327,30 @@ class SpatialOptimizer:
             w = softmax(z)
             total_mass = 0.0
             T = len(series)
-            
+
             # Calculate time-weighted top-left mass (emphasize later/overfitting phase)
             for t, Xt in enumerate(series):
                 time_weight = ((t + 1) / T) ** 2  # Quadratic emphasis on later epochs
                 u = w if self.u_mode == "mirror_w" else Xt.mean(axis=0)
                 Y, _, _ = self.phi_transform(Xt, u, w)
                 total_mass += time_weight * self.top_left_mass(Y)
-                
+
             # Regularization components
             reg = self.l2 * np.sum(w**2)  # L2 penalty
-            entropy = -np.sum(w * np.log(w + 1e-12))  # Entropy penalty
-            monotonicity = -np.dot(w, mono_scores)  # Monotonicity reward
-            
+            # Encourage spread (higher entropy => lower loss)
+            entropy = -np.sum(w * np.log(w + 1e-12))
+            # So subtract a small multiple of entropy to discourage peaky weights
+            entropy_term = -1e-2 * entropy
+            # Monotonicity prior (keep modest to avoid over-biasing)
+            monotonicity = -0.5 * np.dot(w, mono_scores)
+
             # Compose final loss
-            loss = -total_mass + reg + 1e-4*entropy + 5.0*monotonicity
+            loss = -total_mass + reg + entropy_term + monotonicity
             return loss
 
         # Optimize using L-BFGS
         res = minimize(objective, np.log(w0), method='L-BFGS-B', options={'maxiter': iters})
         w_opt = softmax(res.x)
-        # Post-normalize to unit L2 for stability and test expectations
-        norm = float(np.linalg.norm(w_opt) + 1e-12)
-        w_opt = w_opt / norm
 
         if verbose:
             print(f"Optimization completed. Final loss: {res.fun:.4f}")
@@ -383,6 +384,10 @@ class SpatialOptimizer:
 
         # Core optimization workflow
         self.metric_weights = self.learn_weights(series)
+        # Normalize to unit L2 for downstream stability expectations
+        norm = float(np.linalg.norm(self.metric_weights) + 1e-12)
+        if norm > 0:
+            self.metric_weights = self.metric_weights / norm
         _, _, col_orders = self.gamma_operator(series, self.metric_weights)
         W = self.metric_graph(col_orders)
         self.canonical_layout = self.compute_canonical_layout(W)

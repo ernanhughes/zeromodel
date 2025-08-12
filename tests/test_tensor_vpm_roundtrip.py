@@ -142,6 +142,13 @@ def verify_roundtrip(original: Any, restored: Any, path: str = "") -> Tuple[bool
         return True, ""
     
     elif isinstance(original, (int, float, bool, str)):
+        # Special handling for float scalars to treat NaNs as equal, mirroring array logic
+        if isinstance(original, float):
+            # If both are NaN (including numpy float types), consider them equal
+            if (np.isnan(original) and
+                ((isinstance(restored, float) and np.isnan(restored)) or
+                 (isinstance(restored, np.floating) and np.isnan(restored)))):
+                return True, ""
         if original != restored:
             return False, f"{path}: Value mismatch ({original} vs {restored})"
         return True, ""

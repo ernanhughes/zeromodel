@@ -670,11 +670,10 @@ def test_hierarchical_navigation():
     level_1, doc_idx_1, _ = hvpm.get_decision(1)
     level_2 = hvpm.zoom_in(level_1, doc_idx_1, 0)
     assert level_2 == 2
-    
     # Test trying to zoom beyond base level
     level_2, doc_idx_2, _ = hvpm.get_decision(2)
     level_3 = hvpm.zoom_in(level_2, doc_idx_2, 0)
-    assert level_3 == 2  # Should stay at base level
+    assert level_3 == 2  # Should stay at base Any sign all right level
     
     # Test navigation with specific document
     # Level 0 should have 1 document (the most relevant cluster)

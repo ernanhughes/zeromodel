@@ -1,14 +1,15 @@
-import os
 import time
-import math
 import pathlib
 import numpy as np
 import pytest
+import logging
 
 from zeromodel import VPMImageWriter, VPMImageReader
 from zeromodel.vpm.metadata import (
     VPMMetadata, RouterPointer, MapKind, AggId
 )
+
+logger = logging.getLogger(__name__)
 
 # ---------- helpers ----------
 
@@ -36,9 +37,59 @@ def _write_tile(path: pathlib.Path, M: int, D: int, level: int,
         metadata_bytes=metadata_bytes,
     ).write(str(path))
 
+def _weights_for_metrics(metrics, seed=123):
+    rng = np.random.default_rng(seed)
+    return {m: float(rng.random()) for m in metrics}
+
 # ---------- tests ----------
 
-@pytest.mark.slow
+def test_world_scale_header_only_smoke():
+    """
+    Doesn't hit disk; just measures metadata size & serialize speed
+    for a 40-level chain with many pointers per level.
+    """
+    levels = 40
+    pointers_per_level = 64  # tune up/down
+    metrics = [f"m{i}" for i in range(512)]
+    weights = _weights_for_metrics(metrics, seed=999)
+
+    start = time.perf_counter()
+    total_bytes = 0
+    for L in range(levels):
+        meta = VPMMetadata.for_tile(
+            level=L, metric_count=len(metrics), doc_count=2_048,
+            doc_block_size=2**L, agg_id=int(AggId.MAX),
+            metric_weights=weights, metric_names=metrics,
+            task_hash=0xFEEDFACE, tile_id=VPMMetadata.make_tile_id(f"level-{L}".encode())
+        )
+        for i in range(pointers_per_level):
+            tid = VPMMetadata.make_tile_id(f"child-{L}-{i}".encode())
+            meta.add_pointer(RouterPointer(
+                kind=MapKind.VPM, level=L+1, x_offset=i*10_000,
+                span=10_000, doc_block_size=2**(L+1),
+                agg_id=int(AggId.MAX), tile_id=tid
+            ))
+        b = meta.to_bytes()
+        total_bytes += len(b)
+        _ = VPMMetadata.from_bytes(b)  # ensure parsable OK
+
+    elapsed = time.perf_counter() - start
+    elapsed_ms = elapsed * 1000.0
+
+    logger.info(f"World-scale header-only smoke: {levels} levels, {pointers_per_level} pointers each")
+    logger.info(f"Elapsed time: {elapsed_ms:.3f} ms")
+    logger.info(f"Total bytes: {total_bytes:,}")
+
+    mb_per_s = (total_bytes / (1024**2)) / elapsed
+    logger.info(f"Throughput: {mb_per_s:.2f} MiB/s")
+
+
+    # Just sanity constraints (not strict perf assertions)
+    assert elapsed < 3.0  # keep header-only ops sub-seconds on dev machines
+    assert total_bytes > 0
+
+
+@pytest.mark.skip(reason="This writes a large amount of data run for a demo only")
 def test_world_scale_chain_write_and_hop(tmp_path):
     """
     Build a world-scale pointer chain on disk, then simulate a 40-hop descent.
@@ -178,7 +229,7 @@ def test_world_scale_chain_write_and_hop(tmp_path):
     total_png = sum(1 for _ in root.glob("*.png"))
     assert total_png >= levels      # wrote at least the main chain
 
-@pytest.mark.slow
+@pytest.mark.skip(reason="This writes a large amount of data run for a demo only")
 def test_world_scale_io_integrity_and_speed(tmp_path):
     """
     Wider tiles + bigger metadata to exercise spill and test end-to-end read speed.

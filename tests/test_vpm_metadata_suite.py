@@ -12,6 +12,9 @@ from zeromodel.vpm.metadata import (
     _ROUTER_PTR_SIZE, _META_FIXED_SIZE
 )
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 # --------------------
 # helpers
@@ -332,12 +335,12 @@ def test_world_scale_header_only_smoke():
     elapsed = time.perf_counter() - start
     elapsed_ms = elapsed * 1000.0
 
-    print(f"World-scale header-only smoke: {levels} levels, {pointers_per_level} pointers each")
-    print(f"Elapsed time: {elapsed_ms:.3f} ms")
-    print(f"Total bytes: {total_bytes:,}")
+    logger.info(f"World-scale header-only smoke: {levels} levels, {pointers_per_level} pointers each")
+    logger.info(f"Elapsed time: {elapsed_ms:.3f} ms")
+    logger.info(f"Total bytes: {total_bytes:,}")
 
     mb_per_s = (total_bytes / (1024**2)) / elapsed
-    print(f"Throughput: {mb_per_s:.2f} MiB/s")
+    logger.info(f"Throughput: {mb_per_s:.2f} MiB/s")
 
 
     # Just sanity constraints (not strict perf assertions)

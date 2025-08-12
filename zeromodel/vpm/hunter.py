@@ -191,7 +191,7 @@ class VPMHunter:
         if not isinstance(tile, np.ndarray) or tile.ndim != 3 or tile.shape[2] != 3:
             logger.warning(
                 "Invalid tile format. Expected (H, W, 3) array, got %s",
-                getattr(tile, "shape", type(tile))
+                getattr(tile, "shape", type(tile)))
             return 0.0
         
         # Convert to normalized float [0, 1]

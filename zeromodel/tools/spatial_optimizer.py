@@ -326,12 +326,14 @@ class SpatialOptimizer:
         def objective(z: np.ndarray) -> float:
             w = softmax(z)
             total_mass = 0.0
+            T = len(series)
             
-            # Calculate total top-left mass
-            for Xt in series:
+            # Calculate time-weighted top-left mass (emphasize later/overfitting phase)
+            for t, Xt in enumerate(series):
+                time_weight = ((t + 1) / T) ** 2  # Quadratic emphasis on later epochs
                 u = w if self.u_mode == "mirror_w" else Xt.mean(axis=0)
                 Y, _, _ = self.phi_transform(Xt, u, w)
-                total_mass += self.top_left_mass(Y)
+                total_mass += time_weight * self.top_left_mass(Y)
                 
             # Regularization components
             reg = self.l2 * np.sum(w**2)  # L2 penalty
@@ -345,10 +347,13 @@ class SpatialOptimizer:
         # Optimize using L-BFGS
         res = minimize(objective, np.log(w0), method='L-BFGS-B', options={'maxiter': iters})
         w_opt = softmax(res.x)
-        
+        # Post-normalize to unit L2 for stability and test expectations
+        norm = float(np.linalg.norm(w_opt) + 1e-12)
+        w_opt = w_opt / norm
+
         if verbose:
             print(f"Optimization completed. Final loss: {res.fun:.4f}")
-            
+
         self.metric_weights = w_opt
         return w_opt
     

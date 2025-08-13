@@ -1245,7 +1245,7 @@ def embed_metrics_stripe(
         region[6+i, header_col, 0] = (crc >> (8*(3-i))) & 0xFF
 
     arr[:, x0:W, :] = region
-    out_img = Image.fromarray(arr, mode="RGB")
+    out_img = Image.fromarray(arr)
     return out_img, {"coverage_percent_width": 100.0 * (stripe_cols / W)}
 
 def extract_metrics_stripe(img: Image.Image, M: int, channels_per_metric: int = 1, use_channels=("R",)):

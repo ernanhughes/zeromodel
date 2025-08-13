@@ -39,7 +39,7 @@ class GifLogger:
         # --- top: scale the VPM ---
         H, W, _ = vpm.shape
         scale = self.vpm_scale
-        top = Image.fromarray(vpm, mode="RGB").resize((W*scale, H*scale), resample=Image.NEAREST)
+        top = Image.fromarray(vpm).resize((W*scale, H*scale), resample=Image.NEAREST)
 
         # --- bottom: timeline strip ---
         K = min(300, len(hist))

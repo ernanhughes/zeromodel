@@ -21,7 +21,7 @@ def _make_demo_image(w=512, h=256):
     y = np.linspace(0, 1, h, dtype=np.float32)[:, None]
     img = np.clip((0.6 * x + 0.4 * y), 0, 1)
     rgb = (np.stack([img, img**0.5, img**2], axis=-1) * 255).astype(np.uint8)
-    return Image.fromarray(rgb, "RGB")
+    return Image.fromarray(rgb)
 
 def test_vpf_embed_extract_verify_and_replay():
     img = _make_demo_image(1024, 512)

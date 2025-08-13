@@ -22,6 +22,15 @@ T = TypeVar('T')
 logger = logging.getLogger(__name__)
 logger.propagate = True
 
+def _t(name):
+    return {"name": name, "t0": time.perf_counter()}
+
+def _end(tk):
+    dt = time.perf_counter() - tk["t0"]
+    logger.info(f"[prepare] {tk['name']}: {dt:.3f}s")
+    return dt
+
+
 def timeit(func: Callable[..., T]) -> Callable[..., T]:
     """
     Decorator to time function execution with minimal overhead.

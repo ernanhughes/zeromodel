@@ -92,7 +92,7 @@ class TrainingHeartbeatVisualizer:
             # Convert each frame to palette mode with adaptive palette so the GIF encoder
             # treats each as a full frame and avoids coalescing identical-looking frames.
             pil_frames = [
-                Image.fromarray(f.astype(np.uint8), mode="RGB").convert("P", palette=Image.ADAPTIVE, colors=256)
+                Image.fromarray(f.astype(np.uint8)).convert("P", palette=Image.ADAPTIVE, colors=256)
                 for f in self.frames
             ]
             duration_ms = int(max(1, round(1000.0 / max(1, self.fps))))

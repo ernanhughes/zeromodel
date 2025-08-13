@@ -20,7 +20,7 @@ from zeromodel.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
 from zeromodel.organization import (MemoryOrganizationStrategy,
                                     SqlOrganizationStrategy)
-from zeromodel.timing import timeit
+from zeromodel.timing import _end, _t
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
 from zeromodel.vpm.metadata import VPMMetadata, AggId
@@ -32,13 +32,6 @@ init_config()
 DATA_NOT_PROCESSED_ERR = "Data not processed yet. Call process() or prepare() first."
 VPM_IMAGE_NOT_READY_ERR = "VPM image not ready. Call prepare() first."
 
-def _t(name):
-    return {"name": name, "t0": time.perf_counter()}
-
-def _end(tk):
-    dt = time.perf_counter() - tk["t0"]
-    logger.info(f"[prepare] {tk['name']}: {dt:.3f}s")
-    return dt
 
 class ZeroModel:
     """
@@ -108,11 +101,10 @@ class ZeroModel:
             self._vpm_reader = VPMImageReader(self.vpm_image_path)
         return self._vpm_reader
 
-    @timeit
     def prepare(
         self,
         score_matrix: np.ndarray,
-        sql_query: str,
+        sql_query: Optional[str] = None,  
         nonlinearity_hint: Optional[str] = None,
         vpm_output_path: Optional[str] = None,
     ) -> VPMMetadata:
@@ -125,7 +117,7 @@ class ZeroModel:
 
         # -------------------- validate inputs --------------------
         st = _t("validate_inputs")
-        self._validate_prepare_inputs(score_matrix, sql_query)
+        self._validate_prepare_inputs(score_matrix)
         _end(st)
 
         # -------------------- normalize -> canonical_matrix --------------------
@@ -165,7 +157,7 @@ class ZeroModel:
         # -------------------- organization analysis --------------------
         st = _t("organization_analysis")
         try:
-            use_duckdb = True
+            use_duckdb = get_config("core").get("use_duckdb", False)
             logger.debug("Using DuckDB: %s", use_duckdb)
             self._org_strategy = SqlOrganizationStrategy(self.duckdb) if use_duckdb else MemoryOrganizationStrategy()
             self._org_strategy.set_task(sql_query)
@@ -374,7 +366,7 @@ class ZeroModel:
         # Return float32 to match the dtype used in canonical/sorted matrices
         return self.normalizer.normalize(score_matrix, as_float32=True)
 
-    def _validate_prepare_inputs(self, score_matrix: np.ndarray, sql_query: str) -> None:
+    def _validate_prepare_inputs(self, score_matrix: np.ndarray) -> None:
         original_metric_names = self.effective_metric_names
         if score_matrix is None:
             raise ValueError("score_matrix cannot be None.")
@@ -382,8 +374,6 @@ class ZeroModel:
             raise ValueError(f"score_matrix must be a NumPy ndarray, got {type(score_matrix)}.")
         if score_matrix.ndim != 2:
             raise ValueError(f"score_matrix must be 2D, got shape {score_matrix.shape}.")
-        if not sql_query or not isinstance(sql_query, str):
-            raise ValueError("sql_query must be a non-empty string.")
         if not np.isfinite(score_matrix).all():
             nan_count = int(np.isnan(score_matrix).sum())
             pos_inf_count = int(np.isposinf(score_matrix).sum())

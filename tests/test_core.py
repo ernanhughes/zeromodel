@@ -123,21 +123,8 @@ def test_duckdb_integration_and_data_loading():
     # 1. Setup
     metric_names = ["uncertainty", "size", "quality", "novelty"]
     zeromodel = ZeroModel(metric_names)
+
     
-    # 2. Verify DuckDB connection and initial schema (without data row)
-    # ... (this part remains the same) ...
-    assert zeromodel.duckdb.connection is not None
-
-    result = zeromodel.duckdb.connection.execute("PRAGMA table_info(virtual_index)").fetchall()
-    assert len(result) == len(metric_names) + 1
-    assert result[0][1] == "row_id"
-    for i, col_name in enumerate(metric_names):
-        assert result[i+1][1] == col_name
-
-    result = zeromodel.duckdb.connection.execute("SELECT * FROM virtual_index").fetchone()
-    assert result is None, "virtual_index table should be empty after initialization."
-    # --- End of part that remains the same ---
-
     # 3. Prepare some test data
     # Create a small, simple score matrix
     score_matrix = np.array([

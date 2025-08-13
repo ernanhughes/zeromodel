@@ -104,21 +104,29 @@ class ZeroModel:
     def prepare(
         self,
         score_matrix: np.ndarray,
-        sql_query: Optional[str] = None,  
+        sql_query: Optional[str] = None,        # <-- make optional
         nonlinearity_hint: Optional[str] = None,
         vpm_output_path: Optional[str] = None,
     ) -> VPMMetadata:
         logger.info(
-            "Preparing ZeroModel with data shape %s, query: '%s', nonlinearity_hint: %s",
+            "Preparing ZeroModel with data shape %s, query: %r, nonlinearity_hint: %s",
             getattr(score_matrix, "shape", None),
             sql_query,
             nonlinearity_hint,
         )
 
-        # -------------------- validate inputs --------------------
-        st = _t("validate_inputs")
-        self._validate_prepare_inputs(score_matrix)
-        _end(st)
+        # 1) Validate, then reconcile names to actual matrix width
+        self._validate_matrix(score_matrix)
+        self._reconcile_metric_names(score_matrix.shape[1])
+
+        # 2) Make sure the normalizer is aligned to the EFFECTIVE names
+        if self.normalizer.metric_names != self.effective_metric_names:
+            logger.debug(
+                f"""Reinitializing DynamicNormalizer with effective metric names:
+                    {self.effective_metric_names}
+                    {self.normalizer.metric_names}"""  
+            )
+            self.normalizer = DynamicNormalizer(self.effective_metric_names)
 
         # -------------------- normalize -> canonical_matrix --------------------
         st = _t("normalize_quantize")
@@ -157,17 +165,7 @@ class ZeroModel:
         # -------------------- organization analysis --------------------
         st = _t("organization_analysis")
         try:
-            use_duckdb = get_config("core").get("use_duckdb", False)
-            logger.debug("Using DuckDB: %s", use_duckdb)
-            self._org_strategy = SqlOrganizationStrategy(self.duckdb) if use_duckdb else MemoryOrganizationStrategy()
-            self._org_strategy.set_task(sql_query)
-            _, metric_order, doc_order, analysis = self._org_strategy.organize(
-                self.canonical_matrix, self.effective_metric_names
-            )
-            self.metric_order = metric_order
-            self.doc_order = doc_order
-            self.task = self._org_strategy.name + "_task"
-            self.task_config = {"sql_query": sql_query, "analysis": analysis}
+            self._apply_organization(sql_query)
         except Exception as e:  # noqa: broad-except
             logger.error("Organization analysis failed: %s", e)
             raise RuntimeError(f"Error during organization strategy: {e}") from e
@@ -183,7 +181,13 @@ class ZeroModel:
         st = _t("build_vmeta_and_write_png")
         try:
             # (metrics x docs)
-            mx_d = self.canonical_matrix.T
+            # choose source for the image
+            source = (
+                self.sorted_matrix
+                if (self.doc_order is not None or self.metric_order is not None)
+                else self.canonical_matrix
+            )
+            mx_d = source.T
             logical_docs = int(mx_d.shape[1])
 
             # Ensure width meets VPM-IMG header minimum (META_MIN_COLS=12)
@@ -195,7 +199,7 @@ class ZeroModel:
             # Build compact VMETA payload carrying the logical doc_count
             try:
                 import zlib
-                task_hash = zlib.crc32(sql_query.encode("utf-8")) & 0xFFFFFFFF
+                task_hash = zlib.crc32((sql_query or "").encode("utf-8")) & 0xFFFFFFFF
             except Exception:
                 task_hash = 0
 
@@ -218,7 +222,6 @@ class ZeroModel:
             )
 
             if vpm_output_path:
-                # Perf toggles
                 import os as _os
                 compress_level = int(_os.getenv("ZM_PNG_COMPRESS", "6"))
                 disable_prov = _os.getenv("ZM_DISABLE_PROVENANCE") == "1"
@@ -255,7 +258,6 @@ class ZeroModel:
         except Exception as e:  # noqa: broad-except
             logger.error("VPM-IMG write failed: %s", e)
             raise RuntimeError(f"Error writing VPM-IMG: {e}") from e
-
 
     # ---- VPM-IMG based operations ----
     def compile_view(
@@ -366,37 +368,107 @@ class ZeroModel:
         # Return float32 to match the dtype used in canonical/sorted matrices
         return self.normalizer.normalize(score_matrix, as_float32=True)
 
-    def _validate_prepare_inputs(self, score_matrix: np.ndarray) -> None:
-        original_metric_names = self.effective_metric_names
+    def _apply_organization(self, sql_query: Optional[str]) -> None:
+        """
+        Sets self.metric_order, self.doc_order, self.task, self.task_config.
+        Modes:
+        - no query -> identity orders
+        - DuckDB SQL  (use_duckdb=True and query starts with SELECT)
+        - memory ORDER BY (use_duckdb=False OR query not starting with SELECT)
+        """
+        use_duckdb = bool(get_config("core").get("use_duckdb", False))
+        q = (sql_query or "").strip()
+
+        if not q:
+            logger.debug("Org mode: none (identity)")
+            n_docs, n_metrics = self.canonical_matrix.shape
+            self.metric_order = np.arange(n_metrics, dtype=int)
+            self.doc_order = np.arange(n_docs, dtype=int)
+            analysis = {"backend": "none", "reason": "no sql_query provided"}
+            self.task = "noop_task"
+            self.task_config = {"analysis": analysis}
+            return
+
+        if use_duckdb and q.lower().startswith("select "):
+            logger.debug("Org mode: DuckDB SQL")
+            self._org_strategy = SqlOrganizationStrategy(self.duckdb)
+            self._org_strategy.set_task(q)
+            _, metric_order, doc_order, analysis = self._org_strategy.organize(
+                self.canonical_matrix, self.effective_metric_names
+            )
+            self.metric_order = metric_order
+            self.doc_order = doc_order
+            self.task = self._org_strategy.name + "_task"
+            self.task_config = {"sql_query": q, "analysis": analysis}
+            return
+
+        logger.debug("Org mode: memory ORDER BY -> %s", q)
+        self._org_strategy = MemoryOrganizationStrategy()
+        self._org_strategy.set_task(q)  # e.g. "metric DESC, other ASC"
+        _, metric_order, doc_order, analysis = self._org_strategy.organize(
+            self.canonical_matrix, self.effective_metric_names
+        )
+        self.metric_order = metric_order
+        self.doc_order = doc_order
+        self.task = "memory_task"
+        self.task_config = {"spec": q, "analysis": analysis}
+
+
+    def _validate_matrix(self, score_matrix: np.ndarray) -> None:
+        """Validate shape, dtype, and finiteness. No side effects beyond logging."""
         if score_matrix is None:
             raise ValueError("score_matrix cannot be None.")
         if not isinstance(score_matrix, np.ndarray):
-            raise ValueError(f"score_matrix must be a NumPy ndarray, got {type(score_matrix)}.")
+            raise TypeError(f"score_matrix must be a NumPy ndarray, got {type(score_matrix).__name__}.")
         if score_matrix.ndim != 2:
-            raise ValueError(f"score_matrix must be 2D, got shape {score_matrix.shape}.")
-        if not np.isfinite(score_matrix).all():
-            nan_count = int(np.isnan(score_matrix).sum())
-            pos_inf_count = int(np.isposinf(score_matrix).sum())
-            neg_inf_count = int(np.isneginf(score_matrix).sum())
+            raise ValueError(f"score_matrix must be 2D, got {score_matrix.ndim}D with shape {getattr(score_matrix, 'shape', None)}.")
+        if score_matrix.size == 0:
+            raise ValueError("score_matrix is empty.")
+        if not np.issubdtype(score_matrix.dtype, np.number):
+            raise TypeError(f"score_matrix must be numeric, got dtype={score_matrix.dtype}.")
+
+        # Single pass finiteness check
+        finite_mask = np.isfinite(score_matrix)
+        if not finite_mask.all():
+            total_bad = int((~finite_mask).sum())
+            nan_count  = int(np.isnan(score_matrix).sum())
+            pos_inf    = int(np.isposinf(score_matrix).sum())
+            neg_inf    = int(np.isneginf(score_matrix).sum())
             raise ValueError(
                 "score_matrix contains non-finite values: "
-                f"NaN={nan_count}, +inf={pos_inf_count}, -inf={neg_inf_count}. "
+                f"NaN={nan_count}, +inf={pos_inf}, -inf={neg_inf}, total_bad={total_bad}. "
                 "Clean or impute these values before calling prepare()."
             )
-        _, n_cols = score_matrix.shape
-        if n_cols != len(original_metric_names):
-            logger.warning(
-                "Column count mismatch: %d (expected) vs %d (received).",
-                len(original_metric_names),
-                n_cols,
-            )
-            if n_cols > len(original_metric_names):
-                added = [f"col_{i}" for i in range(len(original_metric_names), n_cols)]
-                new_names = list(original_metric_names) + added
-            else:
-                new_names = list(original_metric_names[:n_cols])
-            self.effective_metric_names = new_names
-            self.normalizer = DynamicNormalizer(new_names)
+
+        # Pure validation: do NOT enforce column count equality here; reconciliation is separate.
+        # Just log current vs declared for visibility.
+        n_rows, n_cols = score_matrix.shape
+        expected = len(self.metric_names)
+        if n_cols != expected:
+            logger.warning("Column count differs from declared metric_names: expected=%d, received=%d.",
+                        expected, n_cols)
+
+
+    def _reconcile_metric_names(self, n_cols: int) -> None:
+        """
+        Align effective_metric_names with the matrix column count.
+        Side-effectful by design; keep it out of _validate_matrix().
+        """
+        declared = list(self.metric_names)  # baseline, immutable by convention
+
+        if n_cols == len(declared):
+            self.effective_metric_names = declared
+            return
+
+        if n_cols < len(declared):
+            new_names = declared[:n_cols]
+            logger.warning("Trimming metric_names to first %d to match matrix.", n_cols)
+        else:
+            extras = [f"col_{i}" for i in range(len(declared), n_cols)]
+            new_names = declared + extras
+            logger.warning("Extending metric_names by %d synthetic columns to match matrix.", len(extras))
+
+        self.effective_metric_names = new_names
 
     def get_metadata(self) -> Dict[str, Any]:
         logger.debug("Retrieving metadata.")

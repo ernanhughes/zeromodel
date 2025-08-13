@@ -148,3 +148,102 @@ def test_quickstart():
         logger.info(f"{k}: {human_bytes(v)}")
     logger.info("Done.")
 
+def test_quickstart_compare():
+    profile = {}
+    os.makedirs("images", exist_ok=True)
+
+    with Timer("generate_metric_names"):
+        METRICS = gen_metric_names(2048)
+
+    PRIMARY_METRIC = METRICS[0]
+    SECONDARY_METRIC = METRICS[1]
+
+    num_docs = 2048
+    rng = np.random.default_rng(0)
+
+    with Timer("build_score_matrix"):
+        scores = np.zeros((num_docs, len(METRICS)), dtype=np.float32)
+        scores[:, 0] = rng.random(num_docs)              # uncertainty
+        scores[:, 1] = rng.normal(0.5, 0.15, num_docs)   # size
+        scores[:, 2] = rng.random(num_docs) ** 2         # quality (skewed)
+        scores[:, 3] = rng.random(num_docs)              # novelty
+        scores[:, 4] = 1.0 - scores[:, 0]                # coherence
+        logger.info("score_matrix shape=%s dtype=%s ~%s",
+                    scores.shape, scores.dtype, human_bytes(scores.nbytes))
+
+    # make ORDER BY signal obvious
+    with Timer("inject_structure_for_order_by"):
+        row_idx = np.arange(num_docs)
+        band_center = num_docs // 3
+        band_width  = max(1, num_docs // 10)
+        scores[:, 0] = np.clip(
+            0.2 + np.exp(-((row_idx - band_center) ** 2) / (2 * (band_width ** 2))).astype(np.float32),
+            0, 1
+        )
+        scores[:, 1] = np.clip(np.linspace(0, 1, num_docs) + rng.normal(0, 0.05, num_docs), 0, 1)
+
+    # ---------- Case A: DuckDB SQL ----------
+    sql_query = f"SELECT * FROM virtual_index ORDER BY {PRIMARY_METRIC} DESC, {SECONDARY_METRIC} ASC"
+    os.environ["ZM_USE_DUCKDB"] = "1"
+    with Timer("initialize_ZeroModel[sql]"):
+        zm_sql = ZeroModel(METRICS)
+
+    out_sql = "images/vpm_sql.png"
+    logger.info("ORDER BY (DuckDB): %s DESC, %s ASC", PRIMARY_METRIC, SECONDARY_METRIC)
+    with Timer("ZeroModel.prepare[sql]") as t:
+        zm_sql.prepare(score_matrix=scores, sql_query=sql_query, vpm_output_path=out_sql)
+    profile["prepare_sql_s"] = t.elapsed
+
+    # ---------- Case B: Memory ORDER BY (no DuckDB) ----------
+    mem_spec = f"{PRIMARY_METRIC} DESC, {SECONDARY_METRIC} ASC"  # same semantics, no SELECT
+    os.environ["ZM_USE_DUCKDB"] = "0"
+    with Timer("initialize_ZeroModel[mem]"):
+        zm_mem = ZeroModel(METRICS)
+
+    out_mem = "images/vpm_mem.png"
+    logger.info("ORDER BY (memory): %s", mem_spec)
+    with Timer("ZeroModel.prepare[mem]") as t:
+        zm_mem.prepare(score_matrix=scores, sql_query=mem_spec, vpm_output_path=out_mem)
+    profile["prepare_mem_s"] = t.elapsed
+
+    # ---------- Case C: No organization (identity) ----------
+    os.environ["ZM_USE_DUCKDB"] = "0"
+    with Timer("initialize_ZeroModel[none]"):
+        zm_none = ZeroModel(METRICS)
+
+    out_none = "images/vpm_none.png"
+    logger.info("ORDER BY: none (identity)")
+    with Timer("ZeroModel.prepare[none]") as t:
+        zm_none.prepare(score_matrix=scores, sql_query=None, vpm_output_path=out_none)
+    profile["prepare_none_s"] = t.elapsed
+
+    # ---------- Basic file checks ----------
+    for path in (out_sql, out_mem, out_none):
+        assert os.path.exists(path), f"Expected PNG not found: {path}"
+
+    # ---------- Equivalence check: SQL vs Memory ordering ----------
+    # With continuous floats the chance of exact ties is tiny; they should match.
+    assert np.array_equal(zm_sql.doc_order, zm_mem.doc_order), "SQL and memory ORDER BY produced different doc orders"
+    assert np.array_equal(zm_sql.metric_order, zm_mem.metric_order), "Metric order should be identical in both modes"
+
+    # ---------- Verify one PNG + read metadata + critical tile ----------
+    with Timer("PIL.verify_png"):
+        Image.open(out_sql).verify()
+        logger.info("PNG verified (sql)")
+
+    with Timer("read_metadata"):
+        mv = MetadataView.from_png(out_sql)
+        logger.info("Metadata parsed (provenance=%s, vpm=%s)",
+                    "present" if mv.provenance else "none",
+                    "present" if mv.vpm else "none")
+
+    with Timer("read_vpm_pixels_for_critical_tile"):
+        vpm_rgb = imageio.imread(out_sql)
+        tile_bytes = get_critical_tile(vpm_rgb, tile_size=3)
+        logger.info("Critical tile bytes: %d", len(tile_bytes))
+
+    # -------- profiling summary --------
+    logger.info("==== Profiling Summary ====")
+    for k, v in profile.items():
+        logger.info("%s: %.3fs", k, v)
+    logger.info("Done.")

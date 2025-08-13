@@ -11,7 +11,6 @@ zeromodel system as score distributions may change due to:
 """
 
 import logging
-from timeit import timeit
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -103,27 +102,6 @@ class DynamicNormalizer:
             >>> normalizer.update(scores)
             INFO: Updated ranges for 2 documents
         """
-        # Validate input
-        if not isinstance(score_matrix, np.ndarray):
-            error_msg = f"Expected ndarray, got {type(score_matrix).__name__}"
-            logger.error(error_msg)
-            raise TypeError(error_msg)
-        if score_matrix.ndim != 2:
-            error_msg = f"Expected 2D array, got {score_matrix.ndim}D"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        if score_matrix.shape[1] != len(self.metric_names):
-            error_msg = (f"Column count mismatch: expected {len(self.metric_names)}, "
-                         f"got {score_matrix.shape[1]}")
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        if not self.allow_non_finite and not np.isfinite(score_matrix).all():
-            nan_count = np.isnan(score_matrix).sum()
-            inf_count = np.isinf(score_matrix).sum() - nan_count
-            error_msg = f"Found {nan_count} NaN and {inf_count} Inf values"
-            logger.error(error_msg)
-            raise ValueError("Non-finite values detected" + error_msg)
-        
         logger.debug(f"Processing update with matrix shape {score_matrix.shape}")
         
         # Handle empty batches gracefully
@@ -186,21 +164,6 @@ class DynamicNormalizer:
             >>> normalizer.normalize(scores)
             array([[0.25], [0.75]])  # Assuming range [0.1, 0.3]
         """
-        # Input validation
-        if not isinstance(score_matrix, np.ndarray):
-            error_msg = f"Expected ndarray, got {type(score_matrix).__name__}"
-            logger.error(error_msg)
-            raise TypeError(error_msg)
-        if score_matrix.ndim != 2:
-            error_msg = f"Expected 2D array, got {score_matrix.ndim}D"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-        if score_matrix.shape[1] != len(self.metric_names):
-            error_msg = (f"Column mismatch: expected {len(self.metric_names)}, "
-                         f"got {score_matrix.shape[1]}")
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-            
         logger.debug(f"Normalizing matrix with shape {score_matrix.shape}")
         
         # Preallocate output array

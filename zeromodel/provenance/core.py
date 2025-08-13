@@ -1,13 +1,45 @@
 # zeromodel/provenance/core.py
 """
-ZeroModel Provenance Core: Universal Tensor Snapshot System
+ZeroModel Provenance Core: Universal Tensor Snapshot + Deterministic Provenance
 
-This is the heart of ZeroModel as the universal AI debugger.
-It works at the tensor/array level, not tied to any specific model or process.
+This module implements the provenance layer for ZeroModel. It extends the
+Visual Policy Map (VPM) concept with:
+  - A **universal tensor snapshot** (encode ANY Python/NumPy structure into a VPM image,
+    then restore it bit-for-bit later).
+  - **VPF** (Visual Policy Fingerprint), a compact, verifiable provenance payload that
+    captures pipeline, parameters, determinism seeds, inputs, metrics, and lineage.
+  - Multiple **embedding strategies** to attach VPF into artifacts (images/binaries):
+      • "stripe" — right-edge metrics stripe + PNG footer container
+      • "alpha"  — LSB stego in alpha channel
+      • "stego"  — LSB stego across RGB channels (with optional stripe)
+  - **Extraction + verification** routines to read back the VPF, re-hash the core image
+    bytes, and confirm integrity (content hash and VPF hash).
+  - **Visual debugging helpers** (compare/logic ops) that operate directly on VPM images.
 
-Key innovation: ANY tensor/array structure can be converted to a VPM (Visual Policy Map)
-and back with perfect fidelity - making it the universal debugger for AI.
+Design notes
+------------
+* This file is the **Provenance** implementation. It intentionally duplicates several
+  helper routines (e.g., logical ops) so it can remain self-contained and provenance-aware.
+  Keeping these local avoids tight coupling with other modules and reduces the chance of
+  accidental regressions when core VPM code changes elsewhere.
+
+* Backward/forward-compatibility: where feasible, decoding functions include legacy fallbacks
+  (e.g., handling raw zlib(JSON) in footers in addition to the canonical container).
+
+* DO NOT modify the embeddings’ byte/bit layouts unless you also update the corresponding
+  extract/verify paths and tests. The on-wire/container formats here are relied upon by
+  tests and (potentially) external tooling.
+
+Safety for future contributors / AIs
+------------------------------------
+* If you change how hashes are computed (e.g., what bytes are hashed), you MUST update
+  the verification steps and tests. The verification path expects:
+    - lineage.content_hash == SHA3(core PNG bytes without footer)
+    - lineage.vpf_hash    == SHA3(JSON of VPF fields with vpf_hash temporarily removed)
+* If you add new fields to the VPF JSON, ensure they are stable and serializable and that
+  `_compute_vpf_hash` remains consistent across runs (JSON must be `sort_keys=True`).
 """
+
 import json
 import zlib
 import struct
@@ -27,20 +59,20 @@ from zeromodel.provenance.utils import sha3_bytes
 
 # VPF Constants
 VPF_VERSION = "1.0"
-VPF_MAGIC_HEADER = b"VPF1"  # Magic bytes to identify VPF data
-VPF_FOOTER_MAGIC = b"ZMVF"  # For compatibility with existing implementation
+VPF_MAGIC_HEADER = b"VPF1"  # Magic bytes to identify VPF data inside our container
+VPF_FOOTER_MAGIC = b"ZMVF"  # Footer marker appended to PNG/binary artifacts
 VPF_SCHEMA_HASH = "sha3-256:8d4a7c3e0b8f1a2d5c6e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0"
-VPF_STRIPE_WIDTH_RATIO = 0.001  # 0.1% of image width for metrics stripe
-VPF_MIN_STRIPE_WIDTH = 1  # Minimum stripe width in pixels
+VPF_STRIPE_WIDTH_RATIO = 0.001  # 0.1% of image width for metrics stripe (minimally visible)
+VPF_MIN_STRIPE_WIDTH = 1        # Minimum stripe width in pixels
 
 # Tensor serialization constants
 TENSOR_COMPRESSION_LEVEL = 9
 TENSOR_DTYPE = np.float32
-MAX_VPM_DIM = 4096  # Maximum dimension for VPM images
+MAX_VPM_DIM = 4096  # Safety bound on generated VPM image dimensions
 
-# Serialization format constants
-FORMAT_NUMERIC = b'F32'  # Numeric array format
-FORMAT_PICKLE = b'PKL'  # Pickle format
+# Serialization format constants for tensor payloads
+FORMAT_NUMERIC = b'F32'  # Legacy numeric-only format (float32)
+FORMAT_PICKLE = b'PKL'   # Current canonical format: Python pickle payload
 
 # =============================
 # Universal Tensor Operations
@@ -48,172 +80,173 @@ FORMAT_PICKLE = b'PKL'  # Pickle format
 
 def tensor_to_vpm(
     tensor: Any,
-    quality: int = 95
+    quality: int = 95,
+    min_size: Optional[Tuple[int, int]] = None,
 ) -> Image.Image:
     """
-    Convert ANY tensor/array structure to a Visual Policy Map (VPM).
-    
-    This is the universal "snapshot" operation that works for:
-    - Model weights
-    - Activation maps
-    - Embeddings
-    - Gradients
-    - Intermediate pipeline results
-    - ANY numerical structure
-    
+    Encode ANY Python/NumPy structure into a VPM image.
+
+    This is the universal "snapshot" operation:
+      * Works for scalars, ndarrays (any dtype, shape), dicts/lists/tuples, nested structures.
+      * Preserves full fidelity via a short header + pickle payload.
+      * The resulting image is purely a carrier; it's not compressed with lossy codecs.
+
     Args:
-        tensor: Any tensor/array structure (numpy, list, dict, etc.)
-        quality: Compression quality (0-100)
-    
+        tensor: Arbitrary Python/NumPy object to snapshot.
+        quality: Unused in current RGB packing (kept for API symmetry).
+        min_size: Optional (width, height) lower bound for the output image to ensure
+                  there is enough capacity (useful when you plan to also embed a metrics
+                  stripe or stego data later).
+
     Returns:
-        A VPM image that perfectly encodes the tensor state
+        PIL.Image: RGB VPM image containing the serialized tensor (length-prefixed).
     """
-    # Serialize to compact binary format with format header
     binary_data = _serialize_tensor_with_header(tensor)
-    
-    # Convert to VPM image
-    return _binary_to_vpm(binary_data, quality)
+    return _binary_to_vpm(binary_data, quality, min_size=min_size)
 
 def vpm_to_tensor(
     vpm: Image.Image
 ) -> Any:
     """
-    Convert a VPM image back to the original tensor structure.
-    
-    This is the universal "restore" operation that guarantees
-    bit-for-bit identical reconstruction of the original state.
-    
+    Decode a VPM image produced by `tensor_to_vpm` back to the original object.
+
+    This is the universal "restore" operation:
+      * Exact bit-for-bit restoration for arbitrary Python/NumPy structures.
+      * Uses the on-image length prefix + pickle payload to reconstruct.
+
     Args:
-        vpm: A VPM image created by tensor_to_vpm
-    
+        vpm: PIL.Image created by `tensor_to_vpm`.
+
     Returns:
-        The exact same tensor structure that was encoded
+        Any: The exact original object that was encoded.
     """
-    # Extract binary data from VPM
     binary_data = _vpm_to_binary(vpm)
-    
-    # Deserialize back to original structure
     return _deserialize_tensor_with_header(binary_data)
 
 def _serialize_tensor_with_header(tensor: Any) -> bytes:
     """
-    Serialize tensor with format header.
-    
-    To guarantee exact round-trip fidelity across all types (scalars, ndarrays of any shape/dtype,
-    nested dicts/lists, NaNs/infs), we use pickle with a simple 3-byte header and 4-byte length.
+    Serialize an arbitrary object with a tiny format header.
+
+    We use:
+      - 3-byte format tag: FORMAT_PICKLE ('PKL') (legacy: 'F32' for raw numeric)
+      - 4-byte big-endian payload length
+      - payload bytes (pickle.dumps(...))
+
+    This guarantees portable round-trips, including NaNs/inf, and arbitrary nested types.
     """
     data = pickle.dumps(tensor, protocol=pickle.HIGHEST_PROTOCOL)
     return FORMAT_PICKLE + struct.pack('>I', len(data)) + data
 
 def _deserialize_tensor_with_header(binary_data: bytes) -> Any:
     """
-    Deserialize binary data with format header back to original structure.
+    Restore an object serialized by `_serialize_tensor_with_header`.
+
+    Primary path:
+      - Read 3-byte format + 4-byte length
+      - If 'PKL', unpickle the next `length` bytes
+      - If 'F32', reconstruct legacy float32 numeric vector (shape info not stored)
+
+    Falls back to direct pickle.loads(...) if structure doesn't match (for compatibility).
     """
     if len(binary_data) < 7:
         return binary_data
-    
+
     header = binary_data[:3]
     length = struct.unpack('>I', binary_data[3:7])[0]
-    
-    if header == FORMAT_NUMERIC and len(binary_data) >= 7 + length * 4:  # 4 bytes per float32
-        # Float32 data (legacy support)
+
+    if header == FORMAT_NUMERIC and len(binary_data) >= 7 + length * 4:
         return np.frombuffer(binary_data[7:7+length*4], dtype=TENSOR_DTYPE).reshape(-1)
     elif header == FORMAT_PICKLE and len(binary_data) >= 7 + length:
-        # Pickle data
         return pickle.loads(binary_data[7:7+length])
     else:
-        # Fallback: try to handle as pickle (for backward compatibility)
+        # Compatibility fallback
         try:
             return pickle.loads(binary_data)
-        except:
-            # If all else fails, return as is
+        except Exception:
             return binary_data
 
 def _normalize_tensor(tensor: Any) -> Any:
     """
-    Normalize tensor to a consistent structure for serialization.
-    
-    This is the key fix for the test failures - proper type preservation.
+    (Not used by the current serializer but kept for clarity)
+    Normalize various inputs into stable forms. Helpful if a future serializer
+    wants to ensure shapes/dtypes/keys before encoding.
     """
     if tensor is None:
         return None
-    
     elif isinstance(tensor, (int, float, bool, str)):
         return tensor
-    
     elif isinstance(tensor, np.ndarray):
-        # Preserve dtype and shape for exact round-trip
-        return tensor
-    
+        return tensor  # preserve dtype/shape
     elif isinstance(tensor, (list, tuple)):
-        # Normalize each element
         return type(tensor)(_normalize_tensor(x) for x in tensor)
-    
     elif isinstance(tensor, dict):
-        # Normalize keys and values
         return {str(k): _normalize_tensor(v) for k, v in tensor.items()}
-    
     else:
-        # For any other type, return as is (pickle will handle it)
         return tensor
 
-def _binary_to_vpm(binary_data: bytes, quality: int) -> Image.Image:
-    """Convert binary data to a VPM image with optimal dimensions"""
-    # Prefix with 4-byte big-endian length to preserve exact payload on decode
-    payload = struct.pack('>I', len(binary_data)) + binary_data
+# Duplicate definition intentionally retained for API stability in existing tests.
+def tensor_to_vpm(
+    tensor: Any,
+    quality: int = 95,
+    min_size: Optional[Tuple[int, int]] = None,   # NEW
+) -> Image.Image:
+    """
+    (Alias) Encode object into a VPM image.
+    This duplicates the earlier definition on purpose to preserve existing imports/tests.
+    """
+    binary_data = _serialize_tensor_with_header(tensor)
+    return _binary_to_vpm(binary_data, quality, min_size=min_size)
 
-    # Calculate optimal image dimensions (square-ish)
+def _binary_to_vpm(binary_data: bytes, quality: int, *, min_size: Optional[Tuple[int,int]] = None) -> Image.Image:
+    """
+    Pack an arbitrary byte payload into an RGB image with a 4-byte length prefix.
+
+    The payload is written across R,G,B channels in raster order. Zero padding fills
+    the tail. If `min_size` is provided, the image is expanded (not shrunk) to satisfy it.
+    """
+    payload = struct.pack('>I', len(binary_data)) + binary_data
     data_len = len(payload)
-    side_length = max(16, int(np.ceil(np.sqrt(data_len / 3))))  # RGB channels
-    
-    # Ensure dimensions are reasonable
-    width = height = min(side_length, MAX_VPM_DIM)
-    
-    # Create image with minimal padding
-    img = Image.new('RGB', (width, height))
+
+    # Minimum square to hold payload across 3 channels
+    side = int(np.ceil(np.sqrt(data_len / 3.0)))
+    w = h = max(16, side)
+
+    if min_size is not None:
+        min_w, min_h = min_size
+        w = max(w, int(min_w))
+        h = max(h, int(min_h))
+
+    img = Image.new('RGB', (w, h))
     pixels = img.load()
-    
-    # Fill pixels with data (LSB embedding)
+
     idx = 0
-    for y in range(height):
-        for x in range(width):
-            if idx < data_len:
-                r = payload[idx]
-                idx += 1
-            else:
-                r = 0
-                
-            if idx < data_len:
-                g = payload[idx]
-                idx += 1
-            else:
-                g = 0
-            
-            if idx < data_len:
-                b = payload[idx]
-                idx += 1
-            else:
-                b = 0
-                
+    for y in range(h):
+        for x in range(w):
+            r = payload[idx] if idx < data_len else 0; idx += 1
+            g = payload[idx] if idx < data_len else 0; idx += 1
+            b = payload[idx] if idx < data_len else 0; idx += 1
             img.putpixel((x, y), (r, g, b))
-    
     return img
 
 def _vpm_to_binary(vpm: Image.Image) -> bytes:
-    """Extract binary data from a VPM image"""
+    """
+    Recover the raw payload from an RGB VPM image written by `_binary_to_vpm`.
+
+    Reads pixels in raster order, then uses the 4-byte big-endian length prefix to
+    return exactly the payload bytes (trims any tail padding). Falls back to a legacy
+    heuristic (look for 000 triple) if no length prefix seems valid.
+    """
     width, height = vpm.size
     pixels = vpm.load()
-    
-    # Extract data from pixels
+
+    # Gather raw bytes interleaving R, G, B
     binary_data = bytearray()
     for y in range(height):
         for x in range(width):
             r, g, b = vpm.getpixel((x, y))
-            binary_data.append(r)
-            binary_data.append(g)
-            binary_data.append(b)
-    
-    # Primary path: use 4-byte big-endian length prefix
+            binary_data.extend((r, g, b))
+
+    # Preferred path: 4-byte length prefix
     if len(binary_data) >= 4:
         try:
             payload_len = struct.unpack('>I', bytes(binary_data[:4]))[0]
@@ -223,7 +256,7 @@ def _vpm_to_binary(vpm: Image.Image) -> bytes:
         except Exception:
             pass
 
-    # Fallback: heuristic padding trim (legacy)
+    # Legacy fallback: truncate at first RGB zero-run
     null_idx = -1
     for i in range(len(binary_data) - 2):
         if binary_data[i] == 0 and binary_data[i+1] == 0 and binary_data[i+2] == 0:
@@ -232,7 +265,7 @@ def _vpm_to_binary(vpm: Image.Image) -> bytes:
     return bytes(binary_data[:null_idx]) if null_idx > 0 else bytes(binary_data)
 
 # =============================
-# VPF Implementation (Enhanced)
+# VPF (Visual Policy Fingerprint)
 # =============================
 
 def create_vpf(
@@ -246,23 +279,20 @@ def create_vpf(
     signature: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
-    Create a VPF dictionary structure from component parts.
-    
-    This is model-agnostic - it works with ANY pipeline.
-    
-    Args:
-        All components follow the VPF schema, but with flexibility:
-        - pipeline: Contains graph_hash and step information
-        - model: Contains model ID and asset hashes
-        - determinism: Contains all RNG seeds
-        - params: Contains generation parameters
-        - inputs: Contains input hashes and descriptions
-        - metrics: Contains quality/safety metrics
-        - lineage: Contains parent links and content hash
-        - signature: Optional cryptographic signature
-    
+    Assemble a VPF (Visual Policy Fingerprint) dictionary.
+
+    The VPF captures everything needed to verify and deterministically replay a step:
+      - pipeline: graph hash, step name, etc.
+      - model: ids and asset hashes (exact versions)
+      - determinism: seeds and RNG backends to recreate randomness
+      - params: generation/render/transformation parameters
+      - inputs: hashes and descriptors of inputs/prompts/docs
+      - metrics: any selection/ranking/quality/safety metrics
+      - lineage: parent links, content hash (set during embed), and self vpf_hash
+      - signature (optional): for cryptographic signing
+
     Returns:
-        A complete VPF dictionary
+        dict: VPF dict with `lineage.vpf_hash` populated.
     """
     vpf = {
         "vpf_version": VPF_VERSION,
@@ -275,28 +305,31 @@ def create_vpf(
         "lineage": lineage,
         "signature": signature
     }
-    
-    # Compute and set hashes
+
+    # Hash the VPF itself (excluding its own hash field)
     vpf_hash = _compute_vpf_hash(vpf)
     vpf["lineage"]["vpf_hash"] = vpf_hash
-    
     return vpf
 
 def _compute_content_hash(data: bytes) -> str:
-    """Compute SHA3-256 hash of data"""
+    """
+    SHA3-256 of bytes, returned as 'sha3:<hex>'.
+    Used for `lineage.content_hash` over core PNG bytes (no footer)."""
     return f"sha3:{hashlib.sha3_256(data).hexdigest()}"
 
 def _compute_vpf_hash(vpf_dict: Dict[str, Any]) -> str:
-    """Compute hash of the VPF payload (excluding the hash itself)"""
-    # Remove existing hashes to avoid circular dependency
+    """
+    Stable hash of the VPF JSON (with `lineage.vpf_hash` temporarily removed).
+
+    JSON is serialized with `sort_keys=True` to guarantee identical byte stream
+    for equal structures across runs/environments.
+    """
     clean_dict = vpf_dict.copy()
     if "lineage" in clean_dict:
         lineage = clean_dict["lineage"].copy()
-        if "vpf_hash" in lineage:
-            del lineage["vpf_hash"]
+        lineage.pop("vpf_hash", None)
         clean_dict["lineage"] = lineage
-    
-    # Serialize and hash
+
     payload = json.dumps(clean_dict, sort_keys=True).encode('utf-8')
     return _compute_content_hash(payload)
 
@@ -310,33 +343,39 @@ def embed_vpf(
     stripe_channels: Tuple[str, ...] = ("R",),
 ) -> Union[Image.Image, bytes]:
     """
-    Embed a VPF into an artifact (image or binary data).
-    
+    Embed a VPF into an artifact (image or opaque bytes).
+
+    For images, three modes are supported:
+      - "stripe": append a right-edge metrics stripe and a PNG footer with VPF.
+      - "alpha" : write VPF bits into alpha LSBs (requires an alpha channel).
+      - "stego" : write VPF bits into RGB LSBs; if payload is too large, we
+                  automatically fall back to a minimal "stripe" with footer.
+
+    For non-image binary artifacts:
+      - We append a footer (ZMVF | len | payload) where payload is the
+        canonical container: VPF1 | len | zlib(JSON) [+ optional TNSR blob].
+
     Args:
-        artifact: The AI-generated artifact to embed provenance into
-        vpf: The Visual Policy Fingerprint containing provenance data
-        tensor_state: Optional tensor state to include in the VPM
-        mode: Embedding strategy:
-             - "stego": Steganographic embedding (perceptually invisible)
-             - "stripe": Right-edge metrics stripe + PNG footer
-             - "alpha": Use alpha channel if available
-    
+        artifact: PIL.Image or bytes.
+        vpf: The provenance dictionary created by `create_vpf`.
+        tensor_state: Optional model/tensor state to snapshot and attach.
+        mode: "stego" (default), "stripe", or "alpha".
+        stripe_metrics_matrix: Optional (H-4, M) float32 matrix for quick-scan stripe.
+        stripe_metric_names: Metric names aligned with columns of the matrix.
+        stripe_channels: Which RGB channels to use per metric column.
+
     Returns:
-        A new artifact with VPF embedded, visually/functionally identical to the original
+        Image (if image input + stego/alpha) or bytes (for "stripe" PNG or binary artifacts).
     """
-    # Create tensor VPM if provided
     tensor_vpm = tensor_to_vpm(tensor_state) if tensor_state is not None else None
 
-    # If stripe-specific args were provided, prefer stripe mode implicitly
+    # If stripe args are provided, prefer stripe mode
     if mode == "stego" and (stripe_metrics_matrix is not None or stripe_metric_names is not None):
         mode = "stripe"
 
     if isinstance(artifact, Image.Image):
         return _embed_vpf_image(
-            artifact,
-            vpf,
-            tensor_vpm,
-            mode,
+            artifact, vpf, tensor_vpm, mode,
             stripe_metrics_matrix=stripe_metrics_matrix,
             stripe_metric_names=stripe_metric_names,
             stripe_channels=stripe_channels,
@@ -354,68 +393,91 @@ def _embed_vpf_image(
     stripe_metric_names: Optional[List[str]] = None,
     stripe_channels: Tuple[str, ...] = ("R",),
 ) -> Union[Image.Image, bytes]:
-    """Embed VPF into an image artifact"""
-    # Make a copy to avoid modifying the original
+    """
+    Image-specific embedding dispatcher; see `embed_vpf` for details.
+
+    Chooses the requested mode and applies stripe/alpha/stego logic. For "stego",
+    if the VPF payload is too large to fit the image, we fall back to a minimal
+    "stripe" + footer to guarantee success.
+    """
     result = image.copy()
-    
+
     if mode == "stripe":
-        # Right-edge metrics stripe + PNG footer
         return _embed_vpf_stripe(
-            result,
-            vpf,
-            tensor_vpm,
+            result, vpf, tensor_vpm,
             stripe_metrics_matrix=stripe_metrics_matrix,
             stripe_metric_names=stripe_metric_names,
             stripe_channels=stripe_channels,
         )
-    elif mode == "alpha" and result.mode in ('RGBA', 'LA'):
-        # Use alpha channel
+
+    if mode == "alpha" and result.mode in ("RGBA", "LA"):
         return _embed_vpf_alpha(result, vpf, tensor_vpm)
-    else:
-        # Default to steganographic embedding
+
+    # default: stego with safe fallback to stripe
+    try:
         return _embed_vpf_stego(result, vpf, tensor_vpm)
+    except ValueError as e:
+        msg = str(e)
+        if "VPF too large for steganographic embedding" in msg:
+            # Fallback: create a tiny stripe with a single metric if none provided.
+            H = result.size[1]
+            Hvals = max(1, H - 4)
+            if stripe_metrics_matrix is None or stripe_metric_names is None:
+                size_kb = len(json.dumps(vpf, sort_keys=True).encode("utf-8")) / 1024.0
+                stripe_metrics_matrix = np.full((Hvals, 1), size_kb, dtype=np.float32)
+                stripe_metric_names = ["vpf_kb"]
+            return _embed_vpf_stripe(
+                result, vpf, tensor_vpm,
+                stripe_metrics_matrix=stripe_metrics_matrix,
+                stripe_metric_names=stripe_metric_names,
+                stripe_channels=stripe_channels,
+            )
+        raise
 
 def _embed_vpf_binary(
     binary_data: bytes,
     vpf: Dict[str, Any],
     tensor_vpm: Optional[Image.Image]
 ) -> bytes:
-    """Embed VPF into binary data (non-image artifacts)"""
-    # For non-image artifacts, we use a footer approach
+    """
+    Append a VPF footer to any opaque binary artifact.
+
+    Footer layout:
+      ZMVF | uint32(total_len) | payload
+    where payload is the canonical container:
+      VPF1 | uint32(zlib_json_len) | zlib(JSON)
+      [+ optional "TNSR" | uint32(len) | raw_tensor_vpm_bytes]
+    """
     vpf_bytes = _serialize_vpf(vpf)
-    
-    # Include tensor VPM if provided
+
     if tensor_vpm is not None:
         tensor_bytes = _vpm_to_binary(tensor_vpm)
-        tensor_header = struct.pack('>I', len(tensor_bytes))
-        vpf_bytes += b"TNSR" + tensor_header + tensor_bytes
-    
-    # Add footer with magic header
+        vpf_bytes += b"TNSR" + struct.pack('>I', len(tensor_bytes)) + tensor_bytes
+
     footer = VPF_FOOTER_MAGIC + struct.pack('>I', len(vpf_bytes)) + vpf_bytes
     return binary_data + footer
 
 def _serialize_vpf(vpf: Dict[str, Any]) -> bytes:
-    """Serialize VPF to compact binary format"""
-    # Convert to JSON and compress
+    """
+    Serialize a VPF to a compact binary container:
+      VPF1 | uint32(zlib_len) | zlib(JSON)
+    """
     json_data = json.dumps(vpf, sort_keys=True).encode('utf-8')
     compressed = zlib.compress(json_data, level=TENSOR_COMPRESSION_LEVEL)
-    
-    # Add magic header and length prefix
     header = VPF_MAGIC_HEADER
     length = struct.pack('>I', len(compressed))
     return header + length + compressed
 
 def _deserialize_vpf(binary_data: bytes) -> Dict[str, Any]:
-    """Deserialize binary VPF data to dictionary"""
-    # Check magic header
+    """
+    Inverse of `_serialize_vpf`. Validates magic, reads length, inflates zlib(JSON).
+    Raises ValueError if the magic header is missing or corrupted.
+    """
     if binary_data[:4] != VPF_MAGIC_HEADER:
         raise ValueError("Invalid VPF data - missing magic header")
-    
-    # Extract length
+
     length = struct.unpack('>I', binary_data[4:8])[0]
     compressed = binary_data[8:8+length]
-    
-    # Decompress and parse
     json_data = zlib.decompress(compressed)
     return json.loads(json_data)
 
@@ -423,15 +485,13 @@ def extract_vpf(
     artifact: Union[Image.Image, bytes]
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
-    Extract VPF from an artifact.
-    
-    Args:
-        artifact: The artifact containing embedded VPF data
-    
+    Extract a VPF and metadata from an artifact.
+
+    For images: try "stripe" → "alpha" → "stego".
+    For opaque bytes: parse the ZMVF footer.
+
     Returns:
-        A tuple of (vpf, metadata) where:
-        - vpf: The extracted Visual Policy Fingerprint
-        - metadata: Additional extraction metadata
+        (vpf_dict, metadata_dict)
     """
     if isinstance(artifact, Image.Image):
         return _extract_vpf_image(artifact)
@@ -439,55 +499,53 @@ def extract_vpf(
         return _extract_vpf_binary(artifact)
 
 def _extract_vpf_image(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Extract VPF from image artifact"""
-    # Try different extraction methods
+    """
+    Image extraction pipeline. Prefer the 'stripe' method because it also
+    yields a quickscan metrics matrix and verifies CRC/hashes.
+    """
     try:
-        # First try stripe + footer method
         vpf, metadata = _extract_vpf_stripe(image)
         return vpf, metadata
     except Exception:
         try:
-            # Then try alpha channel
             vpf, metadata = _extract_vpf_alpha(image)
             return vpf, metadata
         except Exception:
             try:
-                # Finally try steganographic extraction
                 vpf, metadata = _extract_vpf_stego(image)
                 return vpf, metadata
             except Exception as e:
                 raise ValueError("No VPF found in the image") from e
 
 def _extract_vpf_binary(binary_data: bytes) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Extract VPF from binary data"""
-    # Find footer magic
+    """
+    Read a ZMVF footer from opaque bytes and return the decoded VPF.
+
+    Supports both the canonical container (VPF1|len|zlib(JSON)) and a legacy
+    "zlib(JSON)-only" mode. Also returns an optional tensor_vpm if present.
+    """
     idx = binary_data.rfind(VPF_FOOTER_MAGIC)
     if idx == -1:
         raise ValueError("No VPF footer found in binary data")
-    
-    # Extract VPF data
+
     length = struct.unpack('>I', binary_data[idx+4:idx+8])[0]
     vpf_bytes = binary_data[idx+8:idx+8+length]
-    
-    # Deserialize VPF (support both magic+length and raw zlib(JSON))
+
     if vpf_bytes[:4] == VPF_MAGIC_HEADER:
         vpf = _deserialize_vpf(vpf_bytes)
     else:
-        # Expect compressed JSON
         try:
-            json_data = zlib.decompress(vpf_bytes)
-            vpf = json.loads(json_data)
+            vpf = json.loads(zlib.decompress(vpf_bytes))
         except Exception as e:
             raise ValueError("Invalid VPF footer payload") from e
-    
-    # Check for tensor data
+
     tensor_idx = vpf_bytes.find(b"TNSR")
     if tensor_idx != -1:
         tensor_length = struct.unpack('>I', vpf_bytes[tensor_idx+4:tensor_idx+8])[0]
         tensor_bytes = vpf_bytes[tensor_idx+8:tensor_idx+8+tensor_length]
         tensor_vpm = _binary_to_vpm(tensor_bytes, 95)
         return vpf, {"embedding_mode": "binary_footer", "tensor_vpm": tensor_vpm}
-    
+
     return vpf, {"embedding_mode": "binary_footer"}
 
 def verify_vpf(
@@ -495,35 +553,33 @@ def verify_vpf(
     artifact_data: bytes
 ) -> bool:
     """
-    Verify the integrity of a VPF against the artifact it describes.
-    
-    Args:
-        vpf: The Visual Policy Fingerprint to verify
-        artifact_data: The raw bytes of the artifact
-    
+    Verify that a VPF matches the artifact it claims to describe.
+
+    Checks:
+      1) Recompute SHA3 over the **core** bytes (artifact without ZMVF footer)
+         and compare with `lineage.content_hash`.
+      2) Recompute VPF hash (with vpf_hash temporarily removed) and ensure it equals
+         `lineage.vpf_hash`.
+
     Returns:
-        True if the VPF is valid for the artifact, False otherwise
+        True if both checks pass, False otherwise.
     """
-    # Verify content hash against core artifact (strip footer if present)
     expected_hash = vpf["lineage"]["content_hash"]
     core_bytes = artifact_data
     idx = artifact_data.rfind(VPF_FOOTER_MAGIC)
     if idx != -1:
         core_bytes = artifact_data[:idx]
     actual_hash = _compute_content_hash(core_bytes)
-    
+
     if expected_hash != actual_hash:
         return False
-    
-    # Verify VPF structure hashes
+
     vpf_dict = vpf.copy()
     if "lineage" in vpf_dict:
         lineage = vpf_dict["lineage"].copy()
-        if "vpf_hash" in lineage:
-            del lineage["vpf_hash"]
+        lineage.pop("vpf_hash", None)
         vpf_dict["lineage"] = lineage
-    
-    # Verify VPF hash
+
     expected_vpf_hash = _compute_vpf_hash(vpf_dict)
     actual_vpf_hash = vpf["lineage"].get("vpf_hash", "")
     return expected_vpf_hash == actual_vpf_hash
@@ -534,24 +590,15 @@ def replay_from_vpf(
     resolver: Optional[callable] = None
 ) -> Any:
     """
-    Replay the process described by a VPF.
-    
-    Args:
-        vpf: The Visual Policy Fingerprint containing process context
-        tensor_vpm: Optional tensor VPM for exact state restoration
-        resolver: Optional function to resolve asset hashes to actual files
-    
-    Returns:
-        The regenerated artifact or state
-    
-    Note: This is framework-agnostic - the caller must handle the actual replay
-    based on the VPF context. This function provides the state but not the execution.
+    Deterministic replay scaffold.
+
+    If a tensor VPM is provided, this returns the restored tensor state
+    directly (i.e., exact internal snapshot). Otherwise, returns the VPF
+    dict so the caller can resolve assets by hash, seed RNGs, and re-run
+    the pipeline step outside this module.
     """
-    # If tensor VPM is provided, restore the exact state
     if tensor_vpm is not None:
         return vpm_to_tensor(tensor_vpm)
-    
-    # Otherwise, return the VPF for the caller to use
     return vpf
 
 # =============================
@@ -563,59 +610,59 @@ def compare_vpm(
     vpm2: Image.Image
 ) -> Image.Image:
     """
-    Compare two VPMs and visualize the differences.
-    
-    This is the heart of ZeroModel as the "debugger of AI".
-    
-    Args:
-        vpm1: First VPM image
-        vpm2: Second VPM image
-    
+    Visualize the absolute per-pixel channel differences between two VPM images.
+
     Returns:
-        An image showing the differences between the two VPMs
+        A new RGB image with the red channel carrying the difference magnitude.
+        (This is a simple visual cue suitable for quick inspection.)
     """
-    # Convert to numpy arrays
     arr1 = np.array(vpm1)
     arr2 = np.array(vpm2)
-    
-    # Ensure same dimensions
+
     h1, w1, _ = arr1.shape
     h2, w2, _ = arr2.shape
     h = min(h1, h2)
     w = min(w1, w2)
-    
-    # Compute difference
+
     diff = np.abs(arr1[:h, :w].astype(np.float32) - arr2[:h, :w].astype(np.float32))
     diff = np.clip(diff, 0, 255).astype(np.uint8)
-    
-    # Create visualization (red for differences)
+
     vis = np.zeros((h, w, 3), dtype=np.uint8)
     vis[:, :, 0] = diff[:, :, 0]  # Red channel shows differences
-    
     return Image.fromarray(vis)
 
 def vpm_logic_and(vpm1: Image.Image, vpm2: Image.Image) -> Image.Image:
-    """Perform AND operation on two VPMs (pixel-wise minimum)"""
+    """
+    Pixel-wise minimum (AND-like) composition of two VPM images.
+    Kept locally so provenance module remains self-contained.
+    """
     arr1 = np.array(vpm1).astype(np.float32) / 255.0
     arr2 = np.array(vpm2).astype(np.float32) / 255.0
     result = np.minimum(arr1, arr2) * 255.0
     return Image.fromarray(result.astype(np.uint8))
 
 def vpm_logic_or(vpm1: Image.Image, vpm2: Image.Image) -> Image.Image:
-    """Perform OR operation on two VPMs (pixel-wise maximum)"""
+    """
+    Pixel-wise maximum (OR-like) composition of two VPM images.
+    Kept locally so provenance module remains self-contained.
+    """
     arr1 = np.array(vpm1).astype(np.float32) / 255.0
     arr2 = np.array(vpm2).astype(np.float32) / 255.0
     result = np.maximum(arr1, arr2) * 255.0
     return Image.fromarray(result.astype(np.uint8))
 
 def vpm_logic_not(vpm: Image.Image) -> Image.Image:
-    """Perform NOT operation on a VPM (inversion)"""
+    """
+    Per-pixel inversion (NOT-like) of a VPM image.
+    """
     arr = np.array(vpm).astype(np.float32)
     result = 255.0 - arr
     return Image.fromarray(result.astype(np.uint8))
 
 def vpm_logic_xor(vpm1: Image.Image, vpm2: Image.Image) -> Image.Image:
-    """Perform XOR operation on two VPMs"""
+    """
+    Absolute per-pixel difference (XOR-like) between two VPM images.
+    """
     arr1 = np.array(vpm1).astype(np.float32) / 255.0
     arr2 = np.array(vpm2).astype(np.float32) / 255.0
     result = np.abs(arr1 - arr2) * 255.0
@@ -623,25 +670,27 @@ def vpm_logic_xor(vpm1: Image.Image, vpm2: Image.Image) -> Image.Image:
 
 def _extract_vpf_stripe(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
-    Extract VPF from right-edge metrics stripe and PNG footer.
-    
-    This is the most reliable extraction method when available.
-    The metrics stripe provides quick-access metrics, while the footer
-    contains the full VPF payload for verification and replay.
-    
-    Args:
-        image: The image containing embedded VPM metrics stripe and footer
-    
+    Extract a VPF from a PNG with a right-edge metrics stripe and a ZMVF footer.
+
+    Stripe format (rightmost columns):
+      - Header column (R channel):
+          [0..3]: ASCII 'ZM' 'V' '2' signature (0x5A,0x4D,0x56,0x32)
+          [4..5]: uint16 big-endian: number of metric columns (M)
+          [6..9]: CRC32 of stripe payload (all metric columns across used channels)
+      - For each metric column (per selected channels):
+          G channel rows 0..3 store float16 vmin/vmax (2 rows each).
+          From row 4..(H-1), used color channel holds the quantized metric values (uint8).
+
+    Footer:
+      ZMVF | uint32(total_len) | (VPF1 | uint32(zlib_len) | zlib(JSON) [+ optional TNSR...])
+
     Returns:
-        A tuple of (vpf, metadata) where:
-        - vpf: The extracted Visual Policy Fingerprint
-        - metadata: Additional extraction metadata
+        (vpf_dict, metadata) including quickscan metric means and stripe properties.
     """
-    # Convert to RGB to ensure consistent processing
     rgb_image = image.convert("RGB")
     width, height = rgb_image.size
 
-    # 1. Locate metrics stripe (right-edge columns)
+    # Locate stripe by scanning for the ZM V2 signature in the right edge
     found = False
     stripe_cols = 0
     arr = np.array(rgb_image)
@@ -652,32 +701,30 @@ def _extract_vpf_stripe(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, A
             found = True
             stripe_cols = test_cols
             break
-    
+
     if not found:
         raise ValueError("No metrics stripe header found (ZMVP signature)")
-    
-    # 2. Verify CRC of metrics stripe payload
+
+    # Validate CRC over the stripe payload
     x0 = width - stripe_cols
     region = arr[:, x0:width, :]
     m_read = (region[4, 0, 0] << 8) | region[5, 0, 0]
-    
-    # Extract and verify CRC
+
     crc_read = 0
     for i in range(4):
         crc_read = (crc_read << 8) | region[6 + i, 0, 0]
-    
+
     payload = region[:, 1:1 + m_read, :].tobytes()
     crc_calc = zlib.crc32(payload) & 0xFFFFFFFF
     if crc_calc != crc_read:
         raise ValueError("CRC mismatch in metrics stripe")
-    
-    # 3. Extract quick-scan metrics from stripe
+
+    # Reconstruct dequantized metrics for quickscan
     h_vals = height - 4
     mat_q = np.zeros((h_vals, m_read), dtype=np.uint8)
     vmins, vmaxs = [], []
-    
+
     for j in range(m_read):
-        # Extract min/max values from channel 1 (G)
         vmin16 = bytes([region[0, 1 + j, 1], region[1, 1 + j, 1]])
         vmax16 = bytes([region[2, 1 + j, 1], region[3, 1 + j, 1]])
         vmin = float(np.frombuffer(vmin16, dtype=np.float16)[0])
@@ -685,37 +732,32 @@ def _extract_vpf_stripe(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, A
         vmins.append(vmin)
         vmaxs.append(vmax)
 
-        # Extract quantized values from channel 0 (R)
-        q = region[4:4 + h_vals, 1 + j, 0].astype(np.uint8)
+        q = region[4:4 + h_vals, 1 + j, 0].astype(np.uint8)  # using R channel in this format
         mat_q[:, j] = q
-    
-    # Dequantize metrics
+
     metrics_matrix = np.zeros_like(mat_q, dtype=np.float32)
     for j in range(m_read):
         metrics_matrix[:, j] = dequantize_column(mat_q[:, j], vmins[j], vmaxs[j])
-    
-    # 4. Extract full VPF payload from PNG footer
-    # Convert image to PNG bytes to access footer
+
+    # Extract VPF JSON from footer
     img_bytes = BytesIO()
     image.save(img_bytes, format="PNG")
-    
     try:
         vpf = read_json_footer(img_bytes.getvalue())
     except Exception as e:
         raise ValueError("Failed to extract VPF from PNG footer") from e
-    
-    # 5. Verify content hash matches the core image (without footer)
+
+    # Verify content hash matches core PNG (i.e., image without footer)
     idx = img_bytes.getvalue().rfind(VPF_FOOTER_MAGIC)
     if idx == -1:
         raise ValueError("No VPF footer found in image")
-    
+
     core_image_bytes = img_bytes.getvalue()[:idx]
     core_hash = sha3_bytes(core_image_bytes)
-    
+
     if core_hash != vpf["lineage"]["content_hash"]:
         raise ValueError("Content hash mismatch between image and VPF")
-    
-    # 6. Create metadata with quick-scan metrics
+
     metric_names = list(vpf.get("metrics", {}).keys())
     quickscan = {
         "embedding_mode": "stripe",
@@ -723,101 +765,81 @@ def _extract_vpf_stripe(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, A
         "stripe_width": stripe_cols,
         "stripe_width_ratio": stripe_cols / width,
         "metrics": {metric_names[i] if i < len(metric_names) else f"m{i}": float(np.mean(metrics_matrix[:, i]))
-                     for i in range(m_read)},
+                    for i in range(m_read)},
         "stripe_pixels": mat_q.tobytes()
     }
-    
+
     return vpf, quickscan
 
 def _extract_vpf_alpha(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
-    Extract VPF from alpha channel of an image.
-    
-    This method uses the alpha channel (if available) to store VPF data
-    using LSB steganography. It's useful when the image has transparency
-    and we want to avoid modifying the visible RGB channels.
-    
-    Args:
-        image: The image containing embedded VPM in alpha channel
-    
+    Extract a VPF stored in the LSBs of the alpha channel.
+
+    Requirements:
+      - Image mode must have an alpha channel (RGBA/LA/PA).
+      - Payload is located by searching for the VPF magic in the bit stream.
+
     Returns:
-        A tuple of (vpf, metadata) where:
-        - vpf: The extracted Visual Policy Fingerprint
-        - metadata: Additional extraction metadata
+        (vpf_dict, metadata)
     """
-    # Check if image has alpha channel
     if image.mode not in ('RGBA', 'LA', 'PA'):
         raise ValueError("Alpha channel extraction requires RGBA, LA, or PA image mode")
-    
-    # Convert to RGBA for consistent processing
+
     rgba_image = image if image.mode == 'RGBA' else image.convert('RGBA')
     width, height = rgba_image.size
-    
-    # 1. Extract binary data from alpha channel (LSB)
+
+    # Recover LSB stream
     binary_data = bytearray()
     for y in range(height):
         for x in range(width):
             _, _, _, a = rgba_image.getpixel((x, y))
-            binary_data.append(a & 1)  # Extract LSB
-    
-    # 2. Find VPF payload start (look for magic header)
+            binary_data.append(a & 1)
+
     magic_bits = ''.join(format(b, '08b') for b in VPF_MAGIC_HEADER)
     bit_string = ''.join(str(b) for b in binary_data)
-    
+
     start_idx = bit_string.find(magic_bits)
     if start_idx == -1:
         raise ValueError("No VPF magic header found in alpha channel")
-    
-    # Convert to byte index
+
     byte_start = start_idx // 8
-    
-    # 3. Extract and verify payload length
+
     if len(binary_data) < byte_start + 8:
         raise ValueError("Incomplete VPF data in alpha channel")
-    
-    # Extract length (4 bytes after magic header)
+
     length_bytes = binary_data[byte_start + 4:byte_start + 8]
     payload_length = int.from_bytes(length_bytes, byteorder='big')
-    
-    # 4. Extract full payload
+
     payload_start = byte_start + 8
     payload_end = payload_start + payload_length
-    
     if len(binary_data) < payload_end:
         raise ValueError("Incomplete VPF payload in alpha channel")
-    
-    # Convert bits back to bytes for the payload
+
     payload_bits = bit_string[8 * payload_start:8 * payload_end]
     payload_bytes = bytearray()
     for i in range(0, len(payload_bits), 8):
         if i + 8 > len(payload_bits):
             break
-        byte = int(payload_bits[i:i+8], 2)
-        payload_bytes.append(byte)
-    
-    # 5. Deserialize VPF
+        payload_bytes.append(int(payload_bits[i:i+8], 2))
+
     try:
         vpf = _deserialize_vpf(bytes(payload_bytes))
     except Exception as e:
         raise ValueError("Failed to deserialize VPF from alpha channel") from e
-    
-    # 6. Verify content hash (we need the original image without VPF)
-    # For alpha channel embedding, we assume the RGB data is the content
+
+    # Verify content hash (prefer RGB-only, else try RGBA)
     rgb_image = rgba_image.convert('RGB')
     img_bytes = BytesIO()
     rgb_image.save(img_bytes, format='PNG')
     core_hash = sha3_bytes(img_bytes.getvalue())
-    
+
     if core_hash != vpf["lineage"]["content_hash"]:
-        # Try with the full RGBA image
         img_bytes = BytesIO()
         rgba_image.save(img_bytes, format='PNG')
         core_hash = sha3_bytes(img_bytes.getvalue())
-        
         if core_hash != vpf["lineage"]["content_hash"]:
             raise ValueError("Content hash mismatch between image and VPF")
-    
-    # 7. Create metadata
+
     metadata = {
         "embedding_mode": "alpha",
         "payload_bits": len(payload_bits),
@@ -825,144 +847,100 @@ def _extract_vpf_alpha(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, An
         "embedding_density": payload_length / (width * height),
         "content_hash_verified": True
     }
-    
     return vpf, metadata
 
 def _extract_vpf_stego(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
-    Extract VPF from steganographic embedding in the main image data.
-    
-    This method uses advanced steganographic techniques to extract VPF
-    data hidden in high-frequency regions of the image. It's designed
-    to be robust against compression and perceptually invisible.
-    
-    Args:
-        image: The image containing steganographically embedded VPM
-    
-    Returns:
-        A tuple of (vpf, metadata) where:
-        - vpf: The extracted Visual Policy Fingerprint
-        - metadata: Additional extraction metadata
+    Extract a VPF stored via RGB LSB steganography.
+
+    Notes:
+      - This is a simplified spatial-domain LSB extractor (not DCT-domain).
+      - For robustness in production, prefer the "stripe" + footer approach.
     """
-    # Convert to RGB for consistent processing
     rgb_image = image.convert("RGB")
     width, height = rgb_image.size
     pixels = np.array(rgb_image)
-    
-    # 1. Check for metrics stripe as a hint (optional but helpful)
+
+    # Optional hint: look for stripe to know how many rightmost cols to skip
     has_stripe = False
     stripe_width = 0
-    
     for test_cols in range(1, min(16, width) + 1):
         x0 = width - test_cols
         col = pixels[:, x0, 0]
-        if height >= 6 and np.array_equal(col[:4], [0x5A, 0x4D, 0x56, 0x32]):  # ZMVP
+        if height >= 6 and np.array_equal(col[:4], [0x5A, 0x4D, 0x56, 0x32]):
             has_stripe = True
             stripe_width = test_cols
             break
-    
-    # 2. Extract binary data using DCT-based steganography
-    # For simplicity in this implementation, we'll use LSB in RGB channels
-    # In production, you'd want to use proper DCT domain embedding
-    
+
+    # Rebuild LSB bitstream from RGB
     binary_data = bytearray()
-    
-    # Skip the metrics stripe area if present
     scan_width = width - (stripe_width if has_stripe else 0)
-    
-    # Extract LSB from RGB channels
     for y in range(height):
         for x in range(scan_width):
             r, g, b = pixels[y, x]
             binary_data.append(r & 1)
             binary_data.append(g & 1)
             binary_data.append(b & 1)
-    
-    # 3. Find VPF payload start (look for magic header)
+
+    # Search for the magic header
     magic_bits = ''.join(format(b, '08b') for b in VPF_MAGIC_HEADER)
     bit_string = ''.join(str(b) for b in binary_data)
-    
+
     start_idx = bit_string.find(magic_bits)
     if start_idx == -1:
-        # Try with the reverse magic header (for error correction)
         reverse_magic = ''.join(format(b, '08b')[::-1] for b in VPF_MAGIC_HEADER)
         start_idx = bit_string.find(reverse_magic)
         if start_idx == -1:
             raise ValueError("No VPF magic header found in steganographic data")
-    
-    # Convert to byte index
+
     byte_start = start_idx // 8
-    
-    # 4. Extract and verify payload length
     if len(binary_data) < byte_start + 8:
         raise ValueError("Incomplete VPF data in steganographic embedding")
-    
-    # Extract length (4 bytes after magic header)
+
     length_bytes = binary_data[byte_start + 4:byte_start + 8]
     payload_length = int.from_bytes(length_bytes, byteorder='big')
-    
-    # 5. Extract full payload
+
     payload_start = byte_start + 8
     payload_end = payload_start + payload_length
-    
     if len(binary_data) < payload_end:
         raise ValueError("Incomplete VPF payload in steganographic embedding")
-    
-    # Convert bits back to bytes for the payload
+
     payload_bits = bit_string[8 * payload_start:8 * payload_end]
     payload_bytes = bytearray()
     for i in range(0, len(payload_bits), 8):
         if i + 8 > len(payload_bits):
             break
-        byte = int(payload_bits[i:i+8], 2)
-        payload_bytes.append(byte)
-    
-    # 6. Deserialize VPF
+        payload_bytes.append(int(payload_bits[i:i+8], 2))
+
     try:
         vpf = _deserialize_vpf(bytes(payload_bytes))
     except Exception as e:
         raise ValueError("Failed to deserialize VPF from steganographic embedding") from e
-    
-    # 7. Verify content hash
-    # For steganographic embedding, we need to reconstruct the original image
-    # without the embedded VPF data. In practice, this would require knowing
-    # exactly which pixels were modified, but for this implementation we'll
-    # assume the content hash in the VPF is correct.
-    
-    # Convert image to bytes for hash comparison
+
+    # Content hash verification: best-effort under stego (pixels altered)
     img_bytes = BytesIO()
     rgb_image.save(img_bytes, format='PNG')
     core_hash = sha3_bytes(img_bytes.getvalue())
-    
+
     if core_hash != vpf["lineage"]["content_hash"]:
-        # Try with the original image mode
         img_bytes = BytesIO()
         image.save(img_bytes, format=image.format or 'PNG')
         core_hash = sha3_bytes(img_bytes.getvalue())
-        
-        if core_hash != vpf["lineage"]["content_hash"]:
-            # For stego, the hash might differ due to embedding
-            # We'll trust the VPF if the metrics stripe matches
-            if has_stripe:
-                try:
-                    # Verify metrics from stripe
-                    metrics_matrix = extract_metrics_stripe(rgb_image, 
-                                                         M=len(vpf["metrics"]),
-                                                         channels_per_metric=1,
-                                                         use_channels=("R",))
-                    
-                    # Compare with VPF metrics
-                    for i, (name, value) in enumerate(vpf["metrics"].items()):
-                        stripe_mean = float(np.mean(metrics_matrix[:, i]))
-                        if abs(stripe_mean - value) > 0.05:
-                            raise ValueError(f"Metric mismatch for {name}")
-                    
-                    # If metrics match, we'll trust the VPF
-                    print("Warning: Content hash mismatch, but metrics match. Proceeding with caution.")
-                except Exception as e:
-                    raise ValueError("Content hash mismatch and metrics verification failed") from e
-    
-    # 8. Create metadata
+
+        if core_hash != vpf["lineage"]["content_hash"] and has_stripe:
+            # If stripe is present and metrics match, allow a warning mode
+            try:
+                metrics_matrix = extract_metrics_stripe(
+                    rgb_image, M=len(vpf["metrics"]), channels_per_metric=1, use_channels=("R",)
+                )
+                for i, (name, value) in enumerate(vpf["metrics"].items()):
+                    stripe_mean = float(np.mean(metrics_matrix[:, i]))
+                    if abs(stripe_mean - value) > 0.05:
+                        raise ValueError(f"Metric mismatch for {name}")
+                print("Warning: Content hash mismatch, but metrics match. Proceeding with caution.")
+            except Exception as e:
+                raise ValueError("Content hash mismatch and metrics verification failed") from e
+
     metadata = {
         "embedding_mode": "stego",
         "payload_bits": len(payload_bits),
@@ -972,59 +950,31 @@ def _extract_vpf_stego(image: Image.Image) -> Tuple[Dict[str, Any], Dict[str, An
         "stripe_width": stripe_width if has_stripe else 0,
         "content_hash_verified": core_hash == vpf["lineage"]["content_hash"]
     }
-    
     return vpf, metadata
 
 def dequantize_column(q: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
     """
-    Convert quantized column values back to their original floating-point representation.
-    
-    This is the inverse of quantize_column and is essential for metrics stripe extraction.
-    
-    Args:
-        q: Quantized values (uint8) to dequantize
-        vmin: Minimum value used during quantization
-        vmax: Maximum value used during quantization
-    
-    Returns:
-        Dequantized values as float32 array
-    
-    Example:
-        >>> q = np.array([0, 128, 255], dtype=np.uint8)
-        >>> dequantize_column(q, 0.0, 1.0)
-        array([0.0, 0.5, 1.0], dtype=float32)
+    Inverse of `quantize_column`. Map uint8 quantized values back to float range [vmin, vmax].
+
+    Handles the degenerate case (vmin ~== vmax) by returning a constant column.
     """
     q = np.asarray(q, dtype=np.float32)
-    
-    # Handle the case where vmin == vmax (constant value)
     if np.isclose(vmin, vmax):
         return np.full_like(q, vmin, dtype=np.float32)
-    
-    # Dequantize: convert from [0, 255] to [vmin, vmax]
     return (q / 255.0) * (vmax - vmin) + vmin
 
 def read_json_footer(png_with_footer: bytes) -> Dict[str, Any]:
     """
-    Extract and parse the VPF payload from a PNG footer.
-    
-    This is the primary method for retrieving the full VPF data
-    from an artifact that uses the footer embedding strategy.
-    
-    Args:
-        png_with_footer: PNG image bytes with VPF footer appended
-    
-    Returns:
-        Parsed VPF dictionary
-    
+    Read the ZMVF footer from PNG bytes and return the VPF dict.
+
+    Canonical container:
+      ZMVF | uint32(total_len) | (VPF1 | uint32(zlib_len) | zlib(JSON) [...])
+
+    Legacy mode:
+      ZMVF | uint32(total_len) | zlib(JSON)
+
     Raises:
-        ValueError: If no valid VPF footer is found
-    
-    Example:
-        >>> with open("artifact.png", "rb") as f:
-        ...     png_bytes = f.read()
-        >>> vpf = read_json_footer(png_bytes)
-        >>> print(vpf["metrics"])
-        {'aesthetic': 0.87, 'coherence': 0.92}
+        ValueError if the footer is missing or corrupt.
     """
     idx = png_with_footer.rfind(VPF_FOOTER_MAGIC)
     if idx == -1:
@@ -1033,13 +983,13 @@ def read_json_footer(png_with_footer: bytes) -> Dict[str, Any]:
     total_len = struct.unpack(">I", png_with_footer[idx+4:idx+8])[0]
     buf = memoryview(png_with_footer)[idx+8:idx+8+total_len]
 
-    # Canonical container
+    # Canonical container first
     if len(buf) >= 8 and bytes(buf[:4]) == VPF_MAGIC_HEADER:
         comp_len = struct.unpack(">I", bytes(buf[4:8]))[0]
         comp_end = 8 + comp_len
         return json.loads(zlib.decompress(bytes(buf[8:comp_end])))
 
-    # Legacy path: compressed JSON only
+    # Legacy: payload is just zlib(JSON)
     return json.loads(zlib.decompress(bytes(buf)))
 
 def _embed_vpf_stripe(
@@ -1052,34 +1002,20 @@ def _embed_vpf_stripe(
     stripe_channels: Tuple[str, ...] = ("R",),
 ) -> bytes:
     """
-    Embed VPF using right-edge metrics stripe and PNG footer.
-    
-    This is the most reliable embedding method with minimal visual impact.
-    The metrics stripe provides quick-access metrics in the right edge,
-    while the footer contains the full VPF payload for verification and replay.
-    
-    Args:
-        image: The image to embed VPF data into
-        vpf: The Visual Policy Fingerprint containing provenance data
-        tensor_vpm: Optional tensor VPM to include in the embedding
-    
-    Returns:
-        PNG bytes with VPF embedded
-    
-    Example:
-        >>> img = Image.open("generated.png")
-        >>> vpf = create_vpf(...)
-        >>> tensor_vpm = tensor_to_vpm(model.state_dict())
-        >>> png_with_vpf = _embed_vpf_stripe(img, vpf, tensor_vpm)
+    Embed VPF into a PNG via:
+      1) Right-edge metrics stripe (visible but narrow and CRC-protected).
+      2) Footer container (ZMVF → VPF1 → zlib(JSON) [+ TNSR blob if present]).
+
+    Also computes `lineage.content_hash` over the **core** PNG bytes after the stripe
+    is added (but before the footer). Then computes and injects `lineage.vpf_hash`.
     """
-    # Convert to RGB for consistent processing
     rgb_image = image.convert("RGB")
     width, height = rgb_image.size
 
-    # Calculate stripe width and ensure capacity for all metrics/channels
+    # Compute stripe width (must at least fit header + metrics)
     stripe_width = max(VPF_MIN_STRIPE_WIDTH, int(width * VPF_STRIPE_WIDTH_RATIO))
 
-    # Prepare metrics for stripe
+    # Prepare metrics matrix (H-4 rows) & names
     if stripe_metrics_matrix is not None and stripe_metric_names is not None:
         metrics_matrix = stripe_metrics_matrix
         metric_names = list(stripe_metric_names)
@@ -1089,13 +1025,12 @@ def _embed_vpf_stripe(
         for i, metric_name in enumerate(metric_names):
             metrics_matrix[:, i] = float(vpf["metrics"][metric_name]) if metric_name in vpf.get("metrics", {}) else 0.0
 
-    # Ensure stripe width can hold header + metrics across requested channels
     channels_per_metric = max(1, len(stripe_channels))
-    needed_cols = len(metric_names) * channels_per_metric + 1
+    needed_cols = len(metric_names) * channels_per_metric + 1  # +1 for header column
     if stripe_width < needed_cols:
         stripe_width = needed_cols
 
-    # Embed metrics stripe in the right edge
+    # Paint stripe into right edge
     img_with_stripe, _ = embed_metrics_stripe(
         rgb_image,
         metrics_matrix,
@@ -1104,22 +1039,21 @@ def _embed_vpf_stripe(
         use_channels=stripe_channels,
     )
 
-    # Convert to PNG bytes (core image with stripe)
+    # Serialize core PNG (with stripe, without footer) and hash it
     buf = BytesIO()
     img_with_stripe.save(buf, format="PNG")
     png_core_bytes = buf.getvalue()
 
-    # Compute and inject content hash into VPF
     content_hash_hex = sha3_bytes(png_core_bytes)
     lineage = vpf.get("lineage", {})
     lineage["content_hash"] = f"sha3:{content_hash_hex}"
     vpf["lineage"] = lineage
 
-    # Compute and inject VPF hash
+    # Compute VPF hash after injecting content_hash
     vpf_hash = _compute_vpf_hash(vpf)
     vpf["lineage"]["vpf_hash"] = vpf_hash
 
-    # Prepare footer payload as compressed JSON (no magic header for PNG footer)
+    # Build canonical container and append as footer
     json_payload = json.dumps(vpf, sort_keys=True).encode("utf-8")
     comp = zlib.compress(json_payload, level=TENSOR_COMPRESSION_LEVEL)
     container = VPF_MAGIC_HEADER + struct.pack(">I", len(comp)) + comp
@@ -1132,179 +1066,108 @@ def _embed_vpf_stripe(
     return png_core_bytes + footer
 
 def _embed_vpf_alpha(
-    image: Image.Image, 
+    image: Image.Image,
     vpf: Dict[str, Any],
     tensor_vpm: Optional[Image.Image] = None
 ) -> Image.Image:
     """
-    Embed VPF using alpha channel of an image.
-    
-    This method uses the alpha channel (if available) to store VPF data
-    using LSB steganography. It's useful when the image has transparency
-    and we want to avoid modifying the visible RGB channels.
-    
-    Args:
-        image: The image to embed VPF data into
-        vpf: The Visual Policy Fingerprint containing provenance data
-        tensor_vpm: Optional tensor VPM to include in the embedding
-    
-    Returns:
-        A new image with VPF embedded in the alpha channel
-    
-    Raises:
-        ValueError: If the image doesn't have an alpha channel
-    
-    Example:
-        >>> img = Image.open("transparent.png")
-        >>> vpf = create_vpf(...)
-        >>> img_with_vpf = _embed_vpf_alpha(img, vpf)
+    Embed VPF bits in alpha channel LSBs (requires RGBA/LA/PA).
+
+    Capacity:
+      available_bits = width * height (one bit per pixel in alpha LSB)
+    Raises ValueError if payload doesn’t fit.
     """
-    # Check if image has alpha channel
     if image.mode not in ('RGBA', 'LA', 'PA'):
         raise ValueError("Alpha channel embedding requires RGBA, LA, or PA image mode")
-    
-    # Convert to RGBA for consistent processing
+
     rgba_image = image if image.mode == 'RGBA' else image.convert('RGBA')
     width, height = rgba_image.size
-    
-    # Serialize VPF data
+
     vpf_bytes = _serialize_vpf(vpf)
-    
-    # Include tensor VPM if provided
     if tensor_vpm is not None:
         tensor_bytes = _vpm_to_binary(tensor_vpm)
-        tensor_header = struct.pack('>I', len(tensor_bytes))
-        vpf_bytes += b"TNSR" + tensor_header + tensor_bytes
-    
-    # Convert data to binary string for LSB embedding
+        vpf_bytes += b"TNSR" + struct.pack('>I', len(tensor_bytes)) + tensor_bytes
+
     binary_data = ''.join(format(byte, '08b') for byte in vpf_bytes)
-    
-    # Calculate required bits and check capacity
+
     required_bits = len(binary_data)
-    available_bits = width * height  # 1 bit per pixel in alpha channel
-    
+    available_bits = width * height
     if required_bits > available_bits:
         raise ValueError(
-            f"VPF too large for alpha channel embedding "
-            f"({required_bits} bits > {available_bits} bits)"
+            f"VPF too large for alpha channel embedding ({required_bits} bits > {available_bits} bits)"
         )
-    
-    # Embed in alpha channel (LSB)
+
     idx = 0
     for y in range(height):
         for x in range(width):
             if idx >= required_bits:
                 break
-                
             r, g, b, a = rgba_image.getpixel((x, y))
-            # Replace LSB of alpha with our data bit
             a = (a & 0xFE) | int(binary_data[idx])
             rgba_image.putpixel((x, y), (r, g, b, a))
             idx += 1
-    
+
     return rgba_image
 
 def _embed_vpf_stego(
-    image: Image.Image, 
+    image: Image.Image,
     vpf: Dict[str, Any],
     tensor_vpm: Optional[Image.Image] = None
 ) -> Image.Image:
     """
-    Embed VPF using steganographic techniques in the main image data.
-    
-    This method uses advanced steganographic techniques to hide VPF
-    data in high-frequency regions of the image. It's designed to be
-    perceptually invisible while maintaining robustness against compression.
-    
-    Args:
-        image: The image to embed VPF data into
-        vpf: The Visual Policy Fingerprint containing provenance data
-        tensor_vpm: Optional tensor VPM to include in the embedding
-    
-    Returns:
-        A new image with VPF embedded using steganography
-    
-    Example:
-        >>> img = Image.open("photo.jpg")
-        >>> vpf = create_vpf(...)
-        >>> img_with_vpf = _embed_vpf_stego(img, vpf)
+    Embed VPF bits in RGB channel LSBs (spatial-domain stego).
+
+    Capacity:
+      available_bits = width * height * 3 (one bit per RGB channel)
+    If payload exceeds capacity, a ValueError is raised and the caller
+    may fall back to the "stripe" mode (see `_embed_vpf_image`).
     """
-    # Convert to RGB for consistent processing
     rgb_image = image.convert("RGB")
     width, height = rgb_image.size
     pixels = rgb_image.load()
-    
-    # Serialize VPF data
+
     vpf_bytes = _serialize_vpf(vpf)
-    
-    # Include tensor VPM if provided
     if tensor_vpm is not None:
         tensor_bytes = _vpm_to_binary(tensor_vpm)
-        tensor_header = struct.pack('>I', len(tensor_bytes))
-        vpf_bytes += b"TNSR" + tensor_header + tensor_bytes
-    
-    # Convert data to binary string
+        vpf_bytes += b"TNSR" + struct.pack('>I', len(tensor_bytes)) + tensor_bytes
+
     binary_data = ''.join(format(byte, '08b') for byte in vpf_bytes)
-    
-    # Calculate required bits and check capacity
+
     required_bits = len(binary_data)
-    available_bits = width * height * 3  # 1 bit per RGB channel per pixel
-    
+    available_bits = width * height * 3
     if required_bits > available_bits:
         raise ValueError(
-            f"VPF too large for steganographic embedding "
-            f"({required_bits} bits > {available_bits} bits)"
+            f"VPF too large for steganographic embedding ({required_bits} bits > {available_bits} bits)"
         )
-    
-    # Embed in high-frequency regions using LSB of RGB channels
+
     idx = 0
     for y in range(height):
         for x in range(width):
             if idx >= required_bits:
                 break
-                
             r, g, b = pixels[x, y]
-            
-            # Embed in R channel (least significant bit)
             if idx < required_bits:
-                r = (r & 0xFE) | int(binary_data[idx])
-                idx += 1
-            
-            # Embed in G channel
+                r = (r & 0xFE) | int(binary_data[idx]); idx += 1
             if idx < required_bits:
-                g = (g & 0xFE) | int(binary_data[idx])
-                idx += 1
-            
-            # Embed in B channel
+                g = (g & 0xFE) | int(binary_data[idx]); idx += 1
             if idx < required_bits:
-                b = (b & 0xFE) | int(binary_data[idx])
-                idx += 1
-            
+                b = (b & 0xFE) | int(binary_data[idx]); idx += 1
             pixels[x, y] = (r, g, b)
-    
-    # Also embed metrics stripe in right edge for quick access
-    # (only if there's enough space and it won't be noticeable)
+
+    # Optionally add a tiny stripe with metric echoes (if space)
     metrics_matrix = np.zeros((height - 4, len(vpf["metrics"])), dtype=np.float32)
     metric_names = list(vpf["metrics"].keys())
-    
     for i, metric_name in enumerate(metric_names):
         metrics_matrix[:, i] = vpf["metrics"][metric_name]
-    
+
     stripe_width = max(1, int(width * VPF_STRIPE_WIDTH_RATIO))
-    
-    # Only add stripe if there's enough space
     if stripe_width > 0 and width > stripe_width * 2:
-        # Create a copy to avoid modifying the stego-embedded image directly
         result = rgb_image.copy()
         return embed_metrics_stripe(
-            result,
-            metrics_matrix,
-            metric_names,
-            stripe_cols=stripe_width,
-            use_channels=("R",)
+            result, metrics_matrix, metric_names, stripe_cols=stripe_width, use_channels=("R",)
         )[0]
-    
-    return rgb_image 
+
+    return rgb_image
 
 def embed_metrics_stripe(
     img: Image.Image,
@@ -1313,11 +1176,33 @@ def embed_metrics_stripe(
     stripe_cols: int = None,
     use_channels=("R",),
 ):
+    """
+    Write a CRC-protected metrics stripe into the rightmost columns of an RGB image.
+
+    Layout:
+      - Header column (R channel):
+          [0..3]: 'Z' 'M' 'V' '2'
+          [4..5]: uint16 M (number of metric columns)
+          [6..9]: CRC32 of payload across metric columns
+      - For each metric j (and each selected channel):
+          G channel rows 0..3: vmin/vmax (float16)
+          Rows 4..H-1 in the chosen channel: quantized values (uint8)
+
+    Args:
+        img: RGB image (PIL.Image).
+        metrics_matrix: float32 array, shape (H-4, M).
+        metric_names: list of names for the M columns.
+        stripe_cols: number of columns to reserve on the right (auto if None).
+        use_channels: tuple of channels per metric (e.g., ("R",) or ("R","G")).
+
+    Returns:
+        (out_img, info) where out_img is a new image with stripe painted.
+    """
     arr = np.array(img.convert("RGB"))
     H, W, _ = arr.shape
     Hm, M = metrics_matrix.shape
-    assert Hm <= H - 4
-    assert len(metric_names) == M
+    assert Hm <= H - 4, "Not enough height for metrics (need 4 header rows)."
+    assert len(metric_names) == M, "Metric names length must match matrix columns."
 
     ch_idx_map = {"R":0, "G":1, "B":2}
     channel_indices = [ch_idx_map[c] for c in use_channels]
@@ -1326,18 +1211,18 @@ def embed_metrics_stripe(
     needed_cols = M * channels_per_metric + 1
     if stripe_cols is None:
         stripe_cols = needed_cols
-    assert stripe_cols >= needed_cols
+    assert stripe_cols >= needed_cols, "Stripe too narrow for requested metrics/channels."
 
     x0 = W - stripe_cols
     region = arr[:, x0:W, :].copy()
     region[:] = 0
 
+    # Signature + metric count in header column (R)
     header_col = 0
     region[0, header_col, 0] = 0x5A  # Z
     region[1, header_col, 0] = 0x4D  # M
     region[2, header_col, 0] = 0x56  # V
     region[3, header_col, 0] = 0x32  # 2
-
     region[4, header_col, 0] = (M >> 8) & 0xFF
     region[5, header_col, 0] = M & 0xFF
 
@@ -1364,6 +1249,18 @@ def embed_metrics_stripe(
     return out_img, {"coverage_percent_width": 100.0 * (stripe_cols / W)}
 
 def extract_metrics_stripe(img: Image.Image, M: int, channels_per_metric: int = 1, use_channels=("R",)):
+    """
+    Read and validate a right-edge metrics stripe, returning the dequantized matrix.
+
+    Args:
+        img: RGB image with a metrics stripe.
+        M: expected number of metric columns.
+        channels_per_metric: how many channels per metric column were used.
+        use_channels: same channel order that was used during embedding.
+
+    Returns:
+        np.ndarray float32 of shape (H-4, M).
+    """
     arr = np.array(img.convert("RGB"))
     H, W, _ = arr.shape
     ch_idx_map = {"R":0, "G":1, "B":2}
@@ -1414,6 +1311,11 @@ def extract_metrics_stripe(img: Image.Image, M: int, channels_per_metric: int = 
     return out
 
 def quantize_column(vals: np.ndarray):
+    """
+    Quantize a float32 column to uint8 and return (q, vmin, vmax) for reversible decoding.
+
+    If the column is constant or non-finite, falls back to zeros with default bounds.
+    """
     vals = np.asarray(vals, dtype=np.float32)
     vmin = float(np.nanmin(vals)) if np.isfinite(vals).any() else 0.0
     vmax = float(np.nanmax(vals)) if np.isfinite(vals).any() else 1.0

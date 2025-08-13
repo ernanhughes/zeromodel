@@ -317,12 +317,20 @@ class SpatialOptimizer:
                 mono_scores[m] += np.dot(col, rank_vector) / n
         mono_scores = np.maximum(0, mono_scores / len(series))
 
-        # Softmax wrapper for unconstrained optimization
+        # Softmax wrapper for unconstrained optimization (numerically safe)
         def softmax(z: np.ndarray) -> np.ndarray:
+            z = np.asarray(z, dtype=float)
+            # Replace any non-finite values to avoid propagating NaNs/Infs into exp
+            if not np.all(np.isfinite(z)):
+                z = np.nan_to_num(z, copy=False)
             e = np.exp(z - np.max(z))
-            return e / (e.sum() + 1e-12)
+            denom = e.sum()
+            if not np.isfinite(denom) or denom <= 0.0:
+                # Fallback to uniform if underflow/overflow happens
+                return np.full_like(z, 1.0 / z.size)
+            return e / (denom + 1e-12)
 
-        # Optimization objective
+    # Optimization objective
         def objective(z: np.ndarray) -> float:
             w = softmax(z)
             total_mass = 0.0
@@ -348,8 +356,14 @@ class SpatialOptimizer:
             loss = -total_mass + reg + entropy_term + monotonicity
             return loss
 
+        # Prepare a finite, centered initial logits vector; avoid log(0)
+        eps = 1e-8
+        w0_safe = np.clip(w0, eps, None)
+        z0 = np.log(w0_safe)
+        z0 -= float(z0.mean())
+
         # Optimize using L-BFGS
-        res = minimize(objective, np.log(w0), method='L-BFGS-B', options={'maxiter': iters})
+        res = minimize(objective, z0, method='L-BFGS-B', options={'maxiter': iters})
         w_opt = softmax(res.x)
 
         if verbose:

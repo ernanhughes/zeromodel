@@ -24,7 +24,7 @@ from zeromodel.timing import timeit
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
 from zeromodel.vpm.metadata import VPMMetadata, AggId
-
+import time
 logger = logging.getLogger(__name__)
 
 init_config()
@@ -32,6 +32,13 @@ init_config()
 DATA_NOT_PROCESSED_ERR = "Data not processed yet. Call process() or prepare() first."
 VPM_IMAGE_NOT_READY_ERR = "VPM image not ready. Call prepare() first."
 
+def _t(name):
+    return {"name": name, "t0": time.perf_counter()}
+
+def _end(tk):
+    dt = time.perf_counter() - tk["t0"]
+    logger.info(f"[prepare] {tk['name']}: {dt:.3f}s")
+    return dt
 
 class ZeroModel:
     """
@@ -41,6 +48,9 @@ class ZeroModel:
     1. prepare() -> normalize, optional features, analyze org, write VPM-IMG
     2. compile_view()/extract_critical_tile() -> use VPM-IMG reader for virtual addressing
     """
+
+    logger.info("[prepare] total done")
+
 
     def __init__(self, metric_names: List[str]) -> None:
         logger.debug(
@@ -113,9 +123,13 @@ class ZeroModel:
             nonlinearity_hint,
         )
 
+        # -------------------- validate inputs --------------------
+        st = _t("validate_inputs")
         self._validate_prepare_inputs(score_matrix, sql_query)
+        _end(st)
 
-        # 1) Normalize to canonical matrix (docs x metrics)
+        # -------------------- normalize -> canonical_matrix --------------------
+        st = _t("normalize_quantize")
         try:
             self.normalizer.update(score_matrix)
             normalized_data = self.normalizer.normalize(score_matrix)
@@ -123,14 +137,17 @@ class ZeroModel:
         except Exception as e:  # noqa: broad-except
             logger.error("Normalization failed: %s", e)
             raise RuntimeError(f"Error during data normalization: {e}") from e
-
         logger.debug(
-            "normalize: mins[max]=(%s..%s)[%d], dtype=%s",
-            float(np.min(self.canonical_matrix)), float(np.max(self.canonical_matrix)),
-            self.canonical_matrix.size, self.canonical_matrix.dtype
+            "normalize: min=%.6f max=%.6f N=%d dtype=%s",
+            float(np.min(self.canonical_matrix)),
+            float(np.max(self.canonical_matrix)),
+            int(self.canonical_matrix.size),
+            self.canonical_matrix.dtype,
         )
+        _end(st)
 
-        # 2) Optional feature engineering
+        # -------------------- feature engineering (optional) --------------------
+        st = _t("feature_engineering")
         original_metric_names = list(self.effective_metric_names)
         processed_data, effective_metric_names = self._feature_engineer.apply(
             nonlinearity_hint, self.canonical_matrix, original_metric_names
@@ -143,22 +160,14 @@ class ZeroModel:
             )
             self.canonical_matrix = processed_data
         self.effective_metric_names = effective_metric_names
+        _end(st)
 
-        logger.debug(
-            "org: metric_order len=%s, doc_order len=%s; top metric idx=%s, top doc idx=%s",
-            None if self.metric_order is None else len(self.metric_order),
-            None if self.doc_order is None else len(self.doc_order),
-            None if self.metric_order is None else int(self.metric_order[0]),
-            None if self.doc_order is None else int(self.doc_order[0]),
-        )
-
-        # 3) Organization analysis (for metadata; we keep canonical unsorted)
+        # -------------------- organization analysis --------------------
+        st = _t("organization_analysis")
         try:
-            use_duckdb = bool(get_config("core").get("use_duckdb", False))
-            if use_duckdb:
-                self._org_strategy = SqlOrganizationStrategy(self.duckdb)
-            else:
-                self._org_strategy = MemoryOrganizationStrategy()
+            use_duckdb = True
+            logger.debug("Using DuckDB: %s", use_duckdb)
+            self._org_strategy = SqlOrganizationStrategy(self.duckdb) if use_duckdb else MemoryOrganizationStrategy()
             self._org_strategy.set_task(sql_query)
             _, metric_order, doc_order, analysis = self._org_strategy.organize(
                 self.canonical_matrix, self.effective_metric_names
@@ -170,32 +179,39 @@ class ZeroModel:
         except Exception as e:  # noqa: broad-except
             logger.error("Organization analysis failed: %s", e)
             raise RuntimeError(f"Error during organization strategy: {e}") from e
+        _end(st)
 
-        # Legacy: materialize a sorted view for backward-compat APIs
+        # -------------------- legacy: materialize sorted view --------------------
+        st = _t("materialize_sorted_view")
         if self.doc_order is not None and self.metric_order is not None:
             self.sorted_matrix = self.canonical_matrix[self.doc_order][:, self.metric_order]
+        _end(st)
 
-
-        # 4) Write canonical memory to VPM-IMG (metrics x docs)
+        # -------------------- VPM-IMG write --------------------
+        st = _t("build_vmeta_and_write_png")
         try:
-            mx_d = self.canonical_matrix.T  # (metrics x docs)
+            # (metrics x docs)
+            mx_d = self.canonical_matrix.T
             logical_docs = int(mx_d.shape[1])
+
             # Ensure width meets VPM-IMG header minimum (META_MIN_COLS=12)
             MIN_VPM_WIDTH = 12
             if mx_d.shape[1] < MIN_VPM_WIDTH:
                 pad = MIN_VPM_WIDTH - mx_d.shape[1]
                 mx_d = np.pad(mx_d, ((0, 0), (0, pad)), mode="constant", constant_values=0.0)
+
             # Build compact VMETA payload carrying the logical doc_count
             try:
-                # Stable-ish 32-bit task hash from SQL query
                 import zlib
-                task_hash = zlib.crc32(sql_query.encode('utf-8')) & 0xFFFFFFFF
+                task_hash = zlib.crc32(sql_query.encode("utf-8")) & 0xFFFFFFFF
             except Exception:
                 task_hash = 0
+
             try:
-                tile_id = VPMMetadata.make_tile_id(f"{self.task}|{mx_d.shape}".encode('utf-8'))
+                tile_id = VPMMetadata.make_tile_id(f"{self.task}|{mx_d.shape}".encode("utf-8"))
             except Exception:
                 tile_id = b"\x00" * 16
+
             vmeta = VPMMetadata.for_tile(
                 level=0,
                 metric_count=int(mx_d.shape[0]),
@@ -210,12 +226,19 @@ class ZeroModel:
             )
 
             if vpm_output_path:
-                metadata_bytes = vmeta.to_bytes()
+                # Perf toggles
+                import os as _os
+                compress_level = int(_os.getenv("ZM_PNG_COMPRESS", "6"))
+                disable_prov = _os.getenv("ZM_DISABLE_PROVENANCE") == "1"
 
+                metadata_bytes = None if disable_prov else vmeta.to_bytes()
                 logger.debug(
-                    "vpm write: mx_d shape=%s (metrics x docs), pad_to_min_width=%s",
+                    "vpm write: mx_d shape=%s (metrics x docs), pad_to_min_width=%s, "
+                    "compress=%d, provenance=%s",
                     getattr(mx_d, "shape", None),
-                    mx_d.shape[1] < 12
+                    mx_d.shape[1] < MIN_VPM_WIDTH,
+                    compress_level,
+                    "disabled" if disable_prov else "enabled",
                 )
 
                 writer = VPMImageWriter(
@@ -223,19 +246,24 @@ class ZeroModel:
                     metric_names=self.effective_metric_names,
                     metadata_bytes=metadata_bytes,
                     store_minmax=True,
-                    compression=6,
+                    compression=compress_level,
                 )
+                t_io = time.perf_counter()
                 writer.write(vpm_output_path)
+                io_dt = time.perf_counter() - t_io
+
                 self.vpm_image_path = vpm_output_path
                 self._vpm_reader = None
-                logger.info("VPM-IMG written to %s", vpm_output_path)
+                logger.info("VPM-IMG written to %s (io=%.3fs)", vpm_output_path, io_dt)
 
+            _end(st)
+            logger.info("ZeroModel preparation complete. VPM-IMG is ready.")
             return vmeta
+
         except Exception as e:  # noqa: broad-except
             logger.error("VPM-IMG write failed: %s", e)
             raise RuntimeError(f"Error writing VPM-IMG: {e}") from e
 
-        logger.info("ZeroModel preparation complete. VPM-IMG is ready.")
 
     # ---- VPM-IMG based operations ----
     def compile_view(

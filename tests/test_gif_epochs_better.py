@@ -85,8 +85,8 @@ def test_gif_training_epochs_obvious(tmp_path, epochs):
     zm = ZeroMemory(metric_names=metrics, buffer_steps=1024, tile_size=24, selection_k=64)
 
     gif = GIFLogger(fps=6)
-    out_gif = os.path.join(os.getcwd(), "training_epochs_obvious.gif")
-    out_last_png = os.path.join(os.getcwd(), "training_epochs_obvious_last.png")
+    out_gif = os.path.join(os.getcwd(), "images/training_epochs_obvious.gif")
+    out_last_png = os.path.join(os.getcwd(), "images/training_epochs_obvious_last.png")
 
     # Learning-rate schedule to create visible phases (adds structure)
     lr0, lr1, lr2 = 0.3, 0.1, 0.03

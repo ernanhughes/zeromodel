@@ -50,7 +50,7 @@ def test_gif_logging_with_zeromemory(tmp_path, epochs):
 
     # --- 3) GIF logger ---
     gif = GIFLogger(fps=6) 
-    out_gif = os.path.join(os.getcwd(), "training.gif")
+    out_gif = os.path.join(os.getcwd(), "images/training.gif")
 
     # Batch the training data for more realistic updates
     n = len(Xtr)

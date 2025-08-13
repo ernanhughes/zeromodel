@@ -38,7 +38,7 @@ def test_zero_model_vpm_view_compilation():
 
     # --- 2. Prepare ZeroModel (Creates VPM-IMG) ---
     with tempfile.TemporaryDirectory() as tmpdir:
-        vpm_path = os.path.join(os.getcwd(), "test_canonical.vpm.png")
+        vpm_path = os.path.join(os.getcwd(), "images/test_canonical.vpm.png")
 
         model = ZeroModel(metric_names=metric_names)
         model.prepare(

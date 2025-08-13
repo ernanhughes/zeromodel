@@ -76,7 +76,7 @@ def test_gif_training_epochs(tmp_path, epochs):
     zm = ZeroMemory(metric_names=metrics, buffer_steps=256, tile_size=8, selection_k=24)
 
     gif = GIFLogger(fps=6)
-    out_gif = os.path.join(os.getcwd(), "training_epochs.gif")
+    out_gif = os.path.join(os.getcwd(), "images/training_epochs.gif")
 
     # --- 4) Training loop with epochs ---
     idx_all = np.arange(n)

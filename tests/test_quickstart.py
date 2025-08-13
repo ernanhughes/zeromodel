@@ -104,7 +104,7 @@ def test_quickstart():
     with Timer("initialize_ZeroModel"):
         zm = ZeroModel(METRICS)
 
-    out_png = os.getenv("OUT_PNG", "vpm_demo.png")
+    out_png = os.getenv(os.getcwd(), "images/vpm_demo.png")
     sql = f"SELECT * FROM virtual_index ORDER BY {PRIMARY_METRIC} DESC, {SECONDARY_METRIC} ASC"
     logger.info(f"ORDER BY: {PRIMARY_METRIC} DESC, {SECONDARY_METRIC} ASC")
 

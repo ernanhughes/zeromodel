@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -165,7 +166,8 @@ def visualize_decision_manifold():
                 rotation=90, color='r')
     
     plt.tight_layout()
-    plt.savefig('decision_manifold_visualization.png', dpi=300, bbox_inches='tight')
+    file_path =  os.path.join(os.getcwd(), 'images/decision_manifold_visualization.png')
+    plt.savefig(file_path, dpi=300, bbox_inches='tight')
 
 def test_decision_manifold():
     """Comprehensive test of the DecisionManifold class."""

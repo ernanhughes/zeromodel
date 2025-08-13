@@ -1,7 +1,6 @@
 # quickstart.py — minimal “install, run, see it” demo (instrumented)
 import os
 import time
-import math
 import logging
 import numpy as np
 from PIL import Image
@@ -9,12 +8,6 @@ import imageio.v2 as imageio
 from zeromodel import ZeroModel, get_critical_tile
 from zeromodel.metadata import MetadataView
 
-# -------- logging setup --------
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-    format="%(asctime)s %(levelname)s %(name)s :: %(message)s"
-)
 logger = logging.getLogger("quickstart")
 
 class Timer:

@@ -371,7 +371,7 @@ demonstrate_tamper_detection(png_with_vpf, vpf)
 # ZeroModel enables tracing decisions back through their entire reasoning history.
 
 # %% [code]
-def create_reasoning_chain(num_steps: int = 5) -> List[bytes]:
+def create_reasoning_chain(num_steps: int = 5) -> list[bytes]:
     """Create a chain of VPMs with linked provenance"""
     vpm_chain = []
     parent_ids = []
@@ -399,7 +399,7 @@ def create_reasoning_chain(num_steps: int = 5) -> List[bytes]:
     
     return vpm_chain
 
-def trace_reasoning_chain(vpm_chain: List[bytes]):
+def trace_reasoning_chain(vpm_chain: list[bytes]):
     """Trace a reasoning chain from end to beginning"""
     print("\n=== REASONING CHAIN TRACE ===")
     print(f"Chain length: {len(vpm_chain)} steps")

@@ -110,8 +110,7 @@ def idct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
     out = np.moveaxis(out, -1, axis)
     return out.astype(np.float32, copy=False)
 
-
-    
+  
 def to_png_bytes(img: Union[np.ndarray, bytes, bytearray]) -> bytes:
     """Ensure we have real PNG bytes. If given a numpy image, encode it."""
     if isinstance(img, (bytes, bytearray)):

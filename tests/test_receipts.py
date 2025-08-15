@@ -9,14 +9,15 @@ import pytest
 from PIL import Image
 
 # Core provenance / VPM ops
+
+from zeromodel.images.vpf import (
+    create_vpf,
+    embed_vpf,
+)
+
 from zeromodel.provenance.core import (
     tensor_to_vpm,
     vpm_to_tensor,
-    create_vpf,
-    embed_vpf,
-    extract_vpf,
-    verify_vpf,
-    read_json_footer,
     vpm_logic_and,
     vpm_logic_or,
     vpm_logic_not,

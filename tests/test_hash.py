@@ -1,6 +1,6 @@
 import hashlib
 from PIL import Image
-from zeromodel.provenance.core import create_vpf, embed_vpf, extract_vpf, verify_vpf
+from zeromodel.images.vpf import create_vpf, embed_vpf, extract_vpf, verify_vpf
 import logging
 
 logger = logging.getLogger(__name__)

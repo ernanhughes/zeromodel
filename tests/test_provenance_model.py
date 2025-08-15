@@ -16,21 +16,25 @@ from zeromodel.metadata import read_all_metadata
 
 import logging
 
-from zeromodel.vpm.metadata import VPMMetadata
 
-logger = logging.getLogger(__name__)
-
-from zeromodel.provenance.core import (
-    tensor_to_vpm,
-    vpm_to_tensor,
-    create_vpf,
+from zeromodel.images.vpf import (
     embed_vpf,
+    create_vpf,
     extract_vpf,
     verify_vpf,
 )
 
+from zeromodel.provenance.core import (
+    tensor_to_vpm,
+    vpm_to_tensor,
+)
+
+logger = logging.getLogger(__name__)
+
+
 def sha3_hex(b: bytes) -> str:
     return hashlib.sha3_256(b).hexdigest()
+
 
 def test_provenance_model():
     # 1) Data + model
@@ -80,7 +84,7 @@ def test_provenance_model():
     m2 = LogisticRegression(max_iter=2000, solver="lbfgs", random_state=0)
     # inject minimal fitted attributes
     m2.classes_ = restored_state["classes_"]
-    m2.n_features_in_ = int(restored_state["n_features_in_"]) 
+    m2.n_features_in_ = int(restored_state["n_features_in_"])
     m2.coef_ = restored_state["coef_"]
     m2.intercept_ = restored_state["intercept_"]
 
@@ -93,9 +97,8 @@ def test_provenance_model():
     logger.info(f"Predictions identical: {np.array_equal(y_pred, y2)}")
 
     meta = read_all_metadata(png_with_footer)
-    print(meta.vpm)          # core info (legacy chunks/whatever VPMMetadata parses)
-    print(meta.provenance)   # VPF dict, core_sha3, has_tensor_vpm
+    print(meta.vpm)  # core info (legacy chunks/whatever VPMMetadata parses)
+    print(meta.provenance)  # VPF dict, core_sha3, has_tensor_vpm
     logger.info(f"Meta vpm: {meta.vpm}")
     logger.info(f"\n\n Hi Meta Provenance: {json.dumps(meta.provenance.vpf, indent=2)}")
     assert np.array_equal(y_pred, y2), "Restored model predictions differ."
-

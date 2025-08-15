@@ -23,7 +23,8 @@ import numpy as np
 from PIL import Image
 
 from zeromodel.vpm.encoder import VPMEncoder
-from zeromodel.provenance import create_vpf, extract_vpf, VPF_FOOTER_MAGIC
+from zeromodel.provenance.metadata import VPF_FOOTER_MAGIC
+from zeromodel.provenance import create_vpf, extract_vpf
 from zeromodel.core import ZeroModel
 from zeromodel.utils import to_png_bytes, png_to_gray_array
 
@@ -688,6 +689,7 @@ class HierarchicalVPM:
             metrics = vpf.get("metrics", {}) if isinstance(vpf, dict) else {}
             doc_start = int(params.get("doc_start", 0))
             docs_in_tile = int(metrics.get("documents", 0)) or None
+            vpf.setdefault("metrics", {})["decision_fallback_used"] = True
         except Exception:
             pass
 

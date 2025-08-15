@@ -16,7 +16,7 @@ import numpy as np
 from zeromodel.config import get_config, init_config
 from zeromodel.constants import precision_dtype_map
 from zeromodel.duckdb_adapter import DuckDBAdapter
-from zeromodel.feature_engineer import FeatureEngineer
+from zeromodel.nonlinear.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
 from zeromodel.organization import (MemoryOrganizationStrategy,
                                     SqlOrganizationStrategy)
@@ -161,6 +161,8 @@ class ZeroModel:
             self.canonical_matrix = processed_data
         self.effective_metric_names = effective_metric_names
         _end(st)
+        self.duckdb = DuckDBAdapter(self.effective_metric_names)
+
 
         # -------------------- organization analysis --------------------
         st = _t("organization_analysis")
@@ -336,7 +338,12 @@ class ZeroModel:
                     col_idx = int(min(metric_idx, n_metrics - 1))
             else:
                 col_idx = int(min(metric_idx, n_metrics - 1))
-            top_doc = 0  # sorted_matrix already reflects doc_order (top candidate first)
+            if self.doc_order is not None and len(self.doc_order) > 0:
+                logger.debug(f"Using doc_order for top document {self.doc_order[0]}")
+                top_doc = int(self.doc_order[0])
+            else:
+                logger.debug("No doc_order available, using default top_doc=0")
+                top_doc = 0
             h = int(max(1, min(context_size, n_docs)))
             try:
                 rel = float(np.mean(self.sorted_matrix[:h, col_idx]))

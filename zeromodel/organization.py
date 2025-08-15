@@ -1,3 +1,4 @@
+# zeromodel/organization.py
 """Organization strategies for arranging documents and metrics.
 
 Provides a pluggable abstraction so different ordering backends (SQL/DuckDB,
@@ -9,8 +10,10 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+import re
 
 logger = logging.getLogger(__name__)
+
 
 class BaseOrganizationStrategy:
     """Abstract base for spatial organization strategies."""
@@ -19,9 +22,12 @@ class BaseOrganizationStrategy:
     def set_task(self, spec: str):  # pragma: no cover - interface
         raise NotImplementedError
 
-    def organize(self, matrix: np.ndarray, metric_names: List[str]) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[str, Any]]:  # pragma: no cover - interface
+    def organize(
+        self, matrix: np.ndarray, metric_names: List[str]
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[str, Any]]:  # pragma: no cover - interface
         """Return (sorted_matrix, metric_order, doc_order, analysis_dict)."""
         raise NotImplementedError
+
 
 class MemoryOrganizationStrategy(BaseOrganizationStrategy):
     """In-memory (non-SQL) organization.
@@ -53,13 +59,13 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
             return []
         # Very small parser: split by comma, allow 'metric [ASC|DESC]' tokens
         priorities = []
-        for token in spec.split(','):
+        for token in spec.split(","):
             t = token.strip()
             if not t:
                 continue
             parts = t.split()
             metric = parts[0]
-            direction = 'DESC'
+            direction = "DESC"
             if len(parts) > 1 and parts[1].upper() in ("ASC", "DESC"):
                 direction = parts[1].upper()
             priorities.append((metric, direction))
@@ -69,6 +75,7 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
         # Build metric index map
         name_to_idx = {n: i for i, n in enumerate(metric_names)}
         doc_indices = np.arange(matrix.shape[0])
+
         # Apply simple multi-key sort if priorities defined
         if self._parsed_metric_priority:
             sort_keys = []
@@ -78,15 +85,31 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
                     continue
                 column = matrix[:, idx]
                 # For descending we sort ascending on -column
-                if direction == 'DESC' and np.issubdtype(column.dtype, np.number):
+                if direction == "DESC" and np.issubdtype(column.dtype, np.number):
                     sort_keys.append(-column)
                 else:
                     sort_keys.append(column)
             if sort_keys:
                 stacked = np.lexsort(tuple(sort_keys))
                 doc_indices = stacked
+
         final_matrix = matrix[doc_indices, :]
         metric_order = np.arange(matrix.shape[1])
+
+        # Determine primary ordering metric for analysis
+        primary_metric = None
+        primary_direction = None
+        if self._parsed_metric_priority:
+            for m, d in self._parsed_metric_priority:
+                if m in name_to_idx:
+                    primary_metric = m
+                    primary_direction = d
+                    break
+        # Fallback: if no valid spec, pick the first metric (if any)
+        if primary_metric is None and metric_names:
+            primary_metric = metric_names[0]
+            primary_direction = "DESC"
+
         analysis = {
             "backend": self.name,
             "spec": self._spec,
@@ -94,8 +117,19 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
             "doc_order": doc_indices.tolist(),
             "metric_order": metric_order.tolist(),
         }
+        if primary_metric is not None:
+            try:
+                analysis["ordering"] = {
+                    "primary_metric": primary_metric,
+                    "primary_metric_index": int(name_to_idx[primary_metric]),  # absolute index
+                    "direction": primary_direction or "DESC",
+                }
+            except Exception as _e:
+                logger.debug("memory ordering resolution skipped: %s", _e)
+
         self._analysis = analysis
         return final_matrix, metric_order, doc_indices, analysis
+
 
 class SqlOrganizationStrategy(BaseOrganizationStrategy):
     """SQL-based organization using a DuckDBAdapter-like object.
@@ -120,11 +154,14 @@ class SqlOrganizationStrategy(BaseOrganizationStrategy):
     def organize(self, matrix: np.ndarray, metric_names: List[str]):
         if self._sql_query is None:
             raise RuntimeError("SQL task has not been set before organize().")
+
         # Ensure schema reflects current metric names then load data
         self.adapter.ensure_schema(metric_names)
         self.adapter.load_matrix(matrix, metric_names)
+
         # Analyze query
         analysis = self.adapter.analyze_query(self._sql_query, metric_names)
+
         # Apply ordering
         doc_order_list = analysis.get("doc_order", [])
         num_docs = matrix.shape[0]
@@ -132,6 +169,7 @@ class SqlOrganizationStrategy(BaseOrganizationStrategy):
         if not valid_doc_order:
             valid_doc_order = list(range(num_docs))
         sorted_by_docs = matrix[valid_doc_order, :]
+
         raw_metric_order = analysis.get("metric_order", list(range(matrix.shape[1])))
         metric_count = matrix.shape[1]
         valid_metric_order = [i for i in raw_metric_order if 0 <= i < metric_count]
@@ -140,9 +178,44 @@ class SqlOrganizationStrategy(BaseOrganizationStrategy):
             valid_metric_order.extend(remaining)
         if not valid_metric_order:
             valid_metric_order = list(range(metric_count))
+
         final_matrix = sorted_by_docs[:, valid_metric_order]
+
+        # Ensure analysis contains an 'ordering' block with absolute index
+        try:
+            name_to_idx = {n: i for i, n in enumerate(metric_names)}
+            ordering = analysis.get("ordering") or {}
+            primary_name = ordering.get("primary_metric")
+            primary_index = ordering.get("primary_metric_index")
+            direction = ordering.get("direction")
+
+            # If adapter didn't provide, attempt a simple parse of ORDER BY
+            if primary_name is None:
+                m = re.search(
+                    r"order\s+by\s+([A-Za-z0-9_\"\.]+)\s*(ASC|DESC)?",
+                    self._sql_query,
+                    flags=re.IGNORECASE,
+                )
+                if m:
+                    primary_name = m.group(1).strip()
+                    # strip optional quotes or qualified names
+                    primary_name = primary_name.strip('"').split(".")[-1]
+                    direction = (m.group(2) or "DESC").upper()
+
+            if primary_name is not None:
+                if primary_index is None and primary_name in name_to_idx:
+                    primary_index = int(name_to_idx[primary_name])
+                analysis["ordering"] = {
+                    "primary_metric": primary_name,
+                    "primary_metric_index": int(primary_index) if primary_index is not None else 0,
+                    "direction": (direction or "DESC"),
+                }
+        except Exception as _e:
+            logger.debug("sql ordering resolution skipped: %s", _e)
+
         self._analysis = analysis
         return final_matrix, np.array(valid_metric_order), np.array(valid_doc_order), analysis
+
 
 __all__ = [
     "BaseOrganizationStrategy",

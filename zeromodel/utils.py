@@ -5,7 +5,16 @@ Utility Functions
 This module provides helper functions used throughout the zeromodel package.
 """
 
-from typing import Any
+from typing import Any, Union
+import io
+import json
+import struct
+import zlib
+import numpy as np
+from PIL import Image
+from typing import Any, Dict 
+
+from zeromodel.constants import precision_dtype_map
 
 import numpy as np
 
@@ -13,18 +22,8 @@ __all__ = [
     "quantize",
     "dct",
     "idct",
+    "embed_vpf",
 ]
-
-
-def _select_dtype_for_precision(precision: int):
-    """Return an integer dtype able to hold the given precision (bits)."""
-    if precision <= 8:
-        return np.uint8
-    if precision <= 16:
-        return np.uint16
-    if precision <= 32:
-        return np.uint32
-    return np.uint64
 
 
 def quantize(value: Any, precision: int) -> Any:
@@ -46,7 +45,7 @@ def quantize(value: Any, precision: int) -> Any:
         raise ValueError("precision must be >= 1")
     if precision > 64:
         precision = 64  # cap
-    dtype = _select_dtype_for_precision(precision)
+    dtype = precision_dtype_map(precision)
     max_val = (1 << precision) - 1 if precision < 64 else np.iinfo(dtype).max
     if isinstance(value, np.ndarray):
         clipped = np.clip(value, 0.0, 1.0)
@@ -110,3 +109,41 @@ def idct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
     out = np.tensordot(Y, cos_table.T, axes=([-1], [0]))  # shape (..., N)
     out = np.moveaxis(out, -1, axis)
     return out.astype(np.float32, copy=False)
+
+
+    
+def to_png_bytes(img: Union[np.ndarray, bytes, bytearray]) -> bytes:
+    """Ensure we have real PNG bytes. If given a numpy image, encode it."""
+    if isinstance(img, (bytes, bytearray)):
+        return bytes(img)
+
+    if not isinstance(img, np.ndarray):
+        raise TypeError(f"Expected np.ndarray or bytes, got {type(img)}")
+
+    arr = img
+    if arr.dtype != np.uint8:
+        arr = np.clip(arr, 0, 255).astype(np.uint8)
+
+    # Infer mode
+    if arr.ndim == 2:
+        mode = "L"
+    elif arr.ndim == 3 and arr.shape[2] == 3:
+        mode = "RGB"
+    elif arr.ndim == 3 and arr.shape[2] == 4:
+        mode = "RGBA"
+    else:
+        raise ValueError(f"Unsupported image shape: {arr.shape}")
+
+    bio = io.BytesIO()
+    Image.fromarray(arr, mode=mode).save(bio, format="PNG")
+    return bio.getvalue()
+
+def png_to_gray_array(png_bytes: bytes) -> np.ndarray:
+    """
+    Decode PNG to a 2D grayscale uint8 array (H, W).
+    Guarantees a 2-D array so argmax/indices are (y, x).
+    """
+    with Image.open(io.BytesIO(png_bytes)) as im:
+        im = im.convert("L")
+        arr = np.array(im, dtype=np.uint8)
+    return arr

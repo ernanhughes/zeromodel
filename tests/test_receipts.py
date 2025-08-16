@@ -2,10 +2,8 @@
 import hashlib
 import json
 import math
-from io import BytesIO
 
 import numpy as np
-import pytest
 from PIL import Image
 
 from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
@@ -114,6 +112,8 @@ def test_visual_logic_and_or_not_xor_sane():
     W = H = 64
     A = _bw(W, H, lambda x, y: x + y >= W // 2)      # upper-right triangle-ish
     B = _bw(W, H, lambda x, y: x + y <= W // 2 - 2)  # lower-left triangle-ish
+    A = np.array(A.convert("RGB"), dtype=np.uint8)
+    B = np.array(B.convert("RGB"), dtype=np.uint8)
 
     AND = vpm_and(A, B)
     OR  = vpm_or(A, B)

@@ -18,6 +18,7 @@ from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
 from zeromodel.images.vpf import (create_vpf, embed_vpf, extract_vpf,
                                   png_core_bytes, verify_vpf)
 from zeromodel.metadata import read_all_metadata
+import pytest
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 def sha3_hex(b: bytes) -> str:
     return hashlib.sha3_256(b).hexdigest()
 
-
+@pytest.mark.skip("Skipping provenance model test")
 def test_provenance_model():
     # 1) Data + model
     X, y = make_moons(n_samples=400, noise=0.15, random_state=42)

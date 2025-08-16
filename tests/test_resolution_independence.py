@@ -4,11 +4,10 @@ Test cases for resolution independence and precision control features in ZeroMod
 """
 
 import numpy as np
-import pytest
 
 from zeromodel.core import ZeroModel
 from zeromodel.vpm.logic import (denormalize_vpm, normalize_vpm,
-                                 query_top_left, vpm_and,
+                                 vpm_query_top_left, vpm_and,
                                  vpm_concat_horizontal, vpm_concat_vertical,
                                  vpm_not, vpm_or, vpm_resize)
 
@@ -284,23 +283,23 @@ def test_vpm_concatenation():
     
     print("test_vpm_concatenation passed.")
 
-def test_query_top_left_resolution_independence():
-    """Test query_top_left works with different VPM sizes."""
+def test_vpm_query_top_left_resolution_independence():
+    """Test vpm_query_top_left works with different VPM sizes."""
     # Small VPM
     small_vpm = np.zeros((5, 5, 3), dtype=np.float32)
     small_vpm[0, 0, 0] = 1.0 # Bright top-left
-    score_small = query_top_left(small_vpm, context_size=3)
+    score_small = vpm_query_top_left(small_vpm, context_size=3)
     assert 0.0 <= score_small <= 1.0
 
     # Large VPM
     large_vpm = np.zeros((100, 100, 3), dtype=np.float32)
     large_vpm[0, 0, 0] = 1.0 # Bright top-left
-    score_large = query_top_left(large_vpm, context_size=3)
+    score_large = vpm_query_top_left(large_vpm, context_size=3)
     assert 0.0 <= score_large <= 1.0
 
     # Score should be similar for the same relative pattern
     # (This is a bit hand-wavy, but the function should handle size)
-    # The weighting logic inside query_top_left should make it relative.
+    # The weighting logic inside vpm_query_top_left should make it relative.
     # assert abs(score_small - score_large) < 0.1 # Example, might not hold strictly
 
 # Add more tests as needed for specific functions like vpm_subtract if added.

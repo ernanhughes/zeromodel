@@ -83,7 +83,7 @@ level, doc_idx, relevance = hvpm.get_decision()
 Combine VPMs like logic gates to create new, complex decision criteria:
 
 ```python
-from zeromodel.vpm_logic import vpm_and, vpm_or, vpm_not, query_top_left
+from zeromodel.vpm.logic import vpm_and, vpm_or, vpm_not, vpm_query_top_left
 
 # Prepare VPMs for different sub-tasks
 high_quality_model = ZeroModel(metric_names)
@@ -99,7 +99,7 @@ low_uncertainty_vpm = low_uncertainty_model.encode()
 good_and_cert_vpm = vpm_and(high_quality_vpm, low_uncertainty_vpm)
 
 # Query the composed VPM
-composite_score = query_top_left(good_and_cert_vpm, context_size=3)
+composite_score = vpm_query_top_left(good_and_cert_vpm, context_size=3)
 print(f"Score for 'High Quality AND Low Uncertainty' items: {composite_score:.4f}")
 
 # This enables complex reasoning: (A AND NOT B) OR (C AND D) as VPM operations.

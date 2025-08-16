@@ -1,5 +1,5 @@
 # zeromodel/stdm.py
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Tuple
 
 import numpy as np
 

@@ -496,7 +496,7 @@ class VPMMetadata:
             Dictionary of metric weights
         """
         if not self.weights_nibbles:
-            return {m: default for m in metric_names}
+            return dict.fromkeys(metric_names, default)
         return _nibbles_to_weights(self.weights_nibbles, metric_names)
 
     def add_pointer(self, ptr: RouterPointer) -> None:

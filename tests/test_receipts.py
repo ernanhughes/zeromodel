@@ -9,8 +9,8 @@ import pytest
 from PIL import Image
 
 from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
-from zeromodel.images.logic import (vpm_logic_and, vpm_logic_not, vpm_logic_or,
-                                    vpm_logic_xor)
+from zeromodel.vpm.logic import (vpm_and, vpm_not, vpm_or,
+                                    vpm_xor)
 from zeromodel.images.vpf import create_vpf, embed_vpf, read_json_footer
 # Pointer routing (storage-agnostic) — adjust import if your path differs
 from zeromodel.vpm.metadata import AggId, DictResolver, MapKind, RouterPointer
@@ -115,10 +115,10 @@ def test_visual_logic_and_or_not_xor_sane():
     A = _bw(W, H, lambda x, y: x + y >= W // 2)      # upper-right triangle-ish
     B = _bw(W, H, lambda x, y: x + y <= W // 2 - 2)  # lower-left triangle-ish
 
-    AND = vpm_logic_and(A, B)
-    OR  = vpm_logic_or(A, B)
-    NOT = vpm_logic_not(A)
-    XOR = vpm_logic_xor(A, B)
+    AND = vpm_and(A, B)
+    OR  = vpm_or(A, B)
+    NOT = vpm_not(A)
+    XOR = vpm_xor(A, B)
 
     a = np.array(A)[:, :, 0] > 0
     b = np.array(B)[:, :, 0] > 0

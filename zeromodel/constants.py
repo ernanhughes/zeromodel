@@ -20,3 +20,5 @@ PRECISION_DTYPE_MAP = {
     "float32": np.float32,
     "float64": np.float64
 }
+
+_PNG_SIG = b"\x89PNG\r\n\x1a\n"

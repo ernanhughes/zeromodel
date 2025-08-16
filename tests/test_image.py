@@ -1,7 +1,9 @@
-import numpy as np
-from zeromodel.vpm.encoder import VPMEncoder
-from zeromodel.utils import to_png_bytes, png_to_gray_array
 import logging
+
+import numpy as np
+
+from zeromodel.utils import png_to_gray_array, to_png_bytes
+from zeromodel.vpm.encoder import VPMEncoder
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

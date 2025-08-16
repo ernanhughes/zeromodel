@@ -1,6 +1,9 @@
-import logging, re
+import logging
+import re
 from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
+
 from .base import BaseOrganizationStrategy
 
 logger = logging.getLogger(__name__)

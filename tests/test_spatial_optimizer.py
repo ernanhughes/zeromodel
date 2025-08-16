@@ -1,9 +1,10 @@
 import numpy as np
 import pytest
+
 from zeromodel.core import ZeroModel
 from zeromodel.memory import ZeroMemory
-
 from zeromodel.tools.spatial_optimizer import SpatialOptimizer
+
 
 class TestSpatialOptimizer:
     """Test suite for the SpatialOptimizer class (ZeroModel's Spatial Calculus)."""

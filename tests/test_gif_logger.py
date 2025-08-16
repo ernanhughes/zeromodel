@@ -1,7 +1,8 @@
 # tests/test_gif_logging.py
 import os
-import numpy as np
+
 import imageio.v2 as imageio
+import numpy as np
 import pytest
 
 # Try to import plotting libraries for better visualization (optional)
@@ -12,19 +13,19 @@ except ImportError:
     HAS_MATPLOTLIB = False
     plt = None
 
+from io import BytesIO
+
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
 from sklearn.datasets import make_classification
+from sklearn.metrics import accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
+from sklearn.neural_network import \
+    MLPClassifier  # Better for showing epoch progress
 from sklearn.preprocessing import StandardScaler
-from sklearn.neural_network import MLPClassifier # Better for showing epoch progress
-from sklearn.metrics import log_loss, accuracy_score
 
 from zeromodel.memory import ZeroMemory
-
-import numpy as np
-import matplotlib.pyplot as plt
-from io import BytesIO
-from PIL import Image
-
 
 
 class GIFLogger:

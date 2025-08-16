@@ -1,6 +1,6 @@
 import numpy as np
 
-precision_dtype_map = {
+PRECISION_DTYPE_MAP = {
     # Numeric precision values (user-friendly)
     4: np.uint8,
     8: np.uint8,

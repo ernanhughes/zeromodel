@@ -13,19 +13,21 @@ This file tests each function in `zeromodel.vpm_logic` by:
 This provides a comprehensive, visual demonstration of the VPM logic system.
 """
 
-import numpy as np
 import matplotlib
+import numpy as np
 
 from zeromodel.config import get_config
+
 matplotlib.use('Agg')  # Use non-GUI backend to avoid TclError
-import matplotlib.pyplot as plt
 import os
+
+import matplotlib.pyplot as plt
+
 from zeromodel.core import ZeroModel
 from zeromodel.vpm.encoder import VPMEncoder
-from zeromodel.vpm.logic import (
-    vpm_and, vpm_or, vpm_not, vpm_add, vpm_xor,
-    vpm_nand, vpm_nor, query_top_left, vpm_subtract
-)
+from zeromodel.vpm.logic import (query_top_left, vpm_add, vpm_and, vpm_nand,
+                                 vpm_nor, vpm_not, vpm_or, vpm_subtract,
+                                 vpm_xor)
 
 # --- Test Configuration ---
 # Directory to save output images

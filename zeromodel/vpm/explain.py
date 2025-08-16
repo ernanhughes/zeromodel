@@ -12,6 +12,7 @@ Key Concepts:
 """
 
 import numpy as np
+
 from zeromodel.vpm.encoder import VPMEncoder
 
 

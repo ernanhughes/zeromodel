@@ -1,9 +1,13 @@
-from zeromodel.images import extract_vpf
+import time
+
 import numpy as np
 import pytest
-from zeromodel.hierarchical import HierarchicalVPM, extract_critical_region, region_max_intensity
+
+from zeromodel.hierarchical import (HierarchicalVPM, extract_critical_region,
+                                    region_max_intensity)
+from zeromodel.images import extract_vpf
 from zeromodel.utils import png_to_gray_array
-import time
+
 
 @pytest.mark.skip("Needs work")
 @pytest.mark.parametrize("order_col,expected_doc", [
@@ -452,7 +456,7 @@ class TestHierarchicalVPM:
         and storage implementation, ensuring "decisions, not models, move" across systems.
         """
         from zeromodel.storage.in_memory import InMemoryStorage
-        
+
         # Custom storage backend that logs operations
         class LoggingStorage(InMemoryStorage):
             def __init__(self):

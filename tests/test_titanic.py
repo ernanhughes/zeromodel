@@ -2,22 +2,23 @@
 import numpy as np
 import pandas as pd
 import pytest
-from sklearn.datasets import fetch_openml
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.feature_selection import mutual_info_classif
+from sklearn.datasets import fetch_openml
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_selection import mutual_info_classif
+from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
 
 from zeromodel import ZeroModel  # your package
 
 RANDOM = 42
 
-import seaborn as sns
 import pandas as pd
+import seaborn as sns
+
 
 def load_titanic():
     """

@@ -5,29 +5,19 @@ strip footer → restore weights → verify identical predictions.
 
 import hashlib
 import json
-import numpy as np
+import logging
 from io import BytesIO
+
+import numpy as np
 from PIL import Image
 from sklearn.datasets import make_moons
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
+from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
+from zeromodel.images.vpf import (create_vpf, embed_vpf, extract_vpf,
+                                  png_core_bytes, verify_vpf)
 from zeromodel.metadata import read_all_metadata
-
-import logging
-
-
-from zeromodel.images.vpf import (
-    embed_vpf,
-    create_vpf,
-    extract_vpf,
-    verify_vpf,
-)
-
-from zeromodel.images.core import (
-    tensor_to_vpm,
-    vpm_to_tensor,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -75,11 +65,10 @@ def test_provenance_model():
     assert verify_vpf(vpf_out, png_with_footer), "VPF verification failed."
 
     # 7) Strip footer to recover the core VPM PNG, then restore model state
-    idx = png_with_footer.rfind(b"ZMVF")
-    core_png = png_with_footer[:idx]
+    core_png = png_core_bytes(png_with_footer)
     restored_vpm_img = Image.open(BytesIO(core_png)).convert("RGB")
-    restored_state = vpm_to_tensor(restored_vpm_img)
-
+    restored_state = vpm_to_tensor(Image.open(BytesIO(png_with_footer)).convert("RGB"))
+    
     # 8) Rehydrate a fresh model with restored state
     m2 = LogisticRegression(max_iter=2000, solver="lbfgs", random_state=0)
     # inject minimal fitted attributes

@@ -12,15 +12,15 @@ and save all as grayscale images for quick inspection.
 """
 
 import os
-import numpy as np
+
 import matplotlib
+import numpy as np
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # import your pixel-wise ops
-from zeromodel.vpm.logic import (
-    vpm_and, vpm_or, vpm_not, vpm_xor, vpm_nor
-)
+from zeromodel.vpm.logic import vpm_and, vpm_nor, vpm_not, vpm_or, vpm_xor
 
 OUTDIR = "images/logic_demo"
 os.makedirs(OUTDIR, exist_ok=True)

@@ -3,8 +3,8 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import imageio.v2 as imageio
-from PIL import Image
 import numpy as np
+from PIL import Image
 
 log = logging.getLogger(__name__)
 

@@ -1,11 +1,10 @@
-import numpy as np
 import logging
-from zeromodel.organization import (
-    MemoryOrganizationStrategy,
-    SqlOrganizationStrategy,
-    ZeroModelOrganizationStrategy,
-    DuckDBAdapter,
-)
+
+import numpy as np
+
+from zeromodel.organization import (DuckDBAdapter, MemoryOrganizationStrategy,
+                                    SqlOrganizationStrategy,
+                                    ZeroModelOrganizationStrategy)
 
 logger = logging.getLogger(__name__)
 

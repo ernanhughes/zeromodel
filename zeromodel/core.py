@@ -9,20 +9,22 @@ layout and virtual views, not heavy processing.
 """
 
 import logging
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
 from zeromodel.config import get_config, init_config
-from zeromodel.constants import precision_dtype_map
-from zeromodel.organization import DuckDBAdapter, MemoryOrganizationStrategy, SqlOrganizationStrategy
+from zeromodel.constants import PRECISION_DTYPE_MAP
 from zeromodel.nonlinear.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
+from zeromodel.organization import (DuckDBAdapter, MemoryOrganizationStrategy,
+                                    SqlOrganizationStrategy)
 from zeromodel.timing import _end, _t
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
-from zeromodel.vpm.metadata import VPMMetadata, AggId
-import time
+from zeromodel.vpm.metadata import AggId, VPMMetadata
+
 logger = logging.getLogger(__name__)
 
 init_config()
@@ -61,10 +63,10 @@ class ZeroModel:
         self.default_output_precision = get_config("core").get(
             "default_output_precision", "float32"
         )
-        if self.default_output_precision not in precision_dtype_map:
+        if self.default_output_precision not in PRECISION_DTYPE_MAP:
             raise ValueError(
                 f"Invalid default_output_precision '{self.default_output_precision}'. "
-                f"Must be one of {list(precision_dtype_map.keys())}."
+                f"Must be one of {list(PRECISION_DTYPE_MAP.keys())}."
             )
 
         # VPM-IMG state (canonical memory image)

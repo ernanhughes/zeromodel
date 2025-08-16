@@ -1,18 +1,22 @@
 # tests/test_xor.py
 
 import sys
-import numpy as np
 import time
+
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score  # Import f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+
 # Import the updated ZeroModel
 from zeromodel.config import get_config
-from zeromodel.core import ZeroModel # Adjust import path if your structure is different
+from zeromodel.core import \
+    ZeroModel  # Adjust import path if your structure is different
 from zeromodel.vpm.encoder import VPMEncoder
+
 # If you have a hierarchical module and use it elsewhere in the file
 # from zeromodel.hierarchical import HierarchicalVPM
 
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, f1_score # Import f1_score
 
 def test_xor_validation():
     """Full XOR validation comparing ZeroModel and traditional ML (SVM)"""

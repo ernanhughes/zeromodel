@@ -1,7 +1,10 @@
 
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+
 from zeromodel.storage.base import StorageBackend
-from typing import Any, List, Tuple, Dict, Optional
-import numpy as np  
+
 
 class InMemoryStorage(StorageBackend[np.ndarray]):
     """In-memory storage backend for testing and small datasets."""

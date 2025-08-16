@@ -1,13 +1,14 @@
 import os
-import numpy as np
-import imageio.v2 as imageio
-import pytest
 
+import imageio.v2 as imageio
+import numpy as np
+import pytest
 from sklearn.datasets import make_moons
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from zeromodel.memory import ZeroMemory
+
 
 class GIFLogger:
     def __init__(self, fps=6): self.frames, self.fps = [], fps

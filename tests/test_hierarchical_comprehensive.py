@@ -1,12 +1,9 @@
 import numpy as np
 import pytest
 
-from zeromodel.hierarchical import (
-    HierarchicalVPM,
-    extract_critical_region,
-)
-from zeromodel.utils import png_to_gray_array
+from zeromodel.hierarchical import HierarchicalVPM, extract_critical_region
 from zeromodel.images import extract_vpf
+from zeromodel.utils import png_to_gray_array
 
 
 def test_hierarchical_vpm_comprehensive():

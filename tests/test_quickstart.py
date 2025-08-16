@@ -1,10 +1,12 @@
 # quickstart.py — minimal “install, run, see it” demo (instrumented)
+import logging
 import os
 import time
-import logging
+
+import imageio.v2 as imageio
 import numpy as np
 from PIL import Image
-import imageio.v2 as imageio
+
 from zeromodel import ZeroModel, get_critical_tile
 from zeromodel.metadata import MetadataView
 

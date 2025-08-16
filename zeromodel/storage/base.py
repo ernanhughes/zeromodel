@@ -1,10 +1,10 @@
-import logging
 import json
+import logging
 import math
 import struct
 import zlib
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable, TypeVar, Generic
-
+from typing import (Any, Callable, Dict, Generic, List, Optional, Tuple,
+                    TypeVar, Union)
 
 # Create a logger for this module
 logger = logging.getLogger(__name__)

@@ -1,13 +1,12 @@
-import time
+import logging
 import pathlib
+import time
+
 import numpy as np
 import pytest
-import logging
 
-from zeromodel import VPMImageWriter, VPMImageReader
-from zeromodel.vpm.metadata import (
-    VPMMetadata, RouterPointer, MapKind, AggId
-)
+from zeromodel import VPMImageReader, VPMImageWriter
+from zeromodel.vpm.metadata import AggId, MapKind, RouterPointer, VPMMetadata
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,8 @@
 import numpy as np
-from zeromodel.vpm.stdm import learn_w, gamma_operator, top_left_mass, curvature_over_time
+
+from zeromodel.vpm.stdm import (curvature_over_time, gamma_operator, learn_w,
+                                top_left_mass)
+
 
 def _generate_series(T=6, N=800, M=32, sparsity=6, noise=0.5, drift=0.08, seed=7):
     rng = np.random.default_rng(seed)

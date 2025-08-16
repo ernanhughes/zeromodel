@@ -1,12 +1,11 @@
 # tests/test_vpm_metadata_v2.py
 import numpy as np
 import pytest
-from zeromodel.vpm.metadata import (
-    VPMMetadata, MapKind, AggId, RouterPointer
-)
 
 # If your writer/reader expose PNG embedding, import them; otherwise skip those parts.
-from zeromodel import VPMImageWriter, VPMImageReader  # adjust import if needed
+from zeromodel import VPMImageReader, VPMImageWriter  # adjust import if needed
+from zeromodel.vpm.metadata import AggId, MapKind, RouterPointer, VPMMetadata
+
 
 def _mk_scores(M, D, seed=0):
     rng = np.random.default_rng(seed)

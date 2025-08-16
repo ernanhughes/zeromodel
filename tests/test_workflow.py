@@ -1,9 +1,10 @@
 # tests/test_demo_workflow.py
 
+import numpy as np
+
+from tests.utils import generate_synthetic_data
 from zeromodel.core import ZeroModel
 from zeromodel.vpm.encoder import VPMEncoder
-from tests.utils import generate_synthetic_data
-import numpy as np
 
 
 # In tests/test_demo_workflow.py

@@ -1,9 +1,12 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from typing import List, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.animation import FuncAnimation
+
 from zeromodel.decision_manifold import DecisionManifold
+
 
 def generate_test_data(T: int = 20, S: int = 50, V: int = 10, 
                       concept_drift: bool = True) -> List[np.ndarray]:

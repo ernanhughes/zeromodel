@@ -1,8 +1,11 @@
-import pytest
-import numpy as np
-from zeromodel import ZeroModel, HierarchicalVPM  
-from zeromodel.vpm.encoder import VPMEncoder
 import time
+
+import numpy as np
+import pytest
+
+from zeromodel import HierarchicalVPM, ZeroModel
+from zeromodel.vpm.encoder import VPMEncoder
+
 
 @pytest.mark.skip(reason="This test is for performance benchmarking and takes a long time to run")
 def test_performance_scalability():

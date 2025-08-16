@@ -1,7 +1,9 @@
 # In tests/test_nonlinearity.py
 import numpy as np
 import pytest
-from zeromodel import ZeroModel # Adjust import path if needed
+
+from zeromodel import ZeroModel  # Adjust import path if needed
+
 
 def test_prepare_with_auto_hint():
     """Test that the 'auto' hint adds a set of features."""

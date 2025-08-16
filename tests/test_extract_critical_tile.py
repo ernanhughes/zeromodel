@@ -1,10 +1,12 @@
 import math
+
 import numpy as np
 import pytest
 
 from zeromodel import ZeroModel
 from zeromodel.vpm.image import VPMImageReader
 from zeromodel.vpm.metadata import VPMMetadata
+
 
 def _effective_doc_count(reader: VPMImageReader) -> int:
     D_eff = reader.D

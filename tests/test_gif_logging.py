@@ -1,13 +1,13 @@
 import os
-import numpy as np
-import imageio.v2 as imageio
-import pytest
 
+import imageio.v2 as imageio
+import numpy as np
+import pytest
 from sklearn.datasets import make_moons
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import accuracy_score, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import SGDClassifier
-from sklearn.metrics import log_loss, accuracy_score
 
 from zeromodel.memory import ZeroMemory
 

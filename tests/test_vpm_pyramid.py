@@ -1,12 +1,14 @@
 # tests/test_vpm_pyramid.py
 
 import math
+
 import numpy as np
 import pytest
 
-from zeromodel.vpm.image import VPMImageWriter, VPMImageReader, _round_u16, _u16_clip
+from zeromodel.vpm.image import (VPMImageReader, VPMImageWriter, _round_u16,
+                                 _u16_clip)
+from zeromodel.vpm.metadata import AggId, MapKind, RouterPointer, VPMMetadata
 from zeromodel.vpm.pyramid import VPMPyramidBuilder
-from zeromodel.vpm.metadata import VPMMetadata, RouterPointer, MapKind, AggId
 
 
 def _mk_scores(M, D, seed=0):

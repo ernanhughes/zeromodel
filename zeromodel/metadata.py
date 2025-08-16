@@ -1,17 +1,16 @@
 # zeromodel/metadata.py
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from pathlib import Path
-from typing import Optional, Union, IO, Any, Dict
 import json
+from dataclasses import asdict, dataclass
 from io import BytesIO
+from pathlib import Path
+from typing import IO, Any, Dict, Optional, Union
 
-# Core (legacy) VPM metadata reader – expects *its own* binary block, not PNG.
-from zeromodel.vpm.metadata import VPMMetadata
 # New provenance footer reader (PNG-safe)
 from zeromodel.images.metadata import ProvenanceMetadata
-
+# Core (legacy) VPM metadata reader – expects *its own* binary block, not PNG.
+from zeromodel.vpm.metadata import VPMMetadata
 
 SrcType = Union[str, Path, bytes, bytearray, IO[bytes]]
 

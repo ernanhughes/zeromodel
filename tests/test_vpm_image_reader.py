@@ -1,10 +1,11 @@
 # tests/test_vpm_image_tojson_roundtrip.py
 import json
-import numpy as np
 import pathlib
 
-from zeromodel.vpm.image import VPMImageWriter, VPMImageReader
-from zeromodel.vpm.metadata import VPMMetadata, AggId
+import numpy as np
+
+from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
+from zeromodel.vpm.metadata import AggId, VPMMetadata
 
 
 def _make_writer_png(tmp_path, *, M=3, D=16, store_minmax=True,

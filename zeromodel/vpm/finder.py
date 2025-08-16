@@ -1,6 +1,6 @@
-from typing import Callable, Optional, Dict, Any, List, Tuple
-from dataclasses import dataclass
 import struct
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 _PNG_SIG = b"\x89PNG\r\n\x1a\n"
 
@@ -104,7 +104,7 @@ class VPMFinder:
 
             # Decode your existing VPMMetadata binary format:
             # Assuming you already have VPMMetadata.from_bytes(...)
-            from zeromodel.vpm.metadata import VPMMetadata, RouterPointer
+            from zeromodel.vpm.metadata import RouterPointer, VPMMetadata
             meta = VPMMetadata.from_bytes(md_bytes)
 
             pointers = []

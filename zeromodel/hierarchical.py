@@ -12,24 +12,23 @@ where navigation time grows logarithmically with data size, enabling:
 The core insight: "When the answer is always 40 steps away, size becomes irrelevant."
 """
 
-import logging
 import json
+import logging
 import math
 import struct
 import zlib
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from PIL import Image
 
-from zeromodel.vpm.encoder import VPMEncoder
-from zeromodel.images.metadata import VPF_FOOTER_MAGIC
-from zeromodel.images import create_vpf, extract_vpf
 from zeromodel.core import ZeroModel
-from zeromodel.utils import to_png_bytes, png_to_gray_array
-
+from zeromodel.images import create_vpf, extract_vpf
+from zeromodel.images.metadata import VPF_FOOTER_MAGIC
 from zeromodel.storage.base import StorageBackend
 from zeromodel.storage.in_memory import InMemoryStorage
+from zeromodel.utils import png_to_gray_array, to_png_bytes
+from zeromodel.vpm.encoder import VPMEncoder
 
 logger = logging.getLogger(__name__)
 

@@ -3,9 +3,10 @@
 Test cases for the ZeroMemory sidecar component.
 """
 
+import logging
+
 import numpy as np
 import pytest
-import logging
 
 # from zeromodel.core import ZeroModel
 # from zeromodel.hierarchical import HierarchicalVPM

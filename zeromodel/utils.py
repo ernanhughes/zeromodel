@@ -5,18 +5,16 @@ Utility Functions
 This module provides helper functions used throughout the zeromodel package.
 """
 
-from typing import Any, Union
 import io
 import json
 import struct
 import zlib
+from typing import Any, Dict, Union
+
 import numpy as np
 from PIL import Image
-from typing import Any, Dict 
 
-from zeromodel.constants import precision_dtype_map
-
-import numpy as np
+from zeromodel.constants import PRECISION_DTYPE_MAP
 
 __all__ = [
     "quantize",
@@ -45,7 +43,7 @@ def quantize(value: Any, precision: int) -> Any:
         raise ValueError("precision must be >= 1")
     if precision > 64:
         precision = 64  # cap
-    dtype = precision_dtype_map(precision)
+    dtype = PRECISION_DTYPE_MAP(precision)
     max_val = (1 << precision) - 1 if precision < 64 else np.iinfo(dtype).max
     if isinstance(value, np.ndarray):
         clipped = np.clip(value, 0.0, 1.0)

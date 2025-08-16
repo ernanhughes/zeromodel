@@ -1,7 +1,9 @@
 import hashlib
-from PIL import Image
-from zeromodel.images.vpf import create_vpf, embed_vpf, extract_vpf, verify_vpf
 import logging
+
+from PIL import Image
+
+from zeromodel.images.vpf import create_vpf, embed_vpf, extract_vpf, verify_vpf
 
 logger = logging.getLogger(__name__)
 

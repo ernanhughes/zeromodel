@@ -1,7 +1,9 @@
-from zeromodel.storage.base import StorageBackend
-from typing import List, Tuple, Optional
-import boto3
 import logging
+from typing import List, Optional, Tuple
+
+import boto3
+
+from zeromodel.storage.base import StorageBackend
 
 logger = logging.getLogger(__name__)
 

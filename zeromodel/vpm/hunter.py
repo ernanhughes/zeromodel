@@ -14,7 +14,9 @@ Key Features:
 
 import logging
 from typing import Any, Dict, List, Tuple, Union
+
 import numpy as np
+
 from zeromodel import HierarchicalVPM, ZeroModel
 
 logger = logging.getLogger(__name__)

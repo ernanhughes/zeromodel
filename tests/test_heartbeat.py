@@ -1,13 +1,16 @@
 import os
-import numpy as np
-import pytest
 import tempfile
 import time
 from unittest.mock import patch
+
+import numpy as np
+import pytest
 from PIL import Image
 
 from zeromodel.memory import ZeroMemory
-from zeromodel.tools.training_heartbeat_visualizer import TrainingHeartbeatVisualizer
+from zeromodel.tools.training_heartbeat_visualizer import \
+    TrainingHeartbeatVisualizer
+
 
 def test_training_heartbeat_visualizer_full_cycle(tmp_path):
     """Test the complete workflow of the TrainingHeartbeatVisualizer with ZeroMemory."""
@@ -243,9 +246,9 @@ def test_visualizer_integration_with_training(tmp_path):
     # --- 1. Setup ---
     from sklearn.datasets import make_classification
     from sklearn.model_selection import train_test_split
-    from sklearn.preprocessing import StandardScaler
     from sklearn.neural_network import MLPClassifier
-    
+    from sklearn.preprocessing import StandardScaler
+
     # Generate dataset
     X, y = make_classification(
         n_samples=500,

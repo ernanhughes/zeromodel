@@ -1,18 +1,16 @@
 # tests/test_vpm_metadata_suite.py
+import logging
+import math
 import os
 import time
-import math
+
 import numpy as np
 import pytest
 
-from zeromodel import VPMImageWriter, VPMImageReader
-from zeromodel.vpm.metadata import (
-    VPMMetadata, RouterPointer, MapKind, AggId,
-    FilenameResolver, DictResolver,
-    _ROUTER_PTR_SIZE, _META_FIXED_SIZE
-)
-
-import logging
+from zeromodel import VPMImageReader, VPMImageWriter
+from zeromodel.vpm.metadata import (_META_FIXED_SIZE, _ROUTER_PTR_SIZE, AggId,
+                                    DictResolver, FilenameResolver, MapKind,
+                                    RouterPointer, VPMMetadata)
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,9 @@
 import numpy as np
-from zeromodel import ZeroModel, HierarchicalVPM
+
+from zeromodel import HierarchicalVPM, ZeroModel
 from zeromodel.config import get_config
 from zeromodel.vpm.encoder import VPMEncoder
+
 
 def test_normalization_quantization():
     """Test normalization and quantization behavior with different precision levels"""
@@ -139,7 +141,9 @@ def test_duckdb_integration_and_data_loading():
     # To correctly test the data loading, we need to compare against the data
     # that is actually loaded into DuckDB, which is the normalized data.
     # We simulate the normalization process that happens inside prepare().
-    from zeromodel.normalizer import DynamicNormalizer # Adjust import path if needed
+    from zeromodel.normalizer import \
+        DynamicNormalizer  # Adjust import path if needed
+
     # Create a normalizer with the same metric names
     test_normalizer = DynamicNormalizer(metric_names)
     # Update its internal min/max with the test data (as prepare does)
@@ -247,8 +251,9 @@ def test_hierarchical_clustering():
     critical_tile_bytes = hvpm.get_tile(2, width=4, height=4)
     
     # Convert bytes to image for pixel access (boring by design)
-    from PIL import Image
     import io
+
+    from PIL import Image
     img = Image.open(io.BytesIO(critical_tile_bytes))
     img_array = np.array(img)
     

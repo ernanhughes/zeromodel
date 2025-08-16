@@ -1,14 +1,12 @@
 # test_vpm.py
 import math
+
 import numpy as np
 
 # CHANGE THIS to your actual module path/name:
-from zeromodel import (
-    VPMImageWriter,
-    VPMImageReader,
-    build_parent_level_png,
-    AGG_MAX,
-)
+from zeromodel import (AGG_MAX, VPMImageReader, VPMImageWriter,
+                       build_parent_level_png)
+
 
 def _mk_scores(M, D, seed=7):
     """Deterministic score matrix with no ties within a row."""

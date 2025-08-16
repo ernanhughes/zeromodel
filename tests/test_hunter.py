@@ -1,8 +1,9 @@
 # tests/test_hunter.py
 import numpy as np
 
-from zeromodel import ZeroModel, HierarchicalVPM
+from zeromodel import HierarchicalVPM, ZeroModel
 from zeromodel.vpm.hunter import VPMHunter
+
 
 def test_hunter_zeromodel_ndarray_path(monkeypatch):
     metrics = ["m1", "m2"]

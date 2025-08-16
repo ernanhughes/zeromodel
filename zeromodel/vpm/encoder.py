@@ -15,7 +15,7 @@ from typing import Optional
 
 import numpy as np
 
-from zeromodel.constants import precision_dtype_map
+from zeromodel.constants import PRECISION_DTYPE_MAP
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +77,11 @@ class VPMEncoder:
         
         # --- Precision Handling ---
         final_precision = output_precision or self.default_output_precision
-        if final_precision not in precision_dtype_map:
+        if final_precision not in PRECISION_DTYPE_MAP:
             logger.warning("Unsupported precision '%s'. Using default '%s'.", 
                           final_precision, self.default_output_precision)
             final_precision = self.default_output_precision
-        target_dtype = precision_dtype_map[final_precision]
+        target_dtype = PRECISION_DTYPE_MAP[final_precision]
         
         # --- Matrix Preparation ---
         # Ensure float32 for consistent processing
@@ -158,11 +158,11 @@ class VPMEncoder:
         
         # --- Precision Handling ---
         final_precision = precision or self.default_output_precision
-        if final_precision not in precision_dtype_map:
+        if final_precision not in PRECISION_DTYPE_MAP:
             logger.warning("Unsupported precision '%s'. Using default '%s'.", 
                           final_precision, self.default_output_precision)
             final_precision = self.default_output_precision
-        target_dtype = precision_dtype_map[final_precision]
+        target_dtype = PRECISION_DTYPE_MAP[final_precision]
         
         # --- Tile Extraction ---
         # Calculate actual tile dimensions

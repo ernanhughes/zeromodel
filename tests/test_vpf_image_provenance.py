@@ -1,15 +1,13 @@
 # tests/test_vpf_image_provenance.py
-import time
 import hashlib
-import numpy as np
-from PIL import Image
-import pytest
+import time
 
-from zeromodel.images.vpf import (
-    embed_vpf,
-    extract_vpf,
-    verify_vpf,
-)
+import numpy as np
+import pytest
+from PIL import Image
+
+from zeromodel.images.vpf import embed_vpf, extract_vpf, verify_vpf
+
 
 def sha3_hex(b: bytes) -> str:
     return hashlib.sha3_256(b).hexdigest()
@@ -23,19 +21,17 @@ def _make_demo_image(w=512, h=256):
     return Image.fromarray(rgb)
 
 def test_vpf_embed_extract_verify_and_replay():
-    from io import BytesIO
-    from PIL import Image
     import time
+    from io import BytesIO
+
     import numpy as np
+    from PIL import Image
 
     # imports from the canonical images package
-    from zeromodel.images import (
-        embed_vpf,
-        extract_vpf_from_png_bytes,
-        verify_vpf,
-        replay_from_vpf,
-    )
-    from zeromodel.images.utils import sha3_bytes as sha3_hex  # hex string (no 'sha3:' tag)
+    from zeromodel.images import (embed_vpf, extract_vpf_from_png_bytes,
+                                  replay_from_vpf, verify_vpf)
+    from zeromodel.images.utils import \
+        sha3_bytes as sha3_hex  # hex string (no 'sha3:' tag)
 
     # --- demo image ----------------------------------------------------------
     def _make_demo_image(w, h):

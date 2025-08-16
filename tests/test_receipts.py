@@ -1,38 +1,26 @@
 # tests/test_receipts.py
-import math
-import json
 import hashlib
+import json
+import math
 from io import BytesIO
 
 import numpy as np
 import pytest
 from PIL import Image
 
+from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
+from zeromodel.images.logic import (vpm_logic_and, vpm_logic_not, vpm_logic_or,
+                                    vpm_logic_xor)
+from zeromodel.images.vpf import create_vpf, embed_vpf, read_json_footer
+# Pointer routing (storage-agnostic) — adjust import if your path differs
+from zeromodel.vpm.metadata import AggId, DictResolver, MapKind, RouterPointer
+from zeromodel.vpm.metadata import VPMMetadata as TileMeta
+
 # Core provenance / VPM ops
 
-from zeromodel.images.vpf import (
-    create_vpf,
-    embed_vpf,
-    read_json_footer
-)
 
-from zeromodel.images.core import (
-    tensor_to_vpm,
-    vpm_to_tensor,
-    vpm_logic_and,
-    vpm_logic_or,
-    vpm_logic_not,
-    vpm_logic_xor,
-)
 
-# Pointer routing (storage-agnostic) — adjust import if your path differs
-from zeromodel.vpm.metadata import (
-    VPMMetadata as TileMeta,
-    RouterPointer,
-    DictResolver,
-    MapKind,
-    AggId,
-)
+
 
 
 # -----------------------------

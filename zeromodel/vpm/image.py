@@ -15,12 +15,14 @@ Key Features:
 - Efficient critical tile extraction
 """
 
-from typing import Dict, List, Optional, Tuple, Literal, Any
-import numpy as np
-import png
-from zeromodel.vpm.metadata import VPMMetadata
 import json
 from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional, Tuple
+
+import numpy as np
+import png
+
+from zeromodel.vpm.metadata import VPMMetadata
 
 # --- Constants ---
 DEFAULT_H_META_BASE = 2              # base meta rows (row0 + row1)

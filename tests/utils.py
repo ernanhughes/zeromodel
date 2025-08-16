@@ -1,7 +1,9 @@
-import numpy as np
-from typing import List, Tuple, Dict
 import hashlib
 import struct
+from typing import Dict, List, Tuple
+
+import numpy as np
+
 
 def generate_synthetic_data(num_docs: int = 100, num_metrics: int = 50) -> Tuple[np.ndarray, List[str]]:
     """Generate synthetic score data for demonstration"""

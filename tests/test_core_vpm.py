@@ -1,10 +1,12 @@
 # test_core_vpm.py
 import os
 import tempfile
+
 import numpy as np
 import pytest
 
 from zeromodel import ZeroModel
+
 
 def test_zero_model_vpm_view_compilation():
     """

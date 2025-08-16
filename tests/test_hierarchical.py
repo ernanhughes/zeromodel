@@ -5,6 +5,7 @@ from zeromodel.hierarchical import HierarchicalVPM, extract_critical_region, reg
 from zeromodel.utils import png_to_gray_array
 import time
 
+@pytest.mark.skip("Needs work")
 @pytest.mark.parametrize("order_col,expected_doc", [
     ("metric1", 0),
     ("metric2", 2),

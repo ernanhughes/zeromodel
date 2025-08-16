@@ -653,53 +653,13 @@ class HierarchicalVPM:
         return (next_level, next_x, next_y, critical_value)
 
     def _extract_decision(self, png_bytes: bytes) -> Tuple[int, float]:
-        """
-        Return (global_doc_idx, relevance in [0,1]) from a base-level tile.
-
-        Prefer the VPF-embedded decision; fall back to pixel heuristic only if absent.
-        """
-        # Try provenance first (deterministic, task-aligned)
-        try:
-            vpf_info = extract_vpf(png_bytes)
-            vpf = vpf_info[0] if isinstance(vpf_info, tuple) else vpf_info
-            metrics = vpf.get("metrics", {}) if isinstance(vpf, dict) else {}
-            if "top_doc_global" in metrics:
-                # Use a simple tile saliency as relevance (or set 1.0); ordering is already decided
-                gray = png_to_gray_array(png_bytes)
-                rel = float(np.max(gray)) / 255.0 if gray.ndim == 2 and gray.size > 0 else 1.0
-                return (int(metrics["top_doc_global"]), rel)
-        except Exception:
-            pass
-
-        # Fallback: pixel heuristic (best-effort only)
-        gray = png_to_gray_array(png_bytes)
+        gray = png_to_gray_array(png_bytes)     # (H, W) uint8
         if gray.ndim != 2 or gray.size == 0:
             return (0, 0.0)
 
         y, x = np.unravel_index(np.argmax(gray), gray.shape)
         rel = float(gray[y, x]) / 255.0
-
-        # If we have doc_start/documents, map to global; otherwise return tile-local index
-        doc_start = 0
-        docs_in_tile = None
-        try:
-            vpf_info = extract_vpf(png_bytes)
-            vpf = vpf_info[0] if isinstance(vpf_info, tuple) else vpf_info
-            params = vpf.get("params", {}) if isinstance(vpf, dict) else {}
-            metrics = vpf.get("metrics", {}) if isinstance(vpf, dict) else {}
-            doc_start = int(params.get("doc_start", 0))
-            docs_in_tile = int(metrics.get("documents", 0)) or None
-            vpf.setdefault("metrics", {})["decision_fallback_used"] = True
-        except Exception:
-            pass
-
-        header_rows = 0
-        if docs_in_tile:
-            header_rows = max(0, gray.shape[0] - docs_in_tile)
-
-        local_doc_idx = max(0, y - header_rows)
-        global_doc_idx = doc_start + local_doc_idx
-        return (int(global_doc_idx), rel)
+        return (int(y), rel)  # y is the document index in this context
 
     def get_tile(
         self,

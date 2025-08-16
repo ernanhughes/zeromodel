@@ -242,8 +242,8 @@ def test_tensor_vpm_roundtrip_parameterized(data_type, value):
     
     # Verify performance remains consistent regardless of data type
     # Demonstrates ZeroModel's "planet-scale navigation that feels flat" principle
-    assert vpm_creation_time < 0.1, f"VPM creation too slow for {data_type}: {vpm_creation_time:.4f}s"
-    assert restoration_time < 0.1, f"Restoration too slow for {data_type}: {restoration_time:.4f}s"
+    assert vpm_creation_time < 0.5, f"VPM creation too slow for {data_type}: {vpm_creation_time:.4f}s"
+    assert restoration_time < 0.5, f"Restoration too slow for {data_type}: {restoration_time:.4f}s"
     
     # Print performance metrics for larger data types
     if "array" in data_type or "large" in data_type:

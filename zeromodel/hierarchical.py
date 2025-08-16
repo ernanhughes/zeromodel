@@ -23,8 +23,8 @@ import numpy as np
 from PIL import Image
 
 from zeromodel.vpm.encoder import VPMEncoder
-from zeromodel.provenance.metadata import VPF_FOOTER_MAGIC
-from zeromodel.provenance import create_vpf, extract_vpf
+from zeromodel.images.metadata import VPF_FOOTER_MAGIC
+from zeromodel.images import create_vpf, extract_vpf
 from zeromodel.core import ZeroModel
 from zeromodel.utils import to_png_bytes, png_to_gray_array
 

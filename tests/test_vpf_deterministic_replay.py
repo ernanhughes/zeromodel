@@ -3,7 +3,7 @@ def test_vpf_deterministic_replay():
     Generate an artifact with a VPF, then replay it later and verify
     that the regenerated output matches bit-for-bit.
     """
-    from zeromodel.provenance import embed_vpf, extract_vpf, replay_from_vpf
+    from zeromodel.images import embed_vpf, extract_vpf, replay_from_vpf
     import hashlib
 
     # Step 1: Generate an artifact with a VPF

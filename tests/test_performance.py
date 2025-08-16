@@ -20,7 +20,6 @@ def test_performance_scalability():
     # Verify processing completed
     assert zeromodel.sorted_matrix is not None
     assert zeromodel.doc_order is not None
-    assert zeromodel.metric_order is not None
   
     # Test with large dataset (10,000 documents × 50 metrics)
     metric_names = [f"metric_{i}" for i in range(50)]

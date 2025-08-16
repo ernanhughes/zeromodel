@@ -7,7 +7,7 @@ import random
 import string
 from typing import Any, Dict, List, Tuple, Union
 
-from zeromodel.provenance.core import tensor_to_vpm, vpm_to_tensor
+from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
 
 def generate_test_data(seed: int = 42) -> Dict[str, Any]:
     """Generate diverse test data structures for roundtrip testing"""

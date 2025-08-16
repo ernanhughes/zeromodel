@@ -24,7 +24,7 @@ from zeromodel.images.vpf import (
     verify_vpf,
 )
 
-from zeromodel.provenance.core import (
+from zeromodel.images.core import (
     tensor_to_vpm,
     vpm_to_tensor,
 )

@@ -6,7 +6,7 @@ from zeromodel.hierarchical import (
     extract_critical_region,
 )
 from zeromodel.utils import png_to_gray_array
-from zeromodel.provenance import extract_vpf
+from zeromodel.images import extract_vpf
 
 
 def test_hierarchical_vpm_comprehensive():

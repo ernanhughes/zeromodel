@@ -10,7 +10,7 @@ from io import BytesIO
 # Core (legacy) VPM metadata reader – expects *its own* binary block, not PNG.
 from zeromodel.vpm.metadata import VPMMetadata
 # New provenance footer reader (PNG-safe)
-from zeromodel.provenance.metadata import ProvenanceMetadata
+from zeromodel.images.metadata import ProvenanceMetadata
 
 
 SrcType = Union[str, Path, bytes, bytearray, IO[bytes]]

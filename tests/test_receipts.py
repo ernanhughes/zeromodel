@@ -13,9 +13,10 @@ from PIL import Image
 from zeromodel.images.vpf import (
     create_vpf,
     embed_vpf,
+    read_json_footer
 )
 
-from zeromodel.provenance.core import (
+from zeromodel.images.core import (
     tensor_to_vpm,
     vpm_to_tensor,
     vpm_logic_and,

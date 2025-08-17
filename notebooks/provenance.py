@@ -31,6 +31,7 @@ from io import BytesIO
 from PIL import Image
 import json
 from typing import Dict, Any, Tuple, Optional
+from zeromodel.utils import sha3
 
 # %% [markdown]
 # ## 1. Creating a Visual Policy Map (VPM)
@@ -110,7 +111,7 @@ def create_vpf(
     
     # Compute content hash of the payload (for verification)
     payload = json.dumps(vpf, sort_keys=True).encode('utf-8')
-    vpf["lineage"]["content_hash"] = f"sha3:{hashlib.sha3_256(payload).hexdigest()}"
+    vpf["lineage"]["content_hash"] = sha3(payload)
     
     # Compute VPF hash (for self-integrity)
     clean_dict = vpf.copy()
@@ -121,8 +122,8 @@ def create_vpf(
         clean_dict["lineage"] = lineage
     
     payload = json.dumps(clean_dict, sort_keys=True).encode('utf-8')
-    vpf["lineage"]["vpf_hash"] = f"sha3:{hashlib.sha3_256(payload).hexdigest()}"
-    
+    vpf["lineage"]["vpf_hash"] = sha3(payload)
+
     return vpf
 
 # Create a realistic VPF for our example
@@ -248,8 +249,8 @@ def verify_vpf(png_bytes: bytes, expected_content_hash: str) -> bool:
     
     # Extract core image (without footer)
     core_image = png_bytes[:idx]
-    actual_hash = f"sha3:{hashlib.sha3_256(core_image).hexdigest()}"
-    
+    actual_hash = sha3(core_image)
+
     if actual_hash != expected_content_hash:
         return False
     
@@ -265,7 +266,7 @@ def verify_vpf(png_bytes: bytes, expected_content_hash: str) -> bool:
             clean_dict["lineage"] = lineage
         
         payload = json.dumps(clean_dict, sort_keys=True).encode('utf-8')
-        expected_vpf_hash = f"sha3:{hashlib.sha3_256(payload).hexdigest()}"
+        expected_vpf_hash = sha3(payload)
         return vpf["lineage"]["vpf_hash"] == expected_vpf_hash
     except Exception as e:
         print(f"Verification error: {str(e)}")
@@ -395,8 +396,8 @@ def create_reasoning_chain(num_steps: int = 5) -> list[bytes]:
         # Update parent IDs for next step
         vpm_bytes = embed_vpf(vpm, vpf)
         vpm_chain.append(vpm_bytes)
-        parent_ids = [hashlib.sha3_256(vpm_bytes).hexdigest()]
-    
+        parent_ids = [sha3(vpm_bytes)]
+
     return vpm_chain
 
 def trace_reasoning_chain(vpm_chain: list[bytes]):

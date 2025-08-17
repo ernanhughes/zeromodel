@@ -1,0 +1,20 @@
+# conf/pipeline/visual_amplifier.yaml
+stages:
+  - stage: "amplifier/stdm.STDMAmplifier"
+    params: 
+      alpha: 0.3
+      iters: 100
+      Kc: 12
+      Kr: 48
+  - stage: "filter/wavelet.WaveletFilter"
+    params: 
+      level: 2
+      wavelet: "db4"
+      mode: "soft"
+  - stage: "combiner/and.AndCombiner"
+    params: 
+      threshold: 0.3
+  - stage: "organizer/top_left_sort.TopLeftSorter"
+    params: 
+      metric: "variance"
+      Kc: 8

@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from zeromodel.constants import _PNG_SIG
 
+
 @dataclass
 class FindStep:
     level: int

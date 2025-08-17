@@ -5,11 +5,9 @@ Utility Functions
 This module provides helper functions used throughout the zeromodel package.
 """
 
+import hashlib
 import io
-import json
-import struct
-import zlib
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 import numpy as np
 from PIL import Image
@@ -20,6 +18,7 @@ __all__ = [
     "quantize",
     "dct",
     "idct",
+    "sha3"
 ]
 
 
@@ -144,3 +143,5 @@ def png_to_gray_array(png_bytes: bytes) -> np.ndarray:
         arr = np.array(im, dtype=np.uint8)
     return arr
 
+def sha3(b):
+    return hashlib.sha3_256(b).hexdigest()

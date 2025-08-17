@@ -1,5 +1,5 @@
 import logging
-from typing import (Generic, List, Optional, Tuple,       TypeVar)
+from typing import Generic, List, Optional, Tuple, TypeVar
 
 # Create a logger for this module
 logger = logging.getLogger(__name__)

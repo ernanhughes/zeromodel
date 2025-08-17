@@ -19,12 +19,11 @@ from zeromodel.images.vpf import (create_vpf, embed_vpf, extract_vpf,
                                   png_core_bytes, verify_vpf)
 from zeromodel.metadata import read_all_metadata
 import pytest
+from zeromodel.utils import sha3
 
 logger = logging.getLogger(__name__)
 
 
-def sha3_hex(b: bytes) -> str:
-    return hashlib.sha3_256(b).hexdigest()
 
 @pytest.mark.skip("Skipping provenance model test")
 def test_provenance_model():
@@ -53,7 +52,7 @@ def test_provenance_model():
         model={"id": "sklearn-logreg", "assets": {}},
         determinism={"seed": 0, "rng_backends": ["numpy"]},
         params={"max_iter": 2000, "solver": "lbfgs"},
-        inputs={"X_sha3": sha3_hex(X.tobytes()), "y_sha3": sha3_hex(y.tobytes())},
+        inputs={"X_sha3": sha3(X.tobytes()), "y_sha3": sha3(y.tobytes())},
         metrics={"train_accuracy": float(acc)},
         lineage={"parents": []},
     )

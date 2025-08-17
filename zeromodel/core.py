@@ -18,8 +18,11 @@ from zeromodel.config import get_config, init_config
 from zeromodel.constants import PRECISION_DTYPE_MAP
 from zeromodel.nonlinear.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
-from zeromodel.organization import (DuckDBAdapter, MemoryOrganizationStrategy,
-                                    SqlOrganizationStrategy)
+from zeromodel.organization import (
+    DuckDBAdapter,
+    MemoryOrganizationStrategy,
+    SqlOrganizationStrategy,
+)
 from zeromodel.timing import _end, _t
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
@@ -43,7 +46,6 @@ class ZeroModel:
     """
 
     logger.info("[prepare] total done")
-
 
     def __init__(self, metric_names: List[str]) -> None:
         logger.debug(
@@ -84,7 +86,9 @@ class ZeroModel:
         # Components
         self.duckdb = DuckDBAdapter(self.effective_metric_names)
         self.normalizer = DynamicNormalizer(self.effective_metric_names)
-        self._encoder = VPMEncoder(get_config("core").get("default_output_precision", "float32"))
+        self._encoder = VPMEncoder(
+            get_config("core").get("default_output_precision", "float32")
+        )
         self._feature_engineer = FeatureEngineer()
         self._org_strategy = MemoryOrganizationStrategy()
 
@@ -104,7 +108,7 @@ class ZeroModel:
     def prepare(
         self,
         score_matrix: np.ndarray,
-        sql_query: Optional[str] = None,        # <-- make optional
+        sql_query: Optional[str] = None,  # <-- make optional
         nonlinearity_hint: Optional[str] = None,
         vpm_output_path: Optional[str] = None,
     ) -> VPMMetadata:
@@ -124,7 +128,7 @@ class ZeroModel:
             logger.debug(
                 f"""Reinitializing DynamicNormalizer with effective metric names:
                     {self.effective_metric_names}
-                    {self.normalizer.metric_names}"""  
+                    {self.normalizer.metric_names}"""
             )
             self.normalizer = DynamicNormalizer(self.effective_metric_names)
 
@@ -163,7 +167,6 @@ class ZeroModel:
         _end(st)
         self.duckdb = DuckDBAdapter(self.effective_metric_names)
 
-
         # -------------------- organization analysis --------------------
         st = _t("organization_analysis")
         try:
@@ -176,7 +179,9 @@ class ZeroModel:
         # -------------------- legacy: materialize sorted view --------------------
         st = _t("materialize_sorted_view")
         if self.doc_order is not None and self.metric_order is not None:
-            self.sorted_matrix = self.canonical_matrix[self.doc_order][:, self.metric_order]
+            self.sorted_matrix = self.canonical_matrix[self.doc_order][
+                :, self.metric_order
+            ]
         _end(st)
 
         # -------------------- VPM-IMG write --------------------
@@ -196,17 +201,22 @@ class ZeroModel:
             MIN_VPM_WIDTH = 12
             if mx_d.shape[1] < MIN_VPM_WIDTH:
                 pad = MIN_VPM_WIDTH - mx_d.shape[1]
-                mx_d = np.pad(mx_d, ((0, 0), (0, pad)), mode="constant", constant_values=0.0)
+                mx_d = np.pad(
+                    mx_d, ((0, 0), (0, pad)), mode="constant", constant_values=0.0
+                )
 
             # Build compact VMETA payload carrying the logical doc_count
             try:
                 import zlib
+
                 task_hash = zlib.crc32((sql_query or "").encode("utf-8")) & 0xFFFFFFFF
             except Exception:
                 task_hash = 0
 
             try:
-                tile_id = VPMMetadata.make_tile_id(f"{self.task}|{mx_d.shape}".encode("utf-8"))
+                tile_id = VPMMetadata.make_tile_id(
+                    f"{self.task}|{mx_d.shape}".encode("utf-8")
+                )
             except Exception:
                 tile_id = b"\x00" * 16
 
@@ -225,6 +235,7 @@ class ZeroModel:
 
             if vpm_output_path:
                 import os as _os
+
                 compress_level = int(_os.getenv("ZM_PNG_COMPRESS", "6"))
                 disable_prov = _os.getenv("ZM_DISABLE_PROVENANCE") == "1"
 
@@ -273,7 +284,9 @@ class ZeroModel:
             raise ValueError(VPM_IMAGE_NOT_READY_ERR)
         reader = self._get_vpm_reader()
         if metric_idx is not None:
-            return reader.virtual_order(metric_idx=metric_idx, descending=True, top_k=top_k)
+            return reader.virtual_order(
+                metric_idx=metric_idx, descending=True, top_k=top_k
+            )
         if weights:
             return reader.virtual_order(weights=weights, descending=True, top_k=top_k)
         raise ValueError("Provide either 'metric_idx' or 'weights'.")
@@ -287,22 +300,36 @@ class ZeroModel:
     ) -> np.ndarray:
         # If no VPM-IMG is present, fall back to encoding the in-memory sorted matrix.
         if self.vpm_image_path is None:
-            logger.debug("extract_critical_tile(): no VPM-IMG available, using encoder fallback. size=%s", size)
+            logger.debug(
+                "extract_critical_tile(): no VPM-IMG available, using encoder fallback. size=%s",
+                size,
+            )
             if self.sorted_matrix is None:
                 raise ValueError(DATA_NOT_PROCESSED_ERR)
             # Encode full image (docs x width x 3) and slice the requested top-left tile
             try:
-                img = self._encoder.encode(self.sorted_matrix, output_precision="uint16")
+                img = self._encoder.encode(
+                    self.sorted_matrix, output_precision="uint16"
+                )
             except Exception as e:
                 logger.error("Encoder fallback failed: %s", e)
                 raise
             h = max(1, min(size, int(img.shape[0])))
             w = max(1, min(size, int(img.shape[1])))
             tile = img[:h, :w, :]
-            logger.debug("encoder fallback tile: shape=%s dtype=%s", getattr(tile, "shape", None), getattr(tile, "dtype", None))
+            logger.debug(
+                "encoder fallback tile: shape=%s dtype=%s",
+                getattr(tile, "shape", None),
+                getattr(tile, "dtype", None),
+            )
             return tile
 
-        logger.debug("extract_critical_tile(): metric_idx=%s weights=%s size=%s", metric_idx, None if weights is None else dict(weights), size)
+        logger.debug(
+            "extract_critical_tile(): metric_idx=%s weights=%s size=%s",
+            metric_idx,
+            None if weights is None else dict(weights),
+            size,
+        )
         reader = self._get_vpm_reader()
         if logger.isEnabledFor(logging.DEBUG):
             try:
@@ -312,28 +339,44 @@ class ZeroModel:
                     D_eff = int(md.doc_count) or None
                     logger.debug(
                         "vpm reader: level=%s, M=%s, D_phys=%s, D_eff(logical)=%s, h_meta=%s",
-                        reader.level, reader.M, reader.D, D_eff, reader.h_meta
+                        reader.level,
+                        reader.M,
+                        reader.D,
+                        D_eff,
+                        reader.h_meta,
                     )
             except Exception as e:
                 logger.debug("vpm metadata read failed (non-fatal): %s", e)
         if metric_idx is not None:
-            return reader.get_virtual_view(metric_idx=metric_idx, x=0, y=0, width=size, height=size)
+            return reader.get_virtual_view(
+                metric_idx=metric_idx, x=0, y=0, width=size, height=size
+            )
         if weights:
-            return reader.get_virtual_view(weights=weights, x=0, y=0, width=size, height=size)
+            return reader.get_virtual_view(
+                weights=weights, x=0, y=0, width=size, height=size
+            )
         raise ValueError("Provide either 'metric_idx' or 'weights'.")
 
-    def get_decision_by_metric(self, metric_idx: int, context_size: int = 8) -> Tuple[int, float]:
+    def get_decision_by_metric(
+        self, metric_idx: int, context_size: int = 8
+    ) -> Tuple[int, float]:
         # Fallback to in-memory path when no VPM-IMG is present
         if self.vpm_image_path is None:
             if self.sorted_matrix is None:
                 raise ValueError(DATA_NOT_PROCESSED_ERR)
             n_docs, n_metrics = self.sorted_matrix.shape
             # Map original metric_idx to column in sorted_matrix via metric_order if available
-            if self.metric_order is not None and 0 <= metric_idx < len(self.metric_order):
+            if self.metric_order is not None and 0 <= metric_idx < len(
+                self.metric_order
+            ):
                 try:
                     # Find position of metric_idx in the sorted order
                     pos_arr = np.where(self.metric_order == metric_idx)[0]
-                    col_idx = int(pos_arr[0]) if pos_arr.size > 0 else int(min(metric_idx, n_metrics - 1))
+                    col_idx = (
+                        int(pos_arr[0])
+                        if pos_arr.size > 0
+                        else int(min(metric_idx, n_metrics - 1))
+                    )
                 except Exception:
                     col_idx = int(min(metric_idx, n_metrics - 1))
             else:
@@ -351,18 +394,26 @@ class ZeroModel:
                 rel = 0.0
             return top_doc, rel
         reader = self._get_vpm_reader()
-        perm = reader.virtual_order(metric_idx=metric_idx, descending=True, top_k=context_size)
+        perm = reader.virtual_order(
+            metric_idx=metric_idx, descending=True, top_k=context_size
+        )
         if len(perm) == 0:
             return 0, 0.0
         top_doc = int(perm[0])
         try:
-            tile = reader.get_virtual_view(metric_idx=metric_idx, x=0, y=0, width=context_size, height=1)
+            tile = reader.get_virtual_view(
+                metric_idx=metric_idx, x=0, y=0, width=context_size, height=1
+            )
             logger.debug(
                 "tile: shape=%s dtype=%s R[min,max]=(%s,%s) G[min,max]=(%s,%s) B[min,max]=(%s,%s)",
-                getattr(tile, "shape", None), getattr(tile, "dtype", None),
-                int(tile[...,0].min()), int(tile[...,0].max()),
-                int(tile[...,1].min()), int(tile[...,1].max()),
-                int(tile[...,2].min()), int(tile[...,2].max())
+                getattr(tile, "shape", None),
+                getattr(tile, "dtype", None),
+                int(tile[..., 0].min()),
+                int(tile[..., 0].max()),
+                int(tile[..., 1].min()),
+                int(tile[..., 1].max()),
+                int(tile[..., 2].min()),
+                int(tile[..., 2].max()),
             )
             rel = float(np.mean(tile[0, :, 0]) / 65535.0) if tile.size > 0 else 0.0
         except Exception:
@@ -420,27 +471,32 @@ class ZeroModel:
         self.task = "memory_task"
         self.task_config = {"spec": q, "analysis": analysis}
 
-
     def _validate_matrix(self, score_matrix: np.ndarray) -> None:
         """Validate shape, dtype, and finiteness. No side effects beyond logging."""
         if score_matrix is None:
             raise ValueError("score_matrix cannot be None.")
         if not isinstance(score_matrix, np.ndarray):
-            raise TypeError(f"score_matrix must be a NumPy ndarray, got {type(score_matrix).__name__}.")
+            raise TypeError(
+                f"score_matrix must be a NumPy ndarray, got {type(score_matrix).__name__}."
+            )
         if score_matrix.ndim != 2:
-            raise ValueError(f"score_matrix must be 2D, got {score_matrix.ndim}D with shape {getattr(score_matrix, 'shape', None)}.")
+            raise ValueError(
+                f"score_matrix must be 2D, got {score_matrix.ndim}D with shape {getattr(score_matrix, 'shape', None)}."
+            )
         if score_matrix.size == 0:
             raise ValueError("score_matrix is empty.")
         if not np.issubdtype(score_matrix.dtype, np.number):
-            raise TypeError(f"score_matrix must be numeric, got dtype={score_matrix.dtype}.")
+            raise TypeError(
+                f"score_matrix must be numeric, got dtype={score_matrix.dtype}."
+            )
 
         # Single pass finiteness check
         finite_mask = np.isfinite(score_matrix)
         if not finite_mask.all():
             total_bad = int((~finite_mask).sum())
-            nan_count  = int(np.isnan(score_matrix).sum())
-            pos_inf    = int(np.isposinf(score_matrix).sum())
-            neg_inf    = int(np.isneginf(score_matrix).sum())
+            nan_count = int(np.isnan(score_matrix).sum())
+            pos_inf = int(np.isposinf(score_matrix).sum())
+            neg_inf = int(np.isneginf(score_matrix).sum())
             raise ValueError(
                 "score_matrix contains non-finite values: "
                 f"NaN={nan_count}, +inf={pos_inf}, -inf={neg_inf}, total_bad={total_bad}. "
@@ -452,9 +508,11 @@ class ZeroModel:
         n_rows, n_cols = score_matrix.shape
         expected = len(self.metric_names)
         if n_cols != expected:
-            logger.warning("Column count differs from declared metric_names: expected=%d, received=%d.",
-                        expected, n_cols)
-
+            logger.warning(
+                "Column count differs from declared metric_names: expected=%d, received=%d.",
+                expected,
+                n_cols,
+            )
 
     def _reconcile_metric_names(self, n_cols: int) -> None:
         """
@@ -473,7 +531,10 @@ class ZeroModel:
         else:
             extras = [f"col_{i}" for i in range(len(declared), n_cols)]
             new_names = declared + extras
-            logger.warning("Extending metric_names by %d synthetic columns to match matrix.", len(extras))
+            logger.warning(
+                "Extending metric_names by %d synthetic columns to match matrix.",
+                len(extras),
+            )
 
         self.effective_metric_names = new_names
 
@@ -482,7 +543,9 @@ class ZeroModel:
         metadata = {
             "task": self.task,
             "task_config": self.task_config,
-            "metric_order": self.metric_order.tolist() if self.metric_order is not None else [],
+            "metric_order": self.metric_order.tolist()
+            if self.metric_order is not None
+            else [],
             "doc_order": self.doc_order.tolist() if self.doc_order is not None else [],
             "metric_names": self.effective_metric_names,
             "precision": self.precision,

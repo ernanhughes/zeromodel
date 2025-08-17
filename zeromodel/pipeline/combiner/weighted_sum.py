@@ -10,6 +10,7 @@ class WeightedSumCombiner(PipelineStage):
     Combine K channels by weighted sum. If vpm is (H,W,K), outputs (H,W).
     If vpm is (T,H,W,K), outputs (T,H,W).
     """
+
     name = "weighted_sum"
     category = "combiner"
 
@@ -37,8 +38,13 @@ class WeightedSumCombiner(PipelineStage):
             w = self._get_w(K)
             out = (vpm * w[None, None, None, :]).sum(axis=-1)
 
-        return out, {"weights": w.tolist(), "normalize": self.normalize,
-                     "input_shape": vpm.shape, "output_shape": out.shape, "applied": True}
+        return out, {
+            "weights": w.tolist(),
+            "normalize": self.normalize,
+            "input_shape": vpm.shape,
+            "output_shape": out.shape,
+            "applied": True,
+        }
 
     def _get_w(self, K: int) -> np.ndarray:
         if self.weights.size == 0:

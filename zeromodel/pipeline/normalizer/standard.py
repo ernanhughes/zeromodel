@@ -25,8 +25,12 @@ class StandardScaler(PipelineStage):
             out = np.stack([self._scale2d(vpm[t]) for t in range(vpm.shape[0])], axis=0)
         else:
             raise ValueError(f"VPM must be 2D or 3D, got {vpm.ndim}D")
-        return out, {"per_column": self.per_column, "eps": self.eps,
-                     "input_shape": vpm.shape, "output_shape": out.shape}
+        return out, {
+            "per_column": self.per_column,
+            "eps": self.eps,
+            "input_shape": vpm.shape,
+            "output_shape": out.shape,
+        }
 
     def _scale2d(self, X: np.ndarray) -> np.ndarray:
         if self.per_column:

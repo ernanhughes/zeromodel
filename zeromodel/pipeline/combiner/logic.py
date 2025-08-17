@@ -23,9 +23,17 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
 
 from zeromodel.pipeline.base import PipelineStage
-from zeromodel.vpm.logic import (normalize_vpm, vpm_add, vpm_and, vpm_nand,
-                                 vpm_nor, vpm_not, vpm_or, vpm_subtract,
-                                 vpm_xor)
+from zeromodel.vpm.logic import (
+    normalize_vpm,
+    vpm_add,
+    vpm_and,
+    vpm_nand,
+    vpm_nor,
+    vpm_not,
+    vpm_or,
+    vpm_subtract,
+    vpm_xor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +60,7 @@ class LogicCombiner(PipelineStage):
         reduce_mode: 'fold' (pairwise left fold) or 'native' (fast path for and/or/add).
                      Default 'fold' to keep semantics uniform across ops.
     """
+
     name = "logic"
     category = "combiner"
 
@@ -68,8 +77,9 @@ class LogicCombiner(PipelineStage):
 
     def _validate_params(self):
         if self.op not in _OPS:
-            raise ValueError(f"Unknown logic op '{self.op}'. "
-                             f"Valid ops: {sorted(_OPS.keys())}")
+            raise ValueError(
+                f"Unknown logic op '{self.op}'. Valid ops: {sorted(_OPS.keys())}"
+            )
         if self.binarize_after is not None:
             if not (0.0 < float(self.binarize_after) <= 1.0):
                 raise ValueError("binarize_after must be in (0,1] if provided")
@@ -77,9 +87,7 @@ class LogicCombiner(PipelineStage):
             raise ValueError("reduce_mode must be 'fold' or 'native'")
 
     def process(
-        self,
-        vpm: np.ndarray,
-        context: Dict[str, Any] = None
+        self, vpm: np.ndarray, context: Dict[str, Any] = None
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
         context = self._get_context(context)
 
@@ -90,14 +98,18 @@ class LogicCombiner(PipelineStage):
         if self.op == "not":
             out = vpm_not(vpm_norm)  # works for 2D or 3D
             out = self._maybe_binarize(out)
-            meta = self._make_meta(vpm, out, channels_combined=(vpm.shape[-1] if vpm.ndim == 3 else 1))
+            meta = self._make_meta(
+                vpm, out, channels_combined=(vpm.shape[-1] if vpm.ndim == 3 else 1)
+            )
             meta["operation"] = "NOT"
             return out, meta
 
         # Binary/multi-operand ops: require channel dimension
         if vpm_norm.ndim < 3 or vpm_norm.shape[-1] < 2:
             # Not enough operands available in a single array
-            msg = "VPM needs >=2 channels for multi-operand logic; got shape {}".format(vpm.shape)
+            msg = "VPM needs >=2 channels for multi-operand logic; got shape {}".format(
+                vpm.shape
+            )
             logger.warning(msg)
             return vpm, {"warning": msg, "operation": self.op.upper()}
 
@@ -109,7 +121,9 @@ class LogicCombiner(PipelineStage):
         meta["operation"] = self.op.upper()
         return out, meta
 
-    def _reduce_over_channels(self, vpm_norm: np.ndarray, op: str, mode: str) -> np.ndarray:
+    def _reduce_over_channels(
+        self, vpm_norm: np.ndarray, op: str, mode: str
+    ) -> np.ndarray:
         """
         Reduce HxWxC into HxW via the requested logic op.
         - 'fold': left-fold using the operator (works for all ops)
@@ -141,7 +155,9 @@ class LogicCombiner(PipelineStage):
         thr = float(self.binarize_after)
         return (v >= thr).astype(np.float32)
 
-    def _make_meta(self, inp: np.ndarray, out: np.ndarray, channels_combined: int) -> Dict[str, Any]:
+    def _make_meta(
+        self, inp: np.ndarray, out: np.ndarray, channels_combined: int
+    ) -> Dict[str, Any]:
         return {
             "input_shape": tuple(inp.shape),
             "output_shape": tuple(out.shape),

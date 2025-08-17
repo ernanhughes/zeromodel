@@ -8,6 +8,7 @@ from .base import BaseOrganizationStrategy
 
 logger = logging.getLogger(__name__)
 
+
 class SqlOrganizationStrategy(BaseOrganizationStrategy):
     """SQL-based organization using a DuckDBAdapter-like object."""
 
@@ -72,11 +73,18 @@ class SqlOrganizationStrategy(BaseOrganizationStrategy):
                     primary_index = int(name_to_idx[primary_name])
                 analysis["ordering"] = {
                     "primary_metric": primary_name,
-                    "primary_metric_index": int(primary_index) if primary_index is not None else 0,
+                    "primary_metric_index": int(primary_index)
+                    if primary_index is not None
+                    else 0,
                     "direction": (direction or "DESC"),
                 }
         except Exception as e:
             logger.debug("sql ordering resolution skipped: %s", e)
 
         self._analysis = analysis
-        return final_matrix, np.array(valid_metric_order), np.array(valid_doc_order), analysis
+        return (
+            final_matrix,
+            np.array(valid_metric_order),
+            np.array(valid_doc_order),
+            analysis,
+        )

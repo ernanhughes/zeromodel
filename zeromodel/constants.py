@@ -7,7 +7,6 @@ PRECISION_DTYPE_MAP = {
     16: np.float16,
     32: np.float32,
     64: np.float64,
-    
     # String aliases (for API flexibility)
     "4": np.uint8,
     "8": np.uint8,
@@ -18,7 +17,7 @@ PRECISION_DTYPE_MAP = {
     "uint16": np.uint16,
     "float16": np.float16,
     "float32": np.float32,
-    "float64": np.float64
+    "float64": np.float64,
 }
 
 _PNG_SIG = b"\x89PNG\r\n\x1a\n"

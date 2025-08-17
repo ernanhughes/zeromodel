@@ -20,6 +20,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+
 def normalize_vpm(vpm: np.ndarray) -> np.ndarray:
     """
     Ensures a VPM is in the normalized float [0.0, 1.0] range.
@@ -46,7 +47,9 @@ def normalize_vpm(vpm: np.ndarray) -> np.ndarray:
         return np.clip(vpm, 0.0, 1.0).astype(np.float32)
 
 
-def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8, assume_normalized: bool = True) -> np.ndarray:
+def denormalize_vpm(
+    vpm: np.ndarray, output_type=np.uint8, assume_normalized: bool = True
+) -> np.ndarray:
     """Convert a (normalized) VPM to a specified dtype.
 
     Args:
@@ -54,7 +57,9 @@ def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8, assume_normalized: bo
         output_type: Target numpy dtype.
         assume_normalized: If False, will first run ``normalize_vpm``.
     """
-    logger.debug(f"Denormalizing VPM to dtype {output_type} (assume_normalized={assume_normalized})")
+    logger.debug(
+        f"Denormalizing VPM to dtype {output_type} (assume_normalized={assume_normalized})"
+    )
     data = vpm if assume_normalized else normalize_vpm(vpm)
     if np.issubdtype(output_type, np.integer):
         dtype_info = np.iinfo(output_type)
@@ -70,7 +75,9 @@ def denormalize_vpm(vpm: np.ndarray, output_type=np.uint8, assume_normalized: bo
 def _ensure_same_shape(a: np.ndarray, b: np.ndarray, op: str) -> None:
     if a.shape != b.shape:
         logger.error(f"VPM {op}: Shape mismatch. a: {a.shape}, b: {b.shape}")
-        raise ValueError(f"VPMs must have the same shape for {op.upper()}. Got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"VPMs must have the same shape for {op.upper()}. Got {a.shape} and {b.shape}"
+        )
 
 
 def _normalize_pair(a: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:

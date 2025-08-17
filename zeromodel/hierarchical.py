@@ -58,7 +58,7 @@ class HierarchicalVPM:
         metric_names: List[str],
         num_levels: int = 5,
         zoom_factor: int = 4,
-        precision: Union[int, str] = 8,  
+        precision: Union[int, str] = 8,
         storage_backend: Optional[StorageBackend] = None,
         tile_size: int = 256,
     ):
@@ -286,9 +286,11 @@ class HierarchicalVPM:
         # --- inside _create_base_tile, after zeromodel.prepare(chunk, task) ---
 
         # Top doc within this chunk after task ordering
-        top_doc_chunk = int(zeromodel.doc_order[0]) if (
-            zeromodel.doc_order is not None and len(zeromodel.doc_order) > 0
-        ) else 0
+        top_doc_chunk = (
+            int(zeromodel.doc_order[0])
+            if (zeromodel.doc_order is not None and len(zeromodel.doc_order) > 0)
+            else 0
+        )
 
         # Convert to global doc index
         top_doc_global = doc_start + top_doc_chunk
@@ -310,8 +312,8 @@ class HierarchicalVPM:
             metrics={
                 "documents": doc_end - doc_start,
                 "metrics": metric_end - metric_start,
-                "top_doc_global": top_doc_global,        # <-- add this
-                "top_doc_chunk": top_doc_chunk,          # <-- optional, for debugging
+                "top_doc_global": top_doc_global,  # <-- add this
+                "top_doc_chunk": top_doc_chunk,  # <-- optional, for debugging
             },
             lineage={"parents": []},
         )
@@ -423,12 +425,14 @@ class HierarchicalVPM:
         aggregated_data = self._aggregate_tiles(source_tiles, source_meta)
 
         if not isinstance(aggregated_data, np.ndarray) or aggregated_data.ndim != 2:
-            logger.error("Aggregated data must be a 2D numpy array; got %r", type(aggregated_data))
+            logger.error(
+                "Aggregated data must be a 2D numpy array; got %r",
+                type(aggregated_data),
+            )
             return
         # Let ZeroModel handle float conversion; this just avoids uint8 surprises in stats
         if aggregated_data.dtype != np.float32:
             aggregated_data = aggregated_data.astype(np.float32, copy=False)
-
 
         # Create a ZeroModel for the aggregated data
         zeromodel = ZeroModel(self.metric_names)
@@ -438,7 +442,8 @@ class HierarchicalVPM:
 
         # Encode as VPM Oh God what's going on
         vpm_image = VPMEncoder(self.precision).encode(
-           zeromodel.sorted_matrix if zeromodel.sorted_matrix is not None
+            zeromodel.sorted_matrix
+            if zeromodel.sorted_matrix is not None
             else zeromodel.canonical_matrix
         )
 
@@ -474,53 +479,55 @@ class HierarchicalVPM:
     ) -> np.ndarray:
         """
         Aggregate multiple tiles using spatial calculus to preserve decision signal.
-        
+
         Fixed to handle small datasets where critical region may be smaller than tile size.
         """
         logger.debug(f"Aggregating {len(source_tiles)} tiles for summary")
-        
+
         # Decode all source tiles
         decoded_tiles = []
         for _, _, png_bytes in source_tiles:
             try:
                 # Extract just the critical region (top-left) for aggregation
-                critical_region = extract_critical_region(png_bytes, size=min(8, self.tile_size))
+                critical_region = extract_critical_region(
+                    png_bytes, size=min(8, self.tile_size)
+                )
                 decoded_tiles.append(critical_region)
             except Exception as e:
                 logger.warning(f"Failed to decode tile: {e}")
-        
+
         if not decoded_tiles:
             logger.error("No valid tiles to aggregate")
             return np.zeros((self.tile_size, self.tile_size))
-        
+
         # Stack the critical regions
         stacked = np.stack(decoded_tiles)
-        
+
         # Get actual dimensions of critical region
         num_tiles, crit_h, crit_w = stacked.shape
-        
+
         # Calculate metric importance (variance across tiles)
         metric_importance = np.var(stacked, axis=0)
-        
+
         # Sort metrics by importance (flatten the 2D array)
         sorted_indices = np.argsort(-metric_importance, axis=None)
-        
+
         # Create output matrix
         output = np.zeros((self.tile_size, self.tile_size))
-        
+
         # Fill output with aggregated data
         for i in range(min(self.tile_size * self.tile_size, len(sorted_indices))):
             flat_idx = sorted_indices[i]
             # Unravel using ACTUAL critical region dimensions
             y_src, x_src = np.unravel_index(flat_idx, (crit_h, crit_w))
-            
+
             # Map to output coordinates (scale up proportionally)
             y_dest = int(y_src * self.tile_size / crit_h)
             x_dest = int(x_src * self.tile_size / crit_w)
-            
+
             # Take the maximum value (preserves strong signals)
             output[y_dest, x_dest] = np.max(stacked[:, y_src, x_src])
-        
+
         return output
 
     def navigate(
@@ -528,7 +535,7 @@ class HierarchicalVPM:
         start_level: int = 0,
         start_x: int = 0,
         start_y: int = 0,
-        max_hops: Optional[int] = None
+        max_hops: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         Navigate from a given tile down to the most relevant decision.
@@ -539,7 +546,9 @@ class HierarchicalVPM:
             start_y: Y coordinate of starting tile.
             max_hops: Maximum number of hops (defaults to full navigation).
         """
-        logger.info(f"Starting navigation from level {start_level}, coords=({start_x},{start_y})")
+        logger.info(
+            f"Starting navigation from level {start_level}, coords=({start_x},{start_y})"
+        )
 
         if max_hops is None:
             max_hops = self.num_levels - start_level
@@ -560,17 +569,21 @@ class HierarchicalVPM:
                 break
 
             # fix
-            next_level, rel_x, rel_y, relevance = self._analyze_tile(png_bytes, current_level)
+            next_level, rel_x, rel_y, relevance = self._analyze_tile(
+                png_bytes, current_level
+            )
             abs_x = current_x * self.zoom_factor + rel_x
             abs_y = current_y * self.zoom_factor + rel_y
 
-            path.append({
-                "level": current_level,
-                "tile": (current_x, current_y),
-                "next_level": next_level,
-                "next_tile": (abs_x, abs_y),
-                "relevance": relevance,
-            })
+            path.append(
+                {
+                    "level": current_level,
+                    "tile": (current_x, current_y),
+                    "next_level": next_level,
+                    "next_tile": (abs_x, abs_y),
+                    "relevance": relevance,
+                }
+            )
 
             current_level = next_level
             current_x, current_y = abs_x, abs_y
@@ -584,13 +597,15 @@ class HierarchicalVPM:
                     vpf_info = extract_vpf(png_bytes)
                     vpf = vpf_info[0] if isinstance(vpf_info, tuple) else vpf_info
                     doc_idx, relevance = self._extract_decision(png_bytes)
-                    path.append({
-                        "level": current_level,
-                        "tile": (current_x, current_y),
-                        "decision": int(doc_idx),
-                        "relevance": float(relevance),
-                        "vpf": vpf,
-                    })
+                    path.append(
+                        {
+                            "level": current_level,
+                            "tile": (current_x, current_y),
+                            "decision": int(doc_idx),
+                            "relevance": float(relevance),
+                            "vpf": vpf,
+                        }
+                    )
                 except Exception as e:
                     logger.error(f"Failed to extract decision: {e}")
 
@@ -651,7 +666,7 @@ class HierarchicalVPM:
         return next_level, next_x, next_y, critical_value
 
     def _extract_decision(self, png_bytes: bytes) -> Tuple[int, float]:
-        gray = png_to_gray_array(png_bytes)     # (H, W) uint8
+        gray = png_to_gray_array(png_bytes)  # (H, W) uint8
         if gray.ndim != 2 or gray.size == 0:
             return 0, 0.0
 
@@ -723,7 +738,11 @@ class HierarchicalVPM:
         final_step = path[-1]
         # If we reached base level and extracted a decision, use it
         if "decision" in final_step:
-            return final_step["level"], int(final_step["decision"]), float(final_step["relevance"])
+            return (
+                final_step["level"],
+                int(final_step["decision"]),
+                float(final_step["relevance"]),
+            )
 
         # Otherwise, we didn't reach the decision tile; fall back to a safe default
         return final_step["level"], 0, float(final_step["relevance"])
@@ -770,46 +789,48 @@ class HierarchicalVPM:
         # Never exceed configured max levels
         return min(levels_needed, self.num_levels)
 
-
     def get_level(self, level_index: int) -> Dict[str, Any]:
         """
         Get data for a specific level in the hierarchy.
-        
+
         This implements ZeroModel's "constant-feeling navigation" principle by
         providing direct access to any level in the pyramid structure.
-        
+
         Args:
             level_index: The hierarchical level index (0 = most abstract).
-        
+
         Returns:
             Dictionary containing level data.
-            
+
         Raises:
             ValueError: If level_index is invalid.
         """
         logger.debug(f"Retrieving data for level {level_index}.")
-        
+
         # Validate level index
         if not (0 <= level_index < len(self.levels)):
             error_msg = f"Level index must be between 0 and {len(self.levels) - 1}, got {level_index}."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        
+
         # Get the level data
         level_data = self.levels[level_index]
-        
+
         if level_data is None:
             error_msg = f"Level {level_index} has not been processed yet."
             logger.error(error_msg)
             raise ValueError(error_msg)
-        
+
         logger.debug(f"Level {level_index} data retrieved successfully.")
         return level_data
+
 
 # --- Helper functions ---
 
 
-def embed_vpf(png_or_img: Union[np.ndarray, bytes, bytearray], vpf: Dict[str, Any]) -> bytes:
+def embed_vpf(
+    png_or_img: Union[np.ndarray, bytes, bytearray], vpf: Dict[str, Any]
+) -> bytes:
     """
     Embed VPF into a PNG footer (allowed trailing data after IEND; most decoders ignore it).
     Accepts either raw PNG bytes or a numpy image array.

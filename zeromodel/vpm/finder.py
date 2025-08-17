@@ -10,10 +10,11 @@ class FindStep:
     level: int
     tile_id: bytes
     path: str
-    pointer_index: int   # which child we took
-    span: int            # block span (docs)
-    x_offset: int        # start offset
+    pointer_index: int  # which child we took
+    span: int  # block span (docs)
+    x_offset: int  # start offset
     doc_block_size: int
+
 
 class VPMFinder:
     @staticmethod
@@ -42,15 +43,17 @@ class VPMFinder:
                 return path, md["tile_id"], audit
 
             p = md["pointers"][choice]
-            audit.append(FindStep(
-                level   = md.get("level", 0),
-                tile_id = md["tile_id"],
-                path    = path,
-                pointer_index = choice,
-                span    = int(p.get("span", 0)),
-                x_offset= int(p.get("x_offset", 0)),
-                doc_block_size = int(p.get("doc_block_size", 1)),
-            ))
+            audit.append(
+                FindStep(
+                    level=md.get("level", 0),
+                    tile_id=md["tile_id"],
+                    path=path,
+                    pointer_index=choice,
+                    span=int(p.get("span", 0)),
+                    x_offset=int(p.get("x_offset", 0)),
+                    doc_block_size=int(p.get("doc_block_size", 1)),
+                )
+            )
             # hop to child
             path = resolver(p["tile_id"])
         # safety stop
@@ -80,17 +83,17 @@ class VPMFinder:
                 data = f.read(length)
                 _ = f.read(4)  # CRC, ignore
 
-                if ctype == b'IHDR':
+                if ctype == b"IHDR":
                     width, height = struct.unpack(">II", data[:8])
 
                 # Our custom metadata chunk (must be written by VPMImageWriter)
-                if ctype == b'vpMm':  # custom ancillary chunk name
+                if ctype == b"vpMm":  # custom ancillary chunk name
                     md_bytes = data
                     # we can stop here; we have the full metadata
                     break
 
                 # If we reached IDAT without vpMm, stop scanning chunks.
-                if ctype == b'IDAT':
+                if ctype == b"IDAT":
                     break
 
             if not md_bytes:
@@ -106,22 +109,25 @@ class VPMFinder:
             # Decode your existing VPMMetadata binary format:
             # Assuming you already have VPMMetadata.from_bytes(...)
             from zeromodel.vpm.metadata import VPMMetadata
+
             meta = VPMMetadata.from_bytes(md_bytes)
 
             pointers = []
             for p in getattr(meta, "pointers", []) or []:
-                pointers.append({
-                    "tile_id": p.tile_id,
-                    "level":  p.level,
-                    "x_offset": p.x_offset,
-                    "span": p.span,
-                    "doc_block_size": p.doc_block_size,
-                    "agg_id": p.agg_id,
-                })
+                pointers.append(
+                    {
+                        "tile_id": p.tile_id,
+                        "level": p.level,
+                        "x_offset": p.x_offset,
+                        "span": p.span,
+                        "doc_block_size": p.doc_block_size,
+                        "agg_id": p.agg_id,
+                    }
+                )
 
             return {
                 "tile_id": meta.tile_id,
-                "level":  getattr(meta, "level", 0),
+                "level": getattr(meta, "level", 0),
                 "metric_count": getattr(meta, "metric_count", 0),
                 "doc_count": getattr(meta, "doc_count", 0),
                 "doc_block_size": getattr(meta, "doc_block_size", 1),
@@ -129,6 +135,7 @@ class VPMFinder:
                 "pointers": pointers,
                 "task_hash": getattr(meta, "task_hash", 0),
             }
+
 
 def hottest_child(meta: Dict[str, Any]) -> int:
     """
@@ -141,10 +148,12 @@ def hottest_child(meta: Dict[str, Any]) -> int:
     # pick by span; replace with your own heuristic (e.g., position hint)
     return max(range(len(ptrs)), key=lambda i: ptrs[i].get("span", 0))
 
+
 def id_to_path(tile_id: bytes) -> str:
     # map tile_id -> file path (DictResolver / FilenameResolver / DB lookup)
     hexid = tile_id.hex()
     return f"/data/vpm/tiles/{hexid}.png"
+
 
 final_path, final_id, steps = VPMFinder.find_target(
     start_path="/data/vpm/root.png",

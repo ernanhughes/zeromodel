@@ -9,6 +9,7 @@ from .base import BaseOrganizationStrategy
 
 logger = logging.getLogger(__name__)
 
+
 class ZeroModelOrganizationStrategy(BaseOrganizationStrategy):
     """
     Legacy-compatible in-memory organization (ZeroModel-flavored).
@@ -46,7 +47,9 @@ class ZeroModelOrganizationStrategy(BaseOrganizationStrategy):
         logger.debug(f"[{self.name}] Organizing matrix: shape={matrix.shape}")
 
         # Determine ordering (robust parsing)
-        primary_metric_idx, direction, primary_name = self._parse_task(self._task, metric_names)
+        primary_metric_idx, direction, primary_name = self._parse_task(
+            self._task, metric_names
+        )
 
         # Sort docs by selected column; stable; numeric-aware for DESC
         col = matrix[:, primary_metric_idx]
@@ -109,7 +112,15 @@ class ZeroModelOrganizationStrategy(BaseOrganizationStrategy):
         if m:
             raw_ident = m.group(1).strip()
             direction = (m.group(2) or "DESC").upper()
-            target = raw_ident.strip().strip('"').strip("'").split(".")[-1].strip().strip('"').strip("'")
+            target = (
+                raw_ident.strip()
+                .strip('"')
+                .strip("'")
+                .split(".")[-1]
+                .strip()
+                .strip('"')
+                .strip("'")
+            )
             for i, name in enumerate(metric_names):
                 if name.lower() == target.lower():
                     return i, direction, name
@@ -118,7 +129,11 @@ class ZeroModelOrganizationStrategy(BaseOrganizationStrategy):
         tokens = task.split()
         if tokens:
             cand = tokens[0].strip().strip('"').strip("'")
-            dir_token = tokens[1].upper() if len(tokens) > 1 and tokens[1].upper() in ("ASC", "DESC") else "DESC"
+            dir_token = (
+                tokens[1].upper()
+                if len(tokens) > 1 and tokens[1].upper() in ("ASC", "DESC")
+                else "DESC"
+            )
             for i, name in enumerate(metric_names):
                 if name.lower() == cand.lower():
                     return i, dir_token, name

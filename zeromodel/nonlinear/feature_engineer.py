@@ -13,18 +13,24 @@ logger = logging.getLogger(__name__)
 
 FeatureResult = Tuple[np.ndarray, List[str]]  # (augmented_matrix, new_metric_names)
 
+
 class FeatureEngineer:
     """Applies optional non-linear feature transformations based on a hint string."""
+
     def __init__(self) -> None:
         # Registry pattern for easy extension
-        self._strategies: Dict[str, Callable[[np.ndarray, List[str]], FeatureResult]] = {
-            'xor': self._xor_features,
-            'radial': self._radial_features,
-            'auto': self._auto_features,
+        self._strategies: Dict[
+            str, Callable[[np.ndarray, List[str]], FeatureResult]
+        ] = {
+            "xor": self._xor_features,
+            "radial": self._radial_features,
+            "auto": self._auto_features,
         }
 
     # ------------------------ Public API ------------------------
-    def apply(self, hint: Optional[str], data: np.ndarray, metric_names: List[str]) -> FeatureResult:
+    def apply(
+        self, hint: Optional[str], data: np.ndarray, metric_names: List[str]
+    ) -> FeatureResult:
         """Apply feature engineering based on hint.
 
         Args:
@@ -35,7 +41,9 @@ class FeatureEngineer:
             (processed_matrix, effective_metric_names)
         """
         if hint is None:
-            logger.debug("No feature engineering hint provided; returning original data.")
+            logger.debug(
+                "No feature engineering hint provided; returning original data."
+            )
             return data, list(metric_names)
         key = hint.lower().strip()
         strategy = self._strategies.get(key)
@@ -48,7 +56,11 @@ class FeatureEngineer:
                 return data, list(metric_names)
             return augmented, new_names
         except Exception as e:  # noqa: broad-except - defensive; fallback to original
-            logger.error("Feature engineering strategy '%s' failed: %s. Falling back to base data.", key, e)
+            logger.error(
+                "Feature engineering strategy '%s' failed: %s. Falling back to base data.",
+                key,
+                e,
+            )
             return data, list(metric_names)
 
     # --------------------- Strategy Implementations ---------------------
@@ -58,7 +70,10 @@ class FeatureEngineer:
             return data, names
         m1, m2 = data[:, 0], data[:, 1]
         feats = [m1 * m2, np.abs(m1 - m2)]
-        feat_names = [f"hint_product_{names[0]}_{names[1]}", f"hint_abs_diff_{names[0]}_{names[1]}"]
+        feat_names = [
+            f"hint_product_{names[0]}_{names[1]}",
+            f"hint_abs_diff_{names[0]}_{names[1]}",
+        ]
         augmented = np.column_stack([data] + feats)
         return augmented, names + feat_names
 
@@ -98,7 +113,10 @@ class FeatureEngineer:
             logger.debug("Auto hint produced no additional features.")
             return data, names
         augmented = np.column_stack([data] + engineered_features)
-        logger.info("Auto hint added %d features (expected ~5 when n>=3).", len(engineered_features))
+        logger.info(
+            "Auto hint added %d features (expected ~5 when n>=3).",
+            len(engineered_features),
+        )
         return augmented, names + engineered_names
 
 __all__ = ["FeatureEngineer"]

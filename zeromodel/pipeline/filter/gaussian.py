@@ -22,7 +22,17 @@ class GaussianFilter(PipelineStage):
         if vpm.ndim == 2:
             out = gaussian_filter(vpm, sigma=self.sigma)
         elif vpm.ndim == 3:
-            out = np.stack([gaussian_filter(vpm[t], sigma=self.sigma) for t in range(vpm.shape[0])], axis=0)
+            out = np.stack(
+                [
+                    gaussian_filter(vpm[t], sigma=self.sigma)
+                    for t in range(vpm.shape[0])
+                ],
+                axis=0,
+            )
         else:
             raise ValueError(f"VPM must be 2D or 3D, got {vpm.ndim}D")
-        return out, {"sigma": self.sigma, "input_shape": vpm.shape, "output_shape": out.shape}
+        return out, {
+            "sigma": self.sigma,
+            "input_shape": vpm.shape,
+            "output_shape": out.shape,
+        }

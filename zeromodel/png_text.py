@@ -12,7 +12,7 @@ _PNG_SIG = b"\x89PNG\r\n\x1a\n"
 
 
 def _crc32(chunk_type: bytes, data: bytes) -> int:
-    return zlib.crc32(chunk_type + data) & 0xffffffff
+    return zlib.crc32(chunk_type + data) & 0xFFFFFFFF
 
 
 def _build_chunk(chunk_type: bytes, data: bytes) -> bytes:
@@ -82,7 +82,9 @@ def _remove_text_chunks_with_key(png: bytes, key: str) -> bytes:
     return bytes(out)
 
 
-def _encode_text_chunk(key: str, text: str, use_itxt: bool = True, *, compress: bool = False) -> bytes:
+def _encode_text_chunk(
+    key: str, text: str, use_itxt: bool = True, *, compress: bool = False
+) -> bytes:
     """Build a tEXt or iTXt chunk."""
     if use_itxt:
         # iTXt layout:
@@ -116,7 +118,9 @@ def _encode_text_chunk(key: str, text: str, use_itxt: bool = True, *, compress: 
         return _build_chunk(b"tEXt", data)
 
 
-def _decode_text_chunk(ctype: bytes, data: bytes) -> Tuple[Optional[str], Optional[str]]:
+def _decode_text_chunk(
+    ctype: bytes, data: bytes
+) -> Tuple[Optional[str], Optional[str]]:
     """Returns (keyword, text) from a tEXt/iTXt/zTXt chunk."""
     try:
         if ctype == b"tEXt":
@@ -204,7 +208,9 @@ def png_write_text_chunk(
     """
     if not png_bytes.startswith(_PNG_SIG):
         raise ValueError("Not a PNG")
-    png2 = _remove_text_chunks_with_key(png_bytes, key) if replace_existing else png_bytes
+    png2 = (
+        _remove_text_chunks_with_key(png_bytes, key) if replace_existing else png_bytes
+    )
     new_chunk = _encode_text_chunk(key, text, use_itxt=use_itxt, compress=compress)
     iend_off = _find_iend_offset(png2)
     out = png2[:iend_off] + new_chunk + png2[iend_off:]

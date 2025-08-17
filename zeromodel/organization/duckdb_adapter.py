@@ -82,7 +82,7 @@ class DuckDBAdapter:
         # 2) Arrow fallback (requires pyarrow)
         try:
             arr_tbl = cur.arrow()
-      
+
             idx = np.array(arr_tbl.column("row_id"), copy=False).astype(
                 np.int32, copy=False
             )

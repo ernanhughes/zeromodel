@@ -25,43 +25,49 @@ import png
 from zeromodel.vpm.metadata import VPMMetadata
 
 # --- Constants ---
-DEFAULT_H_META_BASE = 2              # base meta rows (row0 + row1)
-MAGIC = [ord('V'), ord('P'), ord('M'), ord('1')]  # ASCII for 'VPM1'
+DEFAULT_H_META_BASE = 2  # base meta rows (row0 + row1)
+MAGIC = [ord("V"), ord("P"), ord("M"), ord("1")]  # ASCII for 'VPM1'
 VERSION = np.uint16(1)
-META_MIN_COLS = 12                               # Minimum columns for metadata
+META_MIN_COLS = 12  # Minimum columns for metadata
 
 
 # Aggregation types
-AGG_MAX = 0       # Maximum aggregation
-AGG_MEAN = 1      # Mean aggregation
-AGG_RAW = 65535   # Base level (no aggregation)
+AGG_MAX = 0  # Maximum aggregation
+AGG_MEAN = 1  # Mean aggregation
+AGG_RAW = 65535  # Base level (no aggregation)
 
 # --- Helper Functions ---
+
 
 def _u16_clip(a: np.ndarray) -> np.ndarray:
     """Clip values to 16-bit unsigned integer range [0, 65535]"""
     return np.clip(a, 0, 65535).astype(np.uint16)
 
+
 def _round_u16(a: np.ndarray) -> np.ndarray:
     """Round and convert to 16-bit unsigned integers"""
     return np.round(a).astype(np.uint16)
 
+
 def _check_header_width(D: int):
     """Validate image width meets metadata requirements"""
     if D < META_MIN_COLS:
-        raise ValueError(f"VPM-IMG requires width D≥{META_MIN_COLS} for header; got D={D}")
+        raise ValueError(
+            f"VPM-IMG requires width D≥{META_MIN_COLS} for header; got D={D}"
+        )
 
 
 # --- Writer Class ---
 
+
 class VPMImageWriter:
     """
     Writes multi-metric score matrices to VPM-IMG v1 format PNG files.
-    
+
     Supports hierarchical storage with configurable aggregation methods:
     - Base level (AGG_RAW): Original document-level scores
     - Aggregated levels: Coarser representations for efficient visualization
-    
+
     Attributes:
         score_matrix (np.ndarray): Input scores (M x D)
         metric_names (list): Optional metric identifiers
@@ -73,9 +79,10 @@ class VPMImageWriter:
         doc_block_size (int): Documents aggregated per pixel at this level
         agg_id (int): Aggregation method (AGG_RAW, AGG_MAX, AGG_MEAN)
     """
+
     def __init__(
         self,
-        score_matrix: np.ndarray,           # shape (M, D)
+        score_matrix: np.ndarray,  # shape (M, D)
         metric_names: Optional[list[str]] = None,
         metadata_bytes: Optional[bytes] = None,
         store_minmax: bool = False,
@@ -88,7 +95,9 @@ class VPMImageWriter:
     ):
         self.score_matrix = np.asarray(score_matrix, dtype=np.float64)
         self.metric_names = metric_names or []
-        self.doc_ids = doc_ids or []        # currently informational; not serialized in header
+        self.doc_ids = (
+            doc_ids or []
+        )  # currently informational; not serialized in header
         self.store_minmax = store_minmax
         self.compression = int(compression)
         self.M, self.D = self.score_matrix.shape
@@ -103,7 +112,6 @@ class VPMImageWriter:
         self.level = int(level)
         self.doc_block_size = int(doc_block_size)
         self.agg_id = int(agg_id)
-
 
     def _assemble_header_rows(
         self,
@@ -125,7 +133,9 @@ class VPMImageWriter:
             num_words = self.M * 2
             minmax_rows = (num_words + D - 1) // D
 
-        extra_meta_rows = self._extra_meta_rows_needed(len(self.metadata_bytes), start_col=7)
+        extra_meta_rows = self._extra_meta_rows_needed(
+            len(self.metadata_bytes), start_col=7
+        )
         h_meta = DEFAULT_H_META_BASE + minmax_rows + extra_meta_rows
 
         meta = np.zeros((h_meta, D, 3), dtype=np.uint16)
@@ -133,17 +143,19 @@ class VPMImageWriter:
         # Row 0 core header
         for i, v in enumerate(MAGIC):
             meta[0, i, 0] = v
-        meta[0, 4, 0]  = VERSION
-        meta[0, 5, 0]  = np.uint16(self.M)
-        meta[0, 6, 0]  = np.uint16((D >> 16) & 0xFFFF)
-        meta[0, 7, 0]  = np.uint16(D & 0xFFFF)
-        meta[0, 8, 0]  = np.uint16(h_meta)
-        meta[0, 9, 0]  = np.uint16(self.level)
-        meta[0,10, 0]  = np.uint16(min(self.doc_block_size, 0xFFFF))
-        meta[0,11, 0]  = np.uint16(self.agg_id)
+        meta[0, 4, 0] = VERSION
+        meta[0, 5, 0] = np.uint16(self.M)
+        meta[0, 6, 0] = np.uint16((D >> 16) & 0xFFFF)
+        meta[0, 7, 0] = np.uint16(D & 0xFFFF)
+        meta[0, 8, 0] = np.uint16(h_meta)
+        meta[0, 9, 0] = np.uint16(self.level)
+        meta[0, 10, 0] = np.uint16(min(self.doc_block_size, 0xFFFF))
+        meta[0, 11, 0] = np.uint16(self.agg_id)
 
         # Row 1: flags
-        meta[1, 0, 0] = 1 if (self.store_minmax and mins is not None and maxs is not None) else 0
+        meta[1, 0, 0] = (
+            1 if (self.store_minmax and mins is not None and maxs is not None) else 0
+        )
 
         # Optional min/max (Q16.16)
         if self.store_minmax and mins is not None and maxs is not None:
@@ -180,13 +192,19 @@ class VPMImageWriter:
         """
         if not (R_u16.shape == G_u16.shape == B_u16.shape):
             raise ValueError("R, G, B shapes must match")
-        if R_u16.dtype != np.uint16 or G_u16.dtype != np.uint16 or B_u16.dtype != np.uint16:
+        if (
+            R_u16.dtype != np.uint16
+            or G_u16.dtype != np.uint16
+            or B_u16.dtype != np.uint16
+        ):
             raise ValueError("R, G, B must be uint16")
 
         M, D = R_u16.shape
         if M != self.M or D != self.D:
             # Keep it strict; you could relax if needed.
-            raise ValueError(f"Channel shape {R_u16.shape} does not match writer shape {(self.M, self.D)}")
+            raise ValueError(
+                f"Channel shape {R_u16.shape} does not match writer shape {(self.M, self.D)}"
+            )
 
         # No min/max rows for this path unless you explicitly want to store them.
         mins = maxs = None
@@ -195,7 +213,9 @@ class VPMImageWriter:
             # or derive from a float score matrix you trust. We'll omit by default.
             pass
 
-        h_meta, meta_rows = self._assemble_header_rows(D_override=D, mins=mins, maxs=maxs)
+        h_meta, meta_rows = self._assemble_header_rows(
+            D_override=D, mins=mins, maxs=maxs
+        )
 
         full = np.vstack([meta_rows, np.stack([R_u16, G_u16, B_u16], axis=-1)])
         rows = full.reshape(full.shape[0], -1)
@@ -233,10 +253,10 @@ class VPMImageWriter:
         L = len(payload)
 
         # Row 1 markers & length (R channel)
-        meta[1, 1, 0] = ord('M')
-        meta[1, 2, 0] = ord('E')
-        meta[1, 3, 0] = ord('T')
-        meta[1, 4, 0] = ord('A')
+        meta[1, 1, 0] = ord("M")
+        meta[1, 2, 0] = ord("E")
+        meta[1, 3, 0] = ord("T")
+        meta[1, 4, 0] = ord("A")
         meta[1, 5, 0] = (L >> 16) & 0xFFFF
         meta[1, 6, 0] = L & 0xFFFF
 
@@ -258,8 +278,10 @@ class VPMImageWriter:
 
         # first row (start at col 7)
         while idx < L and col < self.D:
-            w_g = pack2(idx, idx+1); idx += 2
-            w_b = pack2(idx, idx+1); idx += 2
+            w_g = pack2(idx, idx + 1)
+            idx += 2
+            w_b = pack2(idx, idx + 1)
+            idx += 2
             write_pair(row, col, w_g, w_b)
             col += 1
 
@@ -268,17 +290,20 @@ class VPMImageWriter:
         while idx < L and r < H:
             c = 0
             while idx < L and c < self.D:
-                w_g = pack2(idx, idx+1); idx += 2
-                w_b = pack2(idx, idx+1); idx += 2
+                w_g = pack2(idx, idx + 1)
+                idx += 2
+                w_b = pack2(idx, idx + 1)
+                idx += 2
                 write_pair(r, c, w_g, w_b)
                 c += 1
             r += 1
 
-
-    def _normalize_scores(self) -> Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]:
+    def _normalize_scores(
+        self,
+    ) -> Tuple[np.ndarray, Optional[np.ndarray], Optional[np.ndarray]]:
         """
         Normalize scores to [0,1] range per metric.
-        
+
         Returns:
             normalized: Scores scaled to [0,1]
             mins: Per-metric minimums (if store_minmax=True)
@@ -289,7 +314,7 @@ class VPMImageWriter:
         spans = maxs - mins
         spans[spans == 0] = 1.0  # Avoid division by zero
         normalized = (self.score_matrix - mins) / spans
-        
+
         if self.store_minmax:
             return normalized, mins.squeeze(1), maxs.squeeze(1)
         return normalized, None, None
@@ -297,12 +322,12 @@ class VPMImageWriter:
     def _compute_percentiles(self, normalized: np.ndarray) -> np.ndarray:
         """
         Compute percentile ranks for each metric row.
-        
+
         Uses double argsort technique:
         1. argsort(axis=1) gets rank positions
         2. Second argsort converts to rank order
         3. Scale to 16-bit range [0, 65535]
-        
+
         Returns:
             uint16 array of percentile values
         """
@@ -314,17 +339,17 @@ class VPMImageWriter:
             percent = (ranks / (self.D - 1)).astype(np.float64) * 65535.0
         return _round_u16(percent)
 
-    def _assemble_metadata(self, h_meta: int, 
-                          mins: Optional[np.ndarray], 
-                          maxs: Optional[np.ndarray]) -> np.ndarray:
+    def _assemble_metadata(
+        self, h_meta: int, mins: Optional[np.ndarray], maxs: Optional[np.ndarray]
+    ) -> np.ndarray:
         """
         Construct metadata section of the image.
-        
+
         Args:
             h_meta: Total metadata rows
             mins: Per-metric minimums (if stored)
             maxs: Per-metric maximums (if stored)
-            
+
         Returns:
             uint16 array of shape (h_meta, D, 3)
         """
@@ -334,12 +359,12 @@ class VPMImageWriter:
         # Magic number (ASCII 'VPM1')
         for i, v in enumerate(MAGIC):
             meta[0, i, 0] = v
-        
+
         # Version and dimensions
         meta[0, 4, 0] = VERSION
         meta[0, 5, 0] = np.uint16(self.M)  # Metric count
         meta[0, 6, 0] = np.uint16((self.D >> 16) & 0xFFFF)  # D_hi
-        meta[0, 7, 0] = np.uint16(self.D & 0xFFFF)          # D_lo
+        meta[0, 7, 0] = np.uint16(self.D & 0xFFFF)  # D_lo
         meta[0, 8, 0] = np.uint16(h_meta)  # Total metadata rows
         meta[0, 9, 0] = np.uint16(self.level)  # Hierarchy level
         meta[0, 10, 0] = np.uint16(min(self.doc_block_size, 0xFFFF))  # Docs per pixel
@@ -353,7 +378,7 @@ class VPMImageWriter:
             # Convert to 32-bit fixed-point (16.16 format)
             mins_fixed = (np.asarray(mins) * 65536.0).astype(np.uint32)
             maxs_fixed = (np.asarray(maxs) * 65536.0).astype(np.uint32)
-            
+
             for m in range(self.M):
                 # MIN value storage
                 min_col = m * 2
@@ -374,14 +399,14 @@ class VPMImageWriter:
     def write(self, file_path: str) -> None:
         """
         Write score matrix to VPM-IMG v1 PNG file.
-        
+
         Process:
         1. Normalize scores to [0,1]
         2. Compute percentile ranks
         3. Assemble metadata
         4. Combine with data section
         5. Write as 16-bit PNG
-        
+
         Args:
             file_path: Output file path
         """
@@ -398,7 +423,9 @@ class VPMImageWriter:
             minmax_rows = (num_words + self.D - 1) // self.D
 
         # compute extra rows for metadata payload
-        extra_meta_rows = self._extra_meta_rows_needed(len(self.metadata_bytes), start_col=7)
+        extra_meta_rows = self._extra_meta_rows_needed(
+            len(self.metadata_bytes), start_col=7
+        )
 
         h_meta = DEFAULT_H_META_BASE + minmax_rows + extra_meta_rows
         meta = self._assemble_metadata(h_meta, mins, maxs)
@@ -427,16 +454,17 @@ class VPMImageWriter:
 
 # --- Reader Class ---
 
+
 class VPMImageReader:
     """
     Reads and interprets VPM-IMG v1 files.
-    
+
     Provides:
     - Metadata extraction
     - Virtual reordering of documents
     - Critical tile extraction
     - Hierarchy navigation
-    
+
     Attributes:
         image (np.ndarray): Image data (H, W, 3)
         M (int): Number of metrics
@@ -483,11 +511,11 @@ class VPMImageReader:
         # Load PNG data
         r = png.Reader(self.file_path)
         w, h, data, meta = r.read()
-        
+
         # Validate format
         if meta.get("bitdepth") != 16 or meta.get("planes") != 3:
             raise ValueError("Only 16-bit RGB PNG supported.")
-        
+
         # Convert to 3D numpy array (H, W, 3)
         arr = np.vstack(list(data)).astype(np.uint16)
         self.image = arr.reshape(h, w, 3)
@@ -495,7 +523,7 @@ class VPMImageReader:
 
         # --- Parse Row 0 metadata (R channel) ---
         row0 = self.image[0, :, 0]
-        
+
         # Magic number validation
         magic = bytes([row0[0], row0[1], row0[2], row0[3]]).decode("ascii")
         if magic != "VPM1":
@@ -516,7 +544,10 @@ class VPMImageReader:
         self.agg_id = int(row0[11])
 
         # Validate image dimensions
-        if self.image.shape[0] != (self.h_meta + self.M) or self.image.shape[1] != self.D:
+        if (
+            self.image.shape[0] != (self.h_meta + self.M)
+            or self.image.shape[1] != self.D
+        ):
             raise ValueError("Image dimensions mismatch header.")
 
         # --- Row 1: Normalization flag ---
@@ -526,7 +557,7 @@ class VPMImageReader:
         if self.norm_flag == 1:
             self.min_vals = np.zeros(self.M, dtype=np.float64)
             self.max_vals = np.zeros(self.M, dtype=np.float64)
-            
+
             # Each metric uses two pixels (min and max)
             for m in range(self.M):
                 # MIN value (Q16.16 fixed-point)
@@ -534,7 +565,7 @@ class VPMImageReader:
                 min_row = 2 + (min_col // self.D)
                 min_col_in_row = min_col % self.D
                 min_high = self.image[min_row, min_col_in_row, 0]
-                min_low  = self.image[min_row, min_col_in_row, 1]
+                min_low = self.image[min_row, min_col_in_row, 1]
                 self.min_vals[m] = ((int(min_high) << 16) | int(min_low)) / 65536.0
 
                 # MAX value (next column)
@@ -542,11 +573,11 @@ class VPMImageReader:
                 max_row = 2 + (max_col // self.D)
                 max_col_in_row = max_col % self.D
                 max_high = self.image[max_row, max_col_in_row, 0]
-                max_low  = self.image[max_row, max_col_in_row, 1]
+                max_low = self.image[max_row, max_col_in_row, 1]
                 self.max_vals[m] = ((int(max_high) << 16) | int(max_low)) / 65536.0
 
     # --- Accessors ---
-    
+
     @property
     def height(self) -> int:
         """Total image height (pixels)"""
@@ -560,22 +591,22 @@ class VPMImageReader:
     def get_metric_row_raw(self, metric_idx: int) -> np.ndarray:
         """
         Get raw pixel row for a metric.
-        
+
         Args:
             metric_idx: Metric index (0-based)
-            
+
         Returns:
             uint16 array of shape (D, 3) - (R, G, B) values
         """
         if metric_idx < 0 or metric_idx >= self.M:
-            raise IndexError(f"Metric index out of range [0, {self.M-1}]")
+            raise IndexError(f"Metric index out of range [0, {self.M - 1}]")
         row_idx = self.h_meta + metric_idx
         return self.image[row_idx]
 
     def get_metric_values(self, metric_idx: int) -> np.ndarray:
         """
         Get normalized [0,1] values for a metric.
-        
+
         Uses R channel directly without denormalization.
         """
         row = self.get_metric_row_raw(metric_idx)[:, 0].astype(np.float64)
@@ -584,11 +615,15 @@ class VPMImageReader:
     def get_metric_values_original(self, metric_idx: int) -> np.ndarray:
         """
         Reconstruct original values using min/max if available.
-        
+
         Applies reverse normalization if min/max were stored.
         """
         norm = self.get_metric_values(metric_idx)
-        if self.norm_flag == 1 and self.min_vals is not None and self.max_vals is not None:
+        if (
+            self.norm_flag == 1
+            and self.min_vals is not None
+            and self.max_vals is not None
+        ):
             lo = self.min_vals[metric_idx]
             hi = self.max_vals[metric_idx]
             span = hi - lo
@@ -603,7 +638,7 @@ class VPMImageReader:
         return row / 65535.0
 
     # --- Virtual Ordering ---
-    
+
     def virtual_order(
         self,
         metric_idx: Optional[int] = None,
@@ -613,18 +648,18 @@ class VPMImageReader:
     ) -> np.ndarray:
         """
         Generate document permutation based on sorting criteria.
-        
+
         Supports:
         - Single metric ordering (optimized using G channel)
         - Composite score ordering (weighted sum of metrics)
         - Top-K retrieval (efficient partial sort)
-        
+
         Args:
             metric_idx: Single metric to sort by
             weights: Dictionary of {metric_idx: weight} for composite scores
             top_k: Return only top K documents
             descending: Sort descending (highest first)
-            
+
         Returns:
             Document indices in sorted order
         """
@@ -632,17 +667,17 @@ class VPMImageReader:
         if metric_idx is not None:
             # Use R channel values for sorting
             v = self.get_metric_row_raw(metric_idx)[:, 0].astype(np.int32)
-            
+
             # Efficient top-K retrieval
             if top_k is not None and top_k < self.D:
                 # Partial sort: partition then sort top-K
-                idx = np.argpartition(-v, top_k-1)[:top_k]
+                idx = np.argpartition(-v, top_k - 1)[:top_k]
                 order = np.argsort(-v[idx])
                 perm = idx[order]
             else:
                 # Full sort
                 perm = np.argsort(-v)
-            
+
             # Handle ascending order
             if not descending:
                 perm = perm[::-1]
@@ -654,19 +689,19 @@ class VPMImageReader:
             for m, w in weights.items():
                 if w:
                     composite += w * self.get_metric_values(m)
-            
+
             # Efficient top-K retrieval
             if top_k is not None and top_k < self.D:
-                idx = np.argpartition(-composite, top_k-1)[:top_k]
+                idx = np.argpartition(-composite, top_k - 1)[:top_k]
                 order = np.argsort(-composite[idx])
                 return idx[order]
-            
+
             return np.argsort(-composite)
 
         raise ValueError("Must specify either metric_idx or weights")
 
     # --- Virtual View Extraction ---
-    
+
     def get_virtual_view(
         self,
         metric_idx: Optional[int] = None,
@@ -679,10 +714,10 @@ class VPMImageReader:
     ) -> np.ndarray:
         """
         Extract a viewport from virtually ordered documents.
-        
+
         This is the core "critical tile" operation that enables efficient
         visualization without modifying the original image.
-        
+
         Args:
             metric_idx: Metric for ordering (None for composite)
             weights: Weights for composite ordering
@@ -691,7 +726,7 @@ class VPMImageReader:
             width: Viewport width (documents)
             height: Viewport height (metrics)
             descending: Sort order
-            
+
         Returns:
             Image tile (height, width, 3) from the virtual view
         """
@@ -704,32 +739,36 @@ class VPMImageReader:
             metric_idx=metric_idx,
             weights=weights,
             top_k=min(self.D, x + width_eff),
-            descending=descending
+            descending=descending,
         )
         # Exclude padded columns beyond logical width
         if d_eff < self.D:
             perm = perm[perm < d_eff]
         # Select columns in virtual order with effective width
-        cols = perm[x: x + width_eff]
-        
+        cols = perm[x : x + width_eff]
+
         # Select rows (metrics)
         row_start = self.h_meta + y
         row_end = min(self.h_meta + y + height, self.h_meta + self.M)
-        
+
         # Extract and return viewport
         return self.image[row_start:row_end, cols, :]
 
     def read_metadata_bytes(self) -> bytes:
         # Check marker
-        if self.image[1,1,0] != ord('M') or self.image[1,2,0] != ord('E') \
-        or self.image[1,3,0] != ord('T') or self.image[1,4,0] != ord('A'):
+        if (
+            self.image[1, 1, 0] != ord("M")
+            or self.image[1, 2, 0] != ord("E")
+            or self.image[1, 3, 0] != ord("T")
+            or self.image[1, 4, 0] != ord("A")
+        ):
             return b""
 
-        L = ((int(self.image[1,5,0]) << 16) | int(self.image[1,6,0]))
+        L = (int(self.image[1, 5, 0]) << 16) | int(self.image[1, 6, 0])
         out = bytearray(L)
 
         # unpack helper (reverse of pack2)
-        def unpack(word: int) -> tuple[int,int]:
+        def unpack(word: int) -> tuple[int, int]:
             hi = (word >> 8) & 0xFF
             lo = word & 0xFF
             return hi, lo
@@ -765,7 +804,7 @@ class VPMImageReader:
 
         return bytes(out)
 
-    def to_report(self) -> dict: 
+    def to_report(self) -> dict:
         """
         Summarize this VPM-IMG into a JSON-serializable dict:
           - header fields (VPM1 row-0 + flags)
@@ -818,7 +857,9 @@ class VPMImageReader:
             "header": header,
             "vmeta": {
                 "embedded_metadata_len": len(meta_bytes),
-                "embedded_metadata_hex_preview": meta_bytes[:64].hex() if meta_bytes else "",
+                "embedded_metadata_hex_preview": meta_bytes[:64].hex()
+                if meta_bytes
+                else "",
             },
             "logical_vs_physical": {
                 "logical_D": int(d_logical),
@@ -875,8 +916,15 @@ class VPMImageReader:
                 "shape": [int(H), int(W), int(C)],
                 "dtype": str(arr.dtype),
                 "header": {"magic": "unknown"},
-                "vmeta": {"embedded_metadata_len": 0, "embedded_metadata_hex_preview": ""},
-                "logical_vs_physical": {"logical_D": int(W), "physical_W": int(W), "padded": False},
+                "vmeta": {
+                    "embedded_metadata_len": 0,
+                    "embedded_metadata_hex_preview": "",
+                },
+                "logical_vs_physical": {
+                    "logical_D": int(W),
+                    "physical_W": int(W),
+                    "padded": False,
+                },
                 "stats": {"R": stats(R), "G": stats(G), "B": stats(B)},
                 "problems": [f"Not a VPM-IMG (or parse failed): {e}"],
             }
@@ -894,16 +942,16 @@ class VPMImageReader:
         if meta.get("planes", 1) > 1:
             arr = arr.reshape((h, w, meta["planes"]))
         return arr
-    
+
     def to_json(
         self,
         *,
         include_data: bool = True,
         data_mode: Literal["normalized", "original", "raw_u16"] = "normalized",
         include_channels: Literal["R", "RG", "RGB"] = "RGB",
-        max_docs: Optional[int] = None,   # cap width to avoid huge JSON
-        downsample: Optional[int] = None, # e.g. 4 -> take every 4th doc
-        pretty: bool = False
+        max_docs: Optional[int] = None,  # cap width to avoid huge JSON
+        downsample: Optional[int] = None,  # e.g. 4 -> take every 4th doc
+        pretty: bool = False,
     ) -> Dict[str, Any]:
         """
         Build a full JSON-serializable dict of this VPM-IMG.
@@ -975,11 +1023,15 @@ class VPMImageReader:
 
         # --- channel extraction helpers ---
         def _to_norm_u01(u16: np.ndarray) -> np.ndarray:
-            return (u16.astype(np.float64) / 65535.0)
+            return u16.astype(np.float64) / 65535.0
 
         def _denorm_row(idx: int, row_u16: np.ndarray) -> np.ndarray:
             # reconstruct original using per-metric min/max if we have them
-            if self.norm_flag == 1 and self.min_vals is not None and self.max_vals is not None:
+            if (
+                self.norm_flag == 1
+                and self.min_vals is not None
+                and self.max_vals is not None
+            ):
                 lo = float(self.min_vals[idx])
                 hi = float(self.max_vals[idx])
                 span = hi - lo
@@ -997,9 +1049,9 @@ class VPMImageReader:
         # build data block
         data_out = []
         for m in range(self.M):
-            row = self.get_metric_row_raw(m)   # (D, 3) u16
-            row = row[:d_logical]              # trim physical padding
-            row = row[sel]                     # apply selection
+            row = self.get_metric_row_raw(m)  # (D, 3) u16
+            row = row[:d_logical]  # trim physical padding
+            row = row[sel]  # apply selection
 
             entry: Dict[str, Any] = {"metric_index": m}
 
@@ -1014,13 +1066,15 @@ class VPMImageReader:
 
             if ch_G:
                 G = row[:, 1]
-                entry["G"] = (G.tolist() if data_mode == "raw_u16"
-                              else _to_norm_u01(G).tolist())
+                entry["G"] = (
+                    G.tolist() if data_mode == "raw_u16" else _to_norm_u01(G).tolist()
+                )
 
             if ch_B:
                 B = row[:, 2]
-                entry["B"] = (B.tolist() if data_mode == "raw_u16"
-                              else _to_norm_u01(B).tolist())
+                entry["B"] = (
+                    B.tolist() if data_mode == "raw_u16" else _to_norm_u01(B).tolist()
+                )
 
             data_out.append(entry)
 
@@ -1041,8 +1095,8 @@ class VPMImageReader:
                 json.dump(report, f, ensure_ascii=False, separators=(",", ":"))
 
 
-
 # --- Hierarchy Builder ---
+
 
 def build_parent_level_png(
     child_reader: VPMImageReader,
@@ -1054,15 +1108,15 @@ def build_parent_level_png(
 ) -> None:
     """
     Build parent level from child image through document aggregation.
-    
+
     Creates a coarser representation by grouping documents into blocks:
     - Each pixel in parent represents K documents in child
     - Metrics are preserved at original resolution
-    
+
     Supported aggregations:
     - AGG_MAX: Store maximum value + position hint
     - AGG_MEAN: Store mean value
-    
+
     Args:
         child_reader: Reader for child level image
         out_path: Output path for parent PNG
@@ -1079,7 +1133,7 @@ def build_parent_level_png(
     P = (D + K - 1) // K  # ceil(D/K) documents in parent
 
     # Extract child data (R channel only)
-    child_data = child_reader.image[child_reader.h_meta:, :, :]
+    child_data = child_reader.image[child_reader.h_meta :, :, :]
     R_child = child_data[:, :, 0].astype(np.uint16)
 
     # Initialize parent arrays
@@ -1096,7 +1150,7 @@ def build_parent_level_png(
             # Maximum aggregation
             vmax = block.max(axis=1)
             R_parent[:, p] = vmax
-            
+
             # Store relative position of maximum
             argm = block.argmax(axis=1)
             if hi - lo > 1:

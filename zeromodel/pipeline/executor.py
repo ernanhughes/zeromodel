@@ -10,6 +10,7 @@ from zeromodel.pipeline.base import PipelineStage
 
 logger = logging.getLogger(__name__)
 
+
 class PipelineExecutor:
     def __init__(self, stages: List[Dict[str, Any]]):
         self.stages = stages
@@ -29,7 +30,11 @@ class PipelineExecutor:
         if cls is None:
             # fallback: pick first subclass of PipelineStage in the module
             for attr in module.__dict__.values():
-                if isinstance(attr, type) and issubclass(attr, PipelineStage) and attr is not PipelineStage:
+                if (
+                    isinstance(attr, type)
+                    and issubclass(attr, PipelineStage)
+                    and attr is not PipelineStage
+                ):
                     cls = attr
                     break
         if cls is None:
@@ -48,7 +53,9 @@ class PipelineExecutor:
     def _record(self, ctx: Dict[str, Any], **event):
         ctx["provenance"].append({"timestamp": np.datetime64("now"), **event})
 
-    def run(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def run(
+        self, vpm: np.ndarray, context: Dict[str, Any] = None
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
         ctx = self._init_context(context)
         cur = vpm
 
@@ -57,7 +64,8 @@ class PipelineExecutor:
             params = spec.get("params", {})
 
             # stage start event
-            self._record(ctx,
+            self._record(
+                ctx,
                 kind="stage_start",
                 stage=stage_path,
                 index=i,
@@ -74,7 +82,8 @@ class PipelineExecutor:
                 dt = time.time() - t0
 
                 # stage end (success)
-                self._record(ctx,
+                self._record(
+                    ctx,
                     kind="stage_end",
                     stage=stage_path,
                     index=i,
@@ -99,7 +108,8 @@ class PipelineExecutor:
                 dt = time.time() - t0
                 logger.exception(f"Stage {stage_path} failed")
                 # stage end (failure)
-                self._record(ctx,
+                self._record(
+                    ctx,
                     kind="stage_end",
                     stage=stage_path,
                     index=i,
@@ -122,9 +132,11 @@ class PipelineExecutor:
             "vpm_max": float(np.max(cur)),
             "vpm_mean": float(np.mean(cur)),
             "pipeline_stages": len(self.stages),
-            "total_execution_time": float(sum(
-                ctx.get(f"stage_{i}", {}).get("elapsed_sec", 0.0)
-                for i in range(len(self.stages))
-            )),
+            "total_execution_time": float(
+                sum(
+                    ctx.get(f"stage_{i}", {}).get("elapsed_sec", 0.0)
+                    for i in range(len(self.stages))
+                )
+            ),
         }
         return cur, ctx

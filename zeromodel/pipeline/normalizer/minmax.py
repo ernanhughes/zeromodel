@@ -12,12 +12,16 @@ class MinMaxNormalizer(PipelineStage):
     def __init__(self, **params):
         super().__init__(**params)
         self.eps = float(params.get("eps", 1e-12))
-        self.per_column = bool(params.get("per_column", True))  # if True: per-feature (axis=0)
+        self.per_column = bool(
+            params.get("per_column", True)
+        )  # if True: per-feature (axis=0)
 
     def validate_params(self):
         assert self.eps > 0
 
-    def process(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
+    def process(
+        self, vpm: np.ndarray, context: Dict[str, Any] = None
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
         context = self._get_context(context)
         if vpm.ndim == 2:
             out = self._norm2d(vpm)

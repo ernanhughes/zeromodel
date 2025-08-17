@@ -10,6 +10,7 @@ class TopKSelector(PipelineStage):
     Keep only top-K columns (features) by a simple score (mean/var/sum), zero others.
     Useful to hard-focus before STDM or after normalization.
     """
+
     name = "topk"
     category = "selector"
 
@@ -39,10 +40,15 @@ class TopKSelector(PipelineStage):
             return out
 
         if vpm.ndim == 2:
-            out = mask_cols(vpm) 
+            out = mask_cols(vpm)
         elif vpm.ndim == 3:
             out = np.stack([mask_cols(vpm[t]) for t in range(vpm.shape[0])], axis=0)
         else:
             raise ValueError(f"VPM must be 2D or 3D, got {vpm.ndim}D")
 
-        return out, {"K": self.K, "metric": self.metric, "input_shape": vpm.shape, "output_shape": out.shape}
+        return out, {
+            "K": self.K,
+            "metric": self.metric,
+            "input_shape": vpm.shape,
+            "output_shape": out.shape,
+        }

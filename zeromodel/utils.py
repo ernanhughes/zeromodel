@@ -14,12 +14,7 @@ from PIL import Image
 
 from zeromodel.constants import PRECISION_DTYPE_MAP
 
-__all__ = [
-    "quantize",
-    "dct",
-    "idct",
-    "sha3"
-]
+__all__ = ["quantize", "dct", "idct", "sha3"]
 
 
 def quantize(value: Any, precision: int) -> Any:
@@ -55,7 +50,8 @@ def quantize(value: Any, precision: int) -> Any:
         v = 1.0
     return int(round(v * max_val))
 
-def dct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
+
+def dct(matrix: np.ndarray, norm: str = "ortho", axis: int = -1) -> np.ndarray:
     """Compute a DCT-II along a chosen axis (minimal, SciPy-free).
 
     Based on the standard definition:
@@ -75,13 +71,14 @@ def dct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
     cos_table = np.cos(np.pi / N * (k + 0.5)[:, None] * n[None, :])  # shape (N,N)
     # Perform tensordot over last axis of x with first axis of cos_table
     out = np.tensordot(x, cos_table, axes=([-1], [0]))  # shape (..., N)
-    if norm == 'ortho':
+    if norm == "ortho":
         out[..., 0] *= np.sqrt(1.0 / N)
         out[..., 1:] *= np.sqrt(2.0 / N)
     out = np.moveaxis(out, -1, axis)
     return out.astype(np.float32, copy=False)
 
-def idct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
+
+def idct(matrix: np.ndarray, norm: str = "ortho", axis: int = -1) -> np.ndarray:
     """Compute an IDCT (inverse of DCT-II) aka DCT-III along axis.
 
     For norm='ortho' this inverts ``dct(..., norm='ortho')`` numerically.
@@ -96,7 +93,7 @@ def idct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
     k = n  # reuse
     cos_table = np.cos(np.pi / N * (n + 0.5)[:, None] * k[None, :])  # (N,N)
     Y = X.copy()
-    if norm == 'ortho':
+    if norm == "ortho":
         Y[..., 0] *= np.sqrt(1.0 / N)
         Y[..., 1:] *= np.sqrt(2.0 / N)
     else:
@@ -106,7 +103,7 @@ def idct(matrix: np.ndarray, norm: str = 'ortho', axis: int = -1) -> np.ndarray:
     out = np.moveaxis(out, -1, axis)
     return out.astype(np.float32, copy=False)
 
-  
+
 def to_png_bytes(img: Union[np.ndarray, bytes, bytearray]) -> bytes:
     """Ensure we have real PNG bytes. If given a numpy image, encode it."""
     if isinstance(img, (bytes, bytearray)):
@@ -132,6 +129,7 @@ def to_png_bytes(img: Union[np.ndarray, bytes, bytearray]) -> bytes:
     bio = io.BytesIO()
     Image.fromarray(arr, mode=mode).save(bio, format="PNG")
     return bio.getvalue()
+
 
 def png_to_gray_array(png_bytes: bytes) -> np.ndarray:
     """

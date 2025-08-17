@@ -8,6 +8,7 @@ from PIL import Image
 
 log = logging.getLogger(__name__)
 
+
 class TrainingHeartbeatVisualizer:
     """
     Lightweight GIF visualizer for ZeroMemory VPM snapshots.
@@ -42,7 +43,9 @@ class TrainingHeartbeatVisualizer:
         self.frames: List[np.ndarray] = []
         log.info(
             "Initialized TrainingHeartbeatVisualizer with max_frames=%d, vpm_scale=%d, strip_height=%d",
-            self.max_frames, self.vpm_scale, self.strip_height
+            self.max_frames,
+            self.vpm_scale,
+            self.strip_height,
         )
 
     # ----------------- public API -----------------
@@ -92,7 +95,9 @@ class TrainingHeartbeatVisualizer:
             # Convert each frame to palette mode with adaptive palette so the GIF encoder
             # treats each as a full frame and avoids coalescing identical-looking frames.
             pil_frames = [
-                Image.fromarray(f.astype(np.uint8)).convert("P", palette=Image.ADAPTIVE, colors=256)
+                Image.fromarray(f.astype(np.uint8)).convert(
+                    "P", palette=Image.ADAPTIVE, colors=256
+                )
                 for f in self.frames
             ]
             duration_ms = int(max(1, round(1000.0 / max(1, self.fps))))
@@ -123,12 +128,12 @@ class TrainingHeartbeatVisualizer:
         self.frames.append(frame)
         # enforce cap
         if len(self.frames) > self.max_frames:
-            self.frames = self.frames[-self.max_frames:]
+            self.frames = self.frames[-self.max_frames :]
 
     def _frame_from_vpm(self, vpm_uint8: np.ndarray) -> np.ndarray:
         """Scale VPM to display size and add a simple footer strip."""
         vpm_uint8 = self._ensure_rgb_uint8(vpm_uint8)
-    # shape check not required; _ensure_rgb_uint8 guarantees HxWx3
+        # shape check not required; _ensure_rgb_uint8 guarantees HxWx3
 
         # nearest-neighbor scale
         scale = max(1, int(self.vpm_scale))
@@ -203,13 +208,19 @@ class TrainingHeartbeatVisualizer:
             rgb = tile01
         else:
             # collapse any extra channels to 1, then repeat to 3
-            base = tile01[..., :1] if tile01.ndim >= 3 else tile01.reshape(tile01.shape[0], -1)[:, :1]
+            base = (
+                tile01[..., :1]
+                if tile01.ndim >= 3
+                else tile01.reshape(tile01.shape[0], -1)[:, :1]
+            )
             rgb = np.repeat(base, 3, axis=-1)
 
         vpm_uint8 = (rgb * 255.0).astype(np.uint8)
         return self._frame_from_vpm(vpm_uint8)
 
-    def _apply_frame_marker(self, frame: np.ndarray, step_id: Optional[int]) -> np.ndarray:
+    def _apply_frame_marker(
+        self, frame: np.ndarray, step_id: Optional[int]
+    ) -> np.ndarray:
         """Embed a tiny colored marker so successive frames are never bit-identical.
         This avoids GIF encoders merging identical frames and reducing n_frames.
         """

@@ -1,6 +1,5 @@
 <!-- Merged Python Code Files -->
 
-
 ## File: __init__.py
 
 `python
@@ -14,7 +13,9 @@
 ## File: amplifier\pca.py
 
 `python
+
 # zeromodel/pipeline/stages/amplifiers/pca.py
+
 """
 PCA (Principal Component Analysis) amplifier stage for ZeroModel.
 
@@ -31,8 +32,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PCAAmplifier(PipelineStage):
-    """PCA amplifier stage for ZeroModel."""
-    
+"""PCA amplifier stage for ZeroModel."""
+
     name = "pca"
     category = "amplifier"
     
@@ -138,12 +139,15 @@ class PCAAmplifier(PipelineStage):
             logger.error(f"PCA amplification failed: {e}")
             # Return original VPM and error metadata
             return vpm, {"error": str(e), "stage": "pca_amplifier"}
+
 ``n
 
 ## File: amplifier\stdm.py
 
 `python
+
 # zeromodel/pipeline/stages/amplifiers/stdm.py
+
 """
 STDM (Spatio-Temporal Decision Making) amplifier stage.
 
@@ -162,8 +166,8 @@ from zeromodel.vpm.stdm import gamma_operator, learn_w, top_left_mass
 logger = logging.getLogger(__name__)
 
 class STDMAmplifier(PipelineStage):
-    """STDM amplifier stage for ZeroModel."""
-    
+"""STDM amplifier stage for ZeroModel."""
+
     name = "stdm"
     category = "amplifier"
     
@@ -292,12 +296,15 @@ class STDMAmplifier(PipelineStage):
             logger.error(f"STDM amplification failed: {e}")
             # Return original VPM and error metadata
             return vpm, {"error": str(e), "stage": "stmd_amplifier", "optimization_success": False}
+
 ``n
 
 ## File: base.py
 
 `python
+
 # zeromodel/pipeline/base.py
+
 """
 Base classes for ZeroModel pipeline stages.
 
@@ -315,9 +322,9 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 class PipelineStage(ABC):
-    """
-    Base class for all ZeroModel pipeline stages.
-    
+"""
+Base class for all ZeroModel pipeline stages.
+
     This implements ZeroModel's "intelligence lives in the data structure" principle:
     The processing is minimal - the intelligence is in how the data is organized.
     """
@@ -356,13 +363,15 @@ class PipelineStage(ABC):
         if 'provenance' not in context:
             context['provenance'] = []
         return context
-   
+
 ``n
 
 ## File: combiner\and.py
 
 `python
+
 # zeromodel/pipeline/combiner/and.py
+
 """
 Logical AND combiner for ZeroModel.
 
@@ -376,10 +385,9 @@ import numpy as np
 
 from zeromodel.pipeline.base import PipelineStage
 
-
 class AndCombiner(PipelineStage):
-    """Logical AND combiner stage for ZeroModel."""
-    
+"""Logical AND combiner stage for ZeroModel."""
+
     name = "and"
     category = "combiner"
     
@@ -415,12 +423,15 @@ class AndCombiner(PipelineStage):
         }
         
         return processed_vpm, metadata
+
 ``n
 
 ## File: executor.py
 
 `python
+
 # zeromodel/pipeline/executor.py
+
 import importlib
 import time
 import numpy as np
@@ -431,9 +442,9 @@ from zeromodel.pipeline.base import PipelineStage
 logger = logging.getLogger(__name__)
 
 class PipelineExecutor:
-    def __init__(self, stages: List[Dict[str, Any]]):
-        self.stages = stages
-        logger.info(f"PipelineExecutor initialized with {len(stages)} stages")
+def __init__(self, stages: List[Dict[str, Any]]):
+self.stages = stages
+logger.info(f"PipelineExecutor initialized with {len(stages)} stages")
 
     def _load_stage(self, stage_path: str, params: Dict[str, Any]) -> PipelineStage:
         # Supports "pkg/subpkg.ClassName" or "pkg/subpkg" (uses first PipelineStage subclass)
@@ -548,6 +559,7 @@ class PipelineExecutor:
             )),
         }
         return cur, ctx
+
 ``n
 
 ## File: filter\__init__.py
@@ -558,7 +570,9 @@ class PipelineExecutor:
 ## File: filter\fft.py
 
 `python
+
 # zeromodel/pipeline/stages/filters/fft.py
+
 """
 FFT (Fast Fourier Transform) filter stage for ZeroModel.
 
@@ -574,8 +588,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class FFTFilter(PipelineStage):
-    """FFT filter stage for ZeroModel."""
-    
+"""FFT filter stage for ZeroModel."""
+
     name = "fft"
     category = "filter"
     
@@ -682,12 +696,15 @@ class FFTFilter(PipelineStage):
         except Exception as e:
             logger.warning(f"FFT filtering failed: {e}, returning original")
             return matrix
+
 ``n
 
 ## File: filter\kalman.py
 
 `python
+
 # zeromodel/pipeline/stages/filters/kalman.py
+
 """
 Kalman filter stage for ZeroModel.
 
@@ -700,11 +717,11 @@ import numpy as np
 from zeromodel.pipeline.base import PipelineStage
 import logging
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 class KalmanFilter(PipelineStage):
-    """Kalman filter stage for ZeroModel."""
-    
+"""Kalman filter stage for ZeroModel."""
+
     name = "kalman"
     category = "filter"
     
@@ -786,12 +803,15 @@ class KalmanFilter(PipelineStage):
         }
         
         return filtered_vpm, metadata
+
 ``n
 
 ## File: filter\morphological.py
 
 `python
+
 # zeromodel/pipeline/stages/filters/morphological.py
+
 """
 Morphological filter stage for ZeroModel.
 
@@ -805,8 +825,8 @@ from zeromodel.pipeline.base import PipelineStage
 from scipy import ndimage
 
 class MorphologicalFilter(PipelineStage):
-    """Morphological filter stage for ZeroModel."""
-    
+"""Morphological filter stage for ZeroModel."""
+
     name = "morphological"
     category = "filter"
     
@@ -886,12 +906,15 @@ class MorphologicalFilter(PipelineStage):
             result = result * matrix_max
         
         return result
+
 ``n
 
 ## File: filter\wavelet.py
 
 `python
+
 # zeromodel/pipeline/stages/filters/wavelet.py
+
 """
 Wavelet filter stage for ZeroModel.
 
@@ -909,8 +932,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 class WaveletFilter(PipelineStage):
-    """Wavelet filter stage for ZeroModel."""
-    
+"""Wavelet filter stage for ZeroModel."""
+
     name = "wavelet"
     category = "filter"
     
@@ -1006,6 +1029,7 @@ class WaveletFilter(PipelineStage):
         except Exception as e:
             logger.warning(f"Wavelet filtering failed: {e}, returning original")
             return matrix
+
 ``n
 
 ## File: organizer\__init__.py
@@ -1016,7 +1040,9 @@ class WaveletFilter(PipelineStage):
 ## File: organizer\top_left_sort.py
 
 `python
+
 # zeromodel/pipeline/organizer/top_left_sort.py
+
 """
 Top-left sorter for ZeroModel.
 
@@ -1030,10 +1056,9 @@ import numpy as np
 
 from zeromodel.pipeline.base import PipelineStage
 
-
 class TopLeftSorter(PipelineStage):
-    """Top-left sorter stage for ZeroModel."""
-    
+"""Top-left sorter stage for ZeroModel."""
+
     name = "top_left_sort"
     category = "organizer"
     
@@ -1105,4 +1130,5 @@ class TopLeftSorter(PipelineStage):
         matrix_sorted = matrix_sorted[row_order, :]
         
         return matrix_sorted
+
 ``n

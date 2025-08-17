@@ -8,6 +8,7 @@ from typing import IO, Any, Dict, Optional, Union
 
 # New provenance footer reader (PNG-safe)
 from zeromodel.images.metadata import ProvenanceMetadata
+
 # Core (legacy) VPM metadata reader – expects *its own* binary block, not PNG.
 from zeromodel.vpm.metadata import VPMMetadata
 
@@ -31,6 +32,7 @@ class MetadataView:
                 return dict(obj.__dict__)  # type: ignore[attr-defined]
             except Exception:
                 return str(obj)
+
         return {
             "vpm": _maybe_to_dict(self.vpm),
             "provenance": _maybe_to_dict(self.provenance),
@@ -90,6 +92,7 @@ def read_all_metadata(src: SrcType) -> MetadataView:
 # ------------------------
 # Helpers
 # ------------------------
+
 
 def _coerce_to_bytes(src: SrcType) -> bytes:
     if isinstance(src, (bytes, bytearray)):

@@ -25,5 +25,10 @@ class EWMASmoother(PipelineStage):
         out[0] = vpm[0]
         a = self.alpha
         for t in range(1, T):
-            out[t] = a * vpm[t] + (1 - a) * out[t-1]
-        return out, {"alpha": self.alpha, "input_shape": vpm.shape, "output_shape": out.shape, "applied": True}
+            out[t] = a * vpm[t] + (1 - a) * out[t - 1]
+        return out, {
+            "alpha": self.alpha,
+            "input_shape": vpm.shape,
+            "output_shape": out.shape,
+            "applied": True,
+        }

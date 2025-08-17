@@ -9,8 +9,7 @@ from .edge import EdgeProtocol
 from .hierarchical import HierarchicalVPM
 from .hierarchical_edge import HierarchicalEdgeProtocol
 from .normalizer import DynamicNormalizer
-from .vpm.image import (AGG_MAX, VPMImageReader, VPMImageWriter,
-                        build_parent_level_png)
+from .vpm.image import AGG_MAX, VPMImageReader, VPMImageWriter, build_parent_level_png
 from .vpm.transform import get_critical_tile, transform_vpm
 
 __version__ = "1.0.4"

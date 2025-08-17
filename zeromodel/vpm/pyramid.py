@@ -6,11 +6,17 @@ from typing import List, Optional, Tuple
 import numpy as np
 import png
 
-from zeromodel.vpm.image import \
-    META_MIN_COLS  # same constant used by _check_header_width
+from zeromodel.vpm.image import (
+    META_MIN_COLS,
+)  # same constant used by _check_header_width
 
-from .image import (VPMImageReader, VPMImageWriter, _check_header_width,
-                    _round_u16, _u16_clip)
+from .image import (
+    VPMImageReader,
+    VPMImageWriter,
+    _check_header_width,
+    _round_u16,
+    _u16_clip,
+)
 from .metadata import AggId, VPMMetadata
 
 
@@ -24,8 +30,9 @@ class VPMPyramidBuilder:
     If VPMImageWriter supports an optional `aux_channel` parameter, this class
     will use it. Otherwise, it will write the PNG directly (fallback path).
     """
-    K: int = 8                       # documents per parent column
-    agg_id: int = int(AggId.MAX) # parent aggregation
+
+    K: int = 8  # documents per parent column
+    agg_id: int = int(AggId.MAX)  # parent aggregation
     compression: int = 6
 
     def build_parent(
@@ -60,14 +67,16 @@ class VPMPyramidBuilder:
         P_logical = (D_eff + self.K - 1) // self.K
 
         # --- aggregate using ONLY the logical span ---
-        R_child = child.image[child.h_meta:, :, 0].astype(np.uint16)  # (M, D_phys)
+        R_child = child.image[child.h_meta :, :, 0].astype(np.uint16)  # (M, D_phys)
 
         R_parent = np.zeros((M, P_logical), dtype=np.uint16)
         B_parent = np.zeros((M, P_logical), dtype=np.uint16)
 
         for p in range(P_logical):
             lo = p * self.K
-            hi = min(D_eff, lo + self.K)   # do not include padded zeros beyond logical width
+            hi = min(
+                D_eff, lo + self.K
+            )  # do not include padded zeros beyond logical width
             blk = R_child[:, lo:hi]
 
             if self.agg_id == int(AggId.MAX):
@@ -109,7 +118,7 @@ class VPMPyramidBuilder:
             metadata = VPMMetadata.for_tile(
                 level=(child.level - 1 if level is None else level),
                 metric_count=M,
-                doc_count=P_logical,                    # <<< logical count recorded in VMETA
+                doc_count=P_logical,  # <<< logical count recorded in VMETA
                 doc_block_size=child.doc_block_size * self.K,
                 agg_id=self.agg_id,
                 metric_weights={},
@@ -181,7 +190,7 @@ class VPMPyramidBuilder:
             md = VPMMetadata.for_tile(
                 level=cur_level - 1,
                 metric_count=reader.M,
-                doc_count=(child_D_eff + self.K - 1) // self.K,   # logical
+                doc_count=(child_D_eff + self.K - 1) // self.K,  # logical
                 doc_block_size=reader.doc_block_size * self.K,
                 agg_id=self.agg_id,
                 metric_weights={},
@@ -223,29 +232,30 @@ class VPMPyramidBuilder:
 
         # ensure header can fit
         from zeromodel.vpm.image import META_MIN_COLS
+
         out_P = max(P, META_MIN_COLS)
         if out_P != P:
             pad = out_P - P
-            R_parent = np.pad(R_parent, ((0,0),(0,pad)), mode="constant")
-            G_parent = np.pad(G_parent, ((0,0),(0,pad)), mode="constant")
-            B_parent = np.pad(B_parent, ((0,0),(0,pad)), mode="constant")
+            R_parent = np.pad(R_parent, ((0, 0), (0, pad)), mode="constant")
+            G_parent = np.pad(G_parent, ((0, 0), (0, pad)), mode="constant")
+            B_parent = np.pad(B_parent, ((0, 0), (0, pad)), mode="constant")
             P = out_P
 
         DEFAULT_H_META_BASE = 2
         meta = np.zeros((DEFAULT_H_META_BASE, P, 3), dtype=np.uint16)
 
         # row 0: magic + core
-        magic = [ord('V'), ord('P'), ord('M'), ord('1')]
+        magic = [ord("V"), ord("P"), ord("M"), ord("1")]
         for i, v in enumerate(magic):
             meta[0, i, 0] = v
-        meta[0, 4, 0]  = 1               # version
-        meta[0, 5, 0]  = np.uint16(M)    # M
-        meta[0, 6, 0]  = np.uint16((P >> 16) & 0xFFFF)
-        meta[0, 7, 0]  = np.uint16(P & 0xFFFF)
-        meta[0, 8, 0]  = np.uint16(DEFAULT_H_META_BASE)
-        meta[0, 9, 0]  = np.uint16(level)
-        meta[0,10, 0]  = np.uint16(min(doc_block_size, 0xFFFF))
-        meta[0,11, 0]  = np.uint16(agg_id)
+        meta[0, 4, 0] = 1  # version
+        meta[0, 5, 0] = np.uint16(M)  # M
+        meta[0, 6, 0] = np.uint16((P >> 16) & 0xFFFF)
+        meta[0, 7, 0] = np.uint16(P & 0xFFFF)
+        meta[0, 8, 0] = np.uint16(DEFAULT_H_META_BASE)
+        meta[0, 9, 0] = np.uint16(level)
+        meta[0, 10, 0] = np.uint16(min(doc_block_size, 0xFFFF))
+        meta[0, 11, 0] = np.uint16(agg_id)
 
         # row 1: flags (no min/max here)
         meta[1, 0, 0] = 0

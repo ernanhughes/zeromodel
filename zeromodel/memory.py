@@ -661,10 +661,10 @@ class ZeroMemory:
 
         # Create byte representation (new 16-bit LE header: width, height)
         tile_bytes = bytearray()
-        tile_bytes.append(tile_width & 0xFF)        # width LSB
-        tile_bytes.append((tile_width >> 8) & 0xFF) # width MSB
-        tile_bytes.append(tile_height & 0xFF)       # height LSB
-        tile_bytes.append((tile_height >> 8) & 0xFF)# height MSB
+        tile_bytes.append(tile_width & 0xFF)  # width LSB
+        tile_bytes.append((tile_width >> 8) & 0xFF)  # width MSB
+        tile_bytes.append(tile_height & 0xFF)  # height LSB
+        tile_bytes.append((tile_height >> 8) & 0xFF)  # height MSB
 
         # Add pixel data (R, G, B for each pixel)
         for h in range(tile_height):
@@ -919,7 +919,9 @@ class ZeroMemory:
             # New: consider a growing validation gap even if val_loss still trends slightly down
             diff = val_loss - loss
             m_gap = slope(diff)
-            cond_gap_growing = (m_loss <= -0.0010) and (m_gap >= 0.0010) and (gap >= 0.05)
+            cond_gap_growing = (
+                (m_loss <= -0.0010) and (m_gap >= 0.0010) and (gap >= 0.05)
+            )
             if cond_slopes_opposed and (gap >= 0.03):
                 alerts["overfitting"] = True
             elif cond_gap_growing:

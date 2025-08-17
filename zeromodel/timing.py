@@ -18,12 +18,14 @@ import time
 from functools import wraps
 from typing import Callable, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 logger = logging.getLogger(__name__)
 logger.propagate = True
 
+
 def _t(name):
     return {"name": name, "t0": time.perf_counter()}
+
 
 def _end(tk):
     dt = time.perf_counter() - tk["t0"]
@@ -34,25 +36,26 @@ def _end(tk):
 def timeit(func: Callable[..., T]) -> Callable[..., T]:
     """
     Decorator to time function execution with minimal overhead.
-    
+
     Only incurs timing cost when debug logging is enabled.
     Automatically detects if the function is a method to include class name.
-    
+
     Example:
         @timeit
         def process_data(data):
             # processing logic
-            
+
         @timeit
         def _internal_helper(x):
             # helper logic
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs) -> T:
         # Only time if debug logging is enabled - this check has negligible overhead
         if not logger.isEnabledFor(logging.DEBUG):
             return func(*args, **kwargs)
-        
+
         start_time = time.perf_counter()
         try:
             result = func(*args, **kwargs)
@@ -60,12 +63,12 @@ def timeit(func: Callable[..., T]) -> Callable[..., T]:
         finally:
             end_time = time.perf_counter()
             elapsed = end_time - start_time
-            
+
             # Get class name if this is a method
             class_name = ""
-            if args and hasattr(args[0], '__class__'):
+            if args and hasattr(args[0], "__class__"):
                 class_name = f"{args[0].__class__.__name__}."
-                
+
             # Format time appropriately (ms for short times, seconds for longer)
             if elapsed < 0.001:
                 time_str = f"{elapsed * 1_000_000:.1f} μs"
@@ -73,7 +76,7 @@ def timeit(func: Callable[..., T]) -> Callable[..., T]:
                 time_str = f"{elapsed * 1000:.3f} ms"
             else:
                 time_str = f"{elapsed:.6f} seconds"
-                
+
             # Avoid non-ASCII emoji in logs for Windows consoles
             logger.debug(f"Timer {class_name}{func.__name__} completed in {time_str}")
     

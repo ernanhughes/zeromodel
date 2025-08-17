@@ -65,33 +65,45 @@ class TestPCAAmplifier:
     
     def setup_method(self):
         self.amplifier = PCAAmplifier(n_components=5, whiten=False)
-    
+
     def test_process_2d_vpm(self):
         """Test PCA amplification on 2D VPM."""
         # Create test VPM with some structure
         np.random.seed(42)
         vpm = np.random.rand(100, 20).astype(np.float32)
-        
-        # Fix: Add correlation between features with proper broadcasting
-        # Take first 5 features and broadcast to last 15
-        # Use np.tile to properly broadcast
+
+        # Add correlation between features to give PCA something to work with.
+        # This creates a signal for the amplifier to find.
+        # It takes the first 5 features and adds them to the last 15.
         vpm[:, 5:20] += 0.5 * np.tile(vpm[:, :5], (1, 3))
-        
+
         # Process through amplifier
         result, metadata = self.amplifier.process(vpm)
-        
-        # Verify output
+
+        # --- Verification Assertions ---
+
+        # 1. Verify the output shape is the same as the input shape
         assert result.shape == vpm.shape
+
+        # 2. Verify metadata keys exist as expected
         assert "n_components" in metadata
         assert "total_variance_explained" in metadata
-        assert metadata["total_variance_explained"] > 0.1  # Should explain some variance
-        
-        # Verify amplification occurred
+
+        # 3. Verify that the PCA explained a significant amount of variance.
+        # This confirms that the correlation was found.
+        assert metadata["total_variance_explained"] > 0.1
+
+        # 4. Verify the output variance. A PCA reconstruction will typically have
+        # a lower variance than the original matrix because it only keeps
+        # the variance from the top 'n_components'. The important thing is
+        # that the transformation occurred without error.
         input_var = np.var(vpm)
         output_var = np.var(result)
-        # Output variance might be different due to PCA transformation
-        assert isinstance(output_var, float)
-    
+        # We don't assert output_var > input_var, as this is often not true.
+        # Instead, we just check that the variance is a valid float.
+        assert isinstance(output_var, (float, np.floating))
+
+
     def test_process_3d_vpm(self):
         """Test PCA amplification on 3D VPM (time series)."""
         # Create test VPM

@@ -6,10 +6,12 @@ This implements ZeroModel's "planet-scale navigation that feels flat" principle:
 "Whether it's 10K docs or a trillion, you descend in dozens of steps, not millions."
 """
 
-from typing import Dict, Any, Tuple
-import numpy as np
-from zeromodel.pipeline.base import PipelineStage
 import logging
+from typing import Any, Dict, Tuple
+
+import numpy as np
+
+from zeromodel.pipeline.base import PipelineStage
 
 logger = logging.getLogger(__name__) 
 

@@ -1,6 +1,9 @@
-import numpy as np
 from typing import Any, Dict, Tuple
+
+import numpy as np
+
 from zeromodel.pipeline.base import PipelineStage
+
 
 class MinMaxNormalizer(PipelineStage):
     name = "minmax"

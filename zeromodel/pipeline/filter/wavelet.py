@@ -7,11 +7,13 @@ This implements ZeroModel's "robust under pressure" principle:
 keep tiles valid as they scale."
 """
 
-from typing import Dict, Any, Tuple
-import numpy as np
-from zeromodel.pipeline.base import PipelineStage
-import pywt
 import logging
+from typing import Any, Dict, Tuple
+
+import numpy as np
+import pywt
+
+from zeromodel.pipeline.base import PipelineStage
 
 logger = logging.getLogger(__name__)
 

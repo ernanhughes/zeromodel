@@ -1,0 +1,24 @@
+# conf/pipeline/explainability.yaml
+stages:
+  - stage: "amplifiers/stdm.STDMAmplifier"
+    params:
+      Kc: 12
+      Kr: 48
+      alpha: 0.97
+  - stage: "organizer/top_left_sort.TopLeftSorter"
+    params:
+      metric: "variance"
+      Kc: 12
+  - stage: "explainability/occlusion.OcclusionExplainer"
+    params:
+      patch_h: 8
+      patch_w: 8
+      stride: 4
+      prior: "top_left"
+      context_rows: 32
+      context_cols: 32
+  - stage: "quality/quality_control.QualityControl"
+    params:
+      patch_h: 16
+      patch_w: 16
+      stride: 8

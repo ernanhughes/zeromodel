@@ -6,11 +6,13 @@ This implements ZeroModel's "intelligence lives in the data structure" principle
 by learning the principal components that explain most variance in the data.
 """
 
-from typing import Dict, Any, Tuple
+import logging
+from typing import Any, Dict, Tuple
+
 import numpy as np
 from sklearn.decomposition import PCA
+
 from zeromodel.pipeline.base import PipelineStage
-import logging
 
 logger = logging.getLogger(__name__)
 

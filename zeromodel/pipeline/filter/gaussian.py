@@ -1,7 +1,10 @@
-import numpy as np
 from typing import Any, Dict, Tuple
-from zeromodel.pipeline.base import PipelineStage
+
+import numpy as np
 from scipy.ndimage import gaussian_filter
+
+from zeromodel.pipeline.base import PipelineStage
+
 
 class GaussianFilter(PipelineStage):
     name = "gaussian"

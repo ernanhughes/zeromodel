@@ -1,9 +1,11 @@
 # zeromodel/pipeline/executor.py
 import importlib
-import time
-import numpy as np
-from typing import Any, Dict, List, Tuple
 import logging
+import time
+from typing import Any, Dict, List, Tuple
+
+import numpy as np
+
 from zeromodel.pipeline.base import PipelineStage
 
 logger = logging.getLogger(__name__)

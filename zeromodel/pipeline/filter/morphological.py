@@ -6,10 +6,13 @@ This implements ZeroModel's "symbolic logic in the data" principle:
 Instead of running a neural model, we run fuzzy logic on structured images.
 """
 
-from typing import Dict, Any, Tuple
+from typing import Any, Dict, Tuple
+
 import numpy as np
-from zeromodel.pipeline.base import PipelineStage
 from scipy import ndimage
+
+from zeromodel.pipeline.base import PipelineStage
+
 
 class MorphologicalFilter(PipelineStage):
     """Morphological filter stage for ZeroModel."""

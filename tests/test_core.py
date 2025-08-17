@@ -3,6 +3,9 @@ import numpy as np
 from zeromodel import HierarchicalVPM, ZeroModel
 from zeromodel.config import get_config
 from zeromodel.vpm.encoder import VPMEncoder
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def test_normalization_quantization():
@@ -115,7 +118,9 @@ def test_zeromodel_example():
     # Adjust assertion based on expected sorting logic (descending by metric1)
     # Assuming doc_order reflects the new order [1, 0, 2, 3]
     normalized_test = zeromodel.normalize(score_matrix)
-    expected_first_row = normalized_test[1] # Document 1's data
+    expected_first_row = normalized_test[1] # Document 1's
+    logger.debug(f"Result: {zeromodel.sorted_matrix[0]}")
+    logger.debug(f"Expected: {expected_first_row}")
     assert np.array_equal(zeromodel.sorted_matrix[0], expected_first_row)
     # Add more assertions for other rows if needed
 

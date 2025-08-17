@@ -6,10 +6,12 @@ This implements ZeroModel's "edge ↔ cloud symmetry" principle:
 "The same artifact works everywhere - from microcontrollers to data centers."
 """
 
-from typing import Dict, Any, Tuple
-import numpy as np
-from zeromodel.pipeline.base import PipelineStage
 import logging
+from typing import Any, Dict, Tuple
+
+import numpy as np
+
+from zeromodel.pipeline.base import PipelineStage
 
 logger = logging.getLogger(__name__)
 

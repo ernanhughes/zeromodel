@@ -2,7 +2,7 @@
 import numpy as np
 import logging
 
-from zeromodel.tools.stdm import (
+from zeromodel.vpm.stdm import (
     gamma_operator,
     learn_w,
     top_left_mass,

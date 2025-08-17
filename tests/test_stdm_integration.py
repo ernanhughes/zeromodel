@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from zeromodel.tools.stdm import (curvature_over_time, gamma_operator, learn_w,
+from zeromodel.vpm.stdm import (curvature_over_time, gamma_operator, learn_w,
                                 top_left_mass)
 
 from .utils import save_vpm_montage

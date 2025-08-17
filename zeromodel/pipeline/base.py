@@ -57,11 +57,4 @@ class PipelineStage(ABC):
         if 'provenance' not in context:
             context['provenance'] = []
         return context
-    
-    def _record_provenance(self, context: Dict[str, Any], stage_name: str, params: Dict[str, Any]):
-        """Record stage execution in context provenance."""
-        context['provenance'].append({
-            'stage': stage_name,
-            'params': params,
-            'timestamp': np.datetime64('now')
-        })
+   

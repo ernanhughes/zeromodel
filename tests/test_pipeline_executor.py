@@ -1,9 +1,11 @@
 # Fixed test_pipeline_executor.py
-import pytest
-import numpy as np
 import logging
+
+import numpy as np
+import pytest
+
 from zeromodel.pipeline.executor import PipelineExecutor
-from zeromodel.vpm.stdm import top_left_mass, gamma_operator
+from zeromodel.vpm.stdm import gamma_operator, top_left_mass
 
 logger = logging.getLogger(__name__)
 
@@ -77,13 +79,15 @@ def test_pipeline_executor_end_to_end(Kc, Kr, alpha):
     result, ctx = PipelineExecutor(stages).run(vpm)
 
     # ----- basic checks -----
-    assert "provenance" in ctx and len(ctx["provenance"]) == len(stages)
+    ends = [e for e in ctx["provenance"] if e.get("kind") == "stage_end"]
+    assert len(ends) == len(stages)
     assert tuple(ctx["final_stats"]["vpm_shape"]) == tuple(result.shape)
     assert result.shape == vpm.shape, "Pipeline should preserve the (T,N,M) shape"
 
     # STDM should have exposed learned weights in its metadata
-    stg0_meta = ctx.get("stage_0_metadata", {})
-    assert stg0_meta.get("stage") == "amplifier/stdm.STDMAmplifier"
+    stg0_data = ctx.get("stage_0", {})
+    assert stg0_data.get("stage") == "amplifier/stdm.STDMAmplifier"
+    stg0_meta = stg0_data.get("metadata", {})
     assert "w_star" in stg0_meta and len(stg0_meta["w_star"]) == vpm.shape[-1]
     
     # Check that weights are meaningful (not uniform)

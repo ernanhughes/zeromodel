@@ -1,0 +1,5 @@
+# conf/pipeline/stage/filter/wavelet.yaml
+wavelet: "db4"
+level: 3
+mode: "soft"
+threshold_factor: 2.0

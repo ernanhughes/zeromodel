@@ -1,6 +1,7 @@
-import io
 import importlib.util
+import io
 from pathlib import Path
+
 from PIL import Image
 
 _spec = importlib.util.spec_from_file_location(

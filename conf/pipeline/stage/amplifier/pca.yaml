@@ -1,0 +1,4 @@
+# conf/pipeline/stage/amplifier/pca.yaml
+n_components: 10
+whiten: false
+explained_variance_ratio: 0.95

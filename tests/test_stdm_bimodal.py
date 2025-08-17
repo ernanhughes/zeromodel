@@ -1,13 +1,11 @@
 # tests/test_stdm_bimodal.py
-import numpy as np
 import logging
 
-from zeromodel.vpm.stdm import (
-    gamma_operator,
-    learn_w,
-    top_left_mass,
-    curvature_over_time,  # not used here but handy to keep import consistent
-)
+import numpy as np
+
+from zeromodel.vpm.stdm import \
+    curvature_over_time  # not used here but handy to keep import consistent
+from zeromodel.vpm.stdm import gamma_operator, learn_w, top_left_mass
 
 logger = logging.getLogger(__name__)
 

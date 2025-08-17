@@ -6,10 +6,10 @@ Test cases for resolution independence and precision control features in ZeroMod
 import numpy as np
 
 from zeromodel.core import ZeroModel
-from zeromodel.vpm.logic import (denormalize_vpm, normalize_vpm,
-                                 vpm_query_top_left, vpm_and,
+from zeromodel.vpm.logic import (denormalize_vpm, normalize_vpm, vpm_and,
                                  vpm_concat_horizontal, vpm_concat_vertical,
-                                 vpm_not, vpm_or, vpm_resize)
+                                 vpm_not, vpm_or, vpm_query_top_left,
+                                 vpm_resize)
 
 
 # --- Test Data ---

@@ -2,11 +2,12 @@ import hashlib
 import os
 import struct
 from typing import Dict, List, Tuple
+
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-
 from PIL import Image
 
 OUTPUT_DIR = os.path.join(".", "images")  # Ensure this directory exists or create it

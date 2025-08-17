@@ -1,0 +1,4 @@
+# conf/pipeline/stage/filter/morphological.yaml
+operation: "opening"
+kernel_size: 3
+iterations: 1

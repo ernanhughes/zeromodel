@@ -1,0 +1,5 @@
+# conf/pipeline/stage/filter/fft.yaml
+filter_type: "bandpass"
+low_freq: 0.1
+high_freq: 0.4
+normalize: true

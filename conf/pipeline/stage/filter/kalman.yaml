@@ -1,0 +1,4 @@
+# conf/pipeline/stage/filter/kalman.yaml
+process_noise: 1e-4
+measurement_noise: 1e-2
+initial_estimate_error: 1.0

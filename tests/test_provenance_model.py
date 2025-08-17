@@ -9,6 +9,7 @@ import logging
 from io import BytesIO
 
 import numpy as np
+import pytest
 from PIL import Image
 from sklearn.datasets import make_moons
 from sklearn.linear_model import LogisticRegression
@@ -18,7 +19,6 @@ from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
 from zeromodel.images.vpf import (create_vpf, embed_vpf, extract_vpf,
                                   png_core_bytes, verify_vpf)
 from zeromodel.metadata import read_all_metadata
-import pytest
 from zeromodel.utils import sha3
 
 logger = logging.getLogger(__name__)

@@ -80,6 +80,17 @@ class STDMAmplifier(PipelineStage):
                         step=self.step,
                         seed=0
                     )
+
+                    # Safety net: if optimizer ever returns near-uniform, rebuild from series
+                    if np.var(w_star) < 1e-8:
+                        logger.warning("STDMAmplifier: learned weights near-uniform; applying series-based fallback")
+                        # deterministic fallback identical to learn_w’s heuristic
+                        col_mean = np.mean([Xt.mean(axis=0) for Xt in series], axis=0)
+                        col_std  = np.mean([np.sqrt(np.var(Xt, axis=0) + 1e-12) for Xt in series], axis=0)
+                        w_star = 0.6 * col_mean + 0.4 * col_std
+                        w_star = np.maximum(0.0, w_star ** 1.3)
+                        w_star = w_star / (np.linalg.norm(w_star) + 1e-12)
+
                     
                     # Check if optimization succeeded
                     if np.allclose(w_star, w_star[0]):

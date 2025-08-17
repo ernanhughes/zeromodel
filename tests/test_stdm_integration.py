@@ -1,5 +1,7 @@
-import numpy as np
 import logging
+
+import numpy as np
+
 from zeromodel.vpm.stdm import (curvature_over_time, gamma_operator, learn_w,
                                 top_left_mass)
 

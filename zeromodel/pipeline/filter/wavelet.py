@@ -1,19 +1,19 @@
-# zeromodel/pipeline/filter/wavelet.py
+# zeromodel/pipeline/stages/filters/wavelet.py
 """
-Wavelet filter for ZeroModel.
+Wavelet filter stage for ZeroModel.
 
 This implements ZeroModel's "robust under pressure" principle:
 "Versioned headers, spillover-safe metadata, and explicit logical width vs physical padding
 keep tiles valid as they scale."
 """
 
-from typing import Any, Dict, Tuple
-
+from typing import Dict, Any, Tuple
 import numpy as np
-import pywt
-
 from zeromodel.pipeline.base import PipelineStage
+import pywt
+import logging
 
+logger = logging.getLogger(__name__)
 
 class WaveletFilter(PipelineStage):
     """Wavelet filter stage for ZeroModel."""
@@ -26,6 +26,7 @@ class WaveletFilter(PipelineStage):
         self.wavelet = params.get("wavelet", "haar")
         self.level = params.get("level", 3)
         self.mode = params.get("mode", "soft")
+        self.threshold_factor = params.get("threshold_factor", 2.0)
     
     def validate_params(self):
         """Validate wavelet parameters."""
@@ -33,6 +34,8 @@ class WaveletFilter(PipelineStage):
             raise ValueError("level must be positive")
         if self.mode not in ["soft", "hard"]:
             raise ValueError("mode must be 'soft' or 'hard'")
+        if self.threshold_factor <= 0:
+            raise ValueError("threshold_factor must be positive")
     
     def process(self, 
                 vpm: np.ndarray, 
@@ -43,50 +46,69 @@ class WaveletFilter(PipelineStage):
         This removes noise while preserving important signal features.
         """
         context = self._get_context(context)
-       
+        
         # Handle different VPM dimensions
         if vpm.ndim == 2:
             # Single matrix
-            coeffs = pywt.wavedec2(vpm, self.wavelet, level=self.level)
-            
-            # Apply thresholding
-            threshold = np.std(coeffs[-1]) * np.sqrt(2 * np.log(vpm.size))
-            coeffs = [pywt.threshold(c, threshold, mode=self.mode) for c in coeffs]
-            
-            # Reconstruct
-            processed_vpm = pywt.waverec2(coeffs, self.wavelet)
-            
+            processed_vpm = self._process_single(vpm)
         elif vpm.ndim == 3:
             # Time series - apply to each frame
-            processed_frames = []
-            for t in range(vpm.shape[0]):
-                coeffs = pywt.wavedec2(vpm[t], self.wavelet, level=self.level)
-                threshold = np.std(coeffs[-1]) * np.sqrt(2 * np.log(vpm[t].size))
-                coeffs = [pywt.threshold(c, threshold, mode=self.mode) for c in coeffs]
-                frame = pywt.waverec2(coeffs, self.wavelet)
-                processed_frames.append(frame)
-            
+            processed_frames = [self._process_single(vpm[t]) for t in range(vpm.shape[0])]
             processed_vpm = np.stack(processed_frames, axis=0)
-            
         else:
             raise ValueError(f"VPM must be 2D or 3D, got {vpm.ndim}D")
         
-        # Ensure same shape as input
-        if processed_vpm.shape != vpm.shape:
-            # Crop or pad to match
-            slices = tuple(slice(0, min(s1, s2)) for s1, s2 in zip(processed_vpm.shape, vpm.shape))
-            processed_vpm = processed_vpm[slices]
-            # Pad if necessary
-            pad_width = [(0, max(0, s2-s1)) for s1, s2 in zip(processed_vpm.shape, vpm.shape)]
-            processed_vpm = np.pad(processed_vpm, pad_width, mode='constant')
+        # Calculate diagnostics
+        input_energy = np.sum(vpm ** 2)
+        output_energy = np.sum(processed_vpm ** 2)
+        energy_ratio = output_energy / (input_energy + 1e-12)
         
         metadata = {
             "wavelet": self.wavelet,
             "level": self.level,
             "mode": self.mode,
+            "threshold_factor": self.threshold_factor,
             "input_shape": vpm.shape,
             "output_shape": processed_vpm.shape,
+            "energy_ratio": float(energy_ratio),
             "denoising_applied": True
         }
         
         return processed_vpm, metadata
+    
+    def _process_single(self, matrix: np.ndarray) -> np.ndarray:
+        """Apply wavelet denoising to a single matrix."""
+        try:
+            # Apply wavelet transform
+            coeffs = pywt.wavedec2(matrix, self.wavelet, level=self.level)
+            
+            # Calculate threshold based on noise level
+            if coeffs and len(coeffs) > 1:
+                # Use the detail coefficients to estimate noise
+                noise_std = np.std(coeffs[-1])
+                threshold = self.threshold_factor * noise_std * np.sqrt(2 * np.log(matrix.size))
+            else:
+                threshold = 0.1  # Fallback threshold
+            
+            # Apply thresholding
+            if self.mode == "soft":
+                coeffs = [pywt.threshold(c, threshold, mode='soft') for c in coeffs]
+            else:  # hard
+                coeffs = [pywt.threshold(c, threshold, mode='hard') for c in coeffs]
+            
+            # Reconstruct
+            denoised = pywt.waverec2(coeffs, self.wavelet)
+            
+            # Ensure same shape as input
+            if denoised.shape != matrix.shape:
+                # Crop or pad to match
+                slices = tuple(slice(0, min(s1, s2)) for s1, s2 in zip(denoised.shape, matrix.shape))
+                denoised = denoised[slices]
+                pad_width = [(0, max(0, s2-s1)) for s1, s2 in zip(denoised.shape, matrix.shape)]
+                denoised = np.pad(denoised, pad_width, mode='constant')
+            
+            return denoised
+            
+        except Exception as e:
+            logger.warning(f"Wavelet filtering failed: {e}, returning original")
+            return matrix

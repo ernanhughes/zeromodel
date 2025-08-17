@@ -1,15 +1,15 @@
 # tests/test_vpm_logic_operations.py
 
-import numpy as np
 from pathlib import Path
-from .utils import save_vpm_image
 
-from zeromodel.vpm.logic import (
-    vpm_and, vpm_or, vpm_not, vpm_xor, 
-    vpm_nand, vpm_nor, vpm_add, vpm_subtract,
-    vpm_query_top_left
-)
+import numpy as np
+
 from zeromodel.core import ZeroModel
+from zeromodel.vpm.logic import (vpm_add, vpm_and, vpm_nand, vpm_nor, vpm_not,
+                                 vpm_or, vpm_query_top_left, vpm_subtract,
+                                 vpm_xor)
+
+from .utils import save_vpm_image
 
 # Test configuration
 OUTPUT_DIR = Path("test_outputs")

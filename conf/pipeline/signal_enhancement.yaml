@@ -1,0 +1,20 @@
+# conf/pipeline/signal_enhancement.yaml
+stages:
+  - stage: "filter/wavelet.WaveletFilter"
+    params:
+      wavelet: "db4"
+      level: 3
+      mode: "soft"
+  - stage: "amplifier/pca.PCAAmplifier"
+    params:
+      n_components: 10
+      explained_variance_ratio: 0.95
+  - stage: "filter/fft.FFTFilter"
+    params:
+      filter_type: "bandpass"
+      low_freq: 0.1
+      high_freq: 0.4
+  - stage: "organizer/top_left_sort.TopLeftSorter"
+    params:
+      metric: "variance"
+      Kc: 12

@@ -349,11 +349,11 @@ class ZeroModel:
                 rel = float(np.mean(self.sorted_matrix[:h, col_idx]))
             except Exception:
                 rel = 0.0
-            return (top_doc, rel)
+            return top_doc, rel
         reader = self._get_vpm_reader()
         perm = reader.virtual_order(metric_idx=metric_idx, descending=True, top_k=context_size)
         if len(perm) == 0:
-            return (0, 0.0)
+            return 0, 0.0
         top_doc = int(perm[0])
         try:
             tile = reader.get_virtual_view(metric_idx=metric_idx, x=0, y=0, width=context_size, height=1)
@@ -367,7 +367,7 @@ class ZeroModel:
             rel = float(np.mean(tile[0, :, 0]) / 65535.0) if tile.size > 0 else 0.0
         except Exception:
             rel = 0.0
-        return (top_doc, rel)
+        return top_doc, rel
 
     # ---- Shared utilities from previous implementation ----
     def normalize(self, score_matrix: np.ndarray) -> np.ndarray:

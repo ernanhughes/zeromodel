@@ -218,7 +218,7 @@ class OcclusionVPMInterpreter:
         """
         if np.issubdtype(vpm.dtype, np.floating):
             return vpm.astype(np.float32, copy=False)
-        return (vpm.astype(np.float32) / 255.0)
+        return vpm.astype(np.float32) / 255.0
 
     # -------------------- Public API --------------------
 

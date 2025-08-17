@@ -389,7 +389,7 @@ class ZeroMemory:
 
             # 3. Predictiveness vs target (if provided)
             pred_score = 0.0
-            if target_idx is not None and target_idx < M and j != target_idx:
+            if target_idx is not None and M > target_idx != j:
                 target_series = recent_values[:, target_idx]
                 # Align series by finite mask of both
                 joint_finite_mask = finite_mask & np.isfinite(target_series)
@@ -1025,7 +1025,7 @@ class ZeroMemory:
         if vals.shape[0] == 0:
             return np.empty((0,), dtype=np.float32)
         s = vals[:, idx]
-        if window > 0 and s.size > window:
+        if 0 < window < s.size:
             s = s[-window:]
         # sanitize
         s = np.nan_to_num(s, nan=0.0, posinf=1e6, neginf=-1e6).astype(np.float32)

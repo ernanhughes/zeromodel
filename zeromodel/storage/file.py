@@ -1,5 +1,6 @@
 # zeromodel/storage/file.py
 import os
+from typing import Optional
 
 from .base import StorageBackend
 

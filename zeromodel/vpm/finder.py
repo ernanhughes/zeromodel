@@ -69,7 +69,7 @@ class VPMFinder:
                 raise ValueError("Not a PNG")
 
             md_bytes = b""
-            width = height = None
+            width = None
             while True:
                 hdr = f.read(8)
                 if len(hdr) < 8:

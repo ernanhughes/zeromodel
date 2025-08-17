@@ -23,7 +23,7 @@ class EdgeProtocol:
     - Works with tiny memory constraints
     - Requires minimal processing
     - Survives network transmission
-    - Enables zero-model decision making
+    - Enables zero-model decision-making
     
     Designed to work with as little as 180 bytes of code on the device.
     """

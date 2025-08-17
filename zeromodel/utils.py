@@ -20,7 +20,6 @@ __all__ = [
     "quantize",
     "dct",
     "idct",
-    "embed_vpf",
 ]
 
 
@@ -144,3 +143,4 @@ def png_to_gray_array(png_bytes: bytes) -> np.ndarray:
         im = im.convert("L")
         arr = np.array(im, dtype=np.uint8)
     return arr
+

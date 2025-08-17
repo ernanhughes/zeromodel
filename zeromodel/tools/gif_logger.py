@@ -72,7 +72,8 @@ class GifLogger:
             xs = np.linspace(0, w-1, num=len(vals))
             pts = []
             for x, v in zip(xs, vals):
-                if np.isnan(v): continue
+                if np.isnan(v):
+                    continue
                 y = int(y0 + (1.0 - v) * (self.strip_h/3 - 6))
                 pts.append((int(x), y))
             if len(pts) > 1:
@@ -104,7 +105,7 @@ class GifLogger:
             raise RuntimeError("No frames added.")
         # Compose panels (can decimate if too many)
         panels = []
-        stride = max(1, len(self.frames) // (self.max_frames))
+        stride = max(1, len(self.frames) // self.max_frames)
         for i in range(0, len(self.frames), stride):
             panels.append(self._compose_panel(self.frames[i], self.meta[:i+1]))
 

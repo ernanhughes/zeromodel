@@ -151,7 +151,7 @@ class VPMPyramidBuilder:
                 compression=self.compression,
             )
 
-        return (M, P_logical)
+        return M, P_logical
 
     def build_chain(
         self,

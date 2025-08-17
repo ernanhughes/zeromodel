@@ -1,9 +1,7 @@
 # tests/test_vpm_logic_operations.py
 
 import numpy as np
-import pytest
 from PIL import Image
-import os
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -13,8 +11,6 @@ from zeromodel.vpm.logic import (
     vpm_query_top_left
 )
 from zeromodel.core import ZeroModel
-from zeromodel.vpm.encoder import VPMEncoder
-from zeromodel.config import get_config
 
 # Test configuration
 OUTPUT_DIR = Path("test_outputs")

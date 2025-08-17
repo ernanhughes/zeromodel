@@ -20,7 +20,6 @@ import zlib
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from PIL import Image
 
 from zeromodel.core import ZeroModel
 from zeromodel.images import create_vpf, extract_vpf
@@ -106,7 +105,7 @@ class HierarchicalVPM:
 
         # Level metadata - will be populated during processing
         self.levels: List[Optional[Dict[str, Any]]] = [None] * num_levels
-
+        self._task = None
         # System metadata
         self.metadata: Dict[str, Any] = {
             "version": "1.0",
@@ -649,16 +648,16 @@ class HierarchicalVPM:
         next_x = _scale_to_child(top_doc, h, self.zoom_factor)
         next_y = _scale_to_child(top_metric, w, self.zoom_factor)
 
-        return (next_level, next_x, next_y, critical_value)
+        return next_level, next_x, next_y, critical_value
 
     def _extract_decision(self, png_bytes: bytes) -> Tuple[int, float]:
         gray = png_to_gray_array(png_bytes)     # (H, W) uint8
         if gray.ndim != 2 or gray.size == 0:
-            return (0, 0.0)
+            return 0, 0.0
 
         y, x = np.unravel_index(np.argmax(gray), gray.shape)
         rel = float(gray[y, x]) / 255.0
-        return (int(y), rel)  # y is the document index in this context
+        return int(y), rel  # y is the document index in this context
 
     def get_tile(
         self,
@@ -719,15 +718,15 @@ class HierarchicalVPM:
 
         path = self.navigate(start_level=level_index)
         if not path:
-            return (0, 0, 0.0)
+            return 0, 0, 0.0
 
         final_step = path[-1]
         # If we reached base level and extracted a decision, use it
         if "decision" in final_step:
-            return (final_step["level"], int(final_step["decision"]), float(final_step["relevance"]))
+            return final_step["level"], int(final_step["decision"]), float(final_step["relevance"])
 
         # Otherwise, we didn't reach the decision tile; fall back to a safe default
-        return (final_step["level"], 0, float(final_step["relevance"]))
+        return final_step["level"], 0, float(final_step["relevance"])
 
     def get_metadata(self) -> Dict[str, Any]:
         """Get complete metadata for the hierarchical map."""

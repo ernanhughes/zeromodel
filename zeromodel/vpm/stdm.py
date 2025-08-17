@@ -44,11 +44,7 @@ def learn_w(series: List[np.ndarray], Kc: int, Kr: int,
     w0 = np.ones(M, dtype=np.float64) / np.sqrt(M)
 
     # Prefer SciPy optimizer if available; fallback to projected ascent
-    try:
-        from scipy.optimize import minimize
-        SCIPY = True
-    except Exception:
-        SCIPY = False
+    from scipy.optimize import minimize
 
     def _project(w):
         w = np.maximum(0.0, w)
@@ -58,19 +54,15 @@ def learn_w(series: List[np.ndarray], Kc: int, Kr: int,
     def _u_for(w, Xt):
         return w if u_mode == "mirror_w" else Xt.mean(axis=0)
 
-    if SCIPY:
-        def objective(w_raw):
-            w = _project(w_raw)
-            val = 0.0
-            for Xt in series:
-                u_t = _u_for(w, Xt)
-                Yt, _, _ = phi_transform(Xt, u_t, w, Kc)
-                val += top_left_mass(Yt, Kr, Kc, alpha)
-            val -= l2 * float(w @ w)
-            return -val
-        bounds = [(0.0, None)] * M
-        res = minimize(objective, w0, method="L-BFGS-B", bounds=bounds, options={"maxiter": 300})
-        return _project(res.x)
+    def objective(w_raw):
+        w = _project(w_raw)
+        val = 0.0
+        for Xt in series:
+            u_t = _u_for(w, Xt)
+            Yt, _, _ = phi_transform(Xt, u_t, w, Kc)
+            val += top_left_mass(Yt, Kr, Kc, alpha)
+        val -= l2 * float(w @ w)
+        return -val
 
     # ---- Fallback: projected finite-difference ascent ----
     w = w0.copy()
@@ -132,4 +124,4 @@ def critical_mask(Y: np.ndarray, theta: float = 0.8) -> np.ndarray:
     m = Y.max()
     if m <= 0: 
         return np.zeros_like(Y, dtype=bool)
-    return (Y >= theta * m)
+    return Y >= theta * m

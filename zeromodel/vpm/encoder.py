@@ -16,6 +16,7 @@ from typing import Optional
 import numpy as np
 
 from zeromodel.constants import PRECISION_DTYPE_MAP
+from zeromodel.vpm.logic import denormalize_vpm
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +102,7 @@ class VPMEncoder:
         except ValueError as e:
             raise ValueError(f"Reshape failed: {matrix.shape} → ({n_docs}, {width}, 3)") from e
         
-        # --- Precision Conversion ---
         try:
-            # Attempt optimized conversion if available
-            from .logic import denormalize_vpm
             img = denormalize_vpm(img_data, output_type=target_dtype)
         except ImportError:
             # Fallback conversion

@@ -33,7 +33,7 @@ setup(
         "PyWavelets>=1.1.1",
         "pyyaml",
         "duckdb>=0.6.2",
-        "pypng>=0.20210329"
+        "pypng>=0.20210329", 'pyarrow', 'scipy', 'pillow', 'boto3'
     ],
     extras_require={
         "dev": [

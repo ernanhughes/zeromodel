@@ -1,11 +1,31 @@
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from .base import BaseOrganizationStrategy
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_spec(spec: str):
+    if not spec:
+        return []
+    if spec.strip().lower().startswith("select "):
+        return []
+    priorities = []
+    for token in spec.split(","):
+        t = token.strip()
+        if not t:
+            continue
+        parts = t.split()
+        metric = parts[0]
+        direction = "DESC"
+        if len(parts) > 1 and parts[1].upper() in ("ASC", "DESC"):
+            direction = parts[1].upper()
+        priorities.append((metric, direction))
+    return priorities
+
 
 class MemoryOrganizationStrategy(BaseOrganizationStrategy):
     """In-memory (non-SQL) organization."""
@@ -19,25 +39,7 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
 
     def set_task(self, spec: str):
         self._spec = spec or ""
-        self._parsed_metric_priority = self._parse_spec(self._spec)
-
-    def _parse_spec(self, spec: str):
-        if not spec:
-            return []
-        if spec.strip().lower().startswith("select "):
-            return []
-        priorities = []
-        for token in spec.split(","):
-            t = token.strip()
-            if not t:
-                continue
-            parts = t.split()
-            metric = parts[0]
-            direction = "DESC"
-            if len(parts) > 1 and parts[1].upper() in ("ASC", "DESC"):
-                direction = parts[1].upper()
-            priorities.append((metric, direction))
-        return priorities
+        self._parsed_metric_priority = _parse_spec(self._spec)
 
     def organize(self, matrix: np.ndarray, metric_names: List[str]):
         name_to_idx = {n: i for i, n in enumerate(metric_names)}

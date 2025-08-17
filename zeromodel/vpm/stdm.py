@@ -1,23 +1,80 @@
 # zeromodel/stdm.py
 from typing import Callable, List, Tuple
-import logging
 import numpy as np
 
-logger = logging.getLogger(__name__)
+# ---------- Core: ordering & scoring ----------
+
+def top_left_mass(Y: np.ndarray, Kr: int, Kc: int, alpha: float = 0.95) -> float:
+    """
+    Weighted sum of the top-left Kr×Kc block with exponential decay from the corner.
+    """
+    if Y.ndim != 2:
+        raise ValueError(f"Y must be 2D, got {Y.ndim}D")
+
+    Kr = max(0, min(Kr, Y.shape[0]))
+    Kc = max(0, min(Kc, Y.shape[1]))
+    if Kr == 0 or Kc == 0:
+        return 0.0
+
+    block = Y[:Kr, :Kc]
+    weights = alpha ** (np.add.outer(np.arange(Kr), np.arange(Kc)))
+    return float((block * weights).sum())
 
 
 def order_columns(X: np.ndarray, u: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    idx = np.argsort(-u)  # descending interest
+    """
+    Sort columns (metrics) by descending 'interest' vector u.
+    Returns (column_indices, X_sorted_by_columns).
+    """
+    if X.ndim != 2:
+        raise ValueError(f"X must be 2D, got {X.ndim}D")
+    if u.shape[0] != X.shape[1]:
+        raise ValueError(f"u length ({u.shape[0]}) must match X columns ({X.shape[1]})")
+
+    idx = np.argsort(-u)  # descending
     return idx, X[:, idx]
 
 
-def order_rows(
-    Xc: np.ndarray, w_aligned: np.ndarray, Kc: int
-) -> Tuple[np.ndarray, np.ndarray]:
-    Kc = min(Kc, Xc.shape[1])
+def order_rows(Xc: np.ndarray, w_aligned: np.ndarray, Kc: int) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Sort rows (documents) by weighted relevance using the first Kc columns of Xc
+    with the correspondingly-aligned weights.
+    """
+    if Xc.ndim != 2:
+        raise ValueError(f"Xc must be 2D, got {Xc.ndim}D")
+    if w_aligned.shape[0] != Xc.shape[1]:
+        raise ValueError(f"w_aligned length ({w_aligned.shape[0]}) must match Xc columns ({Xc.shape[1]})")
+
+    Kc = max(0, min(Kc, Xc.shape[1]))
+    if Kc == 0:
+        ridx = np.arange(Xc.shape[0])
+        return ridx, Xc
+
     r = Xc[:, :Kc] @ w_aligned[:Kc]
-    ridx = np.argsort(-r)
+    ridx = np.argsort(-r)  # descending relevance
     return ridx, Xc[ridx, :]
+
+
+def phi_transform(
+    X: np.ndarray, u: np.ndarray, w: np.ndarray, Kc: int
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Dual ordering:
+      1) Columns by u (descending)
+      2) Rows by relevance under aligned w on top-Kc columns
+    Returns (Y, row_indices, col_indices).
+    """
+    if X.ndim != 2:
+        raise ValueError(f"X must be 2D, got {X.ndim}D")
+    if u.shape[0] != X.shape[1]:
+        raise ValueError(f"u length ({u.shape[0]}) must match X columns ({X.shape[1]})")
+    if w.shape[0] != X.shape[1]:
+        raise ValueError(f"w length ({w.shape[0]}) must match X columns ({X.shape[1]})")
+
+    cidx, Xc = order_columns(X, u)
+    w_aligned = w[cidx]
+    ridx, Y = order_rows(Xc, w_aligned, Kc)
+    return Y, ridx, cidx
 
 
 def gamma_operator(
@@ -26,6 +83,11 @@ def gamma_operator(
     w: np.ndarray,
     Kc: int,
 ) -> Tuple[List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
+    """
+    Apply phi_transform to each time slice in 'series' with time-varying u = u_fn(t, Xt),
+    and fixed w and Kc.
+    Returns lists of (Y_t, col_order_t, row_order_t).
+    """
     Ys, col_orders, row_orders = [], [], []
     for t, Xt in enumerate(series):
         u_t = u_fn(t, Xt)
@@ -37,10 +99,6 @@ def gamma_operator(
 
 
 # ---------- Learning: weight vector to maximize TL ----------
-
-
-# zeromodel/stdm.py - FIXED VERSION
-
 
 def learn_w(
     series: List[np.ndarray],
@@ -54,185 +112,96 @@ def learn_w(
     seed: int = 0,
 ) -> np.ndarray:
     """
-    Learn metric weights that maximize top-left concentration in VPMs.
+    Learn a nonnegative, L2-normalized weight vector w (len = M) that
+    maximizes the sum over time of top_left_mass(phi_transform(X_t; u_t, w, Kc), Kr, Kc, alpha)
+    minus l2*||w||^2 regularization.
 
-    FIXED: Proper convergence, efficient gradient calculation, and correct objective.
+    Uses SciPy L-BFGS-B if available; otherwise falls back to projected
+    finite-difference ascent.
     """
     rng = np.random.default_rng(seed)
     M = series[0].shape[1]
     w0 = np.ones(M, dtype=np.float64) / np.sqrt(M)
 
-    def _project(w):
-        """Project weights to valid range and normalize"""
+    def _project(w: np.ndarray) -> np.ndarray:
         w = np.maximum(0.0, w)
         n = np.linalg.norm(w) + 1e-12
         return w / n
 
-    def _u_for(w, Xt):
-        """Calculate task weights based on mode"""
-        return w if u_mode == "mirror_w" else Xt.mean(axis=0)
+    def _u_for(w: np.ndarray, Xt: np.ndarray) -> np.ndarray:
+        if u_mode == "mirror_w":
+            return w
+        elif u_mode == "mean":
+            return Xt.mean(axis=0)
+        else:
+            # default to mirror behavior for unknown modes
+            return w
 
-    def objective(w_raw):
-        """Calculate objective: maximize top-left mass minus regularization"""
+    def _objective(w_raw: np.ndarray) -> float:
+        # Project to feasible set (nonnegative, unit norm)
         w = _project(w_raw)
-        total_mass = 0.0
-
-        # Calculate total top-left mass across all time steps
+        total = 0.0
         for Xt in series:
             u_t = _u_for(w, Xt)
-            try:
-                Yt, _, _ = phi_transform(Xt, u_t, w, Kc)
-                mass = top_left_mass(Yt, Kr, Kc, alpha)
-                total_mass += mass
-            except Exception as e:
-                logger.warning(f"phi_transform failed: {e}")
-                continue
+            Yt, _, _ = phi_transform(Xt, u_t, w, Kc)
+            total += top_left_mass(Yt, Kr, Kc, alpha)
+        total -= l2 * float(w @ w)
+        # We MINIMIZE in optimizers, so return negative of what we maximize
+        return -total
 
-        # Apply L2 regularization
-        reg = l2 * float(w @ w)
-        return -(total_mass - reg)  # Minimize negative = maximize positive
-
-    # Use scipy optimizer if available (much more efficient)
+    # ---- Try SciPy optimizer for speed/robustness ----
     try:
         from scipy.optimize import minimize
 
-        logger.debug("Using scipy optimizer for weight learning")
+        # L-BFGS-B with nonnegativity bounds; we'll still project inside objective
+        bounds = [(0.0, None)] * M
 
-        result = minimize(objective, w0, method="L-BFGS-B", options={"maxiter": iters})
+        res = minimize(
+            _objective,
+            w0,
+            method="L-BFGS-B",
+            bounds=bounds,
+            options={"maxiter": int(iters), "ftol": 1e-10},
+        )
+        w_opt = _project(res.x if res.success else w0)
+        return w_opt
+    except Exception:
+        # SciPy not present or failed → manual fallback
+        pass
 
-        if result.success:
-            logger.info(f"Weight learning converged in {result.nit} iterations")
-            return _project(result.x)
-        else:
-            logger.warning("Scipy optimization failed, falling back to manual method")
-    except ImportError:
-        logger.debug("Scipy not available, using manual gradient ascent")
-
-    # Fallback: projected finite-difference ascent with proper batching
+    # ---- Manual fallback: projected finite-difference ascent ----
     w = w0.copy()
-    logger.debug(f"Starting manual gradient ascent with {iters} iterations")
+    eps = 1e-4
 
-    for iteration in range(iters):
-        # Batch gradient calculation for efficiency
+    for _ in range(iters):
+        # central-difference gradient over the whole series (batched objective)
         grad = np.zeros_like(w)
-        base_objective = objective(w)
-
-        # Calculate gradient using central differences
-        eps = 1e-4
+        # We compute a symmetric FD per dimension (still O(M) objectives).
         for j in range(M):
-            w_plus = w.copy()
-            w_plus[j] += eps
-            w_minus = w.copy()
-            w_minus[j] -= eps
+            w_plus = w.copy();  w_plus[j] += eps
+            w_minus = w.copy(); w_minus[j] -= eps
+            f_plus = _objective(w_plus)
+            f_minus = _objective(w_minus)
+            # d/dw_j of (-total) ≈ (f_plus - f_minus)/(2*eps)
+            # ascent on total ⇒ descent on objective ⇒ w = w - step*grad_f
+            grad[j] = (f_plus - f_minus) / (2.0 * eps)
 
-            obj_plus = objective(w_plus)
-            obj_minus = objective(w_minus)
-            grad[j] = (obj_minus - obj_plus) / (2 * eps)
-
-        # Update weights
-        w = w + step * grad
+        # Gradient step to DECREASE objective (i.e., INCREASE total)
+        w = w - step * grad
         w = _project(w)
 
-        # Log progress every 20 iterations
-        if iteration % 20 == 0:
-            current_obj = objective(w)
-            logger.debug(f"Iteration {iteration}: objective={-current_obj:.4f}")
-
-    final_obj = objective(w)
-    logger.info(f"Manual gradient ascent completed: final objective={-final_obj:.4f}")
-    return _project(w)
-
-
-# Also fix the phi_transform function to handle edge cases properly
-def phi_transform(
-    X: np.ndarray, u: np.ndarray, w: np.ndarray, Kc: int
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Apply dual-ordering transformation to concentrate signal in top-left.
-
-    FIXED: Better handling of edge cases and proper alignment.
-    """
-    # Validate inputs
-    if X.size == 0:
-        return X, np.array([]), np.array([])
-
-    # Ensure proper shapes
-    if X.ndim != 2:
-        raise ValueError(f"X must be 2D, got {X.ndim}D")
-
-    n_docs, n_metrics = X.shape
-    if len(u) != n_metrics:
-        raise ValueError(f"u length ({len(u)}) must match X columns ({n_metrics})")
-    if len(w) != n_metrics:
-        raise ValueError(f"w length ({len(w)}) must match X columns ({n_metrics})")
-
-    # Step 1: Sort columns (metrics) by interest (u)
-    cidx = np.argsort(-u)  # descending interest
-    Xc = X[:, cidx]
-
-    # Step 2: Sort rows (documents) by weighted intensity of top-Kc columns
-    Kc_actual = min(Kc, Xc.shape[1])
-    if Kc_actual == 0:
-        ridx = np.arange(n_docs)
-        return Xc, ridx, cidx
-
-    # Calculate weighted document relevance
-    w_aligned = w[cidx]  # Align weights with sorted columns
-    try:
-        r = Xc[:, :Kc_actual] @ w_aligned[:Kc_actual]
-    except Exception as e:
-        logger.warning(f"Matrix multiplication failed: {e}, using fallback")
-        r = np.sum(Xc[:, :Kc_actual] * w_aligned[:Kc_actual], axis=1)
-
-    ridx = np.argsort(-r)  # descending relevance
-
-    # Step 3: Create final organized matrix
-    Y = Xc[ridx, :]
-
-    return Y, ridx, cidx
-
-
-# Fix top_left_mass to handle edge cases
-def top_left_mass(Y: np.ndarray, Kr: int, Kc: int, alpha: float = 0.95) -> float:
-    """
-    Calculate weighted sum of top-left Kr×Kc block with spatial decay.
-
-    FIXED: Proper handling of small matrices and edge cases.
-    """
-    if Y.size == 0:
-        return 0.0
-
-    if Y.ndim != 2:
-        raise ValueError(f"Y must be 2D, got {Y.ndim}D")
-
-    # Handle matrices smaller than requested region
-    actual_Kr = min(Kr, Y.shape[0])
-    actual_Kc = min(Kc, Y.shape[1])
-
-    if actual_Kr == 0 or actual_Kc == 0:
-        return 0.0
-
-    # Extract the critical region
-    critical_region = Y[:actual_Kr, :actual_Kc]
-
-    # Create decay matrix with exponential decay from top-left
-    rows = np.arange(actual_Kr)[:, None]
-    cols = np.arange(actual_Kc)[None, :]
-    decay_matrix = alpha ** (rows + cols)
-
-    # Calculate weighted sum
-    mass = float(np.sum(critical_region * decay_matrix))
-
-    return mass
+    return w
 
 
 # ---------- Metric graph & canonical layout ----------
 
-
 def metric_graph(col_orders: List[np.ndarray], tau: float = 8.0) -> np.ndarray:
+    """
+    Build an affinity between metrics from the per-time column orders.
+    """
     M = col_orders[0].size
     T = len(col_orders)
-    positions = [np.empty(M, int) for _ in range(T)]
+    positions = [np.empty(M, dtype=int) for _ in range(T)]
     for t, cidx in enumerate(col_orders):
         positions[t][cidx] = np.arange(M)
 
@@ -248,6 +217,9 @@ def metric_graph(col_orders: List[np.ndarray], tau: float = 8.0) -> np.ndarray:
 
 
 def canonical_layout(W: np.ndarray) -> np.ndarray:
+    """
+    Spectral layout of metrics: Fiedler vector of Laplacian(W).
+    """
     d = W.sum(axis=1)
     L = np.diag(d) - W
     vals, vecs = np.linalg.eigh(L)
@@ -257,20 +229,48 @@ def canonical_layout(W: np.ndarray) -> np.ndarray:
 
 # ---------- Diagnostics: curvature & critical region ----------
 
-
 def curvature_over_time(Ys: List[np.ndarray]) -> np.ndarray:
-    """‖second finite difference‖_F per time; length T."""
+    """
+    Second finite-difference Frobenius norm across time steps (length T).
+    """
     T = len(Ys)
     curv = np.zeros(T, dtype=np.float64)
     if T < 3:
         return curv
     for t in range(1, T - 1):
-        curv[t] = np.linalg.norm(Ys[t + 1] - 2 * Ys[t] + Ys[t - 1])
+        curv[t] = np.linalg.norm(Ys[t + 1] - 2.0 * Ys[t] + Ys[t - 1])
     return curv
 
 
 def critical_mask(Y: np.ndarray, theta: float = 0.8) -> np.ndarray:
+    """
+    Threshold a matrix at a fraction of its max; returns boolean mask.
+    """
+    if Y.size == 0:
+        return np.zeros_like(Y, dtype=bool)
     m = Y.max()
     if m <= 0:
         return np.zeros_like(Y, dtype=bool)
-    return Y >= theta * m
+    return Y >= (theta * m)
+
+
+# ---------- Optional: normalized TL metric (not used by existing tests) ----------
+
+def top_left_mass_norm(Y: np.ndarray, Kr: int, Kc: int, alpha: float = 0.95) -> float:
+    """
+    Column-normalized variant of TL mass to reduce energy bias toward wide/high-energy columns.
+    Keep signature separate to avoid breaking callers that expect raw TL mass.
+    """
+    if Y.ndim != 2:
+        raise ValueError(f"Y must be 2D, got {Y.ndim}D")
+
+    Kr = max(0, min(Kr, Y.shape[0]))
+    Kc = max(0, min(Kc, Y.shape[1]))
+    if Kr == 0 or Kc == 0:
+        return 0.0
+
+    col_norm = np.maximum(np.linalg.norm(Y, ord=1, axis=0), 1e-12)
+    Yn = Y / col_norm
+    block = Yn[:Kr, :Kc]
+    weights = alpha ** (np.add.outer(np.arange(Kr), np.arange(Kc)))
+    return float((block * weights).sum())

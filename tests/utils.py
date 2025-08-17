@@ -51,8 +51,8 @@ def save_vpm_image(vpm, title: str, filename: str):
     plt.colorbar(label='Normalized Score')
     plt.xlabel('Metrics (sorted)')
     plt.ylabel('Documents (sorted)')
-    
-    filepath = OUTPUT_DIR / filename
+
+    filepath = os.path.join(OUTPUT_DIR, filename)
     plt.savefig(filepath, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"Saved VPM image: {filepath}")
@@ -126,7 +126,8 @@ def save_vpm_montage(Y_list: list, title: str, filename: str):
     fig.colorbar(im, cax=cbar_ax, label='Mass')
     
     plt.tight_layout(rect=[0, 0, 0.85, 1])
-    plt.savefig(filename)
+    filepath = os.path.join(OUTPUT_DIR, filename)
+    plt.savefig(filepath)
     plt.close()
 
 

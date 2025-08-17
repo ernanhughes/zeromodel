@@ -259,7 +259,7 @@ class VPMImageWriter:
         # first row (start at col 7)
         while idx < L and col < self.D:
             w_g = pack2(idx, idx+1); idx += 2
-            w_b = pack2(idx, idx+1); idx += Phone
+            w_b = pack2(idx, idx+1); idx += 2
             write_pair(row, col, w_g, w_b)
             col += 1
 

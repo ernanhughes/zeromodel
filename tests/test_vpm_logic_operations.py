@@ -1,9 +1,8 @@
 # tests/test_vpm_logic_operations.py
 
 import numpy as np
-from PIL import Image
 from pathlib import Path
-import matplotlib.pyplot as plt
+from .utils import save_vpm_image
 
 from zeromodel.vpm.logic import (
     vpm_and, vpm_or, vpm_not, vpm_xor, 
@@ -15,51 +14,6 @@ from zeromodel.core import ZeroModel
 # Test configuration
 OUTPUT_DIR = Path("test_outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
-
-def _to_normalized_array(obj):
-    """Convert PIL Image or numpy array to normalized float32 array in [0,1] range."""
-    if isinstance(obj, Image.Image):
-        # Convert PIL Image to numpy array
-        arr = np.array(obj.convert("RGB"))
-        # Normalize to [0,1] range
-        if arr.dtype != np.float32:
-            if np.issubdtype(arr.dtype, np.integer):
-                max_val = np.iinfo(arr.dtype).max
-                arr = arr.astype(np.float32) / max_val
-            else:
-                arr = np.clip(arr.astype(np.float32), 0.0, 1.0)
-        return arr
-    elif isinstance(obj, np.ndarray):
-        return np.clip(obj.astype(np.float32), 0.0, 1.0)
-    else:
-        raise TypeError(f"Expected PIL.Image or numpy.ndarray, got {type(obj)}")
-
-def save_vpm_image(vpm, title: str, filename: str):
-    """Save VPM as image with proper handling of both array and PIL Image types."""
-    # Convert to normalized array for consistent processing
-    arr = _to_normalized_array(vpm)
-    
-    # Handle 3D arrays (RGB) by converting to grayscale if needed
-    if arr.ndim == 3:
-        if arr.shape[2] == 3:
-            # Convert RGB to grayscale
-            arr = 0.2989 * arr[:,:,0] + 0.5870 * arr[:,:,1] + 0.1140 * arr[:,:,2]
-        else:
-            # Take first channel
-            arr = arr[:,:,0]
-    
-    # Create and save image
-    plt.figure(figsize=(6, 6))
-    plt.imshow(arr, cmap='gray', vmin=0, vmax=1)
-    plt.title(title)
-    plt.colorbar(label='Normalized Score')
-    plt.xlabel('Metrics (sorted)')
-    plt.ylabel('Documents (sorted)')
-    
-    filepath = OUTPUT_DIR / filename
-    plt.savefig(filepath, dpi=300, bbox_inches='tight')
-    plt.close()
-    print(f"Saved VPM image: {filepath}")
 
 def create_test_data():
     """Create test data that works well with logic operations."""

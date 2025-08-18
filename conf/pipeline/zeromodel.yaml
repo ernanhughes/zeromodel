@@ -1,0 +1,5 @@
+stages:
+  - name: organization
+    class_path: zeromodel.organization.zeromodel.ZeroModelOrganizationStrategy
+    params:
+      spec: ""   # can be overridden in test

@@ -11,8 +11,7 @@ import numpy as np
 
 from zeromodel.pipeline.base import PipelineStage
 from zeromodel.pipeline.utils.gif_metrics import _gif_metrics
-from zeromodel.pipeline.utils.vpm_preview import (_choose_best_frame,
-                                                  _vpm_preview_uint8)
+from zeromodel.pipeline.utils.vpm_preview import _vpm_preview_uint8
 from zeromodel.tools.gif_logger import GifLogger
 
 logger = logging.getLogger(__name__)
@@ -228,9 +227,7 @@ class PipelineExecutor:
 
         return context
     
-    # zeromodel/pipeline/executor.py  (add near the top of the file)
 def _vpm_to_uint8_preview(vpm_slice: np.ndarray) -> np.ndarray:
-    import numpy as np
     v = vpm_slice.astype(np.float32)
     lo, hi = np.percentile(v, 1.0), np.percentile(v, 99.0)
     if hi <= lo: hi = lo + 1e-6
@@ -249,6 +246,7 @@ def _gif_capture(ctx: dict, vpm: np.ndarray, label: str = "", per_slice: bool = 
         gif.add_frame(frame, {"step": step, "loss": float("nan"), "val_loss": float("nan"),
                               "acc": float(np.mean(frame)/255.0), "alerts": {"tag": label}})
         return
+
     # Per-slice frames for 3D (T,N,M)
     T = vpm.shape[0]
     for t in range(T):

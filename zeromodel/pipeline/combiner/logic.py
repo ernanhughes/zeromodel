@@ -62,12 +62,8 @@ class LogicCombiner(PipelineStage):
         self.binarize_after: Optional[float] = params.get("binarize_after", None)
         self.reduce_mode: str = params.get("reduce_mode", "fold")
 
-    # If your PipelineExecutor calls `validate_params()` before `process`,
-    # this will be invoked; otherwise it's harmless to keep.
-    def validate_params(self):
-        self._validate_params()
 
-    def _validate_params(self):
+    def validate_params(self):
         if self.op not in _OPS:
             raise ValueError(
                 f"Unknown logic op '{self.op}'. Valid ops: {sorted(_OPS.keys())}"

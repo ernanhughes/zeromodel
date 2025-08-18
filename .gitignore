@@ -7,12 +7,11 @@ qodana.yaml
 test_outputs/
 results.txt
 .idea/
-images/
 
 *.zip
 *.log
 *.png 
-
+*.gif
 
 # C extensions
 *.so

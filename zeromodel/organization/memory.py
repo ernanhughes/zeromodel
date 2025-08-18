@@ -47,7 +47,7 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
 
         if self._parsed_metric_priority:
             sort_keys = []
-            for metric, direction in reversed(self._parsed_metric_priority):
+            for metric, direction in self._parsed_metric_priority:
                 idx = name_to_idx.get(metric)
                 if idx is None:
                     continue
@@ -57,7 +57,7 @@ class MemoryOrganizationStrategy(BaseOrganizationStrategy):
                 else:
                     sort_keys.append(column)
             if sort_keys:
-                doc_indices = np.lexsort(tuple(sort_keys))
+                doc_indices = np.lexsort(tuple(sort_keys[::-1]))
 
         final_matrix = matrix[doc_indices, :]
         metric_order = np.arange(matrix.shape[1])

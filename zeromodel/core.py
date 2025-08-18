@@ -15,11 +15,18 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from zeromodel.config import get_config, init_config
-from zeromodel.constants import PRECISION_DTYPE_MAP
+from zeromodel.constants import (
+    PRECISION_DTYPE_MAP,
+    DATA_NOT_PROCESSED_ERR,
+    VPM_IMAGE_NOT_READY_ERR,
+)
 from zeromodel.nonlinear.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
-from zeromodel.organization import (DuckDBAdapter, MemoryOrganizationStrategy,
-                                    SqlOrganizationStrategy)
+from zeromodel.organization import (
+    DuckDBAdapter,
+    MemoryOrganizationStrategy,
+    SqlOrganizationStrategy,
+)
 from zeromodel.timing import _end, _t
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter
@@ -28,9 +35,6 @@ from zeromodel.vpm.metadata import AggId, VPMMetadata
 logger = logging.getLogger(__name__)
 
 init_config()
-
-DATA_NOT_PROCESSED_ERR = "Data not processed yet. Call process() or prepare() first."
-VPM_IMAGE_NOT_READY_ERR = "VPM image not ready. Call prepare() first."
 
 
 class ZeroModel:
@@ -41,8 +45,6 @@ class ZeroModel:
     1. prepare() -> normalize, optional features, analyze org, write VPM-IMG
     2. compile_view()/extract_critical_tile() -> use VPM-IMG reader for virtual addressing
     """
-
-    logger.info("[prepare] total done")
 
     def __init__(self, metric_names: List[str]) -> None:
         logger.debug(
@@ -551,4 +553,3 @@ class ZeroModel:
         }
         logger.debug(f"Metadata retrieved: {metadata}")
         return metadata
-

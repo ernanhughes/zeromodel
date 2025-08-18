@@ -21,3 +21,6 @@ PRECISION_DTYPE_MAP = {
 }
 
 _PNG_SIG = b"\x89PNG\r\n\x1a\n"
+
+DATA_NOT_PROCESSED_ERR = "Data not processed yet. Call process() or prepare() first."
+VPM_IMAGE_NOT_READY_ERR = "VPM image not ready. Call prepare() first."

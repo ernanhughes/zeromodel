@@ -19,6 +19,7 @@ import logging
 from typing import Callable, List, Tuple
 
 import numpy as np
+from scipy.optimize import minimize
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -304,7 +305,6 @@ def learn_w(
 
     # ---- Try SciPy optimizer ----
     try:
-        from scipy.optimize import minimize
 
         logger.info("Using SciPy L-BFGS-B optimizer")
 
@@ -330,8 +330,6 @@ def learn_w(
             f"norm={np.linalg.norm(w_opt):.3f}"
         )
         return w_opt
-    except ImportError:
-        logger.warning("SciPy not available, falling back to manual optimization")
     except Exception as e:
         logger.error(f"SciPy optimization failed: {str(e)}")
 

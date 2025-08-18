@@ -1,5 +1,3 @@
-import numpy as np
-
 from .image import VPMImageReader
 
 

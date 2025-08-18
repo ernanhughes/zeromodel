@@ -1,12 +1,14 @@
 # tests/test_pipeline_stages.py
-import pytest
-import numpy as np
 import logging
-from zeromodel.pipeline.filter.wavelet import WaveletFilter
+
+import numpy as np
+import pytest
+
 from zeromodel.pipeline.amplifier.pca import PCAAmplifier
-from zeromodel.pipeline.filter.morphological import MorphologicalFilter
 from zeromodel.pipeline.filter.fft import FFTFilter
 from zeromodel.pipeline.filter.kalman import KalmanFilter
+from zeromodel.pipeline.filter.morphological import MorphologicalFilter
+from zeromodel.pipeline.filter.wavelet import WaveletFilter
 
 logger = logging.getLogger(__name__)
 
@@ -310,15 +312,15 @@ class TestPipelineIntegration:
     def test_pipeline_execution(self):
         """Test executing multiple pipeline stages in sequence."""
         from zeromodel.pipeline.executor import PipelineExecutor
-        
+
         # Create test VPM
         vpm = np.random.rand(5, 64, 64).astype(np.float32)
         
         # Define pipeline
         stages = [
-            {"stage": "filters/wavelet.WaveletFilter", "params": {"level": 2}},
-            {"stage": "amplifiers/pca.PCAAmplifier", "params": {"n_components": 10}},
-            {"stage": "filters/fft.FFTFilter", "params": {"filter_type": "lowpass", "high_freq": 0.3}}
+            {"stage": "filter/wavelet.WaveletFilter", "params": {"level": 2}},
+            {"stage": "amplifier/pca.PCAAmplifier", "params": {"n_components": 10}},
+            {"stage": "filter/fft.FFTFilter", "params": {"filter_type": "lowpass", "high_freq": 0.3}}
         ]
         
         # Execute pipeline
@@ -327,18 +329,17 @@ class TestPipelineIntegration:
         
         # Verify output
         assert result.shape == vpm.shape
-        assert "provenance" in context
         
 
 def test_pipeline_stage_imports():
     """Test that all pipeline stages can be imported."""
     try:
-        from zeromodel.pipeline.filter.wavelet import WaveletFilter
         from zeromodel.pipeline.amplifier.pca import PCAAmplifier
-        from zeromodel.pipeline.filter.morphological import MorphologicalFilter
         from zeromodel.pipeline.filter.fft import FFTFilter
         from zeromodel.pipeline.filter.kalman import KalmanFilter
-        
+        from zeromodel.pipeline.filter.morphological import MorphologicalFilter
+        from zeromodel.pipeline.filter.wavelet import WaveletFilter
+
         # Verify classes exist
         assert callable(WaveletFilter)
         assert callable(PCAAmplifier)

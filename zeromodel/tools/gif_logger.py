@@ -1,4 +1,5 @@
 import time
+from multiprocessing import context
 
 import numpy as np
 from PIL import Image, ImageDraw
@@ -114,25 +115,51 @@ class GifLogger:
         panel.paste(strip, (0, top.height))
         return panel
 
-    def save_gif(self, path="training_heartbeat.gif", fps=6, optimize=True, loop=0):
+    def save_gif(
+        self,
+        path: str = "training_heartbeat.gif",
+        fps: int = 6,
+        optimize: bool = True,
+        loop: int = 0,
+        use_palette: bool = True,
+        context: dict | None = None,
+    ):
+        """
+        Save accumulated frames to an animated GIF.
+
+        Args:
+            path: Output file path.
+            fps: Frames per second.
+            optimize: Whether to optimize GIF size.
+            loop: Number of loops (0 = infinite).
+            use_palette: If True, quantize to 256-color palette (smaller, lossy).
+                        If False, keep RGB frames (bigger, lossless).
+        """
         if not self.frames:
             raise RuntimeError("No frames added.")
-        # Compose panels (can decimate if too many)
+
+        # Compose panels (stride decimation if too many frames)
         panels = []
         stride = max(1, len(self.frames) // self.max_frames)
         for i in range(0, len(self.frames), stride):
             panels.append(self._compose_panel(self.frames[i], self.meta[: i + 1]))
 
-        # Convert to palette images to shrink size
-        pal = []
-        for im in panels:
-            pal.append(im.convert("P", palette=Image.ADAPTIVE, colors=256))
+        # Auto override: analysis mode forces RGB
+        if context and context.get("enable_analysis", False):
+            use_palette = False
+
+        if use_palette:
+            # Convert to palette (lossy, but smaller)
+            frames_out = [im.convert("P", palette=Image.ADAPTIVE, colors=256) for im in panels]
+        else:
+            # Keep RGB (full fidelity, bigger file)
+            frames_out = [im.convert("RGB") for im in panels]
 
         duration_ms = int(1000 / max(1, fps))
-        pal[0].save(
+        frames_out[0].save(
             path,
             save_all=True,
-            append_images=pal[1:],
+            append_images=frames_out[1:],
             duration=duration_ms,
             loop=loop,
             optimize=optimize,

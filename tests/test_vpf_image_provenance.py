@@ -30,8 +30,7 @@ def test_vpf_embed_extract_verify_and_replay():
     # imports from the canonical images package
     from zeromodel.images import (embed_vpf, extract_vpf_from_png_bytes,
                                   replay_from_vpf, verify_vpf)
-    from zeromodel.images.utils import \
-        sha3_bytes as sha3_hex  # hex string (no 'sha3:' tag)
+    from zeromodel.utils import sha3 as sha3_hex  # hex string (no 'sha3:' tag)
 
     # --- demo image ----------------------------------------------------------
     def _make_demo_image(w, h):

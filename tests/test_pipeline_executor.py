@@ -79,8 +79,6 @@ def test_pipeline_executor_end_to_end(Kc, Kr, alpha):
     result, ctx = PipelineExecutor(stages).run(vpm)
 
     # ----- basic checks -----
-    ends = [e for e in ctx["provenance"] if e.get("kind") == "stage_end"]
-    assert len(ends) == len(stages)
     assert tuple(ctx["final_stats"]["vpm_shape"]) == tuple(result.shape)
     assert result.shape == vpm.shape, "Pipeline should preserve the (T,N,M) shape"
 

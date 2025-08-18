@@ -18,11 +18,8 @@ from zeromodel.config import get_config, init_config
 from zeromodel.constants import PRECISION_DTYPE_MAP
 from zeromodel.nonlinear.feature_engineer import FeatureEngineer
 from zeromodel.normalizer import DynamicNormalizer
-from zeromodel.organization import (
-    DuckDBAdapter,
-    MemoryOrganizationStrategy,
-    SqlOrganizationStrategy,
-)
+from zeromodel.organization import (DuckDBAdapter, MemoryOrganizationStrategy,
+                                    SqlOrganizationStrategy)
 from zeromodel.timing import _end, _t
 from zeromodel.vpm.encoder import VPMEncoder
 from zeromodel.vpm.image import VPMImageReader, VPMImageWriter

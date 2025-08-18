@@ -6,17 +6,11 @@ from typing import List, Optional, Tuple
 import numpy as np
 import png
 
-from zeromodel.vpm.image import (
-    META_MIN_COLS,
-)  # same constant used by _check_header_width
+from zeromodel.vpm.image import \
+    META_MIN_COLS  # same constant used by _check_header_width
 
-from .image import (
-    VPMImageReader,
-    VPMImageWriter,
-    _check_header_width,
-    _round_u16,
-    _u16_clip,
-)
+from .image import (VPMImageReader, VPMImageWriter, _check_header_width,
+                    _round_u16, _u16_clip)
 from .metadata import AggId, VPMMetadata
 
 

@@ -23,17 +23,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
 
 from zeromodel.pipeline.base import PipelineStage
-from zeromodel.vpm.logic import (
-    normalize_vpm,
-    vpm_add,
-    vpm_and,
-    vpm_nand,
-    vpm_nor,
-    vpm_not,
-    vpm_or,
-    vpm_subtract,
-    vpm_xor,
-)
+from zeromodel.vpm.logic import (normalize_vpm, vpm_add, vpm_and, vpm_nand,
+                                 vpm_nor, vpm_not, vpm_or, vpm_subtract,
+                                 vpm_xor)
 
 logger = logging.getLogger(__name__)
 

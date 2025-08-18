@@ -1,9 +1,10 @@
+import logging
+
 import numpy as np
 
 from zeromodel import HierarchicalVPM, ZeroModel
 from zeromodel.config import get_config
 from zeromodel.vpm.encoder import VPMEncoder
-import logging
 
 logger = logging.getLogger(__name__)
 

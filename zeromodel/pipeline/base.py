@@ -9,7 +9,7 @@ the communication protocol becomes extremely simple and universally understandab
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 

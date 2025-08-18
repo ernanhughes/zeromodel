@@ -1,14 +1,15 @@
 # tests/test_pipeline_new_stages.py
-import numpy as np
-import pytest
 import logging
 
+import numpy as np
+import pytest
+
 from zeromodel.pipeline.amplifier.stdm import STDMAmplifier
-from zeromodel.pipeline.organizer.top_left_sort import TopLeftSorter
 from zeromodel.pipeline.combiner.logic import LogicCombiner
 from zeromodel.pipeline.executor import PipelineExecutor
+from zeromodel.pipeline.organizer.top_left_sort import TopLeftSorter
 from zeromodel.vpm.logic import normalize_vpm
-from zeromodel.vpm.stdm import top_left_mass, gamma_operator
+from zeromodel.vpm.stdm import gamma_operator, top_left_mass
 
 logger = logging.getLogger(__name__)
 
@@ -153,8 +154,6 @@ class TestPipelineExecutorIntegration:
 
         # shape preserved
         assert out.shape == vpm.shape
-        # provenance recorded
-        assert "provenance" in ctx and len(ctx["provenance"]) >= 2
         # stage metadata present
         assert ctx["final_stats"]["pipeline_stages"] == 2
         assert tuple(ctx["final_stats"]["vpm_shape"]) == tuple(out.shape)

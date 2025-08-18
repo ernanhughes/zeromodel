@@ -339,7 +339,7 @@ class VPMImageWriter:
             percent = (ranks / (self.D - 1)).astype(np.float64) * 65535.0
         return _round_u16(percent)
 
-    def _assemble_metadata(
+    def assemble_metadata(
         self, h_meta: int, mins: Optional[np.ndarray], maxs: Optional[np.ndarray]
     ) -> np.ndarray:
         """
@@ -428,7 +428,7 @@ class VPMImageWriter:
         )
 
         h_meta = DEFAULT_H_META_BASE + minmax_rows + extra_meta_rows
-        meta = self._assemble_metadata(h_meta, mins, maxs)
+        meta = self.assemble_metadata(h_meta, mins, maxs)
 
         # finally embed metadata bytes into 'meta'
         self._embed_metadata_into_meta_rows(meta)
@@ -1187,7 +1187,7 @@ def build_parent_level_png(
 
     # Assemble metadata (parents use simplified metadata)
     h_meta = DEFAULT_H_META_BASE
-    meta = writer._assemble_metadata(h_meta, None, None)
+    meta = writer.assemble_metadata(h_meta, None, None)
     
     # Combine with data
     data = np.stack([R_parent, G_parent, B_parent], axis=-1)

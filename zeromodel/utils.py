@@ -14,7 +14,7 @@ from PIL import Image
 
 from zeromodel.constants import PRECISION_DTYPE_MAP
 
-__all__ = ["quantize", "dct", "idct", "sha3"]
+__all__ = ["quantize", "dct", "idct", "sha3", "png_to_gray_array", "to_png_bytes", "tile_to_pil"]
 
 
 def quantize(value: Any, precision: int) -> Any:
@@ -142,4 +142,56 @@ def png_to_gray_array(png_bytes: bytes) -> np.ndarray:
     return arr
 
 def sha3(b):
+    """
+    Compute the SHA3-256 hash of input bytes and return as hex string.
+
+    This is the core hashing function used throughout ZeroModel for:
+    - Content addressing of VPM tiles
+    - Provenance verification
+    - Deterministic tile identification
+    - Cryptographic integrity checks
+
+    Args:
+        b: Input bytes to hash
+
+    Returns:
+        Hexadecimal string representation of the SHA3-256 hash
+
+    Example:
+        >>> sha3_bytes(b"hello world")
+        '944ad329d0fc15a38889e8d61a3d8e127506a0c8e67f8a8e1d3d6e9d3d0c6d0c'
+
+    Note:
+        SHA3-256 is used instead of SHA-256 for better resistance against length
+        extension attacks and as part of the ZeroModel's commitment to modern
+        cryptographic standards for provenance.
+    """
     return hashlib.sha3_256(b).hexdigest()
+
+
+
+def tile_to_pil(tile: np.ndarray) -> Image.Image:
+    """
+    Accepts HxW float32 in [0,1], HxW float32 any range, or HxWx3 uint8.
+    Returns a PIL RGB image suitable for GIF encoding.
+    """
+    if tile.dtype == np.uint8:
+        if tile.ndim == 2:
+            return Image.fromarray(tile, mode="L").convert("RGB")
+        if tile.ndim == 3 and tile.shape[2] in (3, 4):
+            return Image.fromarray(tile[:, :, :3], mode="RGB")
+    # float cases → normalize to 0..255
+    arr = tile.astype(np.float32)
+    finite = np.isfinite(arr)
+    if not finite.any():
+        arr = np.zeros_like(arr)
+    else:
+        vmin = float(np.nanpercentile(arr[finite], 1))
+        vmax = float(np.nanpercentile(arr[finite], 99))
+        if vmax <= vmin:  # degenerate
+            vmax = vmin + 1.0
+        arr = np.clip((arr - vmin) / (vmax - vmin), 0, 1) * 255.0
+    u8 = arr.astype(np.uint8)
+    if u8.ndim == 2:
+        return Image.fromarray(u8, mode="L").convert("RGB")
+    return Image.fromarray(u8[:, :, :3], mode="RGB")

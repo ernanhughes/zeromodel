@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 
-from zeromodel.provenance.vpf import create_vpf, embed_vpf
+from zeromodel.provenance.schema import create_vpf, embed_vpf
 from zeromodel.pipeline.base import PipelineContext, PipelineStage
 
 

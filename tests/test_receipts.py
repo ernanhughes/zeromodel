@@ -6,18 +6,20 @@ import math
 import numpy as np
 from PIL import Image
 
-from zeromodel.provenance.core import tensor_to_vpm, vpm_to_tensor
-from zeromodel.provenance.vpf import create_vpf, embed_vpf, read_json_footer
+from zeromodel.provenance.core import (
+    tensor_to_vpm,
+    vpm_to_tensor,
+    create_vpf,
+    embed_vpf,
+    read_json_footer,
+)
 from zeromodel.vpm.logic import vpm_and, vpm_not, vpm_or, vpm_xor
+
 # Pointer routing (storage-agnostic) — adjust import if your path differs
 from zeromodel.vpm.metadata import AggId, DictResolver, MapKind, RouterPointer
 from zeromodel.vpm.metadata import VPMMetadata as TileMeta
 
 # Core provenance / VPM ops
-
-
-
-
 
 
 # -----------------------------
@@ -65,7 +67,16 @@ def test_footer_container_is_parsable_json():
     blob = embed_vpf(img, vpf, mode="stripe")
     vpf_json = read_json_footer(blob)
     # sanity: looks like our VPF dict
-    for key in ("vpf_version", "pipeline", "model", "determinism", "params", "inputs", "metrics", "lineage"):
+    for key in (
+        "vpf_version",
+        "pipeline",
+        "model",
+        "determinism",
+        "params",
+        "inputs",
+        "metrics",
+        "lineage",
+    ):
         assert key in vpf_json
     # must be valid JSON serialization
     json.dumps(vpf_json)
@@ -109,28 +120,28 @@ def _bw(width, height, on_region):
 
 def test_visual_logic_and_or_not_xor_sane():
     W = H = 64
-    A = _bw(W, H, lambda x, y: x + y >= W // 2)      # upper-right triangle-ish
+    A = _bw(W, H, lambda x, y: x + y >= W // 2)  # upper-right triangle-ish
     B = _bw(W, H, lambda x, y: x + y <= W // 2 - 2)  # lower-left triangle-ish
     A = np.array(A.convert("RGB"), dtype=np.uint8)
     B = np.array(B.convert("RGB"), dtype=np.uint8)
 
     AND = vpm_and(A, B)
-    OR  = vpm_or(A, B)
+    OR = vpm_or(A, B)
     NOT = vpm_not(A)
     XOR = vpm_xor(A, B)
 
     a = np.array(A)[:, :, 0] > 0
     b = np.array(B)[:, :, 0] > 0
     and_ = np.array(AND)[:, :, 0] > 0
-    or_  = np.array(OR)[:, :, 0] > 0
+    or_ = np.array(OR)[:, :, 0] > 0
     not_ = np.array(NOT)[:, :, 0] > 0
     xor_ = np.array(XOR)[:, :, 0] > 0
 
     # Basic set identities (on boolean masks)
-    assert np.all(and_ <= a) and np.all(and_ <= b)                 # A∧B ⊆ A and ⊆ B
-    assert np.all(or_ >= a) and np.all(or_ >= b)                   # A⊆A∨B and B⊆A∨B
-    assert np.all(xor_ == np.logical_xor(a, b))                    # XOR truth table
-    assert np.all(not_ == np.logical_not(a))                       # NOT truth table
+    assert np.all(and_ <= a) and np.all(and_ <= b)  # A∧B ⊆ A and ⊆ B
+    assert np.all(or_ >= a) and np.all(or_ >= b)  # A⊆A∨B and B⊆A∨B
+    assert np.all(xor_ == np.logical_xor(a, b))  # XOR truth table
+    assert np.all(not_ == np.logical_not(a))  # NOT truth table
 
 
 # -------------------------------------------------
@@ -165,8 +176,15 @@ def test_router_pointer_resolution_roundtrip():
         agg_id=int(AggId.MEAN),
         tile_id=child_id,
     )
-    meta = TileMeta(level=1, metric_count=0, doc_count=0, doc_block_size=1, agg_id=int(AggId.RAW),
-                    task_hash=0, tile_id=bytes.fromhex("22"*16))
+    meta = TileMeta(
+        level=1,
+        metric_count=0,
+        doc_count=0,
+        doc_block_size=1,
+        agg_id=int(AggId.RAW),
+        task_hash=0,
+        tile_id=bytes.fromhex("22" * 16),
+    )
     meta.add_pointer(ptr)
 
     # resolve via pluggable resolver
@@ -188,7 +206,12 @@ def _find_stripe_start(img_rgb: Image.Image):
     for cols in range(1, min(256, W) + 1):
         x0 = W - cols
         col = arr[:, x0, 0]
-        if H >= 6 and (int(col[0]), int(col[1]), int(col[2]), int(col[3])) == (0x5A, 0x4D, 0x56, 0x32):
+        if H >= 6 and (int(col[0]), int(col[1]), int(col[2]), int(col[3])) == (
+            0x5A,
+            0x4D,
+            0x56,
+            0x32,
+        ):
             return x0, cols, arr
     return None, None, arr
 

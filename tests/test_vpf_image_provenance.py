@@ -3,34 +3,16 @@ import hashlib
 import time
 
 import numpy as np
-import pytest
 from PIL import Image
 
-from zeromodel.provenance.vpf import embed_vpf, extract_vpf, verify_vpf
-
-
-def sha3_hex(b: bytes) -> str:
-    return hashlib.sha3_256(b).hexdigest()
-
-def _make_demo_image(w=512, h=256):
-    # deterministic gradient for test stability
-    x = np.linspace(0, 1, w, dtype=np.float32)[None, :]
-    y = np.linspace(0, 1, h, dtype=np.float32)[:, None]
-    img = np.clip((0.6 * x + 0.4 * y), 0, 1)
-    rgb = (np.stack([img, img**0.5, img**2], axis=-1) * 255).astype(np.uint8)
-    return Image.fromarray(rgb)
+from zeromodel.utils import sha3 as sha3_hex
 
 def test_vpf_embed_extract_verify_and_replay():
-    import time
-    from io import BytesIO
-
     import numpy as np
     from PIL import Image
 
     # imports from the canonical images package
-    from zeromodel.provenance import (embed_vpf, extract_vpf_from_png_bytes,
-                                  replay_from_vpf, verify_vpf)
-    from zeromodel.utils import sha3 as sha3_hex  # hex string (no 'sha3:' tag)
+    from zeromodel.provenance import embed_vpf, extract_vpf_from_png_bytes, verify_vpf
 
     # --- demo image ----------------------------------------------------------
     def _make_demo_image(w, h):
@@ -42,10 +24,13 @@ def test_vpf_embed_extract_verify_and_replay():
     H = img.size[1]
     Hvals = H - 4
     x = np.linspace(0, 1, Hvals, dtype=np.float32)
-    metrics_matrix = np.stack([
-        0.5 + 0.5*np.sin(2*np.pi*3*x),
-        0.5 + 0.5*np.cos(2*np.pi*5*x),
-    ], axis=1)
+    metrics_matrix = np.stack(
+        [
+            0.5 + 0.5 * np.sin(2 * np.pi * 3 * x),
+            0.5 + 0.5 * np.cos(2 * np.pi * 5 * x),
+        ],
+        axis=1,
+    )
     metric_names = ["aesthetic", "coherence"]
 
     # --- minimal VPF dict ----------------------------------------------------
@@ -68,7 +53,7 @@ def test_vpf_embed_extract_verify_and_replay():
     png_bytes = embed_vpf(
         img,
         vpf,
-        mode="stripe",                    # ensures a ZMVF footer is appended
+        mode="stripe",  # ensures a ZMVF footer is appended
         # The new API can draw a cosmetic stripe internally; you don't need to pass matrix.
         # If you want to force your custom matrix/names, add these **only if implemented**:
         # stripe_metrics_matrix=metrics_matrix,
@@ -84,7 +69,7 @@ def test_vpf_embed_extract_verify_and_replay():
     # 3) Verify: by default, the new API compares SHA3 over the **full PNG bytes**.
     ok = verify_vpf(extracted_vpf, png_bytes)
     t3 = time.perf_counter()
-    print(f"Embed: {t1-t0:.3f}s, Extract: {t2-t1:.3f}s, Verify: {t3-t2:.3f}s")
+    print(f"Embed: {t1 - t0:.3f}s, Extract: {t2 - t1:.3f}s, Verify: {t3 - t2:.3f}s")
 
     # 4) If you still want to sanity-check the footer, it’s present in stripe mode.
     # Footer should be present in stripe mode
@@ -95,7 +80,9 @@ def test_vpf_embed_extract_verify_and_replay():
     core_png_no_footer = _strip_footer(png_bytes)
     core_png = _strip_vpf_itxt(core_png_no_footer)
 
-    assert extracted_vpf["lineage"]["content_hash"].endswith(sha3_hex(core_png)), "Content hash mismatch"
+    assert extracted_vpf["lineage"]["content_hash"].endswith(sha3_hex(core_png)), (
+        "Content hash mismatch"
+    )
 
 
 def _strip_vpf_itxt(png: bytes) -> bytes:
@@ -104,6 +91,7 @@ def _strip_vpf_itxt(png: bytes) -> bytes:
     Does not recompress image data; preserves chunk order otherwise.
     """
     import struct
+
     sig = b"\x89PNG\r\n\x1a\n"
     assert png.startswith(sig), "Not a PNG"
     out = bytearray(sig)
@@ -111,11 +99,11 @@ def _strip_vpf_itxt(png: bytes) -> bytes:
     while i < len(png):
         if i + 12 > len(png):
             break
-        length = struct.unpack(">I", png[i:i+4])[0]
-        ctype  = png[i+4:i+8]
+        length = struct.unpack(">I", png[i : i + 4])[0]
+        ctype = png[i + 4 : i + 8]
         data_start = i + 8
-        data_end   = data_start + length
-        crc_end    = data_end + 4
+        data_end = data_start + length
+        crc_end = data_end + 4
         chunk = png[i:crc_end]
 
         if ctype in (b"iTXt", b"tEXt", b"zTXt"):
@@ -132,6 +120,7 @@ def _strip_vpf_itxt(png: bytes) -> bytes:
         if ctype == b"IEND":
             break
     return bytes(out)
+
 
 def _strip_footer(png: bytes) -> bytes:
     foot = b"ZMVF"

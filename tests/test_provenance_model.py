@@ -3,7 +3,6 @@ Provenance demo: snapshot a trained model → embed VPF →
 strip footer → restore weights → verify identical predictions.
 """
 
-import hashlib
 import json
 import logging
 from io import BytesIO
@@ -15,14 +14,19 @@ from sklearn.datasets import make_moons
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
-from zeromodel.provenance.core import tensor_to_vpm, vpm_to_tensor
-from zeromodel.provenance.vpf import (create_vpf, embed_vpf, extract_vpf,
-                                  png_core_bytes, verify_vpf)
+from zeromodel.provenance.core import (
+    tensor_to_vpm,
+    vpm_to_tensor,
+    create_vpf,
+    embed_vpf,
+    extract_vpf,
+    png_core_bytes,
+    verify_vpf,
+)
 from zeromodel.metadata import read_all_metadata
 from zeromodel.utils import sha3
 
 logger = logging.getLogger(__name__)
-
 
 
 @pytest.mark.skip("Skipping provenance model test")
@@ -68,7 +72,7 @@ def test_provenance_model():
     core_png = png_core_bytes(png_with_footer)
     restored_vpm_img = Image.open(BytesIO(core_png)).convert("RGB")
     restored_state = vpm_to_tensor(Image.open(BytesIO(png_with_footer)).convert("RGB"))
-    
+
     # 8) Rehydrate a fresh model with restored state
     m2 = LogisticRegression(max_iter=2000, solver="lbfgs", random_state=0)
     # inject minimal fitted attributes

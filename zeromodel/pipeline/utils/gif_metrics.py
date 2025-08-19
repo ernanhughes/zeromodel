@@ -9,7 +9,7 @@ import numpy as np
 
 
 def _gif_metrics(
-    step: int, vpm: np.ndarray, tl_value: Optional[float] = None
+    step: int, vpm: np.ndarray, tl_value: Optional[float] = None, tag: str = ""
 ) -> Dict[str, Any]:
     """
     Create metrics dictionary for GIF logging.
@@ -27,4 +27,5 @@ def _gif_metrics(
         "val_loss": float(np.nan),
         "acc": float(np.mean(v > np.percentile(v, 90))),
         "alerts": {},
+        "tag": tag
     }

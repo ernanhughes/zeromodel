@@ -8,6 +8,7 @@ test_outputs/
 results.txt
 .idea/
 
+merged_code.md
 *.zip
 *.log
 *.png 

@@ -15,22 +15,48 @@ def test_core_prepare_pipeline(tmp_path):
     X = np.clip(rng.normal(0.5, 0.25, size=(N, M)), 0, None).astype(np.float32)
 
     out_path = str(tmp_path / "core_pipeline.vpm.png")
+    out_path_1 = str(tmp_path / "core_pipeline_1.vpm.png")
     out_gif  = str(tmp_path / "core_pipeline_heartbeat.gif")
 
     stages = [
-        {"stage": "normalizer/normalize.NormalizeStage", "params": {"metric_names": [f"m{i}" for i in range(M)]}},
-        {"stage": "amplifier/feature_engineer.FeatureEngineerStage", "params": {"nonlinearity_hint": None}},
-        {"stage": "organizer/organize.Organize", "params": {"sql_query": ""}},  # identity sort
-        {"stage": "organizer/top_left.TopLeft No he's good he's good too",
-          "params": {
-          "metric_mode": "mean",       # for 2D, 'mean' is fine; for RGB use 'luminance'
-          "iterations": 12,            # more alternating sorts
-          "monotone_push": True,       # OK cumulative “smear” into TL
-          "stretch": True,             # contrast stretch
-          "clip_percent": 0.0,         # keep full dynamic range (or 0.005)
-          "reverse": True             # bright → top/left
-          }},
-        {"stage": "vpm/write.VPMWrite", "params": {"output_path": out_path}},
+        {"stage": "normalizer/normalize.NormalizeStage",
+        "params": {"metric_names": [f"m{i}" for i in range(M)]}},
+
+        {"stage": "amplifier/feature_engineer.FeatureEngineerStage",
+        "params": {"nonlinearity_hint": None}},
+
+        {"stage": "organizer/organize.Organize",
+        "params": {"sql_query": ""}},  # identity sort
+
+        {"stage": "organizer/top_left.TopLeft",
+        "params": {
+            "metric_mode": "mean",
+            "iterations": 12,
+            "monotone_push": True,
+            "stretch": True,
+            "clip_percent": 0.0,
+            "reverse": True
+        }},
+
+        # Render the current VPM to PNG bytes in context for Stripe to use
+        {"stage": "vpm/write.VPMWrite",
+        "params": {"output_path": out_path, "emit_png_to_context": True}},  # <-- add this flag in your writer
+
+        # Add a clearly visible stripe (hot magenta separator)
+        {"stage": "provenance/stripe.Stripe",
+        "params": {
+            "stripe_ratio": 0.5,   # take up half the width
+            "height": 28,
+            "bg": (10,10,12),
+            "fg": (230,230,230),
+            "separator_px": 2,
+            "separator_color": (255,0,255),
+            "text": "sha={sha} | stages={stages} | {width}x{height}"
+        }},
+
+        # (Optional) write again after the stripe, if you want a separate file:
+        {"stage": "vpm/write.VPMWrite",
+        "params": {"output_path": out_path_1}},
     ]
 
     context = {
@@ -56,6 +82,7 @@ def test_core_prepare_pipeline(tmp_path):
     logger.debug(f"Pipeline result shape: {result.shape}")
     logger.debug(f"Pipeline context: {ctx}")
     logger.info(f"VPM image written to: {out_path}")
+    logger.info(f"VPM 1 image written to: {out_path_1}")
     logger.info(f"GIF written to: {ctx.get('gif_saved')}")
 
     # assertions

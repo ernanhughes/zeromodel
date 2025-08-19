@@ -21,7 +21,7 @@ import time
 import zlib
 from typing import Any, Dict, Optional, Tuple
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,97 @@ STRIPE_WIDTH_RATIO = 0.01  # 1% of image width
 MIN_STRIPE_WIDTH = 1  # Minimum stripe width in pixels
 MAX_STRIPE_WIDTH = 256  # Maximum stripe width (prevents oversized stripes)
 STRIPE_MAGIC_HEADER = b"ZMVS"  # Magic bytes to identify stripe data
+
+def _bg_for_mode(mode: str):
+    if mode in ("1", "L", "I", "F", "I;16", "I;16B", "I;16L"):
+        return 0
+    if mode == "LA":
+        return (0, 255)
+    if mode == "RGBA":
+        return (0, 0, 0, 255)
+    return (0, 0, 0)
+
+def _hi_for_mode(mode: str):
+    # bright/high-contrast “accent” color
+    if mode in ("1", "L", "I", "F", "I;16", "I;16B", "I;16L"):
+        return 255
+    if mode == "LA":
+        return (255, 255)
+    if mode == "RGBA":
+        return (255, 0, 255, 255)  # magenta
+    return (255, 0, 255)           # magenta
+
+def add_visual_stripe(
+    image: Image.Image,
+    vpf: dict,
+    stripe_ratio: float = 0.08,     # 8% of width
+    min_width: int = 10,            # ensure visibility
+    draw_separator: bool = True,
+    separator_px: int = 2,
+    draw_label: bool = True,
+    label_text: str = "VPF",
+    draw_hatch: bool = False,
+    hatch_step: int = 6,
+) -> Image.Image:
+    # compute sizes
+    stripe_width = max(min_width, int(image.width * stripe_ratio))
+    result_width  = image.width + stripe_width
+    result_height = image.height
+
+    bg_color  = _bg_for_mode(image.mode)
+    hi_color  = _hi_for_mode(image.mode)
+
+    # canvas + paste original
+    result = Image.new(image.mode, (result_width, result_height), color=bg_color)
+    result.paste(image, (0, 0))
+
+    # stripe area
+    stripe = Image.new(image.mode, (stripe_width, result_height), color=bg_color)
+    draw = ImageDraw.Draw(stripe)
+
+    # OPTIONAL: light hatch pattern to distinguish
+    if draw_hatch:
+        for y in range(-stripe_width, result_height + stripe_width, hatch_step):
+            # diagonal line from left edge
+            draw.line([(0, y), (stripe_width, y + stripe_width)], fill=hi_color, width=1)
+
+    # always draw a strong separator at the boundary
+    if draw_separator:
+        # draw on the result, at x = image.width - 1 ... image.width + separator_px - 1
+        sep_x0 = image.width
+        sep_x1 = image.width + min(separator_px, stripe_width) - 1
+        sep_box = [sep_x0, 0, sep_x1, result_height - 1]
+        ImageDraw.Draw(result).rectangle(sep_box, fill=hi_color)
+
+    # paste the stripe after drawing hatch (so separator stays crisp)
+    result.paste(stripe, (image.width, 0))
+
+    # OPTIONAL: label “VPF” vertically on stripe
+    if draw_label and stripe_width >= 12 and result_height >= 24:
+        try:
+            # default font (portable); you can replace with a bundled TTF if desired
+            font = ImageFont.load_default()
+        except Exception:
+            font = None
+        text = label_text
+        tw, th = ImageDraw.Draw(result).textsize(text, font=font)
+        # draw rotated label onto a small RGBA tile for legibility, then paste
+        label_img = Image.new("RGBA", (tw + 4, th + 4), (0, 0, 0, 0))
+        ImageDraw.Draw(label_img).text((2, 2), text, fill=(255, 255, 255, 255), font=font)
+        label_img = label_img.rotate(90, expand=True)
+        # center in stripe
+        lx = image.width + (stripe_width - label_img.width) // 2
+        ly = (result_height - label_img.height) // 2
+        # if base mode has no alpha, composite to RGB first
+        if result.mode in ("L", "I", "F", "LA"):
+            # convert a copy to RGBA to composite label, then back
+            temp = result.convert("RGBA")
+            temp.alpha_composite(label_img, (lx, ly))
+            result = temp.convert(result.mode)
+        else:
+            result.paste(label_img, (lx, ly), label_img)
+
+    return result
 
 
 def _create_stripe_image(vpf: Dict[str, Any], width: int, height: int) -> Image.Image:
@@ -126,7 +217,7 @@ def _create_stripe_image(vpf: Dict[str, Any], width: int, height: int) -> Image.
     return stripe_img
 
 
-def add_visual_stripe(image: Image.Image, vpf: Dict[str, Any]) -> Image.Image:
+def add_visual_stripe_old(image: Image.Image, vpf: Dict[str, Any]) -> Image.Image:
     """
     Add a visual VPF stripe to the right edge of a VPM image.
 
@@ -157,20 +248,35 @@ def add_visual_stripe(image: Image.Image, vpf: Dict[str, Any]) -> Image.Image:
     stripe_width, stripe_height = stripe.size
 
     # Create result image with space for stripe
-    result_width = width + stripe_width
-    result_height = max(height, stripe_height)
+    result_width  = image.width + stripe_width
+    result_height = image.height
+    bg_color = _bg_for_mode(image.mode)
 
-    # Create new image with appropriate mode
-    result = Image.new(image.mode, (result_width, result_height), color=(0, 0, 0))
-
-    # Paste original image on left
+    # was: Image.new(image.mode, (result_width, result_height), color=(0,0,0))
+    result = Image.new(image.mode, (result_width, result_height), color=bg_color)
     result.paste(image, (0, 0))
 
-    # Paste stripe on right
-    result.paste(stripe, (width, 0))
+    # build the stripe canvas in the SAME mode
+    stripe = Image.new(image.mode, (stripe_width, result_height), color=bg_color)
+    draw = ImageDraw.Draw(stripe)
 
-    logger.debug(f"Visual stripe added. New image size: {result.size}")
+    # draw your indicators/blocks on `draw` as before...
+    # then paste stripe:
+    result.paste(stripe, (image.width, 0))
     return result
+
+
+
+def _bg_for_mode(mode: str):
+    """Return a black background appropriate for a given PIL mode."""
+    if mode in ("1", "L", "I", "F", "I;16", "I;16B", "I;16L"):
+        return 0                      # single-channel: int
+    if mode == "LA":
+        return (0, 255)               # L + alpha
+    if mode == "RGBA":
+        return (0, 0, 0, 255)         # opaque black
+    # default to RGB-like triple; 'P' will quantize later
+    return (0, 0, 0)
 
 
 def extract_visual_stripe(

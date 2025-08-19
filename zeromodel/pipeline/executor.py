@@ -14,6 +14,9 @@ from zeromodel.pipeline.utils.gif_metrics import _gif_metrics
 from zeromodel.pipeline.utils.vpm_preview import _vpm_preview_uint8
 from zeromodel.tools.gif_logger import GifLogger
 
+from PIL import Image, ImageDraw, ImageFont
+import io
+
 logger = logging.getLogger(__name__)
 
 
@@ -87,6 +90,14 @@ class PipelineExecutor:
         
         if "stats" not in ctx:
             ctx["stats"] = {}
+
+        ctx = {
+            "enable_gif": True,
+            "gif_scale": 4,
+            "gif_fps": 6,
+           **ctx
+        }
+
         
         return ctx
 
@@ -96,6 +107,9 @@ class PipelineExecutor:
             "timestamp": np.datetime64("now"),
             **event
         })
+
+
+
 
     def run(
         self, vpm: np.ndarray, context: Dict[str, Any] = None
@@ -118,19 +132,22 @@ class PipelineExecutor:
 
         logger.info(f"Executing pipeline with {len(self.stages)} stages")
 
-        # Get/create GifLogger from context
-        gif = context.get("gif_logger")
-        if gif is None and context.get("enable_gif", True):
+        # Ensure gif logger lives in ctx
+        gif = ctx.get("gif_logger")
+        if gif is None and ctx.get("enable_gif", True):
             try:
                 gif = GifLogger(
-                    max_frames=context.get("gif_max_frames", 2000),
-                    vpm_scale=context.get("gif_scale", 4),
-                    strip_h=context.get("gif_strip_h", 40),
+                    max_frames=ctx.get("gif_max_frames", 2000),
+                    vpm_scale=ctx.get("gif_scale", 4),
+                    strip_h=ctx.get("gif_strip_h", 40),
                 )
-                context["gif_logger"] = gif
-            except ImportError:
-                logger.warning("GifLogger not available, skipping GIF logging")
+                ctx["gif_logger"] = gif
+            except Exception as _:
                 gif = None
+
+        # Add an initial frame before any stage runs
+        if gif is not None:
+            _gif_add(ctx, cur, tl_value=None, tag="start")
 
         for i, spec in enumerate(self.stages):
             stage_path = spec["stage"]
@@ -151,14 +168,14 @@ class PipelineExecutor:
                 logger.info(f"Executing stage {i + 1}/{len(self.stages)}: {stage_path}")
                 stage = self._load_stage(stage_path, params)
 
-                # BEFORE: preview + (optional) simple metric
-                if gif is not None:
-                    frame = _vpm_preview_uint8(cur)
-                    gif.add_frame(frame, _gif_metrics(step=i * 2, vpm=cur))
-
+                if ctx.get("gif_logger") is not None:
+                    _gif_add(ctx, cur, tl_value=None, tag=f"pre:{i}")
+                
                 start_time = time.time()
                 stage.validate_params()
+
                 cur, meta = stage.process(cur, ctx)
+
                 execution_time = time.time() - start_time
 
                 self._record(
@@ -178,17 +195,12 @@ class PipelineExecutor:
                     "elapsed_sec": execution_time,
                     "metadata": meta or {},
                 }
+                logger.info(f"Stage {i} metadata: {meta}")
 
-                # AFTER: preview with optional TL metric if available
-                tl_val = None
-                if isinstance(meta, dict) and "tl_mass_avg" in meta:
-                    tl_val = float(meta["tl_mass_avg"])
-                if gif is not None:
-                    frame = _vpm_preview_uint8(cur)
-                    gif.add_frame(
-                        frame,
-                        _gif_metrics(step=i * 2 + 1, vpm=cur, tl_value=tl_val),
-                    )
+                # AFTER: capture new state (include TL if provided by meta)
+                tl_val = float(meta["tl_mass_avg"]) if isinstance(meta, dict) and "tl_mass_avg" in meta else None
+                if ctx.get("gif_logger") is not None:
+                    _gif_add(ctx, cur, tl_value=tl_val, tag=f"post:{i}")
 
             except Exception as e:
                 dt = time.time() - t0
@@ -266,18 +278,92 @@ def _gif_capture(ctx: dict, vpm: np.ndarray, label: str = "", per_slice: bool = 
     gif = ctx.get("gif_logger")
     if gif is None:
         return
-    # Single composite frame
+
     if not per_slice or vpm.ndim == 2:
-        frame = _vpm_to_uint8_preview(vpm if vpm.ndim == 2 else vpm[0])
-        step = ctx.setdefault("_gif_step", 0); ctx["_gif_step"] = step + 1
-        gif.add_frame(frame, {"step": step, "loss": float("nan"), "val_loss": float("nan"),
-                              "acc": float(np.mean(frame)/255.0), "alerts": {"tag": label}})
+        frame = _frame_from_context_or_vpm(ctx, vpm if vpm.ndim == 2 else vpm[0])
+        step = _gif_next_step(ctx)
+        gif.add_frame(
+            frame,
+            {"step": step, "loss": float("nan"), "val_loss": float("nan"),
+             "acc": float(np.mean(frame)/255.0), "alerts": {"tag": label}}
+        )
         return
 
-    # Per-slice frames for 3D (T,N,M)
+    # Per-slice frames
     T = vpm.shape[0]
     for t in range(T):
-        frame = _vpm_to_uint8_preview(vpm[t])
-        step = ctx.setdefault("_gif_step", 0); ctx["_gif_step"] = step + 1
-        gif.add_frame(frame, {"step": step, "loss": float("nan"), "val_loss": float("nan"),
-                              "acc": float(np.mean(frame)/255.0), "alerts": {"tag": f"{label}:{t}"}})
+        frame = _frame_from_context_or_vpm(ctx, vpm[t])
+        step = _gif_next_step(ctx)
+        gif.add_frame(
+            frame,
+            {"step": step, "loss": float("nan"), "val_loss": float("nan"),
+             "acc": float(np.mean(frame)/255.0), "alerts": {"tag": f"{label}:{t}"}}
+        )
+
+def _frame_from_context_or_vpm(ctx: dict, vpm: np.ndarray) -> np.ndarray:
+    arr = ctx.get("vpm_uint8")
+    if isinstance(arr, np.ndarray) and arr.ndim == 3 and arr.shape[-1] == 3:
+        return _apply_debug_stripe(arr.astype(np.uint8, copy=False), ctx)
+
+    png_bytes = ctx.get("vpm_png_bytes")
+    if png_bytes:
+        try:
+            im = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+            return _apply_debug_stripe(np.array(im, dtype=np.uint8), ctx)
+        except Exception:
+            pass
+
+    # fallback to your existing preview
+    frame = _vpm_preview_uint8(vpm)
+    return _apply_debug_stripe(frame, ctx)
+
+
+def _gif_next_step(ctx: dict) -> int:
+    step = ctx.setdefault("_gif_step", 0)
+    ctx["_gif_step"] = step + 1
+    return step
+
+
+def _gif_add(ctx: dict, vpm: np.ndarray, tl_value: float | None = None, tag: str = ""):
+    gif = ctx.get("gif_logger")
+    if gif is None:
+        return
+    frame = _frame_from_context_or_vpm(ctx, vpm)
+    step = _gif_next_step(ctx)
+    gif.add_frame(frame, _gif_metrics(step=step, vpm=vpm, tl_value=tl_value, tag=tag))
+
+def _apply_debug_stripe(frame: np.ndarray, ctx: dict) -> np.ndarray:
+    """
+    If ctx['gif_debug_stripe'] is True, overlay a visible debug stripe
+    at the top of the frame so the stripe is unmistakable in GIFs.
+    """
+    if not ctx.get("gif_debug_stripe", False):
+        return frame
+
+    # Config with defaults
+    stripe_h = int(ctx.get("gif_debug_stripe_height", 16))
+    color    = tuple(ctx.get("gif_debug_stripe_color", (255, 0, 255)))  # magenta
+    text_on  = bool(ctx.get("gif_debug_stripe_text", True))
+    text     = str(ctx.get("gif_debug_stripe_label", "DEBUG STRIPE"))
+
+    H, W, _ = frame.shape
+    stripe_h = max(2, min(stripe_h, max(8, H // 6)))
+
+    im = Image.fromarray(frame, mode="RGB")
+    draw = ImageDraw.Draw(im)
+
+    # top bar
+    draw.rectangle([(0, 0), (W - 1, stripe_h - 1)], fill=color)
+
+    # thin black separator under stripe (makes it pop)
+    draw.line([(0, stripe_h), (W - 1, stripe_h)], fill=(0, 0, 0), width=1)
+
+    # optional text
+    if text_on:
+        try:
+            font = ImageFont.load_default()
+        except Exception:
+            font = None
+        draw.text((4, 2), text, fill=(0, 0, 0), font=font)
+
+    return np.asarray(im, dtype=np.uint8)

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import IO, Any, Dict, Optional, Union
 
 # New provenance footer reader (PNG-safe)
-from zeromodel.images.metadata import ProvenanceMetadata
+from zeromodel.provenance.metadata import ProvenanceMetadata
 # Core (legacy) VPM metadata reader – expects *its own* binary block, not PNG.
 from zeromodel.vpm.metadata import VPMMetadata
 

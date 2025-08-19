@@ -13,8 +13,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 from PIL import Image
 
-from zeromodel.images.metadata import VPF_FOOTER_MAGIC, VPF_MAGIC_HEADER
-from zeromodel.images.png_text import png_read_text_chunk, png_write_text_chunk
+from zeromodel.provenance.metadata import VPF_FOOTER_MAGIC, VPF_MAGIC_HEADER
+from zeromodel.provenance.png_text import png_read_text_chunk, png_write_text_chunk
 
 VPF_VERSION = "1.0"
 

@@ -6,8 +6,8 @@ import math
 import numpy as np
 from PIL import Image
 
-from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
-from zeromodel.images.vpf import create_vpf, embed_vpf, read_json_footer
+from zeromodel.provenance.core import tensor_to_vpm, vpm_to_tensor
+from zeromodel.provenance.vpf import create_vpf, embed_vpf, read_json_footer
 from zeromodel.vpm.logic import vpm_and, vpm_not, vpm_or, vpm_xor
 # Pointer routing (storage-agnostic) — adjust import if your path differs
 from zeromodel.vpm.metadata import AggId, DictResolver, MapKind, RouterPointer

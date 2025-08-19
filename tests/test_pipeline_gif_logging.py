@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from zeromodel.images import create_vpf, embed_vpf
+from zeromodel.provenance import create_vpf, embed_vpf
 from zeromodel.pipeline.executor import PipelineExecutor
 from zeromodel.vpm.encoder import VPMEncoder
 
@@ -268,7 +268,7 @@ class TestGifLogging:
         assert os.path.exists("test_vpm_tile.png"), "Final VPM tile not created"
         
         # Verify VPF can be extracted
-        from zeromodel.images import extract_vpf
+        from zeromodel.provenance import extract_vpf
         extracted_vpf, meta = extract_vpf(final_png)
         assert extracted_vpf["pipeline"]["step"] == "pipeline-with-animation"
         

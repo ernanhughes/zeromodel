@@ -41,7 +41,7 @@ from IPython.display import Image, display
 import numpy as np
 from io import BytesIO
 from PIL import Image
-from zeromodel.images.core import (
+from zeromodel.provenance.core import (
     tensor_to_vpm, vpm_to_tensor,
     create_vpf, embed_vpf, extract_vpf, verify_vpf,
     vpm_logic_and, vpm_logic_or, vpm_logic_not, vpm_logic_xor

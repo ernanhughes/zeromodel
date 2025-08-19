@@ -22,8 +22,8 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 
 from zeromodel.core import ZeroModel
-from zeromodel.images import create_vpf, extract_vpf
-from zeromodel.images.metadata import VPF_FOOTER_MAGIC
+from zeromodel.provenance import create_vpf, extract_vpf
+from zeromodel.provenance.metadata import VPF_FOOTER_MAGIC
 from zeromodel.storage.base import StorageBackend
 from zeromodel.storage.in_memory import InMemoryStorage
 from zeromodel.utils import png_to_gray_array, to_png_bytes

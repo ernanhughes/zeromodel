@@ -3,7 +3,7 @@ import logging
 
 from PIL import Image
 
-from zeromodel.images.vpf import create_vpf, embed_vpf, extract_vpf, verify_vpf
+from zeromodel.provenance.vpf import create_vpf, embed_vpf, extract_vpf, verify_vpf
 from zeromodel.utils import sha3
 
 logger = logging.getLogger(__name__)

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from zeromodel.hierarchical import HierarchicalVPM, extract_critical_region
-from zeromodel.images import extract_vpf
+from zeromodel.provenance import extract_vpf
 from zeromodel.utils import png_to_gray_array
 
 

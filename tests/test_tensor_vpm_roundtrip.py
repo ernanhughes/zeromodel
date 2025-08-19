@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple, Union
 import numpy as np
 import pytest
 
-from zeromodel.images.core import tensor_to_vpm, vpm_to_tensor
+from zeromodel.provenance.core import tensor_to_vpm, vpm_to_tensor
 
 logger = logging.getLogger(__name__)
 

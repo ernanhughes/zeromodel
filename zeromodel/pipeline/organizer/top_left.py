@@ -2,7 +2,13 @@
 TopLeft Organizer Module
 
 Organizes image data by iteratively sorting rows and columns to push high-intensity
-values toward the top-left corner (or specified corner) of the image.
+values toward the selected corner. Returns row/column permutations so you can
+apply the same visual sort to your document/metric indices.
+
+Meta includes:
+- row_perm_new_to_orig, col_perm_new_to_orig (single frame)
+- row_perm_new_to_orig_seq, col_perm_new_to_orig_seq (sequences)
+- and their orig→new inverses
 
 Key Features:
 - Multiple intensity aggregation methods (luminance, mean, max, min, etc.)
@@ -15,11 +21,12 @@ Typical Use Cases:
 - Preprocessing for visualization
 - Emphasizing important regions in images
 - Preparing data for downstream processing
+
 """
 
 from __future__ import annotations
 import logging
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Iterable, Tuple, List
 import numpy as np
 from zeromodel.pipeline.base import PipelineStage
 
@@ -96,12 +103,7 @@ def _aggregate_intensity(arr: np.ndarray,
         chmap = {"r": 0, "g": 1, "b": 2}
         k = chmap.get(tag, None)
         if k is None:
-            try:
-                k = int(tag)
-            except ValueError:
-                error_msg = f"Invalid channel specification: {tag}"
-                logger.error(error_msg)
-                raise ValueError(error_msg)
+            k = int(tag)
         if not (0 <= k < C):
             error_msg = f"channel index {k} out of range for C={C}"
             logger.error(error_msg)
@@ -111,14 +113,10 @@ def _aggregate_intensity(arr: np.ndarray,
 
     if mode == "weights":
         if channel_weights is None:
-            error_msg = "metric_mode='weights' requires channel_weights"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise ValueError("metric_mode='weights' requires channel_weights")
         w = np.asarray(list(channel_weights), dtype=np.float32)
         if w.ndim != 1 or w.shape[0] != C:
-            error_msg = f"channel_weights must have length {C}, got {w.shape}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise ValueError(f"channel_weights must have length {C}, got {w.shape}")
         w = np.maximum(0.0, w)
         s = float(w.sum()) or 1.0
         w = w / s
@@ -128,6 +126,13 @@ def _aggregate_intensity(arr: np.ndarray,
     error_msg = f"Unknown metric_mode '{metric_mode}'"
     logger.error(error_msg)
     raise ValueError(error_msg)
+
+
+def _invert_perm(p: np.ndarray) -> np.ndarray:
+    """Given new→orig permutation p, return orig→new inverse."""
+    inv = np.empty_like(p)
+    inv[p] = np.arange(p.size, dtype=p.dtype)
+    return inv
 
 
 # ---------- TopLeft Organizer Class ----------
@@ -153,7 +158,8 @@ class TopLeft(PipelineStage):
     iterations: int, default=5
         Number of alternating sort operations to perform
     reverse: bool, default=True
-        True → bright to top-left (descending), False → dark to top-left (ascending)
+        True → sort descending (bright toward the chosen corner)
+        False → sort ascending (dark toward the chosen corner)
     monotone_push: bool, default=True
         Whether to apply cumulative energy push toward corner
     clip_percent: float, default=0.01
@@ -165,16 +171,16 @@ class TopLeft(PipelineStage):
         'bl' (bottom-left), 'br' (bottom-right)
     """
 
-    name = "top_left_aggressive"
+    name = "top_left"
     category = "organizer"
 
     def __init__(self, **params):
         """Initialize TopLeft organizer with configuration parameters."""
         super().__init__(**params)
-        self.metric_mode = params.get("metric_mode", "luminance")
+        self.metric_mode   = params.get("metric_mode", "luminance")
         self.channel_weights = params.get("channel_weights")
-        self.iterations = int(params.get("iterations", 5))
-        self.reverse = bool(params.get("reverse", True))  # bright → TL
+        self.iterations    = int(params.get("iterations", 5))
+        self.reverse       = bool(params.get("reverse", True))  # bright → corner
         self.monotone_push = bool(params.get("monotone_push", True))
         self.clip_percent = float(params.get("clip_percent", 0.01))
         self.stretch = bool(params.get("stretch", True))
@@ -194,90 +200,97 @@ class TopLeft(PipelineStage):
         logger.debug("Validating parameters")
         assert self.iterations >= 1, "iterations must be ≥ 1"
         assert 0.0 <= self.clip_percent < 0.5, "clip_percent must be in [0, 0.5)"
+        assert self.push_corner in ("tl", "tr", "bl", "br"), "push_corner must be tl|tr|bl|br"
         logger.debug("Parameters validated successfully")
 
     def _once(self, img: np.ndarray) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
-        Apply top-left organization to a single image frame.
-        
-        Args:
-            img: Input image with shape (H,W) or (H,W,C), float32
-            
+        Apply organization to a single frame and return permutations.
         Returns:
-            Tuple of (processed_image, metadata_dict)
+          out: transformed image (float32)
+          meta: {
+            reordering_applied: True,
+            row_perm_new_to_orig: [...],
+            col_perm_new_to_orig: [...],
+            row_perm_orig_to_new: [...],
+            col_perm_orig_to_new: [...],
+            ... (other diagnostics)
+          }
         """
-        logger.debug(f"Processing single frame with shape {img.shape}")
-        
-        # Calculate intensity for sorting
+        H, W = img.shape[:2]
         intensity = _aggregate_intensity(img, self.metric_mode, self.channel_weights).astype(np.float32)
-        logger.debug(f"Intensity range: [{intensity.min():.3f}, {intensity.max():.3f}]")
-        
         out = img.astype(np.float32, copy=True)
 
-        # Apply alternating row/column sorts
-        logger.debug(f"Starting {self.iterations} iterations of alternating sorts")
-        for i in range(self.iterations):
-            # Sort columns by column intensity
+        # track cumulative permutations (new→orig)
+        row_perm = np.arange(H, dtype=np.int32)
+        col_perm = np.arange(W, dtype=np.int32)
+
+        for _ in range(self.iterations):
+            # columns
             col_score = intensity.sum(axis=0)
             col_order = np.argsort(-col_score) if self.reverse else np.argsort(col_score)
             out = out[:, col_order] if out.ndim == 2 else out[:, col_order, :]
             intensity = intensity[:, col_order]
-            logger.debug(f"Iteration {i+1}: sorted {len(col_order)} columns")
+            col_perm = col_perm[col_order]  # compose new→orig
 
-            # Sort rows by row intensity
+            # rows
             row_score = intensity.sum(axis=1)
             row_order = np.argsort(-row_score) if self.reverse else np.argsort(row_score)
             out = out[row_order] if out.ndim == 2 else out[row_order, :, :]
             intensity = intensity[row_order]
-            logger.debug(f"Iteration {i+1}: sorted {len(row_order)} rows")
+            row_perm = row_perm[row_order]  # compose new→orig
 
-        # Apply monotone push if enabled
+        # optional monotone push
         if self.monotone_push:
             logger.debug(f"Applying monotone push toward {self.push_corner} corner")
+
             if out.ndim == 2:
-                # 2D case: apply cumulative sum directly
                 Y = self._corner_cumsum(out, self.push_corner).astype(np.float32)
                 m, M = float(Y.min()), float(Y.max())
                 if M > m:
                     Y = (Y - m) / (M - m)
                     Y *= max(1e-12, float(out.max()))
                 out = Y
-                logger.debug("Applied monotone push to 2D array")
             else:
-                # 3D case: use intensity to guide push
                 I0 = _aggregate_intensity(out, self.metric_mode, self.channel_weights).astype(np.float32) + 1e-12
-                I = self._corner_cumsum(I0, self.push_corner)
-                I = I / (float(I.max()) + 1e-12)
+                I  = self._corner_cumsum(I0, self.push_corner)
+                I  = I / (float(I.max()) + 1e-12)
                 out = out * I[..., None]
                 logger.debug("Applied intensity-guided monotone push to 3D array")
                 
-                # Apply contrast stretching if enabled
-                if self.stretch and out.size:
-                    logger.debug(f"Applying contrast stretch with clip_percent={self.clip_percent}")
-                    lo = float(np.quantile(out, self.clip_percent))
-                    hi = float(np.quantile(out, 1.0 - self.clip_percent))
-                    if hi <= lo:
-                        hi = lo + 1e-6
-                        logger.warning("Contrast stretch range too small, adjusting")
-                    out = np.clip((out - lo) / (hi - lo), 0.0, 1.0, out=out)
-                    logger.debug(f"Contrast stretch range: [{lo:.3f}, {hi:.3f}]")
 
-        # Prepare metadata
-        meta = {
+        # optional contrast stretch
+        if self.stretch and out.size:
+            logger.debug(f"Applying contrast stretch with clip_percent={self.clip_percent}")
+            lo = float(np.quantile(out, self.clip_percent))
+            hi = float(np.quantile(out, 1.0 - self.clip_percent))
+            if hi <= lo:
+                hi = lo + 1e-6
+            out = np.clip((out - lo) / (hi - lo), 0.0, 1.0, out=out)
+
+        # build meta with permutations (both directions)
+        row_inv = _invert_perm(row_perm)
+        col_inv = _invert_perm(col_perm)
+        meta: Dict[str, Any] = {
             "iterations": self.iterations,
             "reverse": self.reverse,
             "monotone_push": self.monotone_push,
             "clip_percent": self.clip_percent,
             "stretch": self.stretch,
             "metric_mode": self.metric_mode,
+            "push_corner": self.push_corner,
             "input_shape": tuple(img.shape),
-            "reordering_applied": True,
             "output_shape": tuple(out.shape),
+            "reordering_applied": True,
+            "row_perm_new_to_orig": row_perm.tolist(),
+            "col_perm_new_to_orig": col_perm.tolist(),
+            "row_perm_orig_to_new": row_inv.tolist(),
+            "col_perm_orig_to_new": col_inv.tolist(),
         }
         if self.metric_mode == "weights" and self.channel_weights is not None:
             meta["channel_weights"] = list(map(float, self.channel_weights))
-            
         logger.debug(f"Processing complete. Output shape: {out.shape}")
+        
         return out, meta
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] | None = None) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -298,15 +311,9 @@ class TopLeft(PipelineStage):
             ValueError: For unsupported input dimensions
         """
         logger.info(f"Processing data with shape {vpm.shape}")
-        
-        # Handle context/provenance (support both old/new base names)
-        if hasattr(self, "get_context"):
-            context = self.get_context(context)
-        else:
-            context = self._get_context(context)
-
-        # Record processing provenance
-        prov_payload = {
+        # provenance
+        context = self.get_context(context) if hasattr(self, "get_context") else self._get_context(context)
+        self.record_provenance(context, self.name, {
             "iterations": self.iterations,
             "reverse": self.reverse,
             "monotone_push": self.monotone_push,
@@ -315,30 +322,32 @@ class TopLeft(PipelineStage):
             "metric_mode": self.metric_mode,
             "push_corner": self.push_corner,
             "channel_weights": None if self.channel_weights is None else list(self.channel_weights),
-        }
-        self.record_provenance(context, self.name, prov_payload)
-        # Process based on input dimensions
+        })
+
         x = vpm
         if x.ndim == 2:  # (H,W)
-            logger.debug("Processing 2D array")
             out, meta = self._once(x.astype(np.float32))
             return out.astype(np.float32), meta
 
         if x.ndim == 3:
-            # If last dim looks like channels, treat as (H,W,C); else (T,H,W)
+            # Heuristic: (H,W,C) if last dim looks like channels; else (T,H,W)
             if x.shape[-1] in (1, 3, 4):
                 logger.debug("Processing 3D array as (H,W,C) image")
+                
                 out, meta = self._once(x.astype(np.float32))
                 return out.astype(np.float32), meta
-            
-            # (T,H,W) grayscale series
+            # (T,H,W) sequence
             logger.debug("Processing 3D array as (T,H,W) sequence")
             T = x.shape[0]
-            frames = []
+            frames: List[np.ndarray] = []
+            row_seq: List[List[int]] = []
+            col_seq: List[List[int]] = []
             for t in range(T):
                 logger.debug(f"Processing frame {t+1}/{T}")
-                f, _ = self._once(x[t].astype(np.float32))
+                f, m = self._once(x[t].astype(np.float32))
                 frames.append(f.astype(np.float32))
+                row_seq.append(m["row_perm_new_to_orig"])
+                col_seq.append(m["col_perm_new_to_orig"])
             out = np.stack(frames, axis=0)
             meta = {
                 "applied_per_frame": True,
@@ -348,9 +357,12 @@ class TopLeft(PipelineStage):
                 "clip_percent": self.clip_percent,
                 "stretch": self.stretch,
                 "metric_mode": self.metric_mode,
+                "push_corner": self.push_corner,
                 "input_shape": tuple(x.shape),
-                "reordering_applied": True,
                 "output_shape": tuple(out.shape),
+                "reordering_applied": True,
+                "row_perm_new_to_orig_seq": row_seq,
+                "col_perm_new_to_orig_seq": col_seq,
             }
             logger.info(f"Processed {T} frames successfully")
             return out, meta
@@ -358,11 +370,15 @@ class TopLeft(PipelineStage):
         if x.ndim == 4:  # (T,H,W,C)
             logger.debug("Processing 4D array as (T,H,W,C) sequence")
             T = x.shape[0]
-            frames = []
+            frames: List[np.ndarray] = []
+            row_seq: List[List[int]] = []
+            col_seq: List[List[int]] = []
             for t in range(T):
                 logger.debug(f"Processing frame {t+1}/{T}")
-                f, _ = self._once(x[t].astype(np.float32))
+                f, m = self._once(x[t].astype(np.float32))
                 frames.append(f.astype(np.float32))
+                row_seq.append(m["row_perm_new_to_orig"])
+                col_seq.append(m["col_perm_new_to_orig"])
             out = np.stack(frames, axis=0)
             meta = {
                 "applied_per_frame": True,
@@ -372,8 +388,12 @@ class TopLeft(PipelineStage):
                 "clip_percent": self.clip_percent,
                 "stretch": self.stretch,
                 "metric_mode": self.metric_mode,
+                "push_corner": self.push_corner,
                 "input_shape": tuple(x.shape),
                 "output_shape": tuple(out.shape),
+                "reordering_applied": True,
+                "row_perm_new_to_orig_seq": row_seq,
+                "col_perm_new_to_orig_seq": col_seq,
             }
             logger.info(f"Processed {T} multi-channel frames successfully")
             return out, meta
@@ -399,17 +419,11 @@ class TopLeft(PipelineStage):
         logger.debug(f"Calculating cumulative sum toward {corner} corner")
         
         if corner == "tl":
-            B = np.cumsum(np.cumsum(A[::-1, ::-1], axis=0), axis=1)[::-1, ::-1]
-        elif corner == "tr":
-            B = np.cumsum(np.cumsum(A[::-1, :], axis=0), axis=1)[::-1, :]
-        elif corner == "bl":
-            B = np.cumsum(np.cumsum(A[:, ::-1], axis=1), axis=0)[:, ::-1]
-        elif corner == "br":
-            B = np.cumsum(np.cumsum(A, axis=0), axis=1)
-        else:
-            error_msg = f"push_corner must be one of ['tl','tr','bl','br'], got {corner!r}"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
-            
-        logger.debug(f"Cumulative sum complete. Range: [{B.min():.3f}, {B.max():.3f}]")
-        return B
+            return np.cumsum(np.cumsum(A[::-1, ::-1], axis=0), axis=1)[::-1, ::-1]
+        if corner == "tr":
+            return np.cumsum(np.cumsum(A[::-1, :], axis=0), axis=1)[::-1, :]
+        if corner == "bl":
+            return np.cumsum(np.cumsum(A[:, ::-1], axis=1), axis=0)[:, ::-1]
+        if corner == "br":
+            return np.cumsum(np.cumsum(A, axis=0), axis=1)
+        raise ValueError(f"push_corner must be one of ['tl','tr','bl','br'], got {corner!r}")

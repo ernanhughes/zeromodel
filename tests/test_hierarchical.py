@@ -5,7 +5,7 @@ import pytest
 
 from zeromodel.hierarchical import (HierarchicalVPM, extract_critical_region,
                                     region_max_intensity)
-from zeromodel.images import extract_vpf
+from zeromodel.provenance import extract_vpf
 from zeromodel.utils import png_to_gray_array
 
 
@@ -338,7 +338,7 @@ class TestHierarchicalVPM:
         "bolted on" explanations, enabling verification by reading pixels rather than
         running models.
         """
-        from zeromodel.images import extract_vpf  # Import the correct function
+        from zeromodel.provenance import extract_vpf  # Import the correct function
         
         hvpm = HierarchicalVPM(
             metric_names=self.metric_names,

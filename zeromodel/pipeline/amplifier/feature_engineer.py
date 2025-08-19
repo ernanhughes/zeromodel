@@ -16,6 +16,7 @@ class FeatureEngineerStage(PipelineStage):
         self.hint = params.get("nonlinearity_hint")
 
     def validate_params(self): 
+        """No validation needed for this stage."""
         pass
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
@@ -33,5 +34,7 @@ class FeatureEngineerStage(PipelineStage):
             "added_metrics": int(processed.shape[1] - vpm.shape[1]),
             "shape": tuple(processed.shape),
             "hint": self.hint,
+            "input_shape": tuple(vpm.shape),
+            "stage": self.name
         }
         return processed, meta

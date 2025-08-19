@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from zeromodel.images.vpf import embed_vpf, extract_vpf, verify_vpf
+from zeromodel.provenance.vpf import embed_vpf, extract_vpf, verify_vpf
 
 
 def sha3_hex(b: bytes) -> str:
@@ -28,7 +28,7 @@ def test_vpf_embed_extract_verify_and_replay():
     from PIL import Image
 
     # imports from the canonical images package
-    from zeromodel.images import (embed_vpf, extract_vpf_from_png_bytes,
+    from zeromodel.provenance import (embed_vpf, extract_vpf_from_png_bytes,
                                   replay_from_vpf, verify_vpf)
     from zeromodel.utils import sha3 as sha3_hex  # hex string (no 'sha3:' tag)
 

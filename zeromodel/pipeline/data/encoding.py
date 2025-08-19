@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 
-from zeromodel.images.core import tensor_to_vpm
+from zeromodel.provenance.core import tensor_to_vpm
 from zeromodel.pipeline.base import PipelineContext, PipelineStage
 
 

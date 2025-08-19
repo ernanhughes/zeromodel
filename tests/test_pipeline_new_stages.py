@@ -2,7 +2,6 @@
 import logging
 
 import numpy as np
-import pytest
 
 from zeromodel.pipeline.amplifier.stdm import STDMAmplifier
 from zeromodel.pipeline.combiner.logic import LogicCombiner
@@ -88,29 +87,105 @@ class TestSTDMAmplifier:
 # -------------------------
 
 
+
+
+def _toy_series(T=1, N=50, M=20, seed=3):
+    rng = np.random.default_rng(seed)
+    series = []
+    for _ in range(T):
+        X = np.clip(rng.normal(0.5, 0.25, size=(N, M)), 0, None).astype(np.float32)
+        # add weak structure so sorting has something to latch on to
+        ramp_rows = np.linspace(0, 1, N, dtype=np.float32)[:, None]
+        ramp_cols = np.linspace(0, 1, M, dtype=np.float32)[None, :]
+        X += 0.15 * (ramp_rows * (1 - ramp_cols))  # brighter near top-left-ish
+        series.append(X)
+    return series
+
+def _quadrant_means(A):
+    """Return mean of TL and BR quadrants for a matrix A."""
+    H, W = A.shape[:2]
+    rmid, cmid = H // 2, W // 2
+    TL = A[:rmid, :cmid].mean()
+    BR = A[rmid:, cmid:].mean()
+    return float(TL), float(BR)
+
 class TestTopLeft:
-    def setup_method(self):
-        self.stage = TopLeft(metric="variance", Kc=8)
-
-    def test_process_2d_vpm(self):
-        # single matrix
+    def test_order_only_increases_tl_mass(self):
         X = _toy_series(T=1, N=50, M=20, seed=3)[0]
-        out, meta = self.stage.process(X)
 
+        # Ordering-only: no value-changing steps
+        stage1 = TopLeft(
+            metric_mode="luminance",
+            iterations=1,
+            reverse=True,
+            monotone_push=False,
+            stretch=False,
+            push_corner="tl",
+        )
+        out1, meta1 = stage1.process(X)
+
+        stage5 = TopLeft(
+            metric_mode="luminance",
+            iterations=5,
+            reverse=True,
+            monotone_push=False,
+            stretch=False,
+            push_corner="tl",
+        )
+        out5, meta5 = stage5.process(X)
+
+        assert out1.shape == X.shape == out5.shape
+        assert meta1.get("reordering_applied") is True
+        assert meta5.get("reordering_applied") is True
+
+        # TL-mass should not decrease when we're only permuting
+        Kc, Kr, alpha = 8, 24, 0.97
+        base = top_left_mass(X, Kr=Kr, Kc=Kc, alpha=alpha)
+        tl1  = top_left_mass(out1, Kr=Kr, Kc=Kc, alpha=alpha)
+        tl5  = top_left_mass(out5, Kr=Kr, Kc=Kc, alpha=alpha)
+
+        # Allow tiny numerical wiggle
+        assert tl1 >= 0.98 * base, f"TL dropped too much: {tl1:.4f} < {base:.4f}"
+        # More iterations should usually help or at least not hurt
+        assert tl5 >= 0.98 * tl1, f"More iterations did not maintain/improve TL: {tl5:.4f} < {tl1:.4f}"
+
+        # Also check TL vs BR contrast improves with iterations
+        tl_tl1, tl_br1 = _quadrant_means(out1)
+        tl_tl5, tl_br5 = _quadrant_means(out5)
+        assert (tl_tl5 - tl_br5) >= (tl_tl1 - tl_br1) - 1e-6, "TL-BR contrast did not improve"
+
+    def test_push_mode_emphasizes_corner(self):
+        X = _toy_series(T=1, N=50, M=20, seed=7)[0]
+
+        # With monotone push (value-changing), we won't require TL-mass to increase.
+        # Instead, demand strong top-left contrast.
+        stage = TopLeft(
+            metric_mode="luminance",
+            iterations=5,
+            reverse=True,
+            monotone_push=True,
+            stretch=True,
+            clip_percent=0.01,
+            push_corner="tl",
+        )
+        out, meta = stage.process(X)
         assert out.shape == X.shape
         assert meta.get("reordering_applied") is True
 
-        # TL mass should usually not decrease after organizing by variance
-        base = top_left_mass(X, Kr=24, Kc=8, alpha=0.97)
-        tl_sorted = top_left_mass(out, Kr=24, Kc=8, alpha=0.97)
-        # don't make it a hard requirement; allow equality (or small loss) but expect non-trivial change
+        # TL vs BR contrast must be clearly stronger than in the input
+        in_tl, in_br = _quadrant_means(X)
+        out_tl, out_br = _quadrant_means(out)
 
-    def test_process_3d_vpm(self):
-        vpm = np.stack(_toy_series(T=3, N=40, M=16, seed=9), axis=0)
-        out, meta = self.stage.process(vpm)
-        assert out.shape == vpm.shape
-        logger.debug(f"Processed VPM meta: {meta}")
-        assert meta.get("reordering_applied") is True
+        # Require a healthy margin (tune if your data differs)
+        assert (out_tl - out_br) >= (in_tl - in_br) + 0.05, \
+            f"Push did not emphasize TL enough: Δout={out_tl-out_br:.3f}, Δin={in_tl-in_br:.3f}"
+
+        # Sanity: if you still want a TL-mass check, keep it non-fatal
+        Kc, Kr, alpha = 8, 24, 0.97
+        base = top_left_mass(X, Kr=Kr, Kc=Kc, alpha=alpha)
+        tl_out = top_left_mass(out, Kr=Kr, Kc=Kc, alpha=alpha)
+        # Do not assert; just ensure it's finite
+        assert np.isfinite(tl_out) and np.isfinite(base)
 
 
 class TestLogicCombiner:

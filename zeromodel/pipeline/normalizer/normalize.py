@@ -1,9 +1,11 @@
 # zeromodel/pipeline/stage/normalize.py
-import numpy as np
-from typing import Any, Dict, Tuple, Optional
-from zeromodel.pipeline.base import PipelineStage
-from zeromodel.normalizer import DynamicNormalizer
 import logging
+from typing import Any, Dict, Optional, Tuple
+
+import numpy as np
+
+from zeromodel.normalizer import DynamicNormalizer
+from zeromodel.pipeline.base import PipelineStage
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +22,7 @@ class NormalizeStage(PipelineStage):
         pass
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
-        ctx = self._get_context(context)
+        ctx = self.get_context(context)
 
         if vpm.ndim != 2:
             raise ValueError(f"NormalizeStage expects a 2D score_matrix, got {vpm.ndim}D")

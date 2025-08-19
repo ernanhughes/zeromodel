@@ -25,7 +25,7 @@ class WeightedSumCombiner(PipelineStage):
             assert np.all(self.weights >= 0)
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None):
-        context = self._get_context(context)
+        context = self.get_context(context)
         if vpm.ndim not in (3, 4):
             return vpm, {"warning": "requires (H,W,K) or (T,H,W,K)", "applied": False}
 

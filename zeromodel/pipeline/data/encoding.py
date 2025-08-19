@@ -1,10 +1,13 @@
 # zeromodel/pipeline/stages/encoding.py
 """Encoding stages - convert to VPM."""
 
-from zeromodel.pipeline.base import PipelineStage, PipelineContext
 from typing import Any, Dict, Tuple
+
 import numpy as np
+
 from zeromodel.images.core import tensor_to_vpm
+from zeromodel.pipeline.base import PipelineContext, PipelineStage
+
 
 class EncodeVPMStage(PipelineStage):
     """Encode data as VPM image."""

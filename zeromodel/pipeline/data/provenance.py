@@ -1,10 +1,13 @@
 # zeromodel/pipeline/stages/provenance.py
 """Provenance stages - add VPF."""
 
-from zeromodel.pipeline.base import PipelineStage, PipelineContext
-from zeromodel.images.vpf import create_vpf, embed_vpf
 from typing import Any, Dict, Tuple
+
 import numpy as np
+
+from zeromodel.images.vpf import create_vpf, embed_vpf
+from zeromodel.pipeline.base import PipelineContext, PipelineStage
+
 
 class AddProvenanceStage(PipelineStage):
     """Add provenance to VPM."""

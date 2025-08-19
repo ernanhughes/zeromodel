@@ -77,7 +77,7 @@ class LogicCombiner(PipelineStage):
     def process(
         self, vpm: np.ndarray, context: Dict[str, Any] = None
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         # Normalize to [0,1] float
         vpm_norm = normalize_vpm(vpm)

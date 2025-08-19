@@ -1,8 +1,11 @@
 # zeromodel/pipeline/stage/feature_engineer.py
-import numpy as np
 from typing import Any, Dict, Tuple
-from zeromodel.pipeline.base import PipelineStage
+
+import numpy as np
+
 from zeromodel.nonlinear.feature_engineer import FeatureEngineer
+from zeromodel.pipeline.base import PipelineStage
+
 
 class FeatureEngineerStage(PipelineStage):
     name = "feature_engineering"
@@ -16,7 +19,7 @@ class FeatureEngineerStage(PipelineStage):
         pass
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
-        ctx = self._get_context(context)
+        ctx = self.get_context(context)
         metric_names = ctx.get("metric_names", [f"m{i}" for i in range(vpm.shape[1])])
 
         fe: FeatureEngineer = ctx.get("feature_engineer") or FeatureEngineer()

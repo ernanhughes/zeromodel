@@ -15,12 +15,12 @@ Key Features:
 """
 
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 import duckdb
 import numpy as np
 import pyarrow as pa
-import re
 
 logger = logging.getLogger(__name__)
 

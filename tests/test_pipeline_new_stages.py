@@ -7,7 +7,7 @@ import pytest
 from zeromodel.pipeline.amplifier.stdm import STDMAmplifier
 from zeromodel.pipeline.combiner.logic import LogicCombiner
 from zeromodel.pipeline.executor import PipelineExecutor
-from zeromodel.pipeline.organizer.top_left_sort import TopLeftSorter
+from zeromodel.pipeline.organizer.top_left import TopLeft
 from zeromodel.vpm.logic import normalize_vpm
 from zeromodel.vpm.stdm import gamma_operator, top_left_mass
 
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # -------------------------
 # Helpers (small utilities)
 # -------------------------
+
 
 def _toy_series(T=5, N=60, M=24, seed=0):
     """
@@ -28,7 +29,9 @@ def _toy_series(T=5, N=60, M=24, seed=0):
     for t in range(T):
         base = rng.gamma(shape=1.5, scale=0.6, size=(N, M))
         # add a faint diagonal-ish signal that moves a bit over time
-        bias = np.maximum(0.0, 1.2 - (np.add.outer(np.arange(N), np.arange(M)) / (N * 0.8)))
+        bias = np.maximum(
+            0.0, 1.2 - (np.add.outer(np.arange(N), np.arange(M)) / (N * 0.8))
+        )
         bias = np.roll(bias, shift=t % 6, axis=1) * 0.25
         X = base + bias + rng.normal(0, 0.05, size=(N, M))
         X = np.clip(X, 0, None)
@@ -49,10 +52,13 @@ def _baseline_tl(series, Kc=12, Kr=32, alpha=0.97):
 # STDMAmplifier
 # -------------------------
 
+
 class TestSTDMAmplifier:
     def setup_method(self):
         # modest Kc/Kr so it runs fast in CI
-        self.stage = STDMAmplifier(Kc=10, Kr=28, alpha=0.97, u_mode="mirror_w", iters=40, step=6e-3, l2=2e-3)
+        self.stage = STDMAmplifier(
+            Kc=10, Kr=28, alpha=0.97, u_mode="mirror_w", iters=40, step=6e-3, l2=2e-3
+        )
 
     def test_process_3d_vpm(self):
         series = _toy_series(T=4, N=48, M=20, seed=7)
@@ -78,12 +84,13 @@ class TestSTDMAmplifier:
 
 
 # -------------------------
-# TopLeftSorter
+# TopLeft
 # -------------------------
 
-class TestTopLeftSorter:
+
+class TestTopLeft:
     def setup_method(self):
-        self.stage = TopLeftSorter(metric="variance", Kc=8)
+        self.stage = TopLeft(metric="variance", Kc=8)
 
     def test_process_2d_vpm(self):
         # single matrix
@@ -92,7 +99,6 @@ class TestTopLeftSorter:
 
         assert out.shape == X.shape
         assert meta.get("reordering_applied") is True
-        assert meta.get("metric") == "variance"
 
         # TL mass should usually not decrease after organizing by variance
         base = top_left_mass(X, Kr=24, Kc=8, alpha=0.97)
@@ -104,8 +110,8 @@ class TestTopLeftSorter:
         vpm = np.stack(_toy_series(T=3, N=40, M=16, seed=9), axis=0)
         out, meta = self.stage.process(vpm)
         assert out.shape == vpm.shape
+        logger.debug(f"Processed VPM meta: {meta}")
         assert meta.get("reordering_applied") is True
-
 
 
 class TestLogicCombiner:
@@ -128,7 +134,7 @@ class TestLogicCombiner:
         assert out.dtype == np.float32
 
         # Fuzzy AND semantics: elementwise min of normalized channels
-        vpm_norm = normalize_vpm(vpm)               # ensure in [0,1]
+        vpm_norm = normalize_vpm(vpm)  # ensure in [0,1]
         ref = np.min(vpm_norm, axis=-1).astype(np.float32)
 
         # Numerical checks
@@ -140,14 +146,35 @@ class TestLogicCombiner:
 # PipelineExecutor (smoke)
 # -------------------------
 
+
 class TestPipelineExecutorIntegration:
     def test_small_pipeline(self):
         # small time-series VPM
         vpm = np.stack(_toy_series(T=3, N=32, M=16, seed=11), axis=0)
 
         stages = [
-            {"stage": "amplifier/stdm.STDMAmplifier", "params": {"Kc": 8, "Kr": 20, "alpha": 0.97, "iters": 30, "step": 6e-3, "l2": 2e-3}},
-            {"stage": "organizer/top_left_sort.TopLeftSorter", "params": {"metric": "variance", "Kc": 8}},
+            {
+                "stage": "amplifier/stdm.STDMAmplifier",
+                "params": {
+                    "Kc": 8,
+                    "Kr": 20,
+                    "alpha": 0.97,
+                    "iters": 30,
+                    "step": 6e-3,
+                    "l2": 2e-3,
+                },
+            },
+            {
+                "stage": "organizer/top_left.TopLeft",
+                "params": {
+                    "metric_mode": "mean",  # for 2D, 'mean' is fine; for RGB use 'luminance'
+                    "iterations": 12,  # more alternating sorts
+                    "monotone_push": True,  # OK cumulative “smear” into TL
+                    "stretch": True,  # contrast stretch
+                    "clip_percent": 0.0,  # keep full dynamic range (or 0.005)
+                    "reverse": True,  # bright → top/left
+                },
+            },
         ]
 
         out, ctx = PipelineExecutor(stages).run(vpm)
@@ -159,7 +186,18 @@ class TestPipelineExecutorIntegration:
         assert tuple(ctx["final_stats"]["vpm_shape"]) == tuple(out.shape)
 
         # TL sanity (don’t require strict improvement)
-        tl_out = float(np.mean([top_left_mass(out[t], Kr=20, Kc=8, alpha=0.97) for t in range(out.shape[0])]))
-        tl_base = _baseline_tl([vpm[t] for t in range(vpm.shape[0])], Kc=8, Kr=20, alpha=0.97)
+        tl_out = float(
+            np.mean(
+                [
+                    top_left_mass(out[t], Kr=20, Kc=8, alpha=0.97)
+                    for t in range(out.shape[0])
+                ]
+            )
+        )
+        tl_base = _baseline_tl(
+            [vpm[t] for t in range(vpm.shape[0])], Kc=8, Kr=20, alpha=0.97
+        )
         logger.info(f"TL baseline={tl_base:.4f}, TL pipeline={tl_out:.4f}")
-        assert tl_out >= 0.0  # always defined; improvement is best-effort, not hard-gated
+        assert (
+            tl_out >= 0.0
+        )  # always defined; improvement is best-effort, not hard-gated

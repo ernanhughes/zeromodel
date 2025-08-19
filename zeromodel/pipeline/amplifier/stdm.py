@@ -50,7 +50,7 @@ class STDMAmplifier(PipelineStage):
 
         This is the "visual amplifier" that surfaces hidden signals in model outputs.
         """
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         # Handle different VPM dimensions
         if vpm.ndim == 2:

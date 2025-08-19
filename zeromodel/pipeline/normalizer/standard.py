@@ -18,7 +18,7 @@ class StandardScaler(PipelineStage):
         assert self.eps > 0
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None):
-        context = self._get_context(context)
+        context = self.get_context(context)
         if vpm.ndim == 2:
             out = self._scale2d(vpm)
         elif vpm.ndim == 3:

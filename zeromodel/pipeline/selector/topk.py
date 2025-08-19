@@ -24,7 +24,7 @@ class TopKSelector(PipelineStage):
         assert self.metric in ("variance", "mean", "sum")
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None):
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         def mask_cols(X: np.ndarray) -> np.ndarray:
             if self.metric == "variance":

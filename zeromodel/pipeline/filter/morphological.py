@@ -45,7 +45,7 @@ class MorphologicalFilter(PipelineStage):
 
         This enhances or suppresses features based on their shape and size.
         """
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         # Create structuring element (square kernel)
         kernel = np.ones((self.kernel_size, self.kernel_size))

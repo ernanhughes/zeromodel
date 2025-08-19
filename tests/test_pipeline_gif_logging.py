@@ -147,7 +147,7 @@ class TestGifLogging:
                 }
             },
             {
-                "stage": "organizer.top_left_sort.TopLeftSorter",
+                "stage": "organizer.top_left.TopLeft",
                 "params": {
                     "metric": "variance", 
                     "Kc": 12
@@ -201,7 +201,7 @@ class TestGifLogging:
                 }
             },
             {
-                "stage": "organizer.top_left_sort.TopLeftSorter",
+                "stage": "organizer.top_left.TopLeft",
                 "params": {
                     "metric": "variance", 
                     "Kc": 12

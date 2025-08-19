@@ -18,7 +18,7 @@ class GaussianFilter(PipelineStage):
         assert self.sigma >= 0
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None):
-        context = self._get_context(context)
+        context = self.get_context(context)
         if vpm.ndim == 2:
             out = gaussian_filter(vpm, sigma=self.sigma)
         elif vpm.ndim == 3:

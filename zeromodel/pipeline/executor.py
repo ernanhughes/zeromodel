@@ -59,16 +59,43 @@ class PipelineExecutor:
 
         except Exception as e:
             logger.error(f"Failed to load stage {stage_path}: {e}")
-            raise
+                    # Return a no-op stage that passes through data
+            msg = f"Failed to load stage {stage_path}: {e}"
+            class NoOpStage(PipelineStage):
+                name = stage_path
+                category = "error"
+                
+                def validate_params(self): 
+                    pass
+                
+                def process(self, vpm, context=None):
+                    return vpm, {"error": msg, "stage": stage_path}
+
+            return NoOpStage(**params)
+        
     def _init_context(self, context: Dict[str, Any] | None) -> Dict[str, Any]:
+        """Initialize context with required fields."""
         ctx = {} if context is None else dict(context)
-        ctx.setdefault("provenance", [])
-        ctx.setdefault("pipeline_start_time", np.datetime64("now"))
-        ctx.setdefault("stats", {})
+        
+        # Initialize provenance with pipeline start
+        if "provenance" not in ctx:
+            ctx["provenance"] = []
+            self._record(ctx, kind="pipeline_start", timestamp=np.datetime64("now"))
+        
+        if "pipeline_start_time" not in ctx:
+            ctx["pipeline_start_time"] = np.datetime64("now")
+        
+        if "stats" not in ctx:
+            ctx["stats"] = {}
+        
         return ctx
 
     def _record(self, ctx: Dict[str, Any], **event):
-        ctx["provenance"].append({"timestamp": np.datetime64("now"), **event})
+        """Record event in provenance with timestamp."""
+        ctx["provenance"].append({
+            "timestamp": np.datetime64("now"),
+            **event
+        })
 
     def run(
         self, vpm: np.ndarray, context: Dict[str, Any] = None

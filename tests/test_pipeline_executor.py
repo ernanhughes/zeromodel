@@ -70,7 +70,7 @@ def test_pipeline_executor_end_to_end(Kc, Kr, alpha):
             "Kc": Kc, "Kr": Kr, "alpha": alpha, "u_mode": "mirror_w",
             "iters": 120, "step": 8e-3, "l2": 2e-3
         }},
-        {"stage": "organizer/top_left_sort.TopLeftSorter", "params": {
+        {"stage": "organizer/top_left.TopLeft", "params": {
             "metric": "variance", "Kc": Kc
         }},
     ]

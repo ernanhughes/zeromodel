@@ -14,7 +14,7 @@ stages:
       filter_type: "bandpass"
       low_freq: 0.1
       high_freq: 0.4
-  - stage: "organizer/top_left_sort.TopLeftSorter"
+  - stage: "organizer/top_left.TopLeft"
     params:
       metric: "variance"
       Kc: 12

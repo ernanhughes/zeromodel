@@ -19,7 +19,7 @@ class TemporalDifference(PipelineStage):
     def process(
         self, vpm: np.ndarray, context: Dict[str, Any] = None
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
-        context = self._get_context(context)
+        context = self.get_context(context)
         if vpm.ndim != 3:
             # no-op on non-temporal data
             return vpm, {"warning": "requires 3D VPM", "applied": False}

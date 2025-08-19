@@ -17,7 +17,7 @@ class EWMASmoother(PipelineStage):
         assert 0 < self.alpha <= 1
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None):
-        context = self._get_context(context)
+        context = self.get_context(context)
         if vpm.ndim != 3:
             return vpm, {"warning": "requires 3D VPM", "applied": False}
         T, N, M = vpm.shape

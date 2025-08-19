@@ -31,7 +31,7 @@ class QualityControl(PipelineStage):
         This ensures the VPM adheres to ZeroModel principles:
         "The top-left corner always contains the most decision-critical information."
         """
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         # Create mock model and generate importance map
         class MockZeroModel:

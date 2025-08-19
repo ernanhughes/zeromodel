@@ -1,9 +1,13 @@
 # zeromodel/pipeline/stage/organize.py
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
-from typing import Any, Dict, Tuple, Optional
-from zeromodel.pipeline.base import PipelineStage
-from zeromodel.organization import DuckDBAdapter, MemoryOrganizationStrategy, SqlOrganizationStrategy
+
 from zeromodel.config import get_config
+from zeromodel.organization import (DuckDBAdapter, MemoryOrganizationStrategy,
+                                    SqlOrganizationStrategy)
+from zeromodel.pipeline.base import PipelineStage
+
 
 class Organize(PipelineStage):
     name = "organize"
@@ -16,7 +20,7 @@ class Organize(PipelineStage):
     def validate_params(self): pass
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
-        ctx = self._get_context(context)
+        ctx = self.get_context(context)
         metric_names = ctx.get("metric_names", [f"m{i}" for i in range(vpm.shape[1])])
         use_duckdb = bool(get_config("core").get("use_duckdb", False))
         q = (self.sql_query or "").strip()

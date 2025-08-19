@@ -31,7 +31,7 @@ class OcclusionExplainer(PipelineStage):
         This implements ZeroModel's "inherently understandable" principle:
         "A core tenet of ZeroModel is that the system's output should be inherently understandable."
         """
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         # Create a mock ZeroModel object with sorted_matrix
         class MockZeroModel:

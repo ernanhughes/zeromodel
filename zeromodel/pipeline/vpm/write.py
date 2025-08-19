@@ -1,12 +1,15 @@
-# zeromodel/pipeline/stage/vpm_write.py
-import numpy as np
+# zeromodel/pipeline/vpm/write.py
+import os
 import time
 import zlib
-import os
-from typing import Any, Dict, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
+
+import numpy as np
+
 from zeromodel.pipeline.base import PipelineStage
 from zeromodel.vpm.image import VPMImageWriter
-from zeromodel.vpm.metadata import VPMMetadata, AggId
+from zeromodel.vpm.metadata import AggId, VPMMetadata
+
 
 class VPMWrite(PipelineStage):
     name = "vpm_write"
@@ -21,7 +24,7 @@ class VPMWrite(PipelineStage):
             raise ValueError("VPMWriteStage requires output_path")
 
     def process(self, vpm: np.ndarray, context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
-        ctx = self._get_context(context)
+        ctx = self.get_context(context)
         metric_names = ctx.get("metric_names", [f"m{i}" for i in range(vpm.shape[1])])
         # choose source: sorted_matrix if present else vpm
         source = ctx.get("sorted_matrix", vpm)

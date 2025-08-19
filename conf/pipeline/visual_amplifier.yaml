@@ -14,7 +14,7 @@ stages:
   - stage: "combiner/and.AndCombiner"
     params: 
       threshold: 0.3
-  - stage: "organizer/top_left_sort.TopLeftSorter"
+  - stage: "organizer/top_left.TopLeft"
     params: 
       metric: "variance"
       Kc: 8

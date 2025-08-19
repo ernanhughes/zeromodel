@@ -5,7 +5,7 @@ stages:
       Kc: 12
       Kr: 48
       alpha: 0.97
-  - stage: "organizer/top_left_sort.TopLeftSorter"
+  - stage: "organizer/top_left.TopLeft"
     params:
       metric: "variance"
       Kc: 12

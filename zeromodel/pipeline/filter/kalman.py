@@ -45,7 +45,7 @@ class KalmanFilter(PipelineStage):
 
         This smooths the signal over time, reducing noise while preserving trends.
         """
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         if vpm.ndim != 3:
             logger.warning(

@@ -1,9 +1,12 @@
 # zeromodel/pipeline/stages/input.py
 """Input handling stages - focused on one responsibility."""
 
-from zeromodel.pipeline.base import PipelineStage, PipelineContext
 from typing import Any, Dict, Tuple
+
 import numpy as np
+
+from zeromodel.pipeline.base import PipelineContext, PipelineStage
+
 
 class LoadDataStage(PipelineStage):
     """Load data from various sources."""

@@ -47,7 +47,7 @@ class PCAAmplifier(PipelineStage):
         This transforms the data to a new coordinate system where the first few components
         capture most of the variance, effectively amplifying the most important signals.
         """
-        context = self._get_context(context)
+        context = self.get_context(context)
 
         # Handle different VPM dimensions
         if vpm.ndim == 2:

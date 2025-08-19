@@ -7,7 +7,9 @@ Python/Numpy for efficient in-memory processing.
 
 import logging
 from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
+
 from .base import BaseOrganizationStrategy
 
 logger = logging.getLogger(__name__)

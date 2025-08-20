@@ -44,7 +44,7 @@ from PIL import Image
 from zeromodel.provenance.core import (
     tensor_to_vpm, vpm_to_tensor,
     create_vpf, embed_vpf, extract_vpf, verify_vpf,
-    vpm_logic_and, vpm_logic_or, vpm_logic_not, vpm_logic_xor
+    vpm_and, vpm_or, vpm_not, vpm_xor
 )
 
 
@@ -142,10 +142,10 @@ A = np.triu(np.ones((256, 256), dtype=np.float32))
 B = np.tril(np.ones((256, 256), dtype=np.float32), k=-1)
 
 imgs  = [
-    vpm_logic_and(A, B),
-    vpm_logic_or(A, B),
-    vpm_logic_not(A),
-    vpm_logic_xor(A, B),
+    vpm_and(A, B),
+    vpm_or(A, B),
+    vpm_not(A),
+    vpm_xor(A, B),
 ]
 titles = ["AND", "OR", "NOT", "XOR"]
 

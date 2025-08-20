@@ -1,4 +1,4 @@
-# tests/test_vpm_logic_operations.py
+# tests/test_vpm_operations.py
 
 from pathlib import Path
 

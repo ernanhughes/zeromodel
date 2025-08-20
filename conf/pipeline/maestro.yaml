@@ -1,0 +1,37 @@
+maestro:
+  vpm:
+    H: 128
+    W: 128
+    patch: 16
+    groups:
+      - name: attention
+        channels: "heads:*"
+      - name: gram
+        channels: [raw, delta, ema]
+      - name: corr
+        channels: [act, grad]
+      - name: scalars
+        channels: [loss, val_loss, lr, grad_norm]
+  time:
+    bins: 16
+    online_window: 8
+  masking:
+    ratio: 0.75
+    time_frac: 0.30
+    group_frac: 0.30
+    space_frac: 0.40
+  encoder:
+    width: 256
+    depth: 8
+    heads: 4
+  decoder:
+    width: 192
+    depth: 4
+  loss:
+    recon: "L1"
+    forecast_steps: 0   # set >0 to enable short-horizon head
+  train:
+    epochs: 100
+    batch_size: 1
+    lr: 3e-4
+    weight_decay: 0.05

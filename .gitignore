@@ -8,6 +8,10 @@ test_outputs/
 results.txt
 .idea/
 
+notebooks/artifacts/*
+notebooks/data/*
+
+
 merged_code.md
 *.zip
 *.log

@@ -1,57 +1,43 @@
-# zeromodel/pipeline/stages/input.py
-"""Input handling stages - focused on one responsibility."""
+# zeromodel/pipeline/data/input.py
+"""
+Input handling stages for ZeroModel pipeline.
+"""
 
-from typing import Any, Dict, Tuple
-
+from typing import Dict, Any, Tuple
 import numpy as np
+from zeromodel.pipeline.base import PipelineStage
 
-from zeromodel.pipeline.base import PipelineContext, PipelineStage
-
-
-class LoadDataStage(PipelineStage):
+class LoadData(PipelineStage):
     """Load data from various sources."""
     
-    @property
-    def name(self) -> str:
-        return "load_data"
+    name = "load_data"
+    category = "input"
     
-    def __init__(self, source_type: str, source_path: str):
-        self.source_type = source_type
-        self.source_path = source_path
+    def __init__(self, **params):
+        super().__init__(**params)
+        self.source_type = params.get("source_type", "array")
+        self.source_path = params.get("source_path", None)
     
     def validate_params(self):
-        """Validate parameters for loading data."""
-        if self.source_type not in ["csv", "json"]:
+        """Validate input parameters."""
+        if self.source_type not in ["array", "csv", "json"]:
             raise ValueError(f"Unsupported source type: {self.source_type}")
-        if not self.source_path:
-            raise ValueError("source_path must be provided")
-
-    def process(
-        self, vpm: np.ndarray, context: Dict[str, Any] = None
-    ) -> Tuple[np.ndarray, Dict[str, Any]]:
-        """Load data and add source metadata."""
-        if self.source_type == "csv":
-            data = self._load_csv(self.source_path)
-        elif self.source_type == "json":
-            data = self._load_json(self.source_path)
-        else:
-            raise ValueError(f"Unsupported source type: {self.source_type}")
+    
+    def process(self, 
+                vpm: np.ndarray, 
+                context: Dict[str, Any] = None) -> Tuple[np.ndarray, Dict[str, Any]]:
+        """
+        Load data and return as VPM.
+        For this stage, vpm parameter is ignored as we're loading fresh data.
+        """
+        context = self.get_context(context)
         
+        # In a real implementation, load from source
+        # For now, return the input as-is with metadata
         metadata = {
             "source_type": self.source_type,
             "source_path": self.source_path,
-            "data_shape": data.shape if hasattr(data, 'shape') else len(data)
+            "stage": self.name
         }
         
-        return PipelineContext(data, {**context.metadata, **metadata})
-    
-    def _load_csv(self, path: str) -> Any:
-        """Load CSV data."""
-        import pandas as pd
-        return pd.read_csv(path).values
-    
-    def _load_json(self, path: str) -> Any:
-        """Load JSON data."""
-        import json
-        with open(path, 'r') as f:
-            return json.load(f)
+        return vpm, metadata

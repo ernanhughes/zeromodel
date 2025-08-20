@@ -49,7 +49,7 @@ def test_normalize_denormalize_roundtrip():
     # If it's supposed to *ensure* [0,1], then it should pass.
     np.testing.assert_allclose(normalized_f, original_float, rtol=1e-6)
 
-def test_vpm_logic_resolution_independence():
+def test_vpm_resolution_independence():
     """Test that VPM logic functions work with different dtypes and produce normalized outputs."""
 
     # Correctly shape: 1x1x3 image (1 pixel, 3 channels)
@@ -117,7 +117,7 @@ def test_vpm_logic_resolution_independence():
     np.testing.assert_allclose(result_not_u8, result_not_f32, rtol=1e-5, atol=safe_atol_for_uint8) # This should pass now
 
     # Add similar tests for vpm_add, vpm_subtract/vpm_diff if applicable
-    print("test_vpm_logic_resolution_independence passed with adjusted tolerances.")
+    print("test_vpm_resolution_independence passed with adjusted tolerances.")
 
 
 

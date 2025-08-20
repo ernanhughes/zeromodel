@@ -1,4 +1,4 @@
-# tests/test_vpm_logic_diagonal_demo.py
+# tests/test_vpm_diagonal_demo.py
 """
 Visual demo + assertions for pixel-wise VPM logic with simple diagonal masks.
 
@@ -49,7 +49,7 @@ def _mk_diagonal_masks(n: int = 256) -> tuple[np.ndarray, np.ndarray]:
     return A, B
 
 
-def test_vpm_logic_diagonal_demo():
+def test_vpm_diagonal_demo():
     # 1) build A and B
     A, B = _mk_diagonal_masks(256)
 
@@ -107,7 +107,7 @@ def test_vpm_logic_diagonal_demo():
         assert img.min() >= 0.0 and img.max() <= 1.0
 
 
-def test_vpm_logic_diagonal_grid():
+def test_vpm_diagonal_grid():
     A, B = _mk_diagonal_masks(256)
 
     results = {

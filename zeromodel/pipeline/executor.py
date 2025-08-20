@@ -300,11 +300,20 @@ def _gif_capture(ctx: dict, vpm: np.ndarray, label: str = "", per_slice: bool = 
              "acc": float(np.mean(frame)/255.0), "alerts": {"tag": f"{label}:{t}"}}
         )
 
-def _frame_from_context_or_vpm(ctx: dict, vpm: np.ndarray) -> np.ndarray:
+def _frame_from_context_or_vpm(ctx: dict, vpm: np.ndarray | None) -> np.ndarray:
+    # Prefer frames from context
+    frames = ctx.get("frames_norm") or ctx.get("frames_in")
+    if frames and isinstance(frames, list) and "frame" in frames[0]:
+        return _apply_debug_stripe(
+            _vpm_preview_uint8(frames[0]["frame"]), ctx
+        )
+
+    # If we already cached an RGB preview
     arr = ctx.get("vpm_uint8")
     if isinstance(arr, np.ndarray) and arr.ndim == 3 and arr.shape[-1] == 3:
         return _apply_debug_stripe(arr.astype(np.uint8, copy=False), ctx)
 
+    # If we have PNG bytes cached
     png_bytes = ctx.get("vpm_png_bytes")
     if png_bytes:
         try:
@@ -313,9 +322,12 @@ def _frame_from_context_or_vpm(ctx: dict, vpm: np.ndarray) -> np.ndarray:
         except Exception:
             pass
 
-    # fallback to your existing preview
-    frame = _vpm_preview_uint8(vpm)
-    return _apply_debug_stripe(frame, ctx)
+    # Fallback: if vpm is None, return a black placeholder
+    if vpm is None:
+        return np.zeros((32, 32, 3), dtype=np.uint8)
+
+    # Otherwise preview the given vpm
+    return _apply_debug_stripe(_vpm_preview_uint8(vpm), ctx)
 
 
 def _gif_next_step(ctx: dict) -> int:

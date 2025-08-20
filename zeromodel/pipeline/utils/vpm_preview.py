@@ -3,13 +3,12 @@
 Utilities for creating VPM previews for GIF logging.
 """
 
-from typing import Optional
 
 import numpy as np
 
 
 def _vpm_preview_uint8(
-    vpm: np.ndarray, p_lo: float = 1.0, p_hi: float = 99.0
+    vpm: np.ndarray | None, p_lo: float = 1.0, p_hi: float = 99.0
 ) -> np.ndarray:
     """
     Convert a 2D or 3D VPM into a small RGB uint8 image for logging.
@@ -18,13 +17,17 @@ def _vpm_preview_uint8(
     "It's just a PNG with a tiny header. Survives image pipelines, is easy to cache and diff."
 
     Args:
-        vpm: Input VPM (2D or 3D)
+        vpm: Input VPM (2D or 3D). If None, returns a black placeholder.
         p_lo: Lower percentile for contrast stretch
         p_hi: Upper percentile for contrast stretch
 
     Returns:
         RGB preview image as uint8 array
     """
+    if vpm is None:
+        # Return black placeholder (32×32) if no VPM available
+        return np.zeros((32, 32, 3), dtype=np.uint8)
+
     x = vpm
     if x.ndim == 3:
         # Choose first time frame by default

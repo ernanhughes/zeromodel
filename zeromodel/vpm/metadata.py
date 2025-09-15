@@ -1,3 +1,4 @@
+#  zeromodel/vpm/metadata.py
 """
 Visual Policy Map (VPM) Metadata System
 
@@ -14,6 +15,7 @@ The system enables:
 - Hierarchical navigation through router pointers
 - Consistent tile identification across systems
 """
+from __future__ import annotations
 
 import hashlib
 import struct

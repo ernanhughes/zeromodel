@@ -1,3 +1,4 @@
+#  zeromodel/nonlinear/feature_engine.py
 """
 Feature engineering strategies for ZeroModel.
 
@@ -5,6 +6,7 @@ Encapsulates hint-based non-linear feature generation so the core model
 remains focused on orchestration while enabling spatial organization
 of complex patterns.
 """
+from __future__ import annotations
 
 import logging
 from typing import Callable, Dict, List, Optional, Tuple

@@ -1,3 +1,4 @@
+#  zeromodel/vpm/encoder.py
 """VPM (Visual Policy Map) encoding utilities.
 
 This module contains the VPMEncoder class which handles:
@@ -9,6 +10,7 @@ This module contains the VPMEncoder class which handles:
 The encoder operates purely on pre-processed numpy arrays and is decoupled from
 data sources, normalization pipelines, and storage systems.
 """
+from __future__ import annotations
 
 import logging
 from typing import Optional

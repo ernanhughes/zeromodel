@@ -1,4 +1,4 @@
-# zeromodel/pipeline/provenance/vpm_write_with_vpf.py
+#  zeromodel/pipeline/provenance/write.py
 from __future__ import annotations
 import os
 import numpy as np

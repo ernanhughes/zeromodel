@@ -1,4 +1,5 @@
-# zeromodel/maestro/masking.py
+#  zeromodel/pipeline/maestro/masking.py
+from __future__ import annotations
 import torch
 
 def structured_mask(shape, *, mask_ratio=0.75, time_frac=0.3, group_frac=0.3, space_frac=0.4, device=None):

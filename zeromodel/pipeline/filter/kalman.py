@@ -1,10 +1,11 @@
-# zeromodel/pipeline/stages/filters/kalman.py
+#  zeromodel/pipeline/filter/kalman.py
 """
 Kalman filter stage for ZeroModel.
 
 This implements ZeroModel's "planet-scale navigation that feels flat" principle:
 "Whether it's 10K docs or a trillion, you descend in dozens of steps, not millions."
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

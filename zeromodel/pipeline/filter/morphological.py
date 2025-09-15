@@ -1,10 +1,11 @@
-# zeromodel/pipeline/stages/filters/morphological.py
+#  zeromodel/pipeline/filter/morphological.py
 """
 Morphological filter stage for ZeroModel.
 
 This implements ZeroModel's "symbolic logic in the data" principle:
 Instead of running a neural model, we run fuzzy logic on structured images.
 """
+from __future__ import annotations
 
 from typing import Any, Dict, Tuple
 

@@ -1,7 +1,8 @@
-# zeromodel/pipeline/executor.py
+#  zeromodel/pipeline/executor.py
 """
 Pipeline executor for ZeroModel with GIF logging integration.
 """
+from __future__ import annotations
 
 import logging
 import time

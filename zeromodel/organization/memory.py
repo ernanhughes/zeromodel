@@ -1,9 +1,11 @@
+#  zeromodel/organization/memory.py
 """In-Memory Spatial Organization Strategy Module.
 
 This module provides a lightweight strategy for organizing document-metric matrices
 without requiring a database. It handles simple ordering specifications directly in
 Python/Numpy for efficient in-memory processing.
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Optional, Tuple

@@ -1,4 +1,5 @@
-# zeromodel/pipeline/stage/normalize.py
+#  zeromodel/pipeline/normalize/normalize.py
+from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional, Tuple
 

@@ -1,4 +1,4 @@
-# zeromodel/pipeline/stages/filters/wavelet.py
+#  zeromodel/pipeline/filter/wavelet.py
 """
 Wavelet filter stage for ZeroModel.
 
@@ -6,6 +6,7 @@ This implements ZeroModel's "robust under pressure" principle:
 "Versioned headers, spillover-safe metadata, and explicit logical width vs physical padding
 keep tiles valid as they scale."
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

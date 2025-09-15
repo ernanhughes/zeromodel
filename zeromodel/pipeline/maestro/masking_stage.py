@@ -1,4 +1,4 @@
-# zeromodel/pipeline/maestro/masking_stage.py
+#  zeromodel/pipeline/maestro/masking_stage.py
 """
 MAESTRO-ZM Structured Masking Stage for ZeroModel pipelines.
 
@@ -7,6 +7,7 @@ returning a boolean mask tensor with an exact global mask ratio.
 
 Author: ZeroModel Project
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

@@ -1,4 +1,4 @@
-# zeromodel/edge.py
+#  zeromodel/edge.py
 """
 Edge Device Protocol
 
@@ -8,6 +8,7 @@ protocol for edge devices with <25KB memory. It handles:
 - Making decisions based on the tile
 - Sending back results with minimal overhead
 """
+from __future__ import annotations
 
 import logging
 import struct

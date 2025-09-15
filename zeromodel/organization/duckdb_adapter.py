@@ -1,3 +1,4 @@
+#  zeromodel/organization/duckdb_adapter.py
 """DuckDB Adapter for Matrix Analysis.
 
 This module provides an adapter class to interface with DuckDB for efficient analysis
@@ -13,6 +14,7 @@ Key Features:
 - Fallback mechanisms for result fetching
 - In-memory database with optimized settings
 """
+from __future__ import annotations
 
 import logging
 import re

@@ -1,4 +1,4 @@
-# zeromodel/transform.py
+#  zeromodel/vpm/transform.py
 """
 Transformation Pipeline
 
@@ -6,6 +6,7 @@ This module provides functions for dynamically transforming visual policy maps
 to prioritize specific metrics for different tasks. This enables the same
 underlying data to be used for multiple decision contexts.
 """
+from __future__ import annotations
 
 import logging
 from typing import List, Tuple

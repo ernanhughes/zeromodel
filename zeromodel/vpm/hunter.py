@@ -1,3 +1,4 @@
+#  zeromodel/vpm/hunter.py
 """
 Visual Policy Map (VPM) Hunter Module
 
@@ -11,6 +12,7 @@ Key Features:
 - Confidence-based stopping conditions
 - Detailed audit trail for explainability
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Tuple, Union

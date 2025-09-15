@@ -1,3 +1,5 @@
+#  zeromodel/pipeline/data/gif_write.py
+from __future__ import annotations
 import os
 from typing import Dict, Any
 from PIL import Image, ImageDraw

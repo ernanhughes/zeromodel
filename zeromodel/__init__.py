@@ -1,7 +1,8 @@
-# zeromodel/__init__.py
+#  zeromodel/__init__.py
 """
 Zero-Model Intelligence (zeromodel) - Standalone package for cognitive compression
 """
+from __future__ import annotations
 
 from .config import init_config
 from .core import ZeroModel

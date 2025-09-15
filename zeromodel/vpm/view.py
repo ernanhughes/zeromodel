@@ -1,3 +1,5 @@
+#  zeromodel/vpm/view.py
+from __future__ import annotations
 from .image import VPMImageReader
 
 

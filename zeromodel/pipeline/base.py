@@ -1,4 +1,4 @@
-# zeromodel/pipeline/core.py
+#  zeromodel/pipeline/base.py
 """
 ZeroModel Pipeline Core
 
@@ -20,6 +20,7 @@ Extension guidelines:
 3. Record only essential provenance fields (avoid large payloads).
 4. Prefer returning small, composable metadata entries over deeply nested structures.
 """
+from __future__ import annotations
 
 import logging
 import time

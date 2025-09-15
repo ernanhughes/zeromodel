@@ -1,4 +1,5 @@
-# Public, DRY API surface for all image+VPF ops
+#  zeromodel/provenance/__init__.py
+from __future__ import annotations
 from .stripe import add_visual_stripe  # optional visual aid
 from .core import (create_vpf,
                   embed_vpf, extract_vpf, extract_vpf_from_png_bytes,

@@ -1,4 +1,4 @@
-# zeromodel/memory.py
+#  zeromodel/memory.py
 """
 ZeroMemory: A lightweight sidecar for monitoring training dynamics using ZeroModel principles.
 
@@ -8,6 +8,7 @@ Visual Policy Map (VPM) tiles representing the "heartbeat" of training.
 It also emits actionable alerts based on simple heuristics applied to the
 spatially-organized metric data.
 """
+from __future__ import annotations
 
 import logging
 from collections import deque

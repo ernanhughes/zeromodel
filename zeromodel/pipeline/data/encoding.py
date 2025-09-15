@@ -1,5 +1,6 @@
-# zeromodel/pipeline/stages/encoding.py
+#  zeromodel/pipeline/data/encoding.py
 """Encoding stages - convert to VPM."""
+from __future__ import annotations
 
 from typing import Any, Dict, Tuple
 

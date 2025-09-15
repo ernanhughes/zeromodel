@@ -1,3 +1,5 @@
+#  zeromodel/pipeline/observer/residual_encoder.py
+from __future__ import annotations
 import numpy as np
 from typing import Dict, Any, List, Tuple
 from zeromodel.pipeline.executor import PipelineStage

@@ -1,4 +1,5 @@
-# zeromodel/training_heartbeat_visualizer.py
+#  zeromodel/tools/training_heartbeat_visualizer.py
+from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 

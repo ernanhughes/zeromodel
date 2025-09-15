@@ -1,4 +1,4 @@
-# zeromodel/maestro/encode.py
+#  zeromodel/pipeline/maestro/encode.py
 """
 MAESTRO-ZM Encoding Stage for ZeroModel pipelines.
 
@@ -11,6 +11,7 @@ or defect detectors.
 
 Author: ZeroModel Project
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List

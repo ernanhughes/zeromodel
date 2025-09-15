@@ -1,4 +1,5 @@
-# zeromodel/maestro/pgw_norm.py
+#  zeromodel/pipeline/maestro/pgw_norm.py
+from __future__ import annotations
 import torch
 
 def pgw_normalize(frame_hwC: torch.Tensor, group_slices, eps=1e-6):

@@ -1,8 +1,10 @@
+#  zeromodel/png_text.py
 """Utilities for reading and writing PNG text chunks.
 
 This module provides minimal helpers to insert, remove and query text chunks
 within PNG images without relying on external libraries.
 """
+from __future__ import annotations
 
 import struct
 import zlib

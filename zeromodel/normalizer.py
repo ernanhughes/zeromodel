@@ -1,4 +1,4 @@
-# zeromodel/normalizer.py
+#  zeromodel/normalizer.py
 """
 Dynamic Range Adaptation Module
 
@@ -9,6 +9,7 @@ zeromodel system as score distributions may change due to:
 - New document types
 - Shifting data distributions
 """
+from __future__ import annotations
 
 import logging
 from typing import Dict, List, Tuple

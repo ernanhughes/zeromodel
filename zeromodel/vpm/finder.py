@@ -1,3 +1,5 @@
+#  zeromodel/vpm/finder.py
+from __future__ import annotations
 import struct
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Tuple

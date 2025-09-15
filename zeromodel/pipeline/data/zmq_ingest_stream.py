@@ -1,4 +1,5 @@
-# ZMQ variant
+#  zeromodel/pipeline/data/zmq_ingest_stream.py
+from __future__ import annotations
 import zmq
 import msgpack
 import msgpack_numpy

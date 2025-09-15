@@ -1,4 +1,5 @@
-# zeromodel/tools/overlay.py
+#  zeromodel/tools/overlay.py
+from __future__ import annotations
 import numpy as np
 from PIL import Image
 

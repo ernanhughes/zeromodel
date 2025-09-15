@@ -1,4 +1,4 @@
-# zeromodel/pipeline/visual/add_stripe.py
+#  zeromodel/pipeline/provenance/stripe.py
 from __future__ import annotations
 
 import io

@@ -1,3 +1,4 @@
+#  zeromodel/vpm/stdm.py
 """
 Spatio-Temporal Dual Modeling (STDM) Module
 
@@ -14,6 +15,7 @@ Key Concepts:
 - top_left_mass: Measures concentration of significant values in top-left corner
 - curvature_over_time: Quantifies rate of change in ordered matrices
 """
+from __future__ import annotations
 
 import logging
 from typing import Callable, List, Tuple

@@ -1,7 +1,10 @@
+#  zeromodel/constants.py
+from __future__ import annotations
 import numpy as np
 
 PRECISION_DTYPE_MAP = {
     # Numeric precision values (user-friendly)
+
     4: np.uint8,
     8: np.uint8,
     16: np.float16,

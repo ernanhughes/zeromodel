@@ -1,4 +1,4 @@
-# zeromodel/pipeline/vpm/encode.py
+#  zeromodel/pipeline/vpm/encode.py
 from __future__ import annotations
 import io
 import json

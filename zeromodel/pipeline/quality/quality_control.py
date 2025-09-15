@@ -1,4 +1,5 @@
-# zeromodel/pipeline/stages/quality/quality_control.py
+#  zeromodel/pipeline/quality/quality_control.py
+from __future__ import annotations
 from typing import Any, Dict, Tuple
 
 import numpy as np

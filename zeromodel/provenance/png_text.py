@@ -1,4 +1,5 @@
-# zeromodel/png_text.py
+#  zeromodel/provenance/png_text.py
+from __future__ import annotations
 import struct
 import zlib
 from typing import List, Optional, Tuple

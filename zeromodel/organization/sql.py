@@ -1,9 +1,11 @@
+#  zeromodel/organization/sql.py
 """SQL-based spatial organization strategy module.
 
 This module provides a strategy that uses SQL queries (via a database adapter)
 to reorganize document-metric matrices. It leverages SQL's analytical capabilities
 for sophisticated ordering and analysis of matrix data.
 """
+from __future__ import annotations
 
 import logging
 import re

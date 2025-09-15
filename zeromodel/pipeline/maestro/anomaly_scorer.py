@@ -1,4 +1,4 @@
-# zeromodel/maestro/anomaly_scorer.py
+#  zeromodel/pipeline/maestro/anomaly_scorer.py
 """
 Anomaly scoring stage for ZeroModel MAESTRO pipelines.
 
@@ -7,6 +7,7 @@ This stage computes simple global statistics over residual maps
 
 Author: ZeroModel Project
 """
+from __future__ import annotations
 import logging
 from typing import Any, Dict, List
 import numpy as np

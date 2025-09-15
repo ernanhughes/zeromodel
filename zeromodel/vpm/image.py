@@ -1,4 +1,4 @@
-# zeromodel/vpm/image.py
+#  zeromodel/vpm/image.py
 """
 VPM-IMG v1 — Image-only Pixel-Parametric Memory Implementation
 
@@ -14,6 +14,7 @@ Key Features:
 - Virtual reordering without data movement
 - Efficient critical tile extraction
 """
+from __future__ import annotations
 
 import json
 from pathlib import Path

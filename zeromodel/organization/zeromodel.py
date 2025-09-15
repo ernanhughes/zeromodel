@@ -1,3 +1,4 @@
+#  zeromodel/organization/zeromodel.py
 """ZeroModel Spatial Organization Strategy Module.
 
 This module implements a legacy-compatible spatial organization strategy based on the 
@@ -13,6 +14,7 @@ Key Features:
   - Top-left rule
   - Constant time navigation
 """
+from __future__ import annotations
 
 import logging
 import re

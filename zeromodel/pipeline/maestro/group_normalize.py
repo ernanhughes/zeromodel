@@ -1,4 +1,4 @@
-# zeromodel/maestro/group_normalize.py
+#  zeromodel/pipeline/maestro/group_normalize.py
 """
 Group-wise frame normalization stage for ZeroModel MAESTRO pipelines.
 
@@ -8,6 +8,7 @@ multi-channel inputs (e.g. RGB + metric channels) before encoding.
 
 Author: ZeroModel Project
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Tuple

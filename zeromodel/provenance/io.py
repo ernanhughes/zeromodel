@@ -1,9 +1,11 @@
+#  zeromodel/provenance/io.py
 """
 I/O operations for VPF embedding and extraction.
 
 Implements ZeroModel's "robust under pressure" principle:
 "Versioned headers, spillover-safe metadata, and explicit logical width vs physical padding keep tiles valid as they scale."
 """
+from __future__ import annotations
 
 from typing import Dict, Any, Optional
 from PIL import Image

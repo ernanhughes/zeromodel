@@ -1,4 +1,4 @@
-# zeromodel/timing.py
+#  zeromodel/timing.py
 """
 Lightweight timing decorator for ZeroModel.
 
@@ -12,6 +12,7 @@ Key features:
 - Smart time formatting (ms for short operations, seconds for longer ones)
 - Simple integration with existing logging system
 """
+from __future__ import annotations
 
 import logging
 import time

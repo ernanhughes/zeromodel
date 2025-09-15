@@ -1,4 +1,4 @@
-# zeromodel/config.py
+#  zeromodel/config.py
 """
 ZeroModel Unified Configuration System
 
@@ -15,6 +15,7 @@ The system is designed to be:
 - Robust: Handles missing or invalid configuration gracefully
 - Extensible: Easy to add new configuration options
 """
+from __future__ import annotations
 
 import logging
 import os

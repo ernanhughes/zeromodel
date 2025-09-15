@@ -1,4 +1,4 @@
-# zeromodel/images/vpf.py
+#  zeromodel/provenance/schema.py
 from __future__ import annotations
 
 import base64

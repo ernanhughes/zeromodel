@@ -1,8 +1,10 @@
+#  zeromodel/provenance/utils.py
 """
 Utility functions for provenance module.
 
 "It's just a PNG with a tiny header. Survives image pipelines, is easy to cache and diff."
 """
+from __future__ import annotations
 
 from typing import Dict, Any
 import zlib

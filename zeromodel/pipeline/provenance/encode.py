@@ -1,4 +1,4 @@
-# zeromodel/pipeline/provenance/vpf_encode.py
+#  zeromodel/pipeline/provenance/encode.py
 from __future__ import annotations
 import numpy as np
 from typing import Any, Dict, Tuple

@@ -1,3 +1,4 @@
+#  zeromodel/core.py
 """
 Zero-Model Intelligence Core Module
 
@@ -12,6 +13,7 @@ Key Components:
 - VPM-IMG encoding and decoding
 - Virtual view compilation and critical region extraction
 """
+from __future__ import annotations
 
 import logging
 import time

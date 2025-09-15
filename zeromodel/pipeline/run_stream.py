@@ -1,4 +1,5 @@
-# zeromodel/pipeline/run_stream.py
+#  zeromodel/pipeline/run_stream.py
+from __future__ import annotations
 import numpy as np
 from zeromodel.maestro.online import OnlineMaestro
 from zeromodel.tools.overlay import overlay_residual   # simple heatmap blend

@@ -1,3 +1,4 @@
+#  zeromodel/tools/spatial_optimizer.py
 """
 Spatial Calculus Optimization Module
 
@@ -33,6 +34,7 @@ Example Usage:
 
 Note: Requires SciPy for optimization. Falls back to coordinate ascent if unavailable.
 """
+from __future__ import annotations
 
 from typing import List, Optional, Tuple
 

@@ -1,10 +1,11 @@
-# zeromodel/pipeline/stages/filters/fft.py
+#  zeromodel/pipeline/filter/fft.py
 """
 FFT (Fast Fourier Transform) filter stage for ZeroModel.
 
 This implements ZeroModel's "edge ↔ cloud symmetry" principle:
 "The same artifact works everywhere - from microcontrollers to data centers."
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

@@ -1,10 +1,11 @@
-# zeromodel/pipeline/stages/amplifiers/stdm.py
+#  zeromodel/pipeline/amplifier/stdm.py
 """
 STDM (Spatio-Temporal Decision Making) amplifier stage.
 
 This implements ZeroModel's "intelligence lives in the data structure" principle
 by learning optimal metric weights and organization before VPM encoding.
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

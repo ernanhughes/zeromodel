@@ -1,9 +1,10 @@
-# zeromodel/utils.py
+#  zeromodel/utils.py
 """
 Utility Functions
 
 This module provides helper functions used throughout the zeromodel package.
 """
+from __future__ import annotations
 
 import hashlib
 import io

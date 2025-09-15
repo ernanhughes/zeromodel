@@ -1,7 +1,9 @@
+#  zeromodel/storage/base.py
+from __future__ import annotations
+
 import logging
 from typing import Generic, List, Optional, Tuple, TypeVar
 
-# Create a logger for this module
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")

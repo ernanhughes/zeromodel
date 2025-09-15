@@ -1,7 +1,8 @@
-# zeromodel/pipeline/utils/gif_metrics.py
+#  zeromodel/pipeline/utils/gif_metrics.py
 """
 Metrics adapter for GIF logging.
 """
+from __future__ import annotations
 
 from typing import Any, Dict, Optional
 

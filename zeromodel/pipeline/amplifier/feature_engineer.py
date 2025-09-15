@@ -1,4 +1,5 @@
-# zeromodel/pipeline/stage/feature_engineer.py
+#  zeromodel/pipeline/amplifier/feature_engineer.py
+from __future__ import annotations
 from typing import Any, Dict, Tuple
 
 import numpy as np

@@ -1,4 +1,4 @@
-# zeromodel/pipeline/combiner/masking.py
+#  zeromodel/pipeline/combiner/masking.py
 """
 StructuredMaskStage
 -------------------
@@ -16,6 +16,7 @@ and partial observability experiments.
 
 Author: ZeroModel / Stephanie Integration
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

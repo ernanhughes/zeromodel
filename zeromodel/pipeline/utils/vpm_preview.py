@@ -1,7 +1,8 @@
-# zeromodel/pipeline/utils/vpm_preview.py
+#  zeromodel/pipeline/utils/vpm_preview.py
 """
 Utilities for creating VPM previews for GIF logging.
 """
+from __future__ import annotations
 
 
 import numpy as np

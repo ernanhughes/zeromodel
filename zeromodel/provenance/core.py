@@ -1,4 +1,4 @@
-# zeromodel/images/core.py
+#  zeromodel/provenance/core.py
 from __future__ import annotations
 
 import pickle

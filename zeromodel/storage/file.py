@@ -1,4 +1,5 @@
-# zeromodel/storage/file.py
+#  zeromodel/storage/file.py
+from __future__ import annotations
 import os
 from typing import Optional
 

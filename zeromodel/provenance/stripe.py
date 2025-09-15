@@ -1,4 +1,4 @@
-# zeromodel/images/stripe.py
+#  zeromodel/provenance/stripe.py
 """
 Visual Policy Fingerprint (VPF) Stripe Implementation
 
@@ -13,6 +13,7 @@ provenance information in VPM images. The stripe provides:
 The stripe is a narrow column (typically <1% of image width) on the right edge
 that contains compressed VPF data in a visually inspectable format.
 """
+from __future__ import annotations
 
 import json
 import logging

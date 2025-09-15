@@ -1,10 +1,11 @@
-# zeromodel/hierarchical_edge.py
+#  zeromodel/hierarchical_edge.py
 """
 Hierarchical Edge Device Protocol
 
 This module provides the communication protocol for edge devices
 to interact with hierarchical visual policy maps.
 """
+from __future__ import annotations
 
 import logging
 import struct

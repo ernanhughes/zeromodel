@@ -1,3 +1,4 @@
+#  zeromodel/pipeline/combiner/logic.py
 """
 Logic combiner for ZeroModel.
 
@@ -16,6 +17,7 @@ Convention:
 If you need to combine *two separate* VPMs, pass them stacked as channels:
 np.stack([vpm_a, vpm_b], axis=-1)  -> shape (H, W, 2)
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Callable, Dict, List, Optional, Tuple

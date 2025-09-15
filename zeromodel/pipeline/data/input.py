@@ -1,7 +1,8 @@
-# zeromodel/pipeline/data/input.py
+#  zeromodel/pipeline/data/input.py
 """
 Input handling stages for ZeroModel pipeline.
 """
+from __future__ import annotations
 
 from typing import Dict, Any, Tuple
 import numpy as np

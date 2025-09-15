@@ -1,4 +1,4 @@
-# vpf_manager.py
+#  zeromodel/provenance/vpf_manager.py
 """
 VPFManager — tiny, surgical PNG metadata manager for ZeroModel VPM images.
 
@@ -36,6 +36,7 @@ Surgical behavior:
 - No reliance on your runtime graph; you can unit test it in isolation.
 
 """
+from __future__ import annotations
 
 import io
 import json

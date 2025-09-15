@@ -1,4 +1,5 @@
-# zeromodel/pipeline/input/ingest_stream.py
+#  zeromodel/pipeline/data/ingest_stream.py
+from __future__ import annotations
 import os
 import time
 import json

@@ -1,4 +1,5 @@
-# zeromodel/pipeline/stages/explainability/occlusion.py
+#  zeromodel/pipeline/explainability/occlusion.py
+from __future__ import annotations
 from typing import Any, Dict, Tuple
 
 import numpy as np

@@ -1,4 +1,4 @@
-# zeromodel/vpm_logic.py
+#  zeromodel/vpm/logic.py
 """
 Visual Policy Maps enable a new kind of symbolic mathematics.
 
@@ -12,6 +12,7 @@ VPM logic gates enable distributed visual intelligence.
 
 This is not just fuzzy logic. This is **Visual Symbolic Math**.
 """
+from __future__ import annotations
 
 import logging
 from typing import Tuple

@@ -1,4 +1,5 @@
-# zeromodel/maestro/tokenizer.py
+#  zeromodel/pipeline/maestro/tokenizer.py
+from __future__ import annotations
 import torch, math, torch.nn as nn
 
 def sinusoid_pos(n, d):

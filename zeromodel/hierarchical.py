@@ -1,4 +1,4 @@
-# zeromodel/hierarchical.py
+#  zeromodel/hierarchical.py
 """
 Hierarchical Visual Policy Map (HVPM) implementation for world-scale navigation.
 
@@ -11,6 +11,7 @@ where navigation time grows logarithmically with data size, enabling:
 
 The core insight: "When the answer is always 40 steps away, size becomes irrelevant."
 """
+from __future__ import annotations
 
 import json
 import logging

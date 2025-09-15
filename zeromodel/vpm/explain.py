@@ -1,3 +1,4 @@
+#  zeromodel/vpm/explain.py
 """
 Visual Policy Map (VPM) Explainability Module
 
@@ -10,6 +11,7 @@ Key Concepts:
 - Proxy Score: Image-based approximation of decision importance
 - Positional Bias: Modeling the model's focus on top-left regions
 """
+from __future__ import annotations
 
 import numpy as np
 

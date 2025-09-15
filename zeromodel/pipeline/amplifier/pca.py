@@ -1,10 +1,11 @@
-# zeromodel/pipeline/stages/amplifiers/pca.py
+#  zeromodel/pipeline/amplifier/pca.py
 """
 PCA (Principal Component Analysis) amplifier stage for ZeroModel.
 
 This implements ZeroModel's "intelligence lives in the data structure" principle
 by learning the principal components that explain most variance in the data.
 """
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, Tuple

@@ -1,4 +1,5 @@
-# zeromodel/pipeline/vpm/write.py
+#  zeromodel/pipeline/vpm/write.py
+from __future__ import annotations
 import os
 import time
 import zlib

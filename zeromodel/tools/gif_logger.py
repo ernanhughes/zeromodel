@@ -1,19 +1,24 @@
-#  zeromodel/tools/gif_logger.py
+# zeromodel/tools/gif_logger.py
+
 from __future__ import annotations
 import time
-
 import numpy as np
 from PIL import Image, ImageDraw
 
-
 class GifLogger:
-    def __init__(self, max_frames=2000, vpm_scale=4, strip_h=40, bg=(10, 10, 12)):
+    def __init__(self, max_frames=2000, vpm_scale=4, strip_h=40, bg=(10, 10, 12), fps: int | None = None, **kwargs):
+        """
+        Backward-compatible init:
+        - Accepts optional fps (some callers pass fps=...)
+        - **kwargs is ignored to remain forwards-compatible with older/newer call sites.
+        """
         self.frames = []
         self.meta = []  # store dicts of metrics for bottom strip
-        self.max_frames = max_frames
-        self.vpm_scale = vpm_scale
-        self.strip_h = strip_h
-        self.bg = bg
+        self.max_frames = int(max_frames)
+        self.vpm_scale = int(vpm_scale)
+        self.strip_h = int(strip_h)
+        self.bg = tuple(bg) if isinstance(bg, (list, tuple)) else (10, 10, 12)
+        self.default_fps = int(fps) if fps is not None else 6  # default 6 if not provided
 
     def add_frame(self, vpm_uint8: np.ndarray, metrics: dict):
         """
@@ -21,16 +26,16 @@ class GifLogger:
         metrics:   {"step": int, "loss": float, "val_loss": float, "acc": float, "alerts": dict}
         """
         if len(self.frames) >= self.max_frames:
-            return  # cheap backpressure; or implement decimation
+            return
         self.frames.append(vpm_uint8.copy())
         self.meta.append(
             {
-                "t": time.time(),
-                "step": metrics.get("step", len(self.frames) - 1),
-                "loss": float(metrics.get("loss", np.nan)),
-                "val_loss": float(metrics.get("val_loss", np.nan)),
-                "acc": float(metrics.get("acc", np.nan)),
-                "alerts": dict(metrics.get("alerts", {})),
+            "t": time.time(),
+            "step": metrics.get("step", len(self.frames) - 1),
+            "loss": float(metrics.get("loss", np.nan)),
+            "val_loss": float(metrics.get("val_loss", np.nan)),
+            "acc": float(metrics.get("acc", np.nan)),
+            "alerts": dict(metrics.get("alerts", {})),
             }
         )
 
@@ -119,7 +124,7 @@ class GifLogger:
     def save_gif(
         self,
         path: str = "training_heartbeat.gif",
-        fps: int = 6,
+        fps: int | None = None,
         optimize: bool = True,
         loop: int = 0,
         use_palette: bool = True,
@@ -127,7 +132,7 @@ class GifLogger:
     ):
         """
         Save accumulated frames to an animated GIF.
-
+        If fps is None, uses the fps provided at construction (default_fps).
         Args:
             path: Output file path.
             fps: Frames per second.
@@ -136,6 +141,7 @@ class GifLogger:
             use_palette: If True, quantize to 256-color palette (smaller, lossy).
                         If False, keep RGB frames (bigger, lossless).
         """
+
         if not self.frames:
             raise RuntimeError("No frames added.")
 
@@ -156,7 +162,10 @@ class GifLogger:
             # Keep RGB (full fidelity, bigger file)
             frames_out = [im.convert("RGB") for im in panels]
 
-        duration_ms = int(1000 / max(1, fps))
+        eff_fps = int(self.default_fps if fps is None else fps)
+        duration_ms = int(1000 / max(1, eff_fps))
+
+        # Pillow's GIF writer supports optimize/disposal; keep them.
         frames_out[0].save(
             path,
             save_all=True,

@@ -4,6 +4,7 @@ import os
 import imageio.v2 as imageio
 import numpy as np
 import pytest
+from zeromodel.tools.gif_logger import GifLogger
 
 # Try to import plotting libraries for better visualization (optional)
 try:
@@ -289,3 +290,107 @@ def test_gif_logging_with_zeromemory_improved(tmp_path, max_epochs):
         print("⚠️  Insufficient data to validate training progress.")
 
     print("✅ Improved ZeroMemory GIF logging test completed.")
+
+def _rand_frame(h=8, w=10):
+    # Small RGB uint8 image
+    return np.random.randint(0, 256, size=(h, w, 3), dtype=np.uint8)
+
+
+def _sample_metrics(step=0, loss=0.1, val_loss=0.2, acc=0.3, overfit=False, drift=False):
+    return {
+        "step": step,
+        "loss": loss,
+        "val_loss": val_loss,
+        "acc": acc,
+        "alerts": {"overfit": overfit, "drift": drift},
+    }
+
+
+def test_init_defaults_and_kwargs_ignored():
+    gl = GifLogger()  # default fps=6
+    assert gl.default_fps == 6
+    gl2 = GifLogger(fps=12, arbitrary_param="ignored")
+    assert gl2.default_fps == 12
+    # bg normalization
+    gl3 = GifLogger(bg=[1, 2, 3])
+    assert gl3.bg == (1, 2, 3)
+
+
+def test_add_frame_stores_copy_and_meta_integrity():
+    gl = GifLogger(max_frames=5)
+    f = _rand_frame()
+    f_orig = f.copy()
+    gl.add_frame(f, _sample_metrics(step=5, loss=1.23, val_loss=2.34, acc=0.56, overfit=True))
+    # Internal frame is a copy (mutating source does not affect stored)
+    f[:, :, :] = 0
+    assert not np.array_equal(gl.frames[0], f), "Stored frame should be independent copy"
+    assert np.array_equal(gl.frames[0], f_orig), "Stored frame should equal original contents"
+
+    # Meta fields present and typed
+    m = gl.meta[0]
+    for k in ("t", "step", "loss", "val_loss", "acc", "alerts"):
+        assert k in m
+    assert isinstance(m["step"], (int, np.integer))
+    assert isinstance(m["loss"], float) and isinstance(m["val_loss"], float) and isinstance(m["acc"], float)
+    assert isinstance(m["alerts"], dict)
+    assert m["alerts"].get("overfit") is True
+    # Default step behavior when not provided
+    gl.add_frame(_rand_frame(), {"loss": 0.1})
+    assert gl.meta[1]["step"] == 1  # len(frames)-1 fallback
+
+
+def test_max_frames_limit_enforced():
+    gl = GifLogger(max_frames=3)
+    for i in range(10):
+        gl.add_frame(_rand_frame(), _sample_metrics(step=i))
+    assert len(gl.frames) == 3
+    assert len(gl.meta) == 3
+
+
+def test_compose_panel_returns_pil_image_and_expected_size():
+    gl = GifLogger(vpm_scale=3, strip_h=30)
+    vpm = _rand_frame(h=7, w=9)
+    # history includes NaNs and alerts to exercise drawing paths
+    hist = [
+        {"loss": 0.5, "val_loss": 0.4, "acc": 0.6, "alerts": {"overfit": False, "drift": False}},
+        {"loss": np.nan, "val_loss": 0.2, "acc": 0.7, "alerts": {"overfit": True, "drift": False}},
+        {"loss": 0.9, "val_loss": np.nan, "acc": 0.8, "alerts": {"overfit": False, "drift": True}},
+    ]
+    panel = gl._compose_panel(vpm, hist)  # using private method in test is OK
+    assert isinstance(panel, Image.Image)
+    # width and height: (W*scale, H*scale + strip_h)
+    assert panel.size == (9 * 3, 7 * 3 + 30)
+
+
+def test_save_gif_raises_without_frames(tmp_path):
+    gl = GifLogger()
+    with pytest.raises(RuntimeError):
+        gl.save_gif(path=str(tmp_path / "no_frames.gif"))
+
+
+@pytest.mark.parametrize("use_palette", [True, False])
+def test_save_gif_creates_file_with_and_without_palette(tmp_path, use_palette):
+    gl = GifLogger(max_frames=50, vpm_scale=2, strip_h=20, fps=10)
+    # Add several frames (also exercise stride path if many)
+    for i in range(12):
+        gl.add_frame(_rand_frame(6, 8), _sample_metrics(step=i, loss=0.1 * i, val_loss=0.2 * i, acc=0.3 + 0.01 * i))
+
+    out_path = str(tmp_path / f"logger_palette_{int(use_palette)}.gif")
+    ret = gl.save_gif(path=out_path, fps=None, optimize=True, loop=0, use_palette=use_palette)
+    assert ret == out_path
+    assert os.path.exists(out_path) and os.path.getsize(out_path) > 0
+
+    # Open to ensure it’s a valid GIF (mode may be 'P' regardless; don’t over-assert)
+    with Image.open(out_path) as im:
+        assert im.format == "GIF"
+        assert im.n_frames >= 1
+
+
+def test_save_gif_respects_context_analysis_forces_rgb_branch(tmp_path):
+    # We cannot assert the on-disk palette mode, but we can ensure no exceptions on that code path.
+    gl = GifLogger(vpm_scale=2, strip_h=14)
+    for i in range(5):
+        gl.add_frame(_rand_frame(5, 7), _sample_metrics(step=i, overfit=(i % 2 == 0), drift=(i % 3 == 0)))
+    out_path = str(tmp_path / "analysis.gif")
+    gl.save_gif(path=out_path, fps=8, optimize=False, loop=0, use_palette=True, context={"enable_analysis": True})
+    assert os.path.exists(out_path) and os.path.getsize(out_path) > 0

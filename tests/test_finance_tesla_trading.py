@@ -428,10 +428,13 @@ def test_finance_tesla_trading_demo_year(tmp_path):
     from zeromodel.pipeline.executor import PipelineExecutor
     from zeromodel.vpm.stdm import top_left_mass
 
-    # --- Step 1. Download Tesla 1-min for 1 year (yfinance only allows ~60d for 1m bars)
-    # So instead, we use 5m bars for 1y
+    # --- Step 1. Download Tesla intraday data ---
+    # Yahoo often limits intraday (<=60d) for 5m bars; fall back and skip if unavailable.
     df = yf.download("TSLA", interval="5m", period="1y")
-    assert not df.empty
+    if df.empty:
+        df = yf.download("TSLA", interval="5m", period="60d")
+    if df.empty:
+        pytest.skip("TSLA intraday data unavailable (rate limit or Yahoo restriction)")
 
     # --- Step 2. Features ---
     df["Return"] = df["Close"].pct_change().fillna(0)
@@ -467,12 +470,12 @@ def test_finance_tesla_trading_demo_year(tmp_path):
     # --- Step 5. Plot ---
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14,8), sharex=True)
     ax1.plot(df.index, df["Close"], label="TSLA Close", color="black")
-    ax1.set_title("Tesla Price (1yr, 5m bars)")
+    ax1.set_title("Tesla Price (5m bars)")
     ax1.legend()
 
     ax2.plot(sig_times, sig_z, label="ZeroModel Signal", color="blue")
     ax2.axhline(0, color="red", linestyle="--")
-    ax2.set_title("ZeroModel Signal (1yr)")
+    ax2.set_title("ZeroModel Signal")
     ax2.legend()
 
     plt.tight_layout()

@@ -14,7 +14,7 @@ from .vpm.image import (AGG_MAX, VPMImageReader, VPMImageWriter,
                         build_parent_level_png)
 from .vpm.transform import get_critical_tile, transform_vpm
 
-__version__ = "1.0.6"
+__version__ = "1.0.8"
 __all__ = [
     "ZeroModel",
     "init_config",

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="ZeroModel",
-    version="1.0.6",
+    version="1.0.8",
     author="Ernan Hughes",
     author_email="ernanhughes@gmail.com",
     description="ZeroModel: Data-centric AI with visual policy maps",

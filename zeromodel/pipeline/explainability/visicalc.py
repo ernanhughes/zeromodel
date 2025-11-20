@@ -1,3 +1,4 @@
+# zeromodel/pipeline/explainability/visicalc.py
 from __future__ import annotations
 
 import logging
@@ -6,6 +7,7 @@ from typing import Any, Dict, List, Tuple
 import numpy as np
 
 from zeromodel.pipeline.base import PipelineStage
+from zeromodel.pipeline.utils.json_sanitize import dumps_safe
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +34,7 @@ class VisiCalcStage(PipelineStage):
 
     def __init__(self, **params):
         super().__init__(**params)
-        self.frontier_metric = params.get("frontier_metric")  # name or None
+        self.frontier_metric_index = params.get("frontier_metric_index", 0)  # index to split on
         self.frontier_low = float(params.get("frontier_low", 0.25))
         self.frontier_high = float(params.get("frontier_high", 0.75))
         self.row_region_splits = int(params.get("row_region_splits", 3))
@@ -63,15 +65,6 @@ class VisiCalcStage(PipelineStage):
         # -------------------------
         # Metric name reconciliation
         # -------------------------
-        metric_names = ctx.get("metric_names") or [f"m{i}" for i in range(num_metrics)]
-        if len(metric_names) != num_metrics:
-            if len(metric_names) > num_metrics:
-                metric_names = metric_names[:num_metrics]
-            else:
-                metric_names = metric_names + [
-                    f"m{i}" for i in range(len(metric_names), num_metrics)
-                ]
-            ctx["metric_names"] = metric_names
 
         # -------------------------
         # Global stats
@@ -96,30 +89,24 @@ class VisiCalcStage(PipelineStage):
         # -------------------------
         # Frontier metric + band
         # -------------------------
-        if self.frontier_metric is None:
-            frontier_idx = 0
-            frontier_name = metric_names[0]
-        else:
-            try:
-                frontier_idx = metric_names.index(self.frontier_metric)
-                frontier_name = self.frontier_metric
-            except ValueError:
-                frontier_idx = 0
-                frontier_name = metric_names[0]
-                log.warning(
-                    "VisiCalcStage: frontier_metric '%s' not found, "
-                    "falling back to '%s'",
-                    self.frontier_metric,
-                    frontier_name,
-                )
 
-        frontier_values = vpm[:, frontier_idx]
+        frontier_values = vpm[:, self.frontier_metric_index]
         low = self.frontier_low
         high = self.frontier_high
 
         band_mask = (frontier_values >= low) & (frontier_values <= high)
         frontier_fraction = float(band_mask.mean()) if num_rows > 0 else 0.0
         num_frontier_rows = int(band_mask.sum())
+
+        # global low / high fractions (below band / above band)
+        if num_rows > 0:
+            low_mask = frontier_values < low
+            high_mask = frontier_values > high
+            global_low_frac = float(low_mask.mean())
+            global_high_frac = float(high_mask.mean())
+        else:
+            global_low_frac = 0.0
+            global_high_frac = 0.0
 
         # -------------------------
         # Row-region splits
@@ -142,25 +129,38 @@ class VisiCalcStage(PipelineStage):
             if rs >= re:
                 region_frontier_fractions.append(0.0)
                 row_region_stats[f"region_{i}"] = {
+                    "index": i,
                     "row_start": int(rs),
                     "row_end": int(re),
                     "num_rows": 0,
                     "frontier_fraction": 0.0,
+                    "low_frac": 0.0,
+                    "high_frac": 0.0,
                     "mean_frontier_value": None,
                 }
                 continue
 
-            region_mask = band_mask[rs:re]
-            region_frontier_fraction = float(region_mask.mean())
+            region_frontier_vals = frontier_values[rs:re]
+            region_band_mask = band_mask[rs:re]
+            region_frontier_fraction = float(region_band_mask.mean())
+
+            # per-region low / high band coverage
+            region_low_mask = region_frontier_vals < low
+            region_high_mask = region_frontier_vals > high
+            region_low_frac = float(region_low_mask.mean())
+            region_high_frac = float(region_high_mask.mean())
+
             region_frontier_fractions.append(region_frontier_fraction)
 
-            region_frontier_values = frontier_values[rs:re]
             row_region_stats[f"region_{i}"] = {
+                "index": i,
                 "row_start": int(rs),
                 "row_end": int(re),
                 "num_rows": int(re - rs),
                 "frontier_fraction": region_frontier_fraction,
-                "mean_frontier_value": float(region_frontier_values.mean()),
+                "low_frac": region_low_frac,
+                "high_frac": region_high_frac,
+                "mean_frontier_value": float(region_frontier_vals.mean()),
             }
 
         # -------------------------
@@ -178,7 +178,7 @@ class VisiCalcStage(PipelineStage):
             col_max = float(np.max(col))
             q25, q50, q75 = [float(q) for q in np.quantile(col, [0.25, 0.5, 0.75])]
 
-            if j == frontier_idx:
+            if j == self.frontier_metric_index:
                 corr_frontier = 1.0
             else:
                 if std > 1e-9 and frontier_std > 1e-9:
@@ -189,7 +189,6 @@ class VisiCalcStage(PipelineStage):
             per_metric_stats.append(
                 {
                     "index": j,
-                    "name": metric_names[j],
                     "mean": mean,
                     "std": std,
                     "min": col_min,
@@ -220,8 +219,10 @@ class VisiCalcStage(PipelineStage):
         add_feature("sparsity_le_1e-2", sparsity_1e2)
         add_feature("entropy", entropy)
 
-        # frontier
+        # frontier (global)
         add_feature("frontier_fraction", frontier_fraction)
+        add_feature("global_low_frac", global_low_frac)
+        add_feature("global_high_frac", global_high_frac)
 
         # row regions
         for i, frac in enumerate(region_frontier_fractions):
@@ -229,7 +230,7 @@ class VisiCalcStage(PipelineStage):
 
         # per-metric compressed view
         for pm in per_metric_stats:
-            prefix = f"metric[{pm['name']}]"
+            prefix = f"metric[{pm['index']}]"
             add_feature(f"{prefix}_mean", pm["mean"])
             add_feature(f"{prefix}_std", pm["std"])
             add_feature(f"{prefix}_corr_frontier", pm["corr_frontier"])
@@ -244,10 +245,11 @@ class VisiCalcStage(PipelineStage):
                 "sparsity_le_1e-3": sparsity_1e3,
                 "sparsity_le_1e-2": sparsity_1e2,
                 "entropy": entropy,
+                "low_frac": global_low_frac,
+                "high_frac": global_high_frac,
             },
             "frontier": {
-                "metric_name": frontier_name,
-                "metric_index": frontier_idx,
+                "metric_index": self.frontier_metric_index,
                 "low": low,
                 "high": high,
                 "frontier_fraction": frontier_fraction,
@@ -257,6 +259,12 @@ class VisiCalcStage(PipelineStage):
             "per_metric": per_metric_stats,
             "feature_names": feature_names,
             "feature_vector": feature_values,
+            # convenience top-level aliases (for Stephanie)
+            "frontier_metric_index": self.frontier_metric_index,
+            "frontier_low": low,
+            "frontier_high": high,
+            "frontier_frac": frontier_fraction,
+            "row_region_splits": splits,
         }
 
         # Expose in shared context for downstream stages
@@ -281,62 +289,4 @@ def format_visicalc_stats(
       - full stage metadata (with 'visicalc' key), or
       - the nested 'visicalc' dict itself.
     """
-    if "visicalc" in stats:
-        data = stats["visicalc"]
-    else:
-        data = stats
-
-    lines: List[str] = []
-
-    shape = data.get("shape", (None, None))
-    lines.append(f"VisiCalc stats (shape={shape[0]}x{shape[1]}):")
-
-    # global
-    g = data.get("global", {})
-    lines.append(
-        "  global:"
-        f" mean={g.get('mean', 0.0):.4f}"
-        f" std={g.get('std', 0.0):.4f}"
-        f" min={g.get('min', 0.0):.4f}"
-        f" max={g.get('max', 0.0):.4f}"
-        f" sparsity<=1e-3={g.get('sparsity_le_1e-3', 0.0):.3f}"
-        f" entropy={g.get('entropy', 0.0):.3f}"
-    )
-
-    # frontier
-    fr = data.get("frontier", {})
-    lines.append(
-        "  frontier:"
-        f" metric={fr.get('metric_name')}[idx={fr.get('metric_index')}]"
-        f" band=[{fr.get('low', 0.0):.2f},{fr.get('high', 1.0):.2f}]"
-        f" fraction={fr.get('frontier_fraction', 0.0):.3f}"
-        f" rows={fr.get('num_frontier_rows', 0)}"
-    )
-
-    # row regions
-    rr = data.get("row_regions", {})
-    lines.append(f"  row_regions: {len(rr)}")
-    for name, r in rr.items():
-        lines.append(
-            f"    {name}: rows[{r['row_start']}:{r['row_end']})"
-            f" n={r['num_rows']}"
-            f" frontier_fraction={r['frontier_fraction']:.3f}"
-        )
-
-    # per metric (shortened)
-    pm_list = data.get("per_metric", [])
-    lines.append(f"  per_metric (first {min(max_metrics, len(pm_list))}):")
-    for pm in pm_list[:max_metrics]:
-        lines.append(
-            f"    {pm['name']}:"
-            f" mean={pm['mean']:.4f}"
-            f" std={pm['std']:.4f}"
-            f" min={pm['min']:.4f}"
-            f" max={pm['max']:.4f}"
-            f" corr_frontier={pm['corr_frontier']:.3f}"
-        )
-
-    fv = data.get("feature_vector") or []
-    lines.append(f"  feature_vector: {len(fv)} dims")
-
-    return "\n".join(lines)
+    return dumps_safe(stats, indent=2)

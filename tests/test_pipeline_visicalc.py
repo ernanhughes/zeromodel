@@ -32,7 +32,7 @@ def test_visicalc_stage_basic():
         {
             "stage": "explainability/visicalc.VisiCalcStage",
             "params": {
-                "frontier_metric": metric_names[0],
+                "frontier_metric_index": 5,
                 "frontier_low": 0.25,
                 "frontier_high": 0.75,
                 "row_region_splits": 3,
@@ -60,8 +60,7 @@ def test_visicalc_stage_basic():
     assert "row_regions" in vstats
     assert "per_metric" in vstats
     assert len(vstats["feature_names"]) == len(vstats["feature_vector"])
-    assert vstats["frontier"]["metric_name"] == metric_names[0]
-
+  
 
 def test_visicalc_respects_row_region_splits():
     """Ensure row_region_splits controls the number of regions."""
@@ -79,7 +78,7 @@ def test_visicalc_respects_row_region_splits():
         {
             "stage": "explainability/visicalc.VisiCalcStage",
             "params": {
-                "frontier_metric": metric_names[0],
+                "frontier_metric_index": 2,
                 "row_region_splits": 4,  # ask for 4 regions
             },
         },

@@ -1,4 +1,6 @@
-1. ✅  python .\scripts\bump_version.py patch
+# create a relase
+
+1. ✅ `python .\scripts\bump_version.py patch`
 2. ✅ `python -m build`
 3. ✅ `python -m twine check dist/*`
 4. ✅ (optional) Upload to TestPyPI, quick smoke test

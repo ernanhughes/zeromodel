@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from zeromodel.core import ZeroModel
 from zeromodel.vpm.encoder import VPMEncoder
 
 
@@ -224,7 +225,7 @@ class OcclusionVPMInterpreter:
 
     # -------------------- Public API --------------------
 
-    def explain(self, zeromodel) -> tuple[np.ndarray, dict]:
+    def explain(self, zeromodel: ZeroModel) -> tuple[np.ndarray, dict]:
         """
         Compute occlusion importance map for a ZeroModel VPM.
 
@@ -248,12 +249,9 @@ class OcclusionVPMInterpreter:
             ValueError: If model not prepared or unsupported inputs
         """
         # Validate model state
-        if getattr(zeromodel, "sorted_matrix", None) is None:
+        if zeromodel.sorted_matrix is None:
             raise ValueError("ZeroModel not prepared (sorted_matrix missing).")
 
-        # Get and normalize VPM image without using deprecated ZeroModel.encode()
-        if getattr(zeromodel, "sorted_matrix", None) is None:
-            raise ValueError("ZeroModel not prepared (sorted_matrix missing).")
         vpm = VPMEncoder("float32").encode(zeromodel.sorted_matrix)
         vpm01 = self._ensure_float01(vpm)
         H, W, _ = vpm01.shape

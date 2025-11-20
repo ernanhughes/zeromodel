@@ -55,16 +55,16 @@ DEFAULT_CONFIG = {
     },
     # Logging configuration
     "logging": {
-        "level": "DEBUG",
+        "level": "INFO",
         "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         "handlers": [
             {
                 "type": "console",
-                "level": "DEBUG",
+                "level": "INFO",
             },
             {
                 "type": "file",
-                "level": "DEBUG",
+                "level": "INFO",
                 "filename": "zeromodel.log",
                 "max_bytes": 10 * 1024 * 1024,  # 10MB
                 "backup_count": 5,

@@ -1,9 +1,9 @@
 import logging
 
 import numpy as np
-import json
+
 from zeromodel.pipeline.executor import PipelineExecutor
-from zeromodel.pipeline.utils.json_sanitize import dumps_safe   
+from zeromodel.pipeline.explainability.visicalc import format_visicalc_stats
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +16,9 @@ def test_visicalc_stage_basic():
 
     metric_names = [f"m{i}" for i in range(M)]
 
-    # NOTE: adjust the stage path string if you placed VisiCalc elsewhere,
-    # e.g. "analytics/visicalc.VisiCalcStage" instead of "visicalc/visicalc.VisiCalcStage"
     stages = [
         {
-            "stage": "normalize I/normalize.NormalizeStage",
+            "stage": "normalize/normalize.NormalizeStage",
             "params": {"metric_names": metric_names},
         },
         {
@@ -48,10 +46,21 @@ def test_visicalc_stage_basic():
     assert isinstance(result, np.ndarray)
     assert result.shape == X.shape, "VisiCalcStage should not change matrix shape"
 
+    # This is how PipelineExecutor exposes per-stage metadata:
     stats = ctx["stage_3"]["metadata"]
+    logger.info(format_visicalc_stats(stats))
 
-    logger.info(f"\n\nVisiCalcStage stats: \n{dumps_safe(stats, indent=2)}")
-    
+    # core invariants
+    assert "visicalc" in stats
+    vstats = stats["visicalc"]
+
+    assert vstats["shape"] == result.shape
+    assert "global" in vstats
+    assert "frontier" in vstats
+    assert "row_regions" in vstats
+    assert "per_metric" in vstats
+    assert len(vstats["feature_names"]) == len(vstats["feature_vector"])
+    assert vstats["frontier"]["metric_name"] == metric_names[0]
 
 
 def test_visicalc_respects_row_region_splits():
@@ -81,5 +90,15 @@ def test_visicalc_respects_row_region_splits():
     assert result.shape == X.shape
 
     stats = ctx["stage_1"]["metadata"]
-    logger.info(f"\n\nVisiCalcStage stats: \n{dumps_safe(stats, indent=2)}")
- 
+    logger.info(format_visicalc_stats(stats))
+
+    vstats = stats["visicalc"]
+    row_regions = vstats["row_regions"]
+
+    # confirm we got 4 regions, and they cover [0, N)
+    assert len(row_regions) == 4
+    bounds = sorted(
+        (v["row_start"], v["row_end"]) for v in row_regions.values()
+    )
+    assert bounds[0][0] == 0
+    assert bounds[-1][1] == N

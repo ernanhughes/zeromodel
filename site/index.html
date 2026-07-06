@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts.">
+  <title>ZeroModel — Inspectable spatial artifacts for scored decisions</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="ZeroModel home">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span><span></span>
+      </span>
+      <span>ZeroModel</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="#demo">Demo</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#evidence">Evidence</a>
+      <a href="../docs/spec/vpm-artifact-v0.md">Specification</a>
+      <a class="nav-cta" href="https://github.com/ernanhughes/zeromodel">GitHub</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">Visual Policy Maps, rebuilt from first principles</p>
+        <h1>Make scored decisions <span>inspectable.</span></h1>
+        <p class="hero-lede">
+          ZeroModel turns an item × metric score table into a deterministic spatial artifact.
+          The values, ordering, layout recipe, source mapping, and provenance travel together.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#demo">Reorganize a live matrix</a>
+          <a class="button secondary" href="../docs/spec/vpm-artifact-v0.md">Read the draft spec</a>
+        </div>
+        <div class="truth-strip" aria-label="ZeroModel boundaries">
+          <span>Not a foundation model</span>
+          <span>Not hidden chain of thought</span>
+          <span>Not a decision policy</span>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-label="Illustration of a Visual Policy Map">
+        <div class="artifact-shell">
+          <div class="artifact-header">
+            <span>vpm-artifact/0</span>
+            <span class="status-dot">deterministic</span>
+          </div>
+          <div class="mini-map" aria-hidden="true">
+            <span style="--v:.98"></span><span style="--v:.84"></span><span style="--v:.71"></span><span style="--v:.46"></span><span style="--v:.22"></span><span style="--v:.08"></span>
+            <span style="--v:.91"></span><span style="--v:.77"></span><span style="--v:.63"></span><span style="--v:.39"></span><span style="--v:.19"></span><span style="--v:.06"></span>
+            <span style="--v:.73"></span><span style="--v:.65"></span><span style="--v:.54"></span><span style="--v:.34"></span><span style="--v:.16"></span><span style="--v:.04"></span>
+            <span style="--v:.51"></span><span style="--v:.44"></span><span style="--v:.36"></span><span style="--v:.25"></span><span style="--v:.11"></span><span style="--v:.03"></span>
+            <span style="--v:.31"></span><span style="--v:.28"></span><span style="--v:.21"></span><span style="--v:.13"></span><span style="--v:.08"></span><span style="--v:.02"></span>
+            <span style="--v:.17"></span><span style="--v:.14"></span><span style="--v:.10"></span><span style="--v:.07"></span><span style="--v:.03"></span><span style="--v:.01"></span>
+          </div>
+          <dl class="artifact-meta">
+            <div><dt>Rows</dt><dd>12 items</dd></div>
+            <div><dt>Metrics</dt><dd>6 signals</dd></div>
+            <div><dt>Recipe</dt><dd>quality-first</dd></div>
+            <div><dt>Mapping</dt><dd>complete</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <section class="definition section-grid" id="definition">
+      <div>
+        <p class="section-kicker">The narrow definition</p>
+        <h2>A VPM is a view over evidence, not an oracle.</h2>
+      </div>
+      <div class="definition-copy">
+        <p>
+          Models, rules, humans, or sensors produce scores. A layout recipe states how those scores should be normalized and ordered. ZeroModel compiles the result into an artifact whose cells can always be traced back to source rows and metrics.
+        </p>
+        <p>
+          A router can inspect the artifact. A human can visualize it. A benchmark can measure it. The artifact itself does not decide what the scores mean or what action follows.
+        </p>
+      </div>
+    </section>
+
+    <section class="demo-section" id="demo">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Interactive demonstration</p>
+          <h2>Same scores. Different declared view.</h2>
+        </div>
+        <p>
+          Choose a recipe. ZeroModel reorders the same source table and preserves the mapping. Hover any cell to inspect its origin.
+        </p>
+      </div>
+
+      <div class="demo-layout">
+        <aside class="controls" aria-label="Layout recipe controls">
+          <div class="control-group">
+            <span class="control-label">Layout recipe</span>
+            <button class="recipe-button active" data-recipe="quality" type="button">
+              <strong>Quality first</strong>
+              <span>quality ↓, uncertainty ↑</span>
+            </button>
+            <button class="recipe-button" data-recipe="investigate" type="button">
+              <strong>Investigate</strong>
+              <span>uncertainty ↓, novelty ↓</span>
+            </button>
+            <button class="recipe-button" data-recipe="efficient" type="button">
+              <strong>Efficient</strong>
+              <span>quality ↓, cost ↑</span>
+            </button>
+            <button class="recipe-button" data-recipe="source" type="button">
+              <strong>Source order</strong>
+              <span>no semantic reordering</span>
+            </button>
+          </div>
+
+          <div class="region-control">
+            <label for="region-size">Inspect top-left region</label>
+            <div class="range-row">
+              <input id="region-size" type="range" min="1" max="5" value="3">
+              <output id="region-output" for="region-size">3 × 3</output>
+            </div>
+          </div>
+
+          <div class="region-result" aria-live="polite">
+            <span>Region mean</span>
+            <strong id="region-mean">0.000</strong>
+            <small>This is a measurement. A consumer decides how to use it.</small>
+          </div>
+        </aside>
+
+        <div class="canvas-panel">
+          <div class="panel-toolbar">
+            <div>
+              <span class="panel-title">Visual Policy Map</span>
+              <span id="view-name">quality-first</span>
+            </div>
+            <div class="legend" aria-label="Value legend">
+              <span>0</span><i></i><span>1</span>
+            </div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="vpm-canvas" width="900" height="560" aria-label="Interactive Visual Policy Map heatmap"></canvas>
+            <div id="cell-tooltip" class="cell-tooltip" hidden></div>
+          </div>
+          <div class="map-axes" aria-hidden="true">
+            <span>ordered items ↓</span>
+            <span>ordered metrics →</span>
+          </div>
+        </div>
+
+        <aside class="inspection-panel" aria-live="polite">
+          <p class="inspection-label">Cell inspection</p>
+          <div id="cell-empty" class="inspection-empty">
+            Hover a cell to see its source identity and value.
+          </div>
+          <dl id="cell-details" class="cell-details" hidden>
+            <div><dt>View coordinate</dt><dd id="detail-view">—</dd></div>
+            <div><dt>Source row</dt><dd id="detail-row">—</dd></div>
+            <div><dt>Metric</dt><dd id="detail-metric">—</dd></div>
+            <div><dt>Raw value</dt><dd id="detail-raw">—</dd></div>
+            <div><dt>Normalized</dt><dd id="detail-normalized">—</dd></div>
+          </dl>
+          <div class="recipe-box">
+            <div class="recipe-box-header">
+              <span>Declared recipe</span>
+              <span>JSON</span>
+            </div>
+            <pre id="recipe-json"></pre>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="architecture" id="architecture">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-kicker">Separation of concerns</p>
+          <h2>One artifact. Several independent consumers.</h2>
+        </div>
+      </div>
+
+      <div class="flow" aria-label="ZeroModel architecture">
+        <article>
+          <span class="step-number">01</span>
+          <h3>Score table</h3>
+          <p>Stable row IDs, metric IDs, and finite numeric values.</p>
+          <code>N items × M metrics</code>
+        </article>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <article>
+          <span class="step-number">02</span>
+          <h3>Layout recipe</h3>
+          <p>Explicit normalization, ordering, direction, and tie-break rules.</p>
+          <code>data, not hidden code</code>
+        </article>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <article class="accent-card">
+          <span class="step-number">03</span>
+          <h3>VPM artifact</h3>
+          <p>Immutable values, view orders, mapping, hashes, and provenance.</p>
+          <code>deterministic + inspectable</code>
+        </article>
+      </div>
+
+      <div class="consumers">
+        <article>
+          <span class="consumer-icon">◫</span>
+          <h3>Renderer</h3>
+          <p>Produces PNG, SVG, or browser views without changing semantics.</p>
+        </article>
+        <article>
+          <span class="consumer-icon">⌖</span>
+          <h3>Inspector</h3>
+          <p>Maps cells and regions back to source rows, metrics, and provenance.</p>
+        </article>
+        <article>
+          <span class="consumer-icon">↯</span>
+          <h3>Policy consumer</h3>
+          <p>Applies an external threshold, ranking rule, router, or gate.</p>
+        </article>
+        <article>
+          <span class="consumer-icon">≋</span>
+          <h3>Benchmark</h3>
+          <p>Measures size, latency, accuracy, and trade-offs against baselines.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="evidence" id="evidence">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Claim discipline</p>
+          <h2>The website should say what we know.</h2>
+        </div>
+        <p>Every technical statement belongs to one of three visible evidence states.</p>
+      </div>
+
+      <div class="evidence-grid">
+        <article class="evidence-card defined">
+          <span class="evidence-state">Defined</span>
+          <h3>Artifact invariants</h3>
+          <p>Deterministic IDs, stable source mapping, explicit recipes, and lossless canonical round-trips are requirements of the specification.</p>
+          <a href="../docs/spec/vpm-artifact-v0.md">Open specification</a>
+        </article>
+        <article class="evidence-card measured">
+          <span class="evidence-state">Measured</span>
+          <h3>Benchmark results</h3>
+          <p>Size and latency numbers will appear only with code, raw output, hardware details, datasets, and comparison baselines.</p>
+          <span class="pending">Benchmarks being rebuilt</span>
+        </article>
+        <article class="evidence-card hypothesis">
+          <span class="evidence-state">Hypothesis</span>
+          <h3>Research directions</h3>
+          <p>Learned layouts, hierarchical navigation, edge gates, and visual composition remain experiments until they beat honest baselines.</p>
+          <a href="https://github.com/ernanhughes/zeromodel">Follow the experiments</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="principles">
+      <p class="section-kicker">Rebuild principles</p>
+      <div class="principle-list">
+        <article><span>01</span><h3>Representation before intelligence claims</h3></article>
+        <article><span>02</span><h3>One canonical artifact path</h3></article>
+        <article><span>03</span><h3>No import-time configuration</h3></article>
+        <article><span>04</span><h3>Every cell maps to evidence</h3></article>
+        <article><span>05</span><h3>Benchmarks before adjectives</h3></article>
+        <article><span>06</span><h3>Experiments stay replaceable</h3></article>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div>
+        <p class="section-kicker">Start with the artifact</p>
+        <h2>Better structure is useful only when we can inspect what the structure means.</h2>
+      </div>
+      <div class="closing-actions">
+        <a class="button primary" href="https://github.com/ernanhughes/zeromodel">View the rebuild on GitHub</a>
+        <a class="button secondary" href="../REBUILD.md">Read the rebuild plan</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+      <span>ZeroModel</span>
+    </a>
+    <p>Visual Policy Maps as deterministic, inspectable artifacts.</p>
+    <p>MIT licensed · Built by Ernan Hughes</p>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

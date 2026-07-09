@@ -1,165 +1,144 @@
-# ZeroModel Intelligence (ZeroModel)
+# ZeroModel
 
-[![PyPI version](https://badge.fury.io/py/zeromodel.svg)](https://badge.fury.io/py/zeromodel)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**ZeroModel turns scored data into deterministic, inspectable spatial artifacts.**
 
-**ZeroModel Intelligence** is a paradigm-shifting approach that embeds decision logic into the *structure* of data itself. Instead of making models smarter, ZeroModel makes data structures intelligent.
+The project is being rebuilt from first principles around one narrow abstraction: the **Visual Policy Map (VPM)**.
 
-> **The intelligence isn't in the processing—it's in the data structure itself.**
+> A VPM is a deterministic spatial view over a table of scored items.
 
-## 🧠 Core Concept
+It carries the numeric values, stable item and metric identifiers, layout recipe, view ordering, source mapping, and provenance needed to inspect how the artifact was formed.
 
-ZeroModel transforms high-dimensional policy evaluation data into spatially-optimized **Visual Policy Maps (VPMs)** where:
+A VPM is **not** a foundation model, a model's hidden chain of thought, or an action policy. Models, rules, sensors, and humans may produce scores. Separate consumers may rank, route, gate, visualize, or audit a VPM. The artifact itself remains a representation.
 
-- **Position = Importance** (top-left = most relevant)
-- **Color = Value** (darker = higher priority)
-- **Structure = Task logic** (spatial organization encodes decision workflow based on user-defined SQL)
+## Rebuild status
 
-This enables **zero-model intelligence** on devices with <25KB memory and unlocks **Visual Symbolic Reasoning**.
+This repository currently contains two layers:
 
-## 🚀 Quick Start
+- `zeromodel/` — the original v1 experimental implementation. It is retained for reference while the useful ideas are retested.
+- the v2 rebuild documents and website — the new contract being established before a replacement Python package is written.
 
-```bash
-pip install zeromodel
-```
+Do not treat the current v1 package API as the future v2 API.
 
-```python
-from zeromodel.core import ZeroModel
-import numpy as np
+Read the rebuild plan in [`REBUILD.md`](REBUILD.md) and the draft artifact contract in [`docs/spec/vpm-artifact-v0.md`](docs/spec/vpm-artifact-v0.md).
 
-# 1. Prepare your data (documents × metrics)
-# Example: 100 items scored on 5 criteria
-score_matrix = np.random.rand(100, 5)
-metric_names = ["uncertainty", "size", "quality", "novelty", "coherence"]
-
-# 2. Initialize ZeroModel
-zeromodel = ZeroModel(metric_names)
-
-# 3. Define your task using SQL and process the data in one step
-# The intelligence comes from how you sort the data for your task.
-sql_task = "SELECT * FROM virtual_index ORDER BY quality DESC, uncertainty ASC"
-
-# Process data for the task. This handles normalization and spatial organization.
-# Use nonlinearity hints for complex tasks (e.g., XOR-like patterns).
-zeromodel.prepare(score_matrix, sql_task, nonlinearity_hint='auto')
-
-# 4. Get the Visual Policy Map (VPM) - a structured image
-vpm = zeromodel.encode() # Returns a NumPy array (H x W x 3)
-
-# 5. Make decisions by inspecting the structured VPM
-doc_idx, relevance = zeromodel.get_decision()
-print(f"Top document index: {doc_idx}, Relevance score: {relevance:.4f}")
-
-# 6. For edge devices: get a small, critical tile
-tile_bytes = zeromodel.get_critical_tile(tile_size=3) # Returns compact bytes
-```
-
-## 🧬 Hierarchical Reasoning
-
-Handle large datasets and multi-resolution decisions with `HierarchicalVPM`:
-
-```python
-from zeromodel.hierarchical import HierarchicalVPM
-
-# Create a hierarchical structure (e.g., 3 levels)
-hvpm = HierarchicalVPM(metric_names, num_levels=3, zoom_factor=3, precision=16)
-
-# Process data with the same SQL task
-hvpm.process(score_matrix, sql_task) # Internally uses ZeroModel.prepare
-
-# Access different levels of detail
-base_level_vpm = hvpm.get_level(2)["vpm"]  # Level 2: Most detailed
-strategic_vpm = hvpm.get_level(0)["vpm"]   # Level 0: Most abstract
-
-# Get a tile from a specific level for an edge device
-edge_tile_bytes = hvpm.get_tile(level_index=0, width=3, height=3)
-
-# Make a decision (defaults to most detailed level)
-level, doc_idx, relevance = hvpm.get_decision()
-```
-
-## 🔮 Visual Symbolic Reasoning
-
-Combine VPMs like logic gates to create new, complex decision criteria:
-
-```python
-from zeromodel.vpm.logic import vpm_and, vpm_or, vpm_not, vpm_query_top_left
-
-# Prepare VPMs for different sub-tasks
-high_quality_model = ZeroModel(metric_names)
-high_quality_model.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY quality DESC")
-high_quality_vpm = high_quality_model.encode()
-
-low_uncertainty_model = ZeroModel(metric_names)
-low_uncertainty_model.prepare(score_matrix, "SELECT * FROM virtual_index ORDER BY uncertainty ASC")
-low_uncertainty_vpm = low_uncertainty_model.encode()
-
-# Compose VPMs: Find items that are High Quality AND Low Uncertainty
-# The result is a new VPM representing this combined concept.
-good_and_cert_vpm = vpm_and(high_quality_vpm, low_uncertainty_vpm)
-
-# Query the composed VPM
-composite_score = vpm_query_top_left(good_and_cert_vpm, context_size=3)
-print(f"Score for 'High Quality AND Low Uncertainty' items: {composite_score:.4f}")
-
-# This enables complex reasoning: (A AND NOT B) OR (C AND D) as VPM operations.
-```
-
-## 💡 Edge Device Example (Pseudocode)
-
-Tiny devices can make intelligent decisions using minimal code by processing small VPM tiles.
-
-```python
-# --- On a powerful server ---
-hvpm = HierarchicalVPM(metric_names)
-hvpm.process(large_score_matrix, "SELECT * ORDER BY my_metric DESC")
-tile_bytes_level_0 = hvpm.get_tile(level_index=0, width=3, height=3)
-send_to_edge_device(tile_bytes_level_0)
-
-# --- On the tiny edge device (e.g., microcontroller) ---
-def process_tile_simple(tile_bytes):
-  # Parse 4-byte header: 16-bit little-endian width, height
-  if len(tile_bytes) < 5:
-    return 0
-  width = tile_bytes[0] | (tile_bytes[1] << 8)
-  height = tile_bytes[2] | (tile_bytes[3] << 8)
-  # Simple decision: check the very first pixel's Red channel
-  # (Assumes uint8 RGB layout [R, G, B, R, G, B, ...])
-  first_pixel_red_value = tile_bytes[4]
-  return 1 if first_pixel_red_value < 128 else 0
-
-# result = process_tile_simple(received_tile_bytes)
-# if result == 1: perform_action()
-```
-
-## 📚 Running Tests
-
-Ensure you have `pytest` installed (`pip install pytest`).
-
-```bash
-# Run all tests
-pytest tests/ -v
-
-# Run a specific test file
-pytest tests/test_core.py -v
-
-# Run a specific test function
-pytest tests/test_xor.py::test_xor_validation -v -s
-```
-
-## 🌐 Website
-
-Check out our website at [zeromi.org](https://zeromodel.org) for tutorials, examples, and community resources.
-
-## 📄 Citation
-
-If you use ZeroModel in your research, please cite:
+## The core pipeline
 
 ```text
-@article{zeromodel2025,
-  title={Zero-Model Intelligence: Spatially-Optimized Decision Maps for Resource-Constrained AI},
-  author={Ernan Hughes},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2025}
-}
+scores + identifiers + layout recipe
+                 |
+                 v
+          VPM artifact
+          /     |      \
+         v      v       v
+    renderer  inspector  consumer policy
+      PNG      browser    router/ranker/gate
 ```
+
+The separation matters:
+
+1. **Score producers** own what the metrics mean.
+2. **Layout recipes** explicitly define normalization, ordering, direction, and tie-break behavior.
+3. **VPM artifacts** preserve the resulting view and its mapping back to source evidence.
+4. **Consumers** own any threshold, route, ranking, or action.
+
+## Website
+
+The new website is a zero-dependency static application in `site/`.
+
+It includes an interactive demonstration that:
+
+- uses one fixed source score table;
+- applies several declared layout recipes;
+- visibly reorganizes rows and metrics;
+- measures a configurable top-left region;
+- maps every displayed cell back to its source row, source metric, raw value, and normalized value;
+- distinguishes specified behavior, measured results, and research hypotheses.
+
+Run it locally:
+
+```bash
+python -m http.server 4173 -d site
+```
+
+Then open `http://localhost:4173`.
+
+GitHub Pages deployment is defined in [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+
+## What the rebuild preserves
+
+The original work contains several ideas worth retaining and testing carefully:
+
+- task-specific spatial ordering of score matrices;
+- cheap inspection of declared high-priority regions;
+- one artifact serving both machine inspection and human visualization;
+- provenance travelling with the representation;
+- hierarchical summaries for bounded navigation;
+- composition when alignment and operator semantics are explicit.
+
+## What must be demonstrated
+
+Claims about compression, latency, edge execution, hierarchy, explainability, or reasoning will be published only when the repository contains:
+
+- the benchmark or experiment code;
+- raw output;
+- hardware and software details;
+- the dataset or generator;
+- comparison baselines;
+- falsification criteria.
+
+The website uses three evidence labels:
+
+- **Defined** — required by the artifact specification;
+- **Measured** — reproduced by a benchmark in this repository;
+- **Hypothesis** — proposed research not yet established.
+
+## Target v2 API
+
+The final names may change, but the intended surface is deliberately small:
+
+```python
+score_table = ScoreTable(
+    values=values,
+    row_ids=row_ids,
+    metric_ids=metric_ids,
+)
+
+recipe = LayoutRecipe.from_dict(recipe_data)
+artifact = build_vpm(score_table, recipe)
+
+artifact.validate()
+artifact.cell(view_row=0, view_column=0)
+artifact.region(rows=slice(0, 4), columns=slice(0, 4))
+artifact.to_bundle("artifact.vpm")
+artifact.render_png("artifact.png")
+```
+
+Decision behavior belongs outside the artifact:
+
+```python
+result = TopLeftGate(threshold=0.8).evaluate(artifact)
+```
+
+## Delivery order
+
+1. Freeze and document the useful v1 experiments.
+2. Finalize the minimal VPM artifact contract.
+3. Build the immutable Python reference implementation.
+4. Add lossless serialization, rendering, inspection, and artifact diffing.
+5. Establish honest format and latency benchmarks.
+6. Reintroduce edge, retrieval, hierarchy, and composition as optional consumers or experiments.
+
+## Contributing
+
+The most useful contributions during the rebuild are:
+
+- criticism of the artifact contract;
+- small reproducible counterexamples;
+- baseline implementations;
+- property and round-trip tests;
+- benchmark design;
+- accessibility and inspection improvements for the website.
+
+## License
+
+MIT.

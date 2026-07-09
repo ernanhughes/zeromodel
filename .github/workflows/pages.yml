@@ -1,0 +1,73 @@
+name: ZeroModel website
+
+on:
+  pull_request:
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate static site
+        run: |
+          test -f site/index.html
+          test -f site/styles.css
+          test -f site/app.js
+          python - <<'PY'
+          from pathlib import Path
+
+          html = Path("site/index.html").read_text(encoding="utf-8")
+          required = [
+              'href="styles.css"',
+              'src="app.js"',
+              'id="vpm-canvas"',
+              'id="recipe-json"',
+          ]
+          missing = [token for token in required if token not in html]
+          if missing:
+              raise SystemExit(f"Missing required site hooks: {missing}")
+          PY
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload static site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -6,6 +6,7 @@ from .bundle import from_bundle, to_bundle
 from .compare import VPMComparison, compare_fields
 from .compose import as_field, vpm_add, vpm_and, vpm_not, vpm_or, vpm_subtract, vpm_xor
 from .controller import Decision, Policy, Signal, Thresholds, VPMController, VPMRow, default_controller
+from .critic import CRITIC_METRICS, CriticAssessment, CriticObservation, build_critic_vpm, critic_recipe, observations_from_critic_lines
 from .edge import TopLeftGate, TopLeftGateResult
 from .hierarchy import HierarchyLevel, build_pyramid, reduce_blocks
 from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation, build_learning_vpm, learning_recipe
@@ -18,6 +19,9 @@ __version__ = "2.0.0"
 
 __all__ = [
     "CANONICAL_METRICS",
+    "CRITIC_METRICS",
+    "CriticAssessment",
+    "CriticObservation",
     "Decision",
     "HierarchyLevel",
     "LEARNING_METRICS",
@@ -41,17 +45,20 @@ __all__ = [
     "VPMRegion",
     "VPMRow",
     "as_field",
+    "build_critic_vpm",
     "build_learning_vpm",
     "build_pyramid",
     "build_training_progress_vpm",
     "build_vpm",
     "compare_fields",
+    "critic_recipe",
     "default_controller",
     "from_bundle",
     "guarded_pack_artifact",
     "image_entropy",
     "learning_recipe",
     "metric_ids_for_rows",
+    "observations_from_critic_lines",
     "pack_artifact",
     "pack_metrics",
     "phos_sort_pack",

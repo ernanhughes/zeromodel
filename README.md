@@ -55,6 +55,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 |---|---|
 | Immutable artifact kernel | `zeromodel.artifact` |
 | Dense policy views over the same source table | `zeromodel.views` |
+| Spatially optimized view profiles | `zeromodel.spatial` |
 | Metric alias packing and score-table building | `zeromodel.metrics` |
 | PHOS sort-pack and guarded top-left concentration | `zeromodel.phos` |
 | Visual AND/OR/NOT/XOR/add/subtract | `zeromodel.compose` |
@@ -100,6 +101,36 @@ print(risk_view.cell(0, 0).row_id)    # traffic
 Positive weights make high values salient. Negative weights make low values salient.
 
 See [`docs/examples/view-profiles.md`](docs/examples/view-profiles.md) and [`docs/research/dense-multiview-representation.md`](docs/research/dense-multiview-representation.md).
+
+## Spatial optimizer
+
+The spatial optimizer derives a `ViewProfile` for one explicit geometric objective: concentrate high-signal mass in the top-left inspection region.
+
+```python
+from zeromodel import ScoreTable, SpatialOptimizer, build_optimized_view, optimize_view_profile
+
+source = ScoreTable(
+    values=[
+        [0.10, 0.50, 0.20],
+        [0.95, 0.50, 0.25],
+        [0.90, 0.50, 0.15],
+        [0.05, 0.50, 0.20],
+    ],
+    row_ids=["background", "target_a", "target_b", "flat"],
+    metric_ids=["target", "constant", "weak"],
+)
+
+optimizer = SpatialOptimizer(Kc=2, Kr=2, alpha=0.95, max_iters=40)
+result = optimize_view_profile(source, name="optimized-target", optimizer=optimizer)
+view = build_optimized_view(source, name="optimized-target", optimizer=optimizer)
+
+print(result.baseline_mass, result.optimized_mass)
+print(view.cell(0, 0).row_id, view.cell(0, 0).metric_id)
+```
+
+This does not claim the optimizer learns the correct semantic view for every task. It proves a deterministic top-left mass objective can emit a normal `ViewProfile` while preserving source mapping.
+
+See [`docs/examples/spatial-optimizer.md`](docs/examples/spatial-optimizer.md) and [`docs/research/spatial-calculus.md`](docs/research/spatial-calculus.md).
 
 ## PHOS and edge usage
 
@@ -220,6 +251,7 @@ python examples/end_to_end_training_progress.py
 python examples/end_to_end_learning_trace.py
 python examples/research_hallucination_energy_vpm.py
 python examples/research_multiview_dense_artifact.py
+python examples/research_spatial_optimizer.py
 ```
 
 The training example reads `tests/fixtures/training/tensorboard_scalars.csv`, builds a training progress VPM, renders PNG/SVG, writes a `.vpm` bundle, and emits a JSON summary under `.zeromodel-demo/`.
@@ -238,4 +270,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, view profiles, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, view profiles, spatial optimization, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

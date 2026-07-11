@@ -19,7 +19,6 @@ __all__ = [
     "CANONICAL_METRICS",
     "Decision",
     "HierarchyLevel",
-    "LAYOUT_VERSION",
     "LEARNING_METRICS",
     "LayoutRecipe",
     "LearningAssessment",

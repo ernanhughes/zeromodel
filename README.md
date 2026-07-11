@@ -64,6 +64,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Edge top-left gates | `zeromodel.edge` |
 | Trend-aware EDIT/RESAMPLE/ESCALATE/STOP/SPINOFF control | `zeromodel.controller` |
 | Before/after/held-out/regression learning traces | `zeromodel.learning` |
+| Model-training progress artifacts | `zeromodel.training` |
 
 ## PHOS and edge usage
 
@@ -96,6 +97,34 @@ learning_artifact = assessment.artifact
 
 See [`docs/examples/learning-trace-vpm.md`](docs/examples/learning-trace-vpm.md).
 
+## Training progress usage
+
+Training telemetry can become a checkpoint-level VPM that shows train improvement, held-out transfer, regression safety, stability, efficiency, and best-checkpoint evidence.
+
+```python
+from zeromodel import TrainingCheckpoint, build_training_progress_vpm
+
+progress = build_training_progress_vpm(
+    [
+        TrainingCheckpoint(step=1000, metrics={
+            "train_loss": 1.00,
+            "heldout_score": 0.50,
+            "regression_safety": 0.99,
+        }),
+        TrainingCheckpoint(step=2000, metrics={
+            "train_loss": 0.82,
+            "heldout_score": 0.57,
+            "regression_safety": 0.98,
+        }),
+    ]
+)
+
+print(progress.best_checkpoint_id, progress.learned, progress.warnings)
+training_artifact = progress.artifact
+```
+
+See [`docs/examples/training-progress-vpm.md`](docs/examples/training-progress-vpm.md).
+
 ## Bundle usage
 
 ```python
@@ -108,4 +137,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, training progress, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

@@ -16,15 +16,15 @@ from functools import cmp_to_key
 import hashlib
 import json
 from types import MappingProxyType
-from typing import Any, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union
 
 import numpy as np
 
 SPEC_VERSION = "vpm-artifact/0"
 LAYOUT_VERSION = "vpm-layout/0"
 
-
 JsonMap = Mapping[str, Any]
+MatrixLike = Union[Sequence[Sequence[float]], np.ndarray]
 
 
 class VPMValidationError(ValueError):
@@ -35,7 +35,7 @@ def _freeze_json(value: Any) -> Any:
     """Return a JSON-like immutable representation for metadata/provenance."""
     if isinstance(value, Mapping):
         return MappingProxyType({str(k): _freeze_json(v) for k, v in value.items()})
-    if isinstance(value, list | tuple):
+    if isinstance(value, (list, tuple)):
         return tuple(_freeze_json(v) for v in value)
     return value
 
@@ -65,15 +65,15 @@ def _sha256_hex(value: Any) -> str:
 
 
 def _validate_unique(values: Sequence[str], kind: str) -> None:
-    seen: set[str] = set()
-    duplicates: list[str] = []
+    seen: Set[str] = set()
+    duplicates: List[str] = []
     for item in values:
         if item in seen:
             duplicates.append(item)
         seen.add(item)
     if duplicates:
         dupes = ", ".join(sorted(set(duplicates)))
-        raise VPMValidationError(f"Duplicate {kind} identifiers: {dupes}")
+        raise VPMValidationError("Duplicate %s identifiers: %s" % (kind, dupes))
 
 
 @dataclass(frozen=True)
@@ -86,16 +86,16 @@ class ScoreTable:
     """
 
     values: np.ndarray
-    row_ids: tuple[str, ...]
-    metric_ids: tuple[str, ...]
+    row_ids: Tuple[str, ...]
+    metric_ids: Tuple[str, ...]
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __init__(
         self,
-        values: Sequence[Sequence[float]] | np.ndarray,
+        values: MatrixLike,
         row_ids: Sequence[str],
         metric_ids: Sequence[str],
-        metadata: Mapping[str, Any] | None = None,
+        metadata: Optional[Mapping[str, Any]] = None,
     ) -> None:
         matrix = np.array(values, dtype=np.float64, copy=True)
         rows = tuple(str(row_id) for row_id in row_ids)
@@ -113,8 +113,8 @@ class ScoreTable:
         if self.values.shape != (len(self.row_ids), len(self.metric_ids)):
             raise VPMValidationError(
                 "ScoreTable shape must match row_ids and metric_ids "
-                f"(shape={self.values.shape}, rows={len(self.row_ids)}, "
-                f"metrics={len(self.metric_ids)})"
+                "(shape=%s, rows=%s, metrics=%s)"
+                % (self.values.shape, len(self.row_ids), len(self.metric_ids))
             )
         if not self.row_ids:
             raise VPMValidationError("ScoreTable must contain at least one row")
@@ -129,7 +129,7 @@ class ScoreTable:
         self.values.flags.writeable = False
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         return self.values.shape
 
     @property
@@ -140,9 +140,9 @@ class ScoreTable:
         try:
             return self.metric_ids.index(metric_id)
         except ValueError as exc:
-            raise VPMValidationError(f"Unknown metric_id in recipe: {metric_id}") from exc
+            raise VPMValidationError("Unknown metric_id in recipe: %s" % metric_id) from exc
 
-    def to_identity_payload(self) -> dict[str, Any]:
+    def to_identity_payload(self) -> Dict[str, Any]:
         return {
             "values": self.values.tolist(),
             "row_ids": list(self.row_ids),
@@ -150,7 +150,7 @@ class ScoreTable:
             "metadata": _thaw_json(self.metadata),
         }
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return self.to_identity_payload()
 
     @classmethod
@@ -189,7 +189,8 @@ class LayoutRecipe:
     def validate_shape(self) -> None:
         if self.data.get("version") != LAYOUT_VERSION:
             raise VPMValidationError(
-                f"LayoutRecipe version must be {LAYOUT_VERSION!r}; got {self.data.get('version')!r}"
+                "LayoutRecipe version must be %r; got %r"
+                % (LAYOUT_VERSION, self.data.get("version"))
             )
 
         row_order = self.data.get("row_order")
@@ -204,11 +205,13 @@ class LayoutRecipe:
 
         row_kind = row_order.get("kind")
         if row_kind not in {"source", "lexicographic", "weighted_score"}:
-            raise VPMValidationError(f"Unsupported row_order kind: {row_kind!r}")
+            raise VPMValidationError("Unsupported row_order kind: %r" % row_kind)
         if row_kind in {"lexicographic", "weighted_score"}:
             keys = row_order.get("keys") or row_order.get("metrics")
             if not isinstance(keys, tuple) or len(keys) == 0:
-                raise VPMValidationError(f"row_order kind {row_kind!r} requires non-empty keys/metrics")
+                raise VPMValidationError(
+                    "row_order kind %r requires non-empty keys/metrics" % row_kind
+                )
             for key in keys:
                 if not isinstance(key, Mapping):
                     raise VPMValidationError("row_order keys must be mappings")
@@ -225,7 +228,7 @@ class LayoutRecipe:
 
         column_kind = column_order.get("kind")
         if column_kind not in {"source", "explicit"}:
-            raise VPMValidationError(f"Unsupported column_order kind: {column_kind!r}")
+            raise VPMValidationError("Unsupported column_order kind: %r" % column_kind)
         if column_kind == "explicit":
             metric_ids = column_order.get("metric_ids")
             if not isinstance(metric_ids, tuple) or len(metric_ids) == 0:
@@ -234,9 +237,7 @@ class LayoutRecipe:
 
         normalization_kind = normalization.get("kind")
         if normalization_kind != "per_metric_minmax":
-            raise VPMValidationError(
-                f"Unsupported normalization kind: {normalization_kind!r}"
-            )
+            raise VPMValidationError("Unsupported normalization kind: %r" % normalization_kind)
 
     def validate_against(self, table: ScoreTable) -> None:
         row_order = self.data["row_order"]
@@ -251,7 +252,7 @@ class LayoutRecipe:
             for metric_id in column_order["metric_ids"]:
                 table.metric_index(str(metric_id))
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return _thaw_json(self.data)
 
 
@@ -273,12 +274,12 @@ class VPMCell:
 class VPMRegion:
     """Resolved region summary for a rectangular view slice."""
 
-    rows: tuple[int, ...]
-    columns: tuple[int, ...]
-    cells: tuple[VPMCell, ...]
+    rows: Tuple[int, ...]
+    columns: Tuple[int, ...]
+    cells: Tuple[VPMCell, ...]
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         return (len(self.rows), len(self.columns))
 
     @property
@@ -295,8 +296,8 @@ class VPMArtifact:
     source: ScoreTable
     recipe: LayoutRecipe
     normalized_values: np.ndarray
-    row_order: tuple[int, ...]
-    column_order: tuple[int, ...]
+    row_order: Tuple[int, ...]
+    column_order: Tuple[int, ...]
     provenance: Mapping[str, Any]
     artifact_id: str
     spec_version: str = SPEC_VERSION
@@ -305,11 +306,11 @@ class VPMArtifact:
         self,
         source: ScoreTable,
         recipe: LayoutRecipe,
-        normalized_values: Sequence[Sequence[float]] | np.ndarray,
+        normalized_values: MatrixLike,
         row_order: Sequence[int],
         column_order: Sequence[int],
-        provenance: Mapping[str, Any] | None = None,
-        artifact_id: str | None = None,
+        provenance: Optional[Mapping[str, Any]] = None,
+        artifact_id: Optional[str] = None,
         spec_version: str = SPEC_VERSION,
     ) -> None:
         matrix = np.array(normalized_values, dtype=np.float64, copy=True)
@@ -330,13 +331,14 @@ class VPMArtifact:
         self.validate()
 
     @property
-    def shape(self) -> tuple[int, int]:
+    def shape(self) -> Tuple[int, int]:
         return self.normalized_values.shape
 
     def validate(self) -> None:
         if self.spec_version != SPEC_VERSION:
             raise VPMValidationError(
-                f"VPMArtifact spec_version must be {SPEC_VERSION!r}; got {self.spec_version!r}"
+                "VPMArtifact spec_version must be %r; got %r"
+                % (SPEC_VERSION, self.spec_version)
             )
         self.source.validate()
         self.recipe.validate_against(self.source)
@@ -349,7 +351,7 @@ class VPMArtifact:
         if self.normalized_values.shape != (row_count, metric_count):
             raise VPMValidationError(
                 "normalized_values must have source shape after view ordering "
-                f"(shape={self.normalized_values.shape}, source={self.source.shape})"
+                "(shape=%s, source=%s)" % (self.normalized_values.shape, self.source.shape)
             )
         if not np.isfinite(self.normalized_values).all():
             raise VPMValidationError("normalized_values must be finite")
@@ -361,14 +363,14 @@ class VPMArtifact:
         expected_id = self.compute_artifact_id()
         if self.artifact_id != expected_id:
             raise VPMValidationError(
-                f"artifact_id mismatch: expected {expected_id}, got {self.artifact_id}"
+                "artifact_id mismatch: expected %s, got %s" % (expected_id, self.artifact_id)
             )
         self.normalized_values.flags.writeable = False
 
     def compute_artifact_id(self) -> str:
         return _sha256_hex(self.to_identity_payload())
 
-    def to_identity_payload(self) -> dict[str, Any]:
+    def to_identity_payload(self) -> Dict[str, Any]:
         return {
             "spec_version": self.spec_version,
             "source": self.source.to_identity_payload(),
@@ -381,7 +383,7 @@ class VPMArtifact:
             "provenance": _thaw_json(self.provenance),
         }
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         payload = self.to_identity_payload()
         payload["artifact_id"] = self.artifact_id
         return payload
@@ -402,9 +404,9 @@ class VPMArtifact:
 
     def cell(self, view_row: int, view_column: int) -> VPMCell:
         if not (0 <= view_row < len(self.row_order)):
-            raise IndexError(f"view_row out of range: {view_row}")
+            raise IndexError("view_row out of range: %s" % view_row)
         if not (0 <= view_column < len(self.column_order)):
-            raise IndexError(f"view_column out of range: {view_column}")
+            raise IndexError("view_column out of range: %s" % view_column)
 
         source_row_index = self.row_order[view_row]
         source_metric_index = self.column_order[view_column]
@@ -445,7 +447,12 @@ def _normalize_per_metric_minmax(table: ScoreTable, clip: bool) -> np.ndarray:
     return normalized
 
 
-def _compare_lexicographic(table: ScoreTable, keys: Sequence[Mapping[str, Any]], left: int, right: int) -> int:
+def _compare_lexicographic(
+    table: ScoreTable,
+    keys: Sequence[Mapping[str, Any]],
+    left: int,
+    right: int,
+) -> int:
     for key in keys:
         metric_index = table.metric_index(str(key["metric_id"]))
         left_value = float(table.values[left, metric_index])
@@ -468,7 +475,7 @@ def _weighted_score(table: ScoreTable, keys: Sequence[Mapping[str, Any]], row_in
     return total
 
 
-def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> tuple[int, ...]:
+def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ...]:
     row_order = recipe.data["row_order"]
     kind = row_order["kind"]
     row_indices = tuple(range(len(table.row_ids)))
@@ -493,23 +500,23 @@ def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> tuple[int, ..
             )
         )
 
-    raise VPMValidationError(f"Unsupported row_order kind: {kind!r}")
+    raise VPMValidationError("Unsupported row_order kind: %r" % kind)
 
 
-def _compile_column_order(table: ScoreTable, recipe: LayoutRecipe) -> tuple[int, ...]:
+def _compile_column_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ...]:
     column_order = recipe.data["column_order"]
     kind = column_order["kind"]
     if kind == "source":
         return tuple(range(len(table.metric_ids)))
     if kind == "explicit":
         return tuple(table.metric_index(str(metric_id)) for metric_id in column_order["metric_ids"])
-    raise VPMValidationError(f"Unsupported column_order kind: {kind!r}")
+    raise VPMValidationError("Unsupported column_order kind: %r" % kind)
 
 
 def build_vpm(
     score_table: ScoreTable,
     recipe: LayoutRecipe,
-    provenance: Mapping[str, Any] | None = None,
+    provenance: Optional[Mapping[str, Any]] = None,
 ) -> VPMArtifact:
     """Build an immutable VPM artifact from a score table and layout recipe."""
     score_table.validate()
@@ -525,8 +532,8 @@ def build_vpm(
     normalized_view = normalized_source[np.ix_(row_order, column_order)]
 
     default_provenance = {
-        "source_digest": f"sha256:{score_table.digest}",
-        "recipe_digest": f"sha256:{recipe.digest}",
+        "source_digest": "sha256:%s" % score_table.digest,
+        "recipe_digest": "sha256:%s" % recipe.digest,
         "parents": [],
     }
     if provenance:

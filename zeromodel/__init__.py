@@ -1,7 +1,7 @@
 """ZeroModel public package surface."""
 from __future__ import annotations
 
-from .artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMCell, VPMRegion, build_vpm
+from .artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMCell, VPMRegion, VPMValidationError, build_vpm
 from .bundle import from_bundle, to_bundle
 from .compare import VPMComparison, compare_fields
 from .compose import as_field, vpm_add, vpm_and, vpm_not, vpm_or, vpm_subtract, vpm_xor
@@ -10,6 +10,7 @@ from .critic import CRITIC_METRICS, CriticAssessment, CriticObservation, build_c
 from .edge import TopLeftGate, TopLeftGateResult
 from .hierarchy import HierarchyLevel, build_pyramid, reduce_blocks
 from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation, build_learning_vpm, learning_recipe
+from .manifold import DecisionManifold, ManifoldFrame, ManifoldSummary, ManifoldTransition, build_decision_manifold, find_inflection_points
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
@@ -25,11 +26,15 @@ __all__ = [
     "CriticAssessment",
     "CriticObservation",
     "Decision",
+    "DecisionManifold",
     "HierarchyLevel",
     "LEARNING_METRICS",
     "LayoutRecipe",
     "LearningAssessment",
     "LearningObservation",
+    "ManifoldFrame",
+    "ManifoldSummary",
+    "ManifoldTransition",
     "PHOSResult",
     "Policy",
     "ScoreTable",
@@ -48,10 +53,12 @@ __all__ = [
     "VPMController",
     "VPMRegion",
     "VPMRow",
+    "VPMValidationError",
     "ViewProfile",
     "ViewSet",
     "as_field",
     "build_critic_vpm",
+    "build_decision_manifold",
     "build_learning_vpm",
     "build_optimized_view",
     "build_pyramid",
@@ -62,6 +69,7 @@ __all__ = [
     "compare_fields",
     "critic_recipe",
     "default_controller",
+    "find_inflection_points",
     "from_bundle",
     "guarded_pack_artifact",
     "image_entropy",

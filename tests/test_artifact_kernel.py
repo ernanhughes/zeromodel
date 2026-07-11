@@ -5,8 +5,8 @@ import json
 import numpy as np
 import pytest
 
-from zeromodel.v2 import LayoutRecipe, ScoreTable, VPMArtifact, build_vpm
-from zeromodel.v2.artifact import VPMValidationError
+from zeromodel import LayoutRecipe, ScoreTable, VPMArtifact, build_vpm
+from zeromodel.artifact import VPMValidationError
 
 
 def quality_recipe() -> LayoutRecipe:

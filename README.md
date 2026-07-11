@@ -12,10 +12,11 @@ A VPM is **not** a foundation model, a model's hidden chain of thought, or an ac
 
 ## Rebuild status
 
-This repository currently contains two layers:
+This repository currently contains three layers:
 
 - `zeromodel/` — the original v1 experimental implementation. It is retained for reference while the useful ideas are retested.
-- the v2 rebuild documents and website — the new contract being established before a replacement Python package is written.
+- `zeromodel/v2/` — the first-principles artifact kernel.
+- `site/` and `docs/spec/` — the public website and artifact contract.
 
 Do not treat the current v1 package API as the future v2 API.
 
@@ -40,6 +41,55 @@ The separation matters:
 2. **Layout recipes** explicitly define normalization, ordering, direction, and tie-break behavior.
 3. **VPM artifacts** preserve the resulting view and its mapping back to source evidence.
 4. **Consumers** own any threshold, route, ranking, or action.
+
+## Current v2 artifact kernel
+
+The initial reference implementation is intentionally small:
+
+```python
+from zeromodel.v2 import LayoutRecipe, ScoreTable, build_vpm
+
+score_table = ScoreTable(
+    values=values,
+    row_ids=row_ids,
+    metric_ids=metric_ids,
+)
+
+recipe = LayoutRecipe.from_dict(recipe_data)
+artifact = build_vpm(score_table, recipe)
+
+artifact.validate()
+cell = artifact.cell(view_row=0, view_column=0)
+region = artifact.region(rows=slice(0, 4), columns=slice(0, 4))
+```
+
+Implemented now:
+
+- immutable `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` objects;
+- deterministic artifact IDs;
+- per-metric min-max normalization;
+- source, lexicographic, and weighted row ordering;
+- source and explicit metric ordering;
+- exact cell-to-source mapping;
+- rectangular region inspection;
+- JSON-compatible dictionary round-trip;
+- provenance digests for source and recipe;
+- v2 imports that do not initialize the old v1 runtime.
+
+Not implemented yet:
+
+- bundle serialization;
+- PNG/SVG rendering;
+- artifact diffing;
+- hierarchy;
+- edge consumers;
+- visual composition.
+
+Decision behavior belongs outside the artifact:
+
+```python
+result = TopLeftGate(threshold=0.8).evaluate(artifact)
+```
 
 ## Website
 
@@ -91,33 +141,6 @@ The website uses three evidence labels:
 - **Defined** — required by the artifact specification;
 - **Measured** — reproduced by a benchmark in this repository;
 - **Hypothesis** — proposed research not yet established.
-
-## Target v2 API
-
-The final names may change, but the intended surface is deliberately small:
-
-```python
-score_table = ScoreTable(
-    values=values,
-    row_ids=row_ids,
-    metric_ids=metric_ids,
-)
-
-recipe = LayoutRecipe.from_dict(recipe_data)
-artifact = build_vpm(score_table, recipe)
-
-artifact.validate()
-artifact.cell(view_row=0, view_column=0)
-artifact.region(rows=slice(0, 4), columns=slice(0, 4))
-artifact.to_bundle("artifact.vpm")
-artifact.render_png("artifact.png")
-```
-
-Decision behavior belongs outside the artifact:
-
-```python
-result = TopLeftGate(threshold=0.8).evaluate(artifact)
-```
 
 ## Delivery order
 

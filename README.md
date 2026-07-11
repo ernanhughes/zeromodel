@@ -66,6 +66,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Before/after/held-out/regression learning traces | `zeromodel.learning` |
 | Model-training progress artifacts | `zeromodel.training` |
 | Tracker-export adapters | `zeromodel.adapters` |
+| Critic/evidence/policy risk artifacts | `zeromodel.critic` |
 
 ## PHOS and edge usage
 
@@ -143,6 +144,40 @@ Supported inputs are JSON, JSONL/NDJSON, and CSV exports. TensorBoard scalar CSV
 
 See [`docs/examples/training-tracker-adapters.md`](docs/examples/training-tracker-adapters.md).
 
+## Critic evidence usage
+
+Critic, verifier, RAG, or policy outputs can become risk-first VPMs for inspection. The module is shaped around Writer-style critic results: `score`, `label`, `verdict`, `explanation`, and numeric feature scores.
+
+```python
+from zeromodel import CriticObservation, build_critic_vpm
+
+assessment = build_critic_vpm([
+    CriticObservation(
+        item_id="claim_supported",
+        critic_score=0.91,
+        policy_fit=0.95,
+        evidence_support=0.92,
+        citation_match=0.94,
+        semantic_drift=0.04,
+    ),
+    CriticObservation(
+        item_id="claim_hallucinated",
+        critic_score=0.25,
+        policy_fit=0.38,
+        evidence_support=0.18,
+        citation_match=0.20,
+        semantic_drift=0.82,
+        hallucination_energy=0.86,
+        verifiability=0.25,
+    ),
+])
+
+print(assessment.highest_risk_item_id, assessment.warnings)
+critic_artifact = assessment.artifact
+```
+
+See [`docs/examples/critic-evidence-vpm.md`](docs/examples/critic-evidence-vpm.md) and [`docs/research/hallucination-energy-to-zeromodel.md`](docs/research/hallucination-energy-to-zeromodel.md).
+
 ## Research readiness examples
 
 The repository includes committed training fixtures and end-to-end scripts so the full path can be reproduced before making broader research claims.
@@ -150,6 +185,7 @@ The repository includes committed training fixtures and end-to-end scripts so th
 ```bash
 python examples/end_to_end_training_progress.py
 python examples/end_to_end_learning_trace.py
+python examples/research_hallucination_energy_vpm.py
 ```
 
 The training example reads `tests/fixtures/training/tensorboard_scalars.csv`, builds a training progress VPM, renders PNG/SVG, writes a `.vpm` bundle, and emits a JSON summary under `.zeromodel-demo/`.
@@ -168,4 +204,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, training progress, tracker adapters, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

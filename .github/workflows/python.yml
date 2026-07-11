@@ -6,7 +6,11 @@ on:
       - "zeromodel/**"
       - "tests/**"
       - "pyproject.toml"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "docs/release.md"
       - ".github/workflows/python.yml"
+      - ".github/workflows/publish-testpypi.yml"
   push:
     branches:
       - main
@@ -14,7 +18,11 @@ on:
       - "zeromodel/**"
       - "tests/**"
       - "pyproject.toml"
+      - "README.md"
+      - "CHANGELOG.md"
+      - "docs/release.md"
       - ".github/workflows/python.yml"
+      - ".github/workflows/publish-testpypi.yml"
   workflow_dispatch:
 
 permissions:
@@ -46,3 +54,28 @@ jobs:
 
       - name: Run package tests
         run: pytest -q
+
+  package-build:
+    name: build distribution artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[release]
+
+      - name: Build source and wheel distributions
+        run: python -m build
+
+      - name: Check distribution metadata
+        run: python -m twine check dist/*

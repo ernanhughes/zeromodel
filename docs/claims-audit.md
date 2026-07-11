@@ -26,6 +26,7 @@ Sources reviewed:
 | VPM cells map back to source evidence. | `VPMArtifact.cell()` returns source row, metric, raw value, and normalized value. Covered by `test_cell_maps_view_coordinates_to_source_coordinates`. | **Validated** | This supports inspectability. It does not by itself prove causal explanation. |
 | Layout recipes reorganize the matrix task-by-task. | `LayoutRecipe` supports source, lexicographic, and weighted row ordering plus source/explicit column ordering. Tests cover lexicographic ordering and tie-breaking. | **Validated** | More recipes and examples would improve confidence, but the core mechanism is real. |
 | No model at decision time. | `TopLeftGate` consumes an already-built artifact/field and thresholds a top-left region. Covered by `test_edge_gate_evaluates_without_model`. | **Validated for simple gates** | Valid wording: “a deployed consumer can make a threshold decision from a prepared artifact without invoking a model.” Avoid implying the artifact independently reasons. |
+| Learning can be made visible. | `LearningObservation` and `build_learning_vpm()` require train, held-out, and regression observations before `learned=True`. Tests cover positive learning, tracking-without-heldout, and regression failure. | **Validated for scored traces** | Valid wording: “ZeroModel can make learning visible as deterministic before/after/held-out/regression artifact traces.” This does not prove a model’s internal mechanism changed. |
 | Task-aware top-left concentration. | `phos_sort_pack`, `pack_artifact`, `guarded_pack_artifact`, and `top_left_concentration`; covered by `test_phos_guarded_pack_measures_concentration`. | **Implemented / thin evidence** | The code measures and guards concentration, but we need benchmark fixtures showing improvement across realistic datasets. |
 | Compositional visual logic: AND/OR/NOT/XOR/add/subtract. | `zeromodel.compose` implements shape-checked fuzzy operators; tests cover AND/OR/XOR and comparison. | **Validated for numeric field operations** | Reframe as “explicit fuzzy field composition.” Do not call this symbolic reasoning unless a semantic layer is added and tested. |
 | Deterministic reproducible provenance. | Artifacts include source and recipe digests, parents, provenance payload, and identity mismatch validation. Tests cover artifact ID and tamper rejection. | **Validated for artifact identity** | Add tests for parent lineage, multi-artifact provenance graphs, and replay from bundles. |
@@ -38,7 +39,7 @@ Sources reviewed:
 | Edge ↔ cloud symmetry. | Same artifact/field can be rendered, bundled, inspected, and gated. | **Implemented / thin evidence** | Need a concrete edge fixture and cloud viewer example using the same artifact bytes. |
 | Multi-metric, multi-view by design. | `ScoreTable` supports multiple metrics; `LayoutRecipe` supports different ordering/column recipes. | **Validated core mechanism** | Add examples showing two recipes over the same source table and asserting source digest is unchanged. |
 | Storage-agnostic routing via pointers. | No current pointer/resolver abstraction. | **Not validated** | Add `resolver` interfaces and tests before claiming storage-agnostic routing. |
-| Traceable “thought” / 40+ levels. | Current code has provenance and controller signals, but no router frame chain or step graph implementation. | **Reframe / not validated** | Use “traceable artifact lineage” once parent-chain tests exist. Avoid “thought” unless strictly metaphorical. |
+| Traceable “thought” / 40+ levels. | Current code has provenance, controller signals, and learning traces, but no router frame chain or step graph implementation. | **Reframe / not validated** | Use “traceable artifact lineage” or “learning trace” when those are the actual artifacts. Avoid “thought” unless strictly metaphorical. |
 | Human-compatible explanations. | Cell/source mapping and SVG/PNG rendering allow inspection. | **Implemented / thin evidence** | Reframe as “inspectable evidence mapping.” Explanation quality requires user-facing viewer tests and examples. |
 | Cheap to adopt. | Package requires only NumPy; README shows short install and simple API. | **Supported, not benchmarked** | Add an end-to-end example from metric rows to gate/render/bundle in under 30 lines. |
 | Works with your stack. | `metrics.pack_metrics()` accepts common aliases and builds score tables from metric rows. | **Implemented / thin evidence** | Add adapters/examples for pandas, JSONL, and common evaluation logs if we want broader wording. |
@@ -49,7 +50,7 @@ Sources reviewed:
 
 The repo can honestly claim:
 
-> ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts. Those artifacts preserve source mapping, deterministic identity, provenance digests, renderable fields, bundle round-trips, and small consumer decisions such as top-left gates without invoking a model at decision time.
+> ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts. Those artifacts preserve source mapping, deterministic identity, provenance digests, renderable fields, bundle round-trips, small consumer decisions such as top-left gates without invoking a model at decision time, and scored learning traces that distinguish tracking from train/held-out/regression evidence of learning.
 
 ## Claims to avoid until benchmarks exist
 
@@ -72,9 +73,10 @@ Avoid or soften these phrases in README/package copy until the repository contai
 3. **Edge benchmark** — minimal no-model gate in a tiny runtime, with memory and timing measurements.
 4. **Multi-view invariant test** — same source table, multiple recipes, identical source digest, different view ordering.
 5. **Lineage/provenance replay** — parent artifact chain and deterministic replay from bundles.
-6. **Examples package** — search triage, safety gate, anomaly toy dataset, code review trace.
-7. **Website claim labels** — mark claims as implemented, benchmarked, or roadmap in the static site.
+6. **Learning trace domain examples** — agent trace learning, RAG correction learning, Writer evaluator learning.
+7. **Examples package** — search triage, safety gate, anomaly toy dataset, code review trace.
+8. **Website claim labels** — mark claims as implemented, benchmarked, or roadmap in the static site.
 
 ## Bottom line
 
-The cleaned repo now validates the core abstraction. It does **not** yet validate the strongest blog-scale performance claims. The next work should be evidence production, not more broadening of the API.
+The cleaned repo now validates the core abstraction and adds a concrete scored-trace definition of visible learning. It does **not** yet validate the strongest blog-scale performance claims. The next work should be evidence production, not more broadening of the API.

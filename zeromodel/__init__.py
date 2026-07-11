@@ -8,6 +8,7 @@ from .compose import as_field, vpm_add, vpm_and, vpm_not, vpm_or, vpm_subtract, 
 from .controller import Decision, Policy, Signal, Thresholds, VPMController, VPMRow, default_controller
 from .edge import TopLeftGate, TopLeftGateResult
 from .hierarchy import HierarchyLevel, build_pyramid, reduce_blocks
+from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation, build_learning_vpm, learning_recipe
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
@@ -18,7 +19,10 @@ __all__ = [
     "CANONICAL_METRICS",
     "Decision",
     "HierarchyLevel",
+    "LEARNING_METRICS",
     "LayoutRecipe",
+    "LearningAssessment",
+    "LearningObservation",
     "PHOSResult",
     "Policy",
     "ScoreTable",
@@ -33,6 +37,7 @@ __all__ = [
     "VPMRegion",
     "VPMRow",
     "as_field",
+    "build_learning_vpm",
     "build_pyramid",
     "build_vpm",
     "compare_fields",
@@ -40,6 +45,7 @@ __all__ = [
     "from_bundle",
     "guarded_pack_artifact",
     "image_entropy",
+    "learning_recipe",
     "metric_ids_for_rows",
     "pack_artifact",
     "pack_metrics",

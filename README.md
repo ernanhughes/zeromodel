@@ -63,6 +63,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Hierarchical pyramids | `zeromodel.hierarchy` |
 | Edge top-left gates | `zeromodel.edge` |
 | Trend-aware EDIT/RESAMPLE/ESCALATE/STOP/SPINOFF control | `zeromodel.controller` |
+| Before/after/held-out/regression learning traces | `zeromodel.learning` |
 
 ## PHOS and edge usage
 
@@ -76,6 +77,25 @@ result = TopLeftGate(threshold=0.75).evaluate(packed.packed)
 print(result.accepted, result.score)
 ```
 
+## Learning trace usage
+
+Tracking means a score moved. Learning means a feedback-driven change improves corrected work, transfers to held-out work, and avoids unacceptable regression.
+
+```python
+from zeromodel import LearningObservation, build_learning_vpm
+
+assessment = build_learning_vpm([
+    LearningObservation("claim-support", before=0.42, after=0.72, split="train"),
+    LearningObservation("related-claim", before=0.50, after=0.63, split="heldout"),
+    LearningObservation("summary-quality", before=0.82, after=0.81, split="regression"),
+])
+
+print(assessment.learned)
+learning_artifact = assessment.artifact
+```
+
+See [`docs/examples/learning-trace-vpm.md`](docs/examples/learning-trace-vpm.md).
+
 ## Bundle usage
 
 ```python
@@ -88,4 +108,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

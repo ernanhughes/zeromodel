@@ -56,6 +56,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Immutable artifact kernel | `zeromodel.artifact` |
 | Dense policy views over the same source table | `zeromodel.views` |
 | Spatially optimized view profiles | `zeromodel.spatial` |
+| Temporal decision manifolds | `zeromodel.manifold` |
 | Metric alias packing and score-table building | `zeromodel.metrics` |
 | PHOS sort-pack and guarded top-left concentration | `zeromodel.phos` |
 | Visual AND/OR/NOT/XOR/add/subtract | `zeromodel.compose` |
@@ -131,6 +132,42 @@ print(view.cell(0, 0).row_id, view.cell(0, 0).metric_id)
 This does not claim the optimizer learns the correct semantic view for every task. It proves a deterministic top-left mass objective can emit a normal `ViewProfile` while preserving source mapping.
 
 See [`docs/examples/spatial-optimizer.md`](docs/examples/spatial-optimizer.md) and [`docs/research/spatial-calculus.md`](docs/research/spatial-calculus.md).
+
+## Decision manifold
+
+A decision manifold turns a sequence of dense scored panels into optimized VPM frames, then surfaces where the spatial view changes most.
+
+```python
+from zeromodel import ScoreTable, SpatialOptimizer, build_decision_manifold
+
+panels = [
+    ScoreTable(
+        values=[[0.20, 0.60, 0.10], [1.00, 0.10, 0.10], [0.10, 0.20, 0.30]],
+        row_ids=["forest", "crowd", "traffic"],
+        metric_ids=["people", "trees", "risk"],
+    ),
+    ScoreTable(
+        values=[[0.15, 0.55, 0.14], [0.25, 0.10, 0.30], [0.10, 0.18, 1.00]],
+        row_ids=["forest", "crowd", "traffic"],
+        metric_ids=["people", "trees", "risk"],
+    ),
+]
+
+summary = build_decision_manifold(
+    panels,
+    optimizer=SpatialOptimizer(Kc=1, Kr=1),
+    name="scene-shift",
+    inflection_top_k=1,
+)
+
+print(summary.inflection_indices)
+print(summary.mass_series)
+print(summary.curvature_series)
+```
+
+This does not claim semantic cause or universal change-point discovery. It provides deterministic temporal geometry over scored panels.
+
+See [`docs/examples/decision-manifold.md`](docs/examples/decision-manifold.md) and [`docs/research/temporal-spatial-calculus.md`](docs/research/temporal-spatial-calculus.md).
 
 ## PHOS and edge usage
 
@@ -252,6 +289,7 @@ python examples/end_to_end_learning_trace.py
 python examples/research_hallucination_energy_vpm.py
 python examples/research_multiview_dense_artifact.py
 python examples/research_spatial_optimizer.py
+python examples/research_decision_manifold.py
 ```
 
 The training example reads `tests/fixtures/training/tensorboard_scalars.csv`, builds a training progress VPM, renders PNG/SVG, writes a `.vpm` bundle, and emits a JSON summary under `.zeromodel-demo/`.
@@ -270,4 +308,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, view profiles, spatial optimization, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, view profiles, spatial optimization, decision manifolds, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

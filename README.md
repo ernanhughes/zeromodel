@@ -54,6 +54,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Capability | Module |
 |---|---|
 | Immutable artifact kernel | `zeromodel.artifact` |
+| Dense policy views over the same source table | `zeromodel.views` |
 | Metric alias packing and score-table building | `zeromodel.metrics` |
 | PHOS sort-pack and guarded top-left concentration | `zeromodel.phos` |
 | Visual AND/OR/NOT/XOR/add/subtract | `zeromodel.compose` |
@@ -67,6 +68,38 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Model-training progress artifacts | `zeromodel.training` |
 | Tracker-export adapters | `zeromodel.adapters` |
 | Critic/evidence/policy risk artifacts | `zeromodel.critic` |
+
+## Dense view profiles
+
+A source table can contain many signals at once. A view profile is a policy lens over that dense table: turn up one set of metrics and the matching rows/columns become salient without changing the source evidence.
+
+```python
+from zeromodel import ScoreTable, ViewProfile, build_view
+
+source = ScoreTable(
+    values=[
+        [0.10, 0.96, 0.05, 0.72, 0.20],
+        [0.94, 0.12, 0.08, 0.18, 0.35],
+        [0.24, 0.07, 0.97, 0.08, 0.78],
+        [0.07, 0.18, 0.04, 0.98, 0.10],
+    ],
+    row_ids=["forest", "crowd", "traffic", "meadow"],
+    metric_ids=["people", "trees", "cars", "grass", "risk"],
+)
+
+people_view = build_view(source, ViewProfile.from_metric("people", name="people"))
+tree_view = build_view(source, ViewProfile.from_metric("trees", name="trees"))
+risk_view = build_view(source, ViewProfile.from_metric("risk", name="risk"))
+
+assert people_view.source.digest == tree_view.source.digest == risk_view.source.digest
+print(people_view.cell(0, 0).row_id)  # crowd
+print(tree_view.cell(0, 0).row_id)    # forest
+print(risk_view.cell(0, 0).row_id)    # traffic
+```
+
+Positive weights make high values salient. Negative weights make low values salient.
+
+See [`docs/examples/view-profiles.md`](docs/examples/view-profiles.md) and [`docs/research/dense-multiview-representation.md`](docs/research/dense-multiview-representation.md).
 
 ## PHOS and edge usage
 
@@ -186,6 +219,7 @@ The repository includes committed training fixtures and end-to-end scripts so th
 python examples/end_to_end_training_progress.py
 python examples/end_to_end_learning_trace.py
 python examples/research_hallucination_energy_vpm.py
+python examples/research_multiview_dense_artifact.py
 ```
 
 The training example reads `tests/fixtures/training/tensorboard_scalars.csv`, builds a training progress VPM, renders PNG/SVG, writes a `.vpm` bundle, and emits a JSON summary under `.zeromodel-demo/`.
@@ -204,4 +238,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, view profiles, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

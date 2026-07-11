@@ -14,6 +14,7 @@ from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
 from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
+from .views import ViewProfile, ViewSet, build_view, build_views
 
 __version__ = "2.0.0"
 
@@ -44,11 +45,15 @@ __all__ = [
     "VPMController",
     "VPMRegion",
     "VPMRow",
+    "ViewProfile",
+    "ViewSet",
     "as_field",
     "build_critic_vpm",
     "build_learning_vpm",
     "build_pyramid",
     "build_training_progress_vpm",
+    "build_view",
+    "build_views",
     "build_vpm",
     "compare_fields",
     "critic_recipe",

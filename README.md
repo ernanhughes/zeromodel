@@ -8,18 +8,39 @@ The package is now the clean new ZeroModel surface. There is no public `zeromode
 
 Public claims are tracked in [`docs/claims-audit.md`](docs/claims-audit.md). Treat that file as the source of truth for what is validated, what is implemented with thin evidence, and what remains a roadmap claim.
 
-## Install from GitHub
+## Install
+
+Current GitHub install:
 
 ```bash
-pip install git+https://github.com/ernanhughes/zeromodel.git@main
+python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
+```
+
+After the TestPyPI release candidate workflow publishes `0.1.0a1`:
+
+```bash
+python -m pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  zeromodel==0.1.0a1
+```
+
+After the production PyPI release is cut:
+
+```bash
+python -m pip install zeromodel
 ```
 
 For development:
 
 ```bash
-pip install -e .[dev]
+python -m pip install -e .[dev]
 pytest
+python -m build
+python -m twine check dist/*
 ```
+
+Release steps are documented in [`docs/release.md`](docs/release.md).
 
 ## Core artifact
 

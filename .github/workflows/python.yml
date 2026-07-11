@@ -1,0 +1,50 @@
+name: Python package
+
+on:
+  pull_request:
+    paths:
+      - "zeromodel/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "setup.py"
+      - ".github/workflows/python.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "zeromodel/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "setup.py"
+      - ".github/workflows/python.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-contracts:
+    name: v2 contracts / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package and test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . pytest
+
+      - name: Run v2 contract tests
+        run: pytest tests/v2 -q

@@ -42,4 +42,4 @@ include = ["zeromodel*"]
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
-testpaths = ["tests/v2"]
+testpaths = ["tests"]

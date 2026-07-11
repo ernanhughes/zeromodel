@@ -4,7 +4,7 @@ import zipfile
 
 import numpy as np
 
-from zeromodel.v2 import (
+from zeromodel import (
     LayoutRecipe,
     ScoreTable,
     TopLeftGate,
@@ -23,7 +23,7 @@ from zeromodel.v2 import (
     vpm_or,
     vpm_xor,
 )
-from zeromodel.v2.controller import Signal
+from zeromodel.controller import Signal
 
 
 def recipe() -> LayoutRecipe:

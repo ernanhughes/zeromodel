@@ -6,6 +6,8 @@ A VPM is a deterministic spatial view over a table of scored items. It carries v
 
 The package is now the clean new ZeroModel surface. There is no public `zeromodel.v2` namespace: import directly from `zeromodel`.
 
+Public claims are tracked in [`docs/claims-audit.md`](docs/claims-audit.md). Treat that file as the source of truth for what is validated, what is implemented with thin evidence, and what remains a roadmap claim.
+
 ## Install from GitHub
 
 ```bash
@@ -87,13 +89,3 @@ assert loaded.artifact_id == artifact.artifact_id
 ## Design rule
 
 The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
-
-## Website
-
-The zero-dependency static website lives in `site/`:
-
-```bash
-python -m http.server 4173 -d site
-```
-
-Then open `http://localhost:4173`.

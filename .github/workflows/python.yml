@@ -21,8 +21,8 @@ permissions:
   contents: read
 
 jobs:
-  v2-contracts:
-    name: v2 contracts / Python ${{ matrix.python-version }}
+  package-tests:
+    name: package tests / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -44,5 +44,5 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .[dev]
 
-      - name: Run v2 tests
+      - name: Run package tests
         run: pytest -q

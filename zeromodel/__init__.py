@@ -1,7 +1,7 @@
 """ZeroModel public package surface."""
 from __future__ import annotations
 
-from .artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMCell, VPMRegion, build_vpm
+from .artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMCell, VPMRegion, VPMValidationError, build_vpm
 from .bundle import from_bundle, to_bundle
 from .compare import VPMComparison, compare_fields
 from .compose import as_field, vpm_add, vpm_and, vpm_not, vpm_or, vpm_subtract, vpm_xor
@@ -53,6 +53,7 @@ __all__ = [
     "VPMController",
     "VPMRegion",
     "VPMRow",
+    "VPMValidationError",
     "ViewProfile",
     "ViewSet",
     "as_field",

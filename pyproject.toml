@@ -1,9 +1,45 @@
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "zeromodel"
+version = "2.0.0"
+description = "Deterministic Visual Policy Map artifacts and consumers"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Ernan Hughes", email = "ernanhughes@gmail.com"}]
+keywords = ["visual-policy-map", "vpm", "explainability", "edge-ai", "provenance"]
+dependencies = [
+    "numpy>=1.23",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/ernanhughes/zeromodel"
+Repository = "https://github.com/ernanhughes/zeromodel"
+Documentation = "https://ernanhughes.github.io/zeromodel/"
+
+[tool.setuptools.packages.find]
+include = ["zeromodel*"]
+
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
-filterwarnings = [
-	"ignore::sklearn.exceptions.ConvergenceWarning",
-]
+testpaths = ["tests/v2"]

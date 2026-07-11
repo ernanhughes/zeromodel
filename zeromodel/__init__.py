@@ -12,6 +12,7 @@ from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation,
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
+from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
 
 __version__ = "2.0.0"
 
@@ -27,9 +28,12 @@ __all__ = [
     "Policy",
     "ScoreTable",
     "Signal",
+    "TRAINING_METRICS",
     "Thresholds",
     "TopLeftGate",
     "TopLeftGateResult",
+    "TrainingCheckpoint",
+    "TrainingProgressAssessment",
     "VPMArtifact",
     "VPMCell",
     "VPMComparison",
@@ -39,6 +43,7 @@ __all__ = [
     "as_field",
     "build_learning_vpm",
     "build_pyramid",
+    "build_training_progress_vpm",
     "build_vpm",
     "compare_fields",
     "default_controller",
@@ -59,6 +64,7 @@ __all__ = [
     "to_square",
     "to_uint8",
     "top_left_concentration",
+    "training_progress_recipe",
     "vpm_add",
     "vpm_and",
     "vpm_not",

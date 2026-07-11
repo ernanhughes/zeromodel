@@ -13,6 +13,7 @@ from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation,
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
+from .spatial import SpatialOptimizationResult, SpatialOptimizer, build_optimized_view, optimize_view_profile
 from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
 from .views import ViewProfile, ViewSet, build_view, build_views
 
@@ -33,6 +34,8 @@ __all__ = [
     "Policy",
     "ScoreTable",
     "Signal",
+    "SpatialOptimizationResult",
+    "SpatialOptimizer",
     "TRAINING_METRICS",
     "Thresholds",
     "TopLeftGate",
@@ -50,6 +53,7 @@ __all__ = [
     "as_field",
     "build_critic_vpm",
     "build_learning_vpm",
+    "build_optimized_view",
     "build_pyramid",
     "build_training_progress_vpm",
     "build_view",
@@ -64,6 +68,7 @@ __all__ = [
     "learning_recipe",
     "metric_ids_for_rows",
     "observations_from_critic_lines",
+    "optimize_view_profile",
     "pack_artifact",
     "pack_metrics",
     "phos_sort_pack",

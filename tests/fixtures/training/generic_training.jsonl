@@ -1,0 +1,4 @@
+{"step":1000,"metrics":{"train_loss":1.0,"heldout_score":0.50,"regression_safety":0.99,"stability":0.98,"tokens_per_second":1000},"epoch":1}
+{"step":2000,"metrics":{"train_loss":0.82,"heldout_score":0.56,"regression_safety":0.985,"stability":0.97,"tokens_per_second":1100},"epoch":2}
+{"step":3000,"metrics":{"train_loss":0.72,"heldout_score":0.64,"regression_safety":0.975,"stability":0.95,"tokens_per_second":1180},"epoch":3}
+{"step":4000,"metrics":{"train_loss":0.68,"heldout_score":0.61,"regression_safety":0.94,"stability":0.88,"tokens_per_second":1160},"epoch":4}

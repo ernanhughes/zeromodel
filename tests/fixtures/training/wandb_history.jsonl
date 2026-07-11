@@ -1,0 +1,4 @@
+{"_step":1000,"train/loss":1.0,"val/accuracy":0.50,"regression/safety":0.99,"stability":0.98,"system/tokens_per_second":1000}
+{"_step":2000,"train/loss":0.82,"val/accuracy":0.56,"regression/safety":0.985,"stability":0.97,"system/tokens_per_second":1100}
+{"_step":3000,"train/loss":0.72,"val/accuracy":0.64,"regression/safety":0.975,"stability":0.95,"system/tokens_per_second":1180}
+{"_step":4000,"train/loss":0.68,"val/accuracy":0.61,"regression/safety":0.94,"stability":0.88,"system/tokens_per_second":1160}

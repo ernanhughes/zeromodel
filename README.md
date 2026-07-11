@@ -143,6 +143,19 @@ Supported inputs are JSON, JSONL/NDJSON, and CSV exports. TensorBoard scalar CSV
 
 See [`docs/examples/training-tracker-adapters.md`](docs/examples/training-tracker-adapters.md).
 
+## Research readiness examples
+
+The repository includes committed training fixtures and end-to-end scripts so the full path can be reproduced before making broader research claims.
+
+```bash
+python examples/end_to_end_training_progress.py
+python examples/end_to_end_learning_trace.py
+```
+
+The training example reads `tests/fixtures/training/tensorboard_scalars.csv`, builds a training progress VPM, renders PNG/SVG, writes a `.vpm` bundle, and emits a JSON summary under `.zeromodel-demo/`.
+
+See [`docs/examples/research-readiness.md`](docs/examples/research-readiness.md).
+
 ## Bundle usage
 
 ```python

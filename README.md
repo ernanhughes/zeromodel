@@ -65,6 +65,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Trend-aware EDIT/RESAMPLE/ESCALATE/STOP/SPINOFF control | `zeromodel.controller` |
 | Before/after/held-out/regression learning traces | `zeromodel.learning` |
 | Model-training progress artifacts | `zeromodel.training` |
+| Tracker-export adapters | `zeromodel.adapters` |
 
 ## PHOS and edge usage
 
@@ -125,6 +126,23 @@ training_artifact = progress.artifact
 
 See [`docs/examples/training-progress-vpm.md`](docs/examples/training-progress-vpm.md).
 
+## Tracker adapter usage
+
+Adapters parse exported tracker files into `TrainingCheckpoint` objects without requiring TensorBoard, W&B, or Trackio SDKs at runtime.
+
+```python
+from zeromodel import build_training_progress_vpm
+from zeromodel.adapters import checkpoints_from_tensorboard_scalars
+
+checkpoints = checkpoints_from_tensorboard_scalars("runs/scalars.csv")
+progress = build_training_progress_vpm(checkpoints)
+print(progress.best_checkpoint_id, progress.learned, progress.warnings)
+```
+
+Supported inputs are JSON, JSONL/NDJSON, and CSV exports. TensorBoard scalar CSV rows shaped like `wall_time,step,tag,value` are grouped into one checkpoint per step.
+
+See [`docs/examples/training-tracker-adapters.md`](docs/examples/training-tracker-adapters.md).
+
 ## Bundle usage
 
 ```python
@@ -137,4 +155,4 @@ assert loaded.artifact_id == artifact.artifact_id
 
 ## Design rule
 
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, training progress, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.
+The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, learning traces, training progress, tracker adapters, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

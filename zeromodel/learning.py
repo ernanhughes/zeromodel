@@ -94,7 +94,7 @@ class LearningObservation:
     @property
     def learning_score(self) -> float:
         if self.split == "regression":
-            return self.regression_safety
+            return 0.0
         return self.improvement * self.feedback_alignment
 
     def metric_row(self) -> Tuple[float, ...]:

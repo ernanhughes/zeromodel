@@ -15,7 +15,7 @@ Do not use stronger claims such as planet-scale traversal, automatic semantic vi
 
 Use pre-release versions for release candidates until the package install path is proven:
 
-- `0.1.0a1` for the first TestPyPI alpha.
+- `0.1.1a1` for the first TestPyPI alpha.
 - `0.1.0a2`, `0.1.0a3`, etc. for packaging fixes.
 - `0.1.0` only after TestPyPI install/import checks pass.
 
@@ -64,7 +64,7 @@ python -m pip install --upgrade pip
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  zeromodel==0.1.0a1
+  zeromodel==0.1.1a1
 python - <<'PY'
 from zeromodel import LayoutRecipe, ScoreTable, build_vpm
 

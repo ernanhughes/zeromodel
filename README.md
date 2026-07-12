@@ -16,13 +16,13 @@ Current GitHub install:
 python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
 ```
 
-After the TestPyPI release candidate workflow publishes `0.1.0a1`:
+After the TestPyPI release candidate workflow publishes `0.1.1a1`:
 
 ```bash
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  zeromodel==0.1.0a1
+  zeromodel==0.1.1a1
 ```
 
 After the production PyPI release is cut:

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0a1 - Unreleased
+## 0.1.1a1 - Unreleased
 
 First TestPyPI release candidate for the clean `zeromodel` package surface.
 

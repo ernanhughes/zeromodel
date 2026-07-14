@@ -18,7 +18,7 @@ from .spatial import SpatialOptimizationResult, SpatialOptimizer, build_optimize
 from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
 from .views import ViewProfile, ViewSet, build_view, build_views
 
-__version__ = "2.0.0"
+__version__ = "0.1.1a1"
 
 __all__ = [
     "CANONICAL_METRICS",

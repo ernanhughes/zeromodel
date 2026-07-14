@@ -7,7 +7,7 @@ that can be measured, rendered, compared, or used by edge consumers.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Optional, Sequence, Tuple
+from typing import Sequence, Tuple
 
 import numpy as np
 

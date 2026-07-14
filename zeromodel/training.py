@@ -288,7 +288,7 @@ def build_training_progress_vpm(
 
     table = ScoreTable(
         values=rows,
-        row_ids=tuple(checkpoint.checkpoint_id for checkpoint in normalized_checkpoints),
+        row_ids=tuple(checkpoint.checkpoint_id for checkpoint in normalized_checkpoints if checkpoint.checkpoint_id is not None),
         metric_ids=TRAINING_METRICS,
         metadata={
             "kind": "training_progress",
@@ -318,7 +318,7 @@ def build_training_progress_vpm(
     return TrainingProgressAssessment(
         artifact=artifact,
         checkpoints=normalized_checkpoints,
-        best_checkpoint_id=best.checkpoint_id,
+        best_checkpoint_id=best.checkpoint_id or "",
         best_step=best.step,
         learned=learned,
         warnings=tuple(warnings),

@@ -33,6 +33,8 @@ class VPMValidationError(ValueError):
 
 def _freeze_json(value: Any) -> Any:
     """Return a JSON-like immutable representation for metadata/provenance."""
+    if isinstance(value, np.generic):
+        raise VPMValidationError("metadata/provenance must use plain JSON scalar types")
     if isinstance(value, Mapping):
         return MappingProxyType({str(k): _freeze_json(v) for k, v in value.items()})
     if isinstance(value, (list, tuple)):
@@ -51,17 +53,40 @@ def _thaw_json(value: Any) -> Any:
 
 def _canonical_json_bytes(value: Any) -> bytes:
     """Serialize semantic content with stable key and separator choices."""
-    return json.dumps(
-        _thaw_json(value),
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-        allow_nan=False,
-    ).encode("utf-8")
+    try:
+        return json.dumps(
+            _thaw_json(value),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise VPMValidationError("metadata/provenance must be JSON-serializable") from exc
+
+
+def _length_prefixed(label: str, data: bytes) -> bytes:
+    label_bytes = label.encode("utf-8")
+    return (
+        len(label_bytes).to_bytes(4, "big")
+        + label_bytes
+        + len(data).to_bytes(8, "big")
+        + data
+    )
 
 
 def _sha256_hex(value: Any) -> str:
     return hashlib.sha256(_canonical_json_bytes(value)).hexdigest()
+
+
+def _matrix_bytes(values: np.ndarray) -> bytes:
+    """Return cross-language canonical IEEE-754 big-endian matrix bytes."""
+    matrix = np.asarray(values, dtype=np.float64)
+    if matrix.ndim != 2:
+        raise VPMValidationError("canonical matrix identity requires a 2D matrix")
+    shape = matrix.shape[0].to_bytes(8, "big") + matrix.shape[1].to_bytes(8, "big")
+    body = np.ascontiguousarray(matrix.astype(">f8", copy=False)).tobytes(order="C")
+    return shape + body
 
 
 def _validate_unique(values: Sequence[str], kind: str) -> None:
@@ -78,12 +103,7 @@ def _validate_unique(values: Sequence[str], kind: str) -> None:
 
 @dataclass(frozen=True)
 class ScoreTable:
-    """Rectangular source score table with stable identifiers.
-
-    Values are canonicalized to a copied ``float64`` NumPy array. The table is
-    immutable at the object level; callers should treat the exposed array as
-    read-only.
-    """
+    """Rectangular source score table with stable identifiers."""
 
     values: np.ndarray
     row_ids: Tuple[str, ...]
@@ -100,12 +120,14 @@ class ScoreTable:
         matrix = np.array(values, dtype=np.float64, copy=True)
         rows = tuple(str(row_id) for row_id in row_ids)
         metrics = tuple(str(metric_id) for metric_id in metric_ids)
-
         object.__setattr__(self, "values", matrix)
         object.__setattr__(self, "row_ids", rows)
         object.__setattr__(self, "metric_ids", metrics)
         object.__setattr__(self, "metadata", _freeze_json(metadata or {}))
         self.validate()
+        identity_bytes = self._compute_identity_bytes()
+        object.__setattr__(self, "_identity_bytes", identity_bytes)
+        object.__setattr__(self, "_digest", hashlib.sha256(identity_bytes).hexdigest())
 
     def validate(self) -> None:
         if self.values.ndim != 2:
@@ -126,6 +148,7 @@ class ScoreTable:
             raise VPMValidationError(
                 "ScoreTable values must be finite unless a missing-value policy is declared"
             )
+        _canonical_json_bytes(self.metadata)
         self.values.flags.writeable = False
 
     @property
@@ -134,7 +157,23 @@ class ScoreTable:
 
     @property
     def digest(self) -> str:
-        return _sha256_hex(self.to_identity_payload())
+        return self._digest
+
+    @property
+    def identity_bytes(self) -> bytes:
+        return self._identity_bytes
+
+    def _compute_identity_bytes(self) -> bytes:
+        return b"".join(
+            _length_prefixed(label, data)
+            for label, data in (
+                ("format", b"zeromodel.score_table.identity.v1"),
+                ("values", _matrix_bytes(self.values)),
+                ("row_ids", _canonical_json_bytes(list(self.row_ids))),
+                ("metric_ids", _canonical_json_bytes(list(self.metric_ids))),
+                ("metadata", _canonical_json_bytes(self.metadata)),
+            )
+        )
 
     def metric_index(self, metric_id: str) -> int:
         try:
@@ -173,6 +212,9 @@ class LayoutRecipe:
         frozen = _freeze_json(data)
         object.__setattr__(self, "data", frozen)
         self.validate_shape()
+        identity_bytes = _canonical_json_bytes(self.to_dict())
+        object.__setattr__(self, "_identity_bytes", identity_bytes)
+        object.__setattr__(self, "_digest", hashlib.sha256(identity_bytes).hexdigest())
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "LayoutRecipe":
@@ -184,7 +226,11 @@ class LayoutRecipe:
 
     @property
     def digest(self) -> str:
-        return _sha256_hex(self.to_dict())
+        return self._digest
+
+    @property
+    def identity_bytes(self) -> bytes:
+        return self._identity_bytes
 
     def validate_shape(self) -> None:
         if self.data.get("version") != LAYOUT_VERSION:
@@ -192,7 +238,6 @@ class LayoutRecipe:
                 "LayoutRecipe version must be %r; got %r"
                 % (LAYOUT_VERSION, self.data.get("version"))
             )
-
         row_order = self.data.get("row_order")
         column_order = self.data.get("column_order")
         normalization = self.data.get("normalization")
@@ -234,10 +279,10 @@ class LayoutRecipe:
             if not isinstance(metric_ids, tuple) or len(metric_ids) == 0:
                 raise VPMValidationError("explicit column_order requires non-empty metric_ids")
             _validate_unique([str(metric_id) for metric_id in metric_ids], "column metric")
-
         normalization_kind = normalization.get("kind")
         if normalization_kind != "per_metric_minmax":
             raise VPMValidationError("Unsupported normalization kind: %r" % normalization_kind)
+        _canonical_json_bytes(self.data)
 
     def validate_against(self, table: ScoreTable) -> None:
         row_order = self.data["row_order"]
@@ -246,7 +291,6 @@ class LayoutRecipe:
             keys = row_order.get("keys") or row_order.get("metrics")
             for key in keys:
                 table.metric_index(str(key["metric_id"]))
-
         column_order = self.data["column_order"]
         if column_order["kind"] == "explicit":
             for metric_id in column_order["metric_ids"]:
@@ -317,7 +361,6 @@ class VPMArtifact:
         rows = tuple(int(index) for index in row_order)
         columns = tuple(int(index) for index in column_order)
         frozen_provenance = _freeze_json(provenance or {})
-
         object.__setattr__(self, "source", source)
         object.__setattr__(self, "recipe", recipe)
         object.__setattr__(self, "normalized_values", matrix)
@@ -325,7 +368,7 @@ class VPMArtifact:
         object.__setattr__(self, "column_order", columns)
         object.__setattr__(self, "provenance", frozen_provenance)
         object.__setattr__(self, "spec_version", spec_version)
-
+        object.__setattr__(self, "_identity_bytes", self._compute_identity_bytes())
         computed_id = artifact_id or self.compute_artifact_id()
         object.__setattr__(self, "artifact_id", computed_id)
         self.validate()
@@ -333,6 +376,10 @@ class VPMArtifact:
     @property
     def shape(self) -> Tuple[int, int]:
         return self.normalized_values.shape
+
+    @property
+    def identity_bytes(self) -> bytes:
+        return self._identity_bytes
 
     def validate(self) -> None:
         if self.spec_version != SPEC_VERSION:
@@ -342,7 +389,6 @@ class VPMArtifact:
             )
         self.source.validate()
         self.recipe.validate_against(self.source)
-
         row_count, metric_count = self.source.shape
         if sorted(self.row_order) != list(range(row_count)):
             raise VPMValidationError("row_order must be a full permutation of source rows")
@@ -359,7 +405,7 @@ class VPMArtifact:
             self.normalized_values.min() < -1e-12 or self.normalized_values.max() > 1 + 1e-12
         ):
             raise VPMValidationError("normalized_values must be in the [0, 1] range")
-
+        _canonical_json_bytes(self.provenance)
         expected_id = self.compute_artifact_id()
         if self.artifact_id != expected_id:
             raise VPMValidationError(
@@ -367,8 +413,23 @@ class VPMArtifact:
             )
         self.normalized_values.flags.writeable = False
 
+    def _compute_identity_bytes(self) -> bytes:
+        return b"".join(
+            _length_prefixed(label, data)
+            for label, data in (
+                ("format", b"zeromodel.vpm_artifact.identity.v1"),
+                ("spec_version", self.spec_version.encode("utf-8")),
+                ("source", self.source.identity_bytes),
+                ("layout_recipe", self.recipe.identity_bytes),
+                ("normalized_values", _matrix_bytes(self.normalized_values)),
+                ("row_order", _canonical_json_bytes(list(self.row_order))),
+                ("column_order", _canonical_json_bytes(list(self.column_order))),
+                ("provenance", _canonical_json_bytes(self.provenance)),
+            )
+        )
+
     def compute_artifact_id(self) -> str:
-        return _sha256_hex(self.to_identity_payload())
+        return hashlib.sha256(self.identity_bytes).hexdigest()
 
     def to_identity_payload(self) -> Dict[str, Any]:
         return {
@@ -407,7 +468,6 @@ class VPMArtifact:
             raise IndexError("view_row out of range: %s" % view_row)
         if not (0 <= view_column < len(self.column_order)):
             raise IndexError("view_column out of range: %s" % view_column)
-
         source_row_index = self.row_order[view_row]
         source_metric_index = self.column_order[view_column]
         return VPMCell(
@@ -442,6 +502,9 @@ def _normalize_per_metric_minmax(table: ScoreTable, clip: bool) -> np.ndarray:
     normalized = np.zeros_like(values, dtype=np.float64)
     non_constant = ranges > 0
     normalized[:, non_constant] = (values[:, non_constant] - mins[non_constant]) / ranges[non_constant]
+    constant = ~non_constant
+    if np.any(constant):
+        normalized[:, constant] = values[:, constant]
     if clip:
         normalized = np.clip(normalized, 0.0, 1.0)
     return normalized
@@ -479,10 +542,8 @@ def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ..
     row_order = recipe.data["row_order"]
     kind = row_order["kind"]
     row_indices = tuple(range(len(table.row_ids)))
-
     if kind == "source":
         return row_indices
-
     keys = tuple(row_order.get("keys") or row_order.get("metrics"))
     if kind == "lexicographic":
         return tuple(
@@ -491,7 +552,6 @@ def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ..
                 key=cmp_to_key(lambda left, right: _compare_lexicographic(table, keys, left, right)),
             )
         )
-
     if kind == "weighted_score":
         return tuple(
             sorted(
@@ -499,7 +559,6 @@ def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ..
                 key=lambda index: (-_weighted_score(table, keys, index), table.row_ids[index]),
             )
         )
-
     raise VPMValidationError("Unsupported row_order kind: %r" % kind)
 
 
@@ -521,7 +580,6 @@ def build_vpm(
     """Build an immutable VPM artifact from a score table and layout recipe."""
     score_table.validate()
     recipe.validate_against(score_table)
-
     normalization = recipe.data["normalization"]
     normalized_source = _normalize_per_metric_minmax(
         score_table,
@@ -530,7 +588,6 @@ def build_vpm(
     row_order = _compile_row_order(score_table, recipe)
     column_order = _compile_column_order(score_table, recipe)
     normalized_view = normalized_source[np.ix_(row_order, column_order)]
-
     default_provenance = {
         "source_digest": "sha256:%s" % score_table.digest,
         "recipe_digest": "sha256:%s" % recipe.digest,
@@ -538,7 +595,6 @@ def build_vpm(
     }
     if provenance:
         default_provenance.update(dict(provenance))
-
     return VPMArtifact(
         source=score_table,
         recipe=recipe,

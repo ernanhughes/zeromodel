@@ -28,7 +28,10 @@ class PHOSResult:
     @property
     def improvement_ratio(self) -> float:
         if self.raw_concentration <= 0.0:
-            return float("inf") if self.packed_concentration > 0.0 else 1.0
+            # A zero raw baseline should not clear every guard by becoming
+            # mathematically infinite. Treat the packed gain as a finite ratio
+            # over the unit concentration scale instead.
+            return 1.0 + max(0.0, self.absolute_improvement)
         return float(self.packed_concentration / self.raw_concentration)
 
     @property

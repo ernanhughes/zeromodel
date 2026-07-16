@@ -1,0 +1,753 @@
+{
+  "action_cell_count": 448,
+  "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "normalization_note": "Brightness is normalized independently within each action column. In this demo every action column already spans 0..1, so the rendered intensities preserve the raw values.",
+  "policy_cleared": true,
+  "policy_score": 4,
+  "policy_steps": 22,
+  "random_average_score_10_seeds": 0.4,
+  "state_count": 112,
+  "trace": [
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "after_score": 0,
+      "after_tank_x": 2,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=3|target=0|cooldown=0",
+      "score": 0,
+      "source_metric_index": 0,
+      "source_row_index": 50,
+      "step": 0,
+      "tank_x": 3,
+      "target_x": 0,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 50
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "after_score": 0,
+      "after_tank_x": 1,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=2|target=0|cooldown=0",
+      "score": 0,
+      "source_metric_index": 0,
+      "source_row_index": 34,
+      "step": 1,
+      "tank_x": 2,
+      "target_x": 0,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 34
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "after_score": 0,
+      "after_tank_x": 0,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=1|target=0|cooldown=0",
+      "score": 0,
+      "source_metric_index": 0,
+      "source_row_index": 18,
+      "step": 2,
+      "tank_x": 1,
+      "target_x": 0,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 18
+    },
+    {
+      "action": "FIRE",
+      "after_cooldown": 1,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 0,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 1.0,
+        "LEFT": 0.0,
+        "RIGHT": 0.0,
+        "STAY": 0.0
+      },
+      "cooldown": 0,
+      "metric_id": "FIRE",
+      "remaining_aliens": [
+        0,
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=0|target=0|cooldown=0",
+      "score": 0,
+      "source_metric_index": 3,
+      "source_row_index": 2,
+      "step": 3,
+      "tank_x": 0,
+      "target_x": 0,
+      "value": 1.0,
+      "view_column": 3,
+      "view_row": 2
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 1,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 1,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=0|target=6|cooldown=1",
+      "score": 1,
+      "source_metric_index": 1,
+      "source_row_index": 15,
+      "step": 4,
+      "tank_x": 0,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 15
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 2,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=1|target=6|cooldown=0",
+      "score": 1,
+      "source_metric_index": 1,
+      "source_row_index": 30,
+      "step": 5,
+      "tank_x": 1,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 30
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 3,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=2|target=6|cooldown=0",
+      "score": 1,
+      "source_metric_index": 1,
+      "source_row_index": 46,
+      "step": 6,
+      "tank_x": 2,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 46
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 4,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=3|target=6|cooldown=0",
+      "score": 1,
+      "source_metric_index": 1,
+      "source_row_index": 62,
+      "step": 7,
+      "tank_x": 3,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 62
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 5,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=4|target=6|cooldown=0",
+      "score": 1,
+      "source_metric_index": 1,
+      "source_row_index": 78,
+      "step": 8,
+      "tank_x": 4,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 78
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "after_score": 1,
+      "after_tank_x": 6,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=5|target=6|cooldown=0",
+      "score": 1,
+      "source_metric_index": 1,
+      "source_row_index": 94,
+      "step": 9,
+      "tank_x": 5,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 94
+    },
+    {
+      "action": "FIRE",
+      "after_cooldown": 1,
+      "after_remaining_aliens": [
+        1,
+        5
+      ],
+      "after_score": 2,
+      "after_tank_x": 6,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 1.0,
+        "LEFT": 0.0,
+        "RIGHT": 0.0,
+        "STAY": 0.0
+      },
+      "cooldown": 0,
+      "metric_id": "FIRE",
+      "remaining_aliens": [
+        6,
+        1,
+        5
+      ],
+      "row_id": "tank=6|target=6|cooldown=0",
+      "score": 1,
+      "source_metric_index": 3,
+      "source_row_index": 110,
+      "step": 10,
+      "tank_x": 6,
+      "target_x": 6,
+      "value": 1.0,
+      "view_column": 3,
+      "view_row": 110
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        1,
+        5
+      ],
+      "after_score": 2,
+      "after_tank_x": 5,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 1,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        1,
+        5
+      ],
+      "row_id": "tank=6|target=1|cooldown=1",
+      "score": 2,
+      "source_metric_index": 0,
+      "source_row_index": 101,
+      "step": 11,
+      "tank_x": 6,
+      "target_x": 1,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 101
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        1,
+        5
+      ],
+      "after_score": 2,
+      "after_tank_x": 4,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        1,
+        5
+      ],
+      "row_id": "tank=5|target=1|cooldown=0",
+      "score": 2,
+      "source_metric_index": 0,
+      "source_row_index": 84,
+      "step": 12,
+      "tank_x": 5,
+      "target_x": 1,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 84
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        1,
+        5
+      ],
+      "after_score": 2,
+      "after_tank_x": 3,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        1,
+        5
+      ],
+      "row_id": "tank=4|target=1|cooldown=0",
+      "score": 2,
+      "source_metric_index": 0,
+      "source_row_index": 68,
+      "step": 13,
+      "tank_x": 4,
+      "target_x": 1,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 68
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        1,
+        5
+      ],
+      "after_score": 2,
+      "after_tank_x": 2,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        1,
+        5
+      ],
+      "row_id": "tank=3|target=1|cooldown=0",
+      "score": 2,
+      "source_metric_index": 0,
+      "source_row_index": 52,
+      "step": 14,
+      "tank_x": 3,
+      "target_x": 1,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 52
+    },
+    {
+      "action": "LEFT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        1,
+        5
+      ],
+      "after_score": 2,
+      "after_tank_x": 1,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 1.0,
+        "RIGHT": 0.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "LEFT",
+      "remaining_aliens": [
+        1,
+        5
+      ],
+      "row_id": "tank=2|target=1|cooldown=0",
+      "score": 2,
+      "source_metric_index": 0,
+      "source_row_index": 36,
+      "step": 15,
+      "tank_x": 2,
+      "target_x": 1,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 36
+    },
+    {
+      "action": "FIRE",
+      "after_cooldown": 1,
+      "after_remaining_aliens": [
+        5
+      ],
+      "after_score": 3,
+      "after_tank_x": 1,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 1.0,
+        "LEFT": 0.0,
+        "RIGHT": 0.0,
+        "STAY": 0.0
+      },
+      "cooldown": 0,
+      "metric_id": "FIRE",
+      "remaining_aliens": [
+        1,
+        5
+      ],
+      "row_id": "tank=1|target=1|cooldown=0",
+      "score": 2,
+      "source_metric_index": 3,
+      "source_row_index": 20,
+      "step": 16,
+      "tank_x": 1,
+      "target_x": 1,
+      "value": 1.0,
+      "view_column": 3,
+      "view_row": 20
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        5
+      ],
+      "after_score": 3,
+      "after_tank_x": 2,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 1,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        5
+      ],
+      "row_id": "tank=1|target=5|cooldown=1",
+      "score": 3,
+      "source_metric_index": 1,
+      "source_row_index": 29,
+      "step": 17,
+      "tank_x": 1,
+      "target_x": 5,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 29
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        5
+      ],
+      "after_score": 3,
+      "after_tank_x": 3,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        5
+      ],
+      "row_id": "tank=2|target=5|cooldown=0",
+      "score": 3,
+      "source_metric_index": 1,
+      "source_row_index": 44,
+      "step": 18,
+      "tank_x": 2,
+      "target_x": 5,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 44
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        5
+      ],
+      "after_score": 3,
+      "after_tank_x": 4,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        5
+      ],
+      "row_id": "tank=3|target=5|cooldown=0",
+      "score": 3,
+      "source_metric_index": 1,
+      "source_row_index": 60,
+      "step": 19,
+      "tank_x": 3,
+      "target_x": 5,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 60
+    },
+    {
+      "action": "RIGHT",
+      "after_cooldown": 0,
+      "after_remaining_aliens": [
+        5
+      ],
+      "after_score": 3,
+      "after_tank_x": 5,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 0.0,
+        "LEFT": 0.0,
+        "RIGHT": 1.0,
+        "STAY": 0.1
+      },
+      "cooldown": 0,
+      "metric_id": "RIGHT",
+      "remaining_aliens": [
+        5
+      ],
+      "row_id": "tank=4|target=5|cooldown=0",
+      "score": 3,
+      "source_metric_index": 1,
+      "source_row_index": 76,
+      "step": 20,
+      "tank_x": 4,
+      "target_x": 5,
+      "value": 1.0,
+      "view_column": 1,
+      "view_row": 76
+    },
+    {
+      "action": "FIRE",
+      "after_cooldown": 1,
+      "after_remaining_aliens": [],
+      "after_score": 4,
+      "after_tank_x": 5,
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "candidates": {
+        "FIRE": 1.0,
+        "LEFT": 0.0,
+        "RIGHT": 0.0,
+        "STAY": 0.0
+      },
+      "cooldown": 0,
+      "metric_id": "FIRE",
+      "remaining_aliens": [
+        5
+      ],
+      "row_id": "tank=5|target=5|cooldown=0",
+      "score": 3,
+      "source_metric_index": 3,
+      "source_row_index": 92,
+      "step": 21,
+      "tank_x": 5,
+      "target_x": 5,
+      "value": 1.0,
+      "view_column": 3,
+      "view_row": 92
+    }
+  ]
+}

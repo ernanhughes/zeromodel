@@ -61,6 +61,24 @@ def test_negative_view_weight_makes_low_values_salient() -> None:
     assert view.cell(0, 0).metric_id == "latency"
 
 
+def test_include_unweighted_columns_false_records_hidden_columns() -> None:
+    table = _dense_scene_table()
+    profile = ViewProfile(
+        "people-only",
+        {"people": 1.0},
+        include_unweighted_columns=False,
+    )
+
+    view = build_view(table, profile)
+
+    assert view.recipe.data["view_profile"]["visible_metric_ids"] == ("people",)
+    assert view.recipe.data["view_profile"]["hidden_metric_ids"] == ("trees", "cars", "grass", "risk")
+    assert view.provenance["visible_metric_ids"] == ("people",)
+    assert view.provenance["hidden_metric_ids"] == ("trees", "cars", "grass", "risk")
+    # Source mapping remains complete and deterministic even when a renderer crops.
+    assert view.column_order == (0, 1, 2, 3, 4)
+
+
 def test_build_view_from_existing_artifact_preserves_parent_provenance() -> None:
     table = _dense_scene_table()
     base = build_view(table, ViewProfile.from_metric("risk", name="risk"))

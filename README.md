@@ -19,7 +19,7 @@ python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
 After the production PyPI release is cut:
 
 ```bash
-python -m pip install zeromodel==1.0.0
+python -m pip install zeromodel==1.0.10
 ```
 
 For development:

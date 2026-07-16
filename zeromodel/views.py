@@ -74,17 +74,11 @@ class ViewProfile:
             )
         return tuple(keys)
 
-    def column_metric_ids(self, table: ScoreTable) -> tuple[str, ...]:
-        """Return a full metric order for this profile.
-
-        Weighted metrics come first by absolute weight. Unweighted metrics remain
-        in source order when ``include_unweighted_columns`` is true.
-        """
+    def _metric_sets(self, table: ScoreTable) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
         metrics = tuple(str(metric_id) for metric_id in table.metric_ids)
         missing = sorted(set(self.metric_weights) - set(metrics))
         if missing:
             raise VPMValidationError("ViewProfile references unknown metrics: %s" % ", ".join(missing))
-
         weighted = tuple(
             metric_id
             for metric_id, _ in sorted(
@@ -92,15 +86,38 @@ class ViewProfile:
                 key=lambda item: (-abs(float(item[1])), item[0]),
             )
         )
-        if not self.include_unweighted_columns:
-            # VPM artifacts require a full column permutation, so hidden columns are
-            # not removed; they are placed after the weighted columns.
-            return weighted + tuple(metric for metric in metrics if metric not in set(weighted))
-        return weighted + tuple(metric for metric in metrics if metric not in set(weighted))
+        unweighted = tuple(metric for metric in metrics if metric not in set(weighted))
+        return metrics, weighted, unweighted
+
+    def column_metric_ids(self, table: ScoreTable) -> tuple[str, ...]:
+        """Return the full metric order for this profile.
+
+        VPM artifacts preserve a full column permutation for source mapping. When
+        ``include_unweighted_columns`` is false, unweighted columns are still
+        retained after the weighted columns, but the recipe records them as
+        hidden so renderers and consumers can crop or de-emphasize them honestly.
+        """
+        _, weighted, unweighted = self._metric_sets(table)
+        return weighted + unweighted
+
+    def visible_metric_ids(self, table: ScoreTable) -> tuple[str, ...]:
+        """Return metrics intended to be visible under this profile."""
+        metrics, weighted, _ = self._metric_sets(table)
+        return metrics if self.include_unweighted_columns else weighted
+
+    def hidden_metric_ids(self, table: ScoreTable) -> tuple[str, ...]:
+        """Return retained-but-hidden metrics under this profile."""
+        _, _, unweighted = self._metric_sets(table)
+        return tuple() if self.include_unweighted_columns else unweighted
 
     def to_recipe(self, table: ScoreTable) -> LayoutRecipe:
         """Build a deterministic layout recipe for ``table``."""
         metric_ids = self.column_metric_ids(table)
+        view_profile = {
+            **self.to_dict(),
+            "visible_metric_ids": list(self.visible_metric_ids(table)),
+            "hidden_metric_ids": list(self.hidden_metric_ids(table)),
+        }
         return LayoutRecipe.from_dict(
             {
                 "version": "vpm-layout/0",
@@ -118,7 +135,7 @@ class ViewProfile:
                     "kind": "per_metric_minmax",
                     "clip": bool(self.normalization_clip),
                 },
-                "view_profile": self.to_dict(),
+                "view_profile": view_profile,
             }
         )
 
@@ -178,6 +195,8 @@ def build_view(
     merged_provenance = {
         "kind": "view_profile",
         "view_profile": profile.to_dict(),
+        "visible_metric_ids": list(profile.visible_metric_ids(table)),
+        "hidden_metric_ids": list(profile.hidden_metric_ids(table)),
         "source_digest": "sha256:%s" % table.digest,
         "parents": parents,
     }

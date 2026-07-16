@@ -1,25 +1,26 @@
 # Release process
 
-ZeroModel should reach PyPI in two steps:
+ZeroModel 1.0.10 should reach PyPI only after the package install path and the
+claims-audit posture are both proven by CI and a clean-environment smoke test.
 
-1. Publish the current alpha package to TestPyPI.
-2. Verify install/import behavior from TestPyPI in a clean environment before promoting the same release posture to production PyPI.
+The validated public claim for 1.0.10 is:
 
-The release is intentionally alpha. The validated public claim is:
+> ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts and small consumers that can operate without a model at decision time.
 
-> ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts.
+The new 1.0.10 policy-lookup example supports a narrower headline:
 
-Do not use stronger claims such as planet-scale traversal, automatic semantic view learning, task-level decision accuracy improvement, real-world hallucination detection, or real training-run validation unless the repository contains the matching benchmark or fixture evidence.
+> A bounded policy can be compiled into an addressable VPM artifact. Runtime state finds the row, the row says what to do, and the decision can cite the exact artifact cell that produced it.
+
+Do not use stronger claims such as planet-scale traversal, automatic semantic
+view learning, task-level decision accuracy improvement for open-world systems,
+real-world hallucination detection, or tiny-hardware latency unless the
+repository contains the matching benchmark or fixture evidence.
 
 ## Version policy
 
-Use pre-release versions for release candidates until the package install path is proven:
-
-- `0.1.1a1` for the first TestPyPI alpha.
-- `0.1.0a2`, `0.1.0a3`, etc. for packaging fixes.
-- `0.1.0` only after TestPyPI install/import checks pass.
-
-Do not publish the current package as `2.0.0` unless there is a deliberate historical compatibility reason.
+- `1.0.10` is the stable public API release intended to supersede the existing PyPI `1.0.9` package.
+- Keep future breaking artifact-contract changes for `2.x`.
+- Use pre-release suffixes such as `1.0.11rc1` or `1.1.0rc1` for release candidates when testing PyPI/TestPyPI paths.
 
 ## Local build check
 
@@ -31,20 +32,24 @@ python -m pip install -e .[dev]
 pytest -q
 python -m build
 python -m twine check dist/*
+python examples/arcade_shooter_policy.py
 ```
 
-The GitHub `Python package` workflow runs the test matrix and distribution metadata checks on pull requests.
+The GitHub `Python package` workflow runs the test matrix and distribution
+metadata checks on pull requests.
 
 ## TestPyPI trusted publishing setup
 
-Before running `.github/workflows/publish-testpypi.yml`, configure a trusted publisher on TestPyPI with these values:
+Before running `.github/workflows/publish-testpypi.yml`, configure a trusted
+publisher on TestPyPI with these values:
 
 - Owner: `ernanhughes`
 - Repository: `zeromodel`
 - Workflow name: `publish-testpypi.yml`
 - Environment name: `testpypi`
 
-The workflow uses GitHub OIDC (`id-token: write`) and does not require a long-lived API token.
+The workflow uses GitHub OIDC (`id-token: write`) and does not require a
+long-lived API token.
 
 ## Publish to TestPyPI
 
@@ -55,7 +60,8 @@ The workflow uses GitHub OIDC (`id-token: write`) and does not require a long-li
 
 ## Verify TestPyPI install
 
-Use a clean virtual environment. Because TestPyPI may not host dependencies such as NumPy, keep PyPI as an extra dependency index:
+Use a clean virtual environment. Because TestPyPI may not host dependencies such
+as NumPy, keep PyPI as an extra dependency index:
 
 ```bash
 python -m venv .venv-testpypi
@@ -64,29 +70,25 @@ python -m pip install --upgrade pip
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  zeromodel==0.1.1a1
+  zeromodel==1.0.10
 python - <<'PY'
-from zeromodel import LayoutRecipe, ScoreTable, build_vpm
+from zeromodel import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
 
 score_table = ScoreTable(
-    values=[[0.9, 0.2], [0.4, 0.8]],
-    row_ids=["candidate-a", "candidate-b"],
-    metric_ids=["quality", "uncertainty"],
+    values=[[1.0, 0.0], [0.0, 1.0]],
+    row_ids=["state:left", "state:right"],
+    metric_ids=["LEFT", "RIGHT"],
 )
 recipe = LayoutRecipe.from_dict({
     "version": "vpm-layout/0",
-    "name": "quality-first",
-    "row_order": {
-        "kind": "lexicographic",
-        "keys": [{"metric_id": "quality", "direction": "desc"}],
-        "tie_break": "row_id",
-    },
+    "name": "policy-source-order",
+    "row_order": {"kind": "source", "tie_break": "row_id"},
     "column_order": {"kind": "source"},
     "normalization": {"kind": "per_metric_minmax", "clip": True},
 })
 artifact = build_vpm(score_table, recipe)
-assert artifact.cell(0, 0).row_id == "candidate-a"
-print("zeromodel import/build smoke test passed")
+assert VPMPolicyLookup(artifact).read("state:right").action == "RIGHT"
+print("zeromodel 1.0.10 policy lookup smoke test passed")
 PY
 ```
 
@@ -104,7 +106,6 @@ Only cut the production PyPI release after:
 - source and wheel builds pass,
 - `twine check` passes,
 - TestPyPI install/import works in a clean environment,
-- README install instructions are updated for the production release, and
+- README install instructions are updated for the production release,
+- the tiny arcade-shooter example runs, and
 - `docs/claims-audit.md` still matches the public wording.
-
-The first production release should probably be `0.1.0`, not `2.0.0`.

@@ -4,7 +4,7 @@
 
 A VPM is a deterministic spatial view over a table of scored items. It carries values, stable row and metric identifiers, a layout recipe, view ordering, source mapping, provenance, and deterministic identity.
 
-The package is now the clean new ZeroModel surface. There is no public `zeromodel.v2` namespace: import directly from `zeromodel`.
+The package is now the clean ZeroModel 1.0 surface. There is no public `zeromodel.v2` namespace: import directly from `zeromodel`.
 
 Public claims are tracked in [`docs/claims-audit.md`](docs/claims-audit.md). Treat that file as the source of truth for what is validated, what is implemented with thin evidence, and what remains a roadmap claim.
 
@@ -16,19 +16,10 @@ Current GitHub install:
 python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
 ```
 
-After the TestPyPI release candidate workflow publishes `0.1.1a1`:
-
-```bash
-python -m pip install \
-  --index-url https://test.pypi.org/simple/ \
-  --extra-index-url https://pypi.org/simple/ \
-  zeromodel==0.1.1a1
-```
-
 After the production PyPI release is cut:
 
 ```bash
-python -m pip install zeromodel
+python -m pip install zeromodel==1.0.10
 ```
 
 For development:
@@ -75,6 +66,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Capability | Module |
 |---|---|
 | Immutable artifact kernel | `zeromodel.artifact` |
+| State-addressed policy lookup / sign reader | `zeromodel.policy_lookup` |
 | Dense policy views over the same source table | `zeromodel.views` |
 | Spatially optimized view profiles | `zeromodel.spatial` |
 | Temporal decision manifolds | `zeromodel.manifold` |
@@ -91,6 +83,47 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Model-training progress artifacts | `zeromodel.training` |
 | Tracker-export adapters | `zeromodel.adapters` |
 | Critic/evidence/policy risk artifacts | `zeromodel.critic` |
+
+## Policy lookup: signs, not directions
+
+`VPMPolicyLookup` is the small 1.0 consumer behind the blog phrase “signs, not directions.” Rows are discretized runtime states, metric columns are candidate actions, and the consumer returns the winning action plus the exact VPM cell that produced it.
+
+```python
+from zeromodel import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
+
+source = ScoreTable(
+    values=[
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ],
+    row_ids=["state:left", "state:right", "state:aligned"],
+    metric_ids=["LEFT", "RIGHT", "STAY", "FIRE"],
+)
+recipe = LayoutRecipe.from_dict({
+    "version": "vpm-layout/0",
+    "name": "policy-source-order",
+    "row_order": {"kind": "source", "tie_break": "row_id"},
+    "column_order": {"kind": "source"},
+    "normalization": {"kind": "per_metric_minmax", "clip": True},
+})
+
+artifact = build_vpm(source, recipe)
+decision = VPMPolicyLookup(artifact).read("state:aligned")
+
+assert decision.action == "FIRE"
+assert decision.artifact_id == artifact.artifact_id
+```
+
+The demo is a tiny arcade shooter:
+
+```bash
+python examples/arcade_shooter_policy.py
+```
+
+It compiles a closed-world shooter policy into one VPM artifact, then replays by reading state signs from that artifact. Tests assert wave clear, random-baseline comparison, and deterministic action trace replay.
+
+See [`docs/examples/sign-reader.md`](docs/examples/sign-reader.md).
 
 ## Dense view profiles
 
@@ -142,7 +175,7 @@ source = ScoreTable(
     metric_ids=["target", "constant", "weak"],
 )
 
-optimizer = SpatialOptimizer(Kc=2, Kr=2, alpha=0.95, max_iters=40)
+optimizer = SpatialOptimizer(Kc=2, Kr=2, alpha=0.95, max_evals=40)
 result = optimize_view_profile(source, name="optimized-target", optimizer=optimizer)
 view = build_optimized_view(source, name="optimized-target", optimizer=optimizer)
 
@@ -218,115 +251,3 @@ assessment = build_learning_vpm([
 print(assessment.learned)
 learning_artifact = assessment.artifact
 ```
-
-See [`docs/examples/learning-trace-vpm.md`](docs/examples/learning-trace-vpm.md).
-
-## Training progress usage
-
-Training telemetry can become a checkpoint-level VPM that shows train improvement, held-out transfer, regression safety, stability, efficiency, and best-checkpoint evidence.
-
-```python
-from zeromodel import TrainingCheckpoint, build_training_progress_vpm
-
-progress = build_training_progress_vpm(
-    [
-        TrainingCheckpoint(step=1000, metrics={
-            "train_loss": 1.00,
-            "heldout_score": 0.50,
-            "regression_safety": 0.99,
-        }),
-        TrainingCheckpoint(step=2000, metrics={
-            "train_loss": 0.82,
-            "heldout_score": 0.57,
-            "regression_safety": 0.98,
-        }),
-    ]
-)
-
-print(progress.best_checkpoint_id, progress.learned, progress.warnings)
-training_artifact = progress.artifact
-```
-
-See [`docs/examples/training-progress-vpm.md`](docs/examples/training-progress-vpm.md).
-
-## Tracker adapter usage
-
-Adapters parse exported tracker files into `TrainingCheckpoint` objects without requiring TensorBoard, W&B, or Trackio SDKs at runtime.
-
-```python
-from zeromodel import build_training_progress_vpm
-from zeromodel.adapters import checkpoints_from_tensorboard_scalars
-
-checkpoints = checkpoints_from_tensorboard_scalars("runs/scalars.csv")
-progress = build_training_progress_vpm(checkpoints)
-print(progress.best_checkpoint_id, progress.learned, progress.warnings)
-```
-
-Supported inputs are JSON, JSONL/NDJSON, and CSV exports. TensorBoard scalar CSV rows shaped like `wall_time,step,tag,value` are grouped into one checkpoint per step.
-
-See [`docs/examples/training-tracker-adapters.md`](docs/examples/training-tracker-adapters.md).
-
-## Critic evidence usage
-
-Critic, verifier, RAG, or policy outputs can become risk-first VPMs for inspection. The module is shaped around Writer-style critic results: `score`, `label`, `verdict`, `explanation`, and numeric feature scores.
-
-```python
-from zeromodel import CriticObservation, build_critic_vpm
-
-assessment = build_critic_vpm([
-    CriticObservation(
-        item_id="claim_supported",
-        critic_score=0.91,
-        policy_fit=0.95,
-        evidence_support=0.92,
-        citation_match=0.94,
-        semantic_drift=0.04,
-    ),
-    CriticObservation(
-        item_id="claim_hallucinated",
-        critic_score=0.25,
-        policy_fit=0.38,
-        evidence_support=0.18,
-        citation_match=0.20,
-        semantic_drift=0.82,
-        hallucination_energy=0.86,
-        verifiability=0.25,
-    ),
-])
-
-print(assessment.highest_risk_item_id, assessment.warnings)
-critic_artifact = assessment.artifact
-```
-
-See [`docs/examples/critic-evidence-vpm.md`](docs/examples/critic-evidence-vpm.md) and [`docs/research/hallucination-energy-to-zeromodel.md`](docs/research/hallucination-energy-to-zeromodel.md).
-
-## Research readiness examples
-
-The repository includes committed training fixtures and end-to-end scripts so the full path can be reproduced before making broader research claims.
-
-```bash
-python examples/end_to_end_training_progress.py
-python examples/end_to_end_learning_trace.py
-python examples/research_hallucination_energy_vpm.py
-python examples/research_multiview_dense_artifact.py
-python examples/research_spatial_optimizer.py
-python examples/research_decision_manifold.py
-```
-
-The training example reads `tests/fixtures/training/tensorboard_scalars.csv`, builds a training progress VPM, renders PNG/SVG, writes a `.vpm` bundle, and emits a JSON summary under `.zeromodel-demo/`.
-
-See [`docs/examples/research-readiness.md`](docs/examples/research-readiness.md).
-
-## Bundle usage
-
-```python
-from zeromodel import from_bundle, to_bundle
-
-to_bundle(artifact, "artifact.vpm")
-loaded = from_bundle("artifact.vpm")
-assert loaded.artifact_id == artifact.artifact_id
-```
-
-## Design rule
-
-The artifact remains a representation. Routing, gates, visual logic, hierarchy, rendering, PHOS packing, view profiles, spatial optimization, decision manifolds, learning traces, training progress, tracker adapters, critic evidence maps, and controllers are consumers around the artifact. This keeps the core auditable while allowing the full ZeroModel system to grow.

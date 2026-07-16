@@ -25,6 +25,16 @@ class PHOSResult:
     entropy: float
     improved: bool
 
+    @property
+    def improvement_ratio(self) -> float:
+        if self.raw_concentration <= 0.0:
+            return float("inf") if self.packed_concentration > 0.0 else 1.0
+        return float(self.packed_concentration / self.raw_concentration)
+
+    @property
+    def absolute_improvement(self) -> float:
+        return float(self.packed_concentration - self.raw_concentration)
+
 
 def robust01(x: np.ndarray, p_lo: float = 10.0, p_hi: float = 90.0) -> np.ndarray:
     """Scale values to [0, 1] with percentile bounds to damp outliers."""
@@ -100,7 +110,7 @@ def pack_artifact(artifact: VPMArtifact, *, top_left_fraction: float = 0.25, rob
         raw_concentration=raw_conc,
         packed_concentration=packed_conc,
         entropy=image_entropy(packed),
-        improved=packed_conc > raw_conc,
+        improved=packed_conc >= raw_conc * (1.0 + 1e-12),
     )
 
 
@@ -111,30 +121,32 @@ def guarded_pack_artifact(
     min_improvement: float = 0.02,
     robust: bool = False,
 ) -> PHOSResult:
-    """Sweep PHOS packing fractions and choose the best honest improvement.
+    """Sweep PHOS packing fractions and choose the first honest improvement.
 
-    Preference is given to the first result that improves top-left concentration
-    by at least ``min_improvement``. If no candidate clears the guard, the most
-    concentrated candidate is returned with ``improved=False``.
+    Concentrations measured at different fractions are not directly comparable:
+    a larger top-left window is mechanically likely to contain more mass. The
+    guard therefore compares each packed field against its own raw baseline and
+    returns the first candidate whose improvement ratio clears the guard. If no
+    candidate clears it, the best ratio candidate is returned with
+    ``improved=False``.
     """
     candidates = [
         pack_artifact(artifact, top_left_fraction=fraction, robust=robust)
         for fraction in top_left_fractions
     ]
-    guarded = [
-        item for item in candidates
-        if item.packed_concentration >= item.raw_concentration * (1.0 + float(min_improvement))
-    ]
-    chosen = max(guarded or candidates, key=lambda item: item.packed_concentration)
-    if not guarded:
-        return PHOSResult(
-            raw=chosen.raw,
-            packed=chosen.packed,
-            order=chosen.order,
-            top_left_fraction=chosen.top_left_fraction,
-            raw_concentration=chosen.raw_concentration,
-            packed_concentration=chosen.packed_concentration,
-            entropy=chosen.entropy,
-            improved=False,
-        )
-    return chosen
+    threshold = 1.0 + float(min_improvement)
+    guarded = [item for item in candidates if item.improvement_ratio >= threshold]
+    if guarded:
+        return guarded[0]
+
+    chosen = max(candidates, key=lambda item: (item.improvement_ratio, item.absolute_improvement))
+    return PHOSResult(
+        raw=chosen.raw,
+        packed=chosen.packed,
+        order=chosen.order,
+        top_left_fraction=chosen.top_left_fraction,
+        raw_concentration=chosen.raw_concentration,
+        packed_concentration=chosen.packed_concentration,
+        entropy=chosen.entropy,
+        improved=False,
+    )

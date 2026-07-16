@@ -13,12 +13,13 @@ from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation,
 from .manifold import DecisionManifold, ManifoldFrame, ManifoldSummary, ManifoldTransition, build_decision_manifold, find_inflection_points
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
+from .policy_lookup import PolicyLookupDecision, SignReader, VPMPolicyLookup
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
 from .spatial import SpatialOptimizationResult, SpatialOptimizer, build_optimized_view, optimize_view_profile
 from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
 from .views import ViewProfile, ViewSet, build_view, build_views
 
-__version__ = "0.1.1a1"
+__version__ = "1.0.0"
 
 __all__ = [
     "CANONICAL_METRICS",
@@ -37,7 +38,9 @@ __all__ = [
     "ManifoldTransition",
     "PHOSResult",
     "Policy",
+    "PolicyLookupDecision",
     "ScoreTable",
+    "SignReader",
     "Signal",
     "SpatialOptimizationResult",
     "SpatialOptimizer",
@@ -51,6 +54,7 @@ __all__ = [
     "VPMCell",
     "VPMComparison",
     "VPMController",
+    "VPMPolicyLookup",
     "VPMRegion",
     "VPMRow",
     "VPMValidationError",

@@ -32,6 +32,9 @@ def _normalize_per_metric(values: np.ndarray) -> np.ndarray:
     out = np.zeros_like(matrix, dtype=np.float64)
     active = ranges > 0.0
     out[:, active] = (matrix[:, active] - mins[active]) / ranges[active]
+    constant = ~active
+    if np.any(constant):
+        out[:, constant] = matrix[:, constant]
     return np.clip(out, 0.0, 1.0)
 
 
@@ -113,7 +116,8 @@ class SpatialOptimizer:
         Kr: int = 32,
         alpha: float = 0.95,
         l2: float = 1e-3,
-        max_iters: int = 80,
+        max_iters: int | None = None,
+        max_evals: int | None = None,
         min_step: float = 1e-4,
     ) -> None:
         if Kc <= 0:
@@ -124,15 +128,20 @@ class SpatialOptimizer:
             raise VPMValidationError("alpha must be in (0, 1)")
         if l2 < 0.0:
             raise VPMValidationError("l2 must be non-negative")
-        if max_iters <= 0:
-            raise VPMValidationError("max_iters must be positive")
+        if max_evals is not None and max_iters is not None and int(max_evals) != int(max_iters):
+            raise VPMValidationError("use max_evals or max_iters, not conflicting values")
+        eval_budget = int(max_evals if max_evals is not None else (80 if max_iters is None else max_iters))
+        if eval_budget <= 0:
+            raise VPMValidationError("max_evals must be positive")
         if min_step <= 0.0:
             raise VPMValidationError("min_step must be positive")
         self.Kc = int(Kc)
         self.Kr = int(Kr)
         self.alpha = float(alpha)
         self.l2 = float(l2)
-        self.max_iters = int(max_iters)
+        self.max_evals = eval_budget
+        # Backwards-compatible alias for callers that still inspect max_iters.
+        self.max_iters = eval_budget
         self.min_step = float(min_step)
 
     def top_left_mass(self, ordered_values: np.ndarray) -> float:
@@ -207,24 +216,24 @@ class SpatialOptimizer:
         best_score = self.score_weights(tables, best)
 
         step = 0.50
-        iterations = 0
-        while iterations < self.max_iters and step >= self.min_step:
+        evaluations = 0
+        while evaluations < self.max_evals and step >= self.min_step:
             improved = False
             for metric_index in range(metric_count):
                 candidate = best.copy()
                 candidate[metric_index] += step
                 candidate = _simplex(candidate)
                 score = self.score_weights(tables, candidate)
-                iterations += 1
+                evaluations += 1
                 if score > best_score + 1e-12:
                     best = candidate
                     best_score = score
                     improved = True
-                if iterations >= self.max_iters:
+                if evaluations >= self.max_evals:
                     break
             if not improved:
                 step *= 0.5
-        return best, iterations, float(baseline), float(best_score)
+        return best, evaluations, float(baseline), float(best_score)
 
     def fit(
         self,
@@ -236,7 +245,7 @@ class SpatialOptimizer:
         """Fit and return a ``ViewProfile`` optimized for top-left mass."""
         tables = _as_tables(source)
         metric_ids = tuple(str(metric_id) for metric_id in tables[0].metric_ids)
-        weights, iterations, baseline, optimized = self.learn_weights(tables)
+        weights, evaluations, baseline, optimized = self.learn_weights(tables)
         weight_map = {metric_id: float(weights[index]) for index, metric_id in enumerate(metric_ids)}
         canonical_metric_ids = tuple(
             metric_id
@@ -266,14 +275,15 @@ class SpatialOptimizer:
             baseline_mass=baseline,
             optimized_mass=optimized,
             improvement=float(optimized - baseline),
-            iterations=iterations,
+            iterations=evaluations,
             objective={
                 "name": "top_left_mass",
                 "Kc": self.Kc,
                 "Kr": self.Kr,
                 "alpha": self.alpha,
                 "l2": self.l2,
-                "max_iters": self.max_iters,
+                "max_evals": self.max_evals,
+                "max_iters_alias": self.max_iters,
                 "min_step": self.min_step,
             },
         )

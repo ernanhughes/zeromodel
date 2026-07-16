@@ -1,13 +1,13 @@
 # Release process
 
-ZeroModel 1.0.0 should reach PyPI only after the package install path and the
+ZeroModel 1.0.10 should reach PyPI only after the package install path and the
 claims-audit posture are both proven by CI and a clean-environment smoke test.
 
-The validated public claim for 1.0.0 is:
+The validated public claim for 1.0.10 is:
 
 > ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts and small consumers that can operate without a model at decision time.
 
-The new 1.0.0 policy-lookup example supports a narrower headline:
+The new 1.0.10 policy-lookup example supports a narrower headline:
 
 > A bounded policy can be compiled into an addressable VPM artifact. Runtime state finds the row, the row says what to do, and the decision can cite the exact artifact cell that produced it.
 
@@ -18,9 +18,9 @@ repository contains the matching benchmark or fixture evidence.
 
 ## Version policy
 
-- `1.0.0` is the first stable public API release.
+- `1.0.10` is the stable public API release intended to supersede the existing PyPI `1.0.9` package.
 - Keep future breaking artifact-contract changes for `2.x`.
-- Use pre-release suffixes such as `1.0.1rc1` or `1.1.0rc1` for release candidates when testing PyPI/TestPyPI paths.
+- Use pre-release suffixes such as `1.0.11rc1` or `1.1.0rc1` for release candidates when testing PyPI/TestPyPI paths.
 
 ## Local build check
 
@@ -70,7 +70,7 @@ python -m pip install --upgrade pip
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  zeromodel==1.0.0
+  zeromodel==1.0.10
 python - <<'PY'
 from zeromodel import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
 
@@ -88,7 +88,7 @@ recipe = LayoutRecipe.from_dict({
 })
 artifact = build_vpm(score_table, recipe)
 assert VPMPolicyLookup(artifact).read("state:right").action == "RIGHT"
-print("zeromodel 1.0.0 policy lookup smoke test passed")
+print("zeromodel 1.0.10 policy lookup smoke test passed")
 PY
 ```
 

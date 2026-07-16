@@ -9,6 +9,9 @@ from zeromodel import LayoutRecipe, ScoreTable, VPMArtifact, build_vpm
 from zeromodel.artifact import VPMValidationError
 
 
+GOLDEN_SAMPLE_ARTIFACT_ID = "32f801671139b73e349c756570c27c06d39c422a4d9a277782e1c997a473083b"
+
+
 def quality_recipe() -> LayoutRecipe:
     return LayoutRecipe.from_dict(
         {
@@ -51,6 +54,12 @@ def test_build_vpm_is_deterministic() -> None:
     assert first.artifact_id == second.artifact_id
     assert first.compute_artifact_id() == first.artifact_id
     assert first.normalized_values.flags.writeable is False
+
+
+def test_golden_artifact_id_pins_public_identity_contract() -> None:
+    artifact = build_vpm(sample_table(), quality_recipe())
+
+    assert artifact.artifact_id == GOLDEN_SAMPLE_ARTIFACT_ID
 
 
 def test_cell_maps_view_coordinates_to_source_coordinates() -> None:
@@ -104,6 +113,27 @@ def test_ties_are_resolved_by_row_id() -> None:
     assert [artifact.cell(row, 0).row_id for row in range(3)] == ["row-a", "row-b", "row-c"]
 
 
+def test_constant_columns_preserve_clipped_raw_signal() -> None:
+    table = ScoreTable(
+        values=[[1.0], [1.0], [1.0]],
+        row_ids=["a", "b", "c"],
+        metric_ids=["risk"],
+    )
+    recipe = LayoutRecipe.from_dict(
+        {
+            "version": "vpm-layout/0",
+            "name": "constant-risk",
+            "row_order": {"kind": "source", "tie_break": "row_id"},
+            "column_order": {"kind": "source"},
+            "normalization": {"kind": "per_metric_minmax", "clip": True},
+        }
+    )
+
+    artifact = build_vpm(table, recipe)
+
+    assert artifact.normalized_values.tolist() == [[1.0], [1.0], [1.0]]
+
+
 def test_score_table_rejects_duplicate_row_ids() -> None:
     with pytest.raises(VPMValidationError, match="Duplicate row"):
         ScoreTable(values=[[0.1], [0.2]], row_ids=["same", "same"], metric_ids=["quality"])
@@ -112,6 +142,11 @@ def test_score_table_rejects_duplicate_row_ids() -> None:
 def test_score_table_rejects_non_finite_values_without_policy() -> None:
     with pytest.raises(VPMValidationError, match="finite"):
         ScoreTable(values=[[float("nan")]], row_ids=["row"], metric_ids=["quality"])
+
+
+def test_score_table_rejects_non_json_metadata_scalars() -> None:
+    with pytest.raises(VPMValidationError, match="plain JSON scalar"):
+        ScoreTable(values=[[0.1]], row_ids=["row"], metric_ids=["quality"], metadata={"bad": np.int64(1)})
 
 
 def test_recipe_rejects_unknown_shape_kinds() -> None:

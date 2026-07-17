@@ -44,13 +44,13 @@ def test_q_diagnostics_are_exact_and_do_not_become_actions() -> None:
     assert table.values[0, -2:].tolist() == pytest.approx([6.0, 4.0])
     assert table.values[1, -2:].tolist() == pytest.approx([1.0, 0.5])
 
-    reader = VPMPolicyLookup(
-        artifact,
-        action_metric_ids=ACTIONS,
-        evidence_metric_ids=("criticality", "decision_margin"),
-    )
+    # Diagnostic metadata lets the reader safely separate actions from evidence
+    # without requiring the caller to repeat the metric lists.
+    reader = VPMPolicyLookup(artifact)
     decision = reader.read("state=critical")
 
+    assert reader.action_metric_ids == ACTIONS
+    assert reader.evidence_metric_ids == ("criticality", "decision_margin")
     assert decision.action == "LEFT"
     assert decision.evidence == pytest.approx(
         {"criticality": 6.0, "decision_margin": 4.0}

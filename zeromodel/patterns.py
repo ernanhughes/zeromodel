@@ -68,6 +68,8 @@ class PatternAnalysisSpec:
 
     ``null_samples`` and ``seed`` control only the calibration; the discovered
     ordering itself is deterministic given the matrix and ``value_source``.
+    ``alpha`` is part of the analytical declaration and therefore participates
+    in the specification digest.
     """
 
     method: str = PATTERN_METHOD
@@ -75,6 +77,7 @@ class PatternAnalysisSpec:
     value_source: str = "normalized"
     null_samples: int = 200
     seed: int = 0
+    alpha: float = 0.05
 
     def validate(self) -> None:
         if self.method != PATTERN_METHOD:
@@ -95,6 +98,10 @@ class PatternAnalysisSpec:
             raise VPMValidationError("null_samples must be positive")
         if self.seed < 0:
             raise VPMValidationError("seed must be non-negative")
+        if not np.isfinite(float(self.alpha)):
+            raise VPMValidationError("alpha must be finite")
+        if not (0.0 < float(self.alpha) < 1.0):
+            raise VPMValidationError("alpha must be between 0 and 1")
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -103,6 +110,7 @@ class PatternAnalysisSpec:
             "value_source": self.value_source,
             "null_samples": int(self.null_samples),
             "seed": int(self.seed),
+            "alpha": float(self.alpha),
         }
 
     @property
@@ -174,9 +182,9 @@ class PatternReport:
 
     @property
     def significant(self) -> bool:
-        """Whether the family-level null test rejects at alpha=0.05."""
+        """Whether the family-level null test rejects at the declared alpha."""
 
-        return (not self.degenerate) and self.family_p_value <= 0.05
+        return (not self.degenerate) and self.family_p_value <= self.spec.alpha
 
     @property
     def primary_objective(self) -> str:
@@ -241,6 +249,20 @@ class PatternReport:
                 ],
             },
         )
+
+
+@dataclass(frozen=True)
+class PatternDiscoveryArtifacts:
+    """Complete materialized output of one pattern-discovery run.
+
+    Returning the report, report artifact, and view artifact together prevents
+    the convenience API from creating a view whose ``ordered_by`` parent is
+    silently discarded by the caller.
+    """
+
+    report: PatternReport
+    report_artifact: VPMArtifact
+    view_artifact: VPMArtifact
 
 
 # ---------------------------------------------------------------------------
@@ -436,8 +458,9 @@ class MatrixPatternDetector:
     """Configured Bertin-inspired detector over immutable VPM artifacts.
 
     The detector is intentionally compile-time analysis. It does not change
-    runtime policy semantics. ``detect`` returns a frozen report; ``build_view``
-    compiles that report's explicit ordering into a normal VPM artifact.
+    runtime policy semantics. ``detect`` returns a frozen report;
+    ``materialize`` returns the complete report/report-artifact/view-artifact
+    set so no lineage parent is dropped by the convenience path.
     """
 
     def __init__(self, spec: Optional[PatternAnalysisSpec] = None) -> None:
@@ -450,30 +473,73 @@ class MatrixPatternDetector:
     def build_view(
         self,
         artifact: VPMArtifact,
-        report: Optional[PatternReport] = None,
+        report: PatternReport,
+        report_artifact: VPMArtifact,
         *,
         name: str = "bertin-discovered-order",
     ) -> VPMArtifact:
-        resolved = report or self.detect(artifact)
-        return build_discovered_view(artifact, resolved, name=name)
+        return build_discovered_view(
+            artifact,
+            report,
+            report_artifact,
+            name=name,
+        )
+
+    def materialize(
+        self,
+        artifact: VPMArtifact,
+        *,
+        name: str = "bertin-discovered-order",
+    ) -> PatternDiscoveryArtifacts:
+        """Build and return the complete linked discovery artifact set."""
+
+        report = self.detect(artifact)
+        report_artifact = report.to_vpm()
+        view_artifact = self.build_view(
+            artifact,
+            report,
+            report_artifact,
+            name=name,
+        )
+        return PatternDiscoveryArtifacts(
+            report=report,
+            report_artifact=report_artifact,
+            view_artifact=view_artifact,
+        )
 
 
 def build_discovered_view(
     artifact: VPMArtifact,
     report: PatternReport,
+    report_artifact: VPMArtifact,
     *,
     name: str = "bertin-discovered-order",
 ) -> VPMArtifact:
-    """Compile the report's discovered ordering into a frozen view artifact.
+    """Compile a materialized report's ordering into a frozen view artifact.
 
-    The view's identity depends on the explicit ordering outcome recorded in
-    the report, never on re-running the discovery procedure.
+    Requiring the report artifact prevents the API from silently minting an
+    ``ordered_by`` parent that the caller never receives.
     """
 
     if report.analyzed_artifact_id != artifact.artifact_id:
         raise VPMValidationError(
             "Report analyzes artifact %s, not %s"
             % (report.analyzed_artifact_id, artifact.artifact_id)
+        )
+    expected_report_artifact = report.to_vpm()
+    if report_artifact.artifact_id != expected_report_artifact.artifact_id:
+        raise VPMValidationError(
+            "report_artifact does not materialize the supplied PatternReport"
+        )
+    report_parents = tuple(report_artifact.provenance.get("parents") or ())
+    if not any(
+        parent.get("relation") == "analyzes"
+        and parent.get("artifact_id") == artifact.artifact_id
+        for parent in report_parents
+        if isinstance(parent, Mapping)
+    ):
+        raise VPMValidationError(
+            "report_artifact must link to the analyzed artifact"
         )
     recipe = LayoutRecipe.from_dict(
         {
@@ -497,7 +563,7 @@ def build_discovered_view(
             "pattern_report_digest": report.digest,
             "parents": [
                 {"artifact_id": artifact.artifact_id, "relation": "derived_from"},
-                {"artifact_id": report.to_vpm().artifact_id, "relation": "ordered_by"},
+                {"artifact_id": report_artifact.artifact_id, "relation": "ordered_by"},
             ],
         },
     )

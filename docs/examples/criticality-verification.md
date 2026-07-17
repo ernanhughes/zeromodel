@@ -15,6 +15,8 @@ decision margin:
 How decisively does the winning action beat its nearest alternative?
 ```
 
+The original 0/1 arcade policy is not an informative criticality fixture: its best-minus-worst spread is `1.0` in every state and its winning margin is nearly constant by construction. The example below therefore uses a separate Q-bearing teacher whose consequence gaps vary across states. Do not describe the original four-column policy image as a meaningful criticality surface.
+
 ## Run the complete fixture
 
 ```bash
@@ -96,6 +98,22 @@ print(decision.evidence)
 
 `evidence_metric_ids` are returned with the decision but never participate in the argmax.
 
+### Deployment identity convention
+
+For a criticality-aware deployment, compile and deploy the enriched six-column artifact. The `artifact_id` in production decision traces is the identity of that enriched artifact, because it is the object that contains both the executable action values and the evidence returned by the reader.
+
+A four-column action-only artifact may still be retained as an upstream source or baseline. When it is persisted, link the enriched artifact to it through explicit provenance rather than switching between the two identities at runtime.
+
+```text
+action-only source artifact
+        ↓ derived evidence
+criticality-aware deployed artifact
+        ↓ runtime lookup
+decision trace cites deployed artifact ID
+```
+
+This convention keeps the audit question unambiguous: **the identity in the decision trace is always the identity of the artifact actually consumed by the deployed reader.**
+
 ## Declare a finite policy property
 
 ```python
@@ -137,6 +155,38 @@ any
 not
 implies
 ```
+
+### Typed row-ID values
+
+`key-value-row-id/v1` decodes scalar values before property evaluation:
+
+| Row-ID text | Property value |
+|---|---|
+| `none`, `null` | JSON `null` / Python `None` |
+| `true`, `false` | Boolean |
+| `3`, `-2` | Integer |
+| `1.5`, `-0.25` | Float |
+| anything else | String |
+
+This means:
+
+```text
+target=none
+```
+
+produces:
+
+```python
+{"target": None}
+```
+
+A property must therefore compare it with JSON `null` or Python `None`:
+
+```python
+{"eq": [{"var": "state.target"}, None]}
+```
+
+The string literal `"none"` is not equal to the decoded null value. Comparison type errors are reported as `VPMValidationError` with the property ID, version, row ID, operator, values, and operand types.
 
 ## Check every declared row
 

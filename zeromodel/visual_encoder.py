@@ -190,6 +190,10 @@ def _integer_processor_value(value: Any, *keys: str) -> Optional[int]:
             item = value.get(key)
             if isinstance(item, (int, np.integer)):
                 return int(item)
+    for key in keys:
+        item = getattr(value, key, None)
+        if isinstance(item, (int, np.integer)):
+            return int(item)
     return None
 
 
@@ -203,14 +207,21 @@ def _letterbox_canvas_side(processor: Any, height: int, width: int) -> int:
     if not do_crop:
         return maximum
 
+    processor_data = processor.to_dict() if hasattr(processor, "to_dict") else {}
+    size_value = getattr(processor, "size", None)
+    crop_value = getattr(processor, "crop_size", None)
+    if size_value is None:
+        size_value = processor_data.get("size")
+    if crop_value is None:
+        crop_value = processor_data.get("crop_size")
     resize_edge = _integer_processor_value(
-        getattr(processor, "size", None),
+        size_value,
         "shortest_edge",
         "height",
         "width",
     )
     crop_edge = _integer_processor_value(
-        getattr(processor, "crop_size", None),
+        crop_value,
         "height",
         "width",
         "shortest_edge",

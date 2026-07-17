@@ -1,0 +1,46 @@
+{
+  "decision": "recovered_partial_original_phase_one_files",
+  "date": "2026-07-17",
+  "historical_dataset_digest": "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e",
+  "historical_report_digest": "d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035",
+  "recovered_from": "build/visual-phase-one-local/",
+  "recovered_files": [
+    {
+      "name": "arcade-visual-phase-one.json",
+      "size": 30574786,
+      "sha256": "2a76f46eb3237cce68fd71ead6436827cf86ebc27a7da0a661d64efa454aa8b3",
+      "embedded_dataset_manifest_digest": "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e",
+      "embedded_benchmark_report_digest": "d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035"
+    },
+    {
+      "name": "command.txt",
+      "size": 181,
+      "sha256": "78e0f5d268520cbfa0f051df30b47f0ca40bd3d0f0c5732eae98324488949b67"
+    },
+    {
+      "name": "dino-full-run.log",
+      "size": 3187,
+      "sha256": "c0c8669bd35973b0b27cef14c08161549bc9b649c2af5b20939828d415346b58"
+    },
+    {
+      "name": "runtime.txt",
+      "size": 135,
+      "sha256": "94e6734788aba930f11a880247c9a739f905d50116d2197d4058970e0e43f855"
+    }
+  ],
+  "missing_original_files": [
+    "argv.json",
+    "environment.json",
+    "run-manifest.json"
+  ],
+  "independently_verifiable": false,
+  "verification_scope": [
+    "historical benchmark-report digest is verifiable from the recovered raw JSON",
+    "historical embedded dataset-manifest digest is present in the recovered raw JSON"
+  ],
+  "limitations": [
+    "complete original environment bundle was not recovered",
+    "command and runtime text preserve an original device-recording defect",
+    "newer repository code does not reproduce the old manifest digest when re-hashing the historical manifest under newer semantics"
+  ]
+}

@@ -14,6 +14,11 @@ from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from .artifact import VPMValidationError
+from .visual_experiment import (
+    EXPECTED_ACCEPT,
+    EXPECTED_REJECT,
+    IMPOSSIBILITY_CONTROL,
+)
 
 
 EXPLORATORY_TEST_REUSE_WARNING = (
@@ -21,6 +26,8 @@ EXPLORATORY_TEST_REUSE_WARNING = (
     "deployment threshold on the same observations; use independent rejection "
     "calibration and untouched final evaluation families."
 )
+GLOBAL_SCORE_THRESHOLD_CURVE_TYPE = "global_score_threshold_diagnostic"
+PER_ROW_CANDIDATE_GRID_CURVE_TYPE = "declared_per_row_calibration_candidate_grid"
 
 
 def _rate(numerator: int, denominator: int) -> float:
@@ -48,10 +55,19 @@ class VisualTracePoint:
         if top1_action is None:
             top1_action = value.get("predicted_action_id")
         score = decision.get("nearest_score")
+        disposition = str(value["expected_disposition"])
+        if disposition not in {
+            EXPECTED_ACCEPT,
+            EXPECTED_REJECT,
+            IMPOSSIBILITY_CONTROL,
+        }:
+            raise VPMValidationError(
+                "unknown visual analysis disposition: %s" % disposition
+            )
         return cls(
             observation_id=str(value["observation_id"]),
             family_id=str(value["family_id"]),
-            expected_disposition=str(value["expected_disposition"]),
+            expected_disposition=disposition,
             expected_row_id=(
                 None
                 if value.get("expected_row_id") is None
@@ -69,11 +85,15 @@ class VisualTracePoint:
 
     @property
     def expected_accept(self) -> bool:
-        return self.expected_disposition == "accept"
+        return self.expected_disposition == EXPECTED_ACCEPT
 
     @property
     def expected_reject(self) -> bool:
-        return self.expected_disposition == "reject"
+        return self.expected_disposition == EXPECTED_REJECT
+
+    @property
+    def information_theoretic_control(self) -> bool:
+        return self.expected_disposition == IMPOSSIBILITY_CONTROL
 
     @property
     def row_correct(self) -> bool:
@@ -116,7 +136,7 @@ def score_thresholds(
     return tuple(scores[int(round(index))] for index in indices)
 
 
-def operating_curve(
+def global_score_threshold_curve(
     points: Sequence[VisualTracePoint],
     thresholds: Optional[Sequence[float]] = None,
 ) -> Tuple[Mapping[str, Any], ...]:
@@ -142,6 +162,13 @@ def operating_curve(
         correct_actions = sum(point.action_correct for point in accepted_benign)
         rows.append(
             {
+                "curve_type": GLOBAL_SCORE_THRESHOLD_CURVE_TYPE,
+                "status": "exploratory",
+                "calibration_semantics": (
+                    "not_equivalent_to_per_row_calibration_frontier"
+                ),
+                "uses_final_evaluation_traces": True,
+                "valid_for_threshold_selection": False,
                 "threshold": float(threshold),
                 "benign_count": len(benign),
                 "rejection_count": len(rejected),
@@ -161,6 +188,13 @@ def operating_curve(
             }
         )
     return tuple(rows)
+
+
+def operating_curve(
+    points: Sequence[VisualTracePoint],
+    thresholds: Optional[Sequence[float]] = None,
+) -> Tuple[Mapping[str, Any], ...]:
+    return global_score_threshold_curve(points, thresholds)
 
 
 def family_summary(points: Sequence[VisualTracePoint]) -> Mapping[str, Mapping[str, Any]]:
@@ -239,7 +273,9 @@ def analyze_trace_sets(
     }
     systems = {
         system_id: {
-            "operating_curve": list(operating_curve(points)),
+            "global_score_threshold_curve": list(
+                global_score_threshold_curve(points)
+            ),
             "family_summary": family_summary(points),
         }
         for system_id, points in parsed.items()

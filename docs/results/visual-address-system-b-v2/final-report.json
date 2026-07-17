@@ -5,7 +5,7 @@
     "deployment_permitted": false,
     "deployment_status": "research",
     "encoder_manifest_id": "431becbe63208280f81de60cbd3ff89bc4cbd9cc154ab2ec92deccb97612b27d",
-    "manifest_id": "ec04c95cebafad260977fbc35da85ea8bc459b6a7627f14128990e9d2925a661",
+    "manifest_id": "0a5d11e41d7fcc1a3b5e64c6ee611a7614e65f2f792912a9ae2b5da3d070aae4",
     "matrix_blob_id": "8de639b2df39f7f2201d7fcc34370fec1e1d4d1607cf455d9b5adc8c07b6cfd8",
     "matrix_row_count": 112,
     "metadata": {
@@ -1026,7 +1026,7 @@
     ],
     "representation_spec_digest": "431becbe63208280f81de60cbd3ff89bc4cbd9cc154ab2ec92deccb97612b27d",
     "score_semantics": "similarity",
-    "source_scope": "arcade-phase-one-held-out/v1",
+    "source_scope": "arcade-visual-system-b-adjudication/v2",
     "version": "zeromodel-visual-address-manifest/v1"
   },
   "calibration": {
@@ -1520,13 +1520,13 @@
     "weights_digest": "none"
   },
   "selected_quantile": 1.0,
-  "selection_digest": "9bf6ca25a6bd3450bc087cf4fb89a957cf6736dc71f8eed2d895b8823a33f7dc",
+  "selection_digest": "cbb11b9f698af443d21c7b3073a7da2c308f4be00da3d05e689ccf2c00eba8a0",
   "system": {
-    "contract_digest": "b8fbb9b6ef7c5b4e74ecc5a1c1f2851687ec9e83ec7373c28c4b87ba4e87f8a3",
+    "contract_digest": "c914f528629a94ad7b1c6caab5154d6e0b0615bc7c5a1835cad626e7eec991ba",
     "metrics": {
-      "accepted_benign_action_correctness": 0.0,
+      "accepted_benign_action_correctness": null,
       "accepted_benign_count": 0,
-      "accepted_benign_row_correctness": 0.0,
+      "accepted_benign_row_correctness": null,
       "accepted_count": 0,
       "action_accuracy": 0.0,
       "benign_action_accuracy": 0.0,

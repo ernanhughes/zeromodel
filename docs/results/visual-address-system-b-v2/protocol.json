@@ -12,6 +12,7 @@
     0.9,
     1.0
   ],
+  "dataset_identity": "arcade-visual-system-b-adjudication/v2",
   "final_evaluation_partition": "final_evaluation",
   "forbidden_partitions_for_selection": [
     "final_evaluation"

@@ -16,19 +16,24 @@ import argparse
 from itertools import product
 import json
 from pathlib import Path
+import sys
 from typing import Any, Mapping, Optional, Tuple
 
 import numpy as np
 
-from examples.arcade_shooter_policy import (
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from examples.arcade_shooter_policy import (  # noqa: E402
     ACTIONS,
     ShooterConfig,
     TinyArcadeShooter,
     compile_policy_artifact,
     state_row_id,
 )
-from zeromodel import to_bundle
-from zeromodel.visual import (
+from zeromodel import to_bundle  # noqa: E402
+from zeromodel.visual import (  # noqa: E402
     VisualFeatureSpec,
     VisualIndexBuild,
     VisualSignReader,
@@ -129,24 +134,32 @@ def compile_visual_index_artifact(
     )
 
 
+def make_visual_reader(
+    policy_artifact: Any,
+    visual_index_build: VisualIndexBuild,
+) -> VisualSignReader:
+    return VisualSignReader(
+        visual_index_build.artifact,
+        policy_artifact,
+        action_metric_ids=ACTIONS,
+        value_source="raw",
+        tie_break="metric_order",
+    )
+
+
 def run_visual_policy_episode(
     config: ShooterConfig = ShooterConfig(),
     *,
     policy_artifact: Any | None = None,
     visual_index_build: VisualIndexBuild | None = None,
+    visual_reader: VisualSignReader | None = None,
 ) -> dict[str, Any]:
     policy = policy_artifact or compile_policy_artifact(config)
     visual_build = visual_index_build or compile_visual_index_artifact(
         config,
         policy_artifact=policy,
     )
-    reader = VisualSignReader(
-        visual_build.artifact,
-        policy,
-        action_metric_ids=ACTIONS,
-        value_source="raw",
-        tie_break="metric_order",
-    )
+    reader = visual_reader or make_visual_reader(policy, visual_build)
     game = TinyArcadeShooter(config)
     trace: list[dict[str, Any]] = []
 
@@ -190,6 +203,7 @@ def exhaustive_visual_equivalence(
 ) -> dict[str, Any]:
     policy = compile_policy_artifact(config)
     visual_build = compile_visual_index_artifact(config, policy_artifact=policy)
+    reader = make_visual_reader(policy, visual_build)
     total_waves = 0
     total_steps = 0
     for wave in product(range(config.width), repeat=len(config.wave)):
@@ -202,6 +216,7 @@ def exhaustive_visual_equivalence(
             wave_config,
             policy_artifact=policy,
             visual_index_build=visual_build,
+            visual_reader=reader,
         )
         if not result["cleared"] or result["score"] != len(wave):
             raise RuntimeError("visual path failed wave %r" % (wave,))
@@ -226,16 +241,14 @@ def main() -> None:
     config = ShooterConfig()
     policy = compile_policy_artifact(config)
     visual_build = compile_visual_index_artifact(config, policy_artifact=policy)
+    reader = make_visual_reader(policy, visual_build)
     result = run_visual_policy_episode(
         config,
         policy_artifact=policy,
         visual_index_build=visual_build,
+        visual_reader=reader,
     )
-    summary = {
-        key: value
-        for key, value in result.items()
-        if key != "trace"
-    }
+    summary = {key: value for key, value in result.items() if key != "trace"}
     summary["exact_decisions"] = sum(
         int(step["visual_decision"]["exact_feature_match"])
         for step in result["trace"]

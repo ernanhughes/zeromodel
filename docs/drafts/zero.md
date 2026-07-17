@@ -2062,7 +2062,7 @@ criticality
 decision_margin
 ```
 
-For deployment, ZeroModel uses the **source-order enriched artifact** as the runtime policy object. Production decisions therefore cite the identity of that six-column artifact—the exact object the reader consumed.
+For deployment, ZeroModel uses the **source-order enriched artifact** as the runtime policy object. Production decisions therefore cite the identity of that six-column artifact, the exact object the reader consumed.
 
 The criticality-first artifact is a separate deterministic inspection view derived from the same scored source. It has its own identity because its layout differs, but it is not the production runtime identity unless a deployment explicitly chooses that view as its executable artifact.
 
@@ -3055,7 +3055,7 @@ The exhaustive result demonstrates that the compiled VPM preserves:
 
 within the complete declared policy domain.
 
-<sup><a class="claim-ref" href="#claim-c55">[C55]</a></sup>
+[C55](#claim-c55)
 
 ---
 
@@ -3157,7 +3157,7 @@ The longest observed episode remained seven steps below the configured limit.
 
 This is exhaustive scenario coverage inside the declared seven-column, four-target world. It is not evidence of behaviour outside that fixture.
 
-<sup><a class="claim-ref" href="#claim-c56">[C56]</a></sup>
+[C56](#claim-c56)
 
 ---
 
@@ -3290,7 +3290,7 @@ A value change that alters the row’s deterministic winner changes both identit
 
 Artifact identity therefore tracks canonical policy contents, not merely the final action selected from those contents.
 
-<sup><a class="claim-ref" href="#claim-c6">[C6]</a> <a class="claim-ref" href="#claim-c45">[C45]</a> <a class="claim-ref" href="#claim-c48">[C48]</a></sup>
+[C6](#claim-c6) [C45](#claim-c45) [C48](#claim-c48) 
 
 ---
 
@@ -3367,7 +3367,7 @@ This establishes deterministic re-execution against the same deterministic envir
 
 It is not an event-sourced replay of an arbitrary historical world state. Such a system would require explicit contracts for external inputs, clock state, random state, transition-rule versions and environment snapshots.
 
-<sup><a class="claim-ref" href="#claim-c11">[C11]</a> <a class="claim-ref" href="#claim-c57">[C57]</a></sup>
+[C11](#claim-c11) [C57](#claim-c57) 
 
 ---
 
@@ -3429,7 +3429,7 @@ It does not establish that the upstream source policy was correct or that its pr
 
 It establishes that every executed action can be mapped back to the precise prepared artifact evidence used during deterministic selection.
 
-<sup><a class="claim-ref" href="#claim-c3">[C3]</a> <a class="claim-ref" href="#claim-c58">[C58]</a></sup>
+[C3](#claim-c3) [C58](#claim-c58) 
 
 ---
 
@@ -3554,7 +3554,7 @@ test source commit:
 cb08db911b0df9e392f632a631d50cb0ad5945ec
 
 GitHub Actions:
-run 29545915566 — success
+run 29545915566 success
 
 Python matrix:
 3.10, 3.11, 3.12

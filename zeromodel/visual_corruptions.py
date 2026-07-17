@@ -99,17 +99,19 @@ def mask_box(
     width: int,
     value: int = 0,
 ) -> np.ndarray:
+    """Mask the visible intersection of a declared box and the frame."""
+
     result = _owned(frame)
     frame_height, frame_width = result.shape[:2]
     if height <= 0 or width <= 0:
         raise VPMValidationError("mask dimensions must be positive")
     if not (0 <= top < frame_height and 0 <= left < frame_width):
         raise VPMValidationError("mask origin must be inside the frame")
-    if top + height > frame_height or left + width > frame_width:
-        raise VPMValidationError("mask box must fit inside the frame")
     if not (0 <= int(value) <= 255):
         raise VPMValidationError("mask value must be in [0, 255]")
-    result[top : top + height, left : left + width] = int(value)
+    bottom = min(frame_height, int(top) + int(height))
+    right = min(frame_width, int(left) + int(width))
+    result[int(top) : bottom, int(left) : right] = int(value)
     result.flags.writeable = False
     return result
 

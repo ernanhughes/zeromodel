@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/visual-address-benchmark.yml"
+      - ".github/scripts/run_visual_address_smoke.py"
       - "examples/arcade_visual_address_benchmark.py"
       - "zeromodel/visual_encoder.py"
       - "zeromodel/visual_retrieval.py"
@@ -61,8 +62,7 @@ jobs:
         run: |
           mkdir -p build/visual-phase-one-smoke
           set -o pipefail
-          python examples/arcade_visual_address_benchmark.py \
-            --encoder dinov2 \
+          python .github/scripts/run_visual_address_smoke.py \
             --variants-per-family 1 \
             --output-dir build/visual-phase-one-smoke \
             2>&1 | tee build/visual-phase-one-smoke-run.log

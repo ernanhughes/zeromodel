@@ -129,7 +129,7 @@ def compile_visual_index_artifact(
         enumerate_visual_frames(config),
         arcade_visual_feature_spec(config),
         threshold_fraction=0.25,
-        margin_fraction=0.25,
+        margin_fraction=0.75,
         name="arcade-visual-index-source-order",
     )
 

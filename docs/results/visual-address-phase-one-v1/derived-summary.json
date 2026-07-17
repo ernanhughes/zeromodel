@@ -1,0 +1,236 @@
+{
+  "dataset_composition": {
+    "benign_test": 1344,
+    "calibration": 1344,
+    "distinguishable_critical_interventions": 224,
+    "information_theoretic_controls_unscored": 98,
+    "out_of_domain": 24,
+    "prototype": 1344,
+    "scored_evaluation_total": 1592
+  },
+  "dataset_digest": "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e",
+  "date": "2026-07-17",
+  "decision": {
+    "critical_mask_or_level_two_work_authorized": false,
+    "phase_one_learned_path_promoted": false,
+    "provider_seam_retained": true,
+    "reason": "Frozen embeddings did not materially improve benign action recovery, substantially degraded exact row addressing, and produced unsafe false acceptance rates."
+  },
+  "document_status": "research result; full pinned three-variant run",
+  "environment_manifest_required_before_merge": {
+    "cpu": "[REQUIRED]",
+    "exact_command": "[REQUIRED]",
+    "git_commit_sha": "[REQUIRED]",
+    "gpu_or_cpu_only": "[REQUIRED]",
+    "machine_architecture": "[REQUIRED]",
+    "model_cache_or_download_state": "[REQUIRED]",
+    "numpy_version": "[REQUIRED]",
+    "operating_system": "[REQUIRED]",
+    "python_version": "[REQUIRED]",
+    "ram": "[REQUIRED]",
+    "torch_version": "[REQUIRED]",
+    "transformers_version": "[REQUIRED]",
+    "zeromodel_install": "[REQUIRED]"
+  },
+  "observation_count": 4378,
+  "report_digest": "d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035",
+  "repository": "ernanhughes/zeromodel",
+  "systems": {
+    "A": {
+      "derived": {
+        "accepted_benign_action_correctness": null,
+        "accepted_benign_count": 0,
+        "accepted_benign_exact_row_correctness": null,
+        "action_equivalent_wrong_row_count": 0,
+        "benign_action_accuracy": 0.0,
+        "benign_count": 1344,
+        "benign_exact_row_accuracy": 0.0,
+        "correct_disposition_rate": 0.15577889447236182,
+        "distinguishable_rejection_count": 248,
+        "end_to_end_scored_success": 0.15577889447236182,
+        "intervals_95_wilson": {
+          "accepted_benign_action_correctness": null,
+          "benign_action_accuracy": [0.0, 0.0028500821039109782],
+          "benign_exact_row_accuracy": [0.0, 0.0028500821039109782],
+          "false_acceptance_rate": [0.0, 0.01525348065676972],
+          "false_rejection_rate": [0.997149917896089, 1.0]
+        },
+        "true_reject_count": 248
+      },
+      "raw": {
+        "accepted_count": 0,
+        "action_accuracy": 0.0,
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_row_count": 0,
+        "evaluation_count": 1592,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 248,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 1344,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 1.0,
+        "name": "current deterministic reader",
+        "rejected_count": 1592,
+        "row_accuracy": 0.0
+      }
+    },
+    "B": {
+      "derived": {
+        "accepted_benign_action_correctness": 0.9791666666666666,
+        "accepted_benign_count": 1008,
+        "accepted_benign_exact_row_correctness": 0.8333333333333334,
+        "action_equivalent_wrong_row_count": 147,
+        "benign_action_accuracy": 0.734375,
+        "benign_count": 1344,
+        "benign_exact_row_accuracy": 0.625,
+        "correct_disposition_rate": 0.7091708542713567,
+        "distinguishable_rejection_count": 248,
+        "end_to_end_scored_success": 0.6959798994974874,
+        "intervals_95_wilson": {
+          "accepted_benign_action_correctness": [0.9683611109293002, 0.9863339073257111],
+          "benign_action_accuracy": [0.7101187299996599, 0.757295294014132],
+          "benign_exact_row_accuracy": [0.5987958207786285, 0.6504916586953938],
+          "false_acceptance_rate": [0.4501775647423217, 0.573646947822434],
+          "false_rejection_rate": [0.22758465681176396, 0.2738403842401916]
+        },
+        "true_reject_count": 121
+      },
+      "raw": {
+        "accepted_count": 1135,
+        "action_accuracy": 0.6199748743718593,
+        "conflicting_action_error_count": 21,
+        "correct_action_count": 987,
+        "correct_row_count": 840,
+        "evaluation_count": 1592,
+        "false_accept_count": 127,
+        "false_accept_opportunities": 248,
+        "false_acceptance_rate": 0.5120967741935484,
+        "false_reject_count": 336,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.25,
+        "name": "normalized-pixel medoid/template matching",
+        "rejected_count": 457,
+        "row_accuracy": 0.5276381909547738
+      }
+    },
+    "C": {
+      "derived": {
+        "accepted_benign_action_correctness": 0.7238461538461538,
+        "accepted_benign_count": 1300,
+        "accepted_benign_exact_row_correctness": 0.3176923076923077,
+        "action_equivalent_wrong_row_count": 528,
+        "benign_action_accuracy": 0.7001488095238095,
+        "benign_count": 1344,
+        "benign_exact_row_accuracy": 0.3072916666666667,
+        "correct_disposition_rate": 0.8442211055276382,
+        "distinguishable_rejection_count": 248,
+        "end_to_end_scored_success": 0.6187185929648241,
+        "intervals_95_wilson": {
+          "accepted_benign_action_correctness": [0.6989096625115206, 0.7474636262519848],
+          "benign_action_accuracy": [0.6751105751850043, 0.724046162782329],
+          "benign_exact_row_accuracy": [0.28320393499710844, 0.33247786748044056],
+          "false_acceptance_rate": [0.770222519869884, 0.8650978151902646],
+          "false_rejection_rate": [0.02447685824365345, 0.04366280181773956]
+        },
+        "true_reject_count": 44
+      },
+      "raw": {
+        "accepted_count": 1504,
+        "action_accuracy": 0.5910804020100503,
+        "conflicting_action_error_count": 359,
+        "correct_action_count": 941,
+        "correct_row_count": 413,
+        "evaluation_count": 1592,
+        "false_accept_count": 204,
+        "false_accept_opportunities": 248,
+        "false_acceptance_rate": 0.8225806451612904,
+        "false_reject_count": 44,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.03273809523809524,
+        "name": "DINOv2 medoid retrieval",
+        "rejected_count": 88,
+        "row_accuracy": 0.2594221105527638
+      }
+    },
+    "D": {
+      "derived": {
+        "accepted_benign_action_correctness": 0.7748650732459522,
+        "accepted_benign_count": 1297,
+        "accepted_benign_exact_row_correctness": 0.3145720894371627,
+        "action_equivalent_wrong_row_count": 597,
+        "benign_action_accuracy": 0.7477678571428571,
+        "benign_count": 1344,
+        "benign_exact_row_accuracy": 0.30357142857142855,
+        "correct_disposition_rate": 0.8555276381909548,
+        "distinguishable_rejection_count": 248,
+        "end_to_end_scored_success": 0.6721105527638191,
+        "intervals_95_wilson": {
+          "accepted_benign_action_correctness": [0.7513417710335892, 0.796764991066679],
+          "benign_action_accuracy": [0.7238656696647796, 0.7702577271498001],
+          "benign_exact_row_accuracy": [0.2795779394143522, 0.32868459284075563],
+          "false_acceptance_rate": [0.6798388789208117, 0.7887098681860479],
+          "false_rejection_rate": [0.026399185079470693, 0.04619203711538699]
+        },
+        "true_reject_count": 65
+      },
+      "raw": {
+        "accepted_count": 1480,
+        "action_accuracy": 0.6312814070351759,
+        "conflicting_action_error_count": 292,
+        "correct_action_count": 1005,
+        "correct_row_count": 408,
+        "evaluation_count": 1592,
+        "false_accept_count": 183,
+        "false_accept_opportunities": 248,
+        "false_acceptance_rate": 0.7379032258064516,
+        "false_reject_count": 47,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.034970238095238096,
+        "name": "DINOv2 all-prototype k-NN",
+        "rejected_count": 112,
+        "row_accuracy": 0.2562814070351759
+      }
+    },
+    "G": {
+      "derived": {
+        "accepted_benign_action_correctness": 0.6053030303030303,
+        "accepted_benign_count": 1320,
+        "accepted_benign_exact_row_correctness": 0.29318181818181815,
+        "action_equivalent_wrong_row_count": 412,
+        "benign_action_accuracy": 0.5944940476190477,
+        "benign_count": 1344,
+        "benign_exact_row_accuracy": 0.28794642857142855,
+        "correct_disposition_rate": 0.8291457286432161,
+        "distinguishable_rejection_count": 248,
+        "end_to_end_scored_success": 0.5018844221105527,
+        "intervals_95_wilson": {
+          "accepted_benign_action_correctness": [0.5786658418252802, 0.6313290923473119],
+          "benign_action_accuracy": [0.5680112940972338, 0.6204381695527711],
+          "benign_exact_row_accuracy": [0.26436967061921773, 0.31273192670163735],
+          "false_acceptance_rate": [0.9847465193432304, 1.0],
+          "false_rejection_rate": [0.012028944459777802, 0.026433634711850642]
+        },
+        "true_reject_count": 0
+      },
+      "raw": {
+        "accepted_count": 1568,
+        "action_accuracy": 0.5018844221105527,
+        "conflicting_action_error_count": 521,
+        "correct_action_count": 799,
+        "correct_row_count": 387,
+        "evaluation_count": 1592,
+        "false_accept_count": 248,
+        "false_accept_opportunities": 248,
+        "false_acceptance_rate": 1.0,
+        "false_reject_count": 24,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.017857142857142856,
+        "name": "rejection-equipped ridge linear probe",
+        "rejected_count": 24,
+        "row_accuracy": 0.24309045226130654
+      }
+    }
+  },
+  "validation_status": "research"
+}

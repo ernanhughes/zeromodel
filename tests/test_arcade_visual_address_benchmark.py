@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import sys
 
+import numpy as np
+
 
 def _load_demo():
     path = (
@@ -23,7 +25,7 @@ def _load_demo():
     return module
 
 
-def test_arcade_dataset_has_family_holdout_and_explicit_rejection_sets() -> None:
+def test_arcade_dataset_has_family_holdout_controls_and_rejection_sets() -> None:
     demo = _load_demo()
     dataset = demo.build_arcade_benchmark_dataset(
         variants_per_family=1,
@@ -41,8 +43,22 @@ def test_arcade_dataset_has_family_holdout_and_explicit_rejection_sets() -> None
     assert any(
         family.critical_evidence_removed for family in dataset.manifest.families
     )
+    target_controls = tuple(
+        record for record in records if record.family_id == "test-critical-target"
+    )
+    assert len(target_controls) == 98
+    assert all(
+        record.metadata["evaluation_role"] == demo.IMPOSSIBILITY_CONTROL
+        for record in target_controls
+    )
     assert sum(record.split == "ood" for record in records) == 6
     assert len(dataset.observations) == len(records)
+
+    impossible = dataset.observations["ood-impossible-state:00"].pixels
+    left_band = impossible[11:14, : demo.CELL_PIXELS]
+    right_band = impossible[11:14, -demo.CELL_PIXELS :]
+    assert np.count_nonzero(left_band == demo.TANK_VALUE) > 0
+    assert np.count_nonzero(right_band == demo.TANK_VALUE) > 0
 
 
 def test_default_benchmark_runs_deterministic_and_template_systems() -> None:
@@ -62,9 +78,14 @@ def test_default_benchmark_runs_deterministic_and_template_systems() -> None:
     for system in report.systems:
         system.metrics.validate()
         assert system.metrics.evaluation_count > 0
-        assert system.metrics.false_accept_opportunities > 0
-        assert system.metrics.false_reject_opportunities > 0
+        assert system.metrics.false_accept_opportunities == 248
+        assert system.metrics.false_reject_opportunities == 448
         assert 0.0 <= system.metrics.false_acceptance_rate <= 1.0
         assert 0.0 <= system.metrics.false_rejection_rate <= 1.0
+        assert system.notes["impossibility_control_count"] == 98
+        assert (
+            system.notes["observation_count_including_controls"]
+            == system.metrics.evaluation_count + 98
+        )
 
     assert json.loads(json.dumps(report.to_dict())) == report.to_dict()

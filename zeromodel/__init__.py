@@ -13,6 +13,15 @@ from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation,
 from .lua import POLICY_LUA_FORMAT, compiled_plan_id, lua_policy_source, write_lua_policy
 from .manifold import DecisionManifold, ManifoldFrame, ManifoldSummary, ManifoldTransition, build_decision_manifold, find_inflection_points
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
+from .patterns import (
+    PATTERN_CHECKER_VERSION,
+    MatrixPatternDetector,
+    ObjectiveResult,
+    PatternAnalysisSpec,
+    PatternReport,
+    build_discovered_view,
+    detect_patterns,
+)
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .policy_diagnostics import CRITICALITY_METRIC_ID, DECISION_MARGIN_METRIC_ID, with_q_diagnostics
 from .policy_lookup import POLICY_PLAN_VERSION, PolicyLookupDecision, SignReader, VPMPolicyLookup
@@ -51,9 +60,14 @@ __all__ = [
     "ManifoldFrame",
     "ManifoldSummary",
     "ManifoldTransition",
+    "MatrixPatternDetector",
+    "ObjectiveResult",
+    "PATTERN_CHECKER_VERSION",
     "PHOSResult",
     "POLICY_LUA_FORMAT",
     "POLICY_PLAN_VERSION",
+    "PatternAnalysisSpec",
+    "PatternReport",
     "Policy",
     "PolicyLookupDecision",
     "PolicyPropertyChecker",
@@ -86,6 +100,7 @@ __all__ = [
     "as_field",
     "build_critic_vpm",
     "build_decision_manifold",
+    "build_discovered_view",
     "build_learning_vpm",
     "build_optimized_view",
     "build_pyramid",
@@ -98,6 +113,7 @@ __all__ = [
     "critic_recipe",
     "decode_key_value_row_id",
     "default_controller",
+    "detect_patterns",
     "find_inflection_points",
     "from_bundle",
     "guarded_pack_artifact",

@@ -249,8 +249,13 @@ class LayoutRecipe:
             raise VPMValidationError("LayoutRecipe requires normalization mapping")
 
         row_kind = row_order.get("kind")
-        if row_kind not in {"source", "lexicographic", "weighted_score"}:
+        if row_kind not in {"source", "lexicographic", "weighted_score", "explicit"}:
             raise VPMValidationError("Unsupported row_order kind: %r" % row_kind)
+        if row_kind == "explicit":
+            row_ids = row_order.get("row_ids")
+            if not isinstance(row_ids, tuple) or len(row_ids) == 0:
+                raise VPMValidationError("explicit row_order requires non-empty row_ids")
+            _validate_unique([str(row_id) for row_id in row_ids], "explicit row")
         if row_kind in {"lexicographic", "weighted_score"}:
             keys = row_order.get("keys") or row_order.get("metrics")
             if not isinstance(keys, tuple) or len(keys) == 0:
@@ -287,6 +292,13 @@ class LayoutRecipe:
     def validate_against(self, table: ScoreTable) -> None:
         row_order = self.data["row_order"]
         row_kind = row_order["kind"]
+        if row_kind == "explicit":
+            declared = tuple(str(row_id) for row_id in row_order["row_ids"])
+            if sorted(declared) != sorted(table.row_ids):
+                raise VPMValidationError(
+                    "explicit row_order must be a complete permutation of the "
+                    "table row_ids"
+                )
         if row_kind in {"lexicographic", "weighted_score"}:
             keys = row_order.get("keys") or row_order.get("metrics")
             for key in keys:
@@ -544,6 +556,11 @@ def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ..
     row_indices = tuple(range(len(table.row_ids)))
     if kind == "source":
         return row_indices
+    if kind == "explicit":
+        index_by_row_id = {row_id: index for index, row_id in enumerate(table.row_ids)}
+        return tuple(
+            index_by_row_id[str(row_id)] for row_id in row_order["row_ids"]
+        )
     keys = tuple(row_order.get("keys") or row_order.get("metrics"))
     if kind == "lexicographic":
         return tuple(

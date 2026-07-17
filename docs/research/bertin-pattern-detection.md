@@ -28,6 +28,8 @@ The detector does not compare an optimized real matrix against unoptimized shuff
 
 This corrects for selecting the most favorable objective after looking at the data. Adding future ordering methods must also add those methods to every null run.
 
+The rejection threshold (`alpha`) is part of `PatternAnalysisSpec` and therefore part of the specification digest. Changing the analytical threshold changes the declared question and the resulting report identity, even when the observed matrix and null samples are otherwise the same.
+
 ## Determinism and identity
 
 Spectral discovery is a compile-time analysis. The result is frozen as an explicit row-ID permutation:
@@ -49,6 +51,7 @@ The report stores:
 - method and objective IDs;
 - value source;
 - null sample count and seed;
+- declared alpha;
 - specification digest;
 - discovered row order;
 - observed scores;
@@ -57,7 +60,11 @@ The report stores:
 - family-level p-value;
 - degeneracy flag.
 
+`family_p_value` is deliberately repeated across objective rows in the report VPM. It is a report-level statistic denormalized into the rectangular score surface so that normal VPM renderers and consumers can see it. The structured report metadata remains the authoritative representation.
+
 ## Public API
+
+The safest convenience path materializes the complete linked result:
 
 ```python
 from zeromodel import MatrixPatternDetector, PatternAnalysisSpec
@@ -66,15 +73,34 @@ spec = PatternAnalysisSpec(
     value_source="normalized",
     null_samples=199,
     seed=11,
+    alpha=0.05,
 )
 detector = MatrixPatternDetector(spec)
-report = detector.detect(source_artifact)
-view = detector.build_view(source_artifact, report)
+result = detector.materialize(source_artifact)
+
+report = result.report
+report_artifact = result.report_artifact
+view_artifact = result.view_artifact
 
 print(report.family_p_value)
+print(report.significant)
 print(report.primary_objective)
 print(report.row_order)
 ```
+
+For callers controlling each stage explicitly:
+
+```python
+report = detector.detect(source_artifact)
+report_artifact = report.to_vpm()
+view_artifact = detector.build_view(
+    source_artifact,
+    report,
+    report_artifact,
+)
+```
+
+`build_view()` requires the materialized report artifact. This prevents the convenience API from returning a view whose `ordered_by` parent was created internally and then discarded.
 
 The lower-level functions `detect_patterns()` and `build_discovered_view()` are also available.
 
@@ -83,11 +109,13 @@ The lower-level functions `detect_patterns()` and `build_discovered_view()` are 
 The committed tests establish the following narrow claims:
 
 - a planted three-block matrix is recovered with strong same-block adjacency;
-- its family-level statistic is significant under the declared permutation null;
+- its family-level statistic is significant under the declared permutation null and alpha;
 - selected pure-noise fixtures are not reported as significant;
 - constant matrices are marked degenerate and fall back to source order;
+- alpha participates in the analysis specification and report identities;
 - identical analysis inputs produce identical report digests and artifact identities;
 - changing only the calibration seed changes the report lineage but not the frozen discovered ordering;
+- the convenience API returns the report, report artifact, and view artifact together;
 - report and view artifacts preserve lineage and `.vpm` round trips;
 - incomplete explicit row permutations are rejected.
 

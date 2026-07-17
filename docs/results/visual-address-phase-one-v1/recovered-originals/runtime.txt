@@ -1,5 +1,10 @@
-started_utc=2026-07-17T18:33:05.8411347Z
-finished_utc=2026-07-17T18:34:15.1350274Z
-elapsed_seconds=69.2938927
+started_utc=2026-07-17T22:40:43.2453839Z
+finished_utc=2026-07-17T22:41:54.5868464Z
+elapsed_seconds=71.3414625
 exit_code=0
-device=
+device=cuda
+git_commit_sha=537ed82f2c7f4f51e5b9d1a90e527a27737b2613
+git_branch=main
+git_worktree_dirty=True
+report_exists=True
+report_file_sha256=929ec025a82fede20d717f05bf5b00562beb8c378a03ad862cabf52797871106

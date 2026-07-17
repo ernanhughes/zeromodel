@@ -1,1 +1,1 @@
-python examples/arcade_visual_address_benchmark.py --encoder dinov2 --device  --local-files-only --variants-per-family 3 --include-traces --output-dir build\visual-phase-one-local
+python examples/arcade_visual_address_benchmark.py --encoder dinov2 --device cuda --variants-per-family 3 --include-traces --output-dir build\visual-phase-one-local --local-files-only

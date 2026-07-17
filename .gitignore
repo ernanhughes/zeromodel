@@ -1,6 +1,6 @@
 test-results/
 *.codebase.md
-!docs/results/visual-address-phase-one-v1/recovered-originals/dino-full-run.log Hey
+!docs/results/visual-address-phase-one-v1/recovered-originals/dino-full-run.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

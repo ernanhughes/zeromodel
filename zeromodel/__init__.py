@@ -10,11 +10,12 @@ from .critic import CRITIC_METRICS, CriticAssessment, CriticObservation, build_c
 from .edge import TopLeftGate, TopLeftGateResult
 from .hierarchy import HierarchyLevel, build_pyramid, reduce_blocks
 from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation, build_learning_vpm, learning_recipe
+from .lua import POLICY_LUA_FORMAT, compiled_plan_id, lua_policy_source, write_lua_policy
 from .manifold import DecisionManifold, ManifoldFrame, ManifoldSummary, ManifoldTransition, build_decision_manifold, find_inflection_points
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
 from .policy_diagnostics import CRITICALITY_METRIC_ID, DECISION_MARGIN_METRIC_ID, with_q_diagnostics
-from .policy_lookup import PolicyLookupDecision, SignReader, VPMPolicyLookup
+from .policy_lookup import POLICY_PLAN_VERSION, PolicyLookupDecision, SignReader, VPMPolicyLookup
 from .policy_properties import (
     CHECKER_VERSION,
     VERIFICATION_METRICS,
@@ -51,6 +52,8 @@ __all__ = [
     "ManifoldSummary",
     "ManifoldTransition",
     "PHOSResult",
+    "POLICY_LUA_FORMAT",
+    "POLICY_PLAN_VERSION",
     "Policy",
     "PolicyLookupDecision",
     "PolicyPropertyChecker",
@@ -91,6 +94,7 @@ __all__ = [
     "build_views",
     "build_vpm",
     "compare_fields",
+    "compiled_plan_id",
     "critic_recipe",
     "decode_key_value_row_id",
     "default_controller",
@@ -99,6 +103,7 @@ __all__ = [
     "guarded_pack_artifact",
     "image_entropy",
     "learning_recipe",
+    "lua_policy_source",
     "metric_ids_for_rows",
     "observations_from_critic_lines",
     "optimize_view_profile",
@@ -122,6 +127,7 @@ __all__ = [
     "vpm_subtract",
     "vpm_xor",
     "with_q_diagnostics",
+    "write_lua_policy",
     "write_png",
     "write_svg",
 ]

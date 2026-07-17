@@ -104,7 +104,7 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
             family_id="test-critical-target",
             kind="information_theoretic_control",
             critical_evidence_removed=True,
-            metadata={
+            parameters={
                 "evaluation_role": IMPOSSIBILITY_CONTROL,
                 "reason": (
                     "removing the target yields pixels equivalent to a valid "

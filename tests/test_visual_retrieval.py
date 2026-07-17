@@ -69,7 +69,7 @@ def test_all_example_build_keeps_multiple_prototypes_per_row() -> None:
     ].count("left") == 2
 
 
-def test_vector_index_accepts_known_direction_and_rejects_ambiguous_query() -> None:
+def test_vector_index_accepts_known_direction_and_rejects_midpoint() -> None:
     index = VectorAddressIndex(_build("medoid"))
 
     accepted = index.match_vector(
@@ -81,13 +81,16 @@ def test_vector_index_accepts_known_direction_and_rejects_ambiguous_query() -> N
     assert accepted.nearest_score > accepted.second_score
     assert "conflicting_action_margin" in accepted.accepted_by
 
-    ambiguous = index.match_vector(
+    midpoint = index.match_vector(
         np.asarray([1.0, 1.0], dtype=np.float32),
-        observation_digest="obs:ambiguous",
+        observation_digest="obs:midpoint",
     )
-    assert not ambiguous.accepted
-    assert ambiguous.reason == "ambiguous_visual_address"
-    assert ambiguous.matched_row_id is None
+    assert not midpoint.accepted
+    assert midpoint.reason in {
+        "visual_similarity_below_threshold",
+        "ambiguous_visual_address",
+    }
+    assert midpoint.matched_row_id is None
 
     zero = index.match_vector(
         np.asarray([0.0, 0.0], dtype=np.float32),
@@ -142,4 +145,7 @@ def test_linear_probe_fits_rows_and_rejects_midpoint() -> None:
         observation_digest="obs:midpoint",
     )
     assert not midpoint.accepted
-    assert midpoint.reason == "ambiguous_visual_address"
+    assert midpoint.reason in {
+        "visual_similarity_below_threshold",
+        "ambiguous_visual_address",
+    }

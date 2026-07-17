@@ -61,7 +61,9 @@ class VPMPolicyLookup:
     that produced the decision.
 
     Optional evidence metrics are returned alongside the decision but never
-    participate in action selection.
+    participate in action selection. Tables produced by ``with_q_diagnostics``
+    declare their action and evidence metrics in metadata, so the reader can use
+    the safe separation automatically when those arguments are omitted.
 
     The default comparison uses raw source values because action values in a
     policy table are usually comparable within a row. Use
@@ -90,10 +92,30 @@ class VPMPolicyLookup:
                 "tie_break must be 'metric_order' or 'metric_id'"
             )
 
-        actions = tuple(
-            str(metric_id)
-            for metric_id in (action_metric_ids or artifact.source.metric_ids)
+        diagnostic_metadata = artifact.source.metadata.get("policy_diagnostics")
+        declared_actions: Sequence[str] | None = None
+        declared_evidence: list[str] = []
+        if isinstance(diagnostic_metadata, Mapping):
+            metadata_actions = diagnostic_metadata.get("action_metric_ids")
+            if isinstance(metadata_actions, (tuple, list)):
+                declared_actions = tuple(str(value) for value in metadata_actions)
+            for key in ("criticality", "decision_margin"):
+                item = diagnostic_metadata.get(key)
+                if isinstance(item, Mapping) and item.get("metric_id") is not None:
+                    declared_evidence.append(str(item["metric_id"]))
+
+        action_source = (
+            action_metric_ids
+            if action_metric_ids is not None
+            else declared_actions or artifact.source.metric_ids
         )
+        evidence_source = (
+            evidence_metric_ids
+            if evidence_metric_ids is not None
+            else declared_evidence
+        )
+
+        actions = tuple(str(metric_id) for metric_id in action_source)
         if not actions:
             raise VPMValidationError(
                 "VPMPolicyLookup requires at least one action metric"
@@ -101,7 +123,7 @@ class VPMPolicyLookup:
         if len(set(actions)) != len(actions):
             raise VPMValidationError("action_metric_ids must be unique")
 
-        evidence = tuple(str(metric_id) for metric_id in (evidence_metric_ids or ()))
+        evidence = tuple(str(metric_id) for metric_id in evidence_source)
         if len(set(evidence)) != len(evidence):
             raise VPMValidationError("evidence_metric_ids must be unique")
         overlap = sorted(set(actions).intersection(evidence))

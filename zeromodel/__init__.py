@@ -1,18 +1,77 @@
 """ZeroModel public package surface."""
 from __future__ import annotations
 
-from .artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMCell, VPMRegion, VPMValidationError, build_vpm
+from .artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    VPMArtifact,
+    VPMCell,
+    VPMRegion,
+    VPMValidationError,
+    build_vpm,
+)
 from .bundle import from_bundle, to_bundle
 from .compare import VPMComparison, compare_fields
-from .compose import as_field, vpm_add, vpm_and, vpm_not, vpm_or, vpm_subtract, vpm_xor
-from .controller import Decision, Policy, Signal, Thresholds, VPMController, VPMRow, default_controller
-from .critic import CRITIC_METRICS, CriticAssessment, CriticObservation, build_critic_vpm, critic_recipe, observations_from_critic_lines
+from .compose import (
+    as_field,
+    vpm_add,
+    vpm_and,
+    vpm_not,
+    vpm_or,
+    vpm_subtract,
+    vpm_xor,
+)
+from .controller import (
+    Decision,
+    Policy,
+    Signal,
+    Thresholds,
+    VPMController,
+    VPMRow,
+    default_controller,
+)
+from .critic import (
+    CRITIC_METRICS,
+    CriticAssessment,
+    CriticObservation,
+    build_critic_vpm,
+    critic_recipe,
+    observations_from_critic_lines,
+)
+from .deployment_binding import (
+    DEPLOYMENT_BINDING_VERSION,
+    DeploymentBinding,
+)
 from .edge import TopLeftGate, TopLeftGateResult
 from .hierarchy import HierarchyLevel, build_pyramid, reduce_blocks
-from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation, build_learning_vpm, learning_recipe
-from .lua import POLICY_LUA_FORMAT, compiled_plan_id, lua_policy_source, write_lua_policy
-from .manifold import DecisionManifold, ManifoldFrame, ManifoldSummary, ManifoldTransition, build_decision_manifold, find_inflection_points
-from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
+from .learning import (
+    LEARNING_METRICS,
+    LearningAssessment,
+    LearningObservation,
+    build_learning_vpm,
+    learning_recipe,
+)
+from .lua import (
+    POLICY_LUA_FORMAT,
+    compiled_plan_id,
+    lua_policy_source,
+    write_lua_policy,
+)
+from .manifold import (
+    DecisionManifold,
+    ManifoldFrame,
+    ManifoldSummary,
+    ManifoldTransition,
+    build_decision_manifold,
+    find_inflection_points,
+)
+from .matrix_blob import MATRIX_BLOB_VERSION, MatrixBlob
+from .metrics import (
+    CANONICAL_METRICS,
+    metric_ids_for_rows,
+    pack_metrics,
+    score_table_from_metric_rows,
+)
 from .patterns import (
     PATTERN_CHECKER_VERSION,
     MatrixPatternDetector,
@@ -23,9 +82,27 @@ from .patterns import (
     build_discovered_view,
     detect_patterns,
 )
-from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
-from .policy_diagnostics import CRITICALITY_METRIC_ID, DECISION_MARGIN_METRIC_ID, with_q_diagnostics
-from .policy_lookup import POLICY_PLAN_VERSION, PolicyLookupDecision, SignReader, VPMPolicyLookup
+from .phos import (
+    PHOSResult,
+    guarded_pack_artifact,
+    image_entropy,
+    pack_artifact,
+    phos_sort_pack,
+    robust01,
+    to_square,
+    top_left_concentration,
+)
+from .policy_diagnostics import (
+    CRITICALITY_METRIC_ID,
+    DECISION_MARGIN_METRIC_ID,
+    with_q_diagnostics,
+)
+from .policy_lookup import (
+    POLICY_PLAN_VERSION,
+    PolicyLookupDecision,
+    SignReader,
+    VPMPolicyLookup,
+)
 from .policy_properties import (
     CHECKER_VERSION,
     VERIFICATION_METRICS,
@@ -37,8 +114,19 @@ from .policy_properties import (
     decode_key_value_row_id,
 )
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
-from .spatial import SpatialOptimizationResult, SpatialOptimizer, build_optimized_view, optimize_view_profile
-from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
+from .spatial import (
+    SpatialOptimizationResult,
+    SpatialOptimizer,
+    build_optimized_view,
+    optimize_view_profile,
+)
+from .training import (
+    TRAINING_METRICS,
+    TrainingCheckpoint,
+    TrainingProgressAssessment,
+    build_training_progress_vpm,
+    training_progress_recipe,
+)
 from .views import ViewProfile, ViewSet, build_view, build_views
 from .visual import (
     VISUAL_FEATURE_VERSION,
@@ -54,27 +142,75 @@ from .visual import (
     visual_feature_digest,
     visual_input_digest,
 )
+from .visual_address import (
+    IMAGE_OBSERVATION_VERSION,
+    VISUAL_ADDRESS_CONTRACT_VERSION,
+    VISUAL_ADDRESS_DECISION_VERSION,
+    VISUAL_ADDRESS_MANIFEST_VERSION,
+    ImageObservation,
+    VisualAddressContract,
+    VisualAddressDecision,
+    VisualAddressProvider,
+)
+from .visual_address_manifest import (
+    PrototypeBinding,
+    VisualAddressManifest,
+)
+from .visual_benchmark import (
+    BenchmarkSystemResult,
+    GovernanceAuditResult,
+    VisualBenchmarkMetrics,
+    VisualBenchmarkReport,
+)
+from .visual_dataset import (
+    VISUAL_BENCHMARK_REPORT_VERSION,
+    VISUAL_BENCHMARK_SYSTEMS,
+    VISUAL_BENCHMARK_VERSION,
+    VISUAL_DATASET_MANIFEST_VERSION,
+    VISUAL_DATASET_SPLITS,
+    CorruptionFamilySpec,
+    VisualDatasetManifest,
+    VisualExampleRecord,
+)
+from .visual_policy import (
+    VISUAL_POLICY_DECISION_VERSION,
+    DeterministicVisualAddressProvider,
+    VisualPolicyDecision,
+    VisualPolicyReader,
+)
+
 
 __version__ = "1.0.11"
 
+
 __all__ = [
+    "BenchmarkSystemResult",
     "CANONICAL_METRICS",
     "CHECKER_VERSION",
     "CRITICALITY_METRIC_ID",
     "CRITIC_METRICS",
+    "CorruptionFamilySpec",
     "CriticAssessment",
     "CriticObservation",
     "DECISION_MARGIN_METRIC_ID",
+    "DEPLOYMENT_BINDING_VERSION",
     "Decision",
     "DecisionManifold",
+    "DeploymentBinding",
+    "DeterministicVisualAddressProvider",
+    "GovernanceAuditResult",
     "HierarchyLevel",
+    "IMAGE_OBSERVATION_VERSION",
+    "ImageObservation",
     "LEARNING_METRICS",
     "LayoutRecipe",
     "LearningAssessment",
     "LearningObservation",
+    "MATRIX_BLOB_VERSION",
     "ManifoldFrame",
     "ManifoldSummary",
     "ManifoldTransition",
+    "MatrixBlob",
     "MatrixPatternDetector",
     "ObjectiveResult",
     "PATTERN_CHECKER_VERSION",
@@ -91,6 +227,7 @@ __all__ = [
     "PolicyPropertySpec",
     "PolicyPropertyViolation",
     "PolicyVerificationReport",
+    "PrototypeBinding",
     "ScoreTable",
     "SignReader",
     "Signal",
@@ -103,8 +240,17 @@ __all__ = [
     "TrainingCheckpoint",
     "TrainingProgressAssessment",
     "VERIFICATION_METRICS",
+    "VISUAL_ADDRESS_CONTRACT_VERSION",
+    "VISUAL_ADDRESS_DECISION_VERSION",
+    "VISUAL_ADDRESS_MANIFEST_VERSION",
+    "VISUAL_BENCHMARK_REPORT_VERSION",
+    "VISUAL_BENCHMARK_SYSTEMS",
+    "VISUAL_BENCHMARK_VERSION",
+    "VISUAL_DATASET_MANIFEST_VERSION",
+    "VISUAL_DATASET_SPLITS",
     "VISUAL_FEATURE_VERSION",
     "VISUAL_INDEX_VERSION",
+    "VISUAL_POLICY_DECISION_VERSION",
     "VISUAL_READER_VERSION",
     "VPMArtifact",
     "VPMCell",
@@ -116,10 +262,20 @@ __all__ = [
     "VPMValidationError",
     "ViewProfile",
     "ViewSet",
+    "VisualAddressContract",
+    "VisualAddressDecision",
+    "VisualAddressManifest",
+    "VisualAddressProvider",
+    "VisualBenchmarkMetrics",
+    "VisualBenchmarkReport",
+    "VisualDatasetManifest",
     "VisualDecision",
+    "VisualExampleRecord",
     "VisualFeatureSpec",
     "VisualIndexBuild",
     "VisualIndexCalibration",
+    "VisualPolicyDecision",
+    "VisualPolicyReader",
     "VisualSignReader",
     "as_field",
     "build_critic_vpm",

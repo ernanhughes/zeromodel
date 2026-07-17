@@ -1,0 +1,65 @@
+
+tests/test_arcade_shooter_exhaustive.py::test_exhaustive_policy_fidelity {
+  "action_matches": 112,
+  "action_values_checked": 448,
+  "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "decision_fidelity_percent": 100.0,
+  "declared_states": 112,
+  "selected_actions_checked": 112,
+  "state_rows_checked": 112,
+  "value_fidelity_percent": 100.0,
+  "value_matches": 448
+}
+PASSED
+tests/test_arcade_shooter_exhaustive.py::test_exhaustive_wave_coverage_and_source_equivalence {
+  "artifact_count": 1,
+  "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "failed_waves": 0,
+  "longest_episode_steps": 25,
+  "maximum_allowed_steps": 32,
+  "possible_waves": 2401,
+  "scenario_coverage_percent": 100.0,
+  "shortest_episode_steps": 7,
+  "source_artifact_steps_compared": 31213,
+  "source_artifact_trace_equivalence_percent": 100.0,
+  "waves_cleared": 2401,
+  "waves_evaluated": 2401
+}
+PASSED
+tests/test_arcade_shooter_exhaustive.py::test_identity_mutation_localization_and_behaviour {
+  "behavioural_after_action": "STAY",
+  "behavioural_before_action": "FIRE",
+  "behavioural_changed_cells": 1,
+  "behavioural_changed_metric": "STAY",
+  "behavioural_changed_state": "tank=3|target=3|cooldown=0",
+  "behavioural_mutation_artifact_id": "3ad520eac9b547cfd849a637812f48c79697a9a5e060d4e3d7bbb5f0fd96d96a",
+  "non_behavioural_after_action": "LEFT",
+  "non_behavioural_before_action": "LEFT",
+  "non_behavioural_changed_state": "tank=3|target=0|cooldown=0",
+  "non_behavioural_mutation_artifact_id": "80c8a2e9701a632874d0f769a22a9b6f1460d972225318ecde84ae013c214053",
+  "original_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e"
+}
+PASSED
+tests/test_arcade_shooter_exhaustive.py::test_bundle_roundtrip_replays_identical_episode {
+  "artifact_identity_preserved": true,
+  "complete_reexecution_match": true,
+  "decision_traces_compared": 22,
+  "decision_traces_matched": 22,
+  "environment_states_matched": 22,
+  "loaded_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "original_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "wave_cleared_after_load": true,
+  "wave_cleared_before_save": true
+}
+PASSED
+tests/test_arcade_shooter_exhaustive.py::test_every_runtime_decision_has_complete_resolvable_trace {
+  "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "decisions_executed": 22,
+  "decisions_with_complete_trace": 22,
+  "json_roundtrip_matches": 22,
+  "resolved_cell_matches": 22,
+  "trace_completeness_percent": 100.0
+}
+PASSED
+
+============================== 5 passed in 0.53s ==============================

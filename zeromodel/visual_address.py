@@ -1,25 +1,32 @@
-"""Governed seam between visual observations and independently identified VPM policies."""
+"""Governed seam between visual observations and identified VPM policies.
+
+This module defines the provider-neutral observation, contract, and decision
+surface. Concrete deterministic, embedding, classifier, or temporal providers
+must declare their contract before a runtime trusts their decisions.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 import hashlib
 import json
 from types import MappingProxyType
-from typing import Any, Dict, Mapping, Optional, Protocol, Sequence, Tuple, runtime_checkable
+from typing import Any, Dict, Mapping, Optional, Protocol, Tuple, runtime_checkable
 
 import numpy as np
 
 from .artifact import VPMValidationError
-from .policy_lookup import PolicyLookupDecision, VPMPolicyLookup
-from .visual import VISUAL_READER_VERSION, VisualDecision, VisualSignReader
+
 
 VISUAL_ADDRESS_CONTRACT_VERSION = "zeromodel-visual-address-contract/v1"
 VISUAL_ADDRESS_DECISION_VERSION = "zeromodel-visual-address-decision/v1"
 VISUAL_ADDRESS_MANIFEST_VERSION = "zeromodel-visual-address-manifest/v1"
-VISUAL_POLICY_DECISION_VERSION = "zeromodel-visual-policy-decision/v1"
 IMAGE_OBSERVATION_VERSION = "zeromodel-image-observation/v1"
 _SCORE_SEMANTICS = {"distance", "similarity"}
-_REPLAY_CONTRACTS = {"exact_bytes", "exact_decision", "tolerance_equivalent"}
+_REPLAY_CONTRACTS = {
+    "exact_bytes",
+    "exact_decision",
+    "tolerance_equivalent",
+}
 
 
 def _thaw(value: Any) -> Any:
@@ -32,9 +39,13 @@ def _thaw(value: Any) -> Any:
 
 def _freeze(value: Any) -> Any:
     if isinstance(value, np.generic):
-        raise VPMValidationError("visual-address JSON must use plain scalar types")
+        raise VPMValidationError(
+            "visual-address JSON must use plain scalar types"
+        )
     if isinstance(value, Mapping):
-        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+        return MappingProxyType(
+            {str(key): _freeze(item) for key, item in value.items()}
+        )
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     return value
@@ -43,11 +54,16 @@ def _freeze(value: Any) -> Any:
 def _json_bytes(value: Any) -> bytes:
     try:
         return json.dumps(
-            _thaw(value), sort_keys=True, separators=(",", ":"),
-            ensure_ascii=False, allow_nan=False,
+            _thaw(value),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("visual-address values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "visual-address values must be JSON-serializable"
+        ) from exc
 
 
 def _digest(value: Any) -> str:
@@ -66,6 +82,8 @@ def _finite_optional(name: str, value: Optional[float]) -> None:
 
 @dataclass(frozen=True)
 class ImageObservation:
+    """Owned immutable image plus source and acquisition context."""
+
     pixels: np.ndarray
     timestamp: Optional[str] = None
     source_id: str = ""
@@ -75,18 +93,32 @@ class ImageObservation:
     def __post_init__(self) -> None:
         array = np.asarray(self.pixels)
         if array.dtype != np.uint8:
-            raise VPMValidationError("image observations must use uint8 samples")
-        if not (array.ndim == 2 or (array.ndim == 3 and array.shape[2] in {3, 4})):
-            raise VPMValidationError("image observations must be HxW or HxWx3/4")
+            raise VPMValidationError(
+                "image observations must use uint8 samples"
+            )
+        if not (
+            array.ndim == 2
+            or (array.ndim == 3 and array.shape[2] in {3, 4})
+        ):
+            raise VPMValidationError(
+                "image observations must be HxW or HxWx3/4"
+            )
         if array.size == 0:
             raise VPMValidationError("image observations cannot be empty")
         owned = np.array(array, dtype=np.uint8, order="C", copy=True)
         owned.flags.writeable = False
         object.__setattr__(self, "pixels", owned)
+        object.__setattr__(
+            self,
+            "timestamp",
+            None if self.timestamp is None else str(self.timestamp),
+        )
         object.__setattr__(self, "source_id", str(self.source_id))
         object.__setattr__(self, "metadata", _freeze(self.metadata))
         if self.version != IMAGE_OBSERVATION_VERSION:
-            raise VPMValidationError("unsupported image observation version")
+            raise VPMValidationError(
+                "unsupported image observation version"
+            )
         _json_bytes(self.metadata)
 
     @property
@@ -111,6 +143,8 @@ class ImageObservation:
 
 @dataclass(frozen=True)
 class VisualAddressContract:
+    """Identity-bearing provider contract available before inference."""
+
     provider_kind: str
     provider_version: str
     score_semantics: str
@@ -127,18 +161,30 @@ class VisualAddressContract:
     def __post_init__(self) -> None:
         object.__setattr__(self, "metadata", _freeze(self.metadata))
         if self.version != VISUAL_ADDRESS_CONTRACT_VERSION:
-            raise VPMValidationError("unsupported visual address contract version")
+            raise VPMValidationError(
+                "unsupported visual address contract version"
+            )
         for name in (
-            "provider_kind", "provider_version", "observation_spec_digest",
-            "representation_spec_digest", "address_artifact_id",
-            "calibration_artifact_id", "policy_artifact_id",
+            "provider_kind",
+            "provider_version",
+            "observation_spec_digest",
+            "representation_spec_digest",
+            "address_artifact_id",
+            "calibration_artifact_id",
+            "policy_artifact_id",
         ):
             _nonempty(name, str(getattr(self, name)))
         if self.score_semantics not in _SCORE_SEMANTICS:
-            raise VPMValidationError("score_semantics must be distance or similarity")
+            raise VPMValidationError(
+                "score_semantics must be distance or similarity"
+            )
         if self.replay_contract not in _REPLAY_CONTRACTS:
             raise VPMValidationError("unsupported replay_contract")
         _json_bytes(self.metadata)
+
+    def validate(self) -> None:
+        """Re-run contract validation for callers crossing a trust boundary."""
+        self.__post_init__()
 
     @property
     def digest(self) -> str:
@@ -151,7 +197,9 @@ class VisualAddressContract:
             "provider_version": self.provider_version,
             "score_semantics": self.score_semantics,
             "observation_spec_digest": self.observation_spec_digest,
-            "representation_spec_digest": self.representation_spec_digest,
+            "representation_spec_digest": (
+                self.representation_spec_digest
+            ),
             "address_artifact_id": self.address_artifact_id,
             "calibration_artifact_id": self.calibration_artifact_id,
             "policy_artifact_id": self.policy_artifact_id,
@@ -161,12 +209,36 @@ class VisualAddressContract:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any]) -> "VisualAddressContract":
-        return cls(**{key: value for key, value in data.items() if key != "digest"})
+    def from_dict(
+        cls,
+        data: Mapping[str, Any],
+    ) -> "VisualAddressContract":
+        return cls(
+            provider_kind=str(data["provider_kind"]),
+            provider_version=str(data["provider_version"]),
+            score_semantics=str(data["score_semantics"]),
+            observation_spec_digest=str(data["observation_spec_digest"]),
+            representation_spec_digest=str(
+                data["representation_spec_digest"]
+            ),
+            address_artifact_id=str(data["address_artifact_id"]),
+            calibration_artifact_id=str(data["calibration_artifact_id"]),
+            policy_artifact_id=str(data["policy_artifact_id"]),
+            source_scope=data.get("source_scope"),
+            replay_contract=str(
+                data.get("replay_contract", "exact_decision")
+            ),
+            metadata=data.get("metadata") or {},
+            version=str(
+                data.get("version", VISUAL_ADDRESS_CONTRACT_VERSION)
+            ),
+        )
 
 
 @dataclass(frozen=True)
 class VisualAddressDecision:
+    """Provider-neutral accepted address or evidence-bearing rejection."""
+
     accepted: bool
     reason: str
     observation_digest: str
@@ -195,28 +267,46 @@ class VisualAddressDecision:
         object.__setattr__(self, "accepted_by", tuple(self.accepted_by))
         object.__setattr__(self, "trace", _freeze(self.trace))
         if self.version != VISUAL_ADDRESS_DECISION_VERSION:
-            raise VPMValidationError("unsupported visual address decision version")
+            raise VPMValidationError(
+                "unsupported visual address decision version"
+            )
         for name in (
-            "reason", "observation_digest", "representation_digest", "provider_kind",
-            "provider_version", "address_artifact_id", "calibration_artifact_id",
+            "reason",
+            "observation_digest",
+            "representation_digest",
+            "provider_kind",
+            "provider_version",
+            "address_artifact_id",
+            "calibration_artifact_id",
             "policy_artifact_id",
         ):
             _nonempty(name, str(getattr(self, name)))
         if self.score_semantics not in _SCORE_SEMANTICS:
-            raise VPMValidationError("score_semantics must be distance or similarity")
+            raise VPMValidationError(
+                "score_semantics must be distance or similarity"
+            )
         for name in (
-            "nearest_score", "second_score", "ambiguity_measure",
-            "local_evidence_score", "visible_evidence_fraction",
+            "nearest_score",
+            "second_score",
+            "ambiguity_measure",
+            "local_evidence_score",
+            "visible_evidence_fraction",
         ):
             _finite_optional(name, getattr(self, name))
         if self.visible_evidence_fraction is not None and not (
             0.0 <= self.visible_evidence_fraction <= 1.0
         ):
-            raise VPMValidationError("visible_evidence_fraction must be in [0, 1]")
+            raise VPMValidationError(
+                "visible_evidence_fraction must be in [0, 1]"
+            )
         if self.accepted != (self.matched_row_id is not None):
-            raise VPMValidationError("matched_row_id must exist exactly when accepted")
+            raise VPMValidationError(
+                "matched_row_id must exist exactly when accepted"
+            )
         if len(set(self.accepted_by)) != len(self.accepted_by):
-            raise VPMValidationError("accepted_by entries must be unique")
+            raise VPMValidationError(
+                "accepted_by entries must be unique"
+            )
         _json_bytes(self.trace)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -245,3 +335,14 @@ class VisualAddressDecision:
             "accepted_by": list(self.accepted_by),
             "trace": _thaw(self.trace),
         }
+
+
+@runtime_checkable
+class VisualAddressProvider(Protocol):
+    """Provider seam implemented by deterministic or learned address engines."""
+
+    def contract(self) -> VisualAddressContract:
+        ...
+
+    def read(self, observation: ImageObservation) -> VisualAddressDecision:
+        ...

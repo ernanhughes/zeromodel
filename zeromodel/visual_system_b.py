@@ -177,20 +177,24 @@ def build_system_b_candidates(
     policy_lookup: Any,
     source_scope: str,
     quantiles: Sequence[float] = (),
+    encoder: Optional[Any] = None,
 ) -> Tuple[SystemBCandidateResult, ...]:
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
     rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
     validate_selection_records(benign_records + rejection_records)
 
-    encoder = NormalizedPixelEncoder(
+    selected_ids = tuple(
+        record.observation_id
+        for record in prototype_records + benign_records + rejection_records
+    )
+    frozen_encoder = encoder or NormalizedPixelEncoder(
         height=next(iter(observations.values())).pixels.shape[0],
         width=next(iter(observations.values())).pixels.shape[1],
     )
-    all_ids = tuple(record.observation_id for record in dataset_manifest.records)
     from .visual_experiment import encode_observations, vectors_for_records
 
-    vectors = encode_observations(encoder, all_ids, observations, batch_size=128)
+    vectors = encode_observations(frozen_encoder, selected_ids, observations, batch_size=128)
     prototype = vectors_for_records(prototype_records, vectors)
     benign = vectors_for_records(benign_records, vectors)
     quantile_values = tuple(float(value) for value in (quantiles or system_b_candidate_quantiles()))
@@ -207,13 +211,13 @@ def build_system_b_candidates(
             calibration_observation_ids=benign[3],
             policy_artifact_id=dataset_manifest.policy_artifact_id,
             source_scope=source_scope,
-            representation_spec_digest=encoder.manifest().manifest_id,
-            encoder_manifest_id=encoder.manifest().manifest_id,
+            representation_spec_digest=frozen_encoder.manifest().manifest_id,
+            encoder_manifest_id=frozen_encoder.manifest().manifest_id,
             strategy="medoid",
             calibration_quantile=quantile,
             deployment_status="research",
         )
-        provider = FrozenVectorAddressProvider(encoder, VectorAddressIndex(build))
+        provider = FrozenVectorAddressProvider(frozen_encoder, VectorAddressIndex(build))
         benign_result, _ = evaluate_visual_provider(
             provider=provider,
             dataset_manifest=dataset_manifest,

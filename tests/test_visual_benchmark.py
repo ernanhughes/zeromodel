@@ -172,6 +172,28 @@ def test_wilson_interval_is_bounded_and_handles_empty_denominator() -> None:
         wilson_score_interval(11, 10)
 
 
+def test_accepted_precision_interval_is_null_when_no_benign_observations_are_accepted() -> None:
+    metrics = VisualBenchmarkMetrics(
+        evaluation_count=10,
+        accepted_count=0,
+        rejected_count=10,
+        correct_row_count=0,
+        correct_action_count=0,
+        conflicting_action_error_count=0,
+        false_accept_count=0,
+        false_accept_opportunities=2,
+        false_reject_count=8,
+        false_reject_opportunities=8,
+        top1_correct_row_count=6,
+        top1_correct_action_count=7,
+    )
+    payload = metrics.to_dict()
+    assert payload["accepted_benign_row_correctness"] is None
+    assert payload["accepted_benign_action_correctness"] is None
+    assert payload["confidence_intervals_95"]["accepted_benign_row_correctness"] is None
+    assert payload["confidence_intervals_95"]["accepted_benign_action_correctness"] is None
+
+
 def test_benchmark_metrics_reject_inconsistent_counts() -> None:
     metrics = VisualBenchmarkMetrics(
         evaluation_count=10,

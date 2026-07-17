@@ -4,11 +4,13 @@ from __future__ import annotations
 import argparse
 import csv
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import platform
+import subprocess
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, Mapping, Sequence
 
 import numpy as np
 
@@ -34,6 +36,23 @@ from zeromodel.visual_system_b import (  # noqa: E402
 )
 
 
+GENERATOR_VERSION = "arcade_visual_system_b_adjudication/v2"
+
+
+def _json_bytes(value: Any) -> bytes:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+
+
+def _json_digest(value: Any) -> str:
+    return hashlib.sha256(_json_bytes(value)).hexdigest()
+
+
 def _environment() -> Dict[str, Any]:
     payload: Dict[str, Any] = {
         "captured_utc": datetime.now(timezone.utc).isoformat(),
@@ -55,9 +74,19 @@ def _environment() -> Dict[str, Any]:
     return payload
 
 
-def _state_equivalence_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
+def _git_output(*args: str) -> str:
+    return subprocess.check_output(
+        ["git", *args],
+        cwd=str(REPO_ROOT),
+        text=True,
+    ).strip()
+
+
+def _row_confusion_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
     counts: Dict[tuple[str, str], Dict[str, Any]] = {}
     for trace in traces:
+        if trace.get("expected_disposition") != EXPECTED_ACCEPT:
+            continue
         expected = trace.get("expected_row_id")
         predicted = trace.get("top1_row_id")
         if expected is None or predicted is None or expected == predicted:
@@ -77,6 +106,7 @@ def _state_equivalence_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
         )
         item["count"] += 1
     return {
+        "atlas_type": "observed_benign_row_confusion",
         "pairs": sorted(counts.values(), key=lambda item: (-item["count"], item["expected_row_id"], item["predicted_row_id"])),
     }
 
@@ -110,7 +140,66 @@ def _translation_family_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
     return {"families": summary}
 
 
-def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
+def _run_manifest(
+    *,
+    argv: Sequence[str],
+    command: str,
+    started_utc: str,
+    completed_utc: str,
+    environment_digest: str,
+    dataset_digest: str,
+    selection_digest: str,
+    final_report_digest: str,
+    trace_digest: str,
+) -> Dict[str, Any]:
+    status = _git_output("status", "--short")
+    return {
+        "version": "zeromodel-visual-benchmark-run-manifest/v1",
+        "generator_version": GENERATOR_VERSION,
+        "git_commit": _git_output("rev-parse", "HEAD"),
+        "branch": _git_output("branch", "--show-current"),
+        "dirty": bool(status),
+        "argv": list(argv),
+        "command": command,
+        "started_utc": started_utc,
+        "completed_utc": completed_utc,
+        "environment_digest": environment_digest,
+        "dataset_digest": dataset_digest,
+        "selection_digest": selection_digest,
+        "final_report_digest": final_report_digest,
+        "trace_digest": trace_digest,
+    }
+
+
+def _classify_outcome(
+    *,
+    selection_status: str,
+    metrics: Any,
+) -> tuple[str, str, str]:
+    if selection_status != "selected_operating_point":
+        return ("C", "no_useful_operating_point", "registration_required_local_baseline_showdown")
+    coverage = float(metrics.accepted_benign_count) / float(metrics.false_reject_opportunities or 1)
+    transfers_all_gates = (
+        metrics.false_accept_count == 0
+        and metrics.conflicting_action_error_count == 0
+        and metrics.accepted_benign_row_correctness is not None
+        and metrics.accepted_benign_row_correctness >= 0.95
+    )
+    if transfers_all_gates and coverage >= 0.5:
+        return ("A", "useful_operating_point_high_coverage", "fixed_camera_and_governance_path")
+    if transfers_all_gates and coverage >= 0.1:
+        return ("B", "useful_operating_point_low_coverage", "registration_required_local_baseline_showdown")
+    return ("C", "no_useful_operating_point", "registration_required_local_baseline_showdown")
+
+
+def run(
+    *,
+    output_dir: Path,
+    variants_per_family: int,
+    argv: Sequence[str] | None = None,
+    command: str | None = None,
+) -> Dict[str, Any]:
+    started_utc = datetime.now(timezone.utc).isoformat()
     dataset = build_arcade_benchmark_dataset(variants_per_family=variants_per_family)
     historical_v1_dataset_digest = "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"
     candidates = build_system_b_candidates(
@@ -127,6 +216,7 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
 
     output_dir.mkdir(parents=True, exist_ok=True)
     environment = _environment()
+    environment_digest = _json_digest(environment)
     (output_dir / "environment.json").write_text(
         json.dumps(environment, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -215,10 +305,29 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
     )
 
     if selection.selection_status != "selected_operating_point":
+        completed_utc = datetime.now(timezone.utc).isoformat()
+        run_manifest = _run_manifest(
+            argv=(argv or []),
+            command=(command or ""),
+            started_utc=started_utc,
+            completed_utc=completed_utc,
+            environment_digest=environment_digest,
+            dataset_digest=dataset.manifest.digest,
+            selection_digest=selection.digest,
+            final_report_digest="",
+            trace_digest="",
+        )
+        run_manifest_digest = _json_digest(run_manifest)
+        run_manifest["run_manifest_digest"] = run_manifest_digest
+        (output_dir / "run-manifest.json").write_text(
+            json.dumps(run_manifest, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         adjudication = {
             "outcome": "C",
             "selection_status": selection.selection_status,
             "selected_quantile": None,
+            "run_manifest_digest": run_manifest_digest,
             "next_action": "registration_required_local_baseline_showdown",
         }
         (output_dir / "adjudication.json").write_text(
@@ -250,13 +359,10 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         "address_manifest": build.manifest.to_dict(),
         "calibration": build.calibration.to_dict(),
     }
-    (output_dir / "final-report.json").write_text(
-        json.dumps(final_report, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
     with (output_dir / "traces.jsonl").open("w", encoding="utf-8") as handle:
         for trace in traces:
             handle.write(json.dumps(trace.to_dict(), sort_keys=True) + "\n")
+    trace_digest = hashlib.sha256((output_dir / "traces.jsonl").read_bytes()).hexdigest()
 
     metrics = final_result.metrics
     trace_payload = [trace.to_dict() for trace in traces]
@@ -343,40 +449,59 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
                     "false_rejection_rate": row["false_rejection_rate"],
                 }
             )
-    state_atlas = _state_equivalence_atlas(trace_payload)
-    (output_dir / "state-equivalence-atlas.json").write_text(
-        json.dumps(state_atlas, indent=2, sort_keys=True) + "\n",
+    row_confusion = _row_confusion_atlas(trace_payload)
+    (output_dir / "row-confusion-atlas.json").write_text(
+        json.dumps(row_confusion, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    legacy_state_equivalence = output_dir / "state-equivalence-atlas.json"
+    if legacy_state_equivalence.exists():
+        legacy_state_equivalence.unlink()
     translation_atlas = _translation_family_atlas(trace_payload)
     (output_dir / "translation-family-atlas.json").write_text(
         json.dumps(translation_atlas, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
 
-    coverage = float(metrics.accepted_benign_count) / float(metrics.false_reject_opportunities or 1)
-    outcome = "B"
-    next_action = "registration_required_local_baseline_showdown"
-    accepted_row_precision = metrics.accepted_benign_row_correctness
-    if (
-        metrics.false_accept_count == 0
-        and metrics.conflicting_action_error_count == 0
-        and accepted_row_precision is not None
-        and accepted_row_precision >= 0.95
-        and coverage >= 0.5
-    ):
-        outcome = "A"
-        next_action = "fixed_camera_and_governance_path"
-    elif metrics.accepted_benign_count == 0:
-        outcome = "C"
-        next_action = "registration_required_local_baseline_showdown"
+    final_report_digest = _json_digest(final_report)
+    completed_utc = datetime.now(timezone.utc).isoformat()
+    invoked_argv = list(argv or [])
+    invoked_command = command or " ".join(invoked_argv)
+    run_manifest = _run_manifest(
+        argv=invoked_argv,
+        command=invoked_command,
+        started_utc=started_utc,
+        completed_utc=completed_utc,
+        environment_digest=environment_digest,
+        dataset_digest=dataset.manifest.digest,
+        selection_digest=selection.digest,
+        final_report_digest=final_report_digest,
+        trace_digest=trace_digest,
+    )
+    run_manifest_digest = _json_digest(run_manifest)
+    run_manifest["run_manifest_digest"] = run_manifest_digest
+    (output_dir / "run-manifest.json").write_text(
+        json.dumps(run_manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    final_report["run_manifest_digest"] = run_manifest_digest
+    (output_dir / "final-report.json").write_text(
+        json.dumps(final_report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    outcome, usefulness_status, next_action = _classify_outcome(
+        selection_status=selection.selection_status,
+        metrics=metrics,
+    )
 
     summary = {
         "outcome": outcome,
         "selection_status": selection.selection_status,
-        "usefulness_status": "no_useful_operating_point",
+        "usefulness_status": usefulness_status,
         "selected_quantile": selection.selected_quantile,
         "calibration_digest": build.calibration.digest,
+        "run_manifest_digest": run_manifest_digest,
         "final_metrics": metrics.to_dict(),
         "next_action": next_action,
         "translation_families": translation_atlas["families"],
@@ -393,7 +518,7 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         "# System B v2 adjudication\n\n"
         f"- outcome: `{outcome}`\n"
         f"- selected quantile: `{selection.selected_quantile}`\n"
-        "- usefulness status: `no_useful_operating_point`\n"
+        f"- usefulness status: `{usefulness_status}`\n"
         f"- next action: `{next_action}`\n",
         encoding="utf-8",
     )
@@ -409,7 +534,18 @@ def main() -> None:
     )
     parser.add_argument("--variants-per-family", type=int, default=3)
     args = parser.parse_args()
-    print(json.dumps(run(output_dir=args.output_dir, variants_per_family=args.variants_per_family), indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            run(
+                output_dir=args.output_dir,
+                variants_per_family=args.variants_per_family,
+                argv=[sys.executable, *sys.argv],
+                command=" ".join([sys.executable, *sys.argv]),
+            ),
+            indent=2,
+            sort_keys=True,
+        )
+    )
 
 
 if __name__ == "__main__":

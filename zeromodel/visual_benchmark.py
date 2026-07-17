@@ -245,7 +245,21 @@ class VisualBenchmarkMetrics:
             "top1_correct_action_count": int(self.top1_correct_action_count),
         }
 
-    def confidence_intervals_95(self) -> Dict[str, Tuple[float, float]]:
+    def confidence_intervals_95(self) -> Dict[str, Optional[Tuple[float, float]]]:
+        accepted_row_interval: Optional[Tuple[float, float]]
+        accepted_action_interval: Optional[Tuple[float, float]]
+        if self.accepted_benign_count == 0:
+            accepted_row_interval = None
+            accepted_action_interval = None
+        else:
+            accepted_row_interval = wilson_score_interval(
+                self.correct_row_count,
+                self.accepted_benign_count,
+            )
+            accepted_action_interval = wilson_score_interval(
+                self.correct_action_count,
+                self.accepted_benign_count,
+            )
         return {
             "benign_row_accuracy": wilson_score_interval(
                 self.correct_row_count,
@@ -263,14 +277,8 @@ class VisualBenchmarkMetrics:
                 self.top1_correct_action_count,
                 self.false_reject_opportunities,
             ),
-            "accepted_benign_row_correctness": wilson_score_interval(
-                self.correct_row_count,
-                self.accepted_benign_count,
-            ),
-            "accepted_benign_action_correctness": wilson_score_interval(
-                self.correct_action_count,
-                self.accepted_benign_count,
-            ),
+            "accepted_benign_row_correctness": accepted_row_interval,
+            "accepted_benign_action_correctness": accepted_action_interval,
             "false_acceptance_rate": wilson_score_interval(
                 self.false_accept_count,
                 self.false_accept_opportunities,
@@ -308,7 +316,11 @@ class VisualBenchmarkMetrics:
                 "false_rejection_rate": self.false_rejection_rate,
                 "correct_disposition_rate": self.correct_disposition_rate,
                 "confidence_intervals_95": {
-                    name: [float(bounds[0]), float(bounds[1])]
+                    name: (
+                        None
+                        if bounds is None
+                        else [float(bounds[0]), float(bounds[1])]
+                    )
                     for name, bounds in self.confidence_intervals_95().items()
                 },
                 "confidence_interval_note": (

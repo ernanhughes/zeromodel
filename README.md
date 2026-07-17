@@ -143,6 +143,7 @@ from zeromodel import (
     PolicyPropertyChecker,
     PolicyPropertySpec,
     VPMPolicyLookup,
+    build_vpm,
     with_q_diagnostics,
 )
 
@@ -152,12 +153,10 @@ enriched = with_q_diagnostics(
     source,
     action_metric_ids=ACTIONS,
 )
+artifact = build_vpm(enriched, recipe)
 
-reader = VPMPolicyLookup(
-    artifact,
-    action_metric_ids=ACTIONS,
-    evidence_metric_ids=("criticality", "decision_margin"),
-)
+# Diagnostic metadata lets the reader safely separate actions from evidence.
+reader = VPMPolicyLookup(artifact)
 ```
 
 Evidence metrics are returned with the decision but never participate in action selection.
@@ -197,7 +196,7 @@ python examples/criticality_verification.py \
   --output-dir docs/assets/criticality-verification
 ```
 
-See [`docs/examples/criticality-verification.md`](docs/examples/criticality-verification.md).
+See [`docs/examples/criticality-verification.md`](docs/examples/criticality-verification.md) and [`docs/research/viper-policy-compilation.md`](docs/research/viper-policy-compilation.md).
 
 ## Dense view profiles
 

@@ -1,5 +1,3 @@
-$ErrorActionPreference = "Stop"
-
 param(
     [string]$Python = "python",
     [string]$PyPIToken = $env:PYPI_API_TOKEN,
@@ -8,6 +6,8 @@ param(
     [switch]$SkipSmokeTest,
     [switch]$Yes
 )
+
+$ErrorActionPreference = "Stop"
 
 function Step($Message) {
     Write-Host ""
@@ -27,7 +27,7 @@ function Get-ZeroModelVersionFromInit {
     }
 
     $InitText = Get-Content $InitPath -Raw
-    $Match = [regex]::Match($InitText, "(?m)^__version__\s*=\s*['\"]([^'\"]+)['\"]")
+    $Match = [regex]::Match($InitText, '(?m)^__version__\s*=\s*["'']([^"'']+)["'']')
     if (-not $Match.Success) {
         Fail "Could not find __version__ in zeromodel\__init__.py."
     }

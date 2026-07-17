@@ -148,23 +148,33 @@ def run(
         "artifacts": artifacts,
     }
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "arcade-visual-phase-one.json").write_text(
+    report_path = output_dir / "arcade-visual-phase-one.json"
+    report_path.write_text(
         json.dumps(payload, indent=2, sort_keys=True),
         encoding="utf-8",
     )
+
+    # Use the public to_dict contracts recursively. Calling dict() on the outer
+    # immutable notes mapping leaves nested mappingproxy values frozen and caused
+    # the original CI summary serialization failure.
+    report_dict = report.to_dict()
     summary = {
         "dataset_digest": dataset.manifest.digest,
         "observation_count": len(dataset.manifest.records),
         "report_digest": report.digest,
         "systems": {
-            system.system_id: {
-                "metrics": system.metrics.to_dict(),
-                "notes": dict(system.notes),
+            item["system_id"]: {
+                "metrics": item["metrics"],
+                "notes": item["notes"],
             }
-            for system in report.systems
+            for item in report_dict["systems"]
         },
         "validation_status": report.validation_status,
     }
+    (output_dir / "summary.json").write_text(
+        json.dumps(summary, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
     return summary
 
 

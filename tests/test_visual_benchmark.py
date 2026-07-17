@@ -10,6 +10,7 @@ from zeromodel.visual_benchmark import (
     GovernanceAuditResult,
     VisualBenchmarkMetrics,
     VisualBenchmarkReport,
+    wilson_score_interval,
 )
 from zeromodel.visual_dataset import (
     CorruptionFamilySpec,
@@ -111,19 +112,21 @@ def test_manifest_requires_equal_row_coverage_across_core_splits() -> None:
 def _metrics() -> VisualBenchmarkMetrics:
     return VisualBenchmarkMetrics(
         evaluation_count=100,
-        accepted_count=90,
-        rejected_count=10,
-        correct_row_count=85,
-        correct_action_count=88,
-        conflicting_action_error_count=2,
+        accepted_count=77,
+        rejected_count=23,
+        correct_row_count=75,
+        correct_action_count=76,
+        conflicting_action_error_count=0,
         false_accept_count=1,
         false_accept_opportunities=20,
         false_reject_count=4,
         false_reject_opportunities=80,
+        top1_correct_row_count=76,
+        top1_correct_action_count=79,
     )
 
 
-def test_benchmark_report_records_accuracy_and_governance_evidence() -> None:
+def test_benchmark_report_records_explicit_benign_and_top1_metrics() -> None:
     metrics = _metrics()
     system = BenchmarkSystemResult(
         system_id="C",
@@ -147,11 +150,26 @@ def test_benchmark_report_records_accuracy_and_governance_evidence() -> None:
         validation_status="research",
     )
 
-    assert metrics.action_accuracy == pytest.approx(0.88)
+    assert metrics.action_accuracy == pytest.approx(0.76)
+    assert metrics.benign_action_accuracy == pytest.approx(76 / 80)
+    assert metrics.top1_benign_row_accuracy == pytest.approx(76 / 80)
+    assert metrics.accepted_benign_count == 76
+    assert metrics.accepted_benign_action_correctness == pytest.approx(1.0)
     assert metrics.false_acceptance_rate == pytest.approx(0.05)
     assert not report.deployment_permitted
     assert report.digest
-    assert json.loads(json.dumps(report.to_dict())) == report.to_dict()
+    payload = report.to_dict()
+    assert payload["systems"][0]["metrics"]["confidence_intervals_95"]
+    assert json.loads(json.dumps(payload)) == payload
+
+
+def test_wilson_interval_is_bounded_and_handles_empty_denominator() -> None:
+    assert wilson_score_interval(0, 0) == (0.0, 0.0)
+    lower, upper = wilson_score_interval(5, 10)
+    assert 0.0 <= lower < 0.5 < upper <= 1.0
+
+    with pytest.raises(VPMValidationError, match="inconsistent"):
+        wilson_score_interval(11, 10)
 
 
 def test_benchmark_metrics_reject_inconsistent_counts() -> None:
@@ -159,13 +177,15 @@ def test_benchmark_metrics_reject_inconsistent_counts() -> None:
         evaluation_count=10,
         accepted_count=8,
         rejected_count=3,
-        correct_row_count=8,
-        correct_action_count=8,
+        correct_row_count=7,
+        correct_action_count=7,
         conflicting_action_error_count=0,
         false_accept_count=0,
         false_accept_opportunities=2,
         false_reject_count=0,
         false_reject_opportunities=8,
+        top1_correct_row_count=7,
+        top1_correct_action_count=7,
     )
 
     with pytest.raises(VPMValidationError, match="must equal"):

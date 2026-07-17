@@ -40,6 +40,8 @@ class VisualEvaluationTrace:
     predicted_row_id: Optional[str]
     predicted_action_id: Optional[str]
     decision: VisualAddressDecision
+    top1_row_id: Optional[str] = None
+    top1_action_id: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.expected_disposition not in _EXPECTED_DISPOSITIONS:
@@ -53,6 +55,10 @@ class VisualEvaluationTrace:
             raise VPMValidationError(
                 "expected_accept does not match expected_disposition"
             )
+        if self.predicted_row_id is not None and not self.decision.accepted:
+            raise VPMValidationError(
+                "predicted_row_id requires an accepted visual decision"
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -65,6 +71,8 @@ class VisualEvaluationTrace:
             "expected_action_id": self.expected_action_id,
             "predicted_row_id": self.predicted_row_id,
             "predicted_action_id": self.predicted_action_id,
+            "top1_row_id": self.top1_row_id,
+            "top1_action_id": self.top1_action_id,
             "decision": self.decision.to_dict(),
         }
 
@@ -180,6 +188,8 @@ def _family_counter() -> Dict[str, int]:
         "scored_rejected_count": 0,
         "correct_row_count": 0,
         "correct_action_count": 0,
+        "top1_correct_row_count": 0,
+        "top1_correct_action_count": 0,
         "conflicting_action_error_count": 0,
         "false_accept_count": 0,
         "false_reject_count": 0,
@@ -197,6 +207,8 @@ def _increment(
     accepted: bool,
     correct_row: bool,
     correct_action: bool,
+    top1_correct_row: bool,
+    top1_correct_action: bool,
     conflicting_error: bool,
 ) -> None:
     target["observation_count"] += 1
@@ -216,6 +228,8 @@ def _increment(
     target["scored_rejected_count"] += int(not accepted)
     target["correct_row_count"] += int(correct_row)
     target["correct_action_count"] += int(correct_action)
+    target["top1_correct_row_count"] += int(top1_correct_row)
+    target["top1_correct_action_count"] += int(top1_correct_action)
     target["conflicting_action_error_count"] += int(conflicting_error)
     target["false_accept_count"] += int(not expected_accept and accepted)
     target["false_reject_count"] += int(expected_accept and not accepted)
@@ -235,7 +249,11 @@ def evaluate_visual_provider(
     splits: Sequence[str] = ("test", "ood"),
     include_traces: bool = False,
 ) -> Tuple[BenchmarkSystemResult, Tuple[VisualEvaluationTrace, ...]]:
-    """Evaluate benign, rejection, and information-theoretic control cases."""
+    """Evaluate benign, rejection, and information-theoretic control cases.
+
+    The evaluator records both the accepted prediction and the provider's raw
+    top-1 row before rejection. This separates ranking quality from calibration.
+    """
 
     contract = provider.contract()
     if contract.policy_artifact_id != dataset_manifest.policy_artifact_id:
@@ -267,10 +285,16 @@ def evaluate_visual_provider(
             else False if disposition == EXPECTED_REJECT else None
         )
         decision = provider.read(observations[record.observation_id])
+
+        top1_row = decision.nearest_row_id
+        top1_action = (
+            policy_lookup.choose(str(top1_row)) if top1_row is not None else None
+        )
         predicted_row = decision.matched_row_id if decision.accepted else None
         predicted_action = (
             policy_lookup.choose(str(predicted_row)) if predicted_row is not None else None
         )
+
         correct_row = bool(
             disposition == EXPECTED_ACCEPT
             and predicted_row is not None
@@ -280,6 +304,16 @@ def evaluate_visual_provider(
             disposition == EXPECTED_ACCEPT
             and predicted_action is not None
             and predicted_action == record.action_id
+        )
+        top1_correct_row = bool(
+            disposition == EXPECTED_ACCEPT
+            and top1_row is not None
+            and top1_row == record.row_id
+        )
+        top1_correct_action = bool(
+            disposition == EXPECTED_ACCEPT
+            and top1_action is not None
+            and top1_action == record.action_id
         )
         conflicting_error = bool(
             disposition == EXPECTED_ACCEPT
@@ -296,6 +330,8 @@ def evaluate_visual_provider(
                 accepted=decision.accepted,
                 correct_row=correct_row,
                 correct_action=correct_action,
+                top1_correct_row=top1_correct_row,
+                top1_correct_action=top1_correct_action,
                 conflicting_error=conflicting_error,
             )
 
@@ -311,6 +347,8 @@ def evaluate_visual_provider(
                     expected_action_id=record.action_id,
                     predicted_row_id=predicted_row,
                     predicted_action_id=predicted_action,
+                    top1_row_id=top1_row,
+                    top1_action_id=top1_action,
                     decision=decision,
                 )
             )
@@ -328,6 +366,8 @@ def evaluate_visual_provider(
         false_accept_opportunities=totals["expected_reject_count"],
         false_reject_count=totals["false_reject_count"],
         false_reject_opportunities=totals["expected_accept_count"],
+        top1_correct_row_count=totals["top1_correct_row_count"],
+        top1_correct_action_count=totals["top1_correct_action_count"],
     )
     notes = {
         "observation_count_including_controls": totals["observation_count"],
@@ -335,21 +375,17 @@ def evaluate_visual_provider(
         "expected_accept_count": totals["expected_accept_count"],
         "expected_reject_count": totals["expected_reject_count"],
         "correct_disposition_count": totals["correct_disposition_count"],
-        "correct_disposition_rate": (
-            float(totals["correct_disposition_count"])
-            / float(totals["scored_evaluation_count"])
+        "correct_disposition_rate": metrics.correct_disposition_rate,
+        # Compatibility copies. These values are now also first-class metrics.
+        "benign_row_accuracy": metrics.benign_row_accuracy,
+        "benign_action_accuracy": metrics.benign_action_accuracy,
+        "top1_benign_row_accuracy": metrics.top1_benign_row_accuracy,
+        "top1_benign_action_accuracy": metrics.top1_benign_action_accuracy,
+        "accepted_benign_row_correctness": (
+            metrics.accepted_benign_row_correctness
         ),
-        "benign_row_accuracy": (
-            float(totals["correct_row_count"])
-            / float(totals["expected_accept_count"])
-            if totals["expected_accept_count"]
-            else 0.0
-        ),
-        "benign_action_accuracy": (
-            float(totals["correct_action_count"])
-            / float(totals["expected_accept_count"])
-            if totals["expected_accept_count"]
-            else 0.0
+        "accepted_benign_action_correctness": (
+            metrics.accepted_benign_action_correctness
         ),
         "impossibility_control_count": totals["impossibility_control_count"],
         "impossibility_control_accepted_count": totals[
@@ -366,6 +402,16 @@ def evaluate_visual_provider(
         ),
         "family_counts": family_counts,
         "evaluated_splits": sorted(selected_splits),
+        "metric_semantics": {
+            "accepted_prediction": (
+                "predicted_row_id and predicted_action_id exist only when the "
+                "provider accepts"
+            ),
+            "top1_prediction": (
+                "top1_row_id and top1_action_id are recorded before rejection "
+                "when the provider exposes a nearest row"
+            ),
+        },
     }
     result = BenchmarkSystemResult(
         system_id=str(system_id),

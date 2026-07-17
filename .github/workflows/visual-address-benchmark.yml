@@ -2,15 +2,23 @@ name: Frozen visual address benchmark
 
 on:
   workflow_dispatch:
+    inputs:
+      variants_per_family:
+        description: Number of variants generated per corruption family
+        required: true
+        default: "3"
   pull_request:
     paths:
       - ".github/workflows/visual-address-benchmark.yml"
       - ".github/scripts/run_visual_address_smoke.py"
       - "examples/arcade_visual_address_benchmark.py"
+      - "examples/analyze_visual_address_report.py"
       - "zeromodel/visual_encoder.py"
       - "zeromodel/visual_retrieval.py"
       - "zeromodel/visual_precomputed.py"
       - "zeromodel/visual_experiment.py"
+      - "zeromodel/visual_benchmark.py"
+      - "zeromodel/visual_analysis.py"
       - "zeromodel/visual_corruptions.py"
       - "zeromodel/vision.py"
       - "pyproject.toml"
@@ -25,12 +33,13 @@ permissions:
 env:
   HF_HUB_DISABLE_TELEMETRY: "1"
   TOKENIZERS_PARALLELISM: "false"
+  VARIANTS_PER_FAMILY: ${{ github.event_name == 'workflow_dispatch' && inputs.variants_per_family || '1' }}
 
 jobs:
   frozen-encoder-smoke:
     name: pinned DINOv2 research smoke
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Check out repository
@@ -57,13 +66,13 @@ jobs:
             'torchvision>=0.17'
           python -m pip install -e '.[vision]'
 
-      - name: Run pinned held-out smoke benchmark
+      - name: Run pinned held-out benchmark
         shell: bash
         run: |
           mkdir -p build/visual-phase-one-smoke
           set -o pipefail
           python .github/scripts/run_visual_address_smoke.py \
-            --variants-per-family 1 \
+            --variants-per-family "$VARIANTS_PER_FAMILY" \
             --output-dir build/visual-phase-one-smoke \
             2>&1 | tee build/visual-phase-one-smoke-run.log
 
@@ -71,9 +80,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: visual-phase-one-dinov2-smoke
+          name: visual-phase-one-dinov2-${{ github.event_name == 'workflow_dispatch' && 'full' || 'smoke' }}
           path: |
             build/visual-phase-one-smoke-run.log
             build/visual-phase-one-smoke/arcade-visual-phase-one.json
+            build/visual-phase-one-smoke/summary.json
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30

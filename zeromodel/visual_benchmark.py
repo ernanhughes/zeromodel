@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from math import sqrt
 from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
@@ -17,9 +18,59 @@ from .visual_dataset import (
 )
 
 
+WILSON_Z_95 = 1.959963984540054
+
+
+def wilson_score_interval(
+    successes: int,
+    opportunities: int,
+    *,
+    z: float = WILSON_Z_95,
+) -> Tuple[float, float]:
+    """Return a two-sided Wilson score interval for one binomial rate.
+
+    The interval is an observation-level descriptive interval. Benchmark
+    observations can share source states and corruption families, so research
+    reports should use paired and clustered analyses for system comparisons.
+    """
+
+    count = int(successes)
+    total = int(opportunities)
+    if count < 0 or total < 0 or count > total:
+        raise VPMValidationError("Wilson interval counts are inconsistent")
+    if total == 0:
+        return (0.0, 0.0)
+    z_value = float(z)
+    if not np.isfinite(z_value) or z_value <= 0.0:
+        raise VPMValidationError("Wilson interval z must be positive and finite")
+    probability = float(count) / float(total)
+    z_squared = z_value * z_value
+    denominator = 1.0 + z_squared / float(total)
+    centre = (
+        probability + z_squared / (2.0 * float(total))
+    ) / denominator
+    half_width = (
+        z_value
+        * sqrt(
+            probability * (1.0 - probability) / float(total)
+            + z_squared / (4.0 * float(total) * float(total))
+        )
+        / denominator
+    )
+    return (
+        max(0.0, centre - half_width),
+        min(1.0, centre + half_width),
+    )
+
+
 @dataclass(frozen=True)
 class VisualBenchmarkMetrics:
-    """Counts with explicit denominators for rejection-sensitive metrics."""
+    """Counts with explicit denominators for rejection-sensitive metrics.
+
+    ``row_accuracy`` and ``action_accuracy`` retain the original whole-scored-
+    evaluation denominator for backward compatibility. New research should use
+    the explicit benign, accepted-benign, and top-1 metrics below.
+    """
 
     evaluation_count: int
     accepted_count: int
@@ -31,6 +82,8 @@ class VisualBenchmarkMetrics:
     false_accept_opportunities: int
     false_reject_count: int
     false_reject_opportunities: int
+    top1_correct_row_count: int = 0
+    top1_correct_action_count: int = 0
 
     def validate(self) -> None:
         values = {name: int(value) for name, value in self.to_counts_dict().items()}
@@ -40,13 +93,31 @@ class VisualBenchmarkMetrics:
             raise VPMValidationError(
                 "accepted_count + rejected_count must equal evaluation_count"
             )
+        if (
+            self.false_accept_opportunities + self.false_reject_opportunities
+            != self.evaluation_count
+        ):
+            raise VPMValidationError(
+                "false-accept and false-reject opportunities must partition "
+                "evaluation_count"
+            )
         for name in (
             "correct_row_count",
             "correct_action_count",
             "conflicting_action_error_count",
         ):
-            if values[name] > self.evaluation_count:
-                raise VPMValidationError("%s cannot exceed evaluation_count" % name)
+            if values[name] > self.false_reject_opportunities:
+                raise VPMValidationError(
+                    "%s cannot exceed benign opportunities" % name
+                )
+        for name in (
+            "top1_correct_row_count",
+            "top1_correct_action_count",
+        ):
+            if values[name] > self.false_reject_opportunities:
+                raise VPMValidationError(
+                    "%s cannot exceed benign opportunities" % name
+                )
         if self.false_accept_count > self.false_accept_opportunities:
             raise VPMValidationError(
                 "false_accept_count cannot exceed its opportunities"
@@ -55,14 +126,83 @@ class VisualBenchmarkMetrics:
             raise VPMValidationError(
                 "false_reject_count cannot exceed its opportunities"
             )
+        if self.accepted_count != self.accepted_benign_count + self.false_accept_count:
+            raise VPMValidationError(
+                "accepted_count must equal accepted benign plus false accepts"
+            )
+        if self.rejected_count != self.false_reject_count + self.correct_reject_count:
+            raise VPMValidationError(
+                "rejected_count must equal false rejects plus correct rejects"
+            )
+        if self.correct_row_count > self.accepted_benign_count:
+            raise VPMValidationError(
+                "correct_row_count cannot exceed accepted benign observations"
+            )
+        if self.correct_action_count > self.accepted_benign_count:
+            raise VPMValidationError(
+                "correct_action_count cannot exceed accepted benign observations"
+            )
+        if self.conflicting_action_error_count > self.accepted_benign_count:
+            raise VPMValidationError(
+                "conflicting_action_error_count cannot exceed accepted benign "
+                "observations"
+            )
 
     @property
     def row_accuracy(self) -> float:
+        """Legacy whole-scored-evaluation row rate."""
+
         return self._rate(self.correct_row_count, self.evaluation_count)
 
     @property
     def action_accuracy(self) -> float:
+        """Legacy whole-scored-evaluation action rate."""
+
         return self._rate(self.correct_action_count, self.evaluation_count)
+
+    @property
+    def benign_row_accuracy(self) -> float:
+        return self._rate(
+            self.correct_row_count,
+            self.false_reject_opportunities,
+        )
+
+    @property
+    def benign_action_accuracy(self) -> float:
+        return self._rate(
+            self.correct_action_count,
+            self.false_reject_opportunities,
+        )
+
+    @property
+    def top1_benign_row_accuracy(self) -> float:
+        return self._rate(
+            self.top1_correct_row_count,
+            self.false_reject_opportunities,
+        )
+
+    @property
+    def top1_benign_action_accuracy(self) -> float:
+        return self._rate(
+            self.top1_correct_action_count,
+            self.false_reject_opportunities,
+        )
+
+    @property
+    def accepted_benign_count(self) -> int:
+        return int(self.false_reject_opportunities - self.false_reject_count)
+
+    @property
+    def accepted_benign_row_correctness(self) -> float:
+        return self._rate(self.correct_row_count, self.accepted_benign_count)
+
+    @property
+    def accepted_benign_action_correctness(self) -> float:
+        return self._rate(self.correct_action_count, self.accepted_benign_count)
+
+    @property
+    def correct_reject_count(self) -> int:
+        return int(self.false_accept_opportunities - self.false_accept_count)
 
     @property
     def false_acceptance_rate(self) -> float:
@@ -71,6 +211,13 @@ class VisualBenchmarkMetrics:
     @property
     def false_rejection_rate(self) -> float:
         return self._rate(self.false_reject_count, self.false_reject_opportunities)
+
+    @property
+    def correct_disposition_rate(self) -> float:
+        return self._rate(
+            self.accepted_benign_count + self.correct_reject_count,
+            self.evaluation_count,
+        )
 
     @staticmethod
     def _rate(numerator: int, denominator: int) -> float:
@@ -94,6 +241,44 @@ class VisualBenchmarkMetrics:
             "false_reject_opportunities": int(
                 self.false_reject_opportunities
             ),
+            "top1_correct_row_count": int(self.top1_correct_row_count),
+            "top1_correct_action_count": int(self.top1_correct_action_count),
+        }
+
+    def confidence_intervals_95(self) -> Dict[str, Tuple[float, float]]:
+        return {
+            "benign_row_accuracy": wilson_score_interval(
+                self.correct_row_count,
+                self.false_reject_opportunities,
+            ),
+            "benign_action_accuracy": wilson_score_interval(
+                self.correct_action_count,
+                self.false_reject_opportunities,
+            ),
+            "top1_benign_row_accuracy": wilson_score_interval(
+                self.top1_correct_row_count,
+                self.false_reject_opportunities,
+            ),
+            "top1_benign_action_accuracy": wilson_score_interval(
+                self.top1_correct_action_count,
+                self.false_reject_opportunities,
+            ),
+            "accepted_benign_row_correctness": wilson_score_interval(
+                self.correct_row_count,
+                self.accepted_benign_count,
+            ),
+            "accepted_benign_action_correctness": wilson_score_interval(
+                self.correct_action_count,
+                self.accepted_benign_count,
+            ),
+            "false_acceptance_rate": wilson_score_interval(
+                self.false_accept_count,
+                self.false_accept_opportunities,
+            ),
+            "false_rejection_rate": wilson_score_interval(
+                self.false_reject_count,
+                self.false_reject_opportunities,
+            ),
         }
 
     def to_dict(self) -> Dict[str, Any]:
@@ -103,8 +288,30 @@ class VisualBenchmarkMetrics:
             {
                 "row_accuracy": self.row_accuracy,
                 "action_accuracy": self.action_accuracy,
+                "benign_row_accuracy": self.benign_row_accuracy,
+                "benign_action_accuracy": self.benign_action_accuracy,
+                "top1_benign_row_accuracy": self.top1_benign_row_accuracy,
+                "top1_benign_action_accuracy": self.top1_benign_action_accuracy,
+                "accepted_benign_count": self.accepted_benign_count,
+                "accepted_benign_row_correctness": (
+                    self.accepted_benign_row_correctness
+                ),
+                "accepted_benign_action_correctness": (
+                    self.accepted_benign_action_correctness
+                ),
+                "correct_reject_count": self.correct_reject_count,
                 "false_acceptance_rate": self.false_acceptance_rate,
                 "false_rejection_rate": self.false_rejection_rate,
+                "correct_disposition_rate": self.correct_disposition_rate,
+                "confidence_intervals_95": {
+                    name: [float(bounds[0]), float(bounds[1])]
+                    for name, bounds in self.confidence_intervals_95().items()
+                },
+                "confidence_interval_note": (
+                    "Observation-level Wilson intervals are descriptive. "
+                    "Use paired and state/family-clustered analyses for system "
+                    "comparisons."
+                ),
             }
         )
         return result
@@ -127,6 +334,15 @@ class VisualBenchmarkMetrics:
             false_reject_count=int(data["false_reject_count"]),
             false_reject_opportunities=int(
                 data["false_reject_opportunities"]
+            ),
+            # Legacy reports did not preserve pre-rejection top-1 outcomes.
+            # The accepted-correct counts are the only defensible lower-bound
+            # fallback during deserialization.
+            top1_correct_row_count=int(
+                data.get("top1_correct_row_count", data["correct_row_count"])
+            ),
+            top1_correct_action_count=int(
+                data.get("top1_correct_action_count", data["correct_action_count"])
             ),
         )
         metrics.validate()

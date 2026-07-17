@@ -40,6 +40,20 @@ from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
 from .spatial import SpatialOptimizationResult, SpatialOptimizer, build_optimized_view, optimize_view_profile
 from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
 from .views import ViewProfile, ViewSet, build_view, build_views
+from .visual import (
+    VISUAL_FEATURE_VERSION,
+    VISUAL_INDEX_VERSION,
+    VISUAL_READER_VERSION,
+    VisualDecision,
+    VisualFeatureSpec,
+    VisualIndexBuild,
+    VisualIndexCalibration,
+    VisualSignReader,
+    build_visual_index,
+    extract_visual_features,
+    visual_feature_digest,
+    visual_input_digest,
+)
 
 __version__ = "1.0.11"
 
@@ -89,6 +103,9 @@ __all__ = [
     "TrainingCheckpoint",
     "TrainingProgressAssessment",
     "VERIFICATION_METRICS",
+    "VISUAL_FEATURE_VERSION",
+    "VISUAL_INDEX_VERSION",
+    "VISUAL_READER_VERSION",
     "VPMArtifact",
     "VPMCell",
     "VPMComparison",
@@ -99,6 +116,11 @@ __all__ = [
     "VPMValidationError",
     "ViewProfile",
     "ViewSet",
+    "VisualDecision",
+    "VisualFeatureSpec",
+    "VisualIndexBuild",
+    "VisualIndexCalibration",
+    "VisualSignReader",
     "as_field",
     "build_critic_vpm",
     "build_decision_manifold",
@@ -109,6 +131,7 @@ __all__ = [
     "build_training_progress_vpm",
     "build_view",
     "build_views",
+    "build_visual_index",
     "build_vpm",
     "compare_fields",
     "compiled_plan_id",
@@ -116,6 +139,7 @@ __all__ = [
     "decode_key_value_row_id",
     "default_controller",
     "detect_patterns",
+    "extract_visual_features",
     "find_inflection_points",
     "from_bundle",
     "guarded_pack_artifact",
@@ -138,6 +162,8 @@ __all__ = [
     "to_uint8",
     "top_left_concentration",
     "training_progress_recipe",
+    "visual_feature_digest",
+    "visual_input_digest",
     "vpm_add",
     "vpm_and",
     "vpm_not",

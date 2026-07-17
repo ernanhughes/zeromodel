@@ -1,0 +1,11 @@
+{
+  "captured_utc": "2026-07-17T21:27:18.834525+00:00",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 2060",
+  "numpy_version": "2.4.6",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python_executable": "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+  "python_version": "3.11.4",
+  "torch_version": "2.6.0+cu118",
+  "torchvision_version": "0.21.0+cu118"
+}

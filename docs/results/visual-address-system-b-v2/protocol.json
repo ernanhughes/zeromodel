@@ -1,0 +1,27 @@
+{
+  "candidate_quantiles": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "final_evaluation_partition": "final_evaluation",
+  "forbidden_partitions_for_selection": [
+    "final_evaluation"
+  ],
+  "permitted_partitions": [
+    "prototype",
+    "benign_calibration",
+    "rejection_calibration"
+  ],
+  "protocol_version": "zeromodel-system-b-protocol/v1",
+  "question": "Can normalized-pixel retrieval achieve high exact-row precision and low distinguishable false acceptance at non-negligible benign coverage when selected entirely on calibration data?",
+  "selection_rule": "Reject candidates with any distinguishable false acceptance or any conflicting-action acceptance; among remaining candidates maximize accepted exact-row precision, then benign coverage, then exact-row recall, then deterministic quantile ordering."
+}

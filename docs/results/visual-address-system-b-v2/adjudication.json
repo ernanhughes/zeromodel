@@ -1,0 +1,79 @@
+{
+  "calibration_digest": "bb985997a8d56cde073f91fc6611c08c0718d888e0d49d00aa0198f0f603e583",
+  "final_metrics": {
+    "accepted_benign_action_correctness": 0.0,
+    "accepted_benign_count": 0,
+    "accepted_benign_row_correctness": 0.0,
+    "accepted_count": 0,
+    "action_accuracy": 0.0,
+    "benign_action_accuracy": 0.0,
+    "benign_row_accuracy": 0.0,
+    "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+    "confidence_intervals_95": {
+      "accepted_benign_action_correctness": [
+        0.0,
+        0.0
+      ],
+      "accepted_benign_row_correctness": [
+        0.0,
+        0.0
+      ],
+      "benign_action_accuracy": [
+        0.0,
+        0.0028500821039109782
+      ],
+      "benign_row_accuracy": [
+        0.0,
+        0.0028500821039109782
+      ],
+      "false_acceptance_rate": [
+        0.0,
+        0.01525348065676972
+      ],
+      "false_rejection_rate": [
+        0.997149917896089,
+        1.0
+      ],
+      "top1_benign_action_accuracy": [
+        0.95802964261285,
+        0.9767984054147335
+      ],
+      "top1_benign_row_accuracy": [
+        0.7261596157598085,
+        0.7724153431882361
+      ]
+    },
+    "conflicting_action_error_count": 0,
+    "correct_action_count": 0,
+    "correct_disposition_rate": 0.15577889447236182,
+    "correct_reject_count": 248,
+    "correct_row_count": 0,
+    "evaluation_count": 1592,
+    "false_accept_count": 0,
+    "false_accept_opportunities": 248,
+    "false_acceptance_rate": 0.0,
+    "false_reject_count": 1344,
+    "false_reject_opportunities": 1344,
+    "false_rejection_rate": 1.0,
+    "rejected_count": 1592,
+    "row_accuracy": 0.0,
+    "top1_benign_action_accuracy": 0.96875,
+    "top1_benign_row_accuracy": 0.75,
+    "top1_correct_action_count": 1302,
+    "top1_correct_row_count": 1008
+  },
+  "next_action": "registration_required_local_baseline_showdown",
+  "outcome": "C",
+  "selected_quantile": 1.0,
+  "selection_status": "selected_operating_point",
+  "translation_families": {
+    "final-shift-two": {
+      "accepted": 0,
+      "conflicting_action": 0,
+      "count": 336,
+      "rejected": 336,
+      "top1_action_correct": 315,
+      "top1_row_correct": 168
+    }
+  }
+}

@@ -1,0 +1,3773 @@
+[
+  {
+    "benign_result": {
+      "contract_digest": "a7a61990a3f814e7cf9a7a9f15f23f42066e99836fe4e7dd78bd074765ca79c5",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 1287,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 1287,
+        "action_accuracy": 0.9575892857142857,
+        "benign_action_accuracy": 0.9575892857142857,
+        "benign_row_accuracy": 0.9575892857142857,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9970240661279942,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9970240661279942,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.9454477520249273,
+            0.9671224853353327
+          ],
+          "benign_row_accuracy": [
+            0.9454477520249273,
+            0.9671224853353327
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.03287751466466721,
+            0.05455224797507276
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 1287,
+        "correct_disposition_rate": 0.9575892857142857,
+        "correct_reject_count": 0,
+        "correct_row_count": 1287,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 57,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.04241071428571429,
+        "rejected_count": 57,
+        "row_accuracy": 0.9575892857142857,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.9575892857142857,
+        "benign_row_accuracy": 0.9575892857142857,
+        "correct_disposition_count": 1287,
+        "correct_disposition_rate": 0.9575892857142857,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 330,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 330,
+            "correct_disposition_count": 330,
+            "correct_row_count": 330,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 6,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 6,
+            "scored_accepted_count": 330,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 6,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 285,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 285,
+            "correct_disposition_count": 285,
+            "correct_row_count": 285,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 51,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 51,
+            "scored_accepted_count": 285,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 51,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "88c88724f881e771dfe2bc4fc42bbd9e144cf4090e5d82cb5fd7eb30618465f3",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.0,
+    "rejection_result": {
+      "contract_digest": "a7a61990a3f814e7cf9a7a9f15f23f42066e99836fe4e7dd78bd074765ca79c5",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 516,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.48106038262670076,
+            0.5426587482616224
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.4880952380952381,
+        "correct_reject_count": 492,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 516,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.5119047619047619,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 492,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 492,
+        "correct_disposition_rate": 0.4880952380952381,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 336,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 180,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 156,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 180,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 156,
+            "scored_accepted_count": 180,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 156,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "d9e370bfcb18afcc7d6ec8466529a6c0aa7896d4f5313c474b25f709d3e68b20",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 1186,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 1186,
+        "action_accuracy": 0.8824404761904762,
+        "benign_action_accuracy": 0.8824404761904762,
+        "benign_row_accuracy": 0.8824404761904762,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9967714532115047,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9967714532115047,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.8641210511745192,
+            0.8985799276924298
+          ],
+          "benign_row_accuracy": [
+            0.8641210511745192,
+            0.8985799276924298
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.10142007230757018,
+            0.13587894882548077
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 1186,
+        "correct_disposition_rate": 0.8824404761904762,
+        "correct_reject_count": 0,
+        "correct_row_count": 1186,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 158,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.11755952380952381,
+        "rejected_count": 158,
+        "row_accuracy": 0.8824404761904762,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.8824404761904762,
+        "benign_row_accuracy": 0.8824404761904762,
+        "correct_disposition_count": 1186,
+        "correct_disposition_rate": 0.8824404761904762,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 327,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 327,
+            "correct_disposition_count": 327,
+            "correct_row_count": 327,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 9,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 9,
+            "scored_accepted_count": 327,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 9,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 187,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 187,
+            "correct_disposition_count": 187,
+            "correct_row_count": 187,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 149,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 149,
+            "scored_accepted_count": 187,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 149,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "3a4b828fef37e49827fed82adaeadccb7f8b0763bf2f48ed7fd2edcdc82f98e7",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.1,
+    "rejection_result": {
+      "contract_digest": "d9e370bfcb18afcc7d6ec8466529a6c0aa7896d4f5313c474b25f709d3e68b20",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 516,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.48106038262670076,
+            0.5426587482616224
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.4880952380952381,
+        "correct_reject_count": 492,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 516,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.5119047619047619,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 492,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 492,
+        "correct_disposition_rate": 0.4880952380952381,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 336,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 180,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 156,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 180,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 156,
+            "scored_accepted_count": 180,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 156,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "468053e84b9e1be2bb5d936be90324ca886249eaa0bc4c0f358fa7d7fe0e4050",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 1061,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 1061,
+        "action_accuracy": 0.7894345238095238,
+        "benign_action_accuracy": 0.7894345238095238,
+        "benign_row_accuracy": 0.7894345238095238,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9963924593761138,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9963924593761138,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.7668279003146806,
+            0.81039132299124
+          ],
+          "benign_row_accuracy": [
+            0.7668279003146806,
+            0.81039132299124
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.18960867700876005,
+            0.23317209968531938
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 1061,
+        "correct_disposition_rate": 0.7894345238095238,
+        "correct_reject_count": 0,
+        "correct_row_count": 1061,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 283,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.2105654761904762,
+        "rejected_count": 283,
+        "row_accuracy": 0.7894345238095238,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.7894345238095238,
+        "benign_row_accuracy": 0.7894345238095238,
+        "correct_disposition_count": 1061,
+        "correct_disposition_rate": 0.7894345238095238,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 320,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 320,
+            "correct_disposition_count": 320,
+            "correct_row_count": 320,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 16,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 16,
+            "scored_accepted_count": 320,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 16,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 69,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 69,
+            "correct_disposition_count": 69,
+            "correct_row_count": 69,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 267,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 267,
+            "scored_accepted_count": 69,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 267,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "6d19061792386bae1f0613788d8e848a1875bac1baf48a0419985b6ed7112963",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.2,
+    "rejection_result": {
+      "contract_digest": "468053e84b9e1be2bb5d936be90324ca886249eaa0bc4c0f358fa7d7fe0e4050",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 516,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.48106038262670076,
+            0.5426587482616224
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.4880952380952381,
+        "correct_reject_count": 492,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 516,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.5119047619047619,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 492,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 492,
+        "correct_disposition_rate": 0.4880952380952381,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 336,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 180,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 156,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 180,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 156,
+            "scored_accepted_count": 180,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 156,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "7a129e7adf1f4882e0f697e3fe00299593ea4dfc628373fe9c559419b0b681ab",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 942,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 942,
+        "action_accuracy": 0.7008928571428571,
+        "benign_action_accuracy": 0.7008928571428571,
+        "benign_row_accuracy": 0.7008928571428571,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9959385806311729,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9959385806311729,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.6758698377373391,
+            0.7247707542744823
+          ],
+          "benign_row_accuracy": [
+            0.6758698377373391,
+            0.7247707542744823
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.27522924572551766,
+            0.3241301622626608
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 942,
+        "correct_disposition_rate": 0.7008928571428571,
+        "correct_reject_count": 0,
+        "correct_row_count": 942,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 402,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.29910714285714285,
+        "rejected_count": 402,
+        "row_accuracy": 0.7008928571428571,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.7008928571428571,
+        "benign_row_accuracy": 0.7008928571428571,
+        "correct_disposition_count": 942,
+        "correct_disposition_rate": 0.7008928571428571,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 336,
+            "correct_disposition_count": 336,
+            "correct_row_count": 336,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 270,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 270,
+            "correct_disposition_count": 270,
+            "correct_row_count": 270,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 66,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 66,
+            "scored_accepted_count": 270,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 66,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "61531bf870a7d6f1331bc44129fc8f89b0589ad1b8cb1604300f9411db075207",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.3,
+    "rejection_result": {
+      "contract_digest": "7a129e7adf1f4882e0f697e3fe00299593ea4dfc628373fe9c559419b0b681ab",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 384,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.35147902794315405,
+            0.41132966317361314
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.6190476190476191,
+        "correct_reject_count": 624,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 384,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.38095238095238093,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 624,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 624,
+        "correct_disposition_rate": 0.6190476190476191,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 336,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 48,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 288,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 48,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 288,
+            "scored_accepted_count": 48,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 288,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "26ec82c1dcc90c0aec20ccc978fc4f82d1c6500cbe7d5c2b8cb2214f93130849",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 797,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 797,
+        "action_accuracy": 0.5930059523809523,
+        "benign_action_accuracy": 0.5930059523809523,
+        "benign_row_accuracy": 0.5930059523809523,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.995203221838251,
+            0.9999999999999999
+          ],
+          "accepted_benign_row_correctness": [
+            0.995203221838251,
+            0.9999999999999999
+          ],
+          "benign_action_accuracy": [
+            0.5665123193974122,
+            0.6189694361636162
+          ],
+          "benign_row_accuracy": [
+            0.5665123193974122,
+            0.6189694361636162
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.38103056383638373,
+            0.43348768060258774
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 797,
+        "correct_disposition_rate": 0.5930059523809523,
+        "correct_reject_count": 0,
+        "correct_row_count": 797,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 547,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.4069940476190476,
+        "rejected_count": 547,
+        "row_accuracy": 0.5930059523809523,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.5930059523809523,
+        "benign_row_accuracy": 0.5930059523809523,
+        "correct_disposition_count": 797,
+        "correct_disposition_rate": 0.5930059523809523,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 335,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 335,
+            "correct_disposition_count": 335,
+            "correct_row_count": 335,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 1,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 1,
+            "scored_accepted_count": 335,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 1,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 326,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 326,
+            "correct_disposition_count": 326,
+            "correct_row_count": 326,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 10,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 10,
+            "scored_accepted_count": 326,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 10,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 136,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 136,
+            "correct_disposition_count": 136,
+            "correct_row_count": 136,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 200,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 200,
+            "scored_accepted_count": 136,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 200,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "6c9c9060df3d8ac00934f4d72137cb4aa568323bc2c5b6a1733af3ed1a75d846",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.4,
+    "rejection_result": {
+      "contract_digest": "26ec82c1dcc90c0aec20ccc978fc4f82d1c6500cbe7d5c2b8cb2214f93130849",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 384,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.35147902794315405,
+            0.41132966317361314
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.6190476190476191,
+        "correct_reject_count": 624,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 384,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.38095238095238093,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 624,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 624,
+        "correct_disposition_rate": 0.6190476190476191,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 336,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 48,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 288,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 48,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 288,
+            "scored_accepted_count": 48,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 288,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "5df014582b968f35f28f8f6e9176b3cfee729b676805b61d171e540b73df42b3",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 684,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 684,
+        "action_accuracy": 0.5089285714285714,
+        "benign_action_accuracy": 0.5089285714285714,
+        "benign_row_accuracy": 0.5089285714285714,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9944151973228247,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9944151973228247,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.4822142882725401,
+            0.5355919602613185
+          ],
+          "benign_row_accuracy": [
+            0.4822142882725401,
+            0.5355919602613185
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.4644080397386814,
+            0.5177857117274598
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 684,
+        "correct_disposition_rate": 0.5089285714285714,
+        "correct_reject_count": 0,
+        "correct_row_count": 684,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 660,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.49107142857142855,
+        "rejected_count": 660,
+        "row_accuracy": 0.5089285714285714,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.5089285714285714,
+        "benign_row_accuracy": 0.5089285714285714,
+        "correct_disposition_count": 684,
+        "correct_disposition_rate": 0.5089285714285714,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 280,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 280,
+            "correct_disposition_count": 280,
+            "correct_row_count": 280,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 56,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 56,
+            "scored_accepted_count": 280,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 56,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 321,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 321,
+            "correct_disposition_count": 321,
+            "correct_row_count": 321,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 15,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 15,
+            "scored_accepted_count": 321,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 15,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 83,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 83,
+            "correct_disposition_count": 83,
+            "correct_row_count": 83,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 253,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 253,
+            "scored_accepted_count": 83,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 253,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "4a060bacdd92dc460dd91730689a504338cd9866e5cb589e0347a54b6993c647",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.5,
+    "rejection_result": {
+      "contract_digest": "5df014582b968f35f28f8f6e9176b3cfee729b676805b61d171e540b73df42b3",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 384,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.35147902794315405,
+            0.41132966317361314
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.6190476190476191,
+        "correct_reject_count": 624,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 384,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.38095238095238093,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 624,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 624,
+        "correct_disposition_rate": 0.6190476190476191,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 336,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 336,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 0,
+            "scored_accepted_count": 336,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 0,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 48,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 288,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 48,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 288,
+            "scored_accepted_count": 48,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 288,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "2ed32de580a103eefd6bfe4009c3da78a5dc3d7f6618ff30c9433fdfba19b186",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 573,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 573,
+        "action_accuracy": 0.4263392857142857,
+        "benign_action_accuracy": 0.4263392857142857,
+        "benign_row_accuracy": 0.4263392857142857,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9933405292529639,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9933405292529639,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.4001465670235482,
+            0.45295188257211716
+          ],
+          "benign_row_accuracy": [
+            0.4001465670235482,
+            0.45295188257211716
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.5470481174278828,
+            0.5998534329764517
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 573,
+        "correct_disposition_rate": 0.4263392857142857,
+        "correct_reject_count": 0,
+        "correct_row_count": 573,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 771,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.5736607142857143,
+        "rejected_count": 771,
+        "row_accuracy": 0.4263392857142857,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.4263392857142857,
+        "benign_row_accuracy": 0.4263392857142857,
+        "correct_disposition_count": 573,
+        "correct_disposition_rate": 0.4263392857142857,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 276,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 276,
+            "correct_disposition_count": 276,
+            "correct_row_count": 276,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 60,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 60,
+            "scored_accepted_count": 276,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 60,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 276,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 276,
+            "correct_disposition_count": 276,
+            "correct_row_count": 276,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 60,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 60,
+            "scored_accepted_count": 276,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 60,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 21,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 21,
+            "correct_disposition_count": 21,
+            "correct_row_count": 21,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 315,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 315,
+            "scored_accepted_count": 21,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 315,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "65045cd270bf01fd465308b3b1cbac823c7379e8295296fceebb2d22fa51a7dd",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.6,
+    "rejection_result": {
+      "contract_digest": "2ed32de580a103eefd6bfe4009c3da78a5dc3d7f6618ff30c9433fdfba19b186",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 240,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.21282748400518353,
+            0.2653516364517045
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.7619047619047619,
+        "correct_reject_count": 768,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 240,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.23809523809523808,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 768,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 768,
+        "correct_disposition_rate": 0.7619047619047619,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 201,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 135,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 201,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 135,
+            "scored_accepted_count": 201,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 135,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 39,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 297,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 39,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 297,
+            "scored_accepted_count": 39,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 297,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "96ac88b6d512a42a675eb821406dcdc6cc7cb79547ce24c790e746bff09fe2f0",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 378,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 378,
+        "action_accuracy": 0.28125,
+        "benign_action_accuracy": 0.28125,
+        "benign_row_accuracy": 0.28125,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9899396497369397,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9899396497369397,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.25786245088392823,
+            0.3058844600365328
+          ],
+          "benign_row_accuracy": [
+            0.25786245088392823,
+            0.3058844600365328
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.6941155399634672,
+            0.7421375491160717
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 378,
+        "correct_disposition_rate": 0.28125,
+        "correct_reject_count": 0,
+        "correct_row_count": 378,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 966,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.71875,
+        "rejected_count": 966,
+        "row_accuracy": 0.28125,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.28125,
+        "benign_row_accuracy": 0.28125,
+        "correct_disposition_count": 378,
+        "correct_disposition_rate": 0.28125,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 180,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 180,
+            "correct_disposition_count": 180,
+            "correct_row_count": 180,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 156,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 156,
+            "scored_accepted_count": 180,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 156,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 179,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 179,
+            "correct_disposition_count": 179,
+            "correct_row_count": 179,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 157,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 157,
+            "scored_accepted_count": 179,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 157,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 19,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 19,
+            "correct_disposition_count": 19,
+            "correct_row_count": 19,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 317,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 317,
+            "scored_accepted_count": 19,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 317,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "92b055c9ffc27e19094119b938761a323f501b3911da49b34a11cc624e73fff9",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.7,
+    "rejection_result": {
+      "contract_digest": "96ac88b6d512a42a675eb821406dcdc6cc7cb79547ce24c790e746bff09fe2f0",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 138,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.11705822122188067,
+            0.15950828668425968
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.8630952380952381,
+        "correct_reject_count": 870,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 138,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.13690476190476192,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 870,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 870,
+        "correct_disposition_rate": 0.8630952380952381,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 117,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 219,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 117,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 219,
+            "scored_accepted_count": 117,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 219,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 21,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 315,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 21,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 315,
+            "scored_accepted_count": 21,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 315,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "2c3c4fe70e53c68abb4a7ce15742960b0400a25f7408370017c1ef619e940060",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 211,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 211,
+        "action_accuracy": 0.15699404761904762,
+        "benign_action_accuracy": 0.15699404761904762,
+        "benign_row_accuracy": 0.15699404761904762,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9821195646232311,
+            0.9999999999999999
+          ],
+          "accepted_benign_row_correctness": [
+            0.9821195646232311,
+            0.9999999999999999
+          ],
+          "benign_action_accuracy": [
+            0.1385254279253584,
+            0.17741785756556863
+          ],
+          "benign_row_accuracy": [
+            0.1385254279253584,
+            0.17741785756556863
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.8225821424344313,
+            0.8614745720746415
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 211,
+        "correct_disposition_rate": 0.15699404761904762,
+        "correct_reject_count": 0,
+        "correct_row_count": 211,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 1133,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.8430059523809523,
+        "rejected_count": 1133,
+        "row_accuracy": 0.15699404761904762,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.15699404761904762,
+        "benign_row_accuracy": 0.15699404761904762,
+        "correct_disposition_count": 211,
+        "correct_disposition_rate": 0.15699404761904762,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 130,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 130,
+            "correct_disposition_count": 130,
+            "correct_row_count": 130,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 206,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 206,
+            "scored_accepted_count": 130,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 206,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 73,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 73,
+            "correct_disposition_count": 73,
+            "correct_row_count": 73,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 263,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 263,
+            "scored_accepted_count": 73,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 263,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 8,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 8,
+            "correct_disposition_count": 8,
+            "correct_row_count": 8,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 328,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 328,
+            "scored_accepted_count": 8,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 328,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "6c9482535f1b341ad1c6cb1fbd2892cfdc2a1d46d6316c712cb9b619725d0a9c",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.8,
+    "rejection_result": {
+      "contract_digest": "2c3c4fe70e53c68abb4a7ce15742960b0400a25f7408370017c1ef619e940060",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 84,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.06781219936116634,
+            0.10201821954751933
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.9166666666666666,
+        "correct_reject_count": 924,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 84,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.08333333333333333,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 924,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 924,
+        "correct_disposition_rate": 0.9166666666666666,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 72,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 264,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 72,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 264,
+            "scored_accepted_count": 72,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 264,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 12,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 324,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 12,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 324,
+            "scored_accepted_count": 12,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 324,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "cc63cf7b759f50d5c2d95d093610d42b68e1a4389b358cc461a22a9b78d9114b",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 107,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 107,
+        "action_accuracy": 0.07961309523809523,
+        "benign_action_accuracy": 0.07961309523809523,
+        "benign_row_accuracy": 0.07961309523809523,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.9653427619812514,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.9653427619812514,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.0663103747934463,
+            0.09531209007070503
+          ],
+          "benign_row_accuracy": [
+            0.0663103747934463,
+            0.09531209007070503
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.9046879099292949,
+            0.9336896252065537
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 107,
+        "correct_disposition_rate": 0.07961309523809523,
+        "correct_reject_count": 0,
+        "correct_row_count": 107,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 1237,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.9203869047619048,
+        "rejected_count": 1237,
+        "row_accuracy": 0.07961309523809523,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.07961309523809523,
+        "benign_row_accuracy": 0.07961309523809523,
+        "correct_disposition_count": 107,
+        "correct_disposition_rate": 0.07961309523809523,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 94,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 94,
+            "correct_disposition_count": 94,
+            "correct_row_count": 94,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 242,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 242,
+            "scored_accepted_count": 94,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 242,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 12,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 12,
+            "correct_disposition_count": 12,
+            "correct_row_count": 12,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 324,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 324,
+            "scored_accepted_count": 12,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 324,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 1,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 1,
+            "correct_disposition_count": 1,
+            "correct_row_count": 1,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 335,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 335,
+            "scored_accepted_count": 1,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 335,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "4fc7dc485b761dd51e03189e1a9c301bbab75efdf972c8436140d132e885face",
+    "feasible": false,
+    "infeasible_reasons": [
+      "distinguishable_false_acceptance"
+    ],
+    "quantile": 0.9,
+    "rejection_result": {
+      "contract_digest": "cc63cf7b759f50d5c2d95d093610d42b68e1a4389b358cc461a22a9b78d9114b",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 3,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            0.001012678377147809,
+            0.008713607035355835
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 0.9970238095238095,
+        "correct_reject_count": 1005,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 3,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.002976190476190476,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 1005,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 1005,
+        "correct_disposition_rate": 0.9970238095238095,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 3,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 333,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 3,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 333,
+            "scored_accepted_count": 3,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 333,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  },
+  {
+    "benign_result": {
+      "contract_digest": "b8fbb9b6ef7c5b4e74ecc5a1c1f2851687ec9e83ec7373c28c4b87ba4e87f8a3",
+      "metrics": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_count": 1,
+        "accepted_benign_row_correctness": 1.0,
+        "accepted_count": 1,
+        "action_accuracy": 0.000744047619047619,
+        "benign_action_accuracy": 0.000744047619047619,
+        "benign_row_accuracy": 0.000744047619047619,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.20654931437723745,
+            1.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.20654931437723745,
+            1.0
+          ],
+          "benign_action_accuracy": [
+            0.00013135475134270222,
+            0.004202581397056504
+          ],
+          "benign_row_accuracy": [
+            0.00013135475134270222,
+            0.004202581397056504
+          ],
+          "false_acceptance_rate": [
+            0.0,
+            0.0
+          ],
+          "false_rejection_rate": [
+            0.9957974186029435,
+            0.9998686452486574
+          ],
+          "top1_benign_action_accuracy": [
+            0.997149917896089,
+            1.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.997149917896089,
+            1.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 1,
+        "correct_disposition_rate": 0.000744047619047619,
+        "correct_reject_count": 0,
+        "correct_row_count": 1,
+        "evaluation_count": 1344,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 0,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 1343,
+        "false_reject_opportunities": 1344,
+        "false_rejection_rate": 0.9992559523809523,
+        "rejected_count": 1343,
+        "row_accuracy": 0.000744047619047619,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0,
+        "top1_correct_action_count": 1344,
+        "top1_correct_row_count": 1344
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 1.0,
+        "accepted_benign_row_correctness": 1.0,
+        "benign_action_accuracy": 0.000744047619047619,
+        "benign_row_accuracy": 0.000744047619047619,
+        "correct_disposition_count": 1,
+        "correct_disposition_rate": 0.000744047619047619,
+        "evaluated_splits": [
+          "benign_calibration"
+        ],
+        "expected_accept_count": 1344,
+        "expected_reject_count": 0,
+        "family_counts": {
+          "benign-calibration-contrast": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-noise": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-palette-b": {
+            "accepted_count": 1,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 1,
+            "correct_disposition_count": 1,
+            "correct_row_count": 1,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 335,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 335,
+            "scored_accepted_count": 1,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 335,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          },
+          "benign-calibration-shift-down": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 0,
+            "correct_row_count": 0,
+            "expected_accept_count": 336,
+            "expected_reject_count": 0,
+            "false_accept_count": 0,
+            "false_reject_count": 336,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 336,
+            "top1_correct_row_count": 336
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1344,
+        "scored_evaluation_count": 1344,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    },
+    "calibration_artifact_id": "bb985997a8d56cde073f91fc6611c08c0718d888e0d49d00aa0198f0f603e583",
+    "feasible": true,
+    "infeasible_reasons": [],
+    "quantile": 1.0,
+    "rejection_result": {
+      "contract_digest": "b8fbb9b6ef7c5b4e74ecc5a1c1f2851687ec9e83ec7373c28c4b87ba4e87f8a3",
+      "metrics": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_count": 0,
+        "accepted_benign_row_correctness": 0.0,
+        "accepted_count": 0,
+        "action_accuracy": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+        "confidence_intervals_95": {
+          "accepted_benign_action_correctness": [
+            0.0,
+            0.0
+          ],
+          "accepted_benign_row_correctness": [
+            0.0,
+            0.0
+          ],
+          "benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "benign_row_accuracy": [
+            0.0,
+            0.0
+          ],
+          "false_acceptance_rate": [
+            2.168404344971009e-19,
+            0.0037965026904228285
+          ],
+          "false_rejection_rate": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_action_accuracy": [
+            0.0,
+            0.0
+          ],
+          "top1_benign_row_accuracy": [
+            0.0,
+            0.0
+          ]
+        },
+        "conflicting_action_error_count": 0,
+        "correct_action_count": 0,
+        "correct_disposition_rate": 1.0,
+        "correct_reject_count": 1008,
+        "correct_row_count": 0,
+        "evaluation_count": 1008,
+        "false_accept_count": 0,
+        "false_accept_opportunities": 1008,
+        "false_acceptance_rate": 0.0,
+        "false_reject_count": 0,
+        "false_reject_opportunities": 0,
+        "false_rejection_rate": 0.0,
+        "rejected_count": 1008,
+        "row_accuracy": 0.0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0,
+        "top1_correct_action_count": 0,
+        "top1_correct_row_count": 0
+      },
+      "notes": {
+        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_row_correctness": 0.0,
+        "benign_action_accuracy": 0.0,
+        "benign_row_accuracy": 0.0,
+        "correct_disposition_count": 1008,
+        "correct_disposition_rate": 1.0,
+        "evaluated_splits": [
+          "rejection_calibration"
+        ],
+        "expected_accept_count": 0,
+        "expected_reject_count": 1008,
+        "family_counts": {
+          "rejection-calibration-blank-band": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-checker": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          },
+          "rejection-calibration-double-tank-left": {
+            "accepted_count": 0,
+            "conflicting_action_error_count": 0,
+            "correct_action_count": 0,
+            "correct_disposition_count": 336,
+            "correct_row_count": 0,
+            "expected_accept_count": 0,
+            "expected_reject_count": 336,
+            "false_accept_count": 0,
+            "false_reject_count": 0,
+            "impossibility_control_accepted_count": 0,
+            "impossibility_control_count": 0,
+            "impossibility_control_rejected_count": 0,
+            "observation_count": 336,
+            "rejected_count": 336,
+            "scored_accepted_count": 0,
+            "scored_evaluation_count": 336,
+            "scored_rejected_count": 336,
+            "top1_correct_action_count": 0,
+            "top1_correct_row_count": 0
+          }
+        },
+        "impossibility_control_acceptance_rate": 0.0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_rejected_count": 0,
+        "metric_semantics": {
+          "accepted_prediction": "predicted_row_id and predicted_action_id exist only when the provider accepts",
+          "top1_prediction": "top1_row_id and top1_action_id are recorded before rejection when the provider exposes a nearest row"
+        },
+        "observation_count_including_controls": 1008,
+        "scored_evaluation_count": 1008,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      },
+      "system_id": "B",
+      "system_name": "normalized_template_matching"
+    }
+  }
+]

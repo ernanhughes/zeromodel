@@ -21,7 +21,26 @@ VISUAL_DATASET_MANIFEST_VERSION = "zeromodel-visual-dataset-manifest/v1"
 VISUAL_BENCHMARK_VERSION = "zeromodel-visual-benchmark/v1"
 VISUAL_BENCHMARK_REPORT_VERSION = "zeromodel-visual-benchmark-report/v1"
 
-VISUAL_DATASET_SPLITS = ("prototype", "calibration", "test", "ood")
+VISUAL_DATASET_SPLITS = (
+    "prototype",
+    "calibration",
+    "test",
+    "benign_calibration",
+    "rejection_calibration",
+    "final_evaluation",
+    "ood",
+)
+VISUAL_CALIBRATION_ROLES = (
+    "prototype",
+    "benign_calibration",
+    "rejection_calibration",
+    "legacy_calibration",
+)
+VISUAL_EVALUATION_ROLES = (
+    "expected_accept",
+    "expected_reject",
+    "information_theoretic_control",
+)
 VISUAL_BENCHMARK_SYSTEMS = MappingProxyType(
     {
         "A": "current_deterministic_reader",
@@ -144,6 +163,9 @@ class VisualExampleRecord:
     family_id: str
     row_id: Optional[str]
     action_id: Optional[str]
+    partition: Optional[str]
+    calibration_role: Optional[str]
+    evaluation_role: Optional[str]
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __init__(
@@ -155,6 +177,9 @@ class VisualExampleRecord:
         family_id: str,
         row_id: Optional[str] = None,
         action_id: Optional[str] = None,
+        partition: Optional[str] = None,
+        calibration_role: Optional[str] = None,
+        evaluation_role: Optional[str] = None,
         metadata: Optional[Mapping[str, Any]] = None,
     ) -> None:
         object.__setattr__(self, "observation_id", str(observation_id))
@@ -170,6 +195,21 @@ class VisualExampleRecord:
             self,
             "action_id",
             None if action_id is None else str(action_id),
+        )
+        object.__setattr__(
+            self,
+            "partition",
+            None if partition is None else str(partition),
+        )
+        object.__setattr__(
+            self,
+            "calibration_role",
+            None if calibration_role is None else str(calibration_role),
+        )
+        object.__setattr__(
+            self,
+            "evaluation_role",
+            None if evaluation_role is None else str(evaluation_role),
         )
         object.__setattr__(self, "metadata", _freeze_json(metadata or {}))
         self.validate()
@@ -187,14 +227,34 @@ class VisualExampleRecord:
                 "visual example split must be one of: %s"
                 % ", ".join(VISUAL_DATASET_SPLITS)
             )
+        reject_without_label = (
+            self.split == "final_evaluation"
+            and self.evaluation_role == "expected_reject"
+        )
         if self.split == "ood":
             if self.row_id is not None or self.action_id is not None:
                 raise VPMValidationError(
                     "OOD examples cannot declare a valid row_id or action_id"
                 )
-        elif self.row_id is None or self.action_id is None:
+        elif not reject_without_label and (self.row_id is None or self.action_id is None):
             raise VPMValidationError(
                 "non-OOD examples require row_id and action_id"
+            )
+        if self.partition is not None and not self.partition:
+            raise VPMValidationError("partition cannot be empty when present")
+        if (
+            self.calibration_role is not None
+            and self.calibration_role not in VISUAL_CALIBRATION_ROLES
+        ):
+            raise VPMValidationError(
+                "unknown calibration_role: %s" % self.calibration_role
+            )
+        if (
+            self.evaluation_role is not None
+            and self.evaluation_role not in VISUAL_EVALUATION_ROLES
+        ):
+            raise VPMValidationError(
+                "unknown evaluation_role: %s" % self.evaluation_role
             )
         _canonical_json_bytes(self.metadata)
 
@@ -206,6 +266,9 @@ class VisualExampleRecord:
             "family_id": self.family_id,
             "row_id": self.row_id,
             "action_id": self.action_id,
+            "partition": self.partition,
+            "calibration_role": self.calibration_role,
+            "evaluation_role": self.evaluation_role,
             "metadata": _thaw_json(self.metadata),
         }
 
@@ -218,6 +281,9 @@ class VisualExampleRecord:
             family_id=str(data["family_id"]),
             row_id=data.get("row_id"),
             action_id=data.get("action_id"),
+            partition=data.get("partition"),
+            calibration_role=data.get("calibration_role"),
+            evaluation_role=data.get("evaluation_role"),
             metadata=data.get("metadata") or {},
         )
 
@@ -294,14 +360,29 @@ class VisualDatasetManifest:
                 "visual records reference unknown families: %s"
                 % ", ".join(unknown_families)
             )
-        required_splits = {"prototype", "calibration", "test"}
         present_splits = {record.split for record in self.records}
-        missing_splits = sorted(required_splits - present_splits)
-        if missing_splits:
-            raise VPMValidationError(
-                "visual dataset is missing required splits: %s"
-                % ", ".join(missing_splits)
-            )
+        modern = {
+            "prototype",
+            "benign_calibration",
+            "rejection_calibration",
+            "final_evaluation",
+        }
+        modern_specific = modern - {"prototype"}
+        legacy = {"prototype", "calibration", "test"}
+        if modern_specific.intersection(present_splits):
+            missing_splits = sorted(modern - present_splits)
+            if missing_splits:
+                raise VPMValidationError(
+                    "visual dataset is missing required splits: %s"
+                    % ", ".join(missing_splits)
+                )
+        else:
+            missing_splits = sorted(legacy - present_splits)
+            if missing_splits:
+                raise VPMValidationError(
+                    "visual dataset is missing required splits: %s"
+                    % ", ".join(missing_splits)
+                )
         if self.enforce_family_holdout:
             splits_by_family: Dict[str, set[str]] = {}
             for record in self.records:
@@ -316,22 +397,52 @@ class VisualDatasetManifest:
                     "corruption families must be held out by split: %s"
                     % json.dumps(leaks, sort_keys=True)
                 )
-        row_sets = {
-            split: {
-                record.row_id
-                for record in self.records
-                if record.split == split and record.row_id is not None
+        if modern_specific.intersection(present_splits):
+            row_sets = {
+                split: {
+                    record.row_id
+                    for record in self.records
+                    if record.split == split
+                    and record.row_id is not None
+                    and (record.evaluation_role in {None, "expected_accept"})
+                }
+                for split in ("prototype", "benign_calibration", "final_evaluation")
             }
-            for split in ("prototype", "calibration", "test")
-        }
-        if not (
-            row_sets["prototype"]
-            == row_sets["calibration"]
-            == row_sets["test"]
-        ):
-            raise VPMValidationError(
-                "prototype, calibration, and test splits must cover identical rows"
-            )
+            if not (
+                row_sets["prototype"]
+                == row_sets["benign_calibration"]
+                == row_sets["final_evaluation"]
+            ):
+                raise VPMValidationError(
+                    "prototype, benign_calibration, and final_evaluation expected-accept rows must match"
+                )
+            overlap = {
+                record.observation_id
+                for record in self.records
+                if record.split == "rejection_calibration"
+                and record.evaluation_role == "information_theoretic_control"
+            }
+            if overlap:
+                raise VPMValidationError(
+                    "information-theoretic controls cannot appear in rejection_calibration"
+                )
+        else:
+            row_sets = {
+                split: {
+                    record.row_id
+                    for record in self.records
+                    if record.split == split and record.row_id is not None
+                }
+                for split in ("prototype", "calibration", "test")
+            }
+            if not (
+                row_sets["prototype"]
+                == row_sets["calibration"]
+                == row_sets["test"]
+            ):
+                raise VPMValidationError(
+                    "prototype, calibration, and test splits must cover identical rows"
+                )
         _canonical_json_bytes(self.metadata)
 
     @property

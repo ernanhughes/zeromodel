@@ -36,25 +36,27 @@ def test_arcade_dataset_has_family_holdout_controls_and_rejection_sets() -> None
     records = dataset.manifest.records
     assert {record.split for record in records} == {
         "prototype",
-        "calibration",
-        "test",
-        "ood",
+        "benign_calibration",
+        "rejection_calibration",
+        "final_evaluation",
     }
     assert any(
         family.critical_evidence_removed for family in dataset.manifest.families
     )
     target_controls = tuple(
-        record for record in records if record.family_id == "test-critical-target"
+        record
+        for record in records
+        if record.family_id == "final-information-target"
     )
     assert len(target_controls) == 98
     assert all(
-        record.metadata["evaluation_role"] == demo.IMPOSSIBILITY_CONTROL
+        record.evaluation_role == demo.IMPOSSIBILITY_CONTROL
         for record in target_controls
     )
-    assert sum(record.split == "ood" for record in records) == 6
+    assert sum(record.split == "final_evaluation" and record.row_id is None for record in records) == 6
     assert len(dataset.observations) == len(records)
 
-    impossible = dataset.observations["ood-impossible-state:00"].pixels
+    impossible = dataset.observations["final-ood-impossible-state:00"].pixels
     left_band = impossible[11:14, : demo.CELL_PIXELS]
     right_band = impossible[11:14, -demo.CELL_PIXELS :]
     assert np.count_nonzero(left_band == demo.TANK_VALUE) > 0
@@ -87,5 +89,6 @@ def test_default_benchmark_runs_deterministic_and_template_systems() -> None:
             system.notes["observation_count_including_controls"]
             == system.metrics.evaluation_count + 98
         )
+        assert tuple(system.notes["evaluated_splits"]) == ("final_evaluation",)
 
     assert json.loads(json.dumps(report.to_dict())) == report.to_dict()

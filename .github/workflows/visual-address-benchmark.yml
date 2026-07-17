@@ -1,5 +1,8 @@
 name: Frozen visual address benchmark
 
+# Frozen DINOv2 runs are manually invoked research reproductions,
+# not routine product or pull-request gates.
+
 on:
   workflow_dispatch:
     inputs:
@@ -7,21 +10,6 @@ on:
         description: Number of variants generated per corruption family
         required: true
         default: "3"
-  pull_request:
-    paths:
-      - ".github/workflows/visual-address-benchmark.yml"
-      - ".github/scripts/run_visual_address_smoke.py"
-      - "examples/arcade_visual_address_benchmark.py"
-      - "examples/analyze_visual_address_report.py"
-      - "zeromodel/visual_encoder.py"
-      - "zeromodel/visual_retrieval.py"
-      - "zeromodel/visual_precomputed.py"
-      - "zeromodel/visual_experiment.py"
-      - "zeromodel/visual_benchmark.py"
-      - "zeromodel/visual_analysis.py"
-      - "zeromodel/visual_corruptions.py"
-      - "zeromodel/vision.py"
-      - "pyproject.toml"
 
 concurrency:
   group: visual-address-${{ github.event.pull_request.number || github.ref }}

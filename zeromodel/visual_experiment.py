@@ -18,9 +18,9 @@ from .visual_dataset import VisualDatasetManifest, VisualExampleRecord
 from .visual_encoder import FrozenVisualEncoder
 
 
-EXPECTED_ACCEPT = "accept"
-EXPECTED_REJECT = "reject"
-IMPOSSIBILITY_CONTROL = "impossibility_control"
+EXPECTED_ACCEPT = "expected_accept"
+EXPECTED_REJECT = "expected_reject"
+IMPOSSIBILITY_CONTROL = "information_theoretic_control"
 _EXPECTED_DISPOSITIONS = {
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
@@ -157,7 +157,9 @@ def _expected_disposition(
     record: VisualExampleRecord,
     manifest: VisualDatasetManifest,
 ) -> str:
-    explicit = record.metadata.get("evaluation_role")
+    explicit = record.evaluation_role
+    if explicit is None:
+        explicit = record.metadata.get("evaluation_role")
     if explicit is not None:
         value = str(explicit)
         if value not in _EXPECTED_DISPOSITIONS:
@@ -168,6 +170,16 @@ def _expected_disposition(
         return value
     if record.split == "ood":
         return EXPECTED_REJECT
+    if record.split == "rejection_calibration":
+        return EXPECTED_REJECT
+    if record.split == "final_evaluation":
+        if record.evaluation_role is None:
+            raise VPMValidationError(
+                "final_evaluation records must declare evaluation_role"
+            )
+        return str(record.evaluation_role)
+    if record.split == "benign_calibration":
+        return EXPECTED_ACCEPT
     family_by_id = {family.family_id: family for family in manifest.families}
     return (
         EXPECTED_REJECT
@@ -429,9 +441,15 @@ def build_research_report(
     system_results: Sequence[BenchmarkSystemResult],
     metadata: Optional[Mapping[str, Any]] = None,
 ) -> VisualBenchmarkReport:
+    present_splits = {record.split for record in dataset_manifest.records}
+    default_metadata = {
+        "dataset_splits": sorted(present_splits),
+        "dataset_digest": dataset_manifest.digest,
+    }
+    default_metadata.update(dict(metadata or {}))
     return VisualBenchmarkReport(
         dataset_manifest_digest=dataset_manifest.digest,
         systems=tuple(system_results),
         validation_status="research",
-        metadata=dict(metadata or {}),
+        metadata=default_metadata,
     )

@@ -58,6 +58,8 @@ from zeromodel.visual_corruptions import (  # noqa: E402
 )
 from zeromodel.visual_encoder import HuggingFaceDinoV2Encoder  # noqa: E402
 from zeromodel.visual_experiment import (  # noqa: E402
+    EXPECTED_ACCEPT,
+    EXPECTED_REJECT,
     IMPOSSIBILITY_CONTROL,
     build_research_report,
     encode_observations,
@@ -92,16 +94,19 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
         CorruptionFamilySpec(family_id="prototype-brightness", kind="brightness"),
         CorruptionFamilySpec(family_id="prototype-shift-up", kind="translation"),
         CorruptionFamilySpec(family_id="prototype-palette-a", kind="palette"),
-        CorruptionFamilySpec(family_id="calibration-contrast", kind="contrast"),
-        CorruptionFamilySpec(family_id="calibration-shift-down", kind="translation"),
-        CorruptionFamilySpec(family_id="calibration-palette-b", kind="palette"),
-        CorruptionFamilySpec(family_id="calibration-noise", kind="noise"),
-        CorruptionFamilySpec(family_id="test-brightness-unseen", kind="brightness"),
-        CorruptionFamilySpec(family_id="test-shift-two", kind="translation"),
-        CorruptionFamilySpec(family_id="test-palette-c", kind="palette"),
-        CorruptionFamilySpec(family_id="test-noncritical-patch", kind="structured_occlusion"),
+        CorruptionFamilySpec(family_id="benign-calibration-contrast", kind="contrast"),
+        CorruptionFamilySpec(family_id="benign-calibration-shift-down", kind="translation"),
+        CorruptionFamilySpec(family_id="benign-calibration-palette-b", kind="palette"),
+        CorruptionFamilySpec(family_id="benign-calibration-noise", kind="noise"),
+        CorruptionFamilySpec(family_id="rejection-calibration-blank-band", kind="invalid_geometry"),
+        CorruptionFamilySpec(family_id="rejection-calibration-checker", kind="structured_non_state"),
+        CorruptionFamilySpec(family_id="rejection-calibration-double-tank-left", kind="impossible_object_count"),
+        CorruptionFamilySpec(family_id="final-brightness-unseen", kind="brightness"),
+        CorruptionFamilySpec(family_id="final-shift-two", kind="translation"),
+        CorruptionFamilySpec(family_id="final-palette-c", kind="palette"),
+        CorruptionFamilySpec(family_id="final-noncritical-patch", kind="structured_occlusion"),
         CorruptionFamilySpec(
-            family_id="test-critical-target",
+            family_id="final-information-target",
             kind="information_theoretic_control",
             critical_evidence_removed=True,
             parameters={
@@ -114,18 +119,18 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
             },
         ),
         CorruptionFamilySpec(
-            family_id="test-critical-tank",
+            family_id="final-critical-tank",
             kind="critical_intervention",
             critical_evidence_removed=True,
         ),
         CorruptionFamilySpec(
-            family_id="test-critical-cooldown",
+            family_id="final-critical-cooldown",
             kind="critical_intervention",
             critical_evidence_removed=True,
         ),
-        CorruptionFamilySpec(family_id="ood-blank", kind="out_of_domain"),
-        CorruptionFamilySpec(family_id="ood-checkerboard", kind="out_of_domain"),
-        CorruptionFamilySpec(family_id="ood-impossible-state", kind="out_of_domain"),
+        CorruptionFamilySpec(family_id="final-ood-blank", kind="out_of_domain"),
+        CorruptionFamilySpec(family_id="final-ood-checkerboard", kind="out_of_domain"),
+        CorruptionFamilySpec(family_id="final-ood-impossible-state", kind="out_of_domain"),
     )
 
 
@@ -197,33 +202,51 @@ def _variant(
         return translate_frame(frame, dy=-1, fill=index)
     if family_id == "prototype-palette-a":
         return _palette(frame, variant="a", index=index)
-    if family_id == "calibration-contrast":
+    if family_id == "benign-calibration-contrast":
         return scale_intensity(frame, numerator=104 + 4 * index, offset=2 + index)
-    if family_id == "calibration-shift-down":
+    if family_id == "benign-calibration-shift-down":
         return translate_frame(frame, dy=1, fill=2 * index)
-    if family_id == "calibration-palette-b":
+    if family_id == "benign-calibration-palette-b":
         return _palette(frame, variant="b", index=index)
-    if family_id == "calibration-noise":
+    if family_id == "benign-calibration-noise":
         return add_integer_noise(frame, amplitude=2 + index, seed=1000 + index)
-    if family_id == "test-brightness-unseen":
+    if family_id == "final-brightness-unseen":
         return scale_intensity(frame, numerator=68 + 5 * index, offset=4)
-    if family_id == "test-shift-two":
+    if family_id == "final-shift-two":
         return translate_frame(frame, dy=2 if index % 2 == 0 else -2, fill=3)
-    if family_id == "test-palette-c":
+    if family_id == "final-palette-c":
         return _palette(frame, variant="c", index=index)
-    if family_id == "test-noncritical-patch":
+    if family_id == "final-noncritical-patch":
         return overlay_background_patch(
             frame,
             height=2 + (index % 2),
             width=3,
             value=80 + 10 * index,
         )
-    if family_id == "test-critical-target":
+    if family_id == "final-information-target":
         return _critical_target(frame, state)
-    if family_id == "test-critical-tank":
+    if family_id == "final-critical-tank":
         return _critical_tank(frame, state)
-    if family_id == "test-critical-cooldown":
+    if family_id == "final-critical-cooldown":
         return _critical_cooldown(frame)
+    if family_id == "rejection-calibration-blank-band":
+        return mask_box(frame, top=5, left=4 + index, height=4, width=8, value=0)
+    if family_id == "rejection-calibration-checker":
+        return checkerboard_frame(
+            height=frame.shape[0],
+            width=frame.shape[1],
+            low=30 + index,
+            high=210 - index,
+            cell=2,
+        )
+    if family_id == "rejection-calibration-double-tank-left":
+        result = np.array(frame, dtype=np.uint8, order="C", copy=True)
+        centre = CELL_PIXELS // 2
+        result[11, centre] = TANK_VALUE
+        result[12, centre - 1 : centre + 2] = TANK_VALUE
+        result[13, centre - 2 : centre + 3] = TANK_VALUE
+        result.flags.writeable = False
+        return result
     raise ValueError("unknown benchmark family: %s" % family_id)
 
 
@@ -248,20 +271,20 @@ def build_arcade_benchmark_dataset(
             "prototype-shift-up",
             "prototype-palette-a",
         ),
-        "calibration": (
-            "calibration-contrast",
-            "calibration-shift-down",
-            "calibration-palette-b",
-            "calibration-noise",
+        "benign_calibration": (
+            "benign-calibration-contrast",
+            "benign-calibration-shift-down",
+            "benign-calibration-palette-b",
+            "benign-calibration-noise",
         ),
-        "test": (
-            "test-brightness-unseen",
-            "test-shift-two",
-            "test-palette-c",
-            "test-noncritical-patch",
-            "test-critical-target",
-            "test-critical-tank",
-            "test-critical-cooldown",
+        "final_evaluation": (
+            "final-brightness-unseen",
+            "final-shift-two",
+            "final-palette-c",
+            "final-noncritical-patch",
+            "final-information-target",
+            "final-critical-tank",
+            "final-critical-cooldown",
         ),
     }
 
@@ -270,9 +293,9 @@ def build_arcade_benchmark_dataset(
         action = lookup.choose(row_id)
         for split, family_ids in split_families.items():
             for family_id in family_ids:
-                if family_id == "test-critical-target" and state["target"] is None:
+                if family_id == "final-information-target" and state["target"] is None:
                     continue
-                count = 1 if family_id.startswith("test-critical-") else variants_per_family
+                count = 1 if family_id.startswith("final-critical-") else variants_per_family
                 for index in range(count):
                     observation_id = "%s:%s:%02d" % (family_id, row_id, index)
                     varied = _variant(frame, state, family_id, index)
@@ -281,9 +304,22 @@ def build_arcade_benchmark_dataset(
                         "row_id": row_id,
                         "variant_index": index,
                     }
-                    if family_id == "test-critical-target":
+                    evaluation_role = None
+                    calibration_role = None
+                    if split == "prototype":
+                        calibration_role = "prototype"
+                    elif split == "benign_calibration":
+                        calibration_role = "benign_calibration"
+                    if family_id == "final-information-target":
+                        evaluation_role = IMPOSSIBILITY_CONTROL
                         metadata["evaluation_role"] = IMPOSSIBILITY_CONTROL
                         metadata["counterfactual_source_row_id"] = row_id
+                    elif split == "final_evaluation":
+                        evaluation_role = (
+                            EXPECTED_REJECT
+                            if family_id.startswith("final-critical-")
+                            else EXPECTED_ACCEPT
+                        )
                     observation = ImageObservation(
                         pixels=varied,
                         source_id=SOURCE_SCOPE,
@@ -298,18 +334,55 @@ def build_arcade_benchmark_dataset(
                             family_id=family_id,
                             row_id=row_id,
                             action_id=action,
+                            partition=split,
+                            calibration_role=calibration_role,
+                            evaluation_role=evaluation_role,
                             metadata=metadata,
                         )
                     )
 
+        for family_id in (
+            "rejection-calibration-blank-band",
+            "rejection-calibration-checker",
+            "rejection-calibration-double-tank-left",
+        ):
+            for index in range(variants_per_family):
+                observation_id = "%s:%s:%02d" % (family_id, row_id, index)
+                varied = _variant(frame, state, family_id, index)
+                metadata = {
+                    "family_id": family_id,
+                    "row_id": row_id,
+                    "variant_index": index,
+                }
+                observation = ImageObservation(
+                    pixels=varied,
+                    source_id=SOURCE_SCOPE,
+                    metadata=metadata,
+                )
+                observations[observation_id] = observation
+                records.append(
+                    VisualExampleRecord(
+                        observation_id=observation_id,
+                        observation_digest=observation.raw_digest,
+                        split="rejection_calibration",
+                        family_id=family_id,
+                        row_id=row_id,
+                        action_id=action,
+                        partition="rejection_calibration",
+                        calibration_role="rejection_calibration",
+                        evaluation_role=EXPECTED_REJECT,
+                        metadata=metadata,
+                    )
+                )
+
     height = FRAME_HEIGHT
     width = config.width * CELL_PIXELS
     first_canonical = next(iter(canonical.values()))
-    for family_id in ("ood-blank", "ood-checkerboard", "ood-impossible-state"):
+    for family_id in ("final-ood-blank", "final-ood-checkerboard", "final-ood-impossible-state"):
         for index in range(ood_examples_per_family):
-            if family_id == "ood-blank":
+            if family_id == "final-ood-blank":
                 frame = np.full((height, width), index % 3, dtype=np.uint8)
-            elif family_id == "ood-checkerboard":
+            elif family_id == "final-ood-checkerboard":
                 frame = checkerboard_frame(
                     height=height,
                     width=width,
@@ -330,8 +403,10 @@ def build_arcade_benchmark_dataset(
                 VisualExampleRecord(
                     observation_id=observation_id,
                     observation_digest=observation.raw_digest,
-                    split="ood",
+                    split="final_evaluation",
                     family_id=family_id,
+                    partition="final_evaluation",
+                    evaluation_role=EXPECTED_REJECT,
                     metadata={"variant_index": index},
                 )
             )
@@ -380,7 +455,10 @@ def _build_vector_system(
     strategy: str,
 ):
     prototype = vectors_for_records(records_for_split(dataset.manifest, "prototype"), vectors)
-    calibration = vectors_for_records(records_for_split(dataset.manifest, "calibration"), vectors)
+    calibration = vectors_for_records(
+        records_for_split(dataset.manifest, "benign_calibration"),
+        vectors,
+    )
     build = build_vector_address(
         prototype_vectors=prototype[0],
         prototype_row_ids=prototype[1],
@@ -429,6 +507,7 @@ def run_benchmark(
         policy_lookup=dataset.policy_lookup,
         system_id="A",
         system_name="current_deterministic_reader",
+        splits=("final_evaluation",),
         include_traces=include_traces,
     )
     systems.append(result_a)
@@ -459,6 +538,7 @@ def run_benchmark(
         policy_lookup=dataset.policy_lookup,
         system_id="B",
         system_name="normalized_template_matching",
+        splits=("final_evaluation",),
         include_traces=include_traces,
     )
     systems.append(result_b)
@@ -499,6 +579,7 @@ def run_benchmark(
                 policy_lookup=dataset.policy_lookup,
                 system_id=system_id,
                 system_name=name,
+                splits=("final_evaluation",),
                 include_traces=include_traces,
             )
             systems.append(result)
@@ -514,7 +595,7 @@ def run_benchmark(
             records_for_split(dataset.manifest, "prototype"), learned_vectors
         )
         calibration = vectors_for_records(
-            records_for_split(dataset.manifest, "calibration"), learned_vectors
+            records_for_split(dataset.manifest, "benign_calibration"), learned_vectors
         )
         probe_build = build_linear_probe(
             prototype_vectors=prototype[0],
@@ -536,6 +617,7 @@ def run_benchmark(
             policy_lookup=dataset.policy_lookup,
             system_id="G",
             system_name="rejection_equipped_linear_probe",
+            splits=("final_evaluation",),
             include_traces=include_traces,
         )
         systems.append(result_g)

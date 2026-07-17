@@ -31,6 +31,11 @@ classifiers = [
 [project.optional-dependencies]
 dev = ["pytest>=7", "build>=1.2", "twine>=5"]
 release = ["build>=1.2", "twine>=5"]
+vision = [
+    "torch>=2.2",
+    "transformers>=4.40",
+    "pillow>=10",
+]
 
 [project.urls]
 Homepage = "https://github.com/ernanhughes/zeromodel"

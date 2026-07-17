@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_encoder import EncoderManifest
+from zeromodel.visual_encoder import EncoderManifest, square_letterbox_uint8
 
 
 def _manifest() -> EncoderManifest:
@@ -53,3 +54,28 @@ def test_encoder_manifest_rejects_tamper_and_invalid_dimension() -> None:
             license_id="MIT",
             source_record="fixture",
         )
+
+
+def test_square_letterbox_preserves_every_source_pixel_without_aliasing() -> None:
+    source = np.arange(2 * 6 * 3, dtype=np.uint8).reshape(2, 6, 3)
+    before = source.copy()
+
+    canvas = square_letterbox_uint8(source, canvas_side=10, fill=7)
+
+    assert canvas.shape == (10, 10, 3)
+    assert canvas.flags.writeable is False
+    assert np.array_equal(canvas[4:6, 2:8], source)
+    assert np.all(canvas[:4] == 7)
+    assert np.array_equal(source, before)
+    assert source.flags.writeable
+
+    source[0, 0, 0] = 255
+    assert canvas[4, 2, 0] != 255
+
+
+def test_square_letterbox_rejects_crop_and_invalid_rgb_contract() -> None:
+    rgb = np.zeros((2, 6, 3), dtype=np.uint8)
+    with pytest.raises(VPMValidationError, match="cannot crop"):
+        square_letterbox_uint8(rgb, canvas_side=5)
+    with pytest.raises(VPMValidationError, match="HxWx3"):
+        square_letterbox_uint8(np.zeros((2, 6), dtype=np.uint8), canvas_side=6)

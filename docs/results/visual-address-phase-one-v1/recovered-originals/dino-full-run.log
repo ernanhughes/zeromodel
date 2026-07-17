@@ -1,52 +1,16 @@
 
 Loading weights:   0%|          | 0/223 [00:00<?, ?it/s]
-Loading weights: 100%|██████████| 223/223 [00:00<00:00, 7490.37it/s]
+Loading weights: 100%|██████████| 223/223 [00:00<00:00, 4616.68it/s]
 {
-  "dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
-  "observation_count": 5582,
-  "report_digest": "da27dd85fb793dd295674709740d54ae01d21d080eb7fc7914380659a5045e5c",
+  "dataset_digest": "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e",
+  "observation_count": 4378,
+  "report_digest": "d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035",
   "systems": {
     "A": {
-      "accepted_benign_action_correctness": null,
-      "accepted_benign_count": 0,
-      "accepted_benign_row_correctness": null,
       "accepted_count": 0,
       "action_accuracy": 0.0,
-      "benign_action_accuracy": 0.0,
-      "benign_row_accuracy": 0.0,
-      "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
-      "confidence_intervals_95": {
-        "accepted_benign_action_correctness": null,
-        "accepted_benign_row_correctness": null,
-        "benign_action_accuracy": [
-          0.0,
-          0.0028500821039109782
-        ],
-        "benign_row_accuracy": [
-          0.0,
-          0.0028500821039109782
-        ],
-        "false_acceptance_rate": [
-          0.0,
-          0.01525348065676972
-        ],
-        "false_rejection_rate": [
-          0.997149917896089,
-          1.0
-        ],
-        "top1_benign_action_accuracy": [
-          0.7745336469704669,
-          0.817524116780336
-        ],
-        "top1_benign_row_accuracy": [
-          0.7430072965222485,
-          0.7882124514045372
-        ]
-      },
       "conflicting_action_error_count": 0,
       "correct_action_count": 0,
-      "correct_disposition_rate": 0.15577889447236182,
-      "correct_reject_count": 248,
       "correct_row_count": 0,
       "evaluation_count": 1592,
       "false_accept_count": 0,
@@ -56,59 +20,13 @@ Loading weights: 100%|██████████| 223/223 [00:00<00:00, 7490
       "false_reject_opportunities": 1344,
       "false_rejection_rate": 1.0,
       "rejected_count": 1592,
-      "row_accuracy": 0.0,
-      "top1_benign_action_accuracy": 0.796875,
-      "top1_benign_row_accuracy": 0.7663690476190477,
-      "top1_correct_action_count": 1071,
-      "top1_correct_row_count": 1030
+      "row_accuracy": 0.0
     },
     "B": {
-      "accepted_benign_action_correctness": 0.9791666666666666,
-      "accepted_benign_count": 1008,
-      "accepted_benign_row_correctness": 0.8333333333333334,
       "accepted_count": 1135,
       "action_accuracy": 0.6199748743718593,
-      "benign_action_accuracy": 0.734375,
-      "benign_row_accuracy": 0.625,
-      "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
-      "confidence_intervals_95": {
-        "accepted_benign_action_correctness": [
-          0.9683611109293002,
-          0.9863339073257111
-        ],
-        "accepted_benign_row_correctness": [
-          0.8090701470561157,
-          0.8550655178169357
-        ],
-        "benign_action_accuracy": [
-          0.7101187299996599,
-          0.757295294014132
-        ],
-        "benign_row_accuracy": [
-          0.5987958207786285,
-          0.6504916586953938
-        ],
-        "false_acceptance_rate": [
-          0.4501775647423217,
-          0.573646947822434
-        ],
-        "false_rejection_rate": [
-          0.22758465681176396,
-          0.2738403842401916
-        ],
-        "top1_benign_action_accuracy": [
-          0.95802964261285,
-          0.9767984054147335
-        ],
-        "top1_benign_row_accuracy": [
-          0.7261596157598085,
-          0.7724153431882361
-        ]
-      },
       "conflicting_action_error_count": 21,
       "correct_action_count": 987,
-      "correct_disposition_rate": 0.7091708542713567,
-      "correct_reject_count": 121,
       "correct_row_count": 840,
       "evaluation_count": 1592,
       "false_accept_count": 127,
@@ -118,59 +36,13 @@ Loading weights: 100%|██████████| 223/223 [00:00<00:00, 7490
       "false_reject_opportunities": 1344,
       "false_rejection_rate": 0.25,
       "rejected_count": 457,
-      "row_accuracy": 0.5276381909547738,
-      "top1_benign_action_accuracy": 0.96875,
-      "top1_benign_row_accuracy": 0.75,
-      "top1_correct_action_count": 1302,
-      "top1_correct_row_count": 1008
+      "row_accuracy": 0.5276381909547738
     },
     "C": {
-      "accepted_benign_action_correctness": 0.7238461538461538,
-      "accepted_benign_count": 1300,
-      "accepted_benign_row_correctness": 0.3176923076923077,
       "accepted_count": 1504,
       "action_accuracy": 0.5910804020100503,
-      "benign_action_accuracy": 0.7001488095238095,
-      "benign_row_accuracy": 0.3072916666666667,
-      "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
-      "confidence_intervals_95": {
-        "accepted_benign_action_correctness": [
-          0.6989096625115206,
-          0.7474636262519848
-        ],
-        "accepted_benign_row_correctness": [
-          0.29295233349382116,
-          0.34350653442043716
-        ],
-        "benign_action_accuracy": [
-          0.6751105751850043,
-          0.724046162782329
-        ],
-        "benign_row_accuracy": [
-          0.28320393499710844,
-          0.33247786748044056
-        ],
-        "false_acceptance_rate": [
-          0.770222519869884,
-          0.8650978151902646
-        ],
-        "false_rejection_rate": [
-          0.02447685824365345,
-          0.04366280181773956
-        ],
-        "top1_benign_action_accuracy": [
-          0.6887891728041763,
-          0.7370769379639449
-        ],
-        "top1_benign_row_accuracy": [
-          0.29264024858572907,
-          0.3423316564701669
-        ]
-      },
       "conflicting_action_error_count": 359,
       "correct_action_count": 941,
-      "correct_disposition_rate": 0.8442211055276382,
-      "correct_reject_count": 44,
       "correct_row_count": 413,
       "evaluation_count": 1592,
       "false_accept_count": 204,
@@ -180,59 +52,13 @@ Loading weights: 100%|██████████| 223/223 [00:00<00:00, 7490
       "false_reject_opportunities": 1344,
       "false_rejection_rate": 0.03273809523809524,
       "rejected_count": 88,
-      "row_accuracy": 0.2594221105527638,
-      "top1_benign_action_accuracy": 0.7135416666666666,
-      "top1_benign_row_accuracy": 0.3169642857142857,
-      "top1_correct_action_count": 959,
-      "top1_correct_row_count": 426
+      "row_accuracy": 0.2594221105527638
     },
     "D": {
-      "accepted_benign_action_correctness": 0.7748650732459522,
-      "accepted_benign_count": 1297,
-      "accepted_benign_row_correctness": 0.3145720894371627,
       "accepted_count": 1480,
       "action_accuracy": 0.6312814070351759,
-      "benign_action_accuracy": 0.7477678571428571,
-      "benign_row_accuracy": 0.30357142857142855,
-      "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
-      "confidence_intervals_95": {
-        "accepted_benign_action_correctness": [
-          0.7513417710335892,
-          0.796764991066679
-        ],
-        "accepted_benign_row_correctness": [
-          0.28988026286075297,
-          0.34035907434790214
-        ],
-        "benign_action_accuracy": [
-          0.7238656696647796,
-          0.7702577271498001
-        ],
-        "benign_row_accuracy": [
-          0.2795779394143522,
-          0.32868459284075563
-        ],
-        "false_acceptance_rate": [
-          0.6798388789208117,
-          0.7887098681860479
-        ],
-        "false_rejection_rate": [
-          0.026399185079470693,
-          0.04619203711538699
-        ],
-        "top1_benign_action_accuracy": [
-          0.7460754638823807,
-          0.7910797002223579
-        ],
-        "top1_benign_row_accuracy": [
-          0.2897354374653874,
-          0.3393010514125557
-        ]
-      },
       "conflicting_action_error_count": 292,
       "correct_action_count": 1005,
-      "correct_disposition_rate": 0.8555276381909548,
-      "correct_reject_count": 65,
       "correct_row_count": 408,
       "evaluation_count": 1592,
       "false_accept_count": 183,
@@ -242,59 +68,13 @@ Loading weights: 100%|██████████| 223/223 [00:00<00:00, 7490
       "false_reject_opportunities": 1344,
       "false_rejection_rate": 0.034970238095238096,
       "rejected_count": 112,
-      "row_accuracy": 0.2562814070351759,
-      "top1_benign_action_accuracy": 0.7693452380952381,
-      "top1_benign_row_accuracy": 0.31398809523809523,
-      "top1_correct_action_count": 1034,
-      "top1_correct_row_count": 422
+      "row_accuracy": 0.2562814070351759
     },
     "G": {
-      "accepted_benign_action_correctness": 0.6053030303030303,
-      "accepted_benign_count": 1320,
-      "accepted_benign_row_correctness": 0.29318181818181815,
       "accepted_count": 1568,
       "action_accuracy": 0.5018844221105527,
-      "benign_action_accuracy": 0.5944940476190477,
-      "benign_row_accuracy": 0.28794642857142855,
-      "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
-      "confidence_intervals_95": {
-        "accepted_benign_action_correctness": [
-          0.5786658418252802,
-          0.6313290923473119
-        ],
-        "accepted_benign_row_correctness": [
-          0.2692528032236976,
-          0.318311103041643
-        ],
-        "benign_action_accuracy": [
-          0.5680112940972338,
-          0.6204381695527711
-        ],
-        "benign_row_accuracy": [
-          0.26436967061921773,
-          0.31273192670163735
-        ],
-        "false_acceptance_rate": [
-          0.9847465193432304,
-          1.0
-        ],
-        "false_rejection_rate": [
-          0.012028944459777802,
-          0.026433634711850642
-        ],
-        "top1_benign_action_accuracy": [
-          0.5830148082139349,
-          0.6351117363258346
-        ],
-        "top1_benign_row_accuracy": [
-          0.2701592619598093,
-          0.31881316771695156
-        ]
-      },
       "conflicting_action_error_count": 521,
       "correct_action_count": 799,
-      "correct_disposition_rate": 0.8291457286432161,
-      "correct_reject_count": 0,
       "correct_row_count": 387,
       "evaluation_count": 1592,
       "false_accept_count": 248,
@@ -304,11 +84,7 @@ Loading weights: 100%|██████████| 223/223 [00:00<00:00, 7490
       "false_reject_opportunities": 1344,
       "false_rejection_rate": 0.017857142857142856,
       "rejected_count": 24,
-      "row_accuracy": 0.24309045226130654,
-      "top1_benign_action_accuracy": 0.609375,
-      "top1_benign_row_accuracy": 0.29389880952380953,
-      "top1_correct_action_count": 819,
-      "top1_correct_row_count": 395
+      "row_accuracy": 0.24309045226130654
     }
   },
   "validation_status": "research"

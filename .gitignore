@@ -1,6 +1,5 @@
 test-results/
 *.codebase.md
-!docs/results/visual-address-phase-one-v1/recovered-originals/dino-full-run.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -223,3 +222,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Preserve the recovered historical benchmark log.
+!docs/results/visual-address-phase-one-v1/recovered-originals/dino-full-run.log

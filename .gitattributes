@@ -1,2 +1,4 @@
 # Historical recovered evidence must preserve its exact original bytes.
+
+# Historical recovered evidence: preserve exact bytes.
 docs/results/visual-address-phase-one-v1/recovered-originals/* -text

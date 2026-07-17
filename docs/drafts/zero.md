@@ -1860,11 +1860,11 @@ small deterministic runtime reader
 
 The learning algorithm produces the policy surface; ZeroModel turns it into a durable artifact. The lookup is old. **The artifact contract is the point.**
 
-[^sutton-barto]: Richard S. Sutton and Andrew G. Barto, *Reinforcement Learning: An Introduction*, second edition, MIT Press, 2018, Part I: “Tabular Solution Methods.”
+[^sutton-barto]: Richard S. Sutton and Andrew G. Barto, [*Reinforcement Learning: An Introduction*](https://web.stanford.edu/class/psych209/Readings/SuttonBartoIPRLBook2ndEd.pdf), second edition, MIT Press, 2018, Part I: “Tabular Solution Methods.”
 
 ---
 
-## VIPER: The Closest Precedent—and the `1.0.11` Extension
+## VIPER: The Closest Precedent
 
 The closest research precedent for ZeroModel’s **compiled-versus-invoked** distinction is VIPER: *Verifiable Reinforcement Learning via Policy Extraction*, by Osbert Bastani, Yewen Pu and Armando Solar-Lezama.[^viper]
 
@@ -1902,7 +1902,7 @@ Their architectural lesson is more important:
 
 For VIPER, the new operation is formal analysis of a structured decision tree.
 
-For ZeroModel, the artifact currently supports:
+For ZeroModel, the artifact supports:
 
 * deterministic state addressing;
 * source-to-view mapping;
@@ -1947,11 +1947,11 @@ VIPER uses that information while extracting the tree.
 
 A conventional deployed tree then retains the routing decision but not necessarily the complete candidate vector that made a state critical.
 
-ZeroModel `1.0.11` extends the idea by preserving that evidence inside the artifact and runtime trace.
+ZeroModel preserves that evidence inside the artifact and runtime trace.
 
 ### Criticality and Decision Margin Are Different
 
-ZeroModel `1.0.11` adds two non-action evidence metrics to Q-bearing policy surfaces:
+A Q-bearing ZeroModel policy can carry two non-action evidence metrics:
 
 ```text
 criticality
@@ -1984,9 +1984,13 @@ The terminology boundary matters.
 
 The best-minus-worst quantity should be called **VIPER-style criticality** only when the source columns contain Q-values or an equivalent consequence-bearing teacher signal. For arbitrary handcrafted scores, the same arithmetic is only **score spread**.
 
-The original four-column shooter artifact remains a handcrafted policy surface.
+The basic four-column shooter artifact remains a handcrafted policy surface.
 
-The `1.0.11` verification fixture builds a separate Q-bearing 112-state policy and enriches it through:
+For that basic `0.0`/`1.0` fixture, best-minus-worst criticality is `1.0` in all 112 states. Decision margin is `0.9` on movement rows and `1.0` elsewhere. It therefore does **not** produce an informative criticality-first surface.
+
+The verification fixture uses a separate Q-bearing teacher precisely because its consequence gaps vary across states.
+
+ZeroModel derives those evidence columns through:
 
 ```python
 from zeromodel import with_q_diagnostics
@@ -2045,6 +2049,41 @@ source and view coordinates
 
 The evidence columns remain visible and traceable but cannot accidentally become runtime actions. [C59](#claim-c59)
 
+### Which Artifact Identity Appears at Runtime
+
+Criticality-aware compilation creates an enriched six-column policy artifact:
+
+```text
+LEFT
+RIGHT
+STAY
+FIRE
+criticality
+decision_margin
+```
+
+For deployment, ZeroModel uses the **source-order enriched artifact** as the runtime policy object. Production decisions therefore cite the identity of that six-column artifact—the exact object the reader consumed.
+
+The criticality-first artifact is a separate deterministic inspection view derived from the same scored source. It has its own identity because its layout differs, but it is not the production runtime identity unless a deployment explicitly chooses that view as its executable artifact.
+
+A four-column action-only artifact may still be retained as an upstream source or baseline. It should be linked through provenance rather than used interchangeably at runtime:
+
+```text
+four-column source or baseline
+        ↓ derive evidence
+six-column source-order artifact
+        ↓ deployed reader
+decision trace cites this artifact ID
+
+six-column source-order artifact
+        ↓ alternate layout
+criticality-first inspection artifact
+```
+
+The convention is simple:
+
+> **The artifact ID in a decision trace is always the identity of the artifact actually consumed by the reader.**
+
 ### Criticality-First Inspection
 
 The same scored source can also produce more than one deterministic view:
@@ -2071,7 +2110,7 @@ VIPER verifies properties because its extracted trees expose a tractable structu
 
 A finite VPM policy is different but, for row-level properties, simpler: every declared state can be enumerated.
 
-ZeroModel `1.0.11` therefore adds a small declarative `PolicyPropertyChecker`.
+ZeroModel therefore includes a small declarative `PolicyPropertyChecker`.
 
 A property can state, for example:
 
@@ -2112,7 +2151,11 @@ fire_requires_alignment = PolicyPropertySpec.from_dict({
 })
 ```
 
-The checker evaluates the named property across every source row:
+The row-address decoder is typed. Under `key-value-row-id/v1`, `none` and `null` become JSON null/Python `None`, booleans become booleans, and numeric text becomes numbers. A property checking `state.target` against an absent target must therefore use `null`/`None`, not the string `"none"`.
+
+Comparison mistakes do not abort with an unlabelled Python `TypeError`: the checker reports the property ID, version, failing row, operator, values and operand types.
+
+The checker then evaluates the named property across every source row:
 
 ```python
 from zeromodel import PolicyPropertyChecker
@@ -2185,7 +2228,7 @@ localized repair
 re-verification
 ```
 
-ZeroModel `1.0.11` makes the same kind of loop an identity-bearing artifact lineage:
+ZeroModel makes the same kind of loop an identity-bearing artifact lineage:
 
 ```mermaid
 flowchart LR
@@ -2209,7 +2252,7 @@ so that `FIRE` wins while the tank is not aligned.
 
 The checker identifies the exact violating row, winning action, candidate vector, criticality, decision margin and source/view cell. The example then rebuilds a repaired policy with a new artifact identity and emits a passing verification artifact linked to that repaired policy. [C61](#claim-c61)
 
-Automatic repair is not part of the release.
+Automatic repair is not part of ZeroModel.
 
 The implementation records a reviewable sequence:
 
@@ -2247,7 +2290,7 @@ Which exact policy artifact, state,
 candidate vector and cell produced this action?
 ```
 
-`1.0.11` connects those questions:
+ZeroModel connects those questions:
 
 ```text
 Which policy ran?
@@ -2263,7 +2306,7 @@ Which repaired artifact replaced it?
 
 VIPER provides the precedent for extracting a tractable policy and checking it.
 
-ZeroModel adds a durable artifact contract around the policy, its evidence, its verification result and its repair lineage.
+ZeroModel supplies a durable artifact contract around the policy, its evidence, its verification result and its repair lineage.
 
 A VIPER tree could itself become a ZeroModel policy producer.
 
@@ -2286,7 +2329,7 @@ It does not provide:
 
 Those are separate research questions.
 
-### The New Research Direction
+### Criticality Beyond Finite Policies
 
 VIPER also suggests a principled extension for larger state spaces.
 
@@ -2329,9 +2372,9 @@ measured on:
 * failure rate;
 * artifact size.
 
-That remains Research claim `[C62]`.
+That remains Research claim [C62](#claim-c62).
 
-The larger extension is:
+The resulting research direction is:
 
 > **Compile policy not only so it can run without the source model, but so its critical states, checked properties, counterexamples, repairs and runtime decisions become durable parts of the artifact record.**
 
@@ -2343,6 +2386,7 @@ The implementation and complete fixture are public:
 
 [^viper]: Osbert Bastani, Yewen Pu and Armando Solar-Lezama, “Verifiable Reinforcement Learning via Policy Extraction,” *Advances in Neural Information Processing Systems 31*, 2018, [official NeurIPS paper](https://proceedings.neurips.cc/paper_files/paper/2018/file/e6d8545daa42d5ced125a4bf747b3688-Paper.pdf).
 
+---
 
 ## From Release Demo to Research Result
 

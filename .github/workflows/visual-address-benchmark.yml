@@ -8,10 +8,15 @@ on:
       - "examples/arcade_visual_address_benchmark.py"
       - "zeromodel/visual_encoder.py"
       - "zeromodel/visual_retrieval.py"
+      - "zeromodel/visual_precomputed.py"
       - "zeromodel/visual_experiment.py"
       - "zeromodel/visual_corruptions.py"
       - "zeromodel/vision.py"
       - "pyproject.toml"
+
+concurrency:
+  group: visual-address-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

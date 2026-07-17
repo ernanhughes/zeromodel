@@ -59,7 +59,20 @@ def _parse_scalar(value: str) -> Any:
 
 
 def decode_key_value_row_id(row_id: str) -> dict[str, Any]:
-    """Decode ``key=value|...`` row ids into a JSON-compatible state mapping."""
+    """Decode ``key=value|...`` row ids into a typed state mapping.
+
+    ``key-value-row-id/v1`` applies these deterministic scalar rules:
+
+    - ``none`` and ``null`` become :data:`None`;
+    - ``true`` and ``false`` become booleans;
+    - integer-looking values become :class:`int`;
+    - decimal-looking values become :class:`float`;
+    - every other value remains a string.
+
+    Property assertions must use the corresponding JSON literal. For example,
+    compare ``state.target`` with ``null``/``None`` in the property spec rather
+    than the string ``"none"``.
+    """
 
     state: dict[str, Any] = {}
     for part in str(row_id).split("|"):
@@ -327,9 +340,9 @@ class PolicyPropertyChecker:
                 }
                 try:
                     passed = bool(_evaluate(spec.assertion, context))
-                except VPMValidationError as exc:
+                except (VPMValidationError, TypeError, ValueError) as exc:
                     raise VPMValidationError(
-                        "Property %s@%s failed to evaluate for %s: %s"
+                        "Property %s@%s failed to evaluate for row %s: %s"
                         % (
                             spec.property_id,
                             spec.version,
@@ -394,6 +407,25 @@ def _binary_args(name: str, value: Any) -> tuple[Any, Any]:
     return value[0], value[1]
 
 
+def _comparison_error(
+    operator: str,
+    left_value: Any,
+    right_value: Any,
+    exc: Exception,
+) -> VPMValidationError:
+    return VPMValidationError(
+        "Property operator %s cannot compare %r (%s) with %r (%s): %s"
+        % (
+            operator,
+            left_value,
+            type(left_value).__name__,
+            right_value,
+            type(right_value).__name__,
+            exc,
+        )
+    )
+
+
 def _evaluate(expression: Any, context: Mapping[str, Any]) -> Any:
     if not isinstance(expression, Mapping):
         if isinstance(expression, list):
@@ -428,19 +460,27 @@ def _evaluate(expression: Any, context: Mapping[str, Any]) -> Any:
     left_value = _evaluate(left, context)
     right_value = _evaluate(right, context)
 
-    if operator == "eq":
-        return left_value == right_value
-    if operator == "ne":
-        return left_value != right_value
-    if operator == "lt":
-        return left_value < right_value
-    if operator == "lte":
-        return left_value <= right_value
-    if operator == "gt":
-        return left_value > right_value
-    if operator == "gte":
-        return left_value >= right_value
-    if operator == "in":
-        return left_value in right_value
+    try:
+        if operator == "eq":
+            return left_value == right_value
+        if operator == "ne":
+            return left_value != right_value
+        if operator == "lt":
+            return left_value < right_value
+        if operator == "lte":
+            return left_value <= right_value
+        if operator == "gt":
+            return left_value > right_value
+        if operator == "gte":
+            return left_value >= right_value
+        if operator == "in":
+            return left_value in right_value
+    except (TypeError, ValueError) as exc:
+        raise _comparison_error(
+            str(operator),
+            left_value,
+            right_value,
+            exc,
+        ) from exc
 
     raise VPMValidationError("Unsupported property operator: %s" % operator)

@@ -1,0 +1,91 @@
+
+Loading weights:   0%|          | 0/223 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 223/223 [00:00<00:00, 4616.68it/s]
+{
+  "dataset_digest": "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e",
+  "observation_count": 4378,
+  "report_digest": "d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035",
+  "systems": {
+    "A": {
+      "accepted_count": 0,
+      "action_accuracy": 0.0,
+      "conflicting_action_error_count": 0,
+      "correct_action_count": 0,
+      "correct_row_count": 0,
+      "evaluation_count": 1592,
+      "false_accept_count": 0,
+      "false_accept_opportunities": 248,
+      "false_acceptance_rate": 0.0,
+      "false_reject_count": 1344,
+      "false_reject_opportunities": 1344,
+      "false_rejection_rate": 1.0,
+      "rejected_count": 1592,
+      "row_accuracy": 0.0
+    },
+    "B": {
+      "accepted_count": 1135,
+      "action_accuracy": 0.6199748743718593,
+      "conflicting_action_error_count": 21,
+      "correct_action_count": 987,
+      "correct_row_count": 840,
+      "evaluation_count": 1592,
+      "false_accept_count": 127,
+      "false_accept_opportunities": 248,
+      "false_acceptance_rate": 0.5120967741935484,
+      "false_reject_count": 336,
+      "false_reject_opportunities": 1344,
+      "false_rejection_rate": 0.25,
+      "rejected_count": 457,
+      "row_accuracy": 0.5276381909547738
+    },
+    "C": {
+      "accepted_count": 1504,
+      "action_accuracy": 0.5910804020100503,
+      "conflicting_action_error_count": 359,
+      "correct_action_count": 941,
+      "correct_row_count": 413,
+      "evaluation_count": 1592,
+      "false_accept_count": 204,
+      "false_accept_opportunities": 248,
+      "false_acceptance_rate": 0.8225806451612904,
+      "false_reject_count": 44,
+      "false_reject_opportunities": 1344,
+      "false_rejection_rate": 0.03273809523809524,
+      "rejected_count": 88,
+      "row_accuracy": 0.2594221105527638
+    },
+    "D": {
+      "accepted_count": 1480,
+      "action_accuracy": 0.6312814070351759,
+      "conflicting_action_error_count": 292,
+      "correct_action_count": 1005,
+      "correct_row_count": 408,
+      "evaluation_count": 1592,
+      "false_accept_count": 183,
+      "false_accept_opportunities": 248,
+      "false_acceptance_rate": 0.7379032258064516,
+      "false_reject_count": 47,
+      "false_reject_opportunities": 1344,
+      "false_rejection_rate": 0.034970238095238096,
+      "rejected_count": 112,
+      "row_accuracy": 0.2562814070351759
+    },
+    "G": {
+      "accepted_count": 1568,
+      "action_accuracy": 0.5018844221105527,
+      "conflicting_action_error_count": 521,
+      "correct_action_count": 799,
+      "correct_row_count": 387,
+      "evaluation_count": 1592,
+      "false_accept_count": 248,
+      "false_accept_opportunities": 248,
+      "false_acceptance_rate": 1.0,
+      "false_reject_count": 24,
+      "false_reject_opportunities": 1344,
+      "false_rejection_rate": 0.017857142857142856,
+      "rejected_count": 24,
+      "row_accuracy": 0.24309045226130654
+    }
+  },
+  "validation_status": "research"
+}

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import pytest
+
 from zeromodel import (
     LayoutRecipe,
     PolicyPropertyChecker,
     PolicyPropertySpec,
     ScoreTable,
     VPMPolicyLookup,
+    VPMValidationError,
     build_vpm,
+    decode_key_value_row_id,
     from_bundle,
     to_bundle,
     with_q_diagnostics,
@@ -142,3 +146,83 @@ def test_evidence_columns_never_participate_in_action_selection() -> None:
     assert decision.action == "RIGHT"
     assert set(decision.candidates) == set(ACTIONS)
     assert set(decision.evidence) == {"criticality", "decision_margin"}
+
+
+def test_key_value_row_id_scalar_decoding_is_typed() -> None:
+    state = decode_key_value_row_id(
+        "target=none|enabled=true|count=3|ratio=1.5|label=left"
+    )
+
+    assert state == {
+        "target": None,
+        "enabled": True,
+        "count": 3,
+        "ratio": 1.5,
+        "label": "left",
+    }
+
+
+def test_string_none_literal_does_not_match_decoded_null() -> None:
+    wrong_literal = PolicyPropertySpec.from_dict(
+        {
+            "id": "string_none_is_not_null",
+            "version": "1",
+            "assert": {
+                "implies": [
+                    {
+                        "eq": [
+                            {"var": "row_id"},
+                            "tank=0|target=none|cooldown=0",
+                        ]
+                    },
+                    {"eq": [{"var": "state.target"}, "none"]},
+                ]
+            },
+        }
+    )
+    correct_literal = PolicyPropertySpec.from_dict(
+        {
+            "id": "json_null_matches_decoded_null",
+            "version": "1",
+            "assert": {
+                "implies": [
+                    {
+                        "eq": [
+                            {"var": "row_id"},
+                            "tank=0|target=none|cooldown=0",
+                        ]
+                    },
+                    {"eq": [{"var": "state.target"}, None]},
+                ]
+            },
+        }
+    )
+
+    wrong_report = _checker(_artifact()).check([wrong_literal])
+    correct_report = _checker(_artifact()).check([correct_literal])
+
+    assert wrong_report.passed is False
+    assert wrong_report.results[0].violations[0].row_id == (
+        "tank=0|target=none|cooldown=0"
+    )
+    assert correct_report.passed is True
+
+
+def test_property_type_error_reports_property_and_row_context() -> None:
+    mismatched_comparison = PolicyPropertySpec.from_dict(
+        {
+            "id": "target_must_be_less_than_three",
+            "version": "1",
+            "assert": {"lt": [{"var": "state.target"}, 3]},
+        }
+    )
+
+    with pytest.raises(VPMValidationError) as error:
+        _checker(_artifact()).check([mismatched_comparison])
+
+    message = str(error.value)
+    assert "target_must_be_less_than_three@1" in message
+    assert "tank=0|target=none|cooldown=0" in message
+    assert "operator lt" in message
+    assert "NoneType" in message
+    assert "int" in message

@@ -1,1985 +1,1418 @@
-# ZeroModel Visual Policy Addressing
-## Unified Deterministic and Embedding Architecture — Comprehensive Design and External-Review Brief
+# ZeroModel Comprehensive External Review Brief
 
-**Document status:** Architecture proposal with one implemented baseline  
+**Required repository path:** `docs/drafts/ZeroModel-comprehensive-external-review-brief.md`  
+**Prepared:** 17 July 2026  
+**Review status:** Request for independent critical review  
 **Repository:** `ernanhughes/zeromodel`  
-**Current implemented baseline:** `VisualSignReader` / visual-index contract v2  
-**Primary purpose:** External technical review before the next implementation stage  
-**Scope:** Visual observation → governed VPM policy address → action or rejection  
-**Non-scope:** A universal computer-vision agent, arbitrary game-winning system, or autonomous physical controller
+**Review ref:** **[INSERT THE EXACT COMMIT SHA REVIEWED]**  
+**Primary area:** Governed visual observation addressing and the proposed next research direction  
+**Required posture:** Adversarial, evidence-led, code-specific, and willing to recommend stopping the direction
 
 ---
 
-# 1. Purpose of this document
+# 1. Your role
 
-This document defines the next-stage architecture for **visual policy addressing in ZeroModel**.
+You are being asked to act as an independent technical and research reviewer of ZeroModel.
 
-The system should allow an image, screenshot, camera frame, or short video observation to identify the nearest valid state or region inside a Visual Policy Map (VPM), after which the existing policy artifact selects the action.
+Do not behave as a collaborator trying to preserve the authors' current direction.
 
-The intended abstraction is:
+Your task is to determine:
 
-```text
-observation
-    ↓
-visual address provider
-    ↓
-accepted VPM row or policy region
-    ↓
-VPMPolicyLookup
-    ↓
-action + evidence + artifact trace
-```
+- what has actually been built;
+- what has actually been validated;
+- whether the research question is correctly formulated;
+- whether the experiment supports the authors' interpretation;
+- whether the architecture is unnecessarily complicated;
+- whether important baselines or failure modes are missing;
+- whether the proposed next direction follows from the evidence;
+- whether the entire visual-address direction should be narrowed, replaced, or stopped.
 
-The architecture deliberately supports more than one way to produce the visual address:
+The authors currently believe they have discovered a meaningful distinction between:
 
 ```text
-Path A — deterministic visual addressing
-    no model, no training, tightly controlled domain
-
-Path B — frozen embedding addressing
-    pretrained encoder, no user training
-
-Path C — automatically adapted embedding addressing
-    pretrained encoder + lightweight fitting performed by ZeroModel
-
-Path D — expert-supplied perception
-    custom trained encoder or projection, fully identity-pinned
-```
-
-The product principle is:
-
-> **Use the least intelligent visual-addressing mechanism that survives the domain’s validation requirements.**
-
-This preserves the cheap, deterministic path for users who cannot or should not train models, while allowing learned visual embeddings when real variation makes a fixed codebook inadequate.
-
----
-
-# 2. Executive summary
-
-ZeroModel already contains an implemented deterministic visual reader for a bounded arcade world.
-
-That implementation:
-
-- converts canonical images into fixed integer feature vectors;
-- stores those vectors in a visual-index artifact;
-- binds the visual index to an exact policy artifact using an `addresses` relation;
-- resolves an observation to a policy row or returns a rejection;
-- preserves feature, calibration, index, policy, and decision identities;
-- exhaustively recovers all 112 canonical arcade states;
-- reproduces the symbolic policy across 2,401 four-target waves;
-- validates a reachable ambiguity rejection;
-- does not mutate caller-owned image arrays;
-- explicitly limits its claim to exact quantized feature-codeword addressing in the committed fixture.
-
-This is a useful **Level 0 baseline**, but it does not provide broad visual generalization.
-
-The proposed architecture extends the same artifact and policy contract with a new family of **embedding-address artifacts**:
-
-```text
-image
-    ↓
-pinned visual encoder
-    ↓
-global embedding + optional local patch embeddings
-    ↓
-prototype or region index
-    ↓
-calibrated acceptance / ambiguity / evidence checks
-    ↓
-VPM row or region
-    ↓
-policy action
-```
-
-The user should not normally need to train a model. The preferred progression is:
-
-```text
-1. Try deterministic compilation.
-2. If validation fails, try a frozen pretrained encoder.
-3. If that fails, automatically fit a small projection or prototypes.
-4. Permit a custom trained encoder only for advanced domains.
-```
-
-The architecture therefore separates:
-
-- **perception**, which may require intelligence;
-- **policy**, which remains a durable identified artifact;
-- **address calibration**, which defines what observations are safe to map;
-- **execution**, which performs the selected action;
-- **verification**, which confirms the expected result.
-
-ZeroModel’s distinctive contribution is not the invention of image embeddings or nearest-neighbour retrieval.
-
-It is the governed handoff:
-
-> **A visual representation becomes an identity-bearing, calibrated and inspectable address into an independently identified policy artifact.**
-
----
-
-# 3. Status labels
-
-Every claim in this document uses one of four statuses.
-
-| Status | Meaning |
-|---|---|
-| **Implemented** | Present and tested in the current repository. |
-| **Next experiment** | Proposed immediate research or implementation work. |
-| **Research option** | Plausible future design requiring evidence before adoption. |
-| **Boundary** | Explicitly not claimed by the current system. |
-
-This distinction is essential. The document must not allow proposed embedding capabilities to be mistaken for already implemented features.
-
----
-
-# 4. The problem being solved
-
-## 4.1 Symbolic policy addressing
-
-The current finite policy reader expects a stable symbolic row identifier:
-
-```text
-tank=3|target=5|cooldown=0
-    ↓
-VPMPolicyLookup
-    ↓
-RIGHT
-```
-
-This works when the runtime system already exposes the exact state.
-
-Many real systems instead provide observations:
-
-- an image from a fixed camera;
-- a screenshot of a user interface;
-- a frame from a game;
-- a remote-desktop stream;
-- a short video clip;
-- a sensor visualization;
-- an equipment panel.
-
-The visual-addressing problem is:
-
-> **Given an observation, identify the policy row or policy region that it safely addresses without first requiring a human-written symbolic parser.**
-
-## 4.2 What “without a semantic middleman” means
-
-It does not mean that raw pixels magically become policy actions.
-
-Some transformation is always required.
-
-The distinction is between:
-
-### Human-semantic parsing
-
-```text
-image
-    ↓
-car count = 1
-car position = bridge centre
-direction = approaching
-    ↓
-policy row
+semantic visual similarity
 ```
 
 and:
 
-### Latent visual addressing
-
 ```text
-image or clip
-    ↓
-visual representation
-    ↓
-nearest safe policy region
+governed policy-address fidelity
 ```
 
-The second route may still use a pretrained encoder, patch features, prototypes and calibration. It avoids requiring a bespoke object/state parser for every application.
+They also currently believe the next promising direction is a factorized **Visual State Compiler**.
 
-## 4.3 Why this is useful
+Those are hypotheses to review, not conclusions you are required to accept.
 
-A stable visual-policy region can be reused at runtime without invoking a reasoning model.
+The most useful review may show that:
 
-Intelligence is used when needed to:
+- the benchmark asks the wrong question;
+- exact row identity is not the right requirement;
+- the negative result is caused by calibration rather than representation;
+- the learned path was tested unfairly;
+- the fixture is too synthetic to support any broader inference;
+- direct instrumentation makes the visual direction unnecessary;
+- the governance machinery adds little beyond conventional logging;
+- the factorized proposal is merely ordinary computer vision with additional names;
+- another simpler research programme would be better;
+- ZeroModel's strongest contribution lies elsewhere.
 
-- select or train an encoder;
-- discover useful visual structure;
-- define or adapt prototypes;
-- recover from novel interfaces;
-- propose new policy mappings.
-
-Once reviewed and calibrated, the stable result becomes a durable artifact.
-
-This follows the larger ZeroModel principle:
-
-> **When a decision is genuinely new, invoke intelligence. When the policy is stable, build a sign.**
+Be direct.
 
 ---
 
-# 5. Core architecture
+# 2. Review objectives
 
-## 5.1 Unified runtime pipeline
+Your review should answer five high-level questions.
 
-```text
-Raw observation
-    ↓
-Observation canonicalizer
-    ↓
-VisualAddressProvider
-    ↓
-VisualAddressDecision
-    ├── accepted row / region
-    └── rejection with evidence
-    ↓
-VPMPolicyLookup
-    ↓
-PolicyDecision
-    ↓
-Action executor
-    ↓
-Postcondition verifier
-```
+## 2.1 What is ZeroModel now?
 
-The address provider may be deterministic or learned. The policy reader should not need to know which one was used.
+Reconstruct the implemented system from the code rather than relying on the project's language.
 
-## 5.2 Shared interface
+State what is:
 
-```python
-from typing import Protocol
+- a data structure;
+- a deterministic algorithm;
+- a policy artifact;
+- a runtime consumer;
+- a visual representation;
+- a calibration artifact;
+- a benchmark harness;
+- a governance or lineage contract;
+- a research hypothesis;
+- a validated capability;
+- a metaphor.
 
-class VisualAddressProvider(Protocol):
-    def read(self, observation: "VisualObservation") -> "VisualAddressDecision":
-        ...
-```
+## 2.2 What did the full visual experiment actually establish?
 
-All providers return the same conceptual decision:
+Evaluate both the raw result and the interpretation.
 
-```python
-@dataclass(frozen=True)
-class VisualAddressDecision:
-    accepted: bool
-    reason: str
+Determine whether the evidence justifies saying:
 
-    observation_digest: str
-    representation_digest: str
+- the DINOv2 path failed;
+- normalized pixels are the stronger baseline;
+- action accuracy is misleading;
+- exact row recovery is the correct primary metric;
+- rejection is the central problem;
+- global semantic embeddings are mismatched to the task.
 
-    provider_kind: str
-    provider_version: str
-    address_artifact_id: str
-    policy_artifact_id: str
+## 2.3 What is missing or wrong?
 
-    nearest_row_id: str | None
-    nearest_score: float | None
-    second_row_id: str | None
-    second_score: float | None
-    ambiguity_measure: float | None
+Search for:
 
-    local_evidence_score: float | None
-    visible_evidence_fraction: float | None
-    critical_evidence_present: bool | None
+- implementation defects;
+- invalid assumptions;
+- leakage;
+- weak baselines;
+- inappropriate metrics;
+- underpowered comparisons;
+- calibration errors;
+- post-hoc reinterpretation;
+- governance complexity without value;
+- untested security properties;
+- unsupported positioning or novelty claims.
 
-    matched_row_id: str | None
-    exact_match: bool
-    accepted_by: tuple[str, ...]
+## 2.4 What should happen next?
 
-    trace: dict[str, object]
-```
+Do not default to the proposed Visual State Compiler.
 
-The address decision should remain separate from the policy decision.
+Compare at least:
 
-Composition:
+- stopping visual work;
+- direct instrumentation;
+- deterministic factor extraction;
+- conventional object detection;
+- task-specific classification;
+- supervised contrastive row learning;
+- patch-token evidence;
+- temporal state estimation;
+- a fixed-camera bounded installation;
+- removing exact row identity from the requirement;
+- focusing ZeroModel on policy artifacts rather than perception.
 
-```python
-address = provider.read(observation)
+## 2.5 What is the smallest decisive next experiment?
 
-if not address.accepted:
-    return RejectedVisualPolicyDecision.from_address(address)
+Recommend one bounded experiment or PR that produces the most information.
 
-policy_decision = policy_reader.read(address.matched_row_id)
-return VisualPolicyDecision.combine(address, policy_decision)
-```
+It should have:
 
-This separation prevents perception evidence from being conflated with action values.
-
----
-
-# 6. Architecture ladder
-
-## 6.1 Level 0 — exact deterministic codebook
-
-**Status: Implemented**
-
-```text
-canonical image
-    ↓
-fixed integer grayscale / pooling / quantization
-    ↓
-exact feature codeword
-    ↓
-VPM row
-```
-
-Best fit:
-
-- generated interfaces;
-- stable displays;
-- finite game screens;
-- equipment panels with fixed rendering;
-- fixed camera with negligible environmental variation;
-- known menus and alerts.
-
-Strengths:
-
-- no model;
-- no training;
-- tiny dependency footprint;
-- strong reproducibility;
-- simple artifact identity;
-- exact replay;
-- easy audit.
-
-Limitations:
-
-- little or no tolerance beyond quantization;
-- every valid state must be enumerable;
-- the renderer must visibly encode all policy-relevant state;
-- no learned invariance to lighting, translation, occlusion or appearance.
-
-## 6.2 Level 1 — deterministic neighbourhoods
-
-**Status: Next experiment**
-
-```text
-image
-    ↓
-fixed deterministic descriptor
-    ↓
-nearest known codeword
-    ↓
-per-state calibrated acceptance basin
-```
-
-Potential enhancements:
-
-- integer squared distances;
-- per-row acceptance radii;
-- ratio-based ambiguity;
-- classical local features;
-- perceptual hashes;
-- multiscale deterministic descriptors;
-- perturbation-calibrated thresholds.
-
-This remains a “dumb” architecture in the productive sense:
-
-- no training;
-- no external model;
-- predictable;
-- suitable for modest hardware.
-
-It should only be adopted if it demonstrates meaningful non-exact tolerance without unsafe false acceptance.
-
-## 6.3 Level 2 — frozen pretrained embeddings
-
-**Status: Next experiment**
-
-```text
-image
-    ↓
-frozen pretrained visual encoder
-    ↓
-embedding and patch tokens
-    ↓
-stored prototypes
-    ↓
-calibrated VPM region
-```
-
-No user training is required.
-
-The user supplies:
-
-- example images;
-- a VPM policy artifact;
-- optional row labels or demonstrations;
-- a validation set or generated variants.
-
-ZeroModel performs:
-
-- embedding extraction;
-- prototype selection;
-- clustering if necessary;
-- threshold calibration;
-- OOD tests;
-- artifact construction.
-
-Candidate encoders include DINOv2, DINOv3 or another pinned vision foundation model. The architecture must remain encoder-agnostic.
-
-## 6.4 Level 3 — automatic lightweight adaptation
-
-**Status: Research option**
-
-```text
-frozen encoder output
-    ↓
-small projection or aggregation head
-    ↓
-policy-aware embedding
-```
-
-The user does not run an ML training workflow manually.
-
-A ZeroModel compile command may fit:
-
-- a linear projection;
-- a shallow MLP;
-- a NetVLAD-style aggregator;
-- prototype clusters;
-- class-conditional covariance;
-- a metric-learning head.
-
-The resulting weights, dataset, configuration and calibration are all identified and frozen.
-
-This is best treated as **compilation with fitting**, not as an opaque autonomous training system.
-
-## 6.5 Level 4 — expert custom perception
-
-**Status: Research option**
-
-Advanced users may supply:
-
-- a custom encoder;
-- a fine-tuned foundation model;
-- a video encoder;
-- a domain-specific detector;
-- a segmentation model;
-- a multimodal sensor fusion model.
-
-ZeroModel’s responsibility becomes:
-
-- verify the supplied model identity;
-- verify preprocessing identity;
-- calibrate the representation against the policy;
-- preserve artifact lineage;
-- reject unsupported observations;
-- expose evidence and drift.
-
----
-
-# 7. Artifact model
-
-The architecture should use separate artifacts for separate responsibilities.
-
-## 7.1 Policy artifact
-
-**Status: Implemented**
-
-Contains:
-
-- stable row or region IDs;
-- action values;
-- evidence metrics;
-- source mapping;
-- policy provenance;
-- artifact identity.
-
-It must not contain encoder weights or raw image datasets.
-
-## 7.2 Visual address artifact
-
-Contains either deterministic descriptors or learned prototypes.
-
-Common metadata:
-
-```json
-{
-  "kind": "visual_address_index",
-  "address_kind": "deterministic_codebook | embedding_prototype | embedding_region",
-  "address_version": "...",
-  "addresses_policy_artifact_id": "...",
-  "representation_dimension": 256,
-  "distance_or_similarity": "cosine",
-  "normalization": "l2",
-  "calibration_digest": "...",
-  "observation_spec_digest": "...",
-  "provider_spec_digest": "..."
-}
-```
-
-Common provenance:
-
-```json
-{
-  "kind": "visual_address_index",
-  "parents": [
-    {
-      "artifact_id": "<policy artifact id>",
-      "relation": "addresses"
-    }
-  ]
-}
-```
-
-## 7.3 Encoder manifest artifact
-
-Required for learned paths.
-
-```json
-{
-  "kind": "visual_encoder_manifest",
-  "architecture": "dinov3_vits16",
-  "weights_digest": "sha256:...",
-  "code_version": "...",
-  "framework": "pytorch",
-  "framework_version": "...",
-  "preprocessing_digest": "...",
-  "output_contract": {
-    "global_dimension": 384,
-    "patch_dimension": 384,
-    "normalization": "l2"
-  },
-  "license_record": "...",
-  "source_record": "..."
-}
-```
-
-The manifest identifies the encoder; it need not embed the weight bytes inside a `.vpm` file.
-
-## 7.4 Projection or aggregator artifact
-
-Required only when fitted.
-
-```json
-{
-  "kind": "visual_projection",
-  "architecture": "linear | mlp | netvlad",
-  "weights_digest": "sha256:...",
-  "input_dimension": 384,
-  "output_dimension": 256,
-  "training_manifest_digest": "...",
-  "optimizer_spec_digest": "...",
-  "seed": 1234,
-  "parent_encoder_manifest_id": "..."
-}
-```
-
-## 7.5 Calibration artifact
-
-Calibration should be independently inspectable rather than hidden in one metadata dictionary.
-
-It records:
-
-- development dataset identity;
-- calibration split identity;
-- OOD split identity;
-- global and per-region thresholds;
-- ambiguity rule;
-- local evidence rule;
-- operating point;
-- false-acceptance estimate;
-- false-rejection estimate;
-- subgroup results;
-- corruption and occlusion curves;
-- kill-condition result.
-
-## 7.6 Validation report artifact
-
-A report should link the complete chain:
-
-```text
-validation report
-    validates → visual address artifact
-    validates → policy artifact
-    validates → encoder manifest
-    validates → calibration artifact
-```
-
-This allows the deployed decision trace to cite exactly what was validated.
-
-## 7.7 Dataset manifest
-
-The dataset itself may live outside the repository, but the manifest must be identity-bearing.
-
-It should include:
-
-- observation IDs;
-- labels or policy-row bindings;
-- corruption family;
-- split assignment;
-- source category;
-- transformation parameters;
-- content digests;
-- licensing and privacy metadata where relevant.
-
----
-
-# 8. Observation contract
-
-## 8.1 Image observation
-
-```python
-@dataclass(frozen=True)
-class ImageObservation:
-    pixels: object
-    timestamp: str | None
-    source_id: str
-    sequence_id: str | None
-    metadata: dict[str, object]
-```
-
-Canonicalization must define:
-
-- colour channel order;
-- orientation;
-- crop;
-- resize;
-- aspect-ratio policy;
-- value range;
-- normalization;
-- alpha handling;
-- camera or screen rectification;
-- digest semantics.
-
-## 8.2 Video observation
-
-```python
-@dataclass(frozen=True)
-class VideoObservation:
-    frames: tuple[ImageObservation, ...]
-    start_timestamp: str
-    end_timestamp: str
-    sample_rate_hz: float
-```
-
-Video becomes necessary when the action depends on motion or history:
-
-- approaching versus departing;
-- opening versus closing;
-- damage direction;
-- interface transition;
-- object entering versus leaving.
-
-## 8.3 Multisensor observation
-
-```python
-@dataclass(frozen=True)
-class MultisensorObservation:
-    image_or_video: ImageObservation | VideoObservation
-    scalar_signals: dict[str, float | int | bool | str]
-    previous_policy_state: str | None
-```
-
-For safety-relevant infrastructure, visual evidence should usually supplement rather than replace physical sensors.
-
----
-
-# 9. Deterministic path
-
-## 9.1 Current implemented contract
-
-The repository currently implements:
-
-- integer BT.601 grayscale conversion;
-- exact integer box pooling;
-- uniform integer quantization;
-- a separate visual-index artifact;
-- an `addresses` policy parent;
-- compile-time separation audit;
-- exact-feature fast path;
-- nearest-candidate evidence;
-- distance rejection;
-- mathematically effective absolute-gap ambiguity rejection;
-- caller-memory ownership;
-- complete decision trace.
-
-The contract is explicitly bounded. It does not claim open-world perception or learned generalization.
-
-## 9.2 Appropriate future deterministic enhancements
-
-A deterministic v3 experiment may compare:
-
-1. current pooled grayscale;
-2. colour histograms;
-3. edge-orientation histograms;
-4. multiscale pooled descriptors;
-5. perceptual hashing;
-6. local binary patterns;
-7. classical keypoint descriptors;
-8. combinations of deterministic features.
-
-Every candidate must be treated as a declared feature contract with its own identity.
-
-## 9.3 Per-row calibration
-
-A global radius is controlled by the most confusable pair.
-
-A per-row radius may be derived from:
-
-- nearest valid neighbour;
-- within-state perturbation distribution;
-- distance to nearest conflicting-action region;
-- explicit false-acceptance target.
-
-A safer policy-aware radius is:
-
-```text
-maximum accepted radius for row r
-    constrained by
-minimum distance to any row requiring a conflicting action
-```
-
-This avoids giving a state a large radius merely because its nearest same-action neighbour is far away.
-
-## 9.4 Deterministic kill condition
-
-Do not keep increasing feature complexity indefinitely.
-
-Move to the frozen-embedding path when:
-
-- legitimate variation overlaps conflicting policy states;
-- small lighting or viewpoint changes cause unacceptable rejection;
-- robustness requires brittle domain-specific feature engineering;
-- the deterministic descriptor becomes more complex than a pinned encoder;
-- false acceptance cannot be controlled.
-
----
-
-# 10. Frozen embedding path
-
-## 10.1 Representation
-
-A visual encoder may produce:
-
-```text
-global embedding:
-    one vector representing the image
-
-patch embeddings:
-    one vector for each spatial image patch
-```
-
-The global vector supports fast candidate retrieval.
-
-Patch vectors support local verification and occlusion reasoning.
-
-## 10.2 Why a frozen encoder is the default learned path
-
-A frozen encoder:
-
-- requires no domain training;
-- is easy to pin by digest;
-- can be reused across applications;
-- limits the trainable surface;
-- allows prototypes to be rebuilt cheaply;
-- is easier to govern than an end-to-end trained policy.
-
-DINOv2 and DINOv3 are relevant because they produce general-purpose global and dense visual features. DINOv3’s official model card exposes class and patch tokens and recommends frozen-feature use before fine-tuning.
-
-Encoder choice remains an experiment, not a locked dependency.
-
-## 10.3 Prototype construction
-
-For each VPM row or policy region, collect embeddings from valid examples.
-
-Possible prototype schemes:
-
-### Single centroid
-
-```text
-all row embeddings
-    ↓
-normalized mean
-    ↓
-one prototype
-```
-
-Simple, but may average incompatible visual modes.
-
-### Multiple medoids
-
-```text
-row embeddings
-    ↓
-cluster
-    ↓
-representative real observations
-```
-
-Safer when one state has several appearance modes.
-
-### Region density model
-
-```text
-row embeddings
-    ↓
-mean + covariance or non-parametric neighbourhood
-```
-
-Potentially more accurate, but harder to interpret and calibrate.
-
-The first experiment should compare centroid and medoid prototypes.
-
-## 10.4 Similarity
-
-For normalized vectors:
-
-```text
-cosine similarity = prototype · query
-cosine distance = 1 - similarity
-```
-
-The trace must record:
-
-- nearest prototype;
-- owning row;
-- nearest similarity;
-- second-nearest conflicting-row similarity;
-- ambiguity margin;
-- threshold used;
-- prototype ID;
-- encoder identity.
-
-## 10.5 Policy-region versus exact-row retrieval
-
-Two evaluation targets must be kept separate.
-
-### Exact-row retrieval
-
-The system identifies the original simulator or workflow state.
-
-Useful for diagnostics and exhaustive comparison.
-
-### Action-equivalent region retrieval
-
-The system may confuse exact rows while still choosing the same safe action.
-
-Useful for deployment when exact state distinctions are unnecessary.
-
-The artifact must declare which contract it provides:
-
-```text
-address_semantics:
-    exact_row
-    action_equivalent_region
-    hierarchical_region_then_row
-```
-
----
-
-# 11. Local and global evidence
-
-## 11.1 Why global embeddings are insufficient
-
-A global embedding may remain similar even when the exact decision-critical object is hidden.
-
-Example:
-
-```text
-bridge scene with a car
-bridge scene with the car region removed
-```
-
-The road, water, barriers and background may dominate the global descriptor.
-
-The runtime should not accept “bridge clear” merely because the visible background resembles clear examples.
-
-## 11.2 Two-stage retrieval
-
-```text
-query global embedding
-    ↓
-retrieve top candidate regions
-    ↓
-compare local patch evidence
-    ↓
-accept or reject
-```
-
-The local verification may measure:
-
-- fraction of expected patches matched;
-- spatially consistent patch correspondences;
-- presence of critical patch groups;
-- patch entropy;
-- amount of unmasked visual evidence;
-- consistency across several recent frames.
-
-## 11.3 Critical evidence
-
-Critical evidence should not be inferred solely from raw attention maps.
-
-Possible sources:
-
-1. annotated critical regions;
-2. learned patch importance from held-out interventions;
-3. policy-conflict analysis;
-4. occlusion sensitivity tests;
-5. counterfactual masking;
-6. physical sensor cross-checks.
-
-A region is decision-critical when removing it changes the safe policy action or destroys the evidence needed to distinguish conflicting actions.
-
-## 11.4 Occlusion contract
-
-The system must not claim that any image remains understandable after arbitrary 50% removal.
-
-The valid claim is:
-
-> **The address should remain stable under removal of non-critical evidence within the validated corruption envelope, and it should reject when critical evidence is missing.**
-
-Two separate tests are required:
-
-### Non-critical occlusion
-
-Expected:
-
-- same policy region;
-- accepted;
-- local evidence remains above threshold.
-
-### Critical occlusion
-
-Expected:
-
-- rejection;
-- reason `insufficient_decision_evidence`;
-- no action or only a declared fail-safe action.
-
-## 11.5 Aggregation methods
-
-Potential aggregation methods include:
-
-- class token;
-- mean patch pooling;
-- generalized mean pooling;
-- NetVLAD-style aggregation;
-- attention-weighted pooling;
-- robust trimmed pooling;
-- multiple local prototype banks.
-
-NetVLAD is relevant because it aggregates local descriptors into a fixed-length representation and was originally designed for place recognition under appearance change.
-
-DELG is relevant because it explicitly combines global and local image features.
-
-These are candidates for comparison, not mandatory architecture.
-
----
-
-# 12. Policy-aware embedding
-
-## 12.1 Motivation
-
-A generic image embedding preserves visual similarity.
-
-A policy-aware embedding should preserve distinctions that matter to action.
-
-Example:
-
-```text
-two visually similar images
-    but
-one requires STOP and one requires GO
-```
-
-These must be strongly separated.
-
-Conversely:
-
-```text
-two visually different images
-    but
-both require the same safe action
-```
-
-These may occupy the same broad policy region.
-
-## 12.2 Training relationships
-
-The fitting process may use four relationship tiers:
-
-```text
-same exact row:
-    strongest attraction
-
-different row, same policy region:
-    moderate attraction or weak separation
-
-different row, different action:
-    strong separation
-
-critical conflicting actions:
-    strongest separation
-```
-
-Criticality may come from:
-
-- policy decision margin;
-- Q-value consequence;
-- declared safety relationship;
-- verification properties;
-- manually reviewed action-pair severity.
-
-## 12.3 Recommended first adaptation
-
-Do not begin with a large MLP and NetVLAD stack.
-
-Start with:
-
-```text
-frozen encoder
-    ↓
-linear projection
-    ↓
-L2 normalization
-    ↓
-multiple prototypes per row
-```
-
-This provides a clean baseline for determining whether policy-aware adaptation adds value.
-
-Only add trainable aggregation when the frozen features plus linear projection fail.
-
-## 12.4 Training artifacts
-
-A fitted projection must record:
-
-- encoder identity;
-- initialization;
-- trainable parameter shapes;
-- random seed;
-- optimizer;
-- learning rate;
-- epochs;
-- early-stopping rule;
-- training split;
-- validation split;
-- negative sampling;
-- loss definition;
-- action relationship matrix;
-- resulting weights digest.
-
----
-
-# 13. Temporal addressing
-
-## 13.1 Why single images may be insufficient
-
-Some policy facts are not observable from one frame:
-
-- approaching versus departing;
-- object velocity;
-- opening versus closing;
-- attack direction;
-- previous interface step;
-- whether a warning is new or stale.
-
-The correct address may therefore depend on:
-
-```text
-recent frames + previous accepted policy state
-```
-
-## 13.2 Temporal architecture
-
-```text
-short frame sequence
-    ↓
-video encoder or frame embeddings
-    ↓
-temporal aggregator
-    ↓
-temporal visual address
-    ↓
-VPM transition policy
-```
-
-Possible implementation levels:
-
-1. concatenate recent frozen image embeddings;
-2. exponentially weighted history;
-3. small recurrent or temporal projection;
-4. frozen V-JEPA-style video encoder;
-5. custom domain video model.
-
-Again, use the cheapest validated level.
-
-## 13.3 VPM transition evidence
-
-A temporal decision should record:
-
-- previous accepted row;
-- current candidate row;
-- expected transition;
-- transition likelihood or distance;
-- whether the transition is allowed;
-- whether the observation implies a jump;
-- time since previous state.
-
-A visually plausible state that violates the workflow or physical transition model should be rejected.
-
----
-
-# 14. Compiler workflow
-
-The intended user experience is not “train a computer-vision model.”
-
-It is:
-
-```bash
-zeromodel visual compile \
-  --policy policy.vpm \
-  --examples examples/manifest.json \
-  --mode auto \
-  --output visual-address.vpm
-```
-
-## 14.1 `--mode deterministic`
-
-Runs:
-
-- feature contract;
-- exact separation;
-- perturbation generation;
-- calibration;
-- validation report.
-
-Fails if the deterministic path does not meet targets.
-
-## 14.2 `--mode frozen`
-
-Runs:
-
-- pinned encoder;
-- global and patch extraction;
-- prototype construction;
-- calibration;
-- held-out validation;
-- artifact generation.
-
-No training.
-
-## 14.3 `--mode adapt`
-
-Runs:
-
-- frozen encoder;
-- lightweight projection fitting;
-- prototype construction;
-- calibration;
-- held-out evaluation;
-- comparison with frozen mode.
-
-The adapted artifact is emitted only if it improves the declared objective without violating false-acceptance limits.
-
-## 14.4 `--mode auto`
-
-Runs the architecture ladder in order.
-
-Example decision:
-
-```json
-{
-  "selected_mode": "frozen_embedding",
-  "rejected_modes": [
-    {
-      "mode": "deterministic",
-      "reason": "held_out_translation_false_rejection_rate_exceeded"
-    }
-  ],
-  "selection_evidence": {
-    "action_accuracy": 0.984,
-    "false_acceptance_rate": 0.004,
-    "false_rejection_rate": 0.021
-  }
-}
-```
-
-The selected mode and failed alternatives should become part of the build report.
-
----
-
-# 15. Runtime reader
-
-## 15.1 Unified reader
-
-```python
-class VisualPolicyReader:
-    def __init__(
-        self,
-        address_provider: VisualAddressProvider,
-        policy_lookup: VPMPolicyLookup,
-    ) -> None:
-        self.address_provider = address_provider
-        self.policy_lookup = policy_lookup
-
-    def read(self, observation: VisualObservation) -> VisualPolicyDecision:
-        address = self.address_provider.read(observation)
-        if not address.accepted or address.matched_row_id is None:
-            return VisualPolicyDecision.rejected(address)
-
-        policy = self.policy_lookup.read(address.matched_row_id)
-        return VisualPolicyDecision.accepted(address, policy)
-```
-
-## 15.2 Rejection reasons
-
-Common reasons:
-
-```text
-unsupported_observation_shape
-observation_preprocessing_failed
-no_visual_region_within_threshold
-ambiguous_visual_address
-insufficient_decision_evidence
-critical_region_missing
-unexpected_temporal_transition
-encoder_identity_mismatch
-address_policy_identity_mismatch
-calibration_not_valid_for_source
-source_drift_detected
-```
-
-## 15.3 Fail-safe actions
-
-A rejection does not always mean “do nothing.”
-
-The policy may declare a rejection action:
-
-```text
-web workflow:
-    stop and request review
-
-industrial machine:
-    safe stop
-
-bridge:
-    lock opening mechanism
-
-game:
-    invoke exploratory policy
-
-monitoring:
-    record incident and alert
-```
-
-The fail-safe action belongs to a separate, explicit safety policy. It must not be invented by the address provider.
-
----
-
-# 16. Drift and recalibration
-
-## 16.1 Drift sources
-
-- camera movement;
-- replacement camera;
-- changed UI theme;
-- lighting season;
-- new vehicle types;
-- altered sprite rendering;
-- encoder library change;
-- preprocessing change;
-- compression pipeline;
-- domain population change.
-
-## 16.2 Drift signals
-
-- rising nearest distance;
-- shrinking nearest/second margin;
-- increasing rejection;
-- changed patch-evidence distribution;
-- transition inconsistencies;
-- operator overrides;
-- new clusters outside known regions.
-
-## 16.3 Recalibration
-
-A recalibration should create a new artifact, not mutate an existing one.
-
-```text
-old address artifact
-    superseded_by → new address artifact
-
-new calibration
-    calibrated_from → new dataset manifest
-
-validation report
-    validates → new artifact
-```
-
-A policy artifact may remain unchanged while its observation-address artifact evolves.
-
----
-
-# 17. Security and safety
-
-## 17.1 Threats
-
-- adversarial perturbation;
-- replayed image;
-- camera substitution;
-- display spoofing;
-- prototype poisoning;
-- mislabeled examples;
-- encoder-weight substitution;
-- crafted near-prototype images;
-- hidden critical object;
-- stale frame;
-- unexpected crop;
-- model supply-chain compromise.
-
-## 17.2 Required controls
-
-- weight and preprocessing digests;
-- artifact-policy binding;
-- source identity;
-- timestamp freshness;
-- replay detection where needed;
-- signed deployment manifests for critical systems;
-- held-out corruption tests;
-- explicit OOD set;
-- critical-evidence checks;
-- sensor fusion for physical control;
-- rate-limited or approval-gated actions;
-- complete rejection trace.
-
-## 17.3 Safety boundary
-
-For physical infrastructure:
-
-> **Visual embedding similarity must not be treated as sufficient proof of safety.**
-
-The system should combine visual evidence with:
-
-- physical occupancy sensors;
-- mechanism state;
-- interlocks;
-- emergency stop;
-- previous transition state;
-- operator approval where required.
-
----
-
-# 18. First experiment: Arcade Visual Address Benchmark
-
-The current arcade environment remains the best calibration fixture because it provides complete symbolic ground truth.
-
-## 18.1 Dataset
-
-For each of 112 policy rows, generate at least 100 visual variants:
-
-```text
-112 × 100 = 11,200 observations
-```
-
-Variation families:
-
-- clean renderer variants;
-- brightness and contrast;
-- colour palette;
-- sprite shape;
-- one- and two-pixel translation;
-- scale;
-- background texture;
-- noise;
-- JPEG-style degradation;
-- random masks;
-- structured non-critical masks;
-- structured critical masks;
-- partial crop.
-
-## 18.2 Split design
-
-Do not use a simple random image split.
-
-Hold out complete variation families.
-
-Example:
-
-```text
-train/calibrate:
-    red and blue sprites
-    brightness changes
-    random masks
-
-held-out validation:
-    green sprites
-    new target shape
-    structured occlusion
-```
-
-This measures generalization rather than memorization.
-
-## 18.3 Systems compared
-
-### System A
-
-Current deterministic visual reader.
-
-### System B
-
-Enhanced deterministic descriptor with per-row calibration.
-
-### System C
-
-Frozen encoder global prototype.
-
-### System D
-
-Frozen encoder global retrieval plus local patch verification.
-
-### System E
-
-Frozen encoder plus linear policy-aware projection.
-
-### System F
-
-Optional NetVLAD-style aggregation plus projection.
-
-## 18.4 Metrics
-
-- exact row retrieval;
-- action-equivalent retrieval;
-- top-k row retrieval;
-- acceptance rate;
-- false acceptance;
-- false rejection;
-- conflicting-action error;
-- OOD rejection;
-- critical-mask rejection;
-- non-critical-mask stability;
-- nearest/second margin;
-- calibration error;
-- runtime;
-- memory;
-- artifact size;
-- prototype count;
-- cross-version reproducibility.
-
-## 18.5 Required corruption curves
-
-Evaluate at:
-
-```text
-0%
-10%
-25%
-40%
-50%
-60%
-75%
-```
-
-For each corruption level, report:
-
-- exact row accuracy;
-- action accuracy;
-- false acceptance;
-- rejection;
-- critical versus non-critical masking.
-
-## 18.6 Success criterion
-
-The system must demonstrate both:
-
-1. correct action under substantial **non-critical** corruption;
-2. rejection under removal of **critical** evidence.
-
-A high average accuracy that accepts critically corrupted images is a failure.
-
-## 18.7 Kill conditions
-
-Terminate or radically narrow the embedding direction if:
-
-1. a direct classifier matches or exceeds action accuracy, rejection and inspectability while the VPM layer adds no policy-governance value;
-2. local evidence cannot prevent unsafe acceptance under critical masking;
-3. calibration does not transfer to held-out corruption families;
-4. prototypes require nearly one exemplar per observation, reducing the system to a large memory lookup;
-5. the frozen encoder’s license, access, runtime or hardware makes the claimed user experience unrealistic;
-6. the deterministic path outperforms the learned path for the target domain.
-
----
-
-# 19. Role of Bertin and matrix pattern analysis
-
-Bertin-style ordering is not the runtime matcher.
-
-The runtime uses high-dimensional representations.
-
-Bertin analysis can make the visual-policy geometry inspectable.
-
-```text
-prototype similarity matrix
-    ↓
-pattern detector / seriation
-    ↓
-ordered VPM inspection view
-```
-
-Questions it may expose:
-
-- Do same-action regions form coherent blocks?
-- Are conflicting actions visually entangled?
-- Is there a smooth progression between operational states?
-- Which rows form the closest conflicting pair?
-- Which prototypes are isolated?
-- Does a corruption family form its own unwanted cluster?
-- Does adaptation improve policy separation?
-- Are there visually similar states with incompatible actions?
-
-A discovered ordering should be frozen into a linked view artifact, not treated as proof of semantic correctness.
-
----
-
-# 20. Ten practical application classes
-
-These are examples of where the architecture might be useful. They are not all validated use cases.
-
-| # | Application | Likely starting level | Addressed policy |
-|---|---|---|---|
-| 1 | **Known web workflow state recognition** | DOM/deterministic, visual fallback | Which workflow step and action is valid |
-| 2 | **Legacy or remote-desktop automation** | Frozen screenshot embeddings | Which known screen or dialog is visible |
-| 3 | **Kiosk and check-in flows** | Deterministic signs | Continue, request input, reject unexpected screen |
-| 4 | **Industrial control-panel monitoring** | Deterministic or frozen embedding | Normal, warning, alarm, safe-stop state |
-| 5 | **Parking-bay or loading-zone occupancy** | Frozen embedding + local evidence | Clear, occupied, obstructed, uncertain |
-| 6 | **Bridge or crossing operational state** | Temporal embedding + physical sensors | Clear, approaching, occupied, exiting, blocked |
-| 7 | **Production-line station state** | Deterministic or frozen embedding | Ready, processing, jammed, missing part |
-| 8 | **Warehouse aisle or robot-zone supervision** | Temporal embedding | Clear, human present, obstruction, uncertain |
-| 9 | **Game menus, tutorials and bounded arenas** | Hybrid deterministic/embedding | Menu state, tactical region, action primitive |
-| 10 | **Visual regression and deployment verification** | Screenshot/DOM embeddings | Expected state, changed state, release-blocking anomaly |
-
-## 20.1 Why web workflows are illustrative but not the whole project
-
-A browser often exposes a DOM or accessibility tree, so visual embeddings should not replace exact structure unnecessarily.
-
-The web example demonstrates the broader architecture:
-
-```text
-observe
-    → address
-    → decide
-    → act
-    → verify
-```
-
-But the visual-policy contribution is most distinctive where exact symbolic structure is absent, unreliable or inaccessible.
-
-## 20.2 Why Quake is not an immediate claim
-
-A complete Quake-playing system additionally requires:
-
-- screen localization;
-- video understanding;
-- memory;
-- policy learning;
-- continuous controller output;
-- feedback;
-- exploration;
-- map and opponent adaptation.
-
-Visual addressing is one component, not the complete agent.
-
----
-
-# 21. Claims ladder
-
-## Claim V1 — implemented
-
-> ZeroModel can compile a deterministic visual index for the committed closed arcade world and recover exact quantized feature codewords, policy rows and actions from canonical observations.
-
-## Claim V2 — implemented
-
-> The deterministic reader can reject declared distant and ambiguous fixtures while preserving complete artifact and decision evidence.
-
-## Claim V3 — not yet supported
-
-> Deterministic visual addressing tolerates meaningful non-exact visual variation.
-
-Requires perturbation benchmarks.
-
-## Claim V4 — next experiment
-
-> A frozen pretrained visual encoder can address bounded policy regions from held-out visual variants without user training.
-
-Requires the arcade embedding benchmark.
-
-## Claim V5 — not yet supported
-
-> Local and global evidence can preserve correct action under substantial non-critical occlusion while rejecting critical occlusion.
-
-Requires explicit intervention tests.
-
-## Claim V6 — not yet supported
-
-> Policy-aware metric fitting improves action separation over frozen generic embeddings.
-
-Requires a baseline-controlled held-out experiment.
-
-## Claim V7 — not supported
-
-> ZeroModel provides general image understanding or universal visual control.
-
-## Claim V8 — not supported
-
-> An arbitrary image with half of its pixels removed remains understandable.
-
-## Claim V9 — not supported
-
-> A visual-only system is sufficient for safety-critical infrastructure control.
-
----
-
-# 22. Recommended implementation sequence
-
-## PR A — experiment contracts
-
-No heavy model dependency yet.
-
-Add:
-
-- dataset manifest schema;
-- corruption specification;
-- benchmark result schema;
-- address-provider protocol;
-- common visual-address decision;
-- baseline evaluation harness;
-- claims-audit entry.
-
-## PR B — frozen embedding baseline
-
-Add:
-
-- optional vision extra;
-- encoder manifest;
-- frozen encoder adapter;
-- global prototype artifact;
-- cosine matcher;
-- held-out evaluation;
-- exact policy binding;
-- no user training.
-
-## PR C — local evidence
-
-Add:
-
-- patch-token contract;
-- local prototype store;
-- local agreement metric;
-- critical-mask evaluation;
-- `insufficient_decision_evidence` rejection.
-
-## PR D — automatic lightweight adaptation
-
-Add only after frozen baselines:
-
-- linear projection;
-- policy-aware objective;
-- training manifest;
-- weights artifact;
-- comparison report;
-- selection gate.
-
-## PR E — temporal observation
-
-Add:
-
-- clip contract;
-- previous-state evidence;
-- temporal transition validation;
-- a motion-dependent fixture.
-
----
-
-# 23. Important corrections to supplied proposals
-
-The supplied design drafts contain valuable ideas, but they should not be implemented verbatim.
-
-## 23.1 Do not call model inference “zero inference”
-
-A frozen encoder still performs model inference at runtime.
-
-The valid claim is:
-
-> No reasoning model or policy model is invoked after visual encoding.
-
-## 23.2 Do not assume DINOv3 is a simple dependency
-
-The official DINOv3 repository provides strong dense features, but its weights and custom licence require review, and its training stack is substantial.
-
-The architecture must support alternative encoders.
-
-## 23.3 Do not store large prototype banks in arbitrary metadata
-
-Embeddings, patch banks and calibration tables should be structured artifact values or referenced content-addressed resources.
-
-Metadata should describe the schema and identities.
-
-## 23.4 Do not average all patch grids blindly
-
-Spatially corresponding patch means may blur multiple poses and transformations.
-
-Use:
-
-- medoids;
-- clustering;
-- spatially aware matching;
-- key patch selection;
-- or learned aggregation.
-
-## 23.5 Do not set target metrics before measuring task difficulty
-
-Figures such as “95% at 50% occlusion” are hypotheses, not justified universal thresholds.
-
-The benchmark should publish full operating curves.
-
-## 23.6 Do not treat attention as proof of evidence
-
-Attention maps are not automatically calibrated explanations or critical-region detectors.
-
-Critical evidence requires intervention-based validation.
-
-## 23.7 Keep policy and address artifacts separate
-
-Embedding prototypes should not be injected into the policy artifact’s metadata.
-
-The separate-artifact architecture remains the stronger design.
-
----
-
-# 24. External-review instructions
-
-Please evaluate the architecture as a proposed ZeroModel direction, not as an already completed product.
-
-Distinguish findings as:
-
-```text
-blocker
-major
-minor
-optional enhancement
-research question
-```
-
-For each finding, provide:
-
-```text
-Severity:
-Area:
-Finding:
-Why it matters:
-Smallest correction:
-Required experiment or test:
-Claims impact:
-```
-
-Do not reward the design for being ambitious. Look for ways it could become an unnecessary wrapper around standard embedding retrieval.
-
----
-
-# 25. Questions for reviewers
-
-## Architecture
-
-1. Is the shared `VisualAddressProvider` abstraction the correct seam?
-2. Should the address decision and policy decision remain separate?
-3. Is `addresses` the correct policy relationship?
-4. Should encoder, projection, prototype and calibration records be separate artifacts?
-5. Is a VPM artifact an appropriate container for dense embedding prototypes?
-6. Should embedding storage use an external content-addressed matrix referenced by the VPM?
-7. Are exact rows and action-equivalent regions being distinguished clearly enough?
-8. Is the architecture actually ZeroModel-specific, or merely nearest-prototype classification with provenance?
-
-## Product ladder
-
-9. Is “least intelligent mechanism that passes validation” a sound product principle?
-10. Is the deterministic path worth preserving?
-11. Can frozen embeddings genuinely deliver a no-training user experience?
-12. What should cause `auto` mode to move from deterministic to frozen?
-13. What should cause it to move from frozen to adapted?
-14. Should automatic adaptation be in ZeroModel core or an optional research package?
-15. Is expert-supplied custom perception too broad for the project?
-
-## Representation
-
-16. Which frozen encoders should be benchmarked first?
-17. Is a global class token sufficient for the first baseline?
-18. Should mean patch pooling precede NetVLAD?
-19. Are medoids preferable to centroids?
-20. How many prototypes per row should be permitted?
-21. Should prototypes represent exact rows, action regions or both?
-22. What representation is most robust to benign partial occlusion?
-23. Does policy-aware metric learning risk hiding visually meaningful distinctions?
-
-## Calibration
-
-24. How should per-prototype acceptance thresholds be estimated?
-25. Should calibration optimize false acceptance globally or per conflicting action?
-26. Is nearest/second-nearest margin sufficient?
-27. Should OOD rejection include an explicit background or unknown distribution?
-28. How should uncertainty be combined across global and local evidence?
-29. Should threshold selection be conformal, percentile-based, EVT-based or simpler?
-30. How should calibration validity be scoped to a camera, renderer or source?
-31. What minimum validation set is needed before emitting a deployable artifact?
-
-## Occlusion
-
-32. How should the system distinguish non-critical from critical masking?
-33. Is patch matching enough when objects move spatially?
-34. Should local matching preserve geometry?
-35. What intervention test best identifies decision-critical patches?
-36. How should the reader react when the global match is strong but local evidence is missing?
-37. Is “insufficient decision evidence” a separate rejection class from OOD?
-38. Should recent frames be used to infer missing current evidence?
-
-## Temporal systems
-
-39. At what point should the architecture move from images to video?
-40. Is previous accepted VPM state sufficient as lightweight memory?
-41. Should temporal transition rules be inside the policy artifact or a separate transition artifact?
-42. Which simple motion-dependent fixture should precede a bridge example?
-43. Is V-JEPA-style encoding relevant, or would stacked image embeddings suffice?
-
-## Safety and governance
-
-44. Are artifact digests enough, or are signatures required?
-45. How should encoder licence and weight access be recorded?
-46. What attacks are most likely against prototype addressing?
-47. Should safety-critical actions require independent sensor agreement?
-48. How should human overrides become calibration evidence?
-49. What drift signals should automatically disable an address artifact?
-50. What data or traces must be redacted?
-
-## Evidence and novelty
-
-51. What baseline would most threaten the need for this architecture?
-52. If a linear classifier over frozen embeddings works, what does VPM add?
-53. What inspection study would demonstrate value beyond accuracy?
-54. Can Bertin ordering reveal policy conflicts that ordinary confusion matrices miss?
-55. What result would justify calling the learned space a “Visual Policy Map”?
-56. What result should cause the project to stop using that term?
-57. Is the arcade benchmark too synthetic to decide the architecture?
-58. Which fixed-camera domain is the cheapest honest next test?
-59. What is the smallest publishable claim?
-60. What are the three strongest kill conditions?
-
----
-
-# 26. Requested reviewer response
-
-## A. Overall verdict
-
-Choose one:
-
-```text
-strong architecture
-promising but overbuilt
-useful deterministic and frozen-prototype framework
-standard retrieval wrapped in unnecessary artifacts
-wrong direction for ZeroModel
-```
-
-Explain the verdict.
-
-## B. Severity-ranked findings
-
-Use the required finding format.
-
-## C. Architecture simplification
-
-Describe the smallest system that preserves the real value.
-
-## D. Baselines
-
-Name the mandatory conventional baselines.
-
-## E. Next experiment
-
-Specify one bounded experiment:
-
-- dataset;
-- models;
-- metrics;
-- success criterion;
+- a falsifiable hypothesis;
+- mandatory baselines;
+- a declared loss or target;
+- raw artifacts;
 - kill conditions;
-- exact claim enabled by success.
-
-## F. Recommended next PR
-
-Specify:
-
-- files;
-- API surface;
-- dependencies;
-- tests;
-- documentation;
-- claims-audit change;
 - explicit non-goals.
 
 ---
 
-# 27. Reference research
+# 3. Project in one sentence
 
-These works motivate candidate components; none alone validates the ZeroModel architecture.
+The strongest current interpretation is:
 
-1. **DINOv2: Learning Robust Visual Features without Supervision**  
-   https://arxiv.org/abs/2304.07193
+> ZeroModel compiles bounded scored policies into deterministic, identity-bearing, inspectable artifacts and allows an exact runtime state—or a separately governed observation provider—to address a policy row and recover an action with traceable evidence.
 
-2. **DINOv3**  
-   https://arxiv.org/abs/2508.10104  
-   Official implementation: https://github.com/facebookresearch/dinov3
+This sentence is itself reviewable.
 
-3. **NetVLAD: CNN Architecture for Weakly Supervised Place Recognition**  
-   https://openaccess.thecvf.com/content_cvpr_2016/html/Arandjelovic_NetVLAD_CNN_Architecture_CVPR_2016_paper.html
+The project has used stronger public metaphors and ambitions, including visual intelligence, infinite memory, and images as a medium of intelligence. The current repository claims audit substantially narrows those claims.
 
-4. **Unifying Deep Local and Global Features for Image Search (DELG)**  
-   https://arxiv.org/abs/2001.05027
-
-5. **Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture (I-JEPA)**  
-   https://arxiv.org/abs/2301.08243
-
-6. **Masked Autoencoders Are Scalable Vision Learners**  
-   https://arxiv.org/abs/2111.06377
-
-7. **V-JEPA official implementation**  
-   https://github.com/facebookresearch/jepa
+A reviewer should distinguish the defensible finite-policy artifact contribution from broader programme language.
 
 ---
 
-# 28. Final design position
+# 4. Current evidence ladder
 
-The visual architecture should not force every user into model training.
+## 4.1 Validated core
 
-It should provide a validated progression:
+The repository currently contains evidence for:
+
+- deterministic `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` construction;
+- deterministic artifact identity;
+- cell-to-source mapping;
+- multiple deterministic views over one score table;
+- bounded state-addressed policy lookup;
+- exact action selection without invoking a learned model at policy-decision time;
+- exact policy trace and artifact identity;
+- Lua export of a bounded policy;
+- finite row-property checking;
+- linked verification and repair lineage;
+- canonical deterministic visual feature-codeword addressing in one bounded arcade fixture;
+- provider-neutral visual-address contract mechanics;
+- identity-bearing tensor, encoder, calibration, prototype, and deployment records;
+- family-held-out visual benchmark infrastructure.
+
+## 4.2 Implemented but not validated as a successful capability
+
+The repository contains implementations of:
+
+- normalized-pixel approximate addressing;
+- pinned DINOv2-small CLS extraction;
+- DINOv2 medoid retrieval;
+- DINOv2 all-prototype k-NN;
+- a ridge linear row probe;
+- held-out corruption families;
+- critical-intervention and OOD evaluation;
+- per-family and per-observation traces.
+
+The full run now measures those implementations. The learned systems did not satisfy the current continuation criteria.
+
+## 4.3 Not established
+
+The repository does not establish:
+
+- open-world perception;
+- learned critical-evidence detection;
+- safe visual deployment;
+- robustness across real cameras;
+- robustness across renderers;
+- temporal perception;
+- a fixed-camera real-world result;
+- a task-specific learned visual state compiler;
+- improved human inspection;
+- governance superiority over a lightweight conventional stack;
+- safety certification;
+- general visual reasoning.
+
+---
+
+# 5. Historical progression
+
+The visual-address direction evolved through several stages.
+
+## 5.1 Exact symbolic policy
+
+A complete bounded arcade state is encoded as a policy row.
+
+The policy contains:
+
+- seven tank positions;
+- seven target positions plus target absence;
+- two cooldown states;
+- four actions;
+- 112 policy rows.
+
+The exact runtime state selects a row, and the policy artifact selects an action.
+
+## 5.2 Exact canonical visual sign reader
+
+Every state is rendered as an integer frame:
 
 ```text
-deterministic codebook
-    ↓ when evidence requires
-deterministic tolerant descriptor
-    ↓ when evidence requires
-frozen pretrained embedding
-    ↓ when evidence requires
-automatic lightweight adaptation
-    ↓ when evidence requires
-expert custom perception
+height: 16
+width: 28
+dtype: uint8
 ```
 
-All levels should terminate in the same governed interface:
+The frame visibly contains:
+
+- tank position;
+- target position or absence;
+- cooldown state.
+
+The canonical reader extracts a deterministic quantized feature codeword and addresses a separate visual index bound to the exact policy artifact.
+
+It succeeds on all canonical rows and the committed exhaustive trajectory fixture.
+
+It does not currently demonstrate accepted tolerance to the held-out benign perturbation families.
+
+## 5.3 Provider-neutral visual addressing
+
+The project created a seam through which multiple visual providers can return a governed decision:
 
 ```text
-observation
+ImageObservation
     ↓
-identity-bearing visual address
+VisualAddressProvider
     ↓
-accepted VPM row or region
+VisualAddressDecision
     ↓
-independently identified policy
+VisualPolicyReader / VPMPolicyLookup
     ↓
-action or rejection
+policy action
 ```
 
-The current deterministic reader remains valuable as the cheapest and most auditable level.
+The address provider and policy artifact remain separately identified.
 
-The next serious question is not whether embeddings can retrieve similar images. That is established.
+## 5.4 Learned Phase 1 benchmark
 
-The question is:
+The benchmark compares:
 
-> **Can ZeroModel turn a visual representation into a calibrated, policy-aware and independently governed address that remains stable under benign variation, rejects missing critical evidence, and provides operational value beyond a conventional classifier?**
+- A: exact deterministic reader;
+- B: normalized-pixel medoid retrieval;
+- C: frozen DINOv2 medoid retrieval;
+- D: frozen DINOv2 all-prototype k-NN;
+- G: rejection-equipped ridge linear probe.
 
-That is the experiment the next stage must answer.
+The declared Phase 1 research question was whether a pinned learned representation could improve held-out benign recovery while retaining safe rejection.
+
+---
+
+# 6. Current code architecture
+
+Review the current repository rather than relying only on this summary.
+
+## 6.1 Policy and original visual codebook
+
+```text
+examples/arcade_shooter_policy.py
+    bounded state/action fixture
+    row-ID encoding
+    policy artifact compilation
+
+examples/arcade_visual_sign_reader.py
+    canonical integer renderer
+    deterministic visual feature specification
+    complete frame enumeration
+    canonical visual index compilation
+    visual-policy equivalence fixture
+
+zeromodel/visual.py
+    VisualFeatureSpec
+    VisualIndexCalibration
+    VisualIndexBuild
+    VisualDecision
+    extract_visual_features
+    build_visual_index
+    VisualSignReader
+```
+
+Questions to ask:
+
+- Is the canonical renderer too deliberately aligned with the feature extractor?
+- Is this a meaningful visual result or an encoded state protocol?
+- Does that distinction matter if the claim is bounded and explicit?
+- Is the separate visual index valuable compared with directly decoding the renderer?
+
+## 6.2 Governed address contracts
+
+```text
+zeromodel/visual_address.py
+zeromodel/visual_address_manifest.py
+zeromodel/matrix_blob.py
+zeromodel/deployment_binding.py
+zeromodel/vision.py
+```
+
+Key concepts include:
+
+- immutable observations;
+- provider contracts;
+- score semantics;
+- observation and representation specification digests;
+- address artifact identity;
+- calibration identity;
+- policy identity;
+- source scope;
+- replay contract;
+- accepted and rejected decisions;
+- prototype-to-policy bindings;
+- deployment status.
+
+Questions to ask:
+
+- Which identities are essential?
+- Which are research scaffolding?
+- Does this materially outperform a model digest, config file, and append-only JSON event log?
+- Is `exact_decision` replay realistic for float representations across environments?
+- Is the deployment binding an actual security control or only a consistency check?
+
+## 6.3 Learned representations
+
+```text
+zeromodel/visual_encoder.py
+    EncoderManifest
+    FrozenVisualEncoder
+    HuggingFaceDinoV2Encoder
+
+zeromodel/visual_precomputed.py
+    precomputed representation providers
+
+zeromodel/visual_retrieval.py
+    NormalizedPixelEncoder
+    VectorCalibration
+    build_vector_address
+    VectorAddressIndex
+    FrozenVectorAddressProvider
+    LinearProbeBuild
+    LinearProbeIndex
+    build_linear_probe
+```
+
+The current DINOv2 path uses:
+
+```text
+model:
+facebook/dinov2-small
+
+revision:
+ed25f3a31f01632728cabb09d1542f84ab7b0056
+
+representation:
+L2-normalized CLS token
+
+preprocessing:
+identity-bearing square letterbox followed by the pinned processor
+```
+
+Questions to ask:
+
+- Is a global CLS token a fair test of the proposed visual-sign task?
+- Does resizing a 16×28 synthetic frame to the encoder's input destroy small local evidence?
+- Would patch tokens, a small CNN, or explicit detectors be a more appropriate baseline?
+- Does the DINOv2 result support a general conclusion about semantic representations, or only this preprocessing and pooling choice?
+
+## 6.4 Dataset and benchmark
+
+```text
+zeromodel/visual_corruptions.py
+zeromodel/visual_dataset.py
+zeromodel/visual_experiment.py
+zeromodel/visual_benchmark.py
+
+examples/arcade_visual_address_benchmark.py
+.github/scripts/run_visual_address_smoke.py
+.github/workflows/visual-address-benchmark.yml
+```
+
+The evaluator:
+
+- separates expected accept, expected reject, and impossibility-control cases;
+- only counts row and action correctness on expected-accept observations;
+- counts accepted conflicting actions;
+- reports false accepts over distinguishable rejection opportunities;
+- reports false rejects over benign opportunities;
+- retains per-family counts;
+- can retain per-observation traces.
+
+Questions to ask:
+
+- Are the split families genuinely independent?
+- Is family-held-out testing enough when every frame comes from the same renderer and policy surface?
+- Is there seed leakage or parameter overlap?
+- Is three variants per family enough?
+- Should renderer, state combinations, or policy rows be held out?
+- Are the OOD fixtures representative?
+- Is the critical intervention set sufficiently broad?
+- Is target removal correctly excluded as an impossibility control?
+- Are there other hidden impossibility cases?
+
+---
+
+# 7. Important implementation details to inspect
+
+## 7.1 Calibration
+
+`VectorCalibration` currently stores:
+
+- per-row acceptance thresholds;
+- per-row ambiguity margins;
+- one global `calibration_count`;
+- a calibration quantile;
+- metadata and digest.
+
+The current default quantile is `0.0`, the minimum observed calibration value.
+
+For retrieval, calibration computes:
+
+```text
+correct score
+    minus
+best conflicting-action score
+```
+
+For a row with no conflicting-action candidate, calibration uses a synthetic conflict score of `-1.0`.
+
+At runtime, if no conflicting-action candidate exists, the code falls back to the second-ranked prototype even if it has the same action.
+
+This appears to create a calibration/runtime semantic mismatch.
+
+Review whether:
+
+- no-conflict rows exist in this fixture;
+- the mismatch affected the result;
+- ambiguity should be optional when no conflicting action exists;
+- calibration should store per-row sample counts;
+- quantile `0.0` is too permissive or too brittle;
+- threshold and margin should be selected from an explicit loss curve.
+
+## 7.2 Benchmark metric schema
+
+`VisualBenchmarkMetrics.action_accuracy` and `.row_accuracy` divide by all scored observations:
+
+```text
+benign expected accepts
++
+distinguishable expected rejects
+```
+
+The evaluator separately places `benign_action_accuracy` and `benign_row_accuracy` in result notes.
+
+Review whether:
+
+- the primary schema is misleading;
+- the benign metrics should be first-class;
+- correct rejection should have its own score rather than sharing a denominator;
+- accepted-decision precision should be first-class;
+- risk-weighted loss is required;
+- a predeclared FAR target is mandatory;
+- confidence intervals and paired tests should be included.
+
+## 7.3 Float representation identity
+
+The representation digest hashes the exact big-endian float32 vector plus the representation specification digest.
+
+This identifies the exact vector produced in one execution environment.
+
+Review whether the project incorrectly implies that it is reproducible across:
+
+- CPU and GPU;
+- BLAS implementations;
+- PyTorch versions;
+- compiler settings;
+- processor implementations;
+- hardware architectures.
+
+Consider whether:
+
+- quantized vectors;
+- tolerance-aware identity;
+- environment-scoped identity;
+- golden vectors;
+- or a separately identified consumer plan
+
+would be more honest.
+
+## 7.4 Summary serialization defect
+
+The first CI smoke workflow completed the benchmark and wrote its report, but the final console-summary serialization failed because a nested immutable mapping remained a `mappingproxy`.
+
+The full local run shown to the authors produced a console summary successfully, but reviewers should verify:
+
+- which script and commit produced it;
+- whether the CI summary defect remains on the reviewed ref;
+- whether serialization tests cover nested frozen metadata;
+- whether generated reports are stable and round-trippable.
+
+This is not the main research result, but it is evidence that the reporting path requires stronger end-to-end tests.
+
+---
+
+# 8. Benchmark dataset
+
+The full run uses `variants_per_family = 3`.
+
+| Partition | Observations |
+|---|---:|
+| Prototype | 1,344 |
+| Calibration | 1,344 |
+| Held-out benign test | 1,344 |
+| Information-theoretic controls | 98 |
+| Distinguishable critical interventions | 224 |
+| OOD | 24 |
+| **Total** | **4,378** |
+| **Scored** | **1,592** |
+
+## 8.1 Prototype families
+
+- clean intensity variation;
+- lower brightness;
+- one-pixel upward translation;
+- palette A.
+
+## 8.2 Calibration families
+
+- held-out contrast;
+- one-pixel downward translation;
+- palette B;
+- low-amplitude noise.
+
+## 8.3 Benign test families
+
+- stronger unseen brightness;
+- two-pixel vertical translation;
+- palette C;
+- noncritical structured background patch.
+
+## 8.4 Distinguishable rejection cases
+
+- tank removed;
+- cooldown indicator removed;
+- blank frame;
+- checkerboard;
+- impossible two-tank frame.
+
+## 8.5 Information-theoretic control
+
+Removing a visible target can create a frame identical to a valid no-target state.
+
+Those 98 cases are reported but excluded from FAR and FRR denominators.
+
+Review this treatment carefully. The authors believe it is correct because the pixels contain no information capable of distinguishing the two hidden states.
+
+---
+
+# 9. Full result
+
+Run identity:
+
+```text
+dataset_digest:
+91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e
+
+report_digest:
+d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035
+
+observations:
+4,378
+
+scored observations:
+1,592
+
+benign opportunities:
+1,344
+
+distinguishable rejection opportunities:
+248
+
+validation_status:
+research
+```
+
+## 9.1 Raw console metrics
+
+| System | Whole-evaluation action accuracy | Whole-evaluation row accuracy | FAR | FRR |
+|---|---:|---:|---:|---:|
+| **A** | 0.00% | 0.00% | 0.00% | 100.00% |
+| **B** | 62.00% | 52.76% | 51.21% | 25.00% |
+| **C** | 59.11% | 25.94% | 82.26% | 3.27% |
+| **D** | 63.13% | 25.63% | 73.79% | 3.50% |
+| **G** | 50.19% | 24.31% | 100.00% | 1.79% |
+
+## 9.2 Derived benign metrics
+
+| System | Benign action accuracy | Exact benign row accuracy | Conflicting-action errors |
+|---|---:|---:|---:|
+| **A** | 0.00% | 0.00% | 0 |
+| **B** | 73.44% | 62.50% | 21 |
+| **C** | 70.01% | 30.73% | 359 |
+| **D** | 74.78% | 30.36% | 292 |
+| **G** | 59.45% | 28.79% | 521 |
+
+## 9.3 Accepted benign reliability
+
+| System | Accepted benign | Correct action when accepted | Exact row when accepted |
+|---|---:|---:|---:|
+| **B** | 1,008 | 97.92% | 83.33% |
+| **C** | 1,300 | 72.38% | 31.77% |
+| **D** | 1,297 | 77.49% | 31.46% |
+| **G** | 1,320 | 60.53% | 29.32% |
+
+## 9.4 Action-equivalent wrong-row outcomes
+
+| System | Correct actions | Exact rows | Correct action from wrong row |
+|---|---:|---:|---:|
+| **B** | 987 | 840 | 147 |
+| **C** | 941 | 413 | 528 |
+| **D** | 1,005 | 408 | 597 |
+| **G** | 799 | 387 | 412 |
+
+## 9.5 Rejection outcomes
+
+| System | False accepts | Opportunities | FAR |
+|---|---:|---:|---:|
+| **A** | 0 | 248 | 0.00% |
+| **B** | 127 | 248 | 51.21% |
+| **C** | 204 | 248 | 82.26% |
+| **D** | 183 | 248 | 73.79% |
+| **G** | 248 | 248 | 100.00% |
+
+---
+
+# 10. Authors' current interpretation
+
+The authors currently interpret the result as follows.
+
+## 10.1 System A
+
+A validates exact canonical addressing but not perturbation tolerance.
+
+## 10.2 System B
+
+B is the strongest overall addressing baseline:
+
+- best exact-row recovery;
+- fewest conflicting-action errors among approximate systems;
+- most reliable accepted actions;
+- lowest approximate-system FAR.
+
+It is still unsafe at a 51.21% FAR.
+
+## 10.3 System C
+
+C beats G but loses to B on the relevant fidelity and rejection trade-off.
+
+## 10.4 System D
+
+D has the highest benign action point estimate, exceeding B by 1.34 points.
+
+The authors do not regard this as a meaningful win because D:
+
+- loses 32.14 points of exact-row accuracy;
+- adds 22.58 points of FAR;
+- reduces accepted-action correctness by 20.43 points;
+- produces 271 more conflicting-action errors;
+- retains every prototype.
+
+## 10.5 System G
+
+G is eliminated because it combines weak benign recovery with a 100% FAR.
+
+## 10.6 Research interpretation
+
+The authors believe:
+
+1. action accuracy can hide wrong-address behaviour;
+2. global semantic invariance is poorly aligned with exact governed-state identity;
+3. similarity alone is insufficient for rejection;
+4. the next problem is visual evidence compilation rather than whole-row retrieval.
+
+Review all four claims critically.
+
+---
+
+# 11. Reasons the current interpretation may be wrong
+
+A useful external review should actively test these alternatives.
+
+## 11.1 Exact row identity may be an unnecessarily strict target
+
+If several rows are action-equivalent and no downstream consumer uses row-specific evidence, exact row recovery may not matter operationally.
+
+Questions:
+
+- Is exact row identity a product requirement or an artifact-driven preference?
+- Does row identity improve safety, replay, or inspection enough to justify the stricter task?
+- Could the correct abstraction be an action-equivalence class?
+- Could multiple observations legitimately address one symbolic state or action?
+- Would a hierarchical address—factor state, action class, exact row—be more appropriate?
+
+## 11.2 The comparison may unfairly favour normalized pixels
+
+The fixture is tiny, geometric, and directly rendered.
+
+Normalized pixels preserve exact geometry and may be almost optimal for this synthetic task.
+
+Questions:
+
+- Is this a meaningful test of DINOv2?
+- Does the result say anything beyond “semantic encoders are poor on tiny synthetic sprites”?
+- Should the image be rendered at a native visual scale rather than enlarged from 16×28?
+- Should a conventional small CNN, HOG, template matcher, or object detector be the mandatory learned baseline?
+
+## 11.3 The learned representation choice may be inappropriate
+
+Only the global CLS token was tested.
+
+Questions:
+
+- Would patch tokens preserve local object existence and coordinates?
+- Would intermediate layers work better?
+- Would DINOv2 register tokens or pooled spatial bins help?
+- Would a task-specific projection be a fairer test?
+- Was the model's preprocessing designed for natural images, not integer arcade glyphs?
+
+## 11.4 The calibration may be the main failure
+
+The experiment reports one calibrated operating point.
+
+Questions:
+
+- What do complete FAR/FRR curves show?
+- Is quantile `0.0` defensible?
+- How sensitive are results to threshold and margin selection?
+- Can any operating point achieve acceptable FAR while preserving useful row accuracy?
+- Were per-row calibration sample counts sufficient?
+- Is the conflicting-action margin the right rejection statistic?
+- Should OOD detection be separate from row discrimination?
+
+## 11.5 The safety language may be under-specified
+
+The authors describe FAR values as unsafe, but no deployment-specific acceptable FAR was declared.
+
+Questions:
+
+- What loss function should govern the trade?
+- Are tank removal, cooldown removal, blank, checkerboard, and two-tank cases equally costly?
+- Should false accepts be severity-weighted?
+- Is 51% clearly unacceptable for research but not yet formally “unsafe” without a use case?
+- Should the document use “fails the benchmark's rejection expectation” rather than “unsafe”?
+
+## 11.6 The benchmark may be too small or too synthetic
+
+Questions:
+
+- Do three variants per family support stable conclusions?
+- Do the 1,344 benign observations provide independent information when they derive from 112 states and deterministic transforms?
+- Should uncertainty account for clustering by state and family?
+- Are Wilson intervals over observations misleading because samples are correlated?
+- Should inference use state-level or family-level bootstrap resampling?
+- Is a paired comparison required?
+
+## 11.7 The benchmark may not test generalization in the relevant sense
+
+All states and all rows appear in prototype and calibration splits.
+
+Only corruption families are held out.
+
+Questions:
+
+- Is this invariance testing rather than state generalization?
+- Should some state combinations be held out?
+- Would held-out rows make sense if the goal is exact finite policy addressing?
+- Should a second renderer or camera style be held out?
+- Should the benchmark include renderer drift, compression, scale, blur, crop, and sensor noise?
+
+## 11.8 The governance layer may be overbuilt
+
+Questions:
+
+- What practical incident question can the current contracts answer that a conventional model registry plus structured event log cannot?
+- How much code and review burden does the identity chain add?
+- Are all digests persisted and independently verifiable?
+- Is deployment binding enforceable outside one process?
+- Does a content digest provide authenticity?
+- Is the distinction between artifact identity and consumer-plan identity consistently applied?
+
+## 11.9 The proposed factorized compiler may be ordinary perception renamed
+
+Questions:
+
+- Is `Visual State Compiler` a useful architectural distinction or merely object detection plus state assembly?
+- What is genuinely ZeroModel-specific?
+- Does the name obscure established prior art?
+- Would a conventional detector feeding a typed state schema accomplish the same result?
+- Is the contribution the evidence contract rather than the perception algorithm?
+
+## 11.10 Direct instrumentation may dominate the entire direction
+
+The arcade engine already has exact state.
+
+In many bounded installations, explicit sensors or software signals may be available.
+
+Questions:
+
+- Why use vision at all?
+- Is the visual path only valuable when instrumentation is unavailable?
+- Is visual redundancy useful as an independent verifier?
+- What deployment makes observation addressing preferable to direct telemetry?
+- Should the next benchmark compare against direct instrumentation cost, reliability, and governance?
+
+---
+
+# 12. Known evidence and engineering gaps
+
+Reviewers should verify and expand this list.
+
+## 12.1 Result preservation
+
+- The full original JSON report is not yet included in this brief.
+- The full local environment manifest is incomplete.
+- The exact command and Git commit must be recorded.
+- The exact model cache state and package versions must be recorded.
+- Raw per-family results should be committed.
+- Per-observation traces should be retained for paired analysis.
+
+## 12.2 Statistical analysis
+
+- no paired B-versus-D significance test;
+- no state-clustered or family-clustered uncertainty;
+- no operating curves;
+- no predeclared target FAR;
+- no risk-weighted objective;
+- no multiple-comparison discussion;
+- no calibration sensitivity analysis.
+
+## 12.3 Baselines
+
+Missing or not yet reported:
+
+- direct symbolic instrumentation;
+- deterministic factor extraction;
+- perceptual hash;
+- HOG or other classical local descriptor;
+- small task-specific CNN;
+- multi-head factor classifier;
+- supervised contrastive row encoder;
+- patch-token retrieval;
+- explicit OOD detector;
+- one-class or conformal rejection;
+- standard k-NN/classifier implementation from a conventional library;
+- lightweight model registry plus JSON-log governance baseline.
+
+## 12.4 Dataset
+
+- one synthetic renderer;
+- one policy fixture;
+- one source resolution;
+- limited corruption families;
+- three variants per family;
+- no temporal sequence benchmark;
+- no real camera;
+- no held-out renderer;
+- no environment drift;
+- no state-prior weighting;
+- no label-noise test;
+- no adversarial near-codeword generation.
+
+## 12.5 Code and contracts
+
+- benchmark's primary action and row accuracy denominators are easy to misread;
+- no-conflict calibration/runtime mismatch may exist;
+- global calibration count hides per-row counts;
+- float-vector digest reproducibility is environment-scoped;
+- report serialization previously failed on nested immutable metadata;
+- report and manifest persistence may be fragmented across several file types;
+- `deployment_status="research"` blocks claims but does not itself enforce safe deployment;
+- no signatures or attestations;
+- no cross-process persistence service;
+- no declared memory/runtime benchmark for learned providers.
+
+## 12.6 Product and research purpose
+
+- no named external deployment;
+- no declared acceptable error cost;
+- no user study demonstrating value of exact row provenance;
+- no comparison of visual addressing with direct sensors;
+- unclear whether visual addressing is central to ZeroModel or a research branch.
+
+---
+
+# 13. Proposed next direction under review
+
+The authors currently propose replacing whole-image row retrieval with a factorized Visual State Compiler.
+
+Proposed flow:
+
+```text
+ImageObservation
+    ↓
+local evidence providers
+    ↓
+EvidenceBundle
+    ↓
+TypedObservedState
+    ↓
+exact state encoding
+    ↓
+VPMPolicyLookup
+    ↓
+action + trace
+```
+
+Possible fields for the arcade fixture:
+
+```text
+tank_present
+tank_count
+tank_position
+target_present
+target_position
+cooldown_state
+frame_validity
+```
+
+Possible field record:
+
+```text
+field_id
+value
+status
+score
+calibration_id
+provider_id
+evidence_region
+rejection_reason
+```
+
+Possible provider baselines:
+
+- direct engine state;
+- deterministic connected components and geometry;
+- local templates;
+- patch-token probes;
+- small factor classifiers;
+- compact multi-head model.
+
+The proposed advantage is that missing evidence and invalid combinations become explicit rather than being inferred from one global similarity score.
+
+Review whether this direction is:
+
+- logically implied by the result;
+- merely one plausible option;
+- unnecessarily elaborate;
+- a standard perception stack with useful governance;
+- likely to overfit the fixture;
+- worth pursuing within ZeroModel.
+
+---
+
+# 14. Questions for external reviewers
+
+## 14.1 Problem definition
+
+1. What is the actual problem the code solves today?
+2. Is “observation-addressed policy” a coherent and useful category?
+3. Is exact policy-row identity a necessary requirement?
+4. Should the target be exact state, action-equivalence class, or action?
+5. When is visual addressing preferable to direct telemetry?
+6. Is the arcade fixture a valid hydrogen-atom environment or an engineered encoding trick?
+7. Does the project need a visual component at all?
+
+## 14.2 Experimental validity
+
+8. Is the family-held-out split free of material leakage?
+9. Are prototype, calibration, and test families sufficiently distinct?
+10. Is three variants per family enough?
+11. Are observations independent enough for the reported intervals?
+12. Should uncertainty be computed over states, families, or individual frames?
+13. Should the benchmark hold out renderers or state combinations?
+14. Are the critical interventions valid expected-reject cases?
+15. Is target removal correctly treated as information-theoretically unscorable?
+16. What other impossibility controls are missing?
+17. Are blank, checkerboard, and two-tank frames meaningful OOD tests?
+18. Does preprocessing create an avoidable information bottleneck?
+19. Is the source resolution too small for the learned encoder?
+
+## 14.3 Metrics and decision theory
+
+20. Which metric should be primary?
+21. Is exact-row accuracy more important than action accuracy?
+22. Should correct action from a wrong row count as partial success?
+23. Should acceptance precision be first-class?
+24. What false-acceptance target should be declared?
+25. What deployment loss function is appropriate?
+26. Should critical interventions be severity-weighted?
+27. Are whole-evaluation action and row accuracy fields misleading?
+28. What paired statistical analysis is required?
+29. What operating curves are required?
+30. How should calibration uncertainty be represented?
+
+## 14.4 Representation
+
+31. Is DINOv2 CLS an appropriate baseline?
+32. What representation would be the strongest conventional baseline?
+33. Should patch tokens be tested before abandoning the encoder?
+34. Would a tiny supervised model be more informative?
+35. Would explicit factor supervision solve the wrong-row/right-action problem?
+36. Is global semantic invariance genuinely opposed to this task?
+37. Does the result generalize beyond tiny synthetic sprites?
+38. What result would falsify the authors' semantic-invariance interpretation?
+
+## 14.5 Calibration and rejection
+
+39. Is empirical lower quantile `0.0` defensible?
+40. Should thresholds be per row, per action, or global?
+41. Should ambiguity compare against conflicting actions or all other rows?
+42. How should rows with no conflicting action candidate behave?
+43. Should OOD detection be a separate component?
+44. Would conformal prediction help?
+45. Are similarity and margin sufficient rejection statistics?
+46. Can any threshold curve salvage B, C, or D?
+47. What calibration data volume is required?
+48. How should environment drift trigger recalibration?
+
+## 14.6 Architecture and governance
+
+49. Is the policy/index/encoder/calibration/manifest/binding separation correct?
+50. Which identifiers are redundant?
+51. Does the architecture provide audit value proportional to its complexity?
+52. What is the minimal conventional governance baseline?
+53. Does exact-decision replay make sense for floating-point providers?
+54. Should representation identity be quantized?
+55. Should accepted and rejected decisions be different types?
+56. Should evidence regions be mandatory for learned acceptance?
+57. Is the deployment binding a useful contract without signatures?
+58. What persistence and attestation layer is missing?
+59. Does the provider seam remain valuable even if visual research stops?
+
+## 14.7 Proposed Visual State Compiler
+
+60. Is factorization the correct hypothesis revision?
+61. Which factors should be explicit?
+62. Should state assembly be deterministic?
+63. Is the proposal simply object detection plus a typed schema?
+64. What is the smallest implementation that could falsify it?
+65. Which baseline should be implemented first?
+66. Should direct instrumentation be considered the gold standard?
+67. Should DINOv2 patch tokens be included?
+68. What evidence-region metric is required?
+69. How should single-frame impossibility be represented?
+70. When should temporal state be introduced?
+71. What kill condition should stop the factorized direction?
+
+## 14.8 Novelty and positioning
+
+72. What prior work best describes the mechanism?
+73. Is the visual matcher technically novel?
+74. Is the artifact governance layer the actual contribution?
+75. Is “Visual State Compiler” useful terminology or unnecessary renaming?
+76. What is the smallest publishable claim?
+77. Does the visual branch strengthen or distract from ZeroModel?
+78. Which public claims should be removed immediately?
+79. What would make the work interesting to a technical reviewer?
+80. What result would justify a paper rather than a repository note?
+
+## 14.9 Next experiment
+
+81. What is the single highest-information next experiment?
+82. What files and APIs should it change?
+83. What baselines are mandatory?
+84. What target and loss must be declared?
+85. What result continues the direction?
+86. What result stops it?
+87. Should the next step be analysis only rather than new code?
+88. Should the result be reproduced on CI before any new architecture work?
+
+---
+
+# 15. Required reviewer output
+
+Use the structure below.
+
+## A. Overall verdict
+
+Choose one primary verdict:
+
+```text
+strong and well-founded direction
+promising but incorrectly framed
+valid bounded research result
+useful infrastructure, weak research thesis
+overbuilt conventional mechanism
+benchmark is not yet trustworthy
+visual direction should be paused
+visual direction should be stopped
+```
+
+Explain the verdict in no more than eight paragraphs.
+
+## B. Reconstructed system
+
+Describe what the repository actually implements in plain technical language.
+
+Separate:
+
+- policy artifact;
+- observation provider;
+- representation;
+- calibration;
+- runtime decision;
+- trace;
+- benchmark;
+- deployment claim.
+
+## C. Most damaging critique
+
+State the single criticism that, if correct, most changes the project's direction.
+
+Include:
+
+```text
+Claim or assumption:
+Failure mode:
+Evidence:
+Why it matters:
+How to test it:
+Decision if confirmed:
+```
+
+## D. Severity-ranked findings
+
+For every finding use:
+
+```text
+Severity: blocker | major | moderate | minor | optional
+Area:
+Finding:
+Repository evidence:
+Why it matters:
+Smallest corrective change:
+Required test:
+Claims impact:
+```
+
+Do not dilute serious findings with a long list of stylistic suggestions.
+
+## E. Evaluation of the full result
+
+Answer explicitly:
+
+- Did A fail or define its expected boundary?
+- Is B the strongest practical baseline?
+- Did C fail?
+- Did D meaningfully beat B?
+- Is G eliminated?
+- Is exact-row accuracy the right measure?
+- Are the FAR values sufficient to stop the current path?
+- Is the current interpretation post hoc?
+
+## F. Alternative interpretations
+
+Provide at least three plausible interpretations of the result.
+
+Rank them by likelihood.
+
+For each, state what additional evidence would distinguish it from the authors' interpretation.
+
+## G. Missing baselines
+
+List the mandatory baselines that should have existed before or must exist next.
+
+Separate:
+
+- algorithm baseline;
+- perception baseline;
+- calibration baseline;
+- governance baseline;
+- deployment baseline.
+
+## H. Recommended next experiment
+
+Specify one bounded experiment.
+
+Include:
+
+```text
+Hypothesis:
+Why this experiment:
+Systems:
+Dataset:
+Splits:
+Metrics:
+Predeclared target:
+Raw artifacts:
+Statistical analysis:
+Kill conditions:
+Explicit non-goals:
+Expected implementation files:
+```
+
+## I. Recommended next PR
+
+Describe one PR only.
+
+Include:
+
+- branch purpose;
+- files to add;
+- files to change;
+- tests;
+- report artifacts;
+- claims-audit changes;
+- what must not be included.
+
+## J. Claim rewrite
+
+Provide:
+
+1. the strongest claim the current repository can honestly make;
+2. the strongest visual-address claim;
+3. claims that should be removed;
+4. claims that may be tested next.
+
+## K. Research opportunity
+
+State whether the result contains a genuinely interesting research observation.
+
+Possible answers include:
+
+- action-equivalent wrong-address behaviour is publishable;
+- semantic invariance versus governed identity is interesting;
+- rejection is the main contribution;
+- this is established nearest-neighbour/OOD behaviour;
+- the result is too fixture-specific;
+- the artifact-governance layer is the real novelty;
+- no substantial novelty remains.
+
+Explain the reasoning and cite relevant prior-art categories.
+
+---
+
+# 16. Information available on request
+
+Do not invent missing details.
+
+The reviewer may request any of the following before finalizing the review:
+
+- exact Git commit SHA;
+- original full benchmark JSON;
+- compact derived summary JSON;
+- complete environment manifest;
+- exact local command;
+- Python, NumPy, PyTorch, Transformers, and platform versions;
+- encoder manifest;
+- loaded-weights digest;
+- preprocessing digest;
+- per-family counts;
+- complete per-observation traces;
+- B-versus-D paired outcome table;
+- nearest-neighbour examples;
+- confusion matrix;
+- calibration thresholds per row;
+- score and margin distributions;
+- workflow logs;
+- relevant pull-request patches;
+- test files;
+- claims-audit diff;
+- prior visual-sign-reader design brief;
+- public blog text;
+- intended deployment scenarios.
+
+When a missing item materially affects the verdict, say:
+
+```text
+Review blocked pending:
+Why it is required:
+What decision it could change:
+```
+
+Do not fill gaps with confident assumptions.
+
+---
+
+# 17. Suggested repository reading order
+
+1. `docs/claims-audit.md`
+2. `docs/research/visual-address-phase-one.md`
+3. `docs/results/visual-address-phase-one-dinov2-full.md`
+4. `examples/arcade_shooter_policy.py`
+5. `examples/arcade_visual_sign_reader.py`
+6. `zeromodel/visual.py`
+7. `zeromodel/visual_address.py`
+8. `zeromodel/visual_address_manifest.py`
+9. `zeromodel/matrix_blob.py`
+10. `zeromodel/visual_encoder.py`
+11. `zeromodel/visual_retrieval.py`
+12. `zeromodel/visual_experiment.py`
+13. `zeromodel/visual_benchmark.py`
+14. `examples/arcade_visual_address_benchmark.py`
+15. `tests/test_visual_sign_reader.py`
+16. `tests/test_visual_retrieval.py`
+17. `tests/test_arcade_visual_address_benchmark.py`
+18. `.github/scripts/run_visual_address_smoke.py`
+19. `.github/workflows/visual-address-benchmark.yml`
+
+Review implementation and tests before accepting the prose interpretation.
+
+---
+
+# 18. Pre-review facts versus hypotheses
+
+## Facts currently evidenced
+
+- the bounded policy has 112 rows and four actions;
+- canonical deterministic visual addressing succeeds on the committed exact fixture;
+- the held-out benchmark machinery executes;
+- the full local DINOv2 run produced the recorded counts;
+- B has substantially higher exact-row accuracy than C, D, and G;
+- D has a 1.34-point higher benign action point estimate than B;
+- B, C, D, and G have high FAR at the measured operating point;
+- G accepts every distinguishable rejection opportunity;
+- hundreds of learned-system correct actions come from wrong rows.
+
+## Current interpretations
+
+- exact row identity should be primary;
+- global semantic embeddings are structurally mismatched;
+- rejection is the central problem;
+- D does not meaningfully beat B;
+- the learned Phase 1 path should stop;
+- factorized visual state compilation is the best next direction.
+
+## Open hypotheses
+
+- patch-level learned evidence can preserve local facts;
+- deterministic factor extraction will outperform global retrieval;
+- a task-specific representation can recover exact states safely;
+- factorized evidence improves governance;
+- a fixed-camera real-world environment will retain the observed pattern;
+- direct instrumentation may dominate vision.
+
+Keep these categories separate in the review.
+
+---
+
+# 19. Decision standard
+
+The review should not ask whether the work is interesting in isolation.
+
+It should ask whether the next unit of engineering effort is justified.
+
+A continuation recommendation should require:
+
+- a precise unresolved hypothesis;
+- evidence that the next experiment distinguishes competing explanations;
+- a conventional baseline;
+- an operationally meaningful target;
+- a credible rejection method;
+- bounded implementation cost;
+- an explicit stop condition.
+
+A stop or pause recommendation is valid and useful.
+
+---
+
+# 20. Final instruction to the reviewer
+
+Assume the authors are capable of implementing almost any proposed extension.
+
+Therefore do not recommend complexity merely because it is technically possible.
+
+Prefer the answer that most rapidly reveals whether ZeroModel has:
+
+- a distinct research contribution;
+- a useful bounded engineering pattern;
+- a governance layer worth retaining;
+- or an attractive metaphor wrapped around conventional mechanisms.
+
+The desired outcome is not encouragement.
+
+The desired outcome is a more accurate map of reality.

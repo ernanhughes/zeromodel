@@ -73,16 +73,22 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--null-samples", type=int, default=199)
     parser.add_argument("--seed", type=int, default=11)
+    parser.add_argument("--alpha", type=float, default=0.05)
     args = parser.parse_args()
 
     matrix, labels = planted_block_matrix()
     source = source_artifact(matrix)
     detector = MatrixPatternDetector(
-        PatternAnalysisSpec(null_samples=args.null_samples, seed=args.seed)
+        PatternAnalysisSpec(
+            null_samples=args.null_samples,
+            seed=args.seed,
+            alpha=args.alpha,
+        )
     )
-    report = detector.detect(source)
-    report_artifact = report.to_vpm()
-    discovered_view = detector.build_view(source, report)
+    result = detector.materialize(source)
+    report = result.report
+    report_artifact = result.report_artifact
+    discovered_view = result.view_artifact
     adjacency = block_adjacency(report.row_order, source.source.row_ids, labels)
 
     output = {
@@ -92,7 +98,8 @@ def main() -> None:
         "pattern_spec_digest": report.spec.digest,
         "primary_objective": report.primary_objective,
         "family_p_value": report.family_p_value,
-        "significant_at_0_05": report.significant,
+        "alpha": report.spec.alpha,
+        "significant": report.significant,
         "same_block_adjacency": adjacency,
         "row_count": matrix.shape[0],
         "metric_count": matrix.shape[1],

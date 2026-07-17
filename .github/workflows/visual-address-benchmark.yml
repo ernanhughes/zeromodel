@@ -1,0 +1,79 @@
+name: Frozen visual address benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/visual-address-benchmark.yml"
+      - ".github/scripts/run_visual_address_smoke.py"
+      - "examples/arcade_visual_address_benchmark.py"
+      - "zeromodel/visual_encoder.py"
+      - "zeromodel/visual_retrieval.py"
+      - "zeromodel/visual_precomputed.py"
+      - "zeromodel/visual_experiment.py"
+      - "zeromodel/visual_corruptions.py"
+      - "zeromodel/vision.py"
+      - "pyproject.toml"
+
+concurrency:
+  group: visual-address-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+jobs:
+  frozen-encoder-smoke:
+    name: pinned DINOv2 research smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cache Hugging Face model files
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: visual-address-dinov2-small-ed25f3a31f01632728cabb09d1542f84ab7b0056
+
+      - name: Install optional CPU vision dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            --index-url https://download.pytorch.org/whl/cpu \
+            'torch>=2.2' \
+            'torchvision>=0.17'
+          python -m pip install -e '.[vision]'
+
+      - name: Run pinned held-out smoke benchmark
+        shell: bash
+        run: |
+          mkdir -p build/visual-phase-one-smoke
+          set -o pipefail
+          python .github/scripts/run_visual_address_smoke.py \
+            --variants-per-family 1 \
+            --output-dir build/visual-phase-one-smoke \
+            2>&1 | tee build/visual-phase-one-smoke-run.log
+
+      - name: Upload research report and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-phase-one-dinov2-smoke
+          path: |
+            build/visual-phase-one-smoke-run.log
+            build/visual-phase-one-smoke/arcade-visual-phase-one.json
+          if-no-files-found: error
+          retention-days: 14

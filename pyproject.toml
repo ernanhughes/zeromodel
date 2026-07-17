@@ -33,6 +33,7 @@ dev = ["pytest>=7", "build>=1.2", "twine>=5"]
 release = ["build>=1.2", "twine>=5"]
 vision = [
     "torch>=2.2",
+    "torchvision>=0.17",
     "transformers>=4.40",
     "pillow>=10",
 ]

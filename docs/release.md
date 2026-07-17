@@ -1,15 +1,21 @@
 # Release process
 
-ZeroModel 1.0.10 should reach PyPI only after the package install path and the
-claims-audit posture are both proven by CI and a clean-environment smoke test.
+ZeroModel 1.0.11 should reach PyPI only after the package install path, the
+criticality/verification fixtures, and the claims-audit posture are all proven
+by CI and a clean-environment smoke test.
 
-The validated public claim for 1.0.10 is:
+The validated public headline remains:
 
 > ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts and small consumers that can operate without a model at decision time.
 
-The new 1.0.10 policy-lookup example supports a narrower headline:
+ZeroModel 1.0.11 adds a narrower research-backed claim:
 
-> A bounded policy can be compiled into an addressable VPM artifact. Runtime state finds the row, the row says what to do, and the decision can cite the exact artifact cell that produced it.
+> A Q-bearing finite policy can preserve criticality and decision-margin evidence without allowing those evidence columns to participate in action selection. Named row-level properties can be checked exhaustively and recorded as verification artifacts linked to the exact policy artifact checked.
+
+Do not describe best-minus-worst score spread as VIPER-style criticality unless
+the source columns carry Q-values or an equivalent consequence-bearing teacher
+signal. Do not describe the finite row checker as general formal verification of
+continuous dynamics, temporal safety, or universal policy correctness.
 
 Do not use stronger claims such as planet-scale traversal, automatic semantic
 view learning, task-level decision accuracy improvement for open-world systems,
@@ -18,9 +24,9 @@ repository contains the matching benchmark or fixture evidence.
 
 ## Version policy
 
-- `1.0.10` is the stable public API release intended to supersede the existing PyPI `1.0.9` package.
+- `1.0.11` is an additive release over the stable 1.0 artifact contract.
 - Keep future breaking artifact-contract changes for `2.x`.
-- Use pre-release suffixes such as `1.0.11rc1` or `1.1.0rc1` for release candidates when testing PyPI/TestPyPI paths.
+- Use pre-release suffixes such as `1.0.12rc1` or `1.1.0rc1` for release candidates when testing PyPI/TestPyPI paths.
 
 ## Local build check
 
@@ -33,6 +39,8 @@ pytest -q
 python -m build
 python -m twine check dist/*
 python examples/arcade_shooter_policy.py
+python examples/criticality_verification.py \
+  --output-dir docs/assets/criticality-verification
 ```
 
 The GitHub `Python package` workflow runs the test matrix and distribution
@@ -70,14 +78,26 @@ python -m pip install --upgrade pip
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  zeromodel==1.0.10
+  zeromodel==1.0.11
 python - <<'PY'
-from zeromodel import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
+from zeromodel import (
+    LayoutRecipe,
+    PolicyPropertyChecker,
+    PolicyPropertySpec,
+    ScoreTable,
+    VPMPolicyLookup,
+    build_vpm,
+    with_q_diagnostics,
+)
 
-score_table = ScoreTable(
-    values=[[1.0, 0.0], [0.0, 1.0]],
-    row_ids=["state:left", "state:right"],
-    metric_ids=["LEFT", "RIGHT"],
+ACTIONS = ("LEFT", "RIGHT")
+source = with_q_diagnostics(
+    ScoreTable(
+        values=[[2.0, 0.0], [0.0, 2.0]],
+        row_ids=["side=left", "side=right"],
+        metric_ids=ACTIONS,
+    ),
+    action_metric_ids=ACTIONS,
 )
 recipe = LayoutRecipe.from_dict({
     "version": "vpm-layout/0",
@@ -86,9 +106,32 @@ recipe = LayoutRecipe.from_dict({
     "column_order": {"kind": "source"},
     "normalization": {"kind": "per_metric_minmax", "clip": True},
 })
-artifact = build_vpm(score_table, recipe)
-assert VPMPolicyLookup(artifact).read("state:right").action == "RIGHT"
-print("zeromodel 1.0.10 policy lookup smoke test passed")
+artifact = build_vpm(source, recipe)
+reader = VPMPolicyLookup(
+    artifact,
+    action_metric_ids=ACTIONS,
+    evidence_metric_ids=("criticality", "decision_margin"),
+)
+assert reader.read("side=right").action == "RIGHT"
+
+property_spec = PolicyPropertySpec.from_dict({
+    "id": "right_state_moves_right",
+    "version": "1",
+    "assert": {
+        "implies": [
+            {"eq": [{"var": "state.side"}, "right"]},
+            {"eq": [{"var": "winner"}, "RIGHT"]},
+        ]
+    },
+})
+report = PolicyPropertyChecker(
+    artifact,
+    action_metric_ids=ACTIONS,
+    evidence_metric_ids=("criticality", "decision_margin"),
+).check([property_spec])
+assert report.passed is True
+assert report.to_vpm().provenance["parents"][0]["artifact_id"] == artifact.artifact_id
+print("zeromodel 1.0.11 criticality and verification smoke test passed")
 PY
 ```
 
@@ -107,5 +150,7 @@ Only cut the production PyPI release after:
 - `twine check` passes,
 - TestPyPI install/import works in a clean environment,
 - README install instructions are updated for the production release,
-- the tiny arcade-shooter example runs, and
+- the tiny arcade-shooter example runs,
+- the criticality/verification example produces one exact counterexample and a passing repaired artifact,
+- verification artifacts preserve identity across `.vpm` round-trip, and
 - `docs/claims-audit.md` still matches the public wording.

@@ -5,6 +5,8 @@ on:
     paths:
       - "zeromodel/**"
       - "tests/**"
+      - "examples/**"
+      - "docs/examples/**"
       - "pyproject.toml"
       - "README.md"
       - "CHANGELOG.md"
@@ -17,6 +19,8 @@ on:
     paths:
       - "zeromodel/**"
       - "tests/**"
+      - "examples/**"
+      - "docs/examples/**"
       - "pyproject.toml"
       - "README.md"
       - "CHANGELOG.md"
@@ -54,6 +58,40 @@ jobs:
 
       - name: Run package tests
         run: pytest -q
+
+  lua-edge:
+    name: Lua edge policy fixture
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python package and Lua
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.4
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+
+      - name: Test Lua exporter
+        run: pytest -q tests/test_lua_policy.py
+
+      - name: Export arcade policy for Lua
+        run: |
+          python examples/lua_edge_policy.py \
+            --output build/lua/arcade_policy.lua
+
+      - name: Run arcade policy in Lua
+        run: |
+          lua5.4 examples/lua/run_arcade_policy.lua \
+            build/lua/arcade_policy.lua
 
   package-build:
     name: build distribution artifacts

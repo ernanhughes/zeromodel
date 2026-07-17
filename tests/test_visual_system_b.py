@@ -71,3 +71,9 @@ def test_system_b_candidate_enumeration_and_selection_are_deterministic() -> Non
     assert selection_a.to_dict() == selection_b.to_dict()
     assert selection_a.digest == selection_b.digest
 
+
+def test_system_b_v2_dataset_digest_differs_from_historical_v1() -> None:
+    demo = _load_demo()
+    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    assert dataset.manifest.source_scope == "arcade-visual-system-b-adjudication/v2"
+    assert dataset.manifest.digest != "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"

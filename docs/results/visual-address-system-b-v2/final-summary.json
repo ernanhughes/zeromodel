@@ -1,9 +1,9 @@
 {
   "calibration_digest": "bb985997a8d56cde073f91fc6611c08c0718d888e0d49d00aa0198f0f603e583",
   "final_metrics": {
-    "accepted_benign_action_correctness": 0.0,
+    "accepted_benign_action_correctness": null,
     "accepted_benign_count": 0,
-    "accepted_benign_row_correctness": 0.0,
+    "accepted_benign_row_correctness": null,
     "accepted_count": 0,
     "action_accuracy": 0.0,
     "benign_action_accuracy": 0.0,
@@ -75,5 +75,6 @@
       "top1_action_correct": 315,
       "top1_row_correct": 168
     }
-  }
+  },
+  "usefulness_status": "no_useful_operating_point"
 }

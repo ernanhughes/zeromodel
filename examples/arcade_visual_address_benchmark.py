@@ -77,7 +77,7 @@ from zeromodel.visual_retrieval import (  # noqa: E402
 )
 
 
-SOURCE_SCOPE = "arcade-phase-one-held-out/v1"
+SOURCE_SCOPE = "arcade-visual-system-b-adjudication/v2"
 
 
 @dataclass(frozen=True)

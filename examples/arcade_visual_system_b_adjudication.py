@@ -21,7 +21,12 @@ from examples.arcade_visual_address_benchmark import (  # noqa: E402
     build_arcade_benchmark_dataset,
 )
 from zeromodel.visual_analysis import analyze_trace_sets  # noqa: E402
-from zeromodel.visual_experiment import evaluate_visual_provider  # noqa: E402
+from zeromodel.visual_experiment import (  # noqa: E402
+    EXPECTED_ACCEPT,
+    EXPECTED_REJECT,
+    IMPOSSIBILITY_CONTROL,
+    evaluate_visual_provider,
+)
 from zeromodel.visual_system_b import (  # noqa: E402
     build_system_b_candidates,
     build_system_b_provider,
@@ -107,6 +112,7 @@ def _translation_family_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
 
 def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
     dataset = build_arcade_benchmark_dataset(variants_per_family=variants_per_family)
+    historical_v1_dataset_digest = "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"
     candidates = build_system_b_candidates(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -129,8 +135,60 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         json.dumps(dataset.manifest.to_dict(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    (output_dir / "dataset-identity.json").write_text(
+        json.dumps(
+            {
+                "source_scope": SOURCE_SCOPE,
+                "historical_v1_dataset_digest": historical_v1_dataset_digest,
+                "current_v2_dataset_digest": dataset.manifest.digest,
+                "digest_compatible": False,
+                "reason": (
+                    "the v2 adjudication dataset changed split semantics, "
+                    "family assignments, calibration roles, evaluation roles, "
+                    "and source identity"
+                ),
+                "changed_families": [
+                    "prototype",
+                    "calibration",
+                    "ood-holdout",
+                    "translation",
+                    "critical-intervention",
+                    "information-theoretic-control",
+                ],
+                "changed_partitions": [
+                    "prototype",
+                    "benign_calibration",
+                    "rejection_calibration",
+                    "final_evaluation",
+                ],
+                "changed_semantics": [
+                    "canonical evaluation dispositions",
+                    "independent rejection calibration",
+                    "final-only evaluation",
+                ],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
     (output_dir / "candidate-operating-points.json").write_text(
         json.dumps([candidate.to_dict() for candidate in candidates], indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "per-row-calibration-candidate-grid.json").write_text(
+        json.dumps(
+            {
+                "curve_type": "declared_per_row_calibration_candidate_grid",
+                "uses_final_evaluation_traces": False,
+                "valid_for_threshold_selection": True,
+                "candidates": [candidate.to_dict() for candidate in candidates],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
         encoding="utf-8",
     )
     (output_dir / "selected-calibration.json").write_text(
@@ -149,6 +207,7 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         "permitted_partitions": ["prototype", "benign_calibration", "rejection_calibration"],
         "forbidden_partitions_for_selection": ["final_evaluation"],
         "final_evaluation_partition": "final_evaluation",
+        "dataset_identity": SOURCE_SCOPE,
     }
     (output_dir / "protocol.json").write_text(
         json.dumps(protocol, indent=2, sort_keys=True) + "\n",
@@ -199,12 +258,63 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         for trace in traces:
             handle.write(json.dumps(trace.to_dict(), sort_keys=True) + "\n")
 
+    metrics = final_result.metrics
     trace_payload = [trace.to_dict() for trace in traces]
+    benign_count = sum(
+        1 for trace in trace_payload if trace["expected_disposition"] == EXPECTED_ACCEPT
+    )
+    reject_count = sum(
+        1 for trace in trace_payload if trace["expected_disposition"] == EXPECTED_REJECT
+    )
+    control_count = sum(
+        1
+        for trace in trace_payload
+        if trace["expected_disposition"] == IMPOSSIBILITY_CONTROL
+    )
+    if benign_count != metrics.false_reject_opportunities:
+        raise RuntimeError("trace benign denominator does not match final-report benign denominator")
+    if reject_count != metrics.false_accept_opportunities:
+        raise RuntimeError("trace reject denominator does not match final-report reject denominator")
+    metrics_control_count = int(final_result.notes["impossibility_control_count"])
+    if control_count != metrics_control_count:
+        raise RuntimeError("trace control denominator does not match final-report control denominator")
     operating_atlas = analyze_trace_sets({"B": trace_payload})
+    (output_dir / "global-threshold-diagnostic.json").write_text(
+        json.dumps(operating_atlas, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     (output_dir / "operating-atlas.json").write_text(
         json.dumps(operating_atlas, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    with (output_dir / "global-threshold-diagnostic.csv").open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "threshold",
+                "coverage",
+                "accepted_row_precision",
+                "accepted_action_precision",
+                "row_recall",
+                "action_recall",
+                "false_acceptance_rate",
+                "false_rejection_rate",
+            ],
+        )
+        writer.writeheader()
+        for row in operating_atlas["systems"]["B"]["global_score_threshold_curve"]:
+            writer.writerow(
+                {
+                    "threshold": row["threshold"],
+                    "coverage": row["coverage"],
+                    "accepted_row_precision": row["accepted_row_precision"],
+                    "accepted_action_precision": row["accepted_action_precision"],
+                    "row_recall": row["row_recall"],
+                    "action_recall": row["action_recall"],
+                    "false_acceptance_rate": row["false_acceptance_rate"],
+                    "false_rejection_rate": row["false_rejection_rate"],
+                }
+            )
     with (output_dir / "operating-atlas.csv").open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
             handle,
@@ -220,7 +330,7 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
             ],
         )
         writer.writeheader()
-        for row in operating_atlas["systems"]["B"]["operating_curve"]:
+        for row in operating_atlas["systems"]["B"]["global_score_threshold_curve"]:
             writer.writerow(
                 {
                     "threshold": row["threshold"],
@@ -244,14 +354,15 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         encoding="utf-8",
     )
 
-    metrics = final_result.metrics
     coverage = float(metrics.accepted_benign_count) / float(metrics.false_reject_opportunities or 1)
     outcome = "B"
     next_action = "registration_required_local_baseline_showdown"
+    accepted_row_precision = metrics.accepted_benign_row_correctness
     if (
         metrics.false_accept_count == 0
         and metrics.conflicting_action_error_count == 0
-        and metrics.accepted_benign_row_correctness >= 0.95
+        and accepted_row_precision is not None
+        and accepted_row_precision >= 0.95
         and coverage >= 0.5
     ):
         outcome = "A"
@@ -263,6 +374,7 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
     summary = {
         "outcome": outcome,
         "selection_status": selection.selection_status,
+        "usefulness_status": "no_useful_operating_point",
         "selected_quantile": selection.selected_quantile,
         "calibration_digest": build.calibration.digest,
         "final_metrics": metrics.to_dict(),
@@ -281,6 +393,7 @@ def run(*, output_dir: Path, variants_per_family: int) -> Dict[str, Any]:
         "# System B v2 adjudication\n\n"
         f"- outcome: `{outcome}`\n"
         f"- selected quantile: `{selection.selected_quantile}`\n"
+        "- usefulness status: `no_useful_operating_point`\n"
         f"- next action: `{next_action}`\n",
         encoding="utf-8",
     )

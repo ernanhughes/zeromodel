@@ -1,7 +1,7 @@
 [
   {
     "benign_result": {
-      "contract_digest": "a7a61990a3f814e7cf9a7a9f15f23f42066e99836fe4e7dd78bd074765ca79c5",
+      "contract_digest": "8dcb03b5698f12173f8d71bdd6c02149e8b6188b0b37455c323cb6a82c6d6af5",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 1287,
@@ -185,11 +185,11 @@
     ],
     "quantile": 0.0,
     "rejection_result": {
-      "contract_digest": "a7a61990a3f814e7cf9a7a9f15f23f42066e99836fe4e7dd78bd074765ca79c5",
+      "contract_digest": "8dcb03b5698f12173f8d71bdd6c02149e8b6188b0b37455c323cb6a82c6d6af5",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 516,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -344,7 +344,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "d9e370bfcb18afcc7d6ec8466529a6c0aa7896d4f5313c474b25f709d3e68b20",
+      "contract_digest": "76aaaa9f5d7f2c760f99d8e1ec6ecd7e600b68bbe78bbfba86aaf0c164bce8e9",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 1186,
@@ -528,11 +528,11 @@
     ],
     "quantile": 0.1,
     "rejection_result": {
-      "contract_digest": "d9e370bfcb18afcc7d6ec8466529a6c0aa7896d4f5313c474b25f709d3e68b20",
+      "contract_digest": "76aaaa9f5d7f2c760f99d8e1ec6ecd7e600b68bbe78bbfba86aaf0c164bce8e9",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 516,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -687,7 +687,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "468053e84b9e1be2bb5d936be90324ca886249eaa0bc4c0f358fa7d7fe0e4050",
+      "contract_digest": "31457ed78bfff36e05dee6d6ece69036baa34883bda4acbe5e0a1cc0eb9fdb80",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 1061,
@@ -871,11 +871,11 @@
     ],
     "quantile": 0.2,
     "rejection_result": {
-      "contract_digest": "468053e84b9e1be2bb5d936be90324ca886249eaa0bc4c0f358fa7d7fe0e4050",
+      "contract_digest": "31457ed78bfff36e05dee6d6ece69036baa34883bda4acbe5e0a1cc0eb9fdb80",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 516,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -1030,7 +1030,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "7a129e7adf1f4882e0f697e3fe00299593ea4dfc628373fe9c559419b0b681ab",
+      "contract_digest": "f57010bb6997c92c7d815ff62b4a2eabba3ef00f350680c5f75b9cd95c3d9a0a",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 942,
@@ -1214,11 +1214,11 @@
     ],
     "quantile": 0.3,
     "rejection_result": {
-      "contract_digest": "7a129e7adf1f4882e0f697e3fe00299593ea4dfc628373fe9c559419b0b681ab",
+      "contract_digest": "f57010bb6997c92c7d815ff62b4a2eabba3ef00f350680c5f75b9cd95c3d9a0a",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 384,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -1373,7 +1373,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "26ec82c1dcc90c0aec20ccc978fc4f82d1c6500cbe7d5c2b8cb2214f93130849",
+      "contract_digest": "c0ed26b46165ac279e4262f14790a4559cb5ae08440aaf93ba420245e796eba8",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 797,
@@ -1557,11 +1557,11 @@
     ],
     "quantile": 0.4,
     "rejection_result": {
-      "contract_digest": "26ec82c1dcc90c0aec20ccc978fc4f82d1c6500cbe7d5c2b8cb2214f93130849",
+      "contract_digest": "c0ed26b46165ac279e4262f14790a4559cb5ae08440aaf93ba420245e796eba8",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 384,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -1716,7 +1716,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "5df014582b968f35f28f8f6e9176b3cfee729b676805b61d171e540b73df42b3",
+      "contract_digest": "3a966230267ac55da102180785ce0cc587aec4d5030174203920e8e207928b20",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 684,
@@ -1900,11 +1900,11 @@
     ],
     "quantile": 0.5,
     "rejection_result": {
-      "contract_digest": "5df014582b968f35f28f8f6e9176b3cfee729b676805b61d171e540b73df42b3",
+      "contract_digest": "3a966230267ac55da102180785ce0cc587aec4d5030174203920e8e207928b20",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 384,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -2059,7 +2059,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "2ed32de580a103eefd6bfe4009c3da78a5dc3d7f6618ff30c9433fdfba19b186",
+      "contract_digest": "628d4c4aa468b2d86fac8e354aff70c5dbbcfd71d348d4d2cc453a0f3bfd8814",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 573,
@@ -2243,11 +2243,11 @@
     ],
     "quantile": 0.6,
     "rejection_result": {
-      "contract_digest": "2ed32de580a103eefd6bfe4009c3da78a5dc3d7f6618ff30c9433fdfba19b186",
+      "contract_digest": "628d4c4aa468b2d86fac8e354aff70c5dbbcfd71d348d4d2cc453a0f3bfd8814",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 240,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -2402,7 +2402,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "96ac88b6d512a42a675eb821406dcdc6cc7cb79547ce24c790e746bff09fe2f0",
+      "contract_digest": "3bda494ffe390def16e5a1ec039dee3c09e4043db7ed7f8b369a7c4321ee7a59",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 378,
@@ -2586,11 +2586,11 @@
     ],
     "quantile": 0.7,
     "rejection_result": {
-      "contract_digest": "96ac88b6d512a42a675eb821406dcdc6cc7cb79547ce24c790e746bff09fe2f0",
+      "contract_digest": "3bda494ffe390def16e5a1ec039dee3c09e4043db7ed7f8b369a7c4321ee7a59",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 138,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -2745,7 +2745,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "2c3c4fe70e53c68abb4a7ce15742960b0400a25f7408370017c1ef619e940060",
+      "contract_digest": "147664c5299fc9460cbcef236fb7434f7d05d435c4c6c74a25635bbee3129936",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 211,
@@ -2929,11 +2929,11 @@
     ],
     "quantile": 0.8,
     "rejection_result": {
-      "contract_digest": "2c3c4fe70e53c68abb4a7ce15742960b0400a25f7408370017c1ef619e940060",
+      "contract_digest": "147664c5299fc9460cbcef236fb7434f7d05d435c4c6c74a25635bbee3129936",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 84,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -3088,7 +3088,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "cc63cf7b759f50d5c2d95d093610d42b68e1a4389b358cc461a22a9b78d9114b",
+      "contract_digest": "16ebed72968679759e6c81a59eb0ed5c620900fe761b37aa967dc6d74945f360",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 107,
@@ -3272,11 +3272,11 @@
     ],
     "quantile": 0.9,
     "rejection_result": {
-      "contract_digest": "cc63cf7b759f50d5c2d95d093610d42b68e1a4389b358cc461a22a9b78d9114b",
+      "contract_digest": "16ebed72968679759e6c81a59eb0ed5c620900fe761b37aa967dc6d74945f360",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 3,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,
@@ -3431,7 +3431,7 @@
   },
   {
     "benign_result": {
-      "contract_digest": "b8fbb9b6ef7c5b4e74ecc5a1c1f2851687ec9e83ec7373c28c4b87ba4e87f8a3",
+      "contract_digest": "c914f528629a94ad7b1c6caab5154d6e0b0615bc7c5a1835cad626e7eec991ba",
       "metrics": {
         "accepted_benign_action_correctness": 1.0,
         "accepted_benign_count": 1,
@@ -3613,11 +3613,11 @@
     "infeasible_reasons": [],
     "quantile": 1.0,
     "rejection_result": {
-      "contract_digest": "b8fbb9b6ef7c5b4e74ecc5a1c1f2851687ec9e83ec7373c28c4b87ba4e87f8a3",
+      "contract_digest": "c914f528629a94ad7b1c6caab5154d6e0b0615bc7c5a1835cad626e7eec991ba",
       "metrics": {
-        "accepted_benign_action_correctness": 0.0,
+        "accepted_benign_action_correctness": null,
         "accepted_benign_count": 0,
-        "accepted_benign_row_correctness": 0.0,
+        "accepted_benign_row_correctness": null,
         "accepted_count": 0,
         "action_accuracy": 0.0,
         "benign_action_accuracy": 0.0,

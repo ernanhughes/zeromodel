@@ -294,10 +294,14 @@ class VisualBenchmarkMetrics:
                 "top1_benign_action_accuracy": self.top1_benign_action_accuracy,
                 "accepted_benign_count": self.accepted_benign_count,
                 "accepted_benign_row_correctness": (
-                    self.accepted_benign_row_correctness
+                    None
+                    if self.accepted_benign_count == 0
+                    else self.accepted_benign_row_correctness
                 ),
                 "accepted_benign_action_correctness": (
-                    self.accepted_benign_action_correctness
+                    None
+                    if self.accepted_benign_count == 0
+                    else self.accepted_benign_action_correctness
                 ),
                 "correct_reject_count": self.correct_reject_count,
                 "false_acceptance_rate": self.false_acceptance_rate,

@@ -1,0 +1,26 @@
+{
+  "changed_families": [
+    "prototype",
+    "calibration",
+    "ood-holdout",
+    "translation",
+    "critical-intervention",
+    "information-theoretic-control"
+  ],
+  "changed_partitions": [
+    "prototype",
+    "benign_calibration",
+    "rejection_calibration",
+    "final_evaluation"
+  ],
+  "changed_semantics": [
+    "canonical evaluation dispositions",
+    "independent rejection calibration",
+    "final-only evaluation"
+  ],
+  "current_v2_dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
+  "digest_compatible": false,
+  "historical_v1_dataset_digest": "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e",
+  "reason": "the v2 adjudication dataset changed split semantics, family assignments, calibration roles, evaluation roles, and source identity",
+  "source_scope": "arcade-visual-system-b-adjudication/v2"
+}

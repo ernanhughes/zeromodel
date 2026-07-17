@@ -2,4 +2,5 @@
 
 - outcome: `C`
 - selected quantile: `1.0`
+- usefulness status: `no_useful_operating_point`
 - next action: `registration_required_local_baseline_showdown`

@@ -42,9 +42,10 @@ jobs:
           path: ~/.cache/huggingface
           key: visual-address-dinov2-small-ed25f3a31f01632728cabb09d1542f84ab7b0056
 
-      - name: Install optional vision dependencies
+      - name: Install optional CPU vision dependencies
         run: |
           python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch>=2.2'
           python -m pip install -e '.[vision]'
 
       - name: Run pinned held-out smoke benchmark

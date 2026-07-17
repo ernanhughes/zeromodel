@@ -1,0 +1,66 @@
+name: Frozen visual address benchmark
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/visual-address-benchmark.yml"
+      - "examples/arcade_visual_address_benchmark.py"
+      - "zeromodel/visual_encoder.py"
+      - "zeromodel/visual_retrieval.py"
+      - "zeromodel/visual_experiment.py"
+      - "zeromodel/visual_corruptions.py"
+      - "zeromodel/vision.py"
+      - "pyproject.toml"
+
+permissions:
+  contents: read
+
+env:
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  TOKENIZERS_PARALLELISM: "false"
+
+jobs:
+  frozen-encoder-smoke:
+    name: pinned DINOv2 research smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Cache Hugging Face model files
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: visual-address-dinov2-small-ed25f3a31f01632728cabb09d1542f84ab7b0056
+
+      - name: Install optional vision dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e '.[vision]'
+
+      - name: Run pinned held-out smoke benchmark
+        run: |
+          python examples/arcade_visual_address_benchmark.py \
+            --encoder dinov2 \
+            --variants-per-family 1 \
+            --output-dir build/visual-phase-one-smoke \
+            | tee build/visual-phase-one-smoke-summary.json
+
+      - name: Upload research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-phase-one-dinov2-smoke
+          path: |
+            build/visual-phase-one-smoke-summary.json
+            build/visual-phase-one-smoke/arcade-visual-phase-one.json
+          if-no-files-found: error
+          retention-days: 14

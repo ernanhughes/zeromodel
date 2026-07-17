@@ -45,7 +45,10 @@ jobs:
       - name: Install optional CPU vision dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --index-url https://download.pytorch.org/whl/cpu 'torch>=2.2'
+          python -m pip install \
+            --index-url https://download.pytorch.org/whl/cpu \
+            'torch>=2.2' \
+            'torchvision>=0.17'
           python -m pip install -e '.[vision]'
 
       - name: Run pinned held-out smoke benchmark

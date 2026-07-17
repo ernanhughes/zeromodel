@@ -19,7 +19,7 @@ python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
 After the production PyPI release is cut:
 
 ```bash
-python -m pip install zeromodel==1.0.10
+python -m pip install zeromodel==1.0.11
 ```
 
 For development:
@@ -67,6 +67,8 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 |---|---|
 | Immutable artifact kernel | `zeromodel.artifact` |
 | State-addressed policy lookup / sign reader | `zeromodel.policy_lookup` |
+| Q-policy criticality and decision-margin evidence | `zeromodel.policy_diagnostics` |
+| Exhaustive finite policy properties and linked verification artifacts | `zeromodel.policy_properties` |
 | Dense policy views over the same source table | `zeromodel.views` |
 | Spatially optimized view profiles | `zeromodel.spatial` |
 | Temporal decision manifolds | `zeromodel.manifold` |
@@ -124,6 +126,77 @@ python examples/arcade_shooter_policy.py
 It compiles a closed-world shooter policy into one VPM artifact, then replays by reading state signs from that artifact. Tests assert wave clear, random-baseline comparison, and deterministic action trace replay.
 
 See [`docs/examples/sign-reader.md`](docs/examples/sign-reader.md).
+
+## Criticality-aware verification
+
+ZeroModel 1.0.11 can add two separate evidence metrics to a Q-bearing policy surface:
+
+```text
+criticality     = best action value - worst action value
+decision margin = best action value - second-best action value
+```
+
+Criticality estimates how consequential a poor choice could be. Decision margin measures how decisively the winner beats its nearest alternative. Describe the first metric as VIPER-style criticality only when the source values are Q-values or an equivalent consequence-bearing teacher signal.
+
+```python
+from zeromodel import (
+    PolicyPropertyChecker,
+    PolicyPropertySpec,
+    VPMPolicyLookup,
+    build_vpm,
+    with_q_diagnostics,
+)
+
+ACTIONS = ("LEFT", "RIGHT", "STAY", "FIRE")
+
+enriched = with_q_diagnostics(
+    source,
+    action_metric_ids=ACTIONS,
+)
+artifact = build_vpm(enriched, recipe)
+
+# Diagnostic metadata lets the reader safely separate actions from evidence.
+reader = VPMPolicyLookup(artifact)
+```
+
+Evidence metrics are returned with the decision but never participate in action selection.
+
+A finite policy property is declarative and versioned:
+
+```python
+fire_requires_alignment = PolicyPropertySpec.from_dict({
+    "id": "fire_requires_alignment",
+    "version": "1",
+    "assert": {
+        "implies": [
+            {"eq": [{"var": "winner"}, "FIRE"]},
+            {"all": [
+                {"eq": [{"var": "state.tank"}, {"var": "state.target"}]},
+                {"eq": [{"var": "state.cooldown"}, 0]},
+            ]},
+        ]
+    },
+})
+
+report = PolicyPropertyChecker(
+    artifact,
+    action_metric_ids=ACTIONS,
+    evidence_metric_ids=("criticality", "decision_margin"),
+).check([fire_requires_alignment])
+
+verification_artifact = report.to_vpm()
+```
+
+The verification artifact points back to the exact checked policy through a provenance parent with relation `verifies`. Failed checks retain exact counterexample rows, candidates, evidence, and source/view coordinates.
+
+Run the full counterexample, repair, and re-verification fixture:
+
+```bash
+python examples/criticality_verification.py \
+  --output-dir docs/assets/criticality-verification
+```
+
+See [`docs/examples/criticality-verification.md`](docs/examples/criticality-verification.md) and [`docs/research/viper-policy-compilation.md`](docs/research/viper-policy-compilation.md).
 
 ## Dense view profiles
 
@@ -230,7 +303,6 @@ from zeromodel import TopLeftGate, guarded_pack_artifact, write_png
 
 packed = guarded_pack_artifact(artifact)
 write_png(packed.packed, "artifact_phos.png")
-
 result = TopLeftGate(threshold=0.75).evaluate(packed.packed)
 print(result.accepted, result.score)
 ```

@@ -10,14 +10,8 @@
     "benign_row_accuracy": 0.0,
     "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
     "confidence_intervals_95": {
-      "accepted_benign_action_correctness": [
-        0.0,
-        0.0
-      ],
-      "accepted_benign_row_correctness": [
-        0.0,
-        0.0
-      ],
+      "accepted_benign_action_correctness": null,
+      "accepted_benign_row_correctness": null,
       "benign_action_accuracy": [
         0.0,
         0.0028500821039109782
@@ -64,6 +58,7 @@
   },
   "next_action": "registration_required_local_baseline_showdown",
   "outcome": "C",
+  "run_manifest_digest": "44d586865ecd1ef4f949f015f53066170f4bdb507592c1f127d24cd0b5eb4025",
   "selected_quantile": 1.0,
   "selection_status": "selected_operating_point",
   "translation_families": {

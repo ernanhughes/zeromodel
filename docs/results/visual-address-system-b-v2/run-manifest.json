@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "examples\\arcade_visual_system_b_adjudication.py"
+  ],
+  "branch": "codex/fix-visual-evidence-identities",
+  "command": "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe examples\\arcade_visual_system_b_adjudication.py",
+  "completed_utc": "2026-07-17T22:20:05.041485+00:00",
+  "dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
+  "dirty": true,
+  "environment_digest": "b63454e524f0af89574b2dea23b61f21e8fb7cf120f8e975178cb24134b511e8",
+  "final_report_digest": "3cf8929aff6e9835e2002bfb1f3b5bcb98891fd1979cac5de75f78d448c9e29a",
+  "generator_version": "arcade_visual_system_b_adjudication/v2",
+  "git_commit": "35d5153394a68a4b2b64c5a0e91cf903c2bc18b8",
+  "run_manifest_digest": "44d586865ecd1ef4f949f015f53066170f4bdb507592c1f127d24cd0b5eb4025",
+  "selection_digest": "b7dfa44942f15cc782eaff3a4d7f4d7224214d4b7b15b6e5c668a76bf191a1b1",
+  "started_utc": "2026-07-17T22:19:39.383431+00:00",
+  "trace_digest": "38a63ac0391fa8873801e2ade66fe5b15200bb8128026408bde25b6713da770a",
+  "version": "zeromodel-visual-benchmark-run-manifest/v1"
+}

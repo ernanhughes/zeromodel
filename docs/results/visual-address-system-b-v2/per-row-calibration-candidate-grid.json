@@ -197,14 +197,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -540,14 +534,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -883,14 +871,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -1226,14 +1208,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -1569,14 +1545,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -1912,14 +1882,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -2255,14 +2219,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -2598,14 +2556,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -2941,14 +2893,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -3284,14 +3230,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -3625,14 +3565,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0

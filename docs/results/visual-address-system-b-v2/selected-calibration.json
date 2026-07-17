@@ -1,6 +1,6 @@
 {
   "benign_calibration_digest": "13a4004bd7d1a7535cdc5d64b3415031a96a55d741841410917212f92bc56b15",
-  "candidate_grid_digest": "403b7df8de48b3ed7956f459580cfb8c624bd5a653c75df3f06bc6cedff02779",
+  "candidate_grid_digest": "62cc2900e8270f3771852e2d2291ec5a8a9384fc388daa3c3001b9ef6e720d1a",
   "candidates": [
     {
       "benign_result": {
@@ -199,14 +199,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -542,14 +536,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -885,14 +873,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -1228,14 +1210,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -1571,14 +1547,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -1914,14 +1884,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -2257,14 +2221,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -2600,14 +2558,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -2943,14 +2895,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -3286,14 +3232,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0
@@ -3627,14 +3567,8 @@
           "benign_row_accuracy": 0.0,
           "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
           "confidence_intervals_95": {
-            "accepted_benign_action_correctness": [
-              0.0,
-              0.0
-            ],
-            "accepted_benign_row_correctness": [
-              0.0,
-              0.0
-            ],
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
             "benign_action_accuracy": [
               0.0,
               0.0

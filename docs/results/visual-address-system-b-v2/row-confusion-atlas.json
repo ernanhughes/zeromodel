@@ -1,0 +1,1013 @@
+{
+  "atlas_type": "observed_benign_row_confusion",
+  "pairs": [
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=0|target=0|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=0|target=0|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=0|target=0|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=0|target=0|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=1|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=1|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=1|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=1|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=2|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=2|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=2|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=2|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=3|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=3|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=3|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=3|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=4|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=4|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=4|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=4|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=5|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=5|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=5|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=5|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=6|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=6|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=0|target=6|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=0|target=6|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=0|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=0|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=0|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=0|target=none|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=1|target=0|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=1|target=0|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=1|target=0|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=1|target=0|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=1|target=1|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=1|target=1|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=1|target=1|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=1|target=1|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=2|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=2|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=2|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=2|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=3|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=3|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=3|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=3|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=4|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=4|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=4|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=4|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=5|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=5|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=5|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=5|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=6|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=6|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=1|target=6|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=1|target=6|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=1|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=1|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=1|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=1|target=none|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=2|target=0|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=2|target=0|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=2|target=0|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=2|target=0|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=2|target=1|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=2|target=1|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=2|target=1|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=2|target=1|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=2|target=2|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=2|target=2|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=2|target=2|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=2|target=2|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=3|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=3|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=3|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=3|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=4|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=4|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=4|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=4|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=5|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=5|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=5|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=5|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=6|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=6|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=2|target=6|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=2|target=6|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=2|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=2|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=2|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=2|target=none|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=3|target=0|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=3|target=0|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=3|target=0|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=3|target=0|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=3|target=1|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=3|target=1|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=3|target=1|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=3|target=1|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=3|target=2|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=3|target=2|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=3|target=2|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=3|target=2|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=3|target=3|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=3|target=3|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=3|target=3|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=3|target=3|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=3|target=4|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=3|target=4|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=3|target=4|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=3|target=4|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=3|target=5|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=3|target=5|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=3|target=5|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=3|target=5|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=3|target=6|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=3|target=6|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=3|target=6|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=3|target=6|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=3|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=3|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=3|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=3|target=none|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=0|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=0|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=0|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=0|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=1|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=1|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=1|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=1|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=2|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=2|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=2|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=2|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=3|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=3|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=4|target=3|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=4|target=3|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=4|target=4|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=4|target=4|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=4|target=4|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=4|target=4|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=4|target=5|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=4|target=5|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=4|target=5|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=4|target=5|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=4|target=6|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=4|target=6|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=4|target=6|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=4|target=6|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=4|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=4|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=4|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=4|target=none|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=0|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=0|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=0|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=0|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=1|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=1|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=1|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=1|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=2|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=2|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=2|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=2|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=3|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=3|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=3|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=3|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=4|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=4|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=5|target=4|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=5|target=4|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=5|target=5|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=5|target=5|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=5|target=5|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=5|target=5|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=5|target=6|cooldown=0",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=5|target=6|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "RIGHT",
+      "expected_row_id": "tank=5|target=6|cooldown=1",
+      "predicted_action_id": "RIGHT",
+      "predicted_row_id": "tank=5|target=6|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=5|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=5|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=5|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=5|target=none|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=0|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=0|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=0|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=0|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=1|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=1|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=1|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=1|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=2|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=2|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=2|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=2|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=3|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=3|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=3|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=3|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=4|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=4|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=4|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=4|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=5|cooldown=0",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=5|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "LEFT",
+      "expected_row_id": "tank=6|target=5|cooldown=1",
+      "predicted_action_id": "LEFT",
+      "predicted_row_id": "tank=6|target=5|cooldown=0",
+      "same_action": true
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "FIRE",
+      "expected_row_id": "tank=6|target=6|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=6|target=6|cooldown=1",
+      "same_action": false
+    },
+    {
+      "conflicting_action": true,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=6|target=6|cooldown=1",
+      "predicted_action_id": "FIRE",
+      "predicted_row_id": "tank=6|target=6|cooldown=0",
+      "same_action": false
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=6|target=none|cooldown=0",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=6|target=none|cooldown=1",
+      "same_action": true
+    },
+    {
+      "conflicting_action": false,
+      "count": 3,
+      "expected_action_id": "STAY",
+      "expected_row_id": "tank=6|target=none|cooldown=1",
+      "predicted_action_id": "STAY",
+      "predicted_row_id": "tank=6|target=none|cooldown=0",
+      "same_action": true
+    }
+  ]
+}

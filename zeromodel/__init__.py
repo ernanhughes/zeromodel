@@ -13,19 +13,33 @@ from .learning import LEARNING_METRICS, LearningAssessment, LearningObservation,
 from .manifold import DecisionManifold, ManifoldFrame, ManifoldSummary, ManifoldTransition, build_decision_manifold, find_inflection_points
 from .metrics import CANONICAL_METRICS, metric_ids_for_rows, pack_metrics, score_table_from_metric_rows
 from .phos import PHOSResult, guarded_pack_artifact, image_entropy, pack_artifact, phos_sort_pack, robust01, to_square, top_left_concentration
+from .policy_diagnostics import CRITICALITY_METRIC_ID, DECISION_MARGIN_METRIC_ID, with_q_diagnostics
 from .policy_lookup import PolicyLookupDecision, SignReader, VPMPolicyLookup
+from .policy_properties import (
+    CHECKER_VERSION,
+    VERIFICATION_METRICS,
+    PolicyPropertyChecker,
+    PolicyPropertyResult,
+    PolicyPropertySpec,
+    PolicyPropertyViolation,
+    PolicyVerificationReport,
+    decode_key_value_row_id,
+)
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
 from .spatial import SpatialOptimizationResult, SpatialOptimizer, build_optimized_view, optimize_view_profile
 from .training import TRAINING_METRICS, TrainingCheckpoint, TrainingProgressAssessment, build_training_progress_vpm, training_progress_recipe
 from .views import ViewProfile, ViewSet, build_view, build_views
 
-__version__ = "1.0.10"
+__version__ = "1.0.11"
 
 __all__ = [
     "CANONICAL_METRICS",
+    "CHECKER_VERSION",
+    "CRITICALITY_METRIC_ID",
     "CRITIC_METRICS",
     "CriticAssessment",
     "CriticObservation",
+    "DECISION_MARGIN_METRIC_ID",
     "Decision",
     "DecisionManifold",
     "HierarchyLevel",
@@ -39,6 +53,11 @@ __all__ = [
     "PHOSResult",
     "Policy",
     "PolicyLookupDecision",
+    "PolicyPropertyChecker",
+    "PolicyPropertyResult",
+    "PolicyPropertySpec",
+    "PolicyPropertyViolation",
+    "PolicyVerificationReport",
     "ScoreTable",
     "SignReader",
     "Signal",
@@ -50,6 +69,7 @@ __all__ = [
     "TopLeftGateResult",
     "TrainingCheckpoint",
     "TrainingProgressAssessment",
+    "VERIFICATION_METRICS",
     "VPMArtifact",
     "VPMCell",
     "VPMComparison",
@@ -72,6 +92,7 @@ __all__ = [
     "build_vpm",
     "compare_fields",
     "critic_recipe",
+    "decode_key_value_row_id",
     "default_controller",
     "find_inflection_points",
     "from_bundle",
@@ -100,6 +121,7 @@ __all__ = [
     "vpm_or",
     "vpm_subtract",
     "vpm_xor",
+    "with_q_diagnostics",
     "write_png",
     "write_svg",
 ]

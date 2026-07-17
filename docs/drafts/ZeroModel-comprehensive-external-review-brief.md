@@ -1,1094 +1,1985 @@
-# ZeroModel: Comprehensive Project Brief and External Review Prompt
+# ZeroModel Visual Policy Addressing
+## Unified Deterministic and Embedding Architecture — Comprehensive Design and External-Review Brief
 
-## Purpose
-
-This document is intended for independent review by multiple AI systems. The goal is not encouragement or a generic summary. The goal is to identify what ZeroModel actually is, what is technically distinctive, what is established engineering, where the strongest research contribution lies, what is missing, and what should be built next.
-
-Review the project critically but constructively. Separate:
-
-1. defects or contradictions;
-2. missing evidence;
-3. useful extensions;
-4. unnecessary complexity;
-5. adjacent prior art;
-6. genuine new research opportunities.
-
-Do not reduce ZeroModel to only one component such as a Q-table, heatmap, cache, decision table or policy reader. Those are relevant precedents and partial descriptions, but the project claims a broader artifact architecture. At the same time, do not accept novelty merely because familiar mechanisms have been combined. Evaluate whether the combination creates a coherent, useful and testable system abstraction.
+**Document status:** Architecture proposal with one implemented baseline  
+**Repository:** `ernanhughes/zeromodel`  
+**Current implemented baseline:** `VisualSignReader` / visual-index contract v2  
+**Primary purpose:** External technical review before the next implementation stage  
+**Scope:** Visual observation → governed VPM policy address → action or rejection  
+**Non-scope:** A universal computer-vision agent, arbitrary game-winning system, or autonomous physical controller
 
 ---
 
-# 1. Project in One Sentence
+# 1. Purpose of this document
 
-**ZeroModel turns scored data into deterministic, inspectable Visual Policy Map artifacts and small consumers that can operate without a model at decision time.**
+This document defines the next-stage architecture for **visual policy addressing in ZeroModel**.
 
-A Visual Policy Map, or VPM, is not simply an image. It is a machine-readable artifact containing:
+The system should allow an image, screenshot, camera frame, or short video observation to identify the nearest valid state or region inside a Visual Policy Map (VPM), after which the existing policy artifact selects the action.
 
-- a source matrix of scored rows and metrics;
-- stable row identifiers;
-- stable metric identifiers;
-- an explicit spatial layout recipe;
-- deterministic row and column ordering;
-- normalized view values;
-- mappings from view coordinates back to source coordinates;
-- provenance and parent relationships;
-- deterministic content identity;
-- optional PNG or SVG renderings;
-- lossless `.vpm` serialization.
+The intended abstraction is:
 
-Different consumers can use the same artifact for lookup, inspection, comparison, rendering, verification, gating, learning traces, training telemetry, critic evidence or temporal analysis.
+```text
+observation
+    ↓
+visual address provider
+    ↓
+accepted VPM row or policy region
+    ↓
+VPMPolicyLookup
+    ↓
+action + evidence + artifact trace
+```
 
-Repository: https://github.com/ernanhughes/zeromodel
+The architecture deliberately supports more than one way to produce the visual address:
 
-Project site: https://zeromodel.org
+```text
+Path A — deterministic visual addressing
+    no model, no training, tightly controlled domain
 
-Technical article: https://programmer.ie/post/zeromodel/
+Path B — frozen embedding addressing
+    pretrained encoder, no user training
+
+Path C — automatically adapted embedding addressing
+    pretrained encoder + lightweight fitting performed by ZeroModel
+
+Path D — expert-supplied perception
+    custom trained encoder or projection, fully identity-pinned
+```
+
+The product principle is:
+
+> **Use the least intelligent visual-addressing mechanism that survives the domain’s validation requirements.**
+
+This preserves the cheap, deterministic path for users who cannot or should not train models, while allowing learned visual embeddings when real variation makes a fixed codebook inadequate.
 
 ---
 
-# 2. Core Thesis: Compiled Versus Invoked
+# 2. Executive summary
 
-Most current AI systems are organized around repeated invocation:
+ZeroModel already contains an implemented deterministic visual reader for a bounded arcade world.
 
-```text
-current state
-        ↓
-invoke model, agent or planner
-        ↓
-reconstruct a decision
-        ↓
-execute action
-```
+That implementation:
 
-ZeroModel asks whether every decision should remain inside that loop.
+- converts canonical images into fixed integer feature vectors;
+- stores those vectors in a visual-index artifact;
+- binds the visual index to an exact policy artifact using an `addresses` relation;
+- resolves an observation to a policy row or returns a rejection;
+- preserves feature, calibration, index, policy, and decision identities;
+- exhaustively recovers all 112 canonical arcade states;
+- reproduces the symbolic policy across 2,401 four-target waves;
+- validates a reachable ambiguity rejection;
+- does not mutate caller-owned image arrays;
+- explicitly limits its claim to exact quantized feature-codeword addressing in the committed fixture.
 
-Some decisions are genuinely novel, ambiguous or open-ended. Those still require models, planning, search, tools or human judgment.
+This is a useful **Level 0 baseline**, but it does not provide broad visual generalization.
 
-Other decisions eventually become:
-
-- bounded;
-- stable;
-- reviewed;
-- repeated;
-- addressable;
-- policy-like.
-
-For those regions, ZeroModel proposes a compiled architecture:
+The proposed architecture extends the same artifact and policy contract with a new family of **embedding-address artifacts**:
 
 ```text
-model, expert, optimizer,
-training process or rules
-        ↓
-scored policy or evidence surface
-        ↓
-compile deterministic VPM artifact
+image
+    ↓
+pinned visual encoder
+    ↓
+global embedding + optional local patch embeddings
+    ↓
+prototype or region index
+    ↓
+calibrated acceptance / ambiguity / evidence checks
+    ↓
+VPM row or region
+    ↓
+policy action
 ```
 
-Later, at runtime:
+The user should not normally need to train a model. The preferred progression is:
 
 ```text
-current state
-        ↓
-resolve stable address
-        ↓
-read prepared candidate values
-        ↓
-select action
-        ↓
-return action + artifact trace
+1. Try deterministic compilation.
+2. If validation fails, try a frozen pretrained encoder.
+3. If that fails, automatically fit a small projection or prototypes.
+4. Permit a custom trained encoder only for advanced domains.
 ```
 
-The intelligence has not disappeared. It has moved upstream.
+The architecture therefore separates:
 
-The governing metaphor is:
+- **perception**, which may require intelligence;
+- **policy**, which remains a durable identified artifact;
+- **address calibration**, which defines what observations are safe to map;
+- **execution**, which performs the selected action;
+- **verification**, which confirms the expected result.
 
-> **Use intelligence for novelty. Build signs for stable policy.**
+ZeroModel’s distinctive contribution is not the invention of image embeddings or nearest-neighbour retrieval.
 
-Or more precisely:
+It is the governed handoff:
 
-> **Do not keep invoking intelligence merely because the system has never materialized what that intelligence already decided.**
-
-This is the meaning of “Signs, Not Directions.”
+> **A visual representation becomes an identity-bearing, calibrated and inspectable address into an independently identified policy artifact.**
 
 ---
 
-# 3. Problems ZeroModel Is Trying to Solve
+# 3. Status labels
 
-## 3.1 Policy remains implicit
+Every claim in this document uses one of four statuses.
 
-A policy may be distributed across model weights, prompts, tools, scripts, orchestration code, retrieval sources, institutional memory and human approval. A system can produce decisions without possessing a durable object representing the stable policy behind them.
+| Status | Meaning |
+|---|---|
+| **Implemented** | Present and tested in the current repository. |
+| **Next experiment** | Proposed immediate research or implementation work. |
+| **Research option** | Plausible future design requiring evidence before adoption. |
+| **Boundary** | Explicitly not claimed by the current system. |
 
-ZeroModel asks whether stable policy can become a first-class system object that can be identified, serialized, inspected, compared, versioned, verified, replayed, promoted and retired.
-
-## 3.2 Runtime traces are often too weak
-
-A conventional action log may say:
-
-```text
-action = FIRE
-```
-
-A ZeroModel policy decision can retain:
-
-```text
-artifact ID
-state row ID
-selected action
-selected value
-all candidate values
-source row index
-source metric index
-view row
-view column
-optional evidence metrics
-```
-
-This does not explain why the upstream policy generator assigned its values. It does establish exactly which compiled artifact and cell supplied the runtime action.
-
-## 3.3 Alternatives are commonly discarded
-
-Many systems retain only the selected output. ZeroModel preserves the complete candidate vector. This makes it possible to inspect not only what won, but what lost, how close the decision was, how consequential a poor choice might be, and whether a policy mutation changed the winner or only changed the surrounding evidence.
-
-## 3.4 Stable work is repeatedly recomputed
-
-Software already avoids recomputing stable work through compilation, caching, indexes, routing tables, materialized views, memoization, residual programs and precomputed policies.
-
-ZeroModel applies this staging idea to bounded AI policy and evidence while adding an artifact contract around identity, layout, traceability and inspection.
+This distinction is essential. The document must not allow proposed embedding capabilities to be mistaken for already implemented features.
 
 ---
 
-# 4. Core Artifact Architecture
+# 4. The problem being solved
 
-## 4.1 `ScoreTable`
+## 4.1 Symbolic policy addressing
 
-The source abstraction is a table of scored relationships.
-
-Examples:
+The current finite policy reader expects a stable symbolic row identifier:
 
 ```text
-states × actions
-documents × evidence metrics
-training checkpoints × progress metrics
-critic findings × risk dimensions
-incidents × response options
+tank=3|target=5|cooldown=0
+    ↓
+VPMPolicyLookup
+    ↓
+RIGHT
 ```
 
-The table contains stable row and metric identifiers rather than relying only on numeric array positions.
+This works when the runtime system already exposes the exact state.
 
-## 4.2 `LayoutRecipe`
+Many real systems instead provide observations:
 
-A layout recipe declares how source rows and metrics become a spatial view.
+- an image from a fixed camera;
+- a screenshot of a user interface;
+- a frame from a game;
+- a remote-desktop stream;
+- a short video clip;
+- a sensor visualization;
+- an equipment panel.
 
-Supported forms include source ordering, lexicographic ordering, weighted-score ordering, explicit column ordering, per-metric normalization and deterministic tie-breaking.
+The visual-addressing problem is:
 
-The layout is part of the representation, not an accidental result of a plotting library.
+> **Given an observation, identify the policy row or policy region that it safely addresses without first requiring a human-written symbolic parser.**
 
-## 4.3 `VPMArtifact`
+## 4.2 What “without a semantic middleman” means
 
-The compiled artifact contains:
+It does not mean that raw pixels magically become policy actions.
 
-- the original scored source;
-- the recipe;
-- deterministic source digests;
-- row and column order;
-- normalized field values;
-- source-to-view mappings;
-- provenance;
-- parents;
-- canonical identity.
+Some transformation is always required.
 
-The project uses canonical numeric encoding and SHA-256 identity. This establishes artifact identity under the canonicalization contract. It does not establish correctness, authorship, approval, authorization, truthful provenance or universal semantic equivalence.
+The distinction is between:
 
-## 4.4 Rendering and serialization
-
-The artifact can be rendered to PNG or SVG for inspection. The image is a view of the artifact, not the complete machine-readable artifact.
-
-The `.vpm` bundle contains the serializable representation required to reconstruct and validate artifact identity.
-
-## 4.5 Multiple deterministic views
-
-The same scored source can support several views:
+### Human-semantic parsing
 
 ```text
-source-order view
-risk-first view
-criticality-first view
-people-first view
-tree-first view
-optimized top-left view
+image
+    ↓
+car count = 1
+car position = bridge centre
+direction = approaching
+    ↓
+policy row
 ```
 
-Each view has a deterministic identity because layout is part of the artifact contract, while source mappings preserve the connection to the same underlying rows and metrics.
+and:
+
+### Latent visual addressing
+
+```text
+image or clip
+    ↓
+visual representation
+    ↓
+nearest safe policy region
+```
+
+The second route may still use a pretrained encoder, patch features, prototypes and calibration. It avoids requiring a bespoke object/state parser for every application.
+
+## 4.3 Why this is useful
+
+A stable visual-policy region can be reused at runtime without invoking a reasoning model.
+
+Intelligence is used when needed to:
+
+- select or train an encoder;
+- discover useful visual structure;
+- define or adapt prototypes;
+- recover from novel interfaces;
+- propose new policy mappings.
+
+Once reviewed and calibrated, the stable result becomes a durable artifact.
+
+This follows the larger ZeroModel principle:
+
+> **When a decision is genuinely new, invoke intelligence. When the policy is stable, build a sign.**
 
 ---
 
-# 5. Runtime Policy Lookup: “Signs, Not Directions”
+# 5. Core architecture
 
-`VPMPolicyLookup`, also exposed as `SignReader`, is one consumer of the artifact.
-
-For a finite policy:
-
-- rows are discretized runtime states;
-- metric columns are candidate actions;
-- cells contain action values;
-- the reader performs deterministic argmax over declared action metrics;
-- the result contains the winning action and exact artifact/source/view coordinates.
-
-The artifact may also contain evidence columns that are returned with the trace but excluded from action selection.
-
-The deployment convention is:
-
-> **The artifact ID recorded in a runtime decision trace is the identity of the exact artifact consumed by the reader.**
-
-Related artifacts should be connected through provenance rather than treated as interchangeable identities.
-
----
-
-# 6. Finite Arcade Experiment
-
-The reference experiment is intentionally small enough to enumerate completely.
-
-The world contains:
-
-- a tank in one of seven positions;
-- a target in one of seven positions or absent;
-- cooldown active or inactive;
-- four actions: `LEFT`, `RIGHT`, `STAY`, `FIRE`.
-
-This produces:
-
-- 112 declared states;
-- 448 state-action values;
-- 2,401 possible ordered four-target waves.
-
-The exhaustive committed validation checks:
-
-- 112 / 112 state rows;
-- 448 / 448 action values;
-- 112 / 112 selected actions;
-- 2,401 / 2,401 possible waves;
-- 31,213 matched source-versus-artifact runtime steps;
-- persistence and reload;
-- deterministic artifact identity;
-- decision-trace equivalence;
-- exact source and view cell resolution.
-
-The shooter is not evidence of commercial usefulness or open-world intelligence. It is a “hydrogen atom” for the architecture: a complete policy small enough that every declared state and trajectory can be checked rather than sampled.
-
----
-
-# 7. What Is New in the Current Project
-
-## 7.1 Q-bearing evidence
-
-A Q-bearing policy can add two non-action evidence metrics:
+## 5.1 Unified runtime pipeline
 
 ```text
-criticality
-    = best action value - worst action value
-
-decision margin
-    = best action value - second-best action value
+Raw observation
+    ↓
+Observation canonicalizer
+    ↓
+VisualAddressProvider
+    ↓
+VisualAddressDecision
+    ├── accepted row / region
+    └── rejection with evidence
+    ↓
+VPMPolicyLookup
+    ↓
+PolicyDecision
+    ↓
+Action executor
+    ↓
+Postcondition verifier
 ```
 
-Criticality asks how costly a poor action could be. Decision margin asks how decisively the winner beat its nearest alternative.
+The address provider may be deterministic or learned. The policy reader should not need to know which one was used.
 
-The best-minus-worst value should be called VIPER-style criticality only when the source columns contain Q-values or an equivalent consequence-bearing signal. For arbitrary handcrafted scores, it is only score spread.
+## 5.2 Shared interface
 
-The original binary arcade policy has a flat best-minus-worst surface, so the criticality fixture uses a separate Q-bearing teacher with varying consequence gaps.
+```python
+from typing import Protocol
 
-## 7.2 Action/evidence separation
+class VisualAddressProvider(Protocol):
+    def read(self, observation: "VisualObservation") -> "VisualAddressDecision":
+        ...
+```
 
-Evidence columns remain inside the artifact and decision trace but cannot participate in action argmax. This preserves forensic information without allowing diagnostic metrics to become accidental actions.
+All providers return the same conceptual decision:
 
-## 7.3 Declarative finite policy properties
+```python
+@dataclass(frozen=True)
+class VisualAddressDecision:
+    accepted: bool
+    reason: str
 
-`PolicyPropertyChecker` exhaustively checks named, versioned row-level properties over a finite policy.
+    observation_digest: str
+    representation_digest: str
+
+    provider_kind: str
+    provider_version: str
+    address_artifact_id: str
+    policy_artifact_id: str
+
+    nearest_row_id: str | None
+    nearest_score: float | None
+    second_row_id: str | None
+    second_score: float | None
+    ambiguity_measure: float | None
+
+    local_evidence_score: float | None
+    visible_evidence_fraction: float | None
+    critical_evidence_present: bool | None
+
+    matched_row_id: str | None
+    exact_match: bool
+    accepted_by: tuple[str, ...]
+
+    trace: dict[str, object]
+```
+
+The address decision should remain separate from the policy decision.
+
+Composition:
+
+```python
+address = provider.read(observation)
+
+if not address.accepted:
+    return RejectedVisualPolicyDecision.from_address(address)
+
+policy_decision = policy_reader.read(address.matched_row_id)
+return VisualPolicyDecision.combine(address, policy_decision)
+```
+
+This separation prevents perception evidence from being conflated with action values.
+
+---
+
+# 6. Architecture ladder
+
+## 6.1 Level 0 — exact deterministic codebook
+
+**Status: Implemented**
+
+```text
+canonical image
+    ↓
+fixed integer grayscale / pooling / quantization
+    ↓
+exact feature codeword
+    ↓
+VPM row
+```
+
+Best fit:
+
+- generated interfaces;
+- stable displays;
+- finite game screens;
+- equipment panels with fixed rendering;
+- fixed camera with negligible environmental variation;
+- known menus and alerts.
+
+Strengths:
+
+- no model;
+- no training;
+- tiny dependency footprint;
+- strong reproducibility;
+- simple artifact identity;
+- exact replay;
+- easy audit.
+
+Limitations:
+
+- little or no tolerance beyond quantization;
+- every valid state must be enumerable;
+- the renderer must visibly encode all policy-relevant state;
+- no learned invariance to lighting, translation, occlusion or appearance.
+
+## 6.2 Level 1 — deterministic neighbourhoods
+
+**Status: Next experiment**
+
+```text
+image
+    ↓
+fixed deterministic descriptor
+    ↓
+nearest known codeword
+    ↓
+per-state calibrated acceptance basin
+```
+
+Potential enhancements:
+
+- integer squared distances;
+- per-row acceptance radii;
+- ratio-based ambiguity;
+- classical local features;
+- perceptual hashes;
+- multiscale deterministic descriptors;
+- perturbation-calibrated thresholds.
+
+This remains a “dumb” architecture in the productive sense:
+
+- no training;
+- no external model;
+- predictable;
+- suitable for modest hardware.
+
+It should only be adopted if it demonstrates meaningful non-exact tolerance without unsafe false acceptance.
+
+## 6.3 Level 2 — frozen pretrained embeddings
+
+**Status: Next experiment**
+
+```text
+image
+    ↓
+frozen pretrained visual encoder
+    ↓
+embedding and patch tokens
+    ↓
+stored prototypes
+    ↓
+calibrated VPM region
+```
+
+No user training is required.
+
+The user supplies:
+
+- example images;
+- a VPM policy artifact;
+- optional row labels or demonstrations;
+- a validation set or generated variants.
+
+ZeroModel performs:
+
+- embedding extraction;
+- prototype selection;
+- clustering if necessary;
+- threshold calibration;
+- OOD tests;
+- artifact construction.
+
+Candidate encoders include DINOv2, DINOv3 or another pinned vision foundation model. The architecture must remain encoder-agnostic.
+
+## 6.4 Level 3 — automatic lightweight adaptation
+
+**Status: Research option**
+
+```text
+frozen encoder output
+    ↓
+small projection or aggregation head
+    ↓
+policy-aware embedding
+```
+
+The user does not run an ML training workflow manually.
+
+A ZeroModel compile command may fit:
+
+- a linear projection;
+- a shallow MLP;
+- a NetVLAD-style aggregator;
+- prototype clusters;
+- class-conditional covariance;
+- a metric-learning head.
+
+The resulting weights, dataset, configuration and calibration are all identified and frozen.
+
+This is best treated as **compilation with fitting**, not as an opaque autonomous training system.
+
+## 6.5 Level 4 — expert custom perception
+
+**Status: Research option**
+
+Advanced users may supply:
+
+- a custom encoder;
+- a fine-tuned foundation model;
+- a video encoder;
+- a domain-specific detector;
+- a segmentation model;
+- a multimodal sensor fusion model.
+
+ZeroModel’s responsibility becomes:
+
+- verify the supplied model identity;
+- verify preprocessing identity;
+- calibrate the representation against the policy;
+- preserve artifact lineage;
+- reject unsupported observations;
+- expose evidence and drift.
+
+---
+
+# 7. Artifact model
+
+The architecture should use separate artifacts for separate responsibilities.
+
+## 7.1 Policy artifact
+
+**Status: Implemented**
+
+Contains:
+
+- stable row or region IDs;
+- action values;
+- evidence metrics;
+- source mapping;
+- policy provenance;
+- artifact identity.
+
+It must not contain encoder weights or raw image datasets.
+
+## 7.2 Visual address artifact
+
+Contains either deterministic descriptors or learned prototypes.
+
+Common metadata:
+
+```json
+{
+  "kind": "visual_address_index",
+  "address_kind": "deterministic_codebook | embedding_prototype | embedding_region",
+  "address_version": "...",
+  "addresses_policy_artifact_id": "...",
+  "representation_dimension": 256,
+  "distance_or_similarity": "cosine",
+  "normalization": "l2",
+  "calibration_digest": "...",
+  "observation_spec_digest": "...",
+  "provider_spec_digest": "..."
+}
+```
+
+Common provenance:
+
+```json
+{
+  "kind": "visual_address_index",
+  "parents": [
+    {
+      "artifact_id": "<policy artifact id>",
+      "relation": "addresses"
+    }
+  ]
+}
+```
+
+## 7.3 Encoder manifest artifact
+
+Required for learned paths.
+
+```json
+{
+  "kind": "visual_encoder_manifest",
+  "architecture": "dinov3_vits16",
+  "weights_digest": "sha256:...",
+  "code_version": "...",
+  "framework": "pytorch",
+  "framework_version": "...",
+  "preprocessing_digest": "...",
+  "output_contract": {
+    "global_dimension": 384,
+    "patch_dimension": 384,
+    "normalization": "l2"
+  },
+  "license_record": "...",
+  "source_record": "..."
+}
+```
+
+The manifest identifies the encoder; it need not embed the weight bytes inside a `.vpm` file.
+
+## 7.4 Projection or aggregator artifact
+
+Required only when fitted.
+
+```json
+{
+  "kind": "visual_projection",
+  "architecture": "linear | mlp | netvlad",
+  "weights_digest": "sha256:...",
+  "input_dimension": 384,
+  "output_dimension": 256,
+  "training_manifest_digest": "...",
+  "optimizer_spec_digest": "...",
+  "seed": 1234,
+  "parent_encoder_manifest_id": "..."
+}
+```
+
+## 7.5 Calibration artifact
+
+Calibration should be independently inspectable rather than hidden in one metadata dictionary.
+
+It records:
+
+- development dataset identity;
+- calibration split identity;
+- OOD split identity;
+- global and per-region thresholds;
+- ambiguity rule;
+- local evidence rule;
+- operating point;
+- false-acceptance estimate;
+- false-rejection estimate;
+- subgroup results;
+- corruption and occlusion curves;
+- kill-condition result.
+
+## 7.6 Validation report artifact
+
+A report should link the complete chain:
+
+```text
+validation report
+    validates → visual address artifact
+    validates → policy artifact
+    validates → encoder manifest
+    validates → calibration artifact
+```
+
+This allows the deployed decision trace to cite exactly what was validated.
+
+## 7.7 Dataset manifest
+
+The dataset itself may live outside the repository, but the manifest must be identity-bearing.
+
+It should include:
+
+- observation IDs;
+- labels or policy-row bindings;
+- corruption family;
+- split assignment;
+- source category;
+- transformation parameters;
+- content digests;
+- licensing and privacy metadata where relevant.
+
+---
+
+# 8. Observation contract
+
+## 8.1 Image observation
+
+```python
+@dataclass(frozen=True)
+class ImageObservation:
+    pixels: object
+    timestamp: str | None
+    source_id: str
+    sequence_id: str | None
+    metadata: dict[str, object]
+```
+
+Canonicalization must define:
+
+- colour channel order;
+- orientation;
+- crop;
+- resize;
+- aspect-ratio policy;
+- value range;
+- normalization;
+- alpha handling;
+- camera or screen rectification;
+- digest semantics.
+
+## 8.2 Video observation
+
+```python
+@dataclass(frozen=True)
+class VideoObservation:
+    frames: tuple[ImageObservation, ...]
+    start_timestamp: str
+    end_timestamp: str
+    sample_rate_hz: float
+```
+
+Video becomes necessary when the action depends on motion or history:
+
+- approaching versus departing;
+- opening versus closing;
+- damage direction;
+- interface transition;
+- object entering versus leaving.
+
+## 8.3 Multisensor observation
+
+```python
+@dataclass(frozen=True)
+class MultisensorObservation:
+    image_or_video: ImageObservation | VideoObservation
+    scalar_signals: dict[str, float | int | bool | str]
+    previous_policy_state: str | None
+```
+
+For safety-relevant infrastructure, visual evidence should usually supplement rather than replace physical sensors.
+
+---
+
+# 9. Deterministic path
+
+## 9.1 Current implemented contract
+
+The repository currently implements:
+
+- integer BT.601 grayscale conversion;
+- exact integer box pooling;
+- uniform integer quantization;
+- a separate visual-index artifact;
+- an `addresses` policy parent;
+- compile-time separation audit;
+- exact-feature fast path;
+- nearest-candidate evidence;
+- distance rejection;
+- mathematically effective absolute-gap ambiguity rejection;
+- caller-memory ownership;
+- complete decision trace.
+
+The contract is explicitly bounded. It does not claim open-world perception or learned generalization.
+
+## 9.2 Appropriate future deterministic enhancements
+
+A deterministic v3 experiment may compare:
+
+1. current pooled grayscale;
+2. colour histograms;
+3. edge-orientation histograms;
+4. multiscale pooled descriptors;
+5. perceptual hashing;
+6. local binary patterns;
+7. classical keypoint descriptors;
+8. combinations of deterministic features.
+
+Every candidate must be treated as a declared feature contract with its own identity.
+
+## 9.3 Per-row calibration
+
+A global radius is controlled by the most confusable pair.
+
+A per-row radius may be derived from:
+
+- nearest valid neighbour;
+- within-state perturbation distribution;
+- distance to nearest conflicting-action region;
+- explicit false-acceptance target.
+
+A safer policy-aware radius is:
+
+```text
+maximum accepted radius for row r
+    constrained by
+minimum distance to any row requiring a conflicting action
+```
+
+This avoids giving a state a large radius merely because its nearest same-action neighbour is far away.
+
+## 9.4 Deterministic kill condition
+
+Do not keep increasing feature complexity indefinitely.
+
+Move to the frozen-embedding path when:
+
+- legitimate variation overlaps conflicting policy states;
+- small lighting or viewpoint changes cause unacceptable rejection;
+- robustness requires brittle domain-specific feature engineering;
+- the deterministic descriptor becomes more complex than a pinned encoder;
+- false acceptance cannot be controlled.
+
+---
+
+# 10. Frozen embedding path
+
+## 10.1 Representation
+
+A visual encoder may produce:
+
+```text
+global embedding:
+    one vector representing the image
+
+patch embeddings:
+    one vector for each spatial image patch
+```
+
+The global vector supports fast candidate retrieval.
+
+Patch vectors support local verification and occlusion reasoning.
+
+## 10.2 Why a frozen encoder is the default learned path
+
+A frozen encoder:
+
+- requires no domain training;
+- is easy to pin by digest;
+- can be reused across applications;
+- limits the trainable surface;
+- allows prototypes to be rebuilt cheaply;
+- is easier to govern than an end-to-end trained policy.
+
+DINOv2 and DINOv3 are relevant because they produce general-purpose global and dense visual features. DINOv3’s official model card exposes class and patch tokens and recommends frozen-feature use before fine-tuning.
+
+Encoder choice remains an experiment, not a locked dependency.
+
+## 10.3 Prototype construction
+
+For each VPM row or policy region, collect embeddings from valid examples.
+
+Possible prototype schemes:
+
+### Single centroid
+
+```text
+all row embeddings
+    ↓
+normalized mean
+    ↓
+one prototype
+```
+
+Simple, but may average incompatible visual modes.
+
+### Multiple medoids
+
+```text
+row embeddings
+    ↓
+cluster
+    ↓
+representative real observations
+```
+
+Safer when one state has several appearance modes.
+
+### Region density model
+
+```text
+row embeddings
+    ↓
+mean + covariance or non-parametric neighbourhood
+```
+
+Potentially more accurate, but harder to interpret and calibrate.
+
+The first experiment should compare centroid and medoid prototypes.
+
+## 10.4 Similarity
+
+For normalized vectors:
+
+```text
+cosine similarity = prototype · query
+cosine distance = 1 - similarity
+```
+
+The trace must record:
+
+- nearest prototype;
+- owning row;
+- nearest similarity;
+- second-nearest conflicting-row similarity;
+- ambiguity margin;
+- threshold used;
+- prototype ID;
+- encoder identity.
+
+## 10.5 Policy-region versus exact-row retrieval
+
+Two evaluation targets must be kept separate.
+
+### Exact-row retrieval
+
+The system identifies the original simulator or workflow state.
+
+Useful for diagnostics and exhaustive comparison.
+
+### Action-equivalent region retrieval
+
+The system may confuse exact rows while still choosing the same safe action.
+
+Useful for deployment when exact state distinctions are unnecessary.
+
+The artifact must declare which contract it provides:
+
+```text
+address_semantics:
+    exact_row
+    action_equivalent_region
+    hierarchical_region_then_row
+```
+
+---
+
+# 11. Local and global evidence
+
+## 11.1 Why global embeddings are insufficient
+
+A global embedding may remain similar even when the exact decision-critical object is hidden.
 
 Example:
 
 ```text
-If FIRE wins,
-tank must equal target
-and cooldown must equal zero.
+bridge scene with a car
+bridge scene with the car region removed
 ```
 
-The property language is a closed JSON-style interpreter rather than arbitrary `eval`. It supports variable lookup, equality, inequality, numeric comparison, membership, conjunction, disjunction, negation and material implication.
+The road, water, barriers and background may dominate the global descriptor.
 
-Typed row IDs decode nulls, booleans, integers, floats and strings deterministically. Evaluation errors include property ID, property version, failing row, operator, operand values and operand types.
+The runtime should not accept “bridge clear” merely because the visible background resembles clear examples.
 
-## 7.4 Verification artifacts
-
-A property-check report can itself become an identity-bearing VPM artifact.
-
-The verification artifact records:
-
-- checked policy artifact ID;
-- checker version;
-- property IDs and versions;
-- digest of the property specification;
-- rows checked;
-- pass or fail;
-- violations;
-- exact counterexample rows;
-- selected actions;
-- candidate values;
-- evidence;
-- source and view coordinates.
-
-Its provenance contains a `verifies` parent relation pointing to the exact checked policy.
-
-This supports the precise claim:
-
-> **This identified finite policy artifact passed these named row-level properties under this checker and property specification.**
-
-It does not prove that the policy is universally safe or that the property set is sufficient.
-
-## 7.5 Counterexample, repair and re-verification lineage
-
-The committed example performs this loop:
+## 11.2 Two-stage retrieval
 
 ```text
-original policy artifact
-        ↓
-passing verification artifact
-
-original policy
-        ↓
-seeded policy defect
-        ↓
-unsafe policy artifact
-        ↓
-failed verification artifact
-        ↓
-exact counterexample row and action cell
-        ↓
-reviewed repair
-        ↓
-repaired policy artifact with new identity
-        ↓
-passing re-verification artifact
+query global embedding
+    ↓
+retrieve top candidate regions
+    ↓
+compare local patch evidence
+    ↓
+accept or reject
 ```
 
-Automatic repair is not implemented. The project demonstrates an identity-bearing, reviewable repair and promotion path.
+The local verification may measure:
 
-## 7.6 Criticality-first inspection
+- fraction of expected patches matched;
+- spatially consistent patch correspondences;
+- presence of critical patch groups;
+- patch entropy;
+- amount of unmasked visual evidence;
+- consistency across several recent frames.
 
-The Q-bearing source can produce a deterministic view that places high-criticality states first.
+## 11.3 Critical evidence
 
-This establishes that a principled consequence metric can drive spatial inspection order. It does not yet establish that people or automated reviewers detect faults faster using this view.
+Critical evidence should not be inferred solely from raw attention maps.
+
+Possible sources:
+
+1. annotated critical regions;
+2. learned patch importance from held-out interventions;
+3. policy-conflict analysis;
+4. occlusion sensitivity tests;
+5. counterfactual masking;
+6. physical sensor cross-checks.
+
+A region is decision-critical when removing it changes the safe policy action or destroys the evidence needed to distinguish conflicting actions.
+
+## 11.4 Occlusion contract
+
+The system must not claim that any image remains understandable after arbitrary 50% removal.
+
+The valid claim is:
+
+> **The address should remain stable under removal of non-critical evidence within the validated corruption envelope, and it should reject when critical evidence is missing.**
+
+Two separate tests are required:
+
+### Non-critical occlusion
+
+Expected:
+
+- same policy region;
+- accepted;
+- local evidence remains above threshold.
+
+### Critical occlusion
+
+Expected:
+
+- rejection;
+- reason `insufficient_decision_evidence`;
+- no action or only a declared fail-safe action.
+
+## 11.5 Aggregation methods
+
+Potential aggregation methods include:
+
+- class token;
+- mean patch pooling;
+- generalized mean pooling;
+- NetVLAD-style aggregation;
+- attention-weighted pooling;
+- robust trimmed pooling;
+- multiple local prototype banks.
+
+NetVLAD is relevant because it aggregates local descriptors into a fixed-length representation and was originally designed for place recognition under appearance change.
+
+DELG is relevant because it explicitly combines global and local image features.
+
+These are candidates for comparison, not mandatory architecture.
 
 ---
 
-# 8. Wider Capability Surface
+# 12. Policy-aware embedding
 
-ZeroModel is larger than the policy reader.
+## 12.1 Motivation
 
-| Capability | Purpose |
-|---|---|
-| Immutable artifact kernel | Deterministic identity, mapping and provenance |
-| Policy lookup | State-addressed action selection and cell trace |
-| Policy diagnostics | Criticality and decision margin |
-| Policy properties | Exhaustive finite checks and verification artifacts |
-| View profiles | Multiple deterministic views over one source |
-| Spatial optimization | Optimize an explicit top-left mass objective |
-| Decision manifolds | Track spatial changes across scored panel sequences |
-| PHOS packing | Sort-pack and top-left concentration |
-| Composition | Numeric fuzzy AND/OR/NOT/XOR/add/subtract |
-| Comparison | Baseline-versus-target field differences |
-| Bundle serialization | Lossless `.vpm` round-trip |
-| Rendering | PNG and SVG views |
-| Hierarchy | Reduced multi-level fields |
-| Edge gates | Small top-left decision consumers |
-| Controller | EDIT/RESAMPLE/ESCALATE/STOP/SPINOFF signals |
-| Learning traces | Before/after/held-out/regression artifacts |
-| Training progress | Checkpoint telemetry and warnings |
-| Tracker adapters | Generic, TensorBoard-style, W&B-style and Trackio-style exports |
-| Critic artifacts | Risk-first maps from critic/evidence/policy scores |
+A generic image embedding preserves visual similarity.
 
-The unifying idea is:
+A policy-aware embedding should preserve distinctions that matter to action.
+
+Example:
 
 ```text
-scored information
-        ↓
-deterministic identity-bearing artifact
-        ↓
-different consumers
+two visually similar images
+    but
+one requires STOP and one requires GO
 ```
 
-The strength of evidence is not equal across all modules. The claims audit separates validated capabilities, implemented capabilities with thin evidence, unvalidated claims and claims requiring reframing.
+These must be strongly separated.
 
----
-
-# 9. What ZeroModel Is Built On
-
-ZeroModel does not claim that each ingredient is historically new.
-
-## 9.1 Tabular policies and Q-tables
-
-State-action lookup, tabular value functions and deterministic argmax are established. ZeroModel does not claim novelty for lookup.
-
-Its proposed contribution is the reusable artifact contract around a scored policy surface: canonical identity, explicit layout, source-to-view mapping, rendering, serialization, candidate retention, artifact-linked decision traces, verification and repair lineage.
-
-## 9.2 Decision tables and DMN
-
-Business decision tables already map conditions to actions, and Decision Model and Notation formalizes executable decisions. A decision table could become a ZeroModel policy producer.
-
-ZeroModel’s additional emphasis is on scored alternatives, visual spatial organization, content identity, multiple views and exact artifact/cell traces.
-
-## 9.3 Partial evaluation and program specialization
-
-Partial evaluation moves work upstream by specializing a general program against known inputs and leaving a residual runtime program.
-
-ZeroModel is not a general partial evaluator. The shared idea is staging: work that no longer depends on runtime novelty can be performed before runtime.
-
-## 9.4 Materialized views, caching and precomputation
-
-Databases, compilers and distributed systems routinely materialize stable computation. ZeroModel asks whether bounded portions of intelligent policy can be materialized while preserving their evidence surface and governance metadata.
-
-## 9.5 Content-addressed artifacts
-
-Content-addressed systems establish identity from canonical contents. ZeroModel applies this discipline to scored policy and evidence artifacts.
-
-Artifact identity is foundational for versioning and lineage, but signatures and trusted attestations remain separate concerns.
-
-## 9.6 Visual analytics and matrix views
-
-Heatmaps and visual inspection of tables are established. ZeroModel does not claim novelty for rendering a matrix.
-
-The relevant claim is that spatial layout is explicit and deterministic, preserved inside the artifact and mapped back to source coordinates.
-
-## 9.7 VIPER
-
-VIPER — *Verifiable Reinforcement Learning via Policy Extraction* — is the closest precedent on the policy-compilation axis.
-
-VIPER uses a neural policy and Q-function as an upstream oracle, then extracts a smaller decision-tree policy that can be analyzed more tractably.
-
-The shared architecture is:
+Conversely:
 
 ```text
-powerful policy producer upstream
-        ↓
-smaller structured policy downstream
+two visually different images
+    but
+both require the same safe action
 ```
 
-VIPER’s Q-DAGGER method also shows that the complete action-value structure carries important signal through its use of criticality.
+These may occupy the same broad policy region.
 
-The distinction is complementary:
+## 12.2 Training relationships
+
+The fitting process may use four relationship tiers:
 
 ```text
-VIPER:
-extract a tractable policy
-so behavioural properties can be verified
+same exact row:
+    strongest attraction
 
-ZeroModel:
-place a durable artifact contract around scored policy,
-candidate evidence, identity, layout, traces,
-verification results and repair lineage
+different row, same policy region:
+    moderate attraction or weak separation
+
+different row, different action:
+    strong separation
+
+critical conflicting actions:
+    strongest separation
 ```
 
-A VIPER tree could become a ZeroModel producer.
+Criticality may come from:
 
-## 9.8 External memory, situated systems and stigmergic intuition
+- policy decision margin;
+- Q-value consequence;
+- declared safety relationship;
+- verification properties;
+- manually reviewed action-pair severity.
 
-ZeroModel externalizes reusable policy into an environmental object addressed by later consumers. This resembles external memory, routing tables, situated action, environmental coordination and stigmergic systems.
+## 12.3 Recommended first adaptation
 
-The current artifact is not fully stigmergic because runtime agents do not necessarily modify it. A stronger version would allow controlled evidence accumulation, reviewed policy updates and promotion into future artifact versions.
+Do not begin with a large MLP and NetVLAD stack.
 
-## 9.9 Sigstore and in-toto as complementary layers
+Start with:
 
-ZeroModel identity answers:
+```text
+frozen encoder
+    ↓
+linear projection
+    ↓
+L2 normalization
+    ↓
+multiple prototypes per row
+```
 
-> Which exact artifact produced the decision?
+This provides a clean baseline for determining whether policy-aware adaptation adds value.
 
-Signing and supply-chain systems answer who produced it, who approved it, which build generated it and whether it passed an authorized promotion process.
+Only add trainable aggregation when the frozen features plus linear projection fail.
 
-These are complementary rather than competing systems.
+## 12.4 Training artifacts
 
----
+A fitted projection must record:
 
-# 10. Strongest Current Claims
-
-The project can currently make these defensible claims.
-
-## Artifact contract
-
-ZeroModel can turn a scored table into a deterministic VPM carrying stable identifiers, explicit spatial organization, source mapping, deterministic identity, provenance, renderable fields and lossless bundle serialization.
-
-## Closed finite policy execution
-
-A bounded, enumerable policy can be compiled into an addressable VPM and consumed without invoking a model or source-policy function at decision time.
-
-## Exact decision trace
-
-A lookup can return the selected action, complete candidate vector and exact artifact/source/view cell that produced it.
-
-## Q-bearing evidence
-
-Criticality and decision margin can be preserved as evidence while remaining excluded from action selection.
-
-## Exhaustive finite properties
-
-Named declarative row-level properties can be checked across every source row.
-
-## Linked verification artifacts
-
-Verification results can become deterministic artifacts linked to the exact checked policy and exact property specification.
-
-## Counterexample lineage
-
-A defect, failed verification result, exact counterexample, reviewed repair, new policy identity and passing re-verification can be retained as artifact lineage.
-
-## Deterministic views and spatial/temporal consumers
-
-The same source can produce deterministic task-specific views, an explicitly optimized spatial profile and temporal geometric summaries.
-
-## Evidence artifacts
-
-Training telemetry, learning observations and critic outputs can become deterministic artifacts for inspection.
+- encoder identity;
+- initialization;
+- trainable parameter shapes;
+- random seed;
+- optimizer;
+- learning rate;
+- epochs;
+- early-stopping rule;
+- training split;
+- validation split;
+- negative sampling;
+- loss definition;
+- action relationship matrix;
+- resulting weights digest.
 
 ---
 
-# 11. Claims Not Yet Established
+# 13. Temporal addressing
 
-Do not treat these as solved:
+## 13.1 Why single images may be insufficient
 
-- general formal verification of continuous dynamics;
-- temporal safety or liveness proofs;
-- universal policy correctness;
-- safety certification;
-- automatic property discovery;
-- automatic policy repair;
-- open-world generalization;
-- reliable approximate addressing for large continuous spaces;
-- criticality-weighted quantization benefits;
-- improved human inspection performance;
-- planet-scale traversal;
-- infinite memory;
-- millisecond performance on tiny hardware;
-- a 25 KB memory footprint;
-- self-describing executable PNGs;
-- survival of arbitrary lossy image transformations;
-- automatic discovery of the semantically best view;
-- real-world hallucination detection;
-- explanation of why a model produced its original scores;
-- trusted authorship or approval from a content hash alone;
-- general semantic equivalence between artifacts;
-- automatic edge/cloud symmetry;
-- a complete production viewer with pointer navigation.
+Some policy facts are not observable from one frame:
 
----
+- approaching versus departing;
+- object velocity;
+- opening versus closing;
+- attack direction;
+- previous interface step;
+- whether a warning is new or stale.
 
-# 12. Likely Deployment Regimes
+The correct address may therefore depend on:
 
-## Regime One: Fully compiled finite policy
+```text
+recent frames + previous accepted policy state
+```
 
-The domain is closed and enumerable. The complete policy can be built, tested and deployed. This is the current shooter regime.
+## 13.2 Temporal architecture
 
-## Regime Two: Compiled common path with intelligent fallback
+```text
+short frame sequence
+    ↓
+video encoder or frame embeddings
+    ↓
+temporal aggregator
+    ↓
+temporal visual address
+    ↓
+VPM transition policy
+```
 
-Known, repeated and reviewed cases use a compiled artifact. Novel, uncertain or out-of-domain cases return to a model, planner, search process, expert or human reviewer.
+Possible implementation levels:
 
-A reviewed resolution may later become part of a new artifact. This is likely the most practical near-term architecture.
+1. concatenate recent frozen image embeddings;
+2. exponentially weighted history;
+3. small recurrent or temporal projection;
+4. frozen V-JEPA-style video encoder;
+5. custom domain video model.
 
-## Regime Three: Hierarchical or approximate policy
+Again, use the cheapest validated level.
 
-The state space cannot be enumerated directly. The system requires abstraction, quantization, hierarchy, approximate addressing, sub-artifacts, uncertainty and fallback policies.
+## 13.3 VPM transition evidence
 
-Criticality may determine where to allocate finer resolution and stronger checking, but this is a research hypothesis rather than a validated result.
+A temporal decision should record:
 
----
+- previous accepted row;
+- current candidate row;
+- expected transition;
+- transition likelihood or distance;
+- whether the transition is allowed;
+- whether the observation implies a jump;
+- time since previous state.
 
-# 13. Current Development and Research Process
-
-## 13.1 Claim-first discipline
-
-Public claims have stable claim IDs and are classified as Verified, Implemented, Research or Vision. The claims audit maps public wording to repository evidence and required next proof.
-
-## 13.2 Implementation before promotion
-
-A capability is not validated merely because code exists. Promotion requires tests, fixtures, reproducible outputs, explicit boundaries, documentation and claims-audit updates.
-
-## 13.3 Pull-request workflow
-
-Features are developed through focused branches and pull requests. CI checks supported Python versions, package tests, source distribution, wheel build and metadata.
-
-## 13.4 Reproducibility artifacts
-
-Important examples should produce `.vpm` bundles, JSON results, rendered views, stable artifact IDs, exact counterexamples and persisted replay evidence.
-
-## 13.5 Adversarial external review
-
-External AIs are asked to find prior art, challenge novelty, identify overclaims, propose stronger experiments and inspect implementation choices.
-
-Useful findings are implemented. Criticism that merely reduces the project to one familiar component is adjudicated rather than accepted automatically.
-
-## 13.6 Publication discipline
-
-Conceptual articles should describe ZeroModel as a durable architecture rather than a sequence of release-specific additions. Version numbers belong mainly in reproducibility and release records.
+A visually plausible state that violates the workflow or physical transition model should be rejected.
 
 ---
 
-# 14. Proposed Next Stages for the Project
+# 14. Compiler workflow
 
-The roadmap below is ordered by likely information gain.
+The intended user experience is not “train a computer-vision model.”
 
-## Stage A — Release and baseline hygiene
+It is:
 
-### A1. Complete the production release path
+```bash
+zeromodel visual compile \
+  --policy policy.vpm \
+  --examples examples/manifest.json \
+  --mode auto \
+  --output visual-address.vpm
+```
 
-- complete TestPyPI clean-environment verification;
-- publish the stable package;
-- tag the tested commit;
-- preserve generated example outputs;
-- ensure README, package metadata and claims audit agree.
+## 14.1 `--mode deterministic`
 
-### A2. Baseline comparison
+Runs:
 
-Implement the same bounded policy using:
+- feature contract;
+- exact separation;
+- perturbation generation;
+- calibration;
+- validation report.
 
-- plain Python dictionary or NumPy table;
-- conventional decision tree;
-- ZeroModel VPM.
+Fails if the deterministic path does not meet targets.
 
-Compare:
+## 14.2 `--mode frozen`
 
-- behaviour fidelity;
-- serialization;
-- identity;
-- candidate retention;
-- trace detail;
-- mutation detection;
-- policy diffing;
-- verification linkage;
+Runs:
+
+- pinned encoder;
+- global and patch extraction;
+- prototype construction;
+- calibration;
+- held-out validation;
+- artifact generation.
+
+No training.
+
+## 14.3 `--mode adapt`
+
+Runs:
+
+- frozen encoder;
+- lightweight projection fitting;
+- prototype construction;
+- calibration;
+- held-out evaluation;
+- comparison with frozen mode.
+
+The adapted artifact is emitted only if it improves the declared objective without violating false-acceptance limits.
+
+## 14.4 `--mode auto`
+
+Runs the architecture ladder in order.
+
+Example decision:
+
+```json
+{
+  "selected_mode": "frozen_embedding",
+  "rejected_modes": [
+    {
+      "mode": "deterministic",
+      "reason": "held_out_translation_false_rejection_rate_exceeded"
+    }
+  ],
+  "selection_evidence": {
+    "action_accuracy": 0.984,
+    "false_acceptance_rate": 0.004,
+    "false_rejection_rate": 0.021
+  }
+}
+```
+
+The selected mode and failed alternatives should become part of the build report.
+
+---
+
+# 15. Runtime reader
+
+## 15.1 Unified reader
+
+```python
+class VisualPolicyReader:
+    def __init__(
+        self,
+        address_provider: VisualAddressProvider,
+        policy_lookup: VPMPolicyLookup,
+    ) -> None:
+        self.address_provider = address_provider
+        self.policy_lookup = policy_lookup
+
+    def read(self, observation: VisualObservation) -> VisualPolicyDecision:
+        address = self.address_provider.read(observation)
+        if not address.accepted or address.matched_row_id is None:
+            return VisualPolicyDecision.rejected(address)
+
+        policy = self.policy_lookup.read(address.matched_row_id)
+        return VisualPolicyDecision.accepted(address, policy)
+```
+
+## 15.2 Rejection reasons
+
+Common reasons:
+
+```text
+unsupported_observation_shape
+observation_preprocessing_failed
+no_visual_region_within_threshold
+ambiguous_visual_address
+insufficient_decision_evidence
+critical_region_missing
+unexpected_temporal_transition
+encoder_identity_mismatch
+address_policy_identity_mismatch
+calibration_not_valid_for_source
+source_drift_detected
+```
+
+## 15.3 Fail-safe actions
+
+A rejection does not always mean “do nothing.”
+
+The policy may declare a rejection action:
+
+```text
+web workflow:
+    stop and request review
+
+industrial machine:
+    safe stop
+
+bridge:
+    lock opening mechanism
+
+game:
+    invoke exploratory policy
+
+monitoring:
+    record incident and alert
+```
+
+The fail-safe action belongs to a separate, explicit safety policy. It must not be invented by the address provider.
+
+---
+
+# 16. Drift and recalibration
+
+## 16.1 Drift sources
+
+- camera movement;
+- replacement camera;
+- changed UI theme;
+- lighting season;
+- new vehicle types;
+- altered sprite rendering;
+- encoder library change;
+- preprocessing change;
+- compression pipeline;
+- domain population change.
+
+## 16.2 Drift signals
+
+- rising nearest distance;
+- shrinking nearest/second margin;
+- increasing rejection;
+- changed patch-evidence distribution;
+- transition inconsistencies;
+- operator overrides;
+- new clusters outside known regions.
+
+## 16.3 Recalibration
+
+A recalibration should create a new artifact, not mutate an existing one.
+
+```text
+old address artifact
+    superseded_by → new address artifact
+
+new calibration
+    calibrated_from → new dataset manifest
+
+validation report
+    validates → new artifact
+```
+
+A policy artifact may remain unchanged while its observation-address artifact evolves.
+
+---
+
+# 17. Security and safety
+
+## 17.1 Threats
+
+- adversarial perturbation;
+- replayed image;
+- camera substitution;
+- display spoofing;
+- prototype poisoning;
+- mislabeled examples;
+- encoder-weight substitution;
+- crafted near-prototype images;
+- hidden critical object;
+- stale frame;
+- unexpected crop;
+- model supply-chain compromise.
+
+## 17.2 Required controls
+
+- weight and preprocessing digests;
+- artifact-policy binding;
+- source identity;
+- timestamp freshness;
+- replay detection where needed;
+- signed deployment manifests for critical systems;
+- held-out corruption tests;
+- explicit OOD set;
+- critical-evidence checks;
+- sensor fusion for physical control;
+- rate-limited or approval-gated actions;
+- complete rejection trace.
+
+## 17.3 Safety boundary
+
+For physical infrastructure:
+
+> **Visual embedding similarity must not be treated as sufficient proof of safety.**
+
+The system should combine visual evidence with:
+
+- physical occupancy sensors;
+- mechanism state;
+- interlocks;
+- emergency stop;
+- previous transition state;
+- operator approval where required.
+
+---
+
+# 18. First experiment: Arcade Visual Address Benchmark
+
+The current arcade environment remains the best calibration fixture because it provides complete symbolic ground truth.
+
+## 18.1 Dataset
+
+For each of 112 policy rows, generate at least 100 visual variants:
+
+```text
+112 × 100 = 11,200 observations
+```
+
+Variation families:
+
+- clean renderer variants;
+- brightness and contrast;
+- colour palette;
+- sprite shape;
+- one- and two-pixel translation;
+- scale;
+- background texture;
+- noise;
+- JPEG-style degradation;
+- random masks;
+- structured non-critical masks;
+- structured critical masks;
+- partial crop.
+
+## 18.2 Split design
+
+Do not use a simple random image split.
+
+Hold out complete variation families.
+
+Example:
+
+```text
+train/calibrate:
+    red and blue sprites
+    brightness changes
+    random masks
+
+held-out validation:
+    green sprites
+    new target shape
+    structured occlusion
+```
+
+This measures generalization rather than memorization.
+
+## 18.3 Systems compared
+
+### System A
+
+Current deterministic visual reader.
+
+### System B
+
+Enhanced deterministic descriptor with per-row calibration.
+
+### System C
+
+Frozen encoder global prototype.
+
+### System D
+
+Frozen encoder global retrieval plus local patch verification.
+
+### System E
+
+Frozen encoder plus linear policy-aware projection.
+
+### System F
+
+Optional NetVLAD-style aggregation plus projection.
+
+## 18.4 Metrics
+
+- exact row retrieval;
+- action-equivalent retrieval;
+- top-k row retrieval;
+- acceptance rate;
+- false acceptance;
+- false rejection;
+- conflicting-action error;
+- OOD rejection;
+- critical-mask rejection;
+- non-critical-mask stability;
+- nearest/second margin;
+- calibration error;
+- runtime;
+- memory;
 - artifact size;
-- lookup latency.
+- prototype count;
+- cross-version reproducibility.
 
-Do not frame this as proving VPM lookup is faster than a dictionary. The goal is to isolate the value and cost of the artifact contract.
+## 18.5 Required corruption curves
 
-### A3. Non-game fixture
-
-Build one serious but bounded fixture, preferably:
+Evaluate at:
 
 ```text
-software deployment evidence
-        ↓
-DEPLOY / CANARY / HOLD / ROLL_BACK
+0%
+10%
+25%
+40%
+50%
+60%
+75%
 ```
 
-or:
+For each corruption level, report:
+
+- exact row accuracy;
+- action accuracy;
+- false acceptance;
+- rejection;
+- critical versus non-critical masking.
+
+## 18.6 Success criterion
+
+The system must demonstrate both:
+
+1. correct action under substantial **non-critical** corruption;
+2. rejection under removal of **critical** evidence.
+
+A high average accuracy that accepts critically corrupted images is a failure.
+
+## 18.7 Kill conditions
+
+Terminate or radically narrow the embedding direction if:
+
+1. a direct classifier matches or exceeds action accuracy, rejection and inspectability while the VPM layer adds no policy-governance value;
+2. local evidence cannot prevent unsafe acceptance under critical masking;
+3. calibration does not transfer to held-out corruption families;
+4. prototypes require nearly one exemplar per observation, reducing the system to a large memory lookup;
+5. the frozen encoder’s license, access, runtime or hardware makes the claimed user experience unrealistic;
+6. the deterministic path outperforms the learned path for the target domain.
+
+---
+
+# 19. Role of Bertin and matrix pattern analysis
+
+Bertin-style ordering is not the runtime matcher.
+
+The runtime uses high-dimensional representations.
+
+Bertin analysis can make the visual-policy geometry inspectable.
 
 ```text
-security evidence
-        ↓
-ALLOW / CHALLENGE / REVIEW / QUARANTINE
+prototype similarity matrix
+    ↓
+pattern detector / seriation
+    ↓
+ordered VPM inspection view
 ```
 
-It should include meaningful alternatives, out-of-domain handling, named properties, one seeded counterexample, repair lineage and comparison with a table or rule implementation.
+Questions it may expose:
 
-This is the highest-value step for showing generality beyond the arcade world.
+- Do same-action regions form coherent blocks?
+- Are conflicting actions visually entangled?
+- Is there a smooth progression between operational states?
+- Which rows form the closest conflicting pair?
+- Which prototypes are isolated?
+- Does a corruption family form its own unwanted cluster?
+- Does adaptation improve policy separation?
+- Are there visually similar states with incompatible actions?
 
----
-
-## Stage B — Test the visual thesis
-
-### B1. Human inspection study
-
-Compare:
-
-- raw table;
-- decision log;
-- source-order VPM;
-- criticality-first VPM.
-
-Seed policy defects and measure detection time, accuracy, false positives, reviewer confidence and ability to identify the exact source cell.
-
-### B2. Automated inspection benchmark
-
-Give the same artifacts to automated review consumers and compare whether criticality-first or risk-first ordering reduces search steps, tokens, rows inspected, time to counterexample and missed defects.
-
-### B3. Viewer
-
-Build a small static or local viewer that supports:
-
-- click a cell;
-- inspect source value;
-- inspect candidate row;
-- inspect provenance;
-- inspect parents;
-- compare two artifacts;
-- show property results;
-- follow counterexample-to-repair lineage.
-
-The viewer should consume real `.vpm` artifacts rather than a separate demo format.
+A discovered ordering should be frozen into a linked view artifact, not treated as proof of semantic correctness.
 
 ---
 
-## Stage C — Extend verification carefully
+# 20. Ten practical application classes
 
-### C1. Dynamic property checker
+These are examples of where the architecture might be useful. They are not all validated use cases.
 
-Add transition-system properties to the finite fixture.
+| # | Application | Likely starting level | Addressed policy |
+|---|---|---|---|
+| 1 | **Known web workflow state recognition** | DOM/deterministic, visual fallback | Which workflow step and action is valid |
+| 2 | **Legacy or remote-desktop automation** | Frozen screenshot embeddings | Which known screen or dialog is visible |
+| 3 | **Kiosk and check-in flows** | Deterministic signs | Continue, request input, reject unexpected screen |
+| 4 | **Industrial control-panel monitoring** | Deterministic or frozen embedding | Normal, warning, alarm, safe-stop state |
+| 5 | **Parking-bay or loading-zone occupancy** | Frozen embedding + local evidence | Clear, occupied, obstructed, uncertain |
+| 6 | **Bridge or crossing operational state** | Temporal embedding + physical sensors | Clear, approaching, occupied, exiting, blocked |
+| 7 | **Production-line station state** | Deterministic or frozen embedding | Ready, processing, jammed, missing part |
+| 8 | **Warehouse aisle or robot-zone supervision** | Temporal embedding | Clear, human present, obstruction, uncertain |
+| 9 | **Game menus, tutorials and bounded arenas** | Hybrid deterministic/embedding | Menu state, tactical region, action primitive |
+| 10 | **Visual regression and deployment verification** | Screenshot/DOM embeddings | Expected state, changed state, release-blocking anomaly |
 
-Examples:
+## 20.1 Why web workflows are illustrative but not the whole project
 
-- a target is eventually cleared;
-- cooldown prevents immediate repeated fire;
-- no trajectory enters a forbidden state;
-- every wave terminates within a bound.
+A browser often exposes a DOM or accessibility tree, so visual embeddings should not replace exact structure unnecessarily.
 
-Compare exhaustive transition scans with an SMT-backed encoding and, where useful, a decision-tree representation.
-
-### C2. Property-set identity and governance
-
-Treat policy, property set, checker, verification result and approval decision as distinct governed objects.
-
-Explore Sigstore or in-toto integration for trusted promotion.
-
-### C3. Counterexample minimization
-
-When a property fails, produce the smallest failing row, shortest failing trajectory, minimal changed-cell set and behavioural diff against the prior artifact.
-
-Do not jump directly to autonomous repair. Improve diagnosis first.
-
----
-
-## Stage D — Criticality-weighted representation
-
-Under a fixed artifact budget, compare uniform discretization with criticality-weighted discretization.
-
-Measure:
-
-- action fidelity;
-- value error;
-- critical-state error;
-- episode return;
-- failure rate;
-- artifact size;
-- out-of-domain fallback rate.
-
-This tests whether VIPER’s critical-state intuition transfers to approximate VPM representation. A negative result would still be valuable.
-
----
-
-## Stage E — Hybrid compilation and policy promotion
-
-Build a controlled Regime Two prototype:
+The web example demonstrates the broader architecture:
 
 ```text
-known state
-    → compiled artifact
-
-unknown or low-confidence state
-    → model or human fallback
-    → decision evidence
-    → review
-    → regression suite
-    → candidate new artifact
-    → verification
-    → promotion
+observe
+    → address
+    → decide
+    → act
+    → verify
 ```
 
-Research questions:
+But the visual-policy contribution is most distinctive where exact symbolic structure is absent, unreliable or inaccessible.
 
-- What qualifies a case for compilation?
-- How is uncertainty represented?
-- What evidence is required for promotion?
-- How are regressions checked?
-- How is rollback performed?
-- How are old decisions linked to the policy version active at the time?
-- When should a compiled region be invalidated?
+## 20.2 Why Quake is not an immediate claim
 
-This may be the most important long-term systems contribution.
+A complete Quake-playing system additionally requires:
 
----
+- screen localization;
+- video understanding;
+- memory;
+- policy learning;
+- continuous controller output;
+- feedback;
+- exploration;
+- map and opponent adaptation.
 
-## Stage F — Edge and portability
-
-Build a minimal reader in Rust, C or MicroPython using the same committed artifact bytes as the Python implementation.
-
-Measure startup time, lookup latency distributions, memory use, artifact size and trace completeness.
-
-Only after this should the project make edge-performance claims.
+Visual addressing is one component, not the complete agent.
 
 ---
 
-## Stage G — Hierarchical policy artifacts
+# 21. Claims ladder
 
-Develop stable child-artifact IDs, a resolver interface, parent/child tiles, a traversal contract, bounded lookup paths, out-of-domain fallback and hierarchy benchmarks.
+## Claim V1 — implemented
 
-This is a later architecture, not a prerequisite for validating the current finite artifact contract.
+> ZeroModel can compile a deterministic visual index for the committed closed arcade world and recover exact quantized feature codewords, policy rows and actions from canonical observations.
+
+## Claim V2 — implemented
+
+> The deterministic reader can reject declared distant and ambiguous fixtures while preserving complete artifact and decision evidence.
+
+## Claim V3 — not yet supported
+
+> Deterministic visual addressing tolerates meaningful non-exact visual variation.
+
+Requires perturbation benchmarks.
+
+## Claim V4 — next experiment
+
+> A frozen pretrained visual encoder can address bounded policy regions from held-out visual variants without user training.
+
+Requires the arcade embedding benchmark.
+
+## Claim V5 — not yet supported
+
+> Local and global evidence can preserve correct action under substantial non-critical occlusion while rejecting critical occlusion.
+
+Requires explicit intervention tests.
+
+## Claim V6 — not yet supported
+
+> Policy-aware metric fitting improves action separation over frozen generic embeddings.
+
+Requires a baseline-controlled held-out experiment.
+
+## Claim V7 — not supported
+
+> ZeroModel provides general image understanding or universal visual control.
+
+## Claim V8 — not supported
+
+> An arbitrary image with half of its pixels removed remains understandable.
+
+## Claim V9 — not supported
+
+> A visual-only system is sufficient for safety-critical infrastructure control.
 
 ---
 
-## Stage H — Real evidence integrations
+# 22. Recommended implementation sequence
 
-Add sanitized fixtures from actual systems:
+## PR A — experiment contracts
 
-- TensorBoard;
-- Weights & Biases;
-- Trackio;
-- RAG or critic evaluation;
-- software deployment;
-- anomaly triage.
+No heavy model dependency yet.
 
-The aim is not to add every integration. It is to demonstrate that the artifact contract survives real, imperfect evidence.
+Add:
+
+- dataset manifest schema;
+- corruption specification;
+- benchmark result schema;
+- address-provider protocol;
+- common visual-address decision;
+- baseline evaluation harness;
+- claims-audit entry.
+
+## PR B — frozen embedding baseline
+
+Add:
+
+- optional vision extra;
+- encoder manifest;
+- frozen encoder adapter;
+- global prototype artifact;
+- cosine matcher;
+- held-out evaluation;
+- exact policy binding;
+- no user training.
+
+## PR C — local evidence
+
+Add:
+
+- patch-token contract;
+- local prototype store;
+- local agreement metric;
+- critical-mask evaluation;
+- `insufficient_decision_evidence` rejection.
+
+## PR D — automatic lightweight adaptation
+
+Add only after frozen baselines:
+
+- linear projection;
+- policy-aware objective;
+- training manifest;
+- weights artifact;
+- comparison report;
+- selection gate.
+
+## PR E — temporal observation
+
+Add:
+
+- clip contract;
+- previous-state evidence;
+- temporal transition validation;
+- a motion-dependent fixture.
 
 ---
 
-# 15. Proposed Next Stages for the Development Process
+# 23. Important corrections to supplied proposals
 
-## Process 1: Maintain one canonical project map
+The supplied design drafts contain valuable ideas, but they should not be implemented verbatim.
 
-Create one document mapping:
+## 23.1 Do not call model inference “zero inference”
+
+A frozen encoder still performs model inference at runtime.
+
+The valid claim is:
+
+> No reasoning model or policy model is invoked after visual encoding.
+
+## 23.2 Do not assume DINOv3 is a simple dependency
+
+The official DINOv3 repository provides strong dense features, but its weights and custom licence require review, and its training stack is substantial.
+
+The architecture must support alternative encoders.
+
+## 23.3 Do not store large prototype banks in arbitrary metadata
+
+Embeddings, patch banks and calibration tables should be structured artifact values or referenced content-addressed resources.
+
+Metadata should describe the schema and identities.
+
+## 23.4 Do not average all patch grids blindly
+
+Spatially corresponding patch means may blur multiple poses and transformations.
+
+Use:
+
+- medoids;
+- clustering;
+- spatially aware matching;
+- key patch selection;
+- or learned aggregation.
+
+## 23.5 Do not set target metrics before measuring task difficulty
+
+Figures such as “95% at 50% occlusion” are hypotheses, not justified universal thresholds.
+
+The benchmark should publish full operating curves.
+
+## 23.6 Do not treat attention as proof of evidence
+
+Attention maps are not automatically calibrated explanations or critical-region detectors.
+
+Critical evidence requires intervention-based validation.
+
+## 23.7 Keep policy and address artifacts separate
+
+Embedding prototypes should not be injected into the policy artifact’s metadata.
+
+The separate-artifact architecture remains the stronger design.
+
+---
+
+# 24. External-review instructions
+
+Please evaluate the architecture as a proposed ZeroModel direction, not as an already completed product.
+
+Distinguish findings as:
 
 ```text
+blocker
+major
+minor
+optional enhancement
 research question
-→ claim IDs
-→ implementation modules
-→ fixtures
-→ benchmarks
-→ publications
-→ open issues
 ```
 
-The claims register, claims audit and backlog should not drift into independent systems.
+For each finding, provide:
 
-## Process 2: Use experiment packets
+```text
+Severity:
+Area:
+Finding:
+Why it matters:
+Smallest correction:
+Required experiment or test:
+Claims impact:
+```
 
-Every research claim should have a compact experiment packet containing:
-
-- hypothesis;
-- baseline;
-- fixture;
-- metric;
-- falsification condition;
-- expected artifacts;
-- hardware/environment;
-- claim IDs affected;
-- decision rule for promotion.
-
-## Process 3: Separate product and research tracks
-
-**Product track:** stable artifact API, package quality, viewer, adapters, portability and deployment workflow.
-
-**Research track:** human inspection, criticality allocation, dynamic verification, hybrid promotion and hierarchical policy.
-
-The tracks should share the artifact contract but have different acceptance standards.
-
-## Process 4: Require baseline-first development
-
-Before creating a new ZeroModel mechanism, implement the simplest credible baseline: dictionary, NumPy table, decision tree, SQLite table, DMN rule table or ordinary JSON artifact.
-
-This clarifies whether each new feature creates enough value to justify complexity.
-
-## Process 5: Track negative results
-
-A failed experiment should produce a committed report rather than disappear.
-
-Negative results are especially important for visual inspection, criticality-weighted layout, PHOS concentration, temporal manifolds and edge performance.
-
-## Process 6: Invite independent reproduction
-
-Prepare a small artifact-evaluation package another developer can run without project context.
-
-It should include a clean install, one command, expected artifact IDs, expected counterexample, expected repaired verification result and baseline comparison.
-
-## Process 7: Reduce version language in conceptual publications
-
-Describe persistent architecture as ZeroModel. Record versions and commits in reproducibility appendices.
+Do not reward the design for being ambitious. Look for ways it could become an unnecessary wrapper around standard embedding retrieval.
 
 ---
 
-# 16. Questions for External Reviewers
+# 25. Questions for reviewers
 
-## A. Concept and novelty
+## Architecture
 
-1. What is the strongest accurate description of ZeroModel?
-2. What is genuinely distinctive?
-3. Which parts are ordinary engineering?
-4. Is “compiled policy artifact” the right abstraction?
-5. Is “Visual Policy Map” technically justified, or is another name better?
-6. Does the combination of identity, layout, candidate retention, traces and verification lineage create a meaningful systems contribution?
-7. What existing work most directly overlaps with the complete system?
+1. Is the shared `VisualAddressProvider` abstraction the correct seam?
+2. Should the address decision and policy decision remain separate?
+3. Is `addresses` the correct policy relationship?
+4. Should encoder, projection, prototype and calibration records be separate artifacts?
+5. Is a VPM artifact an appropriate container for dense embedding prototypes?
+6. Should embedding storage use an external content-addressed matrix referenced by the VPM?
+7. Are exact rows and action-equivalent regions being distinguished clearly enough?
+8. Is the architecture actually ZeroModel-specific, or merely nearest-prototype classification with provenance?
 
-## B. Architecture
+## Product ladder
 
-1. Is `ScoreTable → LayoutRecipe → VPMArtifact → Consumer` a coherent minimal kernel?
-2. Which fields belong in canonical identity?
-3. Should provenance affect artifact identity?
-4. Should different layouts produce different artifact IDs, view IDs, or both?
-5. Is the distinction between action and evidence columns sound?
-6. Is the verification artifact correctly modeled as another VPM, or should it be a separate artifact type?
-7. What is missing from the lineage model?
-8. Where is the architecture unnecessarily coupled to two-dimensional layout?
+9. Is “least intelligent mechanism that passes validation” a sound product principle?
+10. Is the deterministic path worth preserving?
+11. Can frozen embeddings genuinely deliver a no-training user experience?
+12. What should cause `auto` mode to move from deterministic to frozen?
+13. What should cause it to move from frozen to adapted?
+14. Should automatic adaptation be in ZeroModel core or an optional research package?
+15. Is expert-supplied custom perception too broad for the project?
 
-## C. Verification
+## Representation
 
-1. Is exhaustive row-level checking useful enough to justify the word verification when bounded carefully?
-2. What property language should be supported next?
-3. Should dynamic properties use explicit transition systems, temporal logic, SMT or model checking?
-4. How should property sets be versioned and approved?
-5. How should failed checks represent minimal counterexamples?
-6. What would be needed before using this in safety-sensitive systems?
+16. Which frozen encoders should be benchmarked first?
+17. Is a global class token sufficient for the first baseline?
+18. Should mean patch pooling precede NetVLAD?
+19. Are medoids preferable to centroids?
+20. How many prototypes per row should be permitted?
+21. Should prototypes represent exact rows, action regions or both?
+22. What representation is most robust to benign partial occlusion?
+23. Does policy-aware metric learning risk hiding visually meaningful distinctions?
 
-## D. Criticality
+## Calibration
 
-1. Is best-minus-worst the right evidence metric to preserve?
-2. Which other metrics should be first-class?
-3. Should advantage, entropy, regret, uncertainty or calibration be included?
-4. Does criticality-first layout have a plausible inspection benefit?
-5. What experiment would falsify the criticality-weighted representation hypothesis?
-6. Does VIPER provide enough theoretical motivation, or is the transfer too weak?
+24. How should per-prototype acceptance thresholds be estimated?
+25. Should calibration optimize false acceptance globally or per conflicting action?
+26. Is nearest/second-nearest margin sufficient?
+27. Should OOD rejection include an explicit background or unknown distribution?
+28. How should uncertainty be combined across global and local evidence?
+29. Should threshold selection be conformal, percentile-based, EVT-based or simpler?
+30. How should calibration validity be scoped to a camera, renderer or source?
+31. What minimum validation set is needed before emitting a deployable artifact?
 
-## E. Product and use cases
+## Occlusion
 
-1. Which practical domain is the best first non-game fixture?
-2. Where would a VPM add more value than a normal table, policy engine or event log?
-3. Which user would adopt this first?
-4. Is the likely product a library, artifact format, policy registry, verification tool, viewer, deployment gateway or research framework?
-5. What should be removed from the package to make the project easier to understand?
+32. How should the system distinguish non-critical from critical masking?
+33. Is patch matching enough when objects move spatially?
+34. Should local matching preserve geometry?
+35. What intervention test best identifies decision-critical patches?
+36. How should the reader react when the global match is strong but local evidence is missing?
+37. Is “insufficient decision evidence” a separate rejection class from OOD?
+38. Should recent frames be used to infer missing current evidence?
 
-## F. Research programme
+## Temporal systems
 
-1. Which three experiments provide the highest information gain?
-2. Which current research directions are distractions?
-3. What would make the work publishable as a systems or ML paper?
-4. What are the strongest baselines?
-5. What independent reproduction would be persuasive?
-6. Which claims should be narrowed, split or deleted?
+39. At what point should the architecture move from images to video?
+40. Is previous accepted VPM state sufficient as lightweight memory?
+41. Should temporal transition rules be inside the policy artifact or a separate transition artifact?
+42. Which simple motion-dependent fixture should precede a bridge example?
+43. Is V-JEPA-style encoding relevant, or would stacked image embeddings suffice?
 
-## G. Process
+## Safety and governance
 
-1. Is the claim-registry process useful or too heavy?
-2. How should claim IDs, audits, experiments and issues be unified?
-3. What release cadence makes sense?
-4. Should research prototypes live in the core package or separate experimental modules?
-5. How can external AI review be used without producing design-by-consensus?
-6. What evidence should be required before promoting a Research claim to Verified?
+44. Are artifact digests enough, or are signatures required?
+45. How should encoder licence and weight access be recorded?
+46. What attacks are most likely against prototype addressing?
+47. Should safety-critical actions require independent sensor agreement?
+48. How should human overrides become calibration evidence?
+49. What drift signals should automatically disable an address artifact?
+50. What data or traces must be redacted?
 
----
+## Evidence and novelty
 
-# 17. Required Response Format
-
-## 1. Executive verdict
-
-In no more than 500 words, state:
-
-- project quality;
-- strongest contribution;
-- largest weakness;
-- whether the project is worth continuing;
-- recommended primary direction.
-
-## 2. Your model of ZeroModel
-
-Explain the project in your own words. This tests whether the current explanation is coherent.
-
-## 3. Prior-art map
-
-Use this table:
-
-| ZeroModel element | Closest prior work | Same | Different | Implication |
-|---|---|---|---|---|
-
-Do not state that no prior work exists unless you performed a credible search.
-
-## 4. Architecture review
-
-Classify findings as:
-
-- defect;
-- design risk;
-- missing feature;
-- unnecessary complexity;
-- good decision.
-
-Rank each by severity.
-
-## 5. Claims review
-
-Classify important claims as:
-
-- supported;
-- plausible but untested;
-- overstated;
-- false or confused;
-- unclear.
-
-## 6. Experiment roadmap
-
-Recommend the five highest-value experiments. For each include:
-
-- hypothesis;
-- baseline;
-- dataset or fixture;
-- metric;
-- falsification condition;
-- estimated effort;
-- claim IDs affected.
-
-## 7. Product roadmap
-
-Recommend:
-
-- first user;
-- first serious domain;
-- minimum useful product;
-- features to defer;
-- possible commercial or open-source positioning.
-
-## 8. Process roadmap
-
-Recommend changes to issue design, PR structure, claims governance, release process, external review and reproducibility.
-
-## 9. Kill criteria
-
-State what experimental results would indicate that:
-
-- the visual representation is not useful;
-- the artifact contract is not worth its complexity;
-- criticality-guided layout should be abandoned;
-- the project should narrow to a smaller library;
-- the wider research programme should stop.
-
-## 10. Final prioritized plan
-
-Provide:
-
-- next 30 days;
-- next 90 days;
-- next 6 months.
-
-Use explicit priorities:
-
-- P0;
-- P1;
-- P2;
-- defer;
-- reject.
+51. What baseline would most threaten the need for this architecture?
+52. If a linear classifier over frozen embeddings works, what does VPM add?
+53. What inspection study would demonstrate value beyond accuracy?
+54. Can Bertin ordering reveal policy conflicts that ordinary confusion matrices miss?
+55. What result would justify calling the learned space a “Visual Policy Map”?
+56. What result should cause the project to stop using that term?
+57. Is the arcade benchmark too synthetic to decide the architecture?
+58. Which fixed-camera domain is the cheapest honest next test?
+59. What is the smallest publishable claim?
+60. What are the three strongest kill conditions?
 
 ---
 
-# 18. Review Boundaries
+# 26. Requested reviewer response
 
-Do not criticize ZeroModel merely because lookup, tables, hashing, rendering or verification each existed previously. The relevant question is whether the complete artifact contract is coherent and useful.
+## A. Overall verdict
 
-Do not praise ZeroModel merely because it combines many capabilities. The relevant question is whether those capabilities belong together and produce measurable value.
+Choose one:
 
-Do not assume a rendered image is the artifact.
+```text
+strong architecture
+promising but overbuilt
+useful deterministic and frozen-prototype framework
+standard retrieval wrapped in unnecessary artifacts
+wrong direction for ZeroModel
+```
 
-Do not assume the content hash establishes trust.
+Explain the verdict.
 
-Do not treat finite row checking as universal formal verification.
+## B. Severity-ranked findings
 
-Do not treat a successful toy fixture as open-world evidence.
+Use the required finding format.
 
-Do not treat the number of registered claims as the number of historical inventions.
+## C. Architecture simplification
 
-Do not assume every module has equal evidence.
+Describe the smallest system that preserves the real value.
 
-Do not recommend autonomous repair before diagnosis, property coverage and promotion governance are sound.
+## D. Baselines
 
-The desired review is neither defensive nor dismissive.
+Name the mandatory conventional baselines.
 
-It should identify the smallest, strongest and most defensible version of ZeroModel—and the experiments that could justify expanding it.
+## E. Next experiment
+
+Specify one bounded experiment:
+
+- dataset;
+- models;
+- metrics;
+- success criterion;
+- kill conditions;
+- exact claim enabled by success.
+
+## F. Recommended next PR
+
+Specify:
+
+- files;
+- API surface;
+- dependencies;
+- tests;
+- documentation;
+- claims-audit change;
+- explicit non-goals.
+
+---
+
+# 27. Reference research
+
+These works motivate candidate components; none alone validates the ZeroModel architecture.
+
+1. **DINOv2: Learning Robust Visual Features without Supervision**  
+   https://arxiv.org/abs/2304.07193
+
+2. **DINOv3**  
+   https://arxiv.org/abs/2508.10104  
+   Official implementation: https://github.com/facebookresearch/dinov3
+
+3. **NetVLAD: CNN Architecture for Weakly Supervised Place Recognition**  
+   https://openaccess.thecvf.com/content_cvpr_2016/html/Arandjelovic_NetVLAD_CNN_Architecture_CVPR_2016_paper.html
+
+4. **Unifying Deep Local and Global Features for Image Search (DELG)**  
+   https://arxiv.org/abs/2001.05027
+
+5. **Self-Supervised Learning from Images with a Joint-Embedding Predictive Architecture (I-JEPA)**  
+   https://arxiv.org/abs/2301.08243
+
+6. **Masked Autoencoders Are Scalable Vision Learners**  
+   https://arxiv.org/abs/2111.06377
+
+7. **V-JEPA official implementation**  
+   https://github.com/facebookresearch/jepa
+
+---
+
+# 28. Final design position
+
+The visual architecture should not force every user into model training.
+
+It should provide a validated progression:
+
+```text
+deterministic codebook
+    ↓ when evidence requires
+deterministic tolerant descriptor
+    ↓ when evidence requires
+frozen pretrained embedding
+    ↓ when evidence requires
+automatic lightweight adaptation
+    ↓ when evidence requires
+expert custom perception
+```
+
+All levels should terminate in the same governed interface:
+
+```text
+observation
+    ↓
+identity-bearing visual address
+    ↓
+accepted VPM row or region
+    ↓
+independently identified policy
+    ↓
+action or rejection
+```
+
+The current deterministic reader remains valuable as the cheapest and most auditable level.
+
+The next serious question is not whether embeddings can retrieve similar images. That is established.
+
+The question is:
+
+> **Can ZeroModel turn a visual representation into a calibrated, policy-aware and independently governed address that remains stable under benign variation, rejects missing critical evidence, and provides operational value beyond a conventional classifier?**
+
+That is the experiment the next stage must answer.

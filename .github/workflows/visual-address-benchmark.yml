@@ -48,19 +48,23 @@ jobs:
           python -m pip install -e '.[vision]'
 
       - name: Run pinned held-out smoke benchmark
+        shell: bash
         run: |
+          mkdir -p build/visual-phase-one-smoke
+          set -o pipefail
           python examples/arcade_visual_address_benchmark.py \
             --encoder dinov2 \
             --variants-per-family 1 \
             --output-dir build/visual-phase-one-smoke \
-            | tee build/visual-phase-one-smoke-summary.json
+            2>&1 | tee build/visual-phase-one-smoke-run.log
 
-      - name: Upload research report
+      - name: Upload research report and diagnostics
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: visual-phase-one-dinov2-smoke
           path: |
-            build/visual-phase-one-smoke-summary.json
+            build/visual-phase-one-smoke-run.log
             build/visual-phase-one-smoke/arcade-visual-phase-one.json
           if-no-files-found: error
           retention-days: 14

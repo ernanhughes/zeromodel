@@ -4,6 +4,10 @@ This module is a tiny consumer layer: it does not change artifact identity, sour
 mapping, normalization, or rendering. It treats source rows as discretized state
 signs and metric columns as candidate actions, then returns the best action for a
 runtime state row.
+
+The reader compiles its immutable artifact and fixed lookup configuration into a
+compact in-memory execution plan at construction time. Runtime reads therefore do
+not allocate one ``VPMCell`` per candidate or recompute the winning action.
 """
 
 from __future__ import annotations
@@ -13,7 +17,10 @@ from typing import Any, Dict, Mapping, Optional, Sequence
 
 import numpy as np
 
-from .artifact import VPMArtifact, VPMCell, VPMValidationError
+from .artifact import VPMArtifact, VPMValidationError
+
+
+POLICY_PLAN_VERSION = "zeromodel-policy-plan/v1"
 
 
 @dataclass(frozen=True)
@@ -53,12 +60,11 @@ class PolicyLookupDecision:
 
 
 class VPMPolicyLookup:
-    """Read an action sign from a state-addressed VPM artifact.
+    """Read action signs from a state-addressed VPM artifact.
 
     Rows are discretized states. Metrics are actions. The consumer receives a
-    row id for the current state, reads the candidate action values in that row,
-    and returns the deterministic argmax plus the exact cell/source coordinates
-    that produced the decision.
+    row id for the current state and returns the deterministic argmax plus the
+    exact cell/source coordinates that produced the decision.
 
     Optional evidence metrics are returned alongside the decision but never
     participate in action selection. Tables produced by ``with_q_diagnostics``
@@ -69,6 +75,10 @@ class VPMPolicyLookup:
     policy table are usually comparable within a row. Use
     ``value_source="normalized"`` only when the policy intentionally wants to
     compare rendered view intensities instead.
+
+    Construction compiles row/metric mappings, candidate matrices, evidence
+    matrices and the winning action for every immutable source row. ``choose``
+    is the minimal hot path; ``read`` adds the full candidate/evidence trace.
     """
 
     def __init__(
@@ -133,10 +143,12 @@ class VPMPolicyLookup:
                 % ", ".join(overlap)
             )
 
+        metric_source_index = {
+            metric_id: index
+            for index, metric_id in enumerate(artifact.source.metric_ids)
+        }
         missing_actions = [
-            metric_id
-            for metric_id in actions
-            if metric_id not in artifact.source.metric_ids
+            metric_id for metric_id in actions if metric_id not in metric_source_index
         ]
         if missing_actions:
             raise VPMValidationError(
@@ -144,9 +156,7 @@ class VPMPolicyLookup:
                 % ", ".join(sorted(missing_actions))
             )
         missing_evidence = [
-            metric_id
-            for metric_id in evidence
-            if metric_id not in artifact.source.metric_ids
+            metric_id for metric_id in evidence if metric_id not in metric_source_index
         ]
         if missing_evidence:
             raise VPMValidationError(
@@ -160,92 +170,181 @@ class VPMPolicyLookup:
         self.value_source = value_source
         self.evidence_value_source = evidence_value_source
         self.tie_break = tie_break
+
+        row_count = len(artifact.source.row_ids)
+        metric_count = len(artifact.source.metric_ids)
+
+        self._row_source_index = {
+            row_id: source_row
+            for source_row, row_id in enumerate(artifact.source.row_ids)
+        }
         self._row_view_index = {
-            artifact.source.row_ids[source_row_index]: view_row
-            for view_row, source_row_index in enumerate(artifact.row_order)
+            artifact.source.row_ids[source_row]: view_row
+            for view_row, source_row in enumerate(artifact.row_order)
         }
         self._metric_view_index = {
-            artifact.source.metric_ids[source_metric_index]: view_column
-            for view_column, source_metric_index in enumerate(
-                artifact.column_order
-            )
+            artifact.source.metric_ids[source_metric]: view_column
+            for view_column, source_metric in enumerate(artifact.column_order)
         }
 
-    def _read_metric_value(
+        source_to_view_row = np.empty(row_count, dtype=np.intp)
+        for view_row, source_row in enumerate(artifact.row_order):
+            source_to_view_row[source_row] = view_row
+        source_to_view_row.flags.writeable = False
+        self._source_to_view_row = source_to_view_row
+
+        source_to_view_column = np.empty(metric_count, dtype=np.intp)
+        for view_column, source_metric in enumerate(artifact.column_order):
+            source_to_view_column[source_metric] = view_column
+        source_to_view_column.flags.writeable = False
+        self._source_to_view_column = source_to_view_column
+
+        action_source_columns = np.asarray(
+            [metric_source_index[metric_id] for metric_id in actions],
+            dtype=np.intp,
+        )
+        action_source_columns.flags.writeable = False
+        self._action_source_columns = action_source_columns
+
+        action_view_columns = np.asarray(
+            source_to_view_column[action_source_columns],
+            dtype=np.intp,
+        )
+        action_view_columns.flags.writeable = False
+        self._action_view_columns = action_view_columns
+
+        evidence_source_columns = np.asarray(
+            [metric_source_index[metric_id] for metric_id in evidence],
+            dtype=np.intp,
+        )
+        evidence_source_columns.flags.writeable = False
+        self._evidence_source_columns = evidence_source_columns
+
+        evidence_view_columns = np.asarray(
+            source_to_view_column[evidence_source_columns],
+            dtype=np.intp,
+        )
+        evidence_view_columns.flags.writeable = False
+        self._evidence_view_columns = evidence_view_columns
+
+        self._action_values = self._compile_value_matrix(
+            value_source=value_source,
+            source_columns=action_source_columns,
+            view_columns=action_view_columns,
+        )
+        self._evidence_values = self._compile_value_matrix(
+            value_source=evidence_value_source,
+            source_columns=evidence_source_columns,
+            view_columns=evidence_view_columns,
+        )
+        self._winner_indices = self._compile_winner_indices()
+
+    def _compile_value_matrix(
         self,
         *,
-        row_id: str,
-        view_row: int,
-        metric_id: str,
         value_source: str,
-    ) -> tuple[VPMCell, float]:
-        view_column = self._metric_view_index[metric_id]
-        cell = self.artifact.cell(view_row, view_column)
-        value = (
-            cell.raw_value
-            if value_source == "raw"
-            else cell.normalized_value
-        )
-        if not np.isfinite(value):
-            raise VPMValidationError(
-                "Policy value must be finite for %s/%s" % (row_id, metric_id)
-            )
-        return cell, float(value)
-
-    def read(self, row_id: str) -> PolicyLookupDecision:
-        """Return the selected action and optional evidence for ``row_id``."""
-
-        key = str(row_id)
-        if key not in self._row_view_index:
-            raise VPMValidationError("Unknown policy row_id: %s" % key)
-
-        view_row = self._row_view_index[key]
-        cells: list[tuple[int, str, VPMCell, float]] = []
-        candidates: Dict[str, float] = {}
-
-        for rank, metric_id in enumerate(self.action_metric_ids):
-            cell, value = self._read_metric_value(
-                row_id=key,
-                view_row=view_row,
-                metric_id=metric_id,
-                value_source=self.value_source,
-            )
-            candidates[metric_id] = value
-            cells.append((rank, metric_id, cell, value))
-
-        evidence: Dict[str, float] = {}
-        for metric_id in self.evidence_metric_ids:
-            _, value = self._read_metric_value(
-                row_id=key,
-                view_row=view_row,
-                metric_id=metric_id,
-                value_source=self.evidence_value_source,
-            )
-            evidence[metric_id] = value
-
-        if self.tie_break == "metric_id":
-            _, action, cell, value = max(
-                cells,
-                key=lambda item: (
-                    item[3],
-                    tuple(-ord(ch) for ch in item[1]),
-                ),
+        source_columns: np.ndarray,
+        view_columns: np.ndarray,
+    ) -> np.ndarray:
+        row_count = len(self.artifact.source.row_ids)
+        if source_columns.size == 0:
+            values = np.empty((row_count, 0), dtype=np.float64)
+        elif value_source == "raw":
+            values = np.ascontiguousarray(
+                self.artifact.source.values[:, source_columns],
+                dtype=np.float64,
             )
         else:
-            _, action, cell, value = max(
-                cells,
-                key=lambda item: (item[3], -item[0]),
+            values = np.ascontiguousarray(
+                self.artifact.normalized_values[
+                    self._source_to_view_row[:, None],
+                    view_columns[None, :],
+                ],
+                dtype=np.float64,
             )
+        if not np.isfinite(values).all():
+            raise VPMValidationError("Compiled policy values must be finite")
+        values.flags.writeable = False
+        return values
+
+    def _compile_winner_indices(self) -> np.ndarray:
+        if self.tie_break == "metric_order":
+            winners = np.argmax(self._action_values, axis=1).astype(
+                np.intp,
+                copy=False,
+            )
+        else:
+            winners = np.asarray(
+                [
+                    max(
+                        range(len(self.action_metric_ids)),
+                        key=lambda index: (
+                            float(row_values[index]),
+                            tuple(-ord(ch) for ch in self.action_metric_ids[index]),
+                        ),
+                    )
+                    for row_values in self._action_values
+                ],
+                dtype=np.intp,
+            )
+        winners.flags.writeable = False
+        return winners
+
+    def _source_row_for(self, row_id: str) -> tuple[str, int]:
+        key = str(row_id)
+        try:
+            return key, self._row_source_index[key]
+        except KeyError as exc:
+            raise VPMValidationError("Unknown policy row_id: %s" % key) from exc
+
+    def choose(self, row_id: str) -> str:
+        """Return only the selected action for the fastest runtime path."""
+        _, source_row = self._source_row_for(row_id)
+        winner = int(self._winner_indices[source_row])
+        return self.action_metric_ids[winner]
+
+    def choose_many(self, row_ids: Sequence[str]) -> tuple[str, ...]:
+        """Return selected actions for many row ids without trace allocation."""
+        source_rows = [self._source_row_for(row_id)[1] for row_id in row_ids]
+        return tuple(
+            self.action_metric_ids[int(self._winner_indices[source_row])]
+            for source_row in source_rows
+        )
+
+    def read(self, row_id: str) -> PolicyLookupDecision:
+        """Return the selected action and complete candidate/evidence trace."""
+        key, source_row = self._source_row_for(row_id)
+        winner = int(self._winner_indices[source_row])
+        action = self.action_metric_ids[winner]
+        value = float(self._action_values[source_row, winner])
+        source_metric_index = int(self._action_source_columns[winner])
+        view_row = int(self._source_to_view_row[source_row])
+        view_column = int(self._action_view_columns[winner])
+
+        candidates: Dict[str, float] = {
+            metric_id: float(candidate_value)
+            for metric_id, candidate_value in zip(
+                self.action_metric_ids,
+                self._action_values[source_row],
+            )
+        }
+        evidence: Dict[str, float] = {
+            metric_id: float(evidence_value)
+            for metric_id, evidence_value in zip(
+                self.evidence_metric_ids,
+                self._evidence_values[source_row],
+            )
+        }
 
         return PolicyLookupDecision(
             artifact_id=self.artifact.artifact_id,
             row_id=key,
             action=action,
             value=value,
-            source_row_index=cell.source_row_index,
-            source_metric_index=cell.source_metric_index,
-            view_row=cell.view_row,
-            view_column=cell.view_column,
+            source_row_index=source_row,
+            source_metric_index=source_metric_index,
+            view_row=view_row,
+            view_column=view_column,
             candidates=candidates,
             evidence=evidence,
         )
@@ -256,6 +355,43 @@ class VPMPolicyLookup:
     ) -> tuple[PolicyLookupDecision, ...]:
         """Read many state rows and return a deterministic decision trace."""
         return tuple(self.read(row_id) for row_id in row_ids)
+
+    def to_compiled_plan(self) -> dict[str, Any]:
+        """Return a portable consumer plan derived from this artifact and reader.
+
+        The plan is not a second policy artifact and does not replace the VPM
+        artifact identity. It records the exact artifact and lookup semantics used
+        to produce a compact runtime consumer in another language.
+        """
+        return {
+            "format": POLICY_PLAN_VERSION,
+            "artifact_id": self.artifact.artifact_id,
+            "consumer": "VPMPolicyLookup",
+            "value_source": self.value_source,
+            "evidence_value_source": self.evidence_value_source,
+            "tie_break": self.tie_break,
+            "row_ids": list(self.artifact.source.row_ids),
+            "action_metric_ids": list(self.action_metric_ids),
+            "evidence_metric_ids": list(self.evidence_metric_ids),
+            "action_values": self._action_values.tolist(),
+            "evidence_values": self._evidence_values.tolist(),
+            "winner_indices": [int(value) for value in self._winner_indices],
+            "source_to_view_rows": [
+                int(value) for value in self._source_to_view_row
+            ],
+            "action_source_metric_indices": [
+                int(value) for value in self._action_source_columns
+            ],
+            "action_view_columns": [
+                int(value) for value in self._action_view_columns
+            ],
+            "evidence_source_metric_indices": [
+                int(value) for value in self._evidence_source_columns
+            ],
+            "evidence_view_columns": [
+                int(value) for value in self._evidence_view_columns
+            ],
+        }
 
 
 # Blog-facing vocabulary: the code API remains VPMPolicyLookup, while the

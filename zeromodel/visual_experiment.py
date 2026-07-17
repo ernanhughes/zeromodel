@@ -18,23 +18,48 @@ from .visual_dataset import VisualDatasetManifest, VisualExampleRecord
 from .visual_encoder import FrozenVisualEncoder
 
 
+EXPECTED_ACCEPT = "accept"
+EXPECTED_REJECT = "reject"
+IMPOSSIBILITY_CONTROL = "impossibility_control"
+_EXPECTED_DISPOSITIONS = {
+    EXPECTED_ACCEPT,
+    EXPECTED_REJECT,
+    IMPOSSIBILITY_CONTROL,
+}
+
+
 @dataclass(frozen=True)
 class VisualEvaluationTrace:
     observation_id: str
     family_id: str
     split: str
-    expected_accept: bool
+    expected_disposition: str
+    expected_accept: Optional[bool]
     expected_row_id: Optional[str]
     expected_action_id: Optional[str]
     predicted_row_id: Optional[str]
     predicted_action_id: Optional[str]
     decision: VisualAddressDecision
 
+    def __post_init__(self) -> None:
+        if self.expected_disposition not in _EXPECTED_DISPOSITIONS:
+            raise VPMValidationError("unsupported expected visual disposition")
+        required = {
+            EXPECTED_ACCEPT: True,
+            EXPECTED_REJECT: False,
+            IMPOSSIBILITY_CONTROL: None,
+        }[self.expected_disposition]
+        if self.expected_accept is not required:
+            raise VPMValidationError(
+                "expected_accept does not match expected_disposition"
+            )
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "observation_id": self.observation_id,
             "family_id": self.family_id,
             "split": self.split,
+            "expected_disposition": self.expected_disposition,
             "expected_accept": self.expected_accept,
             "expected_row_id": self.expected_row_id,
             "expected_action_id": self.expected_action_id,
@@ -120,30 +145,83 @@ def vectors_for_records(
     )
 
 
-def _expected_accept(
+def _expected_disposition(
     record: VisualExampleRecord,
     manifest: VisualDatasetManifest,
-) -> bool:
+) -> str:
+    explicit = record.metadata.get("evaluation_role")
+    if explicit is not None:
+        value = str(explicit)
+        if value not in _EXPECTED_DISPOSITIONS:
+            raise VPMValidationError(
+                "unsupported evaluation_role for %s: %s"
+                % (record.observation_id, value)
+            )
+        return value
     if record.split == "ood":
-        return False
+        return EXPECTED_REJECT
     family_by_id = {family.family_id: family for family in manifest.families}
-    return not family_by_id[record.family_id].critical_evidence_removed
+    return (
+        EXPECTED_REJECT
+        if family_by_id[record.family_id].critical_evidence_removed
+        else EXPECTED_ACCEPT
+    )
 
 
 def _family_counter() -> Dict[str, int]:
     return {
-        "evaluation_count": 0,
+        "observation_count": 0,
+        "scored_evaluation_count": 0,
         "expected_accept_count": 0,
         "expected_reject_count": 0,
         "accepted_count": 0,
         "rejected_count": 0,
+        "scored_accepted_count": 0,
+        "scored_rejected_count": 0,
         "correct_row_count": 0,
         "correct_action_count": 0,
         "conflicting_action_error_count": 0,
         "false_accept_count": 0,
         "false_reject_count": 0,
         "correct_disposition_count": 0,
+        "impossibility_control_count": 0,
+        "impossibility_control_accepted_count": 0,
+        "impossibility_control_rejected_count": 0,
     }
+
+
+def _increment(
+    target: Dict[str, int],
+    *,
+    disposition: str,
+    accepted: bool,
+    correct_row: bool,
+    correct_action: bool,
+    conflicting_error: bool,
+) -> None:
+    target["observation_count"] += 1
+    target["accepted_count"] += int(accepted)
+    target["rejected_count"] += int(not accepted)
+    if disposition == IMPOSSIBILITY_CONTROL:
+        target["impossibility_control_count"] += 1
+        target["impossibility_control_accepted_count"] += int(accepted)
+        target["impossibility_control_rejected_count"] += int(not accepted)
+        return
+
+    expected_accept = disposition == EXPECTED_ACCEPT
+    target["scored_evaluation_count"] += 1
+    target["expected_accept_count"] += int(expected_accept)
+    target["expected_reject_count"] += int(not expected_accept)
+    target["scored_accepted_count"] += int(accepted)
+    target["scored_rejected_count"] += int(not accepted)
+    target["correct_row_count"] += int(correct_row)
+    target["correct_action_count"] += int(correct_action)
+    target["conflicting_action_error_count"] += int(conflicting_error)
+    target["false_accept_count"] += int(not expected_accept and accepted)
+    target["false_reject_count"] += int(expected_accept and not accepted)
+    target["correct_disposition_count"] += int(
+        (expected_accept and accepted) or (not expected_accept and not accepted)
+    )
 
 
 def evaluate_visual_provider(
@@ -157,7 +235,7 @@ def evaluate_visual_provider(
     splits: Sequence[str] = ("test", "ood"),
     include_traces: bool = False,
 ) -> Tuple[BenchmarkSystemResult, Tuple[VisualEvaluationTrace, ...]]:
-    """Evaluate one provider with explicit benign/rejection opportunities."""
+    """Evaluate benign, rejection, and information-theoretic control cases."""
 
     contract = provider.contract()
     if contract.policy_artifact_id != dataset_manifest.policy_artifact_id:
@@ -182,46 +260,44 @@ def evaluate_visual_provider(
     totals = _family_counter()
 
     for record in records:
-        expected_accept = _expected_accept(record, dataset_manifest)
+        disposition = _expected_disposition(record, dataset_manifest)
+        expected_accept = (
+            True
+            if disposition == EXPECTED_ACCEPT
+            else False if disposition == EXPECTED_REJECT else None
+        )
         decision = provider.read(observations[record.observation_id])
         predicted_row = decision.matched_row_id if decision.accepted else None
         predicted_action = (
             policy_lookup.choose(str(predicted_row)) if predicted_row is not None else None
         )
         correct_row = bool(
-            expected_accept and predicted_row is not None and predicted_row == record.row_id
+            disposition == EXPECTED_ACCEPT
+            and predicted_row is not None
+            and predicted_row == record.row_id
         )
         correct_action = bool(
-            expected_accept
+            disposition == EXPECTED_ACCEPT
             and predicted_action is not None
             and predicted_action == record.action_id
         )
         conflicting_error = bool(
-            expected_accept
+            disposition == EXPECTED_ACCEPT
             and decision.accepted
             and predicted_action is not None
             and predicted_action != record.action_id
         )
-        false_accept = bool(not expected_accept and decision.accepted)
-        false_reject = bool(expected_accept and not decision.accepted)
-        correct_disposition = bool(
-            (expected_accept and decision.accepted)
-            or (not expected_accept and not decision.accepted)
-        )
 
         counters = family_counts.setdefault(record.family_id, _family_counter())
         for target in (totals, counters):
-            target["evaluation_count"] += 1
-            target["expected_accept_count"] += int(expected_accept)
-            target["expected_reject_count"] += int(not expected_accept)
-            target["accepted_count"] += int(decision.accepted)
-            target["rejected_count"] += int(not decision.accepted)
-            target["correct_row_count"] += int(correct_row)
-            target["correct_action_count"] += int(correct_action)
-            target["conflicting_action_error_count"] += int(conflicting_error)
-            target["false_accept_count"] += int(false_accept)
-            target["false_reject_count"] += int(false_reject)
-            target["correct_disposition_count"] += int(correct_disposition)
+            _increment(
+                target,
+                disposition=disposition,
+                accepted=decision.accepted,
+                correct_row=correct_row,
+                correct_action=correct_action,
+                conflicting_error=conflicting_error,
+            )
 
         if include_traces:
             traces.append(
@@ -229,6 +305,7 @@ def evaluate_visual_provider(
                     observation_id=record.observation_id,
                     family_id=record.family_id,
                     split=record.split,
+                    expected_disposition=disposition,
                     expected_accept=expected_accept,
                     expected_row_id=record.row_id,
                     expected_action_id=record.action_id,
@@ -238,10 +315,12 @@ def evaluate_visual_provider(
                 )
             )
 
+    if totals["scored_evaluation_count"] <= 0:
+        raise VPMValidationError("benchmark evaluation contains no scored observations")
     metrics = VisualBenchmarkMetrics(
-        evaluation_count=totals["evaluation_count"],
-        accepted_count=totals["accepted_count"],
-        rejected_count=totals["rejected_count"],
+        evaluation_count=totals["scored_evaluation_count"],
+        accepted_count=totals["scored_accepted_count"],
+        rejected_count=totals["scored_rejected_count"],
         correct_row_count=totals["correct_row_count"],
         correct_action_count=totals["correct_action_count"],
         conflicting_action_error_count=totals["conflicting_action_error_count"],
@@ -251,12 +330,14 @@ def evaluate_visual_provider(
         false_reject_opportunities=totals["expected_accept_count"],
     )
     notes = {
+        "observation_count_including_controls": totals["observation_count"],
+        "scored_evaluation_count": totals["scored_evaluation_count"],
         "expected_accept_count": totals["expected_accept_count"],
         "expected_reject_count": totals["expected_reject_count"],
         "correct_disposition_count": totals["correct_disposition_count"],
         "correct_disposition_rate": (
             float(totals["correct_disposition_count"])
-            / float(totals["evaluation_count"])
+            / float(totals["scored_evaluation_count"])
         ),
         "benign_row_accuracy": (
             float(totals["correct_row_count"])
@@ -268,6 +349,19 @@ def evaluate_visual_provider(
             float(totals["correct_action_count"])
             / float(totals["expected_accept_count"])
             if totals["expected_accept_count"]
+            else 0.0
+        ),
+        "impossibility_control_count": totals["impossibility_control_count"],
+        "impossibility_control_accepted_count": totals[
+            "impossibility_control_accepted_count"
+        ],
+        "impossibility_control_rejected_count": totals[
+            "impossibility_control_rejected_count"
+        ],
+        "impossibility_control_acceptance_rate": (
+            float(totals["impossibility_control_accepted_count"])
+            / float(totals["impossibility_control_count"])
+            if totals["impossibility_control_count"]
             else 0.0
         ),
         "family_counts": family_counts,

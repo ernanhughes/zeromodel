@@ -58,6 +58,7 @@ from zeromodel.visual_corruptions import (  # noqa: E402
 )
 from zeromodel.visual_encoder import HuggingFaceDinoV2Encoder  # noqa: E402
 from zeromodel.visual_experiment import (  # noqa: E402
+    IMPOSSIBILITY_CONTROL,
     build_research_report,
     encode_observations,
     evaluate_visual_provider,
@@ -101,8 +102,16 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
         CorruptionFamilySpec(family_id="test-noncritical-patch", kind="structured_occlusion"),
         CorruptionFamilySpec(
             family_id="test-critical-target",
-            kind="critical_intervention",
+            kind="information_theoretic_control",
             critical_evidence_removed=True,
+            metadata={
+                "evaluation_role": IMPOSSIBILITY_CONTROL,
+                "reason": (
+                    "removing the target yields pixels equivalent to a valid "
+                    "no-target state, so a single frame cannot distinguish hidden "
+                    "presence from true absence"
+                ),
+            },
         ),
         CorruptionFamilySpec(
             family_id="test-critical-tank",
@@ -160,6 +169,18 @@ def _critical_tank(frame: np.ndarray, state: Mapping[str, Any]) -> np.ndarray:
 
 def _critical_cooldown(frame: np.ndarray) -> np.ndarray:
     return mask_box(frame, top=7, left=frame.shape[1] - 3, height=2, width=2, value=0)
+
+
+def _second_tank_frame(frame: np.ndarray, config: ShooterConfig) -> np.ndarray:
+    """Return a frame with two spatially separated tanks, impossible in policy state."""
+
+    result = np.array(frame, dtype=np.uint8, order="C", copy=True)
+    centre = (config.width - 1) * CELL_PIXELS + CELL_PIXELS // 2
+    result[11, centre] = TANK_VALUE
+    result[12, centre - 1 : centre + 2] = TANK_VALUE
+    result[13, centre - 2 : centre + 3] = TANK_VALUE
+    result.flags.writeable = False
+    return result
 
 
 def _variant(
@@ -255,14 +276,18 @@ def build_arcade_benchmark_dataset(
                 for index in range(count):
                     observation_id = "%s:%s:%02d" % (family_id, row_id, index)
                     varied = _variant(frame, state, family_id, index)
+                    metadata: Dict[str, Any] = {
+                        "family_id": family_id,
+                        "row_id": row_id,
+                        "variant_index": index,
+                    }
+                    if family_id == "test-critical-target":
+                        metadata["evaluation_role"] = IMPOSSIBILITY_CONTROL
+                        metadata["counterfactual_source_row_id"] = row_id
                     observation = ImageObservation(
                         pixels=varied,
                         source_id=SOURCE_SCOPE,
-                        metadata={
-                            "family_id": family_id,
-                            "row_id": row_id,
-                            "variant_index": index,
-                        },
+                        metadata=metadata,
                     )
                     observations[observation_id] = observation
                     records.append(
@@ -273,12 +298,13 @@ def build_arcade_benchmark_dataset(
                             family_id=family_id,
                             row_id=row_id,
                             action_id=action,
-                            metadata={"variant_index": index},
+                            metadata=metadata,
                         )
                     )
 
     height = FRAME_HEIGHT
     width = config.width * CELL_PIXELS
+    first_canonical = next(iter(canonical.values()))
     for family_id in ("ood-blank", "ood-checkerboard", "ood-impossible-state"):
         for index in range(ood_examples_per_family):
             if family_id == "ood-blank":
@@ -292,11 +318,7 @@ def build_arcade_benchmark_dataset(
                     cell=1 + index % 3,
                 )
             else:
-                frame = np.array(next(iter(canonical.values())), copy=True)
-                frame[11, 1] = TANK_VALUE
-                frame[12, 0:3] = TANK_VALUE
-                frame[13, 0:5] = TANK_VALUE
-                frame.flags.writeable = False
+                frame = _second_tank_frame(first_canonical, config)
             observation_id = "%s:%02d" % (family_id, index)
             observation = ImageObservation(
                 pixels=frame,

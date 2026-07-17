@@ -16,7 +16,8 @@ The package version remains `1.0.11`.
 - frozen medoid prototype retrieval (system C);
 - raw frozen-embedding k-NN (system D);
 - a rejection-equipped ridge linear probe (system G);
-- independent prototype, calibration, test, critical-intervention, and OOD sets;
+- independent prototype, calibration, benign-test, distinguishable-rejection,
+  information-theoretic-control, and OOD sets;
 - executable false-acceptance and false-rejection accounting;
 - per-family result counts and optional decision traces.
 
@@ -53,9 +54,16 @@ The DINOv2 adapter pins:
 - revision: `ed25f3a31f01632728cabb09d1542f84ab7b0056`;
 - representation: L2-normalized CLS token from `last_hidden_state`;
 - loaded state-dictionary digest;
-- preprocessing digest;
+- crop-safe square-letterbox canonicalization;
+- Hugging Face processor configuration and preprocessing digest;
 - framework versions;
 - source and licence record.
+
+The arcade renderer is substantially wider than it is tall. Sending it directly
+to the default processor would resize by the short edge and then centre-crop,
+discarding policy-relevant pixels near the sides. The adapter therefore centres
+the complete source image on an identity-bearing square canvas large enough that
+the declared crop cannot remove source pixels.
 
 The encoder is loaded only when explicitly requested. Normal package import and
 normal CI remain NumPy-only.
@@ -86,20 +94,31 @@ row across disjoint families.
 - palette C;
 - a patch placed only over source background pixels.
 
-### Critical-evidence interventions
+### Scored rejection interventions
 
-- target removed when a target exists;
 - tank removed;
 - cooldown indicator removed.
 
-These are expected to reject. The benchmark does not claim that a global
-embedding can always distinguish true absence from hidden presence.
+These observations are visibly outside the complete valid-state renderer and
+are expected to reject.
+
+### Information-theoretic control
+
+- target removed when a target exists.
+
+Removing the target produces pixels identical to a legitimate no-target state.
+A single-frame visual reader cannot distinguish “target hidden” from “target
+truly absent” when the observations are identical. These controls remain in the
+report, including acceptance and rejection counts, but are excluded from false-
+acceptance and false-rejection denominators. Solving this case requires temporal,
+multiview, or independent sensor evidence rather than a stronger global image
+embedding.
 
 ### OOD families
 
 - blank frames;
 - checkerboards;
-- impossible multi-object states.
+- a genuinely impossible frame containing two separated tanks.
 
 A family never appears in more than one split.
 
@@ -145,27 +164,33 @@ threshold is selected.
 Benign test observations are expected to be accepted and recover the correct
 action.
 
-Critical interventions and OOD observations are expected to be rejected.
+Distinguishable critical interventions and OOD observations are expected to be
+rejected.
+
+Information-theoretic controls have no scored accept/reject expectation. Their
+behaviour is reported separately.
 
 The report records:
 
-- accepted and rejected counts;
+- scored accepted and rejected counts;
 - correct rows and actions;
 - conflicting-action errors;
-- false accepts with an explicit rejection-opportunity denominator;
-- false rejects with an explicit benign-opportunity denominator;
-- correct disposition;
+- false accepts with an explicit distinguishable-rejection denominator;
+- false rejects with an explicit benign denominator;
+- correct scored disposition;
+- impossibility-control acceptance and rejection counts;
 - per-family counts.
 
 The existing `VisualBenchmarkMetrics.action_accuracy` retains its original whole-
-evaluation denominator. The executable evaluator additionally reports
+scored-evaluation denominator. The executable evaluator additionally reports
 `benign_action_accuracy` so correct expected rejections are not confused with
 wrong actions.
 
 ## Evidence boundary
 
-This phase implements the benchmark and the optional learned baselines. It does
-not yet claim a successful frozen-embedding result.
+This phase implements the benchmark and the optional learned baselines. A CI
+smoke run proves that the pinned encoder and all benchmark systems execute end to
+end; that smoke run is not the final full-variant evidence report.
 
 A measured claim requires a committed report from a full pinned encoder run,
 including hardware, runtime, model identity, dataset identity, thresholds, and
@@ -188,7 +213,7 @@ The direction should be reduced or stopped if:
 1. normalized pixels or the deterministic reader match frozen embeddings within
    the declared operating region;
 2. the linear probe matches retrieval with materially less complexity;
-3. critical interventions are accepted at an unsafe rate;
+3. distinguishable critical interventions are accepted at an unsafe rate;
 4. held-out family calibration does not transfer;
 5. the governance wrapper reaches audit parity at materially lower complexity;
 6. prototype count grows toward one stored vector per observation without a

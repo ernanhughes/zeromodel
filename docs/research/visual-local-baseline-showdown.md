@@ -53,3 +53,8 @@ The evidence supports these narrower statements:
 ## Next action
 
 The next bounded experiment remains `translation_equivariant_template_correlation`.
+
+
+## Wider interpretation
+
+See [`visual-ai-research-status-after-registration.md`](visual-ai-research-status-after-registration.md) for the broader interpretation of the Stage 1 result and its position in the ZeroModel visual-AI research programme.

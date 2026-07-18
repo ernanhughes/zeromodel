@@ -1,0 +1,35 @@
+{
+  "files": [
+    {
+      "byte_size": 315,
+      "path": "README.md",
+      "sha256": "07141e1b358d7d327734d659928f1eefd59008ec34a51e10e035cf586c4234f8"
+    },
+    {
+      "byte_size": 198,
+      "path": "final-rejection-decomposition.csv",
+      "sha256": "db627d5447defa220b5a3e6b0bfdd01f442b0b1aaee4a96d790691d0d9071ec6"
+    },
+    {
+      "byte_size": 822,
+      "path": "final-rejection-decomposition.json",
+      "sha256": "029c096f7ee7232798592466dc512d43f7590349ff499949f6231d641eb35ff4"
+    },
+    {
+      "byte_size": 10606,
+      "path": "independent-threshold-margin-grid.csv",
+      "sha256": "a3b3d668bb44cac82c0af49e255b4894bdcfc77b8cfa4b0447df5f4c087cfdc4"
+    },
+    {
+      "byte_size": 259229,
+      "path": "independent-threshold-margin-grid.json",
+      "sha256": "bc3d4ba810975abcc73eece77cbdca70d246589521fbe5cc295452fcbd2a2fb6"
+    },
+    {
+      "byte_size": 2813,
+      "path": "postanalysis-summary.json",
+      "sha256": "10e4fb379712cb0984f0de3a4fc885e7f9c2c7544323d2840a42a387ba343938"
+    }
+  ],
+  "version": "zeromodel-visual-local-postanalysis/v1"
+}

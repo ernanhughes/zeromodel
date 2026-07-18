@@ -53,7 +53,7 @@ dx ∈ [-3, 3]
 dy ∈ [-3, 3]
 ```
 
-The declared final translation family used unseen shifts of magnitude two pixels.
+The declared final translation family used unseen shifts of magnitude two pixels, which lie inside the declared search envelope of three pixels in each axis.
 
 ---
 
@@ -122,7 +122,7 @@ This is important because the final translation family was not used to select th
 
 The experiment therefore supports the bounded claim:
 
-> Deterministic integer registration can generalize to the declared unseen bounded translations and completely repair that translation family at the raw ranking layer.
+> Deterministic integer registration can generalize to unseen instances within the declared bounded translation envelope and completely repair that held-out translation family at the raw ranking layer.
 
 It does not establish general translation invariance beyond the declared bounds or fixture.
 
@@ -205,6 +205,36 @@ That mechanism does not produce a useful separation between:
 
 The next stage must improve the evidence representation rather than merely improve top-1 guessing.
 
+This interpretation is now strengthened by the decoupled post-analysis in `docs/results/visual-local-baseline-showdown-v1-postanalysis/`.
+
+That sweep tested the full Cartesian grid:
+
+```text
+distance quantiles × margin quantiles
+```
+
+using the same committed fixture and the same calibration/final split discipline.
+
+It found `11` feasible calibration candidates, but every feasible point sat on the most conservative margin slice:
+
+```text
+margin quantile = 0.0
+```
+
+and the best feasible calibration coverage remained only:
+
+```text
+6 / 1344
+```
+
+with transferred final benign coverage still:
+
+```text
+0 / 1344
+```
+
+The coupled Stage 1 search was therefore not hiding a useful operating point elsewhere in the measured distance-margin space.
+
 ---
 
 ## What the experiment did not establish
@@ -249,9 +279,27 @@ distance quantiles
 ambiguity-margin quantiles
 ```
 
-That refinement could strengthen or revise the Stage 1 conclusion without changing the underlying registration measurements.
+That refinement has now been performed as a post-analysis over the committed Stage 1 fixture and evidence.
 
-Until that search is performed, “bounded registration is insufficient” should be interpreted as referring to the declared Stage 1 provider and calibration protocol, not every conceivable registered-pixel rejection policy.
+Its selected feasible candidate used:
+
+```text
+distance quantile: 0.5
+margin quantile: 0.0
+threshold: 0.01861482699582847
+ambiguity margin: 0.6782577226161598
+```
+
+It preserved zero calibration false accepts, but still achieved only:
+
+```text
+calibration benign coverage: 6 / 1344
+final benign coverage: 0 / 1344
+```
+
+The stronger supported statement is therefore:
+
+> No useful governed operating point was found on the declared registered-pixel mechanism even after decoupling the distance and ambiguity-margin quantiles across the measured Stage 1 grid.
 
 ---
 
@@ -263,10 +311,11 @@ Until that search is performed, “bounded registration is insufficient” shoul
 * Deterministic images can be linked to exact policy rows.
 * Raw visual retrieval contains very strong action information.
 * Bounded integer registration materially improves exact-row retrieval.
-* The unseen two-pixel translation family is fully recovered at top-1.
+* The unseen two-pixel translation family is fully recovered at top-1 within the declared search bounds.
 * Evaluation can remain isolated between calibration and final splits.
 * Results can be serialized, hashed, reconstructed and audited.
 * The system can preserve its safety gates by rejecting ambiguous observations.
+* The decoupled distance-margin calibration grid does not reveal a hidden useful operating point for the measured registered-pixel mechanism.
 
 ### Not yet established
 
@@ -318,6 +367,25 @@ It asks whether the system can demonstrate:
 
 R1 improves the first-stage address ranking but does not yet provide enough evidence for those governance questions.
 
+The rejection decomposition clarifies where the current mechanism fails. On the selected Stage 1 final operating point:
+
+```text
+margin-only rejects: 952 / 1344
+distance-only rejects: 0 / 1344
+both-gates reject: 392 / 1344
+```
+
+By family:
+
+```text
+final-brightness-unseen: 336 margin-only
+final-shift-two: 336 margin-only
+final-palette-c: 280 margin-only, 56 both
+final-noncritical-patch: 336 both
+```
+
+That means the dominant bottleneck is not a pure distance gate collapse. It is margin separation, with the noncritical patch family additionally degrading both gates.
+
 This failure is informative rather than merely negative.
 
 It indicates that the next system should produce multiple localized pieces of evidence rather than one aggregate similarity score.
@@ -355,10 +423,20 @@ matched local regions
 region coordinates
 per-region correlation scores
 expected versus observed region layout
-missing critical regions
+expected region unmatched against known modes
 contradictory local regions
 best competing-action evidence
 spatial consistency
+```
+
+The wording matters. In a single frame, local nonmatch does not distinguish true absence from occlusion, so Stage 2 should avoid naming that field as literal evidence absence.
+
+The Stage 2 fixture should also add an explicit beyond-bounds translation control, for example shifts of magnitude four or five pixels, held out from calibration and selection.
+
+That control tests whether bounded registration fails safely when the observation exceeds its declared reach:
+
+```text
+reject rather than confidently mis-register
 ```
 
 The central Stage 2 question should be:
@@ -521,6 +599,12 @@ Frozen Stage 1 evidence:
 
 ```text
 docs/results/visual-local-baseline-showdown-v1/
+```
+
+Stage 1 post-analysis:
+
+```text
+docs/results/visual-local-baseline-showdown-v1-postanalysis/
 ```
 
 Frozen System B comparator:

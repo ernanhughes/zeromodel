@@ -1,0 +1,77 @@
+{
+  "decoupled_grid_digest": "8311a36b03b3a3d478cec21fe29154473955146bd67f6840a7eb3d61bcc9338d",
+  "final_rejection_decomposition_overall": {
+    "accepted": 0,
+    "both": 392,
+    "distance_only": 0,
+    "margin_only": 952,
+    "total": 1344
+  },
+  "postanalysis_manifest_digest": "f7ffc78b17301a29a7eda17f19063f35bca661b0f362ba5db552db3d96f63a29",
+  "rejection_decomposition_digest": "705a912a19c67a4bbff033c695f59e39b1467176ec983a3deb4b8176f6d07bab",
+  "selected_coupled_quantile": 0.0,
+  "selected_decoupled_candidate": {
+    "accepted_exact_row_precision": 1.0,
+    "accepted_exact_row_recall": 0.004464285714285714,
+    "ambiguity_margin": 0.6782577226161598,
+    "benign_coverage": 0.004464285714285714,
+    "calibration": {
+      "benign": {
+        "accepted_action_precision": 1.0,
+        "accepted_benign_count": 6,
+        "accepted_exact_row_precision": 1.0,
+        "accepted_exact_row_recall": 0.004464285714285714,
+        "benign_coverage": 0.004464285714285714,
+        "conflicting_action_accepts": 0,
+        "false_accept_opportunities": 0,
+        "false_accepts": 0,
+        "false_reject_opportunities": 1344,
+        "false_rejects": 1338,
+        "top1_benign_action_accuracy": 1.0,
+        "top1_benign_row_accuracy": 1.0
+      },
+      "rejection": {
+        "accepted_action_precision": null,
+        "accepted_benign_count": 0,
+        "accepted_exact_row_precision": null,
+        "accepted_exact_row_recall": 0.0,
+        "benign_coverage": 0.0,
+        "conflicting_action_accepts": 0,
+        "false_accept_opportunities": 1008,
+        "false_accepts": 0,
+        "false_reject_opportunities": 0,
+        "false_rejects": 0,
+        "top1_benign_action_accuracy": 0.0,
+        "top1_benign_row_accuracy": 0.0
+      }
+    },
+    "distance_quantile": 0.5,
+    "feasible": true,
+    "final": {
+      "accepted_action_precision": null,
+      "accepted_benign_count": 0,
+      "accepted_exact_row_precision": null,
+      "accepted_exact_row_recall": 0.0,
+      "benign_coverage": 0.0,
+      "conflicting_action_accepts": 0,
+      "false_accept_opportunities": 248,
+      "false_accepts": 0,
+      "false_reject_opportunities": 1344,
+      "false_rejects": 1344,
+      "top1_benign_action_accuracy": 0.984375,
+      "top1_benign_row_accuracy": 0.875
+    },
+    "infeasible_reasons": [],
+    "margin_quantile": 0.0,
+    "threshold": 0.01861482699582847,
+    "top1_benign_row_accuracy": 1.0
+  },
+  "source_calibration_digest": "b3efc2a4687ba97a5b899961a8d3b53b91f1e0f2c73afc7bde92a1bb8e805265",
+  "source_selection_digest": "881d63866587aec8d87d4d3419431ccd195f6fe57828e9f70580ebea1e0337f4",
+  "summary": {
+    "best_feasible_calibration_coverage": 0.004464285714285714,
+    "best_feasible_false_accepts": 0,
+    "best_feasible_final_coverage": 0.0
+  },
+  "version": "zeromodel-visual-local-postanalysis/v1"
+}

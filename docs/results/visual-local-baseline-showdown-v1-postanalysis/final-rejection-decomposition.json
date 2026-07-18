@@ -1,0 +1,40 @@
+{
+  "by_family": {
+    "final-brightness-unseen": {
+      "accepted": 0,
+      "both": 0,
+      "distance_only": 0,
+      "margin_only": 336,
+      "total": 336
+    },
+    "final-noncritical-patch": {
+      "accepted": 0,
+      "both": 336,
+      "distance_only": 0,
+      "margin_only": 0,
+      "total": 336
+    },
+    "final-palette-c": {
+      "accepted": 0,
+      "both": 56,
+      "distance_only": 0,
+      "margin_only": 280,
+      "total": 336
+    },
+    "final-shift-two": {
+      "accepted": 0,
+      "both": 0,
+      "distance_only": 0,
+      "margin_only": 336,
+      "total": 336
+    }
+  },
+  "overall": {
+    "accepted": 0,
+    "both": 392,
+    "distance_only": 0,
+    "margin_only": 952,
+    "total": 1344
+  },
+  "version": "zeromodel-visual-local-postanalysis/v1"
+}

@@ -3,6 +3,7 @@
 **Status:** executed  
 **Execution date:** Saturday, July 18, 2026  
 **Evidence package:** `docs/results/visual-local-baseline-showdown-v1/`
+**Post-analysis package:** `docs/results/visual-local-baseline-showdown-v1-postanalysis/`
 
 ## Question
 
@@ -38,6 +39,58 @@ correctness rose from `322 / 336` to `336 / 336`. That improvement did not
 transfer into a useful accepted operating point under the zero-observed-FAR
 constraint.
 
+The held-out two-pixel shifts were unseen during selection, but they were still
+inside the declared `[-3, 3]` registration search bounds. The supported
+generalization claim is therefore bounded: unseen instances within the declared
+translation envelope, not evidence of robustness beyond it.
+
+## Post-analysis
+
+The Stage 1 post-analysis package adds two measurements over the committed
+fixture and frozen Stage 1 evidence:
+
+- an independent distance-threshold by ambiguity-margin calibration grid;
+- a final benign rejection decomposition by gate and family.
+
+The decoupled grid did not revise the Stage 1 result.
+
+- Feasible decoupled candidates: `11`
+- Every feasible point used the most conservative margin slice: `margin quantile = 0.0`
+- Best feasible calibration coverage: `6 / 1344`
+- Best feasible final coverage: `0 / 1344`
+
+The selected decoupled candidate was:
+
+```text
+distance quantile: 0.5
+margin quantile: 0.0
+threshold: 0.01861482699582847
+ambiguity margin: 0.6782577226161598
+```
+
+That confirms the coupled Stage 1 search was not merely unlucky along one
+curve. The measured registered-pixel mechanism still lacks a useful transferred
+governed operating point after decoupling the two calibration dimensions.
+
+The rejection decomposition also sharpens the diagnosis:
+
+```text
+overall: 952 margin-only, 392 both, 0 distance-only
+```
+
+By family:
+
+```text
+final-brightness-unseen: 336 margin-only
+final-shift-two: 336 margin-only
+final-palette-c: 280 margin-only, 56 both
+final-noncritical-patch: 336 both
+```
+
+This means the dominant bottleneck is margin separation, not a pure distance
+threshold collapse, with the noncritical patch family additionally degrading
+both gates at once.
+
 ## Interpretation
 
 This is a stronger local result than frozen System B v2 at the ranking layer,
@@ -53,6 +106,20 @@ The evidence supports these narrower statements:
 ## Next action
 
 The next bounded experiment remains `translation_equivariant_template_correlation`.
+
+Before Stage 2 freezes, its protocol should add one more control family:
+
+```text
+beyond-bounds translation shifts of magnitude 4 or 5 pixels
+```
+
+Because the registered Stage 1 mechanism cannot physically align those shifts,
+they form the correct out-of-envelope safety control for bounded registration.
+The acceptance claim to test is:
+
+```text
+the system rejects what its own registration cannot reach
+```
 
 
 ## Wider interpretation

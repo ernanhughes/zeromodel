@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -38,6 +39,20 @@ from zeromodel.visual_system_b import (  # noqa: E402
 
 GENERATOR_VERSION = "arcade_visual_system_b_adjudication/v2"
 
+def _git_ref() -> str:
+    branch = _git_output("branch", "--show-current")
+    if branch:
+        return branch
+
+    github_head_ref = os.environ.get("GITHUB_HEAD_REF", "").strip()
+    if github_head_ref:
+        return github_head_ref
+
+    github_ref_name = os.environ.get("GITHUB_REF_NAME", "").strip()
+    if github_ref_name:
+        return github_ref_name
+
+    return "detached"
 
 def _json_bytes(value: Any) -> bytes:
     return json.dumps(
@@ -157,7 +172,7 @@ def _run_manifest(
         "version": "zeromodel-visual-benchmark-run-manifest/v1",
         "generator_version": GENERATOR_VERSION,
         "git_commit": _git_output("rev-parse", "HEAD"),
-        "branch": _git_output("branch", "--show-current"),
+        "branch": _git_ref(),
         "dirty": bool(status),
         "argv": list(argv),
         "command": command,

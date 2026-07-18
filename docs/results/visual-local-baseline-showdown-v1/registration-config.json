@@ -1,0 +1,8 @@
+{
+  "max_dx": 3,
+  "max_dy": 3,
+  "metric": "normalized_l2",
+  "minimum_overlap_fraction": 0.6,
+  "padding_value": 0,
+  "version": "zeromodel-registration-config/v1"
+}

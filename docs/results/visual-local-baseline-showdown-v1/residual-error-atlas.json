@@ -1,0 +1,11 @@
+{
+  "counts": {
+    "conflicting_action": 21,
+    "correct_action_but_wrong_row": 147,
+    "information_theoretic_control": 294,
+    "insufficient_overlap": 392,
+    "ood_or_distinguishable_rejection": 248,
+    "registration_selected_wrong_displacement": 0,
+    "rejected_despite_correct_raw_candidate": 1064
+  }
+}

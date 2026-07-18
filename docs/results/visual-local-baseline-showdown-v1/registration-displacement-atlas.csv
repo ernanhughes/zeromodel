@@ -1,0 +1,5 @@
+family_id,count,row_correct_before,row_correct_after,action_correct_before,action_correct_after
+final-brightness-unseen,336,336,336,336,336
+final-shift-two,336,224,336,322,336
+final-palette-c,336,168,168,315,315
+final-noncritical-patch,336,336,336,336,336

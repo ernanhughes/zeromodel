@@ -1,0 +1,110 @@
+{
+  "files": [
+    {
+      "byte_size": 386,
+      "path": "adjudication.json",
+      "sha256": "52242d6a2b7409cc50812af887318317ac6a522aa0a6a7402039139b3db288cf"
+    },
+    {
+      "byte_size": 304,
+      "path": "argv.json",
+      "sha256": "88847ce96b82a57e0effda7baec3b9b5f47dc952e848d1370b24528e1fc6dbbf"
+    },
+    {
+      "byte_size": 235,
+      "path": "command.txt",
+      "sha256": "2edc08e33dd405424ff08ba012e328c6fd2ca7ccff1993fb9c383679ea7f55b6"
+    },
+    {
+      "byte_size": 3606084,
+      "path": "dataset-manifest.json",
+      "sha256": "0b7525188dab63498f631cb5cccfe2b72bde515c94840960c49abffa8d45602c"
+    },
+    {
+      "byte_size": 236,
+      "path": "environment.json",
+      "sha256": "bbfd6e56958d815b2ff672cc0786fef4357c0a6a8e3fa7e857af6de202f309e2"
+    },
+    {
+      "byte_size": 4686,
+      "path": "final-report.json",
+      "sha256": "0a12db7e363005b3e90791d76454087e5dac095aedd36e399626a7d5bd9abf64"
+    },
+    {
+      "byte_size": 2154,
+      "path": "final-summary.json",
+      "sha256": "d4dd54639228efb56b79c7962c0f670cdfd0dd84d9ba83e75b9ecd9bdd9dd7cc"
+    },
+    {
+      "byte_size": 244,
+      "path": "paired-comparison.json",
+      "sha256": "89328680f92306dd394973c2c2eeee1d5464d670afca6338f1549527fff0378d"
+    },
+    {
+      "byte_size": 3518,
+      "path": "protocol.json",
+      "sha256": "b0fa8675f1256cdd4f0b32ab42329a1958ad5a32406e078c1438dc294939cfe2"
+    },
+    {
+      "byte_size": 264,
+      "path": "README.md",
+      "sha256": "38d9eb2ee1b4a05365474cca0828000d53621f48eb490aa8d5323e78c7d79bd0"
+    },
+    {
+      "byte_size": 62954,
+      "path": "registration-candidate-grid.json",
+      "sha256": "14fe024907a4fbe549fdd3f600483be4a1112419dc2b1b5cf02a6d60455ba392"
+    },
+    {
+      "byte_size": 176,
+      "path": "registration-config.json",
+      "sha256": "47ad21ded29166ffcb0950a8ed683a3e5e7a021e51ec73e7d58c07152d16ae08"
+    },
+    {
+      "byte_size": 261,
+      "path": "registration-displacement-atlas.csv",
+      "sha256": "e4ec1d1f85854b762f2b6f1a44923126fb4b1b4012ea1b8612e21255ec79cc6c"
+    },
+    {
+      "byte_size": 1262,
+      "path": "registration-displacement-atlas.json",
+      "sha256": "2d2acf5dd4bd402afac1b7faeea24d746da25584a6dc35fbf94edb6f55159de6"
+    },
+    {
+      "byte_size": 326,
+      "path": "residual-error-atlas.json",
+      "sha256": "0c4253942a2a9ea78a79862b9a382e87bb5a2b0d64656d9856cb1877e7935004"
+    },
+    {
+      "byte_size": 2500,
+      "path": "run-manifest.json",
+      "sha256": "f407ef60ef1c1ea4dfb7b44166fd331178f9ba8c383439ffe2b2e3a53fd02a37"
+    },
+    {
+      "byte_size": 209,
+      "path": "runtime.json",
+      "sha256": "a8382977457e6d8c0f4b095242fa4f6e1caaf70913965cc31a3caa8c71e764d3"
+    },
+    {
+      "byte_size": 1198,
+      "path": "selected-calibration.json",
+      "sha256": "7cef32851c408986218354017d36ab3f82a64636f626a4fe7dde575d4a83614c"
+    },
+    {
+      "byte_size": 930,
+      "path": "system-b-frozen-reference.json",
+      "sha256": "1e74dc82c327f92c3062617c5206a6af8922b1d881670572f16b3ad5dfd1fd39"
+    },
+    {
+      "byte_size": 5320519,
+      "path": "traces.jsonl",
+      "sha256": "c1416850155cb464a70b55fd8856a240ea4d86b6ae3f85afb1948899469dbfec"
+    },
+    {
+      "byte_size": 369,
+      "path": "translation-family-atlas.json",
+      "sha256": "96e5f306e14c64cf4dacb59ec01369b247c15cf9ad55454e996ea270b75f4f35"
+    }
+  ],
+  "version": "zeromodel-visual-local-showdown/v1"
+}

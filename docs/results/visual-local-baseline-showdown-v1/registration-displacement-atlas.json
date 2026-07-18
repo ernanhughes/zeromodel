@@ -1,0 +1,49 @@
+{
+  "families": {
+    "final-brightness-unseen": {
+      "action_correct_after": 336,
+      "action_correct_before": 336,
+      "count": 336,
+      "displacements": {
+        "0,0": 336
+      },
+      "distance_improvement_total": 0.0,
+      "row_correct_after": 336,
+      "row_correct_before": 336
+    },
+    "final-noncritical-patch": {
+      "action_correct_after": 336,
+      "action_correct_before": 336,
+      "count": 336,
+      "displacements": {
+        "0,-1": 336
+      },
+      "distance_improvement_total": 287.4138694006214,
+      "row_correct_after": 336,
+      "row_correct_before": 336
+    },
+    "final-palette-c": {
+      "action_correct_after": 315,
+      "action_correct_before": 315,
+      "count": 336,
+      "displacements": {
+        "0,0": 336
+      },
+      "distance_improvement_total": 0.0,
+      "row_correct_after": 168,
+      "row_correct_before": 168
+    },
+    "final-shift-two": {
+      "action_correct_after": 336,
+      "action_correct_before": 322,
+      "count": 336,
+      "displacements": {
+        "0,-2": 224,
+        "0,2": 112
+      },
+      "distance_improvement_total": 456.1255353401035,
+      "row_correct_after": 336,
+      "row_correct_before": 224
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "benign_calibration_digest": "13a4004bd7d1a7535cdc5d64b3415031a96a55d741841410917212f92bc56b15",
+  "calibration_digest": "b3efc2a4687ba97a5b899961a8d3b53b91f1e0f2c73afc7bde92a1bb8e805265",
+  "candidate_grid_digest": "52e202cc131e357b7c11b901c2f51832332fdbde0ca1d66ed8ec22b993486592",
+  "prototype_digest": "6dbee60d087168e10b86c333cb64db32c9ed8a46543126a2deb6e2b375759903",
+  "registration_config_digest": "6d7d87840d7da9c0260b3664c905981dd440595fef0467ba70343b7b54d2dff5",
+  "rejection_calibration_digest": "eab8be160b6317d59cc6229cba76706de8d2cecf232b39992c1972c158f350de",
+  "selected_ambiguity_margin": 0.6782577226161598,
+  "selected_quantile": 0.0,
+  "selected_threshold": 0.07306751140001405,
+  "selection_digest": "881d63866587aec8d87d4d3419431ccd195f6fe57828e9f70580ebea1e0337f4",
+  "selection_rule": "Among feasible candidates maximize accepted exact-row precision, then benign accepted coverage, then accepted exact-row recall, then raw benign exact-row ranking accuracy, then prefer the more conservative distance threshold, then deterministic quantile ordering.",
+  "selection_status": "selected_operating_point",
+  "version": "zeromodel-visual-local-showdown/v1"
+}

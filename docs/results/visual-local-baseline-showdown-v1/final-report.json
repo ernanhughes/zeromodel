@@ -1,0 +1,163 @@
+{
+  "accepted_metrics": {
+    "accepted_benign_action_correctness": null,
+    "accepted_benign_count": 0,
+    "accepted_benign_row_correctness": null
+  },
+  "final_metrics": {
+    "accepted_benign_action_correctness": null,
+    "accepted_benign_count": 0,
+    "accepted_benign_row_correctness": null,
+    "accepted_count": 0,
+    "action_accuracy": 0.0,
+    "benign_action_accuracy": 0.0,
+    "benign_row_accuracy": 0.0,
+    "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+    "confidence_intervals_95": {
+      "accepted_benign_action_correctness": null,
+      "accepted_benign_row_correctness": null,
+      "benign_action_accuracy": [
+        0.0,
+        0.0028500821039109782
+      ],
+      "benign_row_accuracy": [
+        0.0,
+        0.0028500821039109782
+      ],
+      "false_acceptance_rate": [
+        0.0,
+        0.01525348065676972
+      ],
+      "false_rejection_rate": [
+        0.997149917896089,
+        1.0
+      ],
+      "top1_benign_action_accuracy": [
+        0.9762311701209119,
+        0.9897578128409243
+      ],
+      "top1_benign_row_accuracy": [
+        0.8562430869611285,
+        0.8916193514609384
+      ]
+    },
+    "conflicting_action_error_count": 0,
+    "correct_action_count": 0,
+    "correct_disposition_rate": 0.15577889447236182,
+    "correct_reject_count": 248,
+    "correct_row_count": 0,
+    "evaluation_count": 1592,
+    "false_accept_count": 0,
+    "false_accept_opportunities": 248,
+    "false_acceptance_rate": 0.0,
+    "false_reject_count": 1344,
+    "false_reject_opportunities": 1344,
+    "false_rejection_rate": 1.0,
+    "rejected_count": 1592,
+    "row_accuracy": 0.0,
+    "top1_benign_action_accuracy": 0.984375,
+    "top1_benign_row_accuracy": 0.875,
+    "top1_correct_action_count": 1323,
+    "top1_correct_row_count": 1176
+  },
+  "frozen_comparator_metrics": {
+    "accepted_benign_count": 0,
+    "false_accept_count": 0,
+    "false_reject_count": 1344,
+    "raw_top1_action_accuracy": 0.96875,
+    "raw_top1_exact_row_accuracy": 0.75
+  },
+  "next_action": "translation_equivariant_template_correlation",
+  "outcome": "C",
+  "paired_deltas": {
+    "action": {
+      "b_only": 0,
+      "both_correct": 1302,
+      "neither": 21,
+      "r1_only": 21
+    },
+    "observation_count": 1344,
+    "row": {
+      "b_only": 0,
+      "both_correct": 1008,
+      "neither": 168,
+      "r1_only": 168
+    }
+  },
+  "raw_metrics": {
+    "top1_benign_action_accuracy": 0.984375,
+    "top1_benign_row_accuracy": 0.875
+  },
+  "registration_metrics": {
+    "families": {
+      "final-brightness-unseen": {
+        "action_correct_after": 336,
+        "action_correct_before": 336,
+        "count": 336,
+        "displacements": {
+          "0,0": 336
+        },
+        "distance_improvement_total": 0.0,
+        "row_correct_after": 336,
+        "row_correct_before": 336
+      },
+      "final-noncritical-patch": {
+        "action_correct_after": 336,
+        "action_correct_before": 336,
+        "count": 336,
+        "displacements": {
+          "0,-1": 336
+        },
+        "distance_improvement_total": 287.4138694006214,
+        "row_correct_after": 336,
+        "row_correct_before": 336
+      },
+      "final-palette-c": {
+        "action_correct_after": 315,
+        "action_correct_before": 315,
+        "count": 336,
+        "displacements": {
+          "0,0": 336
+        },
+        "distance_improvement_total": 0.0,
+        "row_correct_after": 168,
+        "row_correct_before": 168
+      },
+      "final-shift-two": {
+        "action_correct_after": 336,
+        "action_correct_before": 322,
+        "count": 336,
+        "displacements": {
+          "0,-2": 224,
+          "0,2": 112
+        },
+        "distance_improvement_total": 456.1255353401035,
+        "row_correct_after": 336,
+        "row_correct_before": 224
+      }
+    }
+  },
+  "rejection_metrics": {
+    "false_accept_count": 0,
+    "false_reject_count": 1344
+  },
+  "translation_family_metrics": {
+    "families": {
+      "final-shift-two": {
+        "accepted_count": 0,
+        "count": 336,
+        "false_rejects": 336,
+        "raw_action_correct": 322,
+        "raw_row_correct": 224,
+        "registered_action_correct": 336,
+        "registered_row_correct": 336,
+        "selected_displacements": {
+          "0,-2": 224,
+          "0,2": 112
+        }
+      }
+    }
+  },
+  "usefulness_status": "bounded_registration_insufficient",
+  "version": "zeromodel-visual-local-showdown/v1"
+}

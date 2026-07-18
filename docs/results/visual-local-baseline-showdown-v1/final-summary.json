@@ -1,0 +1,64 @@
+{
+  "calibration_digest": "b3efc2a4687ba97a5b899961a8d3b53b91f1e0f2c73afc7bde92a1bb8e805265",
+  "final_metrics": {
+    "accepted_benign_action_correctness": null,
+    "accepted_benign_count": 0,
+    "accepted_benign_row_correctness": null,
+    "accepted_count": 0,
+    "action_accuracy": 0.0,
+    "benign_action_accuracy": 0.0,
+    "benign_row_accuracy": 0.0,
+    "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+    "confidence_intervals_95": {
+      "accepted_benign_action_correctness": null,
+      "accepted_benign_row_correctness": null,
+      "benign_action_accuracy": [
+        0.0,
+        0.0028500821039109782
+      ],
+      "benign_row_accuracy": [
+        0.0,
+        0.0028500821039109782
+      ],
+      "false_acceptance_rate": [
+        0.0,
+        0.01525348065676972
+      ],
+      "false_rejection_rate": [
+        0.997149917896089,
+        1.0
+      ],
+      "top1_benign_action_accuracy": [
+        0.9762311701209119,
+        0.9897578128409243
+      ],
+      "top1_benign_row_accuracy": [
+        0.8562430869611285,
+        0.8916193514609384
+      ]
+    },
+    "conflicting_action_error_count": 0,
+    "correct_action_count": 0,
+    "correct_disposition_rate": 0.15577889447236182,
+    "correct_reject_count": 248,
+    "correct_row_count": 0,
+    "evaluation_count": 1592,
+    "false_accept_count": 0,
+    "false_accept_opportunities": 248,
+    "false_acceptance_rate": 0.0,
+    "false_reject_count": 1344,
+    "false_reject_opportunities": 1344,
+    "false_rejection_rate": 1.0,
+    "rejected_count": 1592,
+    "row_accuracy": 0.0,
+    "top1_benign_action_accuracy": 0.984375,
+    "top1_benign_row_accuracy": 0.875,
+    "top1_correct_action_count": 1323,
+    "top1_correct_row_count": 1176
+  },
+  "next_action": "translation_equivariant_template_correlation",
+  "outcome": "C",
+  "selected_quantile": 0.0,
+  "selection_digest": "881d63866587aec8d87d4d3419431ccd195f6fe57828e9f70580ebea1e0337f4",
+  "usefulness_status": "bounded_registration_insufficient"
+}

@@ -1,0 +1,19 @@
+{
+  "calibration_digest": "bb985997a8d56cde073f91fc6611c08c0718d888e0d49d00aa0198f0f603e583",
+  "dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
+  "frozen_report_digest": "0e75c93780c35b7391882e7b39c888a3a1736444cc71932b9b1b41cdf1e90c42",
+  "headline_metrics": {
+    "accepted_benign_count": 0,
+    "false_accept_count": 0,
+    "false_reject_count": 1344,
+    "raw_top1_action_accuracy": 0.96875,
+    "raw_top1_exact_row_accuracy": 0.75
+  },
+  "outcome": "C",
+  "result_directory": "docs/results/visual-address-system-b-v2",
+  "run_manifest_digest": "44d586865ecd1ef4f949f015f53066170f4bdb507592c1f127d24cd0b5eb4025",
+  "selected_quantile": 1.0,
+  "selection_digest": "b7dfa44942f15cc782eaff3a4d7f4d7224214d4b7b15b6e5c668a76bf191a1b1",
+  "trace_digest": "38a63ac0391fa8873801e2ade66fe5b15200bb8128026408bde25b6713da770a",
+  "version": "zeromodel-visual-local-showdown/v1"
+}

@@ -1,0 +1,91 @@
+{
+  "allowed_data_splits": [
+    "prototype",
+    "benign_calibration",
+    "rejection_calibration",
+    "final_evaluation"
+  ],
+  "candidate_grid": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1.0
+  ],
+  "distance_metric": "normalized_l2",
+  "feasibility_rules": [
+    "distinguishable false accepts = 0",
+    "accepted conflicting-action errors = 0"
+  ],
+  "forbidden_data_splits_during_selection": [
+    "final_evaluation"
+  ],
+  "frozen_comparator_identities": {
+    "calibration_digest": "bb985997a8d56cde073f91fc6611c08c0718d888e0d49d00aa0198f0f603e583",
+    "dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
+    "frozen_report_digest": "0e75c93780c35b7391882e7b39c888a3a1736444cc71932b9b1b41cdf1e90c42",
+    "headline_metrics": {
+      "accepted_benign_count": 0,
+      "false_accept_count": 0,
+      "false_reject_count": 1344,
+      "raw_top1_action_accuracy": 0.96875,
+      "raw_top1_exact_row_accuracy": 0.75
+    },
+    "outcome": "C",
+    "result_directory": "docs/results/visual-address-system-b-v2",
+    "run_manifest_digest": "44d586865ecd1ef4f949f015f53066170f4bdb507592c1f127d24cd0b5eb4025",
+    "selected_quantile": 1.0,
+    "selection_digest": "b7dfa44942f15cc782eaff3a4d7f4d7224214d4b7b15b6e5c668a76bf191a1b1",
+    "trace_digest": "38a63ac0391fa8873801e2ade66fe5b15200bb8128026408bde25b6713da770a",
+    "version": "zeromodel-visual-local-showdown/v1"
+  },
+  "invalid_run_conditions": [
+    "calibration leakage detected",
+    "frozen comparator identity mismatch",
+    "dataset identity mismatch",
+    "digest verification fails",
+    "required evidence output is incomplete"
+  ],
+  "outcome_rule": {
+    "A": "zero observed distinguishable false accepts, zero accepted conflicting-action errors, coverage >= 0.50",
+    "B": "zero observed distinguishable false accepts, zero accepted conflicting-action errors, 0.10 <= coverage < 0.50",
+    "C": "no feasible transferred operating point or coverage < 0.10",
+    "invalid": "leakage, comparator mismatch, dataset mismatch, digest failure, incomplete output, or ambiguous code state"
+  },
+  "overlap_rule": {
+    "minimum_overlap_fraction": 0.6
+  },
+  "registration_bounds": {
+    "max_dx": 3,
+    "max_dy": 3
+  },
+  "research_question": "Can bounded, deterministic integer-pixel registration recover a useful accepted operating point for local normalized-pixel retrieval while preserving zero observed distinguishable false accepts and zero accepted conflicting-action errors on the declared fixtures?",
+  "selection_rule": "Among feasible candidates maximize accepted exact-row precision, then benign accepted coverage, then accepted exact-row recall, then raw benign exact-row ranking accuracy, then prefer the more conservative distance threshold, then deterministic quantile ordering.",
+  "system_identity": {
+    "system_id": "R1",
+    "system_name": "registered_local_normalized_pixels"
+  },
+  "tie_break_rules": {
+    "displacement": [
+      "smallest Manhattan displacement",
+      "smallest abs(dy)",
+      "smallest abs(dx)",
+      "lowest signed dy",
+      "lowest signed dx"
+    ],
+    "prototype": [
+      "lowest registered distance",
+      "greatest overlap fraction",
+      "smallest displacement magnitude",
+      "stable row id ordering",
+      "stable prototype observation id ordering"
+    ]
+  },
+  "version": "zeromodel-visual-local-showdown/v1"
+}

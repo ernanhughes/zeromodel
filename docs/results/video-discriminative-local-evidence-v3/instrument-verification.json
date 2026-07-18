@@ -1,0 +1,146 @@
+{
+  "comparison": {
+    "artifacts": [
+      {
+        "actual_digest": "sha256:10b5d5ec562c55870205d34f4a023900cc26b355807cf97b5e31e96d88b1c61c",
+        "artifact": "README.md",
+        "expected_digest": "sha256:10b5d5ec562c55870205d34f4a023900cc26b355807cf97b5e31e96d88b1c61c",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:bff1fefa7554a67e306933d5b518173814ecefbea4e2365c4a716ce7baac2c75",
+        "artifact": "architecture-self-retrieval-status.json",
+        "expected_digest": "sha256:bff1fefa7554a67e306933d5b518173814ecefbea4e2365c4a716ce7baac2c75",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:183b90edb9587baceb12dc4af32ab9094171eb537c3990d68b709b8d3898ef7f",
+        "artifact": "benchmark-manifest.json",
+        "expected_digest": "sha256:183b90edb9587baceb12dc4af32ab9094171eb537c3990d68b709b8d3898ef7f",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:f61fd7b94bc988c1d433c549b2de3e104a4e0c28dc836d2ac40e45e38dfc69a2",
+        "artifact": "candidate-mask-manifest.json",
+        "expected_digest": "sha256:f61fd7b94bc988c1d433c549b2de3e104a4e0c28dc836d2ac40e45e38dfc69a2",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:de5bd174a3641c001fb084018282640a5ad220a55b2fb4af09b71552c4b6089a",
+        "artifact": "canonical-self-retrieval-summary.json",
+        "expected_digest": "sha256:de5bd174a3641c001fb084018282640a5ad220a55b2fb4af09b71552c4b6089a",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:07736013a832161b512d3f6a1b1b55d48a032a27663bf69d976e130b10e97d17",
+        "artifact": "canonical-self-retrieval.csv",
+        "expected_digest": "sha256:07736013a832161b512d3f6a1b1b55d48a032a27663bf69d976e130b10e97d17",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:a12e40838e9052e8b882cf8a6cacec9b1baceb18f5e538594d25c9e4a66a31d7",
+        "artifact": "development-manifest.json",
+        "expected_digest": "sha256:a12e40838e9052e8b882cf8a6cacec9b1baceb18f5e538594d25c9e4a66a31d7",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:e7883ac80f3bb043909834de10e485e62bd064e9e3ff27baf43e0af2255cbb01",
+        "artifact": "evaluation-sample.json",
+        "expected_digest": "sha256:e7883ac80f3bb043909834de10e485e62bd064e9e3ff27baf43e0af2255cbb01",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:9ce37f950c7631c18a0c346c9348e9274cad03192163b7c08870f43a42b9b9f2",
+        "artifact": "evidence-accounting-summary.json",
+        "expected_digest": "sha256:9ce37f950c7631c18a0c346c9348e9274cad03192163b7c08870f43a42b9b9f2",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:1312bf75f5d204aa2bca8d07b92173ced2eb4c70559558cfa770eba04b78ae14",
+        "artifact": "generator-identity.json",
+        "expected_digest": "sha256:1312bf75f5d204aa2bca8d07b92173ced2eb4c70559558cfa770eba04b78ae14",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:da01969606d6ff838bd08d531523400ee6879e88a9437be6dde2d08f32cbca37",
+        "artifact": "pairwise-mask-manifest.json",
+        "expected_digest": "sha256:da01969606d6ff838bd08d531523400ee6879e88a9437be6dde2d08f32cbca37",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:4602e47f237330b5233befe771b749a556aad043a171e51cccec974978477661",
+        "artifact": "pairwise-mask-summary.json",
+        "expected_digest": "sha256:4602e47f237330b5233befe771b749a556aad043a171e51cccec974978477661",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:e6010dec62f8ba501135f80a7a4542c67e2a339f5251fd9410fc0941a6e137be",
+        "artifact": "pairwise-symmetry-results.json",
+        "expected_digest": "sha256:e6010dec62f8ba501135f80a7a4542c67e2a339f5251fd9410fc0941a6e137be",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:05f262d7e35ce8ad570f005ecba1f096cc61e857496cc84f2a1f02d10bee91aa",
+        "artifact": "prototype-manifest.json",
+        "expected_digest": "sha256:05f262d7e35ce8ad570f005ecba1f096cc61e857496cc84f2a1f02d10bee91aa",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:7a7c0e7a69484e7876f6e7acf569acddc9951c79fe3e2dc8fbe7f8cce01c2cb0",
+        "artifact": "provider-equivalence-results.json",
+        "expected_digest": "sha256:7a7c0e7a69484e7876f6e7acf569acddc9951c79fe3e2dc8fbe7f8cce01c2cb0",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:3a14080be84bd3f01543dcf493ba1ff7dfa0dd9687a1136731a0429c7b4003b5",
+        "artifact": "region-manifest.json",
+        "expected_digest": "sha256:3a14080be84bd3f01543dcf493ba1ff7dfa0dd9687a1136731a0429c7b4003b5",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:ad834c6e651f98a41d28b26a713f077cd0209b69e3c69a5e62e7e2d2a6b74c2d",
+        "artifact": "reproduction.md",
+        "expected_digest": "sha256:ad834c6e651f98a41d28b26a713f077cd0209b69e3c69a5e62e7e2d2a6b74c2d",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:59fe7825afc0c04afd8283d5d1f04504827c5ffbcb9880af7f56b9aaa2022c7f",
+        "artifact": "split-manifest.json",
+        "expected_digest": "sha256:59fe7825afc0c04afd8283d5d1f04504827c5ffbcb9880af7f56b9aaa2022c7f",
+        "status": "byte_identical"
+      },
+      {
+        "actual_digest": "sha256:15ef13ffd3dd45a45fd4ae845f9635ea4cb16774dff086dface341fc2490d666",
+        "artifact": "tie-safety-results.json",
+        "expected_digest": "sha256:15ef13ffd3dd45a45fd4ae845f9635ea4cb16774dff086dface341fc2490d666",
+        "status": "byte_identical"
+      }
+    ],
+    "semantic_match": true
+  },
+  "forbidden_artifacts_present": [],
+  "mode": "verify-v3-instrument",
+  "required_artifacts": [
+    "README.md",
+    "generator-identity.json",
+    "benchmark-manifest.json",
+    "split-manifest.json",
+    "prototype-manifest.json",
+    "development-manifest.json",
+    "evaluation-sample.json",
+    "region-manifest.json",
+    "candidate-mask-manifest.json",
+    "pairwise-mask-manifest.json",
+    "pairwise-mask-summary.json",
+    "evidence-accounting-summary.json",
+    "canonical-self-retrieval.csv",
+    "canonical-self-retrieval-summary.json",
+    "architecture-self-retrieval-status.json",
+    "tie-safety-results.json",
+    "pairwise-symmetry-results.json",
+    "provider-equivalence-results.json",
+    "instrument-verification.json",
+    "reproduction.md"
+  ],
+  "verified": true
+}

@@ -1,0 +1,9 @@
+{
+  "all_match": true,
+  "architectures": {
+    "A3": true,
+    "B3": true,
+    "C3": true,
+    "D3": true
+  }
+}

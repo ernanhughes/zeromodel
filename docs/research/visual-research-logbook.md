@@ -38,7 +38,7 @@ what those events meant.
 
 ## Current research position
 
-### Stable ZeroModel policy core
+### Stable ZeroModel core
 
 The ZeroModel policy core is stable inside its declared bounded scope. The
 visual programme has not invalidated the deterministic artifact, policy lookup,
@@ -92,7 +92,7 @@ The repository supports these bounded mechanism claims:
 - registration improved ranking without creating a useful governed operating
   point.
 
-### Retired or unsupported approaches
+### Unsupported or retired approaches
 
 Current repository evidence does not support promotion of:
 
@@ -102,13 +102,30 @@ Current repository evidence does not support promotion of:
 - normalized pixels or registered normalized pixels as useful governed readers
   at the committed operating points.
 
-### Current evidence boundary
+### Preparation-only work
+
+Current `main` also contains implemented and tested, but not yet measured or
+adjudicated:
+
+- the fresh v3 local-evidence fixture in
+  [arcade_visual_local_evidence_benchmark.py](/C:/Projects/zeromodel/examples/arcade_visual_local_evidence_benchmark.py);
+- the independent registered-pixel calibration path in
+  [arcade_visual_registered_calibration_v2.py](/C:/Projects/zeromodel/examples/arcade_visual_registered_calibration_v2.py);
+- supporting tests in
+  [test_visual_local_evidence_benchmark.py](/C:/Projects/zeromodel/tests/test_visual_local_evidence_benchmark.py)
+  and
+  [test_arcade_visual_registered_calibration_v2.py](/C:/Projects/zeromodel/tests/test_arcade_visual_registered_calibration_v2.py).
+
+No committed final evidence package or adjudication for those preparation paths
+exists on current `main`.
+
+### Current claim boundaries
 
 The current visual reader is not production-ready. The strongest bounded claims
 are on the declared synthetic fixture, with explicit separation between raw
 top-1 ranking and accepted governed decisions.
 
-### Open questions
+### Immediate open questions
 
 Open questions include:
 
@@ -122,7 +139,7 @@ Open questions include:
 - whether fixed-camera validation changes the picture;
 - whether governance parity justifies the full visual governance stack.
 
-### Next declared research step
+### Next continuation point
 
 The next declared measured provider remains
 `translation_equivariant_template_correlation`. As of Saturday, July 18, 2026,
@@ -132,6 +149,85 @@ it is not yet implemented as a completed measured Stage 2 evidence package on
 ---
 
 # Chronological research log
+
+## 2026-07-11 — Deterministic policy infrastructure is rebuilt before vision
+
+### Starting position
+
+Before the visual programme opened, the repository was being reconstructed
+around a smaller deterministic artifact contract and clearer public claims.
+
+### Question
+
+What policy infrastructure had to become stable before visual addressing could
+be interpreted as a bounded extension rather than a rewrite of the core?
+
+### Work performed
+
+The repository rebuilt the ZeroModel package around an immutable VPM artifact
+kernel, reintroduced consumer modules on top of that kernel, added a claims
+audit, hardened artifact and spatial contracts, and then established
+reproducible sign-demo, policy-lookup, verification, and exhaustive arcade
+validation scaffolding.
+
+### Commits
+
+- `a9793e0` `Merge pull request #2 from ernanhughes/codex/zeromodel-first-principles`
+- `98775ab` `Merge pull request #3 from ernanhughes/codex/vpm-artifact-kernel`
+- `d909e9d` `Merge pull request #4 from ernanhughes/codex/clean-v2-package`
+- `69ca00e` `Merge pull request #6 from ernanhughes/codex/claims-audit`
+- `22f2699` `Merge pull request #17 from ernanhughes/agent/pre-1-claims-hardening`
+- `554737b` `Merge pull request #19 from ernanhughes/agent/reproducible-signs-demo`
+- `cb95a1c` `Merge pull request #20 from ernanhughes/agent/v1.0.11-criticality-verification`
+- `e113bd4` `Merge pull request #21 from ernanhughes/test/exhaustive-arcade-validation`
+
+### Specifications and reports
+
+- [vpm-artifact-v0.md](/C:/Projects/zeromodel/docs/spec/vpm-artifact-v0.md)
+- [claims-audit.md](/C:/Projects/zeromodel/docs/claims-audit.md)
+- [sign-reader.md](/C:/Projects/zeromodel/docs/examples/sign-reader.md)
+- [criticality-verification.md](/C:/Projects/zeromodel/docs/examples/criticality-verification.md)
+- [arcade-validation.md](/C:/Projects/zeromodel/docs/results/arcade-validation.md)
+- [viper-policy-compilation.md](/C:/Projects/zeromodel/docs/research/viper-policy-compilation.md)
+
+### Measured evidence
+
+The committed exhaustive arcade validation package established that the
+deterministic policy path could be replayed and checked exhaustively before any
+visual approximation layer was introduced. The current repository still carries
+that validation record in
+[arcade-validation.md](/C:/Projects/zeromodel/docs/results/arcade-validation.md)
+and
+[arcade-validation-pytest.txt](/C:/Projects/zeromodel/docs/results/arcade-validation-pytest.txt).
+
+### Interpretation
+
+This was mostly enabling infrastructure rather than a visual result, but it
+changed what later visual evidence could mean. The visual programme would be
+judged against a stable artifact identity contract, exact policy lookup, and a
+known-good exhaustive fixture, rather than against an evolving symbolic core.
+
+### Decision
+
+Keep the artifact kernel conservative and treat visual work as a consumer layer
+that must compile uncertain observations into the existing deterministic policy
+contract.
+
+### Claim effect
+
+The repository could support strong bounded claims about deterministic policy
+identity, lookup, and replay before it claimed anything about visual
+observations.
+
+### Remaining question
+
+Could an external visual observation recover that same deterministic policy
+address without collapsing the distinction between ranking, acceptance, and
+exact policy-row identity?
+
+### Next step
+
+Open the visual research programme on top of the stabilized deterministic core.
 
 ## 2026-07-16 — The visual problem is opened
 

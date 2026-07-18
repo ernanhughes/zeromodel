@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 import json
 
 import numpy as np
@@ -23,6 +24,7 @@ from zeromodel.video_policy import VideoPolicyReader
 from zeromodel.visual_policy import DeterministicVisualAddressProvider
 
 
+@lru_cache(maxsize=None)
 def _reader(*, maximum_identical_frame_run: int | None = None) -> VideoPolicyReader:
     config = ShooterConfig()
     policy = compile_policy_artifact(config)

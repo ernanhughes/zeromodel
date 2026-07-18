@@ -34,6 +34,7 @@ SYSTEM_NAME = "registered_local_normalized_pixels"
 GENERATOR_VERSION = "arcade_visual_local_baseline_showdown/v1"
 FROZEN_SYSTEM_B_DIR = REPO_ROOT / "docs" / "results" / "visual-address-system-b-v2"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "visual-local-baseline-showdown-v1"
+EXPECTED_STARTING_MAIN_SHA = "832bca74fa05a6222ed02c65419bc2f551dfc7c0"
 FROZEN_SYSTEM_B_IDENTITIES = {
     "dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
     "selection_digest": "b7dfa44942f15cc782eaff3a4d7f4d7224214d4b7b15b6e5c668a76bf191a1b1",
@@ -326,6 +327,12 @@ def run_showdown(
     if dirty_at_start:
         raise RuntimeError("final run must start from a clean working tree")
     started_utc = datetime.now(timezone.utc).isoformat()
+    starting_main_sha = _git_output("merge-base", "HEAD", "origin/main")
+    if starting_main_sha != EXPECTED_STARTING_MAIN_SHA:
+        raise RuntimeError(
+            "unexpected starting main sha: expected %s, got %s"
+            % (EXPECTED_STARTING_MAIN_SHA, starting_main_sha)
+        )
 
     dataset = build_arcade_benchmark_dataset(variants_per_family=variants_per_family)
     if dataset.manifest.digest != FROZEN_SYSTEM_B_IDENTITIES["dataset_digest"]:
@@ -444,7 +451,7 @@ def run_showdown(
     runtime = _runtime()
     runtime["completed_utc"] = datetime.now(timezone.utc).isoformat()
     runtime["dirty_at_start"] = False
-    runtime["dirty_after_run"] = True
+    runtime["dirty_after_run"] = False
 
     registration_candidate_grid = {
         "version": SHOWDOWN_PROTOCOL_VERSION,
@@ -551,6 +558,9 @@ def run_showdown(
             writer.writerow({"family_id": family_id, **{k: payload[k] for k in writer.fieldnames if k != "family_id"}})
 
     final_report_payload_digest = _json_digest(final_report)
+    dirty_after_run = bool(_git_output("status", "--short"))
+    runtime["dirty_after_run"] = dirty_after_run
+    _write_json(output_dir / "runtime.json", runtime)
     run_manifest = {
         "version": "zeromodel-visual-benchmark-run-manifest/v1",
         "generator_version": GENERATOR_VERSION,
@@ -561,7 +571,7 @@ def run_showdown(
         "git_commit": _git_output("rev-parse", "HEAD"),
         "branch_or_ref": _git_output("branch", "--show-current") or os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME") or "detached",
         "dirty_at_start": False,
-        "dirty_after_run": True,
+        "dirty_after_run": dirty_after_run,
         "generated_paths": sorted(str(path.relative_to(output_dir)).replace("\\", "/") for path in output_dir.rglob("*") if path.is_file()),
         "python_version": sys.version.split()[0],
         "platform": platform.platform(),
@@ -574,7 +584,7 @@ def run_showdown(
         "final_report_payload_digest": final_report_payload_digest,
         "trace_digest": trace_digest,
         "bundle_manifest_path": "bundle-manifest.json",
-        "starting_main_sha": _git_output("merge-base", "HEAD", "origin/main"),
+        "starting_main_sha": starting_main_sha,
     }
     _write_json(output_dir / "run-manifest.json", run_manifest)
     bundle_manifest = _bundle_manifest(output_dir)

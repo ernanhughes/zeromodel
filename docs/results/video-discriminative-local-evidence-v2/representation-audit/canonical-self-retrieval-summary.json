@@ -1,0 +1,72 @@
+{
+  "architectures": {
+    "A": {
+      "incorrect_exact_acceptances": 112,
+      "maximum_tie_size": 112,
+      "mean_maximum_tie_size": 112.0,
+      "top1": 7,
+      "top10": 94,
+      "top1_count": 7,
+      "top3": 24,
+      "top5": 48,
+      "zero_strength_candidate_count": 12544
+    },
+    "B": {
+      "incorrect_exact_acceptances": 112,
+      "maximum_tie_size": 112,
+      "mean_maximum_tie_size": 112.0,
+      "top1": 7,
+      "top10": 94,
+      "top1_count": 7,
+      "top3": 24,
+      "top5": 48,
+      "zero_strength_candidate_count": 12544
+    },
+    "C": {
+      "incorrect_exact_acceptances": 112,
+      "maximum_tie_size": 112,
+      "mean_maximum_tie_size": 112.0,
+      "top1": 7,
+      "top10": 94,
+      "top1_count": 7,
+      "top3": 24,
+      "top5": 48,
+      "zero_strength_candidate_count": 12544
+    }
+  },
+  "canonical_observation_count": 112,
+  "incorrect_lexical_exact_accepts": 336,
+  "lexical_only_winner_count": 336,
+  "per_action_top1": {
+    "A": {
+      "FIRE": 0,
+      "LEFT": 0,
+      "RIGHT": 0,
+      "STAY": 7
+    },
+    "B": {
+      "FIRE": 0,
+      "LEFT": 0,
+      "RIGHT": 0,
+      "STAY": 7
+    },
+    "C": {
+      "FIRE": 0,
+      "LEFT": 0,
+      "RIGHT": 0,
+      "STAY": 7
+    }
+  },
+  "per_state_factor_top1": {
+    "A": {
+      "tank=None|target=None|cooldown=None": 7
+    },
+    "B": {
+      "tank=None|target=None|cooldown=None": 7
+    },
+    "C": {
+      "tank=None|target=None|cooldown=None": 7
+    }
+  },
+  "zero_strength_observation_count": 336
+}

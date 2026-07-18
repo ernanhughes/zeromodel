@@ -1,0 +1,5 @@
+{
+  "incorrect_lexical_exact_accepts": 336,
+  "ruling": "exact_tie_implementation_defect",
+  "strict_superiority_required": true
+}

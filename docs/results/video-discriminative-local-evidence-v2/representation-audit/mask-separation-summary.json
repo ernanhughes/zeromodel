@@ -1,0 +1,9 @@
+{
+  "informative_pixel_count": 12208,
+  "informative_pixels_zeroed_by_nearest_competitor_rule": 12208,
+  "informative_zeroed_fraction": 1.0,
+  "max_difference_informative_min_difference_zero_contradiction_rows": 112,
+  "row_count": 112,
+  "rows_with_positive_separation_weighted_mass": 0,
+  "rows_with_positive_stable_informative_mass": 112
+}

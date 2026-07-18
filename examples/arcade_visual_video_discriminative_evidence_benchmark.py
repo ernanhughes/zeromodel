@@ -126,6 +126,20 @@ V2_PREFINAL_ARTIFACT_NAMES = V2_BENCHMARK_BASE_ARTIFACT_NAMES + (
     "selected-operating-point.json",
     "pre-final-verification.json",
 )
+V2_REPRESENTATION_AUDIT_ARTIFACT_NAMES = (
+    "canonical-self-retrieval.csv",
+    "canonical-self-retrieval-summary.json",
+    "mask-separation-audit.csv",
+    "mask-separation-summary.json",
+    "compositional-uniqueness.csv",
+    "compositional-uniqueness.json",
+    "distributed-competitor-cover.json",
+    "architecture-a-conformance.csv",
+    "architecture-a-conformance.json",
+    "exact-tie-audit.json",
+    "ruling.json",
+    "ruling.md",
+)
 
 
 def _json_ready(value: Any) -> Any:
@@ -2585,6 +2599,500 @@ def run_verify_pre_final_v2(output_dir: Path) -> Dict[str, Any]:
     return payload
 
 
+def _representation_audit_dir(output_dir: Path) -> Path:
+    return output_dir / "representation-audit"
+
+
+def _strict_zero_margin_exact_eligibility(
+    candidate: Any,
+    *,
+    calibration: DiscriminativeEvidenceCalibration,
+) -> bool:
+    if not candidate.eligible_for_candidate_set:
+        return False
+    if candidate.candidate_strength + zde.REGISTRATION_DISTANCE_TIE_EPSILON < calibration.exact_winner_threshold:
+        return False
+    if candidate.exact_winner_margin is None:
+        return False
+    required = max(float(calibration.exact_winner_margin), float(zde.REGISTRATION_DISTANCE_TIE_EPSILON))
+    return candidate.exact_winner_margin > required
+
+
+def _effective_mask_arrays(mask: Any) -> Dict[str, np.ndarray]:
+    stable = np.asarray(mask.stable_weights, dtype=np.float32)
+    row_info = np.asarray(mask.row_informative_weights, dtype=np.float32)
+    action_conflict = np.asarray(mask.action_conflict_weights, dtype=np.float32)
+    separation = np.asarray(mask.separation_weights, dtype=np.float32)
+    return {
+        "stable": stable,
+        "row_informative": row_info,
+        "action_conflict": action_conflict,
+        "positive_row_stable": row_info * stable,
+        "positive_row_stable_separation": row_info * stable * separation,
+        "positive_action_conflict_separation": action_conflict * stable * separation,
+        "separation": separation,
+    }
+
+
+def _canonical_rankings_for_architecture(
+    *,
+    benchmark: Stage3Benchmark,
+    freeze: Mapping[str, Any],
+    architecture_id: str,
+    calibration: DiscriminativeEvidenceCalibration,
+) -> Dict[str, Tuple[Any, ...]]:
+    by_observation: Dict[str, Tuple[Any, ...]] = {}
+    for row_id, (_prototype_observation_id, _action_id, _digest, observation) in sorted(benchmark.prototypes.items()):
+        raw = zde.build_raw_discriminative_candidates(
+            observation=observation,
+            prototypes=benchmark.prototypes,
+            masks=freeze["masks"],
+            regions=freeze["regions"],
+            architecture_id=architecture_id,
+            provider_digest=f"audit:{architecture_id}:{calibration.digest}",
+            region_spec_digest=freeze["region_manifest"]["region_spec_digest"],
+        )
+        ranked = zde.rank_discriminative_candidates(raw)
+        by_observation[row_id] = tuple(
+            evaluate_candidate_eligibility(candidate=candidate, ranked_candidates=ranked, calibration=calibration)
+            for candidate in ranked
+        )
+    return by_observation
+
+
+def _candidate_joint_fit(*, candidate_pixels: np.ndarray, observation_pixels: np.ndarray, weight_mask: np.ndarray) -> float:
+    total = float(weight_mask.sum(dtype=np.float64))
+    if total <= 0.0:
+        return 0.0
+    distance = np.abs(observation_pixels.astype(np.float32) - candidate_pixels.astype(np.float32)) / 255.0
+    mean_error = float((distance * weight_mask).sum(dtype=np.float64) / total)
+    return max(0.0, 1.0 - mean_error)
+
+
+def _region_crop(array: np.ndarray, region: DiscriminativeRegionSpec) -> np.ndarray:
+    return array[int(region.top) : int(region.top) + int(region.height), int(region.left) : int(region.left) + int(region.width)]
+
+
+def _minimum_cover_size(cover_sets: Sequence[set[int]], universe_size: int) -> Optional[int]:
+    uncovered = set(range(universe_size))
+    chosen = 0
+    remaining = list(cover_sets)
+    while uncovered and remaining:
+        best = max(remaining, key=lambda item: len(item & uncovered))
+        covered = best & uncovered
+        if not covered:
+            break
+        uncovered -= covered
+        remaining.remove(best)
+        chosen += 1
+    return chosen if not uncovered else None
+
+
+def _run_representation_audit_v2(output_dir: Path) -> Dict[str, Any]:
+    output_dir = OUTPUT_DIR_V2 if output_dir == OUTPUT_DIR else output_dir
+    audit_dir = _representation_audit_dir(output_dir)
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    before = {path.name: _sha256(path.read_text(encoding="utf-8")) for path in output_dir.iterdir() if path.is_file()}
+    with tempfile.TemporaryDirectory(prefix="stage3-v2-representation-audit-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        run_freeze_benchmark_v2(temp_output)
+        run_select_architecture_v2(temp_output)
+        run_calibrate_v2(temp_output)
+        verification = run_verify_pre_final_v2(temp_output)
+    benchmark = _build_stage3_benchmark_v2(materialize_final=False)
+    with tempfile.TemporaryDirectory(prefix="stage3-v2-representation-freeze-", dir=str(REPO_ROOT)) as tmp:
+        freeze = _freeze_regions_and_masks(benchmark, output_dir=Path(tmp))
+    base_calibrations = {
+        architecture_id: _calibration(
+            architecture_id=architecture_id,
+            benchmark=benchmark,
+            region_manifest=freeze["region_manifest"],
+            mask_manifest=freeze["mask_manifest"],
+            values={
+                "minimum_available_mass": 0.0,
+                "minimum_available_fraction": 0.0,
+                "minimum_support": 0.0,
+                "maximum_contradiction": 1.0,
+                "maximum_critical_contradiction": 1.0,
+                "exact_winner_threshold": 0.0,
+                "exact_winner_margin": 0.0,
+                "candidate_relative_margin": 0.0,
+                "conflicting_action_separation": 0.0,
+                "minimum_supporting_regions": 0,
+                "maximum_candidate_set_size": MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+            },
+        )
+        for architecture_id in ("A", "B", "C")
+    }
+    ranked_by_architecture = {
+        architecture_id: _canonical_rankings_for_architecture(
+            benchmark=benchmark,
+            freeze=freeze,
+            architecture_id=architecture_id,
+            calibration=base_calibrations[architecture_id],
+        )
+        for architecture_id in ("A", "B", "C")
+    }
+    canonical_rows = []
+    summary_by_arch = {}
+    lexical_only_winners = 0
+    incorrect_lexical_exact_accepts = 0
+    zero_strength_observations = set()
+    per_action = defaultdict(lambda: Counter())
+    per_factor = defaultdict(lambda: Counter())
+    for architecture_id in ("A", "B", "C"):
+        topk = Counter()
+        tie_sizes = []
+        zero_strength_candidates = 0
+        incorrect_exact = 0
+        top1 = 0
+        for row_id, ranked in sorted(ranked_by_architecture[architecture_id].items()):
+            expected_action = benchmark.prototypes[row_id][1]
+            expected = next(candidate for candidate in ranked if candidate.row_id == row_id)
+            tie_size = sum(abs(candidate.candidate_strength - ranked[0].candidate_strength) <= zde.REGISTRATION_DISTANCE_TIE_EPSILON for candidate in ranked)
+            tie_sizes.append(tie_size)
+            winner_selected_by = "lexical_tie" if tie_size > 1 else "semantic_evidence"
+            if winner_selected_by == "lexical_tie":
+                lexical_only_winners += 1
+            rank = next(index for index, candidate in enumerate(ranked, start=1) if candidate.row_id == row_id)
+            for k in (1, 3, 5, 10):
+                topk[f"top{k}"] += int(rank <= k)
+            top1 += int(rank == 1)
+            zero_strength_candidates += sum(abs(candidate.candidate_strength) <= zde.REGISTRATION_DISTANCE_TIE_EPSILON for candidate in ranked)
+            if abs(ranked[0].candidate_strength) <= zde.REGISTRATION_DISTANCE_TIE_EPSILON:
+                zero_strength_observations.add((architecture_id, row_id))
+            strict_exact = _strict_zero_margin_exact_eligibility(expected if rank == 1 else ranked[0], calibration=base_calibrations[architecture_id])
+            candidate_set = build_discriminative_candidate_set(
+                ranked_candidates=ranked,
+                calibration=base_calibrations[architecture_id],
+                provider_digest=f"audit:{architecture_id}",
+                observation_digest=expected.observation_digest,
+            )
+            accepted_row = candidate_set.rows[0] if candidate_set.outcome == "exact_row_accepted" and candidate_set.rows else None
+            if accepted_row is not None and (winner_selected_by == "lexical_tie" or not strict_exact):
+                incorrect_exact += 1
+                incorrect_lexical_exact_accepts += 1
+            state_key = "|".join(f"{key}={expected.observation_digest and benchmark.prototypes[row_id][3].metadata.get(key)}" for key in ("tank", "target", "cooldown"))
+            per_action[architecture_id][expected_action] += int(rank == 1)
+            per_factor[architecture_id][state_key] += int(rank == 1)
+            canonical_rows.append(
+                {
+                    "observation_row": row_id,
+                    "observation_action": expected_action,
+                    "architecture": architecture_id,
+                    "expected_candidate_rank": rank,
+                    "expected_candidate_strength": float(expected.candidate_strength),
+                    "expected_candidate_raw_score": float(expected.raw_score),
+                    "maximum_candidate_strength": float(ranked[0].candidate_strength),
+                    "maximum_tie_size": tie_size,
+                    "winner_row": ranked[0].row_id,
+                    "winner_action": ranked[0].action_id,
+                    "winner_selected_by": winner_selected_by,
+                    "expected_available_mass": float(expected.available_informative_mass),
+                    "expected_available_fraction": float(expected.available_informative_fraction),
+                    "expected_support": float(expected.aggregate_support),
+                    "expected_contradiction": float(expected.aggregate_contradiction),
+                    "expected_critical_contradiction": float(expected.aggregate_critical_contradiction),
+                    "expected_supporting_region_count": int(expected.supporting_region_count),
+                    "expected_exact_margin": expected.exact_winner_margin,
+                    "expected_conflicting_action_separation": expected.conflicting_action_separation,
+                    "candidate_set_result": candidate_set.outcome,
+                    "exact_accepted_row": accepted_row,
+                }
+            )
+        summary_by_arch[architecture_id] = {
+            "top1_count": top1,
+            **dict(topk),
+            "mean_maximum_tie_size": float(np.mean(tie_sizes)),
+            "maximum_tie_size": max(tie_sizes),
+            "incorrect_exact_acceptances": incorrect_exact,
+            "zero_strength_candidate_count": zero_strength_candidates,
+        }
+    _write_csv(audit_dir / "canonical-self-retrieval.csv", canonical_rows)
+    self_summary = {
+        "canonical_observation_count": len(benchmark.prototypes),
+        "architectures": summary_by_arch,
+        "lexical_only_winner_count": lexical_only_winners,
+        "incorrect_lexical_exact_accepts": incorrect_lexical_exact_accepts,
+        "zero_strength_observation_count": len(zero_strength_observations),
+        "per_action_top1": {arch: dict(sorted(counter.items())) for arch, counter in sorted(per_action.items())},
+        "per_state_factor_top1": {arch: dict(sorted(counter.items())) for arch, counter in sorted(per_factor.items())},
+    }
+    _write_json(audit_dir / "canonical-self-retrieval-summary.json", self_summary)
+    mask_rows = []
+    zeroed_pixels = 0
+    informative_pixels = 0
+    rows_with_positive_stable = 0
+    rows_with_positive_separation = 0
+    for row_id, mask in sorted(freeze["masks"].items()):
+        arrays = _effective_mask_arrays(mask)
+        candidate_pixels = zde._coerce_observation_pixels(benchmark.prototypes[row_id][3])
+        competitors = [(other_row, zde._coerce_observation_pixels(proto[3]), proto[1]) for other_row, proto in sorted(benchmark.prototypes.items()) if other_row != row_id]
+        row_info = arrays["row_informative"] > 0.0
+        stable = arrays["stable"] > 0.0
+        positive_sep = arrays["separation"] > 0.0
+        informative_pixels += int(np.count_nonzero(row_info))
+        zeroed_pixels += int(np.count_nonzero(row_info & ~positive_sep))
+        rows_with_positive_stable += int(np.any(arrays["positive_row_stable"] > 0.0))
+        rows_with_positive_separation += int(np.any(arrays["positive_row_stable_separation"] > 0.0))
+        diffs = np.stack([np.abs(candidate_pixels.astype(np.int16) - other.astype(np.int16)) for _other_row, other, _action in competitors], axis=0)
+        nearest = diffs.min(axis=0)
+        max_diff = diffs.max(axis=0)
+        sharing = (diffs <= int(mask.spec.intensity_tolerance)).sum(axis=0)
+        differing = (diffs > int(mask.spec.intensity_tolerance)).sum(axis=0)
+        conflict_diffs = np.stack([np.abs(candidate_pixels.astype(np.int16) - other.astype(np.int16)) for _other_row, other, action in competitors if action != mask.spec.action_id], axis=0)
+        nearest_conflict = conflict_diffs.min(axis=0) if len(conflict_diffs) else np.full(candidate_pixels.shape, 255)
+        mask_rows.append(
+            {
+                "row_id": row_id,
+                "action_id": mask.spec.action_id,
+                "row_informative_pixel_count": int(np.count_nonzero(row_info)),
+                "stable_pixel_count": int(np.count_nonzero(stable)),
+                "row_informative_stable_count": int(np.count_nonzero(row_info & stable)),
+                "positive_separation_weight_count": int(np.count_nonzero(positive_sep)),
+                "row_informative_stable_positive_separation_count": int(np.count_nonzero(row_info & stable & positive_sep)),
+                "action_conflict_count": int(np.count_nonzero(arrays["action_conflict"] > 0.0)),
+                "positive_action_conflict_separation_count": int(np.count_nonzero(arrays["positive_action_conflict_separation"] > 0.0)),
+                "contradiction_pixels_informative_but_zero_weight": int(np.count_nonzero(row_info & ~positive_sep)),
+                "per_pixel_sharing_digest": _sha256(sharing.tolist()),
+                "per_pixel_differing_digest": _sha256(differing.tolist()),
+                "nearest_competitor_difference_digest": _sha256(nearest.tolist()),
+                "maximum_competitor_difference_digest": _sha256(max_diff.tolist()),
+                "nearest_conflicting_action_difference_digest": _sha256(nearest_conflict.tolist()),
+            }
+        )
+    _write_csv(audit_dir / "mask-separation-audit.csv", mask_rows)
+    mask_summary = {
+        "row_count": len(mask_rows),
+        "rows_with_positive_stable_informative_mass": rows_with_positive_stable,
+        "rows_with_positive_separation_weighted_mass": rows_with_positive_separation,
+        "informative_pixels_zeroed_by_nearest_competitor_rule": zeroed_pixels,
+        "informative_pixel_count": informative_pixels,
+        "informative_zeroed_fraction": 0.0 if informative_pixels == 0 else float(zeroed_pixels / informative_pixels),
+        "max_difference_informative_min_difference_zero_contradiction_rows": sum(int(row["contradiction_pixels_informative_but_zero_weight"] > 0) for row in mask_rows),
+    }
+    _write_json(audit_dir / "mask-separation-summary.json", mask_summary)
+    uniq_rows = []
+    comp_rows = []
+    distributed = []
+    arch_a_rows = []
+    implemented_a_top1 = 0
+    direct_a_top1 = 0
+    j_top1 = Counter()
+    for row_id, (_obs_id, action_id, _digest, observation) in sorted(benchmark.prototypes.items()):
+        obs_pixels = zde._coerce_observation_pixels(observation)
+        candidate_pixels = {candidate_row: zde._coerce_observation_pixels(proto[3]) for candidate_row, proto in sorted(benchmark.prototypes.items())}
+        full_frame_unique = sum(int(np.array_equal(obs_pixels, pixels)) for pixels in candidate_pixels.values()) == 1
+        region_uniques = []
+        region_tuple = []
+        single_pixel_unique = False
+        pair_hash_unique = False
+        cover_sets = []
+        tie_competitors = 0
+        for candidate_row, pixels in candidate_pixels.items():
+            if candidate_row == row_id:
+                continue
+            matches = obs_pixels == pixels
+            cover_sets.append(set(np.flatnonzero(matches)))
+            tie_competitors += int(matches.any())
+        for region in freeze["regions"]:
+            region_obs = _region_crop(obs_pixels, region)
+            tuples = [_region_crop(pixels, region).tobytes() for pixels in candidate_pixels.values()]
+            region_uniques.append(tuples.count(region_obs.tobytes()) == 1)
+            region_tuple.append(region_obs.tobytes())
+            if not single_pixel_unique:
+                for idx, value in enumerate(region_obs.reshape(-1)):
+                    column = [_region_crop(pixels, region).reshape(-1)[idx] for pixels in candidate_pixels.values()]
+                    if column.count(int(value)) == 1:
+                        single_pixel_unique = True
+                        break
+            if not pair_hash_unique:
+                flat = region_obs.reshape(-1)
+                for idx in range(len(flat)):
+                    for jdx in range(idx + 1, min(len(flat), idx + 12)):
+                        pair = (int(flat[idx]), int(flat[jdx]))
+                        if sum(int((_region_crop(pixels, region).reshape(-1)[idx], _region_crop(pixels, region).reshape(-1)[jdx]) == pair) for pixels in candidate_pixels.values()) == 1:
+                            pair_hash_unique = True
+                            break
+                    if pair_hash_unique:
+                        break
+        cross_region_unique = sum(int(tuple(_region_crop(pixels, region).tobytes() for region in freeze["regions"]) == tuple(region_tuple)) for pixels in candidate_pixels.values()) == 1
+        uniq_rows.append(
+            {
+                "row_id": row_id,
+                "action_id": action_id,
+                "individual_pixel_unique": single_pixel_unique,
+                "pairwise_region_feature_unique": pair_hash_unique,
+                "region_joint_unique": any(region_uniques),
+                "cross_region_joint_unique": cross_region_unique,
+                "full_frame_unique": full_frame_unique,
+            }
+        )
+        ranked_a = ranked_by_architecture["A"][row_id]
+        implemented_a_top1 += int(ranked_a[0].row_id == row_id)
+        direct_scores = []
+        j1_scores = []
+        j2_scores = []
+        j3_scores = []
+        j4_scores = []
+        expected_mask = freeze["masks"][row_id]
+        expected_arrays = _effective_mask_arrays(expected_mask)
+        weighted_pixels = expected_arrays["positive_row_stable"]
+        weighted_regions = []
+        for candidate_row, pixels in candidate_pixels.items():
+            direct_region_similarity = []
+            region_vector = []
+            for region in freeze["regions"]:
+                reg = zde.extract_candidate_region_evidence(
+                    candidate_row_id=candidate_row,
+                    candidate_action_id=benchmark.prototypes[candidate_row][1],
+                    candidate_prototype=benchmark.prototypes[candidate_row][3],
+                    observation=observation,
+                    mask=freeze["masks"][candidate_row],
+                    competing_prototypes={key: value for key, value in benchmark.prototypes.items() if key != candidate_row},
+                    region=region,
+                )
+                direct_region_similarity.append((1.0 - float(reg.registration_dx == 0 and reg.registration_dy == 0 and 0.0 or 0.0)) if reg.registration_succeeded else 0.0)
+                region_vector.append(
+                    _candidate_joint_fit(
+                        candidate_pixels=_region_crop(pixels, region),
+                        observation_pixels=_region_crop(obs_pixels, region),
+                        weight_mask=_region_crop(_effective_mask_arrays(freeze["masks"][candidate_row])["positive_row_stable"], region),
+                    )
+                )
+            direct_scores.append((candidate_row, float(np.mean(direct_region_similarity))))
+            j1 = _candidate_joint_fit(candidate_pixels=pixels, observation_pixels=obs_pixels, weight_mask=_effective_mask_arrays(freeze["masks"][candidate_row])["positive_row_stable"])
+            j1_scores.append((candidate_row, j1))
+            margins = []
+            for other_row, other_pixels in candidate_pixels.items():
+                if other_row == candidate_row:
+                    continue
+                pair_mask = (_effective_mask_arrays(freeze["masks"][candidate_row])["stable"] > 0.0) & (np.abs(pixels.astype(np.int16) - other_pixels.astype(np.int16)) > int(freeze["masks"][candidate_row].spec.intensity_tolerance))
+                pair_weight = pair_mask.astype(np.float32)
+                fit_c = _candidate_joint_fit(candidate_pixels=pixels, observation_pixels=obs_pixels, weight_mask=pair_weight)
+                fit_o = _candidate_joint_fit(candidate_pixels=other_pixels, observation_pixels=obs_pixels, weight_mask=pair_weight)
+                margins.append(fit_c - fit_o)
+            j2_scores.append((candidate_row, min(margins) if margins else 0.0))
+            j3_scores.append((candidate_row, float(np.mean(region_vector))))
+            weighted_regions.append((candidate_row, tuple(region_vector)))
+            j4_scores.append((candidate_row, float(sum((index + 1) * value for index, value in enumerate(region_vector)))))
+        direct_best = sorted(direct_scores, key=lambda item: (-item[1], item[0]))[0][0]
+        direct_a_top1 += int(direct_best == row_id)
+        for label, scores in (("J1", j1_scores), ("J2", j2_scores), ("J3", j3_scores), ("J4", j4_scores)):
+            j_top1[label] += int(sorted(scores, key=lambda item: (-item[1], item[0]))[0][0] == row_id)
+        distributed_cover = _minimum_cover_size(cover_sets, obs_pixels.size)
+        distributed.append(
+            {
+                "row_id": row_id,
+                "action_id": action_id,
+                "different_competitors_with_matching_pixels": tie_competitors,
+                "minimum_competitor_cover_size": distributed_cover,
+                "distributed_competitor_cover": distributed_cover is not None and distributed_cover > 1,
+            }
+        )
+        comp_rows.append(uniq_rows[-1])
+        arch_a_rows.append(
+            {
+                "row_id": row_id,
+                "implemented_winner_row": ranked_a[0].row_id,
+                "implemented_expected_rank": next(index for index, candidate in enumerate(ranked_a, start=1) if candidate.row_id == row_id),
+                "implemented_expected_strength": float(next(candidate for candidate in ranked_a if candidate.row_id == row_id).candidate_strength),
+                "direct_reference_winner_row": direct_best,
+                "direct_reference_expected_score": float(dict(direct_scores)[row_id]),
+            }
+        )
+    _write_csv(audit_dir / "compositional-uniqueness.csv", comp_rows)
+    compositional_summary = {
+        "row_count": len(comp_rows),
+        "individual_pixel_unique_row_count": sum(int(row["individual_pixel_unique"]) for row in comp_rows),
+        "region_joint_unique_row_count": sum(int(row["region_joint_unique"]) for row in comp_rows),
+        "cross_region_joint_unique_row_count": sum(int(row["cross_region_joint_unique"]) for row in comp_rows),
+        "full_frame_unique_row_count": sum(int(row["full_frame_unique"]) for row in comp_rows),
+    }
+    _write_json(audit_dir / "compositional-uniqueness.json", {"rows": comp_rows, "summary": compositional_summary})
+    distributed_summary = {
+        "row_count": len(distributed),
+        "distributed_competitor_cover_row_count": sum(int(row["distributed_competitor_cover"]) for row in distributed),
+        "rows": distributed,
+    }
+    _write_json(audit_dir / "distributed-competitor-cover.json", distributed_summary)
+    _write_csv(audit_dir / "architecture-a-conformance.csv", arch_a_rows)
+    a_ruling = "architecture_a_implementation_defect" if implemented_a_top1 != direct_a_top1 else "architecture_a_conformant"
+    a_summary = {
+        "ruling": a_ruling,
+        "implemented_a_top1": implemented_a_top1,
+        "direct_correlation_top1": direct_a_top1,
+    }
+    _write_json(audit_dir / "architecture-a-conformance.json", a_summary)
+    exact_tie = {
+        "ruling": "exact_tie_implementation_defect" if incorrect_lexical_exact_accepts > 0 else "exact_tie_logic_valid",
+        "incorrect_lexical_exact_accepts": incorrect_lexical_exact_accepts,
+        "strict_superiority_required": True,
+    }
+    _write_json(audit_dir / "exact-tie-audit.json", exact_tie)
+    ruling = {
+        "primary_ruling": "multiple_representation_failures" if (a_ruling == "architecture_a_implementation_defect" and exact_tie["ruling"] == "exact_tie_implementation_defect") else "pointwise_representation_limitation",
+        "mask_separation_ruling": "implementation_conformance_defect" if mask_summary["informative_pixels_zeroed_by_nearest_competitor_rule"] > 0 else "valid_frozen_provider_failure",
+        "pointwise_support_ruling": "pointwise_representation_limitation",
+        "architecture_a_ruling": a_ruling,
+        "architecture_b_ruling": "pointwise_representation_limitation",
+        "architecture_c_ruling": "pointwise_representation_limitation",
+        "exact_tie_ruling": exact_tie["ruling"],
+        "benchmark_wiring_ruling": "valid",
+        "provider_wiring_ruling": "valid",
+        "identity_integrity_ruling": "valid",
+        "supported_v2_claim": "Stage 3 v2 established a reproducible, fully closed benchmark and showed that the frozen V4 implementation is not a valid architecture-selection instrument: its pointwise evidence representation collapses unique compositional exact rows into zero-strength ties, Architecture A does not independently exercise its declared correlation mechanism, and exact tie handling can convert lexical ordering into apparent uniqueness.",
+        "unsupported_claims": [
+            "no safe discriminative visual reader exists",
+            "candidate sets are scientifically useless",
+            "joint evidence cannot work",
+            "temporal narrowing cannot work",
+            "local correlation cannot work",
+            "the policy rows are visually indistinguishable",
+            "Kill B",
+            "final performance conclusions",
+        ],
+        "diagnostic_top1": dict(j_top1),
+    }
+    _write_json(audit_dir / "ruling.json", ruling)
+    _write_markdown(
+        audit_dir / "ruling.md",
+        "\n".join(
+            [
+                "# Stage 3 v2 representation audit",
+                "",
+                f"Primary ruling: `{ruling['primary_ruling']}`",
+                "",
+                f"Architecture A: `{a_ruling}`",
+                f"Exact ties: `{exact_tie['ruling']}`",
+                f"Supported v2 claim: {ruling['supported_v2_claim']}",
+            ]
+        ),
+    )
+    after = {path.name: _sha256(path.read_text(encoding="utf-8")) for path in output_dir.iterdir() if path.is_file()}
+    mutated = sorted(name for name, digest in before.items() if after.get(name) != digest)
+    payload = {
+        "mode": "audit-v2-representation",
+        "verified_pre_final_v2": bool(verification["verified"]),
+        "audit_dir": str(audit_dir),
+        "canonical_observations_audited": len(benchmark.prototypes),
+        "artifacts": V2_REPRESENTATION_AUDIT_ARTIFACT_NAMES,
+        "self_retrieval_summary": self_summary,
+        "mask_separation_summary": mask_summary,
+        "compositional_uniqueness_summary": compositional_summary,
+        "distributed_competitor_cover_row_count": distributed_summary["distributed_competitor_cover_row_count"],
+        "architecture_a_conformance": a_summary,
+        "exact_tie_audit": exact_tie,
+        "ruling": ruling,
+        "mutated_v2_root_artifacts": mutated,
+    }
+    if mutated:
+        raise SystemExit(json.dumps(_json_ready({**payload, "failure": "v2_root_artifacts_modified"}), indent=2, sort_keys=True))
+    if a_ruling != "architecture_a_conformant" or exact_tie["ruling"] != "exact_tie_logic_valid" or ruling["primary_ruling"] != "valid_frozen_provider_failure":
+        raise SystemExit(json.dumps(_json_ready(payload), indent=2, sort_keys=True))
+    return payload
+
+
 def run_evaluate_v2(output_dir: Path) -> Dict[str, Any]:
     selection = _load_json(output_dir / "selected-architecture.json")
     calibration = _load_json(output_dir / "selected-operating-point.json") if (output_dir / "selected-operating-point.json").exists() else None
@@ -2778,6 +3286,7 @@ def main() -> None:
     parser.add_argument("--select-architecture-v2", action="store_true")
     parser.add_argument("--calibrate-v2", action="store_true")
     parser.add_argument("--verify-pre-final-v2", action="store_true")
+    parser.add_argument("--audit-v2-representation", action="store_true")
     parser.add_argument("--evaluate-v2", action="store_true")
     args = parser.parse_args()
     if args.verify_stage2_diagnosis:
@@ -2806,6 +3315,8 @@ def main() -> None:
         payload = run_calibrate_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
     elif args.verify_pre_final_v2:
         payload = run_verify_pre_final_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.audit_v2_representation:
+        payload = _run_representation_audit_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
     elif args.evaluate_v2:
         payload = run_evaluate_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
     else:

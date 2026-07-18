@@ -1,0 +1,1019 @@
+{
+  "rows": [
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=0|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=0|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=1|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=1|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=2|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=2|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=3|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=0|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=0|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=1|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=1|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=2|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=2|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=3|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=1|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=1|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=2|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=2|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=3|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=2|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=2|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=3|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=3|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=2|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=3|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=3|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=4|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=4|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=2|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=3|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=3|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=4|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=4|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=5|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=5|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=2|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=3|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=3|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=4|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=4|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=5|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=5|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=6|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "cross_region_joint_unique": true,
+      "full_frame_unique": true,
+      "individual_pixel_unique": false,
+      "pairwise_region_feature_unique": false,
+      "region_joint_unique": false,
+      "row_id": "tank=6|target=none|cooldown=1"
+    }
+  ],
+  "summary": {
+    "cross_region_joint_unique_row_count": 112,
+    "full_frame_unique_row_count": 112,
+    "individual_pixel_unique_row_count": 0,
+    "region_joint_unique_row_count": 0,
+    "row_count": 112
+  }
+}

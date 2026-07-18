@@ -1,1418 +1,2310 @@
-# ZeroModel Comprehensive External Review Brief
+# ZeroModel 1.0.12: Temporal Visual Evidence and the Video Policy Reader
 
-**Required repository path:** `docs/drafts/ZeroModel-comprehensive-external-review-brief.md`  
-**Prepared:** 17 July 2026  
-**Review status:** Request for independent critical review  
-**Repository:** `ernanhughes/zeromodel`  
-**Review ref:** **[INSERT THE EXACT COMMIT SHA REVIEWED]**  
-**Primary area:** Governed visual observation addressing and the proposed next research direction  
-**Required posture:** Adversarial, evidence-led, code-specific, and willing to recommend stopping the direction
+You are beginning the next major ZeroModel research and implementation stage.
 
----
-
-# 1. Your role
-
-You are being asked to act as an independent technical and research reviewer of ZeroModel.
-
-Do not behave as a collaborator trying to preserve the authors' current direction.
-
-Your task is to determine:
-
-- what has actually been built;
-- what has actually been validated;
-- whether the research question is correctly formulated;
-- whether the experiment supports the authors' interpretation;
-- whether the architecture is unnecessarily complicated;
-- whether important baselines or failure modes are missing;
-- whether the proposed next direction follows from the evidence;
-- whether the entire visual-address direction should be narrowed, replaced, or stopped.
-
-The authors currently believe they have discovered a meaningful distinction between:
+The target release is:
 
 ```text
-semantic visual similarity
+ZeroModel 1.0.12
 ```
 
-and:
+The repository may still identify itself as `1.0.11` when this chat begins. Treat `1.0.12` as the target release. Do not change the package version until the release definition of done has actually been satisfied.
+
+This chat is responsible for designing, implementing, measuring and documenting the first genuine ZeroModel **video policy-reading path**.
+
+This must be actual temporal visual processing, not merely:
+
+* an animated VPM;
+* a GIF made from independent images;
+* a loop that applies a still-image classifier without temporal state;
+* a cached previous answer presented as video understanding;
+* a demo that has no frozen benchmark, rejection contract or evidence record.
+
+The goal is to determine whether local and temporal visual evidence can turn a sequence of world-produced frames into a governed exact policy address.
+
+A valid negative result remains an acceptable research outcome.
+
+---
+
+# 1. Primary mission
+
+Build a bounded video front end that can:
+
+1. read an actual video file or deterministic frame stream;
+2. preserve frame identity, timestamps and source provenance;
+3. generate local evidence for each frame;
+4. associate evidence across time;
+5. detect consistent and inconsistent state transitions;
+6. retain exact policy-row identity;
+7. expose same-action wrong-row ambiguity;
+8. reject unsupported, contradictory or out-of-domain observations;
+9. delegate accepted exact rows to the existing deterministic VPM policy;
+10. produce a complete reconstructable temporal trace.
+
+The architectural question is:
+
+> Can structured local evidence plus temporal consistency produce useful governed visual-policy coverage where whole-image similarity failed?
+
+The release question is narrower:
+
+> Can ZeroModel 1.0.12 provide a real, deterministic, testable and evidence-producing video policy-reader interface, even if the first approximate temporal provider ends in Outcome B or C?
+
+---
+
+# 2. Authoritative project links
+
+## Repository and documentation
+
+* Repository:
+  https://github.com/ernanhughes/zeromodel
+
+* Documentation site:
+  https://ernanhughes.github.io/zeromodel/
+
+* Repository README:
+  https://github.com/ernanhughes/zeromodel/blob/main/README.md
+
+* Claims audit:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/claims-audit.md
+
+* Release documentation:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/release.md
+
+## Research memory
+
+* Visual research logbook:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-research-logbook.md
+
+* Visual programme status cut:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-programme-status-cut-2026-07-18.md
+
+* Visual representation identity ADR:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/adr/visual-representation-identity.md
+
+* Two-week source audit, if present:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-logbook-source-audit-2026-07-04-to-2026-07-18.md
+
+## Canonical visual research documents
+
+* Exact visual sign reader:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-sign-reader.md
+
+* Visual-address Phase Zero:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-address-phase-zero.md
+
+* Visual-address Phase One:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-address-phase-one.md
+
+* Visual-address research status:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-address-research-status.md
+
+* Phase One review adjudication:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-address-review-adjudication.md
+
+* System B v2 adjudication:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-address-system-b-v2-adjudication.md
+
+* Registered local-baseline showdown:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-local-baseline-showdown.md
+
+* Visual-AI status after registration:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-ai-research-status-after-registration.md
+
+* Fixed-camera benchmark direction:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/fixed-camera-status-panel-benchmark.md
+
+* Governance-parity direction:
+  https://github.com/ernanhughes/zeromodel/blob/main/docs/research/visual-governance-parity.md
+
+## Frozen evidence
+
+* Phase One global benchmark:
+  https://github.com/ernanhughes/zeromodel/tree/main/docs/results/visual-address-phase-one-v1
+
+* System B v2:
+  https://github.com/ernanhughes/zeromodel/tree/main/docs/results/visual-address-system-b-v2
+
+* Registered local baseline R1:
+  https://github.com/ernanhughes/zeromodel/tree/main/docs/results/visual-local-baseline-showdown-v1
+
+* R1 independent post-analysis:
+  https://github.com/ernanhughes/zeromodel/tree/main/docs/results/visual-local-baseline-showdown-v1-postanalysis
+
+## Important pull requests
+
+* Exact visual sign reader, PR #27:
+  https://github.com/ernanhughes/zeromodel/pull/27
+
+* System B calibration and evidence repair, PR #32:
+  https://github.com/ernanhughes/zeromodel/pull/32
+
+* Registered-pixel baseline, PR #34:
+  https://github.com/ernanhughes/zeromodel/pull/34
+
+---
+
+# 3. Public website and articles
+
+## Main website
+
+* Programmer.ie:
+  https://programmer.ie/
+
+* ZeroModel article index:
+  https://programmer.ie/tags/zeromodel/
+
+## Foundational ZeroModel article
+
+* **ZeroModel: Visual AI You Can Scrutinize**
+  https://programmer.ie/post/zeromodel/
+
+This is historically important but contains broad early claims. The current repository claims audit is authoritative when public prose and measured repository evidence differ.
+
+## Related conceptual articles
+
+* **A Complete Visual Reasoning Stack: From Conversations to Epistemic Fields**
+  https://programmer.ie/post/visual_reasoning_stack/
+
+* **Phōs: Visualizing How AI Learns and How to Build It Yourself**
+  https://programmer.ie/post/phos/
+
+* **The Space Between Models Has Holes: Mapping the AI Gap**
+  https://programmer.ie/post/gap/
+
+* **Search–Solve–Prove: Building a Place for Thoughts to Develop**
+  https://programmer.ie/post/ssp/
+
+* **Intelligence Through Execution: The Executable Cognitive Kernel**
+  https://programmer.ie/post/eck/
+
+* **A Memory Gate for AI: Policy-Bounded Acceptance in the Executable Cognitive Kernel**
+  https://programmer.ie/post/verify/
+
+These articles provide the wider intellectual background:
+
+* visual representations;
+* policy-bounded execution;
+* verification before commitment;
+* visible evidence;
+* deterministic policy artifacts;
+* separation of stochastic inference from governed action.
+
+Do not treat earlier public claims as stronger evidence than current tests, reports and the claims audit.
+
+Do not invent a URL for Blog 2 if it has not yet been published. Inspect the repository for its draft or enhancement plan instead.
+
+---
+
+# 4. Source hierarchy
+
+When sources disagree, use this order:
 
 ```text
-governed policy-address fidelity
+1. Current code and tests on main
+2. Claims audit
+3. Frozen evidence bundles and their manifests
+4. Research adjudications
+5. Research logbook and current status cut
+6. Specifications and design notes
+7. Pull-request discussions
+8. Public blog posts
+9. Chat summaries
 ```
 
-They also currently believe the next promising direction is a factorized **Visual State Compiler**.
+A public claim does not override a measured negative result.
 
-Those are hypotheses to review, not conclusions you are required to accept.
+A source file does not establish that an experiment was run.
 
-The most useful review may show that:
+A passing unit test does not establish empirical usefulness.
 
-- the benchmark asks the wrong question;
-- exact row identity is not the right requirement;
-- the negative result is caused by calibration rather than representation;
-- the learned path was tested unfairly;
-- the fixture is too synthetic to support any broader inference;
-- direct instrumentation makes the visual direction unnecessary;
-- the governance machinery adds little beyond conventional logging;
-- the factorized proposal is merely ordinary computer vision with additional names;
-- another simpler research programme would be better;
-- ZeroModel's strongest contribution lies elsewhere.
-
-Be direct.
+A committed result directory does not establish validity unless its identities and bundle manifest verify.
 
 ---
 
-# 2. Review objectives
+# 5. Required startup procedure
 
-Your review should answer five high-level questions.
+Begin from the latest remote `main`.
 
-## 2.1 What is ZeroModel now?
+Run:
 
-Reconstruct the implemented system from the code rather than relying on the project's language.
-
-State what is:
-
-- a data structure;
-- a deterministic algorithm;
-- a policy artifact;
-- a runtime consumer;
-- a visual representation;
-- a calibration artifact;
-- a benchmark harness;
-- a governance or lineage contract;
-- a research hypothesis;
-- a validated capability;
-- a metaphor.
-
-## 2.2 What did the full visual experiment actually establish?
-
-Evaluate both the raw result and the interpretation.
-
-Determine whether the evidence justifies saying:
-
-- the DINOv2 path failed;
-- normalized pixels are the stronger baseline;
-- action accuracy is misleading;
-- exact row recovery is the correct primary metric;
-- rejection is the central problem;
-- global semantic embeddings are mismatched to the task.
-
-## 2.3 What is missing or wrong?
-
-Search for:
-
-- implementation defects;
-- invalid assumptions;
-- leakage;
-- weak baselines;
-- inappropriate metrics;
-- underpowered comparisons;
-- calibration errors;
-- post-hoc reinterpretation;
-- governance complexity without value;
-- untested security properties;
-- unsupported positioning or novelty claims.
-
-## 2.4 What should happen next?
-
-Do not default to the proposed Visual State Compiler.
-
-Compare at least:
-
-- stopping visual work;
-- direct instrumentation;
-- deterministic factor extraction;
-- conventional object detection;
-- task-specific classification;
-- supervised contrastive row learning;
-- patch-token evidence;
-- temporal state estimation;
-- a fixed-camera bounded installation;
-- removing exact row identity from the requirement;
-- focusing ZeroModel on policy artifacts rather than perception.
-
-## 2.5 What is the smallest decisive next experiment?
-
-Recommend one bounded experiment or PR that produces the most information.
-
-It should have:
-
-- a falsifiable hypothesis;
-- mandatory baselines;
-- a declared loss or target;
-- raw artifacts;
-- kill conditions;
-- explicit non-goals.
-
----
-
-# 3. Project in one sentence
-
-The strongest current interpretation is:
-
-> ZeroModel compiles bounded scored policies into deterministic, identity-bearing, inspectable artifacts and allows an exact runtime state—or a separately governed observation provider—to address a policy row and recover an action with traceable evidence.
-
-This sentence is itself reviewable.
-
-The project has used stronger public metaphors and ambitions, including visual intelligence, infinite memory, and images as a medium of intelligence. The current repository claims audit substantially narrows those claims.
-
-A reviewer should distinguish the defensible finite-policy artifact contribution from broader programme language.
-
----
-
-# 4. Current evidence ladder
-
-## 4.1 Validated core
-
-The repository currently contains evidence for:
-
-- deterministic `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` construction;
-- deterministic artifact identity;
-- cell-to-source mapping;
-- multiple deterministic views over one score table;
-- bounded state-addressed policy lookup;
-- exact action selection without invoking a learned model at policy-decision time;
-- exact policy trace and artifact identity;
-- Lua export of a bounded policy;
-- finite row-property checking;
-- linked verification and repair lineage;
-- canonical deterministic visual feature-codeword addressing in one bounded arcade fixture;
-- provider-neutral visual-address contract mechanics;
-- identity-bearing tensor, encoder, calibration, prototype, and deployment records;
-- family-held-out visual benchmark infrastructure.
-
-## 4.2 Implemented but not validated as a successful capability
-
-The repository contains implementations of:
-
-- normalized-pixel approximate addressing;
-- pinned DINOv2-small CLS extraction;
-- DINOv2 medoid retrieval;
-- DINOv2 all-prototype k-NN;
-- a ridge linear row probe;
-- held-out corruption families;
-- critical-intervention and OOD evaluation;
-- per-family and per-observation traces.
-
-The full run now measures those implementations. The learned systems did not satisfy the current continuation criteria.
-
-## 4.3 Not established
-
-The repository does not establish:
-
-- open-world perception;
-- learned critical-evidence detection;
-- safe visual deployment;
-- robustness across real cameras;
-- robustness across renderers;
-- temporal perception;
-- a fixed-camera real-world result;
-- a task-specific learned visual state compiler;
-- improved human inspection;
-- governance superiority over a lightweight conventional stack;
-- safety certification;
-- general visual reasoning.
-
----
-
-# 5. Historical progression
-
-The visual-address direction evolved through several stages.
-
-## 5.1 Exact symbolic policy
-
-A complete bounded arcade state is encoded as a policy row.
-
-The policy contains:
-
-- seven tank positions;
-- seven target positions plus target absence;
-- two cooldown states;
-- four actions;
-- 112 policy rows.
-
-The exact runtime state selects a row, and the policy artifact selects an action.
-
-## 5.2 Exact canonical visual sign reader
-
-Every state is rendered as an integer frame:
-
-```text
-height: 16
-width: 28
-dtype: uint8
+```bash
+git fetch origin
+git switch main
+git pull --ff-only
+git status --short
+git rev-parse HEAD
+git log -n 20 --oneline --decorate
+python -m pytest -q
 ```
 
-The frame visibly contains:
-
-- tank position;
-- target position or absence;
-- cooldown state.
-
-The canonical reader extracts a deterministic quantized feature codeword and addresses a separate visual index bound to the exact policy artifact.
-
-It succeeds on all canonical rows and the committed exhaustive trajectory fixture.
-
-It does not currently demonstrate accepted tolerance to the held-out benign perturbation families.
-
-## 5.3 Provider-neutral visual addressing
-
-The project created a seam through which multiple visual providers can return a governed decision:
+Then inspect:
 
 ```text
-ImageObservation
-    ↓
-VisualAddressProvider
-    ↓
-VisualAddressDecision
-    ↓
-VisualPolicyReader / VPMPolicyLookup
-    ↓
-policy action
-```
-
-The address provider and policy artifact remain separately identified.
-
-## 5.4 Learned Phase 1 benchmark
-
-The benchmark compares:
-
-- A: exact deterministic reader;
-- B: normalized-pixel medoid retrieval;
-- C: frozen DINOv2 medoid retrieval;
-- D: frozen DINOv2 all-prototype k-NN;
-- G: rejection-equipped ridge linear probe.
-
-The declared Phase 1 research question was whether a pinned learned representation could improve held-out benign recovery while retaining safe rejection.
-
----
-
-# 6. Current code architecture
-
-Review the current repository rather than relying only on this summary.
-
-## 6.1 Policy and original visual codebook
-
-```text
-examples/arcade_shooter_policy.py
-    bounded state/action fixture
-    row-ID encoding
-    policy artifact compilation
-
-examples/arcade_visual_sign_reader.py
-    canonical integer renderer
-    deterministic visual feature specification
-    complete frame enumeration
-    canonical visual index compilation
-    visual-policy equivalence fixture
-
-zeromodel/visual.py
-    VisualFeatureSpec
-    VisualIndexCalibration
-    VisualIndexBuild
-    VisualDecision
-    extract_visual_features
-    build_visual_index
-    VisualSignReader
-```
-
-Questions to ask:
-
-- Is the canonical renderer too deliberately aligned with the feature extractor?
-- Is this a meaningful visual result or an encoded state protocol?
-- Does that distinction matter if the claim is bounded and explicit?
-- Is the separate visual index valuable compared with directly decoding the renderer?
-
-## 6.2 Governed address contracts
-
-```text
+pyproject.toml
+README.md
+docs/claims-audit.md
+docs/research/visual-research-logbook.md
+docs/research/visual-programme-status-cut-2026-07-18.md
+docs/adr/visual-representation-identity.md
+docs/results/visual-local-baseline-showdown-v1/
+docs/results/visual-local-baseline-showdown-v1-postanalysis/
+examples/arcade_visual_local_evidence_benchmark.py
+examples/arcade_visual_registered_calibration_v2.py
+zeromodel/visual_registration.py
+zeromodel/visual_local_baselines.py
 zeromodel/visual_address.py
-zeromodel/visual_address_manifest.py
-zeromodel/matrix_blob.py
-zeromodel/deployment_binding.py
-zeromodel/vision.py
-```
-
-Key concepts include:
-
-- immutable observations;
-- provider contracts;
-- score semantics;
-- observation and representation specification digests;
-- address artifact identity;
-- calibration identity;
-- policy identity;
-- source scope;
-- replay contract;
-- accepted and rejected decisions;
-- prototype-to-policy bindings;
-- deployment status.
-
-Questions to ask:
-
-- Which identities are essential?
-- Which are research scaffolding?
-- Does this materially outperform a model digest, config file, and append-only JSON event log?
-- Is `exact_decision` replay realistic for float representations across environments?
-- Is the deployment binding an actual security control or only a consistency check?
-
-## 6.3 Learned representations
-
-```text
-zeromodel/visual_encoder.py
-    EncoderManifest
-    FrozenVisualEncoder
-    HuggingFaceDinoV2Encoder
-
-zeromodel/visual_precomputed.py
-    precomputed representation providers
-
-zeromodel/visual_retrieval.py
-    NormalizedPixelEncoder
-    VectorCalibration
-    build_vector_address
-    VectorAddressIndex
-    FrozenVectorAddressProvider
-    LinearProbeBuild
-    LinearProbeIndex
-    build_linear_probe
-```
-
-The current DINOv2 path uses:
-
-```text
-model:
-facebook/dinov2-small
-
-revision:
-ed25f3a31f01632728cabb09d1542f84ab7b0056
-
-representation:
-L2-normalized CLS token
-
-preprocessing:
-identity-bearing square letterbox followed by the pinned processor
-```
-
-Questions to ask:
-
-- Is a global CLS token a fair test of the proposed visual-sign task?
-- Does resizing a 16×28 synthetic frame to the encoder's input destroy small local evidence?
-- Would patch tokens, a small CNN, or explicit detectors be a more appropriate baseline?
-- Does the DINOv2 result support a general conclusion about semantic representations, or only this preprocessing and pooling choice?
-
-## 6.4 Dataset and benchmark
-
-```text
-zeromodel/visual_corruptions.py
-zeromodel/visual_dataset.py
 zeromodel/visual_experiment.py
-zeromodel/visual_benchmark.py
-
-examples/arcade_visual_address_benchmark.py
-.github/scripts/run_visual_address_smoke.py
-.github/workflows/visual-address-benchmark.yml
 ```
 
-The evaluator:
+Discover the actual present repository structure. Do not assume all suggested file names remain unchanged.
 
-- separates expected accept, expected reject, and impossibility-control cases;
-- only counts row and action correctness on expected-accept observations;
-- counts accepted conflicting actions;
-- reports false accepts over distinguishable rejection opportunities;
-- reports false rejects over benign opportunities;
-- retains per-family counts;
-- can retain per-observation traces.
+Before implementing anything, produce a concise inherited-state report containing:
 
-Questions to ask:
+```text
+Current main SHA
+Current package version
+Current test result
+Measured systems
+Frozen evidence identities
+Confirmed mechanisms
+Retired approaches
+Preparation-only code
+Unresolved Stage 2 question
+Proposed 1.0.12 implementation boundary
+```
 
-- Are the split families genuinely independent?
-- Is family-held-out testing enough when every frame comes from the same renderer and policy surface?
-- Is there seed leakage or parameter overlap?
-- Is three variants per family enough?
-- Should renderer, state combinations, or policy rows be held out?
-- Are the OOD fixtures representative?
-- Is the critical intervention set sufficiently broad?
-- Is target removal correctly excluded as an impossibility control?
-- Are there other hidden impossibility cases?
+Do not ask the user to restate the project history already recorded in the repository.
 
 ---
 
-# 7. Important implementation details to inspect
+# 6. Inherited scientific position
 
-## 7.1 Calibration
+Treat the following as inherited unless current repository evidence has superseded it.
 
-`VectorCalibration` currently stores:
+## 6.1 The policy core is stable
 
-- per-row acceptance thresholds;
-- per-row ambiguity margins;
-- one global `calibration_count`;
-- a calibration quantile;
-- metadata and digest.
+ZeroModel already has a bounded deterministic policy core:
 
-The current default quantile is `0.0`, the minimum observed calibration value.
+* immutable VPM artifacts;
+* exact row and metric identities;
+* deterministic policy lookup;
+* policy diagnostics;
+* verification artifacts;
+* repair lineage;
+* provider-neutral visual addressing;
+* Lua policy consumption;
+* evidence bundles;
+* a five-state claims ladder.
 
-For retrieval, calibration computes:
+The video work belongs in front of this core.
+
+Do not redesign the policy artifact merely because observation reading remains uncertain.
+
+## 6.2 Made images and found images are different
+
+A VPM is a **made image**:
+
+* authored by ZeroModel;
+* intentionally arranged;
+* coordinate-addressable;
+* deterministic;
+* already part of the policy representation.
+
+A camera or rendered observation is a **found image**:
+
+* produced by the world;
+* translated, occluded or corrupted;
+* temporally incomplete;
+* epistemically uncertain;
+* evidence about state rather than state itself.
+
+The video reader must not treat found images as though they were authored VPM coordinates.
+
+The correct relationship is:
 
 ```text
-correct score
-    minus
-best conflicting-action score
+found video
+    → bounded evidence
+    → candidate state or claim set
+    → governed acceptance
+    → exact VPM policy lookup
 ```
 
-For a row with no conflicting-action candidate, calibration uses a synthetic conflict score of `-1.0`.
+## 6.3 Exact row is not the same as correct action
 
-At runtime, if no conflicting-action candidate exists, the code falls back to the second-ranked prototype even if it has the same action.
+Previous systems often selected the correct action from the wrong policy row.
 
-This appears to create a calibration/runtime semantic mismatch.
-
-Review whether:
-
-- no-conflict rows exist in this fixture;
-- the mismatch affected the result;
-- ambiguity should be optional when no conflicting action exists;
-- calibration should store per-row sample counts;
-- quantile `0.0` is too permissive or too brittle;
-- threshold and margin should be selected from an explicit loss curve.
-
-## 7.2 Benchmark metric schema
-
-`VisualBenchmarkMetrics.action_accuracy` and `.row_accuracy` divide by all scored observations:
+Preserve separately:
 
 ```text
-benign expected accepts
+exact-row correctness
+action correctness
+```
+
+A correct action does not establish that the system understood the exact state.
+
+Wrong-row same-action results remain errors because:
+
+* row identity carries provenance;
+* visually similar rows may later require different actions;
+* present action equivalence does not prove state equivalence;
+* transition validity depends on exact state;
+* conflicting-action neighbours must remain visible.
+
+## 6.4 Ranking is not acceptance
+
+System B and R1 contained strong pre-rejection ranking information while failing to produce useful governed accepted coverage.
+
+A video reader must therefore expose at least:
+
+```text
+best row
+best same-action competing row
+best conflicting-action competing row
+raw action
+raw exact-row confidence
+accepted row or rejection
+rejection reasons
+```
+
+Never hide raw prediction behind rejection.
+
+Never present raw ranking accuracy as governed accuracy.
+
+## 6.5 Global DINOv2 CLS retrieval was not promoted
+
+The measured global DINOv2 systems did not improve governed exact policy addressing enough to justify promotion.
+
+This is a bounded negative result for:
+
+* the committed fixture;
+* global CLS representation;
+* recorded preprocessing;
+* recorded calibration;
+* measured operating conditions.
+
+It does not establish that every learned local or temporal representation will fail.
+
+## 6.6 Registration confirmed a mechanism
+
+Bounded deterministic registration improved:
+
+```text
+exact-row top-1:
+75% → 87.5%
+
+action top-1:
+96.875% → 98.4375%
+```
+
+It completely repaired the declared held-out two-pixel translation family at raw top-1:
+
+```text
+224 / 336 → 336 / 336
+```
+
+Those shifts were unseen instances inside the declared search envelope.
+
+This did not establish arbitrary translation invariance.
+
+## 6.7 Governed acceptance remained unresolved
+
+R1 still accepted:
+
+```text
+0 / 1,344 benign final observations
+```
+
+at its selected zero-observed-distinguishable-false-accept operating point.
+
+The committed independent threshold–margin post-analysis found that no useful operating point had been hidden by the original coupled-quantile search.
+
+Therefore Stage 2 should not reopen that frozen conclusion without new evidence.
+
+## 6.8 Fresh v3 work is preparatory
+
+The repository contains a fresh local-evidence benchmark fixture and independent registered-calibration path.
+
+The fixture includes or may include:
+
+* held-out translation;
+* translation plus photometric changes;
+* local occlusion;
+* critical-region corruption;
+* same-action wrong-row controls;
+* conflicting-action near-neighbours;
+* compositional invalid states;
+* information-theoretic controls;
+* beyond-bounds translations.
+
+Code and tests do not imply that the fixture has already produced a verified evidence package.
+
+Inspect its current status before using it.
+
+---
+
+# 7. What “video working” means
+
+ZeroModel 1.0.12 should support a real bounded video path with three layers.
+
+## Layer A: video transport
+
+The system can read:
+
+* an actual video file;
+* a deterministic lossless clip;
+* or an iterable frame stream.
+
+It preserves:
+
+* source identity;
+* frame index;
+* presentation timestamp;
+* decoding order;
+* dimensions;
+* channel format;
+* frame digest;
+* clip digest;
+* declared frame rate;
+* decode warnings.
+
+## Layer B: temporal visual evidence
+
+The system generates:
+
+* frame-local evidence;
+* local-region matches;
+* region motion;
+* temporal identity;
+* state candidates;
+* transition evidence;
+* contradictions;
+* out-of-domain signals.
+
+## Layer C: governed policy execution
+
+Only an accepted exact policy row may reach deterministic policy lookup.
+
+The final decision must retain:
+
+* video source identity;
+* frame identity;
+* evidence identity;
+* selected row;
+* policy artifact identity;
+* action cell;
+* acceptance or rejection status;
+* temporal lineage.
+
+A simple loop that reads each frame independently satisfies only Layer A.
+
+Version 1.0.12 must implement at least a bounded, measured path through all three layers.
+
+---
+
+# 8. Proposed architecture
+
+Use this as the conceptual target, adjusting names to current repository conventions:
+
+```text
+Video file or frame stream
+    ↓
+VideoFrameSource
+    ↓
+Frame normalization and identity
+    ↓
+Frame-local evidence provider
+    ↓
+Local region support and contradiction
+    ↓
+Temporal association
+    ↓
+Transition-consistent candidate state set
+    ↓
+Temporal acceptance gates
+    ↓
+Accepted exact policy row
+    ↓
+Existing VPMPolicyLookup
+    ↓
+Action plus complete video evidence trace
+```
+
+The policy core remains independently identified.
+
+The video reader must not embed policy action choice inside an opaque temporal model.
+
+---
+
+# 9. Suggested public interfaces
+
+Discover and reuse current repository contracts first.
+
+Potential types include:
+
+```python
+@dataclass(frozen=True)
+class VideoFrame:
+    clip_id: str
+    frame_id: str
+    frame_index: int
+    timestamp_seconds: float
+    pixels: np.ndarray
+    source_digest: str
+    frame_digest: str
+
+
+@dataclass(frozen=True)
+class VideoClipManifest:
+    version: str
+    clip_id: str
+    source_kind: str
+    frame_count: int
+    width: int
+    height: int
+    channels: int
+    nominal_fps: float | None
+    frame_digests: tuple[str, ...]
+    payload_digest: str
+
+
+class VideoFrameSource(Protocol):
+    def manifest(self) -> VideoClipManifest:
+        ...
+
+    def frames(self) -> Iterable[VideoFrame]:
+        ...
+
+
+@dataclass(frozen=True)
+class LocalRegionEvidence:
+    region_id: str
+    expected_box: tuple[int, int, int, int]
+    matched_box: tuple[int, int, int, int] | None
+    score: float | None
+    dx: int | None
+    dy: int | None
+    overlap_fraction: float
+    critical: bool
+    status: str
+
+
+@dataclass(frozen=True)
+class TemporalEvidence:
+    frame_id: str
+    row_id: str
+    local_support: float
+    contradiction_score: float
+    spatial_consistency: float
+    transition_consistency: float
+    temporal_persistence: float
+    conflicting_action_gap: float
+    evidence_window: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class VideoAddressDecision:
+    clip_id: str
+    frame_id: str
+    raw_row_id: str | None
+    raw_action_id: str | None
+    accepted_row_id: str | None
+    accepted_action_id: str | None
+    accepted: bool
+    rejection_reasons: tuple[str, ...]
+    policy_artifact_id: str
+    provider_id: str
+    evidence_id: str
+```
+
+Do not create redundant types when existing contracts can be extended safely.
+
+Keep arrays immutable or defensively copied according to existing repository ownership rules.
+
+---
+
+# 10. Core ingestion versus optional adapters
+
+Keep the core dependency-light.
+
+The core video API should accept:
+
+```text
+Iterable[np.ndarray]
+Iterable[VideoFrame]
+lossless frame directory
+deterministic NPZ or repository-native clip bundle
+```
+
+Add a separate optional video dependency group only when necessary.
+
+Inspect whether the best minimal adapter is:
+
+* OpenCV;
+* PyAV;
+* ImageIO plus FFmpeg;
+* another existing repository-compatible library.
+
+Do not add multiple video libraries without a measured reason.
+
+Suggested optional dependency shape:
+
+```toml
+video = [
+    "...minimal selected adapter..."
+]
+```
+
+The canonical research dataset should not depend on lossy codec bytes being bit-identical across machines.
+
+Use:
+
+```text
+lossless frame payloads
 +
-distinguishable expected rejects
+deterministic frame manifests
 ```
 
-The evaluator separately places `benign_action_accuracy` and `benign_row_accuracy` in result notes.
+as canonical benchmark truth.
 
-Review whether:
-
-- the primary schema is misleading;
-- the benign metrics should be first-class;
-- correct rejection should have its own score rather than sharing a denominator;
-- accepted-decision precision should be first-class;
-- risk-weighted loss is required;
-- a predeclared FAR target is mandatory;
-- confidence intervals and paired tests should be included.
-
-## 7.3 Float representation identity
-
-The representation digest hashes the exact big-endian float32 vector plus the representation specification digest.
-
-This identifies the exact vector produced in one execution environment.
-
-Review whether the project incorrectly implies that it is reproducible across:
-
-- CPU and GPU;
-- BLAS implementations;
-- PyTorch versions;
-- compiler settings;
-- processor implementations;
-- hardware architectures.
-
-Consider whether:
-
-- quantized vectors;
-- tolerance-aware identity;
-- environment-scoped identity;
-- golden vectors;
-- or a separately identified consumer plan
-
-would be more honest.
-
-## 7.4 Summary serialization defect
-
-The first CI smoke workflow completed the benchmark and wrote its report, but the final console-summary serialization failed because a nested immutable mapping remained a `mappingproxy`.
-
-The full local run shown to the authors produced a console summary successfully, but reviewers should verify:
-
-- which script and commit produced it;
-- whether the CI summary defect remains on the reviewed ref;
-- whether serialization tests cover nested frozen metadata;
-- whether generated reports are stable and round-trippable.
-
-This is not the main research result, but it is evidence that the reporting path requires stronger end-to-end tests.
+An MP4, WebM or GIF may be included as a human-viewable derivative, but its codec output should not become the canonical dataset identity unless deterministic encoding has been demonstrated.
 
 ---
 
-# 8. Benchmark dataset
+# 11. Minimum working 1.0.12 baseline
 
-The full run uses `variants_per_family = 3`.
+Before approximate temporal inference, implement a deterministic positive baseline.
 
-| Partition | Observations |
-|---|---:|
-| Prototype | 1,344 |
-| Calibration | 1,344 |
-| Held-out benign test | 1,344 |
-| Information-theoretic controls | 98 |
-| Distinguishable critical interventions | 224 |
-| OOD | 24 |
-| **Total** | **4,378** |
-| **Scored** | **1,592** |
+Create a synthetic arcade clip from canonical frames for a known state sequence.
 
-## 8.1 Prototype families
+The video path should:
 
-- clean intensity variation;
-- lower brightness;
-- one-pixel upward translation;
-- palette A.
+1. decode or iterate every frame;
+2. recover each canonical exact row through the existing exact reader;
+3. delegate to the same VPM policy;
+4. reproduce the symbolic action sequence;
+5. emit a complete temporal trace;
+6. reconstruct the sequence from serialized evidence;
+7. fail on reordered or tampered frames when the contract requires ordered replay.
 
-## 8.2 Calibration families
+This proves that:
 
-- held-out contrast;
-- one-pixel downward translation;
-- palette B;
-- low-amplitude noise.
+> ZeroModel can consume a bounded video sequence and preserve exact observation-to-policy lineage.
 
-## 8.3 Benign test families
+It does not prove tolerance to approximate world observations.
 
-- stronger unseen brightness;
-- two-pixel vertical translation;
-- palette C;
-- noncritical structured background patch.
-
-## 8.4 Distinguishable rejection cases
-
-- tank removed;
-- cooldown indicator removed;
-- blank frame;
-- checkerboard;
-- impossible two-tank frame.
-
-## 8.5 Information-theoretic control
-
-Removing a visible target can create a frame identical to a valid no-target state.
-
-Those 98 cases are reported but excluded from FAR and FRR denominators.
-
-Review this treatment carefully. The authors believe it is correct because the pixels contain no information capable of distinguishing the two hidden states.
+The exact canonical video baseline and the approximate temporal provider must remain separate systems.
 
 ---
 
-# 9. Full result
+# 12. Stage 2 frame-local evidence
 
-Run identity:
+The first approximate provider should remain deterministic.
+
+Start with:
 
 ```text
-dataset_digest:
-91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e
-
-report_digest:
-d7d0b4db13c9f96b2ac4583aae25fa2159fb62471fb90110103548317f084035
-
-observations:
-4,378
-
-scored observations:
-1,592
-
-benign opportunities:
-1,344
-
-distinguishable rejection opportunities:
-248
-
-validation_status:
-research
+translation-equivariant local template correlation
 ```
 
-## 9.1 Raw console metrics
+rather than another global embedding.
 
-| System | Whole-evaluation action accuracy | Whole-evaluation row accuracy | FAR | FRR |
-|---|---:|---:|---:|---:|
-| **A** | 0.00% | 0.00% | 0.00% | 100.00% |
-| **B** | 62.00% | 52.76% | 51.21% | 25.00% |
-| **C** | 59.11% | 25.94% | 82.26% | 3.27% |
-| **D** | 63.13% | 25.63% | 73.79% | 3.50% |
-| **G** | 50.19% | 24.31% | 100.00% | 1.79% |
+For each candidate policy row, produce multiple independently scored regions.
 
-## 9.2 Derived benign metrics
+Potential regions in the arcade fixture include:
 
-| System | Benign action accuracy | Exact benign row accuracy | Conflicting-action errors |
-|---|---:|---:|---:|
-| **A** | 0.00% | 0.00% | 0 |
-| **B** | 73.44% | 62.50% | 21 |
-| **C** | 70.01% | 30.73% | 359 |
-| **D** | 74.78% | 30.36% | 292 |
-| **G** | 59.45% | 28.79% | 521 |
+* target band;
+* tank band;
+* cooldown indicator;
+* central playfield;
+* action-critical local patch;
+* stable background anchors.
 
-## 9.3 Accepted benign reliability
-
-| System | Accepted benign | Correct action when accepted | Exact row when accepted |
-|---|---:|---:|---:|
-| **B** | 1,008 | 97.92% | 83.33% |
-| **C** | 1,300 | 72.38% | 31.77% |
-| **D** | 1,297 | 77.49% | 31.46% |
-| **G** | 1,320 | 60.53% | 29.32% |
-
-## 9.4 Action-equivalent wrong-row outcomes
-
-| System | Correct actions | Exact rows | Correct action from wrong row |
-|---|---:|---:|---:|
-| **B** | 987 | 840 | 147 |
-| **C** | 941 | 413 | 528 |
-| **D** | 1,005 | 408 | 597 |
-| **G** | 799 | 387 | 412 |
-
-## 9.5 Rejection outcomes
-
-| System | False accepts | Opportunities | FAR |
-|---|---:|---:|---:|
-| **A** | 0 | 248 | 0.00% |
-| **B** | 127 | 248 | 51.21% |
-| **C** | 204 | 248 | 82.26% |
-| **D** | 183 | 248 | 73.79% |
-| **G** | 248 | 248 | 100.00% |
-
----
-
-# 10. Authors' current interpretation
-
-The authors currently interpret the result as follows.
-
-## 10.1 System A
-
-A validates exact canonical addressing but not perturbation tolerance.
-
-## 10.2 System B
-
-B is the strongest overall addressing baseline:
-
-- best exact-row recovery;
-- fewest conflicting-action errors among approximate systems;
-- most reliable accepted actions;
-- lowest approximate-system FAR.
-
-It is still unsafe at a 51.21% FAR.
-
-## 10.3 System C
-
-C beats G but loses to B on the relevant fidelity and rejection trade-off.
-
-## 10.4 System D
-
-D has the highest benign action point estimate, exceeding B by 1.34 points.
-
-The authors do not regard this as a meaningful win because D:
-
-- loses 32.14 points of exact-row accuracy;
-- adds 22.58 points of FAR;
-- reduces accepted-action correctness by 20.43 points;
-- produces 271 more conflicting-action errors;
-- retains every prototype.
-
-## 10.5 System G
-
-G is eliminated because it combines weak benign recovery with a 100% FAR.
-
-## 10.6 Research interpretation
-
-The authors believe:
-
-1. action accuracy can hide wrong-address behaviour;
-2. global semantic invariance is poorly aligned with exact governed-state identity;
-3. similarity alone is insufficient for rejection;
-4. the next problem is visual evidence compilation rather than whole-row retrieval.
-
-Review all four claims critically.
-
----
-
-# 11. Reasons the current interpretation may be wrong
-
-A useful external review should actively test these alternatives.
-
-## 11.1 Exact row identity may be an unnecessarily strict target
-
-If several rows are action-equivalent and no downstream consumer uses row-specific evidence, exact row recovery may not matter operationally.
-
-Questions:
-
-- Is exact row identity a product requirement or an artifact-driven preference?
-- Does row identity improve safety, replay, or inspection enough to justify the stricter task?
-- Could the correct abstraction be an action-equivalence class?
-- Could multiple observations legitimately address one symbolic state or action?
-- Would a hierarchical address—factor state, action class, exact row—be more appropriate?
-
-## 11.2 The comparison may unfairly favour normalized pixels
-
-The fixture is tiny, geometric, and directly rendered.
-
-Normalized pixels preserve exact geometry and may be almost optimal for this synthetic task.
-
-Questions:
-
-- Is this a meaningful test of DINOv2?
-- Does the result say anything beyond “semantic encoders are poor on tiny synthetic sprites”?
-- Should the image be rendered at a native visual scale rather than enlarged from 16×28?
-- Should a conventional small CNN, HOG, template matcher, or object detector be the mandatory learned baseline?
-
-## 11.3 The learned representation choice may be inappropriate
-
-Only the global CLS token was tested.
-
-Questions:
-
-- Would patch tokens preserve local object existence and coordinates?
-- Would intermediate layers work better?
-- Would DINOv2 register tokens or pooled spatial bins help?
-- Would a task-specific projection be a fairer test?
-- Was the model's preprocessing designed for natural images, not integer arcade glyphs?
-
-## 11.4 The calibration may be the main failure
-
-The experiment reports one calibrated operating point.
-
-Questions:
-
-- What do complete FAR/FRR curves show?
-- Is quantile `0.0` defensible?
-- How sensitive are results to threshold and margin selection?
-- Can any operating point achieve acceptable FAR while preserving useful row accuracy?
-- Were per-row calibration sample counts sufficient?
-- Is the conflicting-action margin the right rejection statistic?
-- Should OOD detection be separate from row discrimination?
-
-## 11.5 The safety language may be under-specified
-
-The authors describe FAR values as unsafe, but no deployment-specific acceptable FAR was declared.
-
-Questions:
-
-- What loss function should govern the trade?
-- Are tank removal, cooldown removal, blank, checkerboard, and two-tank cases equally costly?
-- Should false accepts be severity-weighted?
-- Is 51% clearly unacceptable for research but not yet formally “unsafe” without a use case?
-- Should the document use “fails the benchmark's rejection expectation” rather than “unsafe”?
-
-## 11.6 The benchmark may be too small or too synthetic
-
-Questions:
-
-- Do three variants per family support stable conclusions?
-- Do the 1,344 benign observations provide independent information when they derive from 112 states and deterministic transforms?
-- Should uncertainty account for clustering by state and family?
-- Are Wilson intervals over observations misleading because samples are correlated?
-- Should inference use state-level or family-level bootstrap resampling?
-- Is a paired comparison required?
-
-## 11.7 The benchmark may not test generalization in the relevant sense
-
-All states and all rows appear in prototype and calibration splits.
-
-Only corruption families are held out.
-
-Questions:
-
-- Is this invariance testing rather than state generalization?
-- Should some state combinations be held out?
-- Would held-out rows make sense if the goal is exact finite policy addressing?
-- Should a second renderer or camera style be held out?
-- Should the benchmark include renderer drift, compression, scale, blur, crop, and sensor noise?
-
-## 11.8 The governance layer may be overbuilt
-
-Questions:
-
-- What practical incident question can the current contracts answer that a conventional model registry plus structured event log cannot?
-- How much code and review burden does the identity chain add?
-- Are all digests persisted and independently verifiable?
-- Is deployment binding enforceable outside one process?
-- Does a content digest provide authenticity?
-- Is the distinction between artifact identity and consumer-plan identity consistently applied?
-
-## 11.9 The proposed factorized compiler may be ordinary perception renamed
-
-Questions:
-
-- Is `Visual State Compiler` a useful architectural distinction or merely object detection plus state assembly?
-- What is genuinely ZeroModel-specific?
-- Does the name obscure established prior art?
-- Would a conventional detector feeding a typed state schema accomplish the same result?
-- Is the contribution the evidence contract rather than the perception algorithm?
-
-## 11.10 Direct instrumentation may dominate the entire direction
-
-The arcade engine already has exact state.
-
-In many bounded installations, explicit sensors or software signals may be available.
-
-Questions:
-
-- Why use vision at all?
-- Is the visual path only valuable when instrumentation is unavailable?
-- Is visual redundancy useful as an independent verifier?
-- What deployment makes observation addressing preferable to direct telemetry?
-- Should the next benchmark compare against direct instrumentation cost, reliability, and governance?
-
----
-
-# 12. Known evidence and engineering gaps
-
-Reviewers should verify and expand this list.
-
-## 12.1 Result preservation
-
-- The full original JSON report is not yet included in this brief.
-- The full local environment manifest is incomplete.
-- The exact command and Git commit must be recorded.
-- The exact model cache state and package versions must be recorded.
-- Raw per-family results should be committed.
-- Per-observation traces should be retained for paired analysis.
-
-## 12.2 Statistical analysis
-
-- no paired B-versus-D significance test;
-- no state-clustered or family-clustered uncertainty;
-- no operating curves;
-- no predeclared target FAR;
-- no risk-weighted objective;
-- no multiple-comparison discussion;
-- no calibration sensitivity analysis.
-
-## 12.3 Baselines
-
-Missing or not yet reported:
-
-- direct symbolic instrumentation;
-- deterministic factor extraction;
-- perceptual hash;
-- HOG or other classical local descriptor;
-- small task-specific CNN;
-- multi-head factor classifier;
-- supervised contrastive row encoder;
-- patch-token retrieval;
-- explicit OOD detector;
-- one-class or conformal rejection;
-- standard k-NN/classifier implementation from a conventional library;
-- lightweight model registry plus JSON-log governance baseline.
-
-## 12.4 Dataset
-
-- one synthetic renderer;
-- one policy fixture;
-- one source resolution;
-- limited corruption families;
-- three variants per family;
-- no temporal sequence benchmark;
-- no real camera;
-- no held-out renderer;
-- no environment drift;
-- no state-prior weighting;
-- no label-noise test;
-- no adversarial near-codeword generation.
-
-## 12.5 Code and contracts
-
-- benchmark's primary action and row accuracy denominators are easy to misread;
-- no-conflict calibration/runtime mismatch may exist;
-- global calibration count hides per-row counts;
-- float-vector digest reproducibility is environment-scoped;
-- report serialization previously failed on nested immutable metadata;
-- report and manifest persistence may be fragmented across several file types;
-- `deployment_status="research"` blocks claims but does not itself enforce safe deployment;
-- no signatures or attestations;
-- no cross-process persistence service;
-- no declared memory/runtime benchmark for learned providers.
-
-## 12.6 Product and research purpose
-
-- no named external deployment;
-- no declared acceptable error cost;
-- no user study demonstrating value of exact row provenance;
-- no comparison of visual addressing with direct sensors;
-- unclear whether visual addressing is central to ZeroModel or a research branch.
-
----
-
-# 13. Proposed next direction under review
-
-The authors currently propose replacing whole-image row retrieval with a factorized Visual State Compiler.
-
-Proposed flow:
+For every region record:
 
 ```text
-ImageObservation
-    ↓
-local evidence providers
-    ↓
-EvidenceBundle
-    ↓
-TypedObservedState
-    ↓
-exact state encoding
-    ↓
-VPMPolicyLookup
-    ↓
-action + trace
-```
-
-Possible fields for the arcade fixture:
-
-```text
-tank_present
-tank_count
-tank_position
-target_present
-target_position
-cooldown_state
-frame_validity
-```
-
-Possible field record:
-
-```text
-field_id
-value
-status
+region identity
+expected location
+matched location
 score
-calibration_id
-provider_id
-evidence_region
-rejection_reason
+valid overlap
+displacement
+critical status
+support or contradiction
+competing row support
 ```
 
-Possible provider baselines:
+Use normalized or zero-mean normalized correlation where appropriate.
 
-- direct engine state;
-- deterministic connected components and geometry;
-- local templates;
-- patch-token probes;
-- small factor classifiers;
-- compact multi-head model.
+Support:
 
-The proposed advantage is that missing evidence and invalid combinations become explicit rather than being inferred from one global similarity score.
+* valid-pixel masks;
+* per-region weights;
+* native resolution;
+* bounded integer displacement;
+* no wrapping;
+* no interpolation in the first deterministic system;
+* deterministic tie-breaking.
 
-Review whether this direction is:
-
-- logically implied by the result;
-- merely one plausible option;
-- unnecessarily elaborate;
-- a standard perception stack with useful governance;
-- likely to overfit the fixture;
-- worth pursuing within ZeroModel.
+Do not disguise one whole-image comparison as a collection of local evidence.
 
 ---
 
-# 14. Questions for external reviewers
+# 13. Required semantic caution
 
-## 14.1 Problem definition
+Never serialize:
 
-1. What is the actual problem the code solves today?
-2. Is “observation-addressed policy” a coherent and useful category?
-3. Is exact policy-row identity a necessary requirement?
-4. Should the target be exact state, action-equivalence class, or action?
-5. When is visual addressing preferable to direct telemetry?
-6. Is the arcade fixture a valid hydrogen-atom environment or an engineered encoding trick?
-7. Does the project need a visual component at all?
+```text
+evidence absent
+```
 
-## 14.2 Experimental validity
+merely because a region was not matched in one frame.
 
-8. Is the family-held-out split free of material leakage?
-9. Are prototype, calibration, and test families sufficiently distinct?
-10. Is three variants per family enough?
-11. Are observations independent enough for the reported intervals?
-12. Should uncertainty be computed over states, families, or individual frames?
-13. Should the benchmark hold out renderers or state combinations?
-14. Are the critical interventions valid expected-reject cases?
-15. Is target removal correctly treated as information-theoretically unscorable?
-16. What other impossibility controls are missing?
-17. Are blank, checkerboard, and two-tank frames meaningful OOD tests?
-18. Does preprocessing create an avoidable information bottleneck?
-19. Is the source resolution too small for the learned encoder?
+A single frame cannot distinguish:
 
-## 14.3 Metrics and decision theory
+* true absence;
+* occlusion;
+* corruption;
+* low contrast;
+* displacement beyond the search region;
+* an unseen appearance mode;
+* decode damage.
 
-20. Which metric should be primary?
-21. Is exact-row accuracy more important than action accuracy?
-22. Should correct action from a wrong row count as partial success?
-23. Should acceptance precision be first-class?
-24. What false-acceptance target should be declared?
-25. What deployment loss function is appropriate?
-26. Should critical interventions be severity-weighted?
-27. Are whole-evaluation action and row accuracy fields misleading?
-28. What paired statistical analysis is required?
-29. What operating curves are required?
-30. How should calibration uncertainty be represented?
+Use wording such as:
 
-## 14.4 Representation
+```text
+expected region unmatched against known modes
+```
 
-31. Is DINOv2 CLS an appropriate baseline?
-32. What representation would be the strongest conventional baseline?
-33. Should patch tokens be tested before abandoning the encoder?
-34. Would a tiny supervised model be more informative?
-35. Would explicit factor supervision solve the wrong-row/right-action problem?
-36. Is global semantic invariance genuinely opposed to this task?
-37. Does the result generalize beyond tiny synthetic sprites?
-38. What result would falsify the authors' semantic-invariance interpretation?
-
-## 14.5 Calibration and rejection
-
-39. Is empirical lower quantile `0.0` defensible?
-40. Should thresholds be per row, per action, or global?
-41. Should ambiguity compare against conflicting actions or all other rows?
-42. How should rows with no conflicting action candidate behave?
-43. Should OOD detection be a separate component?
-44. Would conformal prediction help?
-45. Are similarity and margin sufficient rejection statistics?
-46. Can any threshold curve salvage B, C, or D?
-47. What calibration data volume is required?
-48. How should environment drift trigger recalibration?
-
-## 14.6 Architecture and governance
-
-49. Is the policy/index/encoder/calibration/manifest/binding separation correct?
-50. Which identifiers are redundant?
-51. Does the architecture provide audit value proportional to its complexity?
-52. What is the minimal conventional governance baseline?
-53. Does exact-decision replay make sense for floating-point providers?
-54. Should representation identity be quantized?
-55. Should accepted and rejected decisions be different types?
-56. Should evidence regions be mandatory for learned acceptance?
-57. Is the deployment binding a useful contract without signatures?
-58. What persistence and attestation layer is missing?
-59. Does the provider seam remain valuable even if visual research stops?
-
-## 14.7 Proposed Visual State Compiler
-
-60. Is factorization the correct hypothesis revision?
-61. Which factors should be explicit?
-62. Should state assembly be deterministic?
-63. Is the proposal simply object detection plus a typed schema?
-64. What is the smallest implementation that could falsify it?
-65. Which baseline should be implemented first?
-66. Should direct instrumentation be considered the gold standard?
-67. Should DINOv2 patch tokens be included?
-68. What evidence-region metric is required?
-69. How should single-frame impossibility be represented?
-70. When should temporal state be introduced?
-71. What kill condition should stop the factorized direction?
-
-## 14.8 Novelty and positioning
-
-72. What prior work best describes the mechanism?
-73. Is the visual matcher technically novel?
-74. Is the artifact governance layer the actual contribution?
-75. Is “Visual State Compiler” useful terminology or unnecessary renaming?
-76. What is the smallest publishable claim?
-77. Does the visual branch strengthen or distract from ZeroModel?
-78. Which public claims should be removed immediately?
-79. What would make the work interesting to a technical reviewer?
-80. What result would justify a paper rather than a repository note?
-
-## 14.9 Next experiment
-
-81. What is the single highest-information next experiment?
-82. What files and APIs should it change?
-83. What baselines are mandatory?
-84. What target and loss must be declared?
-85. What result continues the direction?
-86. What result stops it?
-87. Should the next step be analysis only rather than new code?
-88. Should the result be reproduced on CI before any new architecture work?
+Temporal evidence may later strengthen an absence hypothesis, but it must not silently convert an unmatched observation into certainty.
 
 ---
 
-# 15. Required reviewer output
+# 14. Temporal association
 
-Use the structure below.
+Video adds information unavailable in a still frame.
 
-## A. Overall verdict
+Use that information explicitly.
 
-Choose one primary verdict:
+The first temporal layer should calculate at least:
 
 ```text
-strong and well-founded direction
-promising but incorrectly framed
-valid bounded research result
-useful infrastructure, weak research thesis
-overbuilt conventional mechanism
-benchmark is not yet trustworthy
-visual direction should be paused
-visual direction should be stopped
+frame-to-frame region displacement
+track persistence
+row-candidate persistence
+action-candidate persistence
+transition validity
+candidate-set contraction or expansion
+temporary unmatched regions
+reappearance
+identity switches
+motion outside declared bounds
 ```
 
-Explain the verdict in no more than eight paragraphs.
+Do not begin with an opaque sequence transformer.
 
-## B. Reconstructed system
+Start with a deterministic temporal evidence layer whose decisions can be reconstructed.
 
-Describe what the repository actually implements in plain technical language.
-
-Separate:
-
-- policy artifact;
-- observation provider;
-- representation;
-- calibration;
-- runtime decision;
-- trace;
-- benchmark;
-- deployment claim.
-
-## C. Most damaging critique
-
-State the single criticism that, if correct, most changes the project's direction.
-
-Include:
+A suitable first structure may be:
 
 ```text
-Claim or assumption:
-Failure mode:
-Evidence:
+window of N frame-local evidence records
+    ↓
+candidate rows per frame
+    ↓
+declared state-transition graph
+    ↓
+temporally consistent candidate paths
+    ↓
+support and contradiction per path
+    ↓
+accepted exact row or rejection
+```
+
+---
+
+# 15. Transition specification
+
+Create a versioned transition contract for the bounded arcade policy.
+
+Potential representation:
+
+```python
+@dataclass(frozen=True)
+class PolicyTransitionSpec:
+    version: str
+    allowed_row_transitions: Mapping[str, tuple[str, ...]]
+    maximum_frame_gap: int
+    maximum_position_delta: int
+    action_conditioned: bool
+```
+
+The transition specification must derive from declared environment dynamics, not from final-evaluation observations.
+
+Track separately:
+
+```text
+possible transition
+impossible transition
+unknown because of dropped frames
+unknown because the observation was rejected
+```
+
+Do not treat an unobserved intermediate frame as proof of an impossible transition.
+
+---
+
+# 16. No silent carry-forward
+
+The system must not convert:
+
+```text
+I could not read this frame
+```
+
+into:
+
+```text
+the previous state is still true
+```
+
+without an explicit bounded persistence rule.
+
+Any carried state must record:
+
+* source frame;
+* elapsed frames;
+* elapsed time;
+* allowed persistence horizon;
+* transition assumptions;
+* confidence degradation;
+* whether the current frame independently supports it.
+
+When the horizon is exceeded, reject.
+
+---
+
+# 17. Candidate-state representation
+
+Avoid forcing every uncertain frame into one row too early.
+
+A temporal frame may produce:
+
+```text
+one exact supported row
+several compatible rows
+several same-action rows
+conflicting-action candidates
+no supported rows
+```
+
+Represent this explicitly.
+
+Potential structure:
+
+```python
+@dataclass(frozen=True)
+class TemporalStateClaimSet:
+    frame_id: str
+    candidate_row_ids: tuple[str, ...]
+    compatible_action_ids: tuple[str, ...]
+    conflicting_action_ids: tuple[str, ...]
+    supporting_evidence_ids: tuple[str, ...]
+    contradictory_evidence_ids: tuple[str, ...]
+    status: str
+```
+
+Default governed execution should require an accepted exact row.
+
+A research-only same-action consensus result may be reported, but must never be described as exact-state understanding.
+
+---
+
+# 18. Acceptance gates
+
+Do not collapse every criterion into one confidence number.
+
+Calibrate separate gates for:
+
+```text
+minimum local support
+minimum critical-region match coverage
+maximum local contradiction
+maximum displacement disagreement
+minimum conflicting-action gap
+minimum temporal persistence
+minimum transition consistency
+maximum identity-switch rate
+maximum unmatched duration
+declared motion envelope
+```
+
+Independent gates must not be searched only along one shared quantile curve.
+
+Cache evidence once, then evaluate candidate gate combinations over cached calibration evidence.
+
+Record why each frame or sequence was rejected.
+
+Suggested rejection reasons:
+
+```text
+decode_error
+frame_shape_invalid
+frame_unreadable
+insufficient_local_support
+expected_region_unmatched
+critical_region_unmatched
+spatially_inconsistent_matches
+conflicting_action_evidence
+same_action_row_ambiguity
+transition_impossible
+transition_unknown_due_to_gap
+temporal_identity_unstable
+persistence_horizon_exceeded
+outside_declared_motion_bound
+outside_declared_visual_domain
+calibration_gate_failed
+```
+
+---
+
+# 19. Fresh temporal benchmark
+
+Build video clips from the fresh v3 fixture rather than evaluating only isolated frames.
+
+Do not tune using the frozen final split.
+
+Use explicit:
+
+```text
+prototype
+benign calibration
+rejection calibration
+final evaluation
+```
+
+roles.
+
+Create temporally meaningful families.
+
+## Positive or expected-accept families
+
+* canonical state trajectories;
+* bounded smooth movement;
+* held-out within-envelope translations;
+* camera jitter;
+* brightness and contrast changes;
+* mild compression;
+* temporary local occlusion;
+* temporary target disappearance with valid reappearance;
+* dropped frames within a declared recoverable gap;
+* variable frame-rate sampling;
+* legal action-conditioned transitions.
+
+## Expected-reject families
+
+* beyond-bounds translation;
+* impossible state jumps;
+* conflicting-action near-neighbour sequences;
+* same-action wrong-row sequences;
+* compositional invalid states;
+* duplicated critical object;
+* reordered frames;
+* stale repeated frames;
+* timestamp reversal;
+* excessive dropped-frame gap;
+* identity swap;
+* critical-region corruption;
+* contradictory local motion;
+* persistent unmatched critical region;
+* decode or shape corruption.
+
+## Information-theoretic controls
+
+Preserve cases where essential evidence has actually been removed.
+
+Do not count indistinguishable impossible controls as distinguishable false-accept opportunities.
+
+---
+
+# 20. Beyond-bounds motion control
+
+The previous registration system used a bounded displacement envelope.
+
+The new temporal benchmark must test motion outside that envelope.
+
+For example:
+
+```text
+within bound:
+±1, ±2 or declared local search range
+
+outside bound:
+±4, ±5 or values beyond the frozen provider range
+```
+
+The question is not whether the provider can magically recover unreachable motion.
+
+The question is:
+
+> Does the provider fail safely when the observation exceeds its declared motion model?
+
+A safe result should reject or mark the state unresolved rather than mis-register confidently to a reachable but wrong row.
+
+---
+
+# 21. Comparison systems
+
+Evaluate at least these systems on the same temporal fixture.
+
+## V0: exact canonical video reader
+
+Exact frame codewords plus deterministic temporal trace.
+
+Purpose:
+
+```text
+positive transport and lineage baseline
+```
+
+## V1: independent-frame registered reader
+
+Apply the strongest existing frame-only registered provider independently.
+
+Purpose:
+
+```text
+measure what temporal evidence must improve over
+```
+
+## V2: local-correlation frame reader
+
+Multiple local evidence regions, but no temporal filtering.
+
+Purpose:
+
+```text
+isolate the value of locality
+```
+
+## V3: local-correlation temporal reader
+
+Local evidence plus transition and persistence constraints.
+
+Purpose:
+
+```text
+isolate the value of time
+```
+
+Do not compare a new temporal system only against historical headline numbers from a different fixture.
+
+---
+
+# 22. Primary Stage 2 research question
+
+The decisive comparison is:
+
+> Does V3 produce greater governed accepted exact-row coverage than V2 while preserving zero observed distinguishable false accepts and zero accepted conflicting-action errors on the declared fresh final clips?
+
+Secondary questions:
+
+1. Does temporal consistency reduce same-action wrong-row confusion?
+2. Does it reject impossible transitions?
+3. Does it recover after temporary occlusion?
+4. Does it fail safely outside the motion envelope?
+5. Does it reduce or increase time-to-decision?
+6. Does temporal persistence introduce stale-state false acceptance?
+7. Can every accepted frame be reconstructed from explicit evidence?
+
+---
+
+# 23. Metrics
+
+Report frame-level and sequence-level metrics separately.
+
+## Frame-level
+
+```text
+raw exact-row top-1 accuracy
+raw action top-1 accuracy
+accepted exact-row precision
+accepted action precision
+accepted coverage
+false accepts
+false rejects
+accepted conflicting-action errors
+same-action wrong-row errors
+```
+
+## Sequence-level
+
+```text
+complete-sequence exact-row correctness
+complete-sequence action correctness
+accepted sequence coverage
+time to first stable acceptance
+time to recover after occlusion
+identity-switch count
+row-switch count
+action-switch count
+impossible-transition accept count
+stale-state carry-forward count
+outside-bound false-accept count
+```
+
+## Temporal quality
+
+```text
+track persistence
+unmatched duration
+candidate-path count
+candidate-set size
+transition consistency
+motion residual
+temporal contradiction
+```
+
+## Runtime
+
+```text
+decode time
+frame evidence time
+temporal update time
+policy lookup time
+end-to-end latency
+frames per second
+peak memory where practical
+```
+
+## Statistical reporting
+
+Report:
+
+* observed rates;
+* counts and denominators;
+* Wilson intervals where applicable;
+* risk–coverage curves;
+* results by row, action, family and clip.
+
+When no observations are accepted:
+
+```text
+precision = null
+confidence interval = null
+```
+
+Do not serialize undefined precision as `0.0`.
+
+Use:
+
+> zero observed distinguishable false accepts on the declared fixture
+
+Never use:
+
+> zero false-accept risk
+
+---
+
+# 24. Outcome ladder
+
+## Outcome A
+
+```text
+zero observed distinguishable false accepts
+zero accepted conflicting-action errors
+final benign exact-row coverage >= 50%
+```
+
+Interpretation:
+
+```text
+the bounded temporal local-evidence reader has a useful governed operating point
+```
+
+Next action:
+
+```text
+fixed-camera bounded validation
+```
+
+## Outcome B
+
+```text
+zero observed distinguishable false accepts
+zero accepted conflicting-action errors
+10% <= final benign exact-row coverage < 50%
+```
+
+Interpretation:
+
+```text
+temporal evidence adds bounded value but remains incomplete
+```
+
+Next action:
+
+```text
+deterministic geometry or stronger local evidence
+```
+
+## Outcome C
+
+```text
+no feasible transferred operating point
+or final benign exact-row coverage < 10%
+```
+
+Interpretation:
+
+```text
+the measured temporal local-evidence architecture remains insufficient
+```
+
+Next action:
+
+```text
+deterministic geometry extraction before learned video systems
+```
+
+## Invalid
+
+Use invalid when:
+
+* final data entered selection;
+* clip identities do not reproduce;
+* source videos cannot be reconstructed;
+* canonical frame manifests disagree;
+* policy identities do not verify;
+* impossible controls are misclassified;
+* sequence metrics cannot be reconstructed;
+* evidence files fail hashing;
+* the code state is ambiguous;
+* the benchmark depends on nondeterministic codec output;
+* required negative families are missing.
+
+A valid Outcome C is preferable to an invalid Outcome A.
+
+---
+
+# 25. Evidence package
+
+Suggested directory:
+
+```text
+docs/results/visual-video-stage-two-v1/
+```
+
+Required artifacts should include, adapting to repository conventions:
+
+```text
+README.md
+protocol.json
+environment.json
+argv.json
+command.txt
+runtime.json
+run-manifest.json
+
+video-dataset-manifest.json
+clip-manifest.json
+frame-manifest.json
+transition-spec.json
+policy-reference.json
+frozen-comparator-references.json
+
+local-template-spec.json
+local-template-manifest.json
+video-provider-config.json
+candidate-grid.json
+selected-calibration.json
+
+frame-traces.jsonl
+sequence-traces.jsonl
+final-report.json
+final-summary.json
+adjudication.json
+
+paired-v1-v2-comparison.json
+paired-v2-v3-comparison.json
+risk-coverage-curve.json
+
+local-region-atlas.json
+temporal-transition-atlas.json
+identity-switch-atlas.json
+conflicting-action-atlas.json
+same-action-row-confusion-atlas.json
+occlusion-recovery-atlas.json
+outside-bound-atlas.json
+residual-error-atlas.json
+
+bundle-manifest.json
+```
+
+Human-viewable video derivatives may be included under:
+
+```text
+docs/assets/visual-video-stage-two-v1/
+```
+
+Do not place large derived videos into the canonical bundle when they make evidence verification impractical. Record their source identities and generation command.
+
+---
+
+# 26. Trace contract
+
+Every frame trace must retain enough information to reconstruct the decision.
+
+At minimum:
+
+```text
+clip ID
+frame ID
+frame index
+timestamp
+frame digest
+expected disposition
+expected row
+expected action
+family
+transformation parameters
+
+raw predicted row
+raw predicted action
+accepted row
+accepted action
+accepted or rejected
+rejection reasons
+
+local region evidence
+best same-action competitor
+best conflicting-action competitor
+local support
+contradiction
+spatial consistency
+
+previous accepted state
+candidate transition
+transition status
+temporal persistence
+unmatched duration
+candidate path count
+
+policy artifact ID
+provider ID
+calibration ID
+evidence ID
+```
+
+Sequence traces must record:
+
+```text
+ordered frame IDs
+accepted state sequence
+raw state sequence
+action sequence
+identity switches
+rejection spans
+occlusion spans
+recovery points
+impossible transitions
+sequence outcome
+```
+
+---
+
+# 27. Test requirements
+
+Create focused tests for all new contracts.
+
+## Video transport
+
+* deterministic lossless frame loading;
+* real video adapter smoke test;
+* frame ordering;
+* timestamp monotonicity;
+* duplicate timestamps;
+* decode errors;
+* frame shape changes;
+* RGB/grayscale handling;
+* source and frame digest stability;
+* caller-memory ownership.
+
+## Temporal contracts
+
+* legal transition;
+* impossible transition;
+* dropped frame;
+* duplicated frame;
+* reordered frame;
+* temporal gap;
+* stale carry-forward prevention;
+* persistence horizon;
+* candidate path reconstruction;
+* deterministic tie-breaking.
+
+## Local evidence
+
+* exact local match;
+* bounded translation;
+* outside-bound translation;
+* masked pixels;
+* weighted regions;
+* critical region unmatched;
+* contradictory region;
+* spatially inconsistent regions;
+* same-action competitor;
+* conflicting-action competitor.
+
+## Semantic safety
+
+* unmatched region is not serialized as certain absence;
+* rejected frame retains raw prediction;
+* correct action with wrong row remains an exact-row error;
+* temporal consensus does not silently become exact-row certainty;
+* impossible transitions are rejected;
+* uncertain gaps do not become state persistence automatically.
+
+## Calibration isolation
+
+Use spy providers to prove that no final clip or frame was:
+
+* decoded for selection;
+* correlated;
+* tracked;
+* summarized;
+* used for gate selection;
+* used for template extraction.
+
+## Evidence integrity
+
+Independently reconstruct:
+
+* frame metrics;
+* sequence metrics;
+* false-accept counts;
+* false-reject counts;
+* conflicting-action accepts;
+* family totals;
+* identity-switch totals;
+* all headline results.
+
+Verify every bundle hash.
+
+## Full repository
+
+Run focused tests first, then:
+
+```bash
+python -m pytest -q
+python -m build
+python -m twine check dist/*
+```
+
+---
+
+# 28. Suggested implementation locations
+
+Inspect current conventions before creating new modules.
+
+Potential modules:
+
+```text
+zeromodel/video.py
+zeromodel/video_source.py
+zeromodel/video_address.py
+zeromodel/visual_local_correlation.py
+zeromodel/visual_local_evidence.py
+zeromodel/temporal_evidence.py
+zeromodel/policy_transitions.py
+```
+
+Potential examples:
+
+```text
+examples/arcade_visual_video_baseline.py
+examples/arcade_visual_video_showdown.py
+examples/render_arcade_video_fixture.py
+```
+
+Potential tests:
+
+```text
+tests/test_video_source.py
+tests/test_video_address.py
+tests/test_visual_local_correlation.py
+tests/test_temporal_evidence.py
+tests/test_policy_transitions.py
+tests/test_arcade_visual_video_baseline.py
+tests/test_arcade_visual_video_showdown.py
+tests/test_visual_video_result_records.py
+```
+
+Avoid a single monolithic module.
+
+Keep transport, visual evidence, temporal logic and policy execution separable.
+
+---
+
+# 29. Research papers: immediate deterministic foundation
+
+Read these before freezing the Stage 2 local-evidence protocol.
+
+## Normalized weighted cross-correlation
+
+**Gastón A. Ayubi, Bartlomiej Kowalski and Alfredo Dubra — “Normalized Weighted Cross Correlation for Multi-Channel Image Registration”**
+
+* Full text:
+  https://pmc.ncbi.nlm.nih.gov/articles/PMC12448653/
+
+* DOI:
+  https://doi.org/10.1364/OPTCON.525065
+
 Why it matters:
-How to test it:
-Decision if confirmed:
-```
 
-## D. Severity-ranked findings
+* masks;
+* irregular boundaries;
+* sparse valid pixels;
+* per-pixel and per-channel weights;
+* zero-mean normalized correlation;
+* fast Fourier formulations.
 
-For every finding use:
+Potential ZeroModel use:
 
 ```text
-Severity: blocker | major | moderate | minor | optional
-Area:
-Finding:
-Repository evidence:
+critical-region weighting
+valid-overlap masks
+RGB channel weighting
+occlusion-aware local matching
+```
+
+## Cross-correlation counterexample
+
+**Serap A. Savari — “A Counterexample in Cross-Correlation Template Matching”**
+
+* Paper:
+  https://arxiv.org/abs/2410.19085
+
 Why it matters:
-Smallest corrective change:
-Required test:
-Claims impact:
-```
 
-Do not dilute serious findings with a long list of stylistic suggestions.
+Cross-correlation can align poorly under sampling, quantization and noise, especially for piecewise-constant structures.
 
-## E. Evaluation of the full result
+Potential ZeroModel use:
 
-Answer explicitly:
+* design adversarial controls;
+* avoid treating maximum correlation as proof;
+* compare correlation with differences or segmented structure;
+* test sampled one-pixel state distinctions.
 
-- Did A fail or define its expected boundary?
-- Is B the strongest practical baseline?
-- Did C fail?
-- Did D meaningfully beat B?
-- Is G eliminated?
-- Is exact-row accuracy the right measure?
-- Are the FAR values sufficient to stop the current path?
-- Is the current interpretation post hoc?
+## Fast exhaustive NCC
 
-## F. Alternative interpretations
+**Wei and Lai — “Fast Template Matching Based on Normalized Cross Correlation with Adaptive Multilevel Winner Update”**
 
-Provide at least three plausible interpretations of the result.
+* PubMed:
+  https://pubmed.ncbi.nlm.nih.gov/18972660/
 
-Rank them by likelihood.
+* DOI:
+  https://doi.org/10.1109/TIP.2008.2004615
 
-For each, state what additional evidence would distinguish it from the authors' interpretation.
+Why it matters:
 
-## G. Missing baselines
+It provides ideas for accelerating exhaustive normalized correlation without immediately replacing it with approximate retrieval.
 
-List the mandatory baselines that should have existed before or must exist next.
+Potential ZeroModel use:
 
-Separate:
+* preserve deterministic maxima;
+* reduce runtime;
+* cache reusable patch statistics;
+* make local evidence practical per frame.
 
-- algorithm baseline;
-- perception baseline;
-- calibration baseline;
-- governance baseline;
-- deployment baseline.
+## Generalized Hough transform
 
-## H. Recommended next experiment
+**Dana H. Ballard — “Generalizing the Hough Transform to Detect Arbitrary Shapes”**
 
-Specify one bounded experiment.
+* Publisher page:
+  https://www.sciencedirect.com/science/article/pii/0031320381900091
 
-Include:
+* DOI:
+  https://doi.org/10.1016/0031-3203(81)90009-1
+
+Why it matters:
+
+It provides a classical route from boundaries and local components to explicit shape and geometry evidence.
+
+This is the primary bridge to deterministic Stage 3 if local correlation remains insufficient.
+
+---
+
+# 30. Research papers: temporal correspondence and tracking
+
+These are references and later baselines. They do not automatically justify adding learned dependencies to 1.0.12.
+
+## RAFT
+
+**Teed and Deng — “RAFT: Recurrent All-Pairs Field Transforms for Optical Flow”**
+
+* Paper:
+  https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3526_ECCV_2020_paper.php
+
+Why it matters:
+
+* dense motion;
+* all-pairs correlation;
+* iterative flow refinement;
+* a strong learned optical-flow comparator.
+
+Potential use:
+
+Compare deterministic local displacement against learned dense motion only after the deterministic temporal baseline is measured.
+
+## TAPIR
+
+**Doersch et al. — “TAPIR: Tracking Any Point with Per-Frame Initialization and Temporal Refinement”**
+
+* Paper:
+  https://openaccess.thecvf.com/content/ICCV2023/html/Doersch_TAPIR_Tracking_Any_Point_with_Per-Frame_Initialization_and_Temporal_Refinement_ICCV_2023_paper.html
+
+Why it matters:
+
+TAPIR explicitly separates:
 
 ```text
-Hypothesis:
-Why this experiment:
-Systems:
-Dataset:
-Splits:
-Metrics:
-Predeclared target:
-Raw artifacts:
-Statistical analysis:
-Kill conditions:
+per-frame matching
+from
+temporal refinement
+```
+
+That separation is highly relevant to ZeroModel’s proposed local-evidence plus temporal-governance architecture.
+
+## CoTracker
+
+**Karaev et al. — “CoTracker: It Is Better to Track Together”**
+
+* Paper:
+  https://www.ecva.net/papers/eccv_2024/papers_ECCV/html/7890_ECCV_2024_paper.php
+
+* Project:
+  https://co-tracker.github.io/
+
+Why it matters:
+
+* jointly tracks many points;
+* models dependencies among tracks;
+* handles occlusion and long sequences;
+* operates causally in windows.
+
+Potential use:
+
+Later learned temporal baseline for whether joint local evidence offers more stable identity than independent tracks.
+
+## DEVA
+
+**Cheng et al. — “Tracking Anything with Decoupled Video Segmentation”**
+
+* Paper:
+  https://openaccess.thecvf.com/content/ICCV2023/html/Cheng_Tracking_Anything_with_Decoupled_Video_Segmentation_ICCV_2023_paper.html
+
+Why it matters:
+
+DEVA separates:
+
+```text
+image-level evidence
+from
+task-agnostic temporal propagation
+```
+
+This is conceptually close to ZeroModel’s requirement that the visual provider and temporal governance remain separable.
+
+## SAM 2
+
+**Ravi et al. — “SAM 2: Segment Anything in Images and Videos”**
+
+* Paper:
+  https://arxiv.org/abs/2408.00714
+
+Why it matters:
+
+* promptable video segmentation;
+* streaming memory;
+* persistent masks;
+* temporal object identity.
+
+Potential use:
+
+A later segmentation-evidence provider, not the first deterministic implementation.
+
+Do not confuse segmentation persistence with policy-state certainty.
+
+## ByteTrack
+
+**Zhang et al. — “ByteTrack: Multi-Object Tracking by Associating Every Detection Box”**
+
+* Paper:
+  https://www.ecva.net/papers/eccv_2022/papers_ECCV/html/315_ECCV_2022_paper.php
+
+Why it matters:
+
+ByteTrack retains low-score detections during association rather than deleting them immediately.
+
+Potential ZeroModel lesson:
+
+> Weak evidence may remain useful for temporal association without being sufficient for governed acceptance.
+
+Do not let weak carried evidence become an accepted state without separate gates.
+
+---
+
+# 31. Research papers: local learned matching
+
+These are later baselines after deterministic local correlation is measured.
+
+## LightGlue
+
+**Lindenberger, Sarlin and Pollefeys — “LightGlue: Local Feature Matching at Light Speed”**
+
+* Paper:
+  https://openaccess.thecvf.com/content/ICCV2023/html/Lindenberger_LightGlue_Local_Feature_Matching_at_Light_Speed_ICCV_2023_paper.html
+
+Why it matters:
+
+* sparse local feature matching;
+* adaptive compute;
+* local correspondence rather than global scene embedding.
+
+## Efficient LoFTR
+
+**Wang et al. — “Efficient LoFTR: Semi-Dense Local Feature Matching with Sparse-Like Speed”**
+
+* Paper:
+  https://openaccess.thecvf.com/content/CVPR2024/html/Wang_Efficient_LoFTR_Semi-Dense_Local_Feature_Matching_with_Sparse-Like_Speed_CVPR_2024_paper.html
+
+Why it matters:
+
+* semi-dense correspondences;
+* texture-poor matching;
+* two-stage correlation;
+* a useful learned comparison for small structured frames.
+
+## XFeat
+
+**Potje et al. — “XFeat: Accelerated Features for Lightweight Image Matching”**
+
+* Paper:
+  https://openaccess.thecvf.com/content/CVPR2024/html/Potje_XFeat_Accelerated_Features_for_Lightweight_Image_Matching_CVPR_2024_paper.html
+
+Why it matters:
+
+* resource-efficient local features;
+* sparse and semi-dense modes;
+* potential edge comparison.
+
+## RoMa
+
+**Edstedt et al. — “RoMa: Robust Dense Feature Matching”**
+
+* Paper:
+  https://openaccess.thecvf.com/content/CVPR2024/html/Edstedt_RoMa_Robust_Dense_Feature_Matching_CVPR_2024_paper.html
+
+Why it matters:
+
+RoMa combines coarse DINOv2 robustness with specialized fine features.
+
+This may help explain why global DINOv2 CLS failed while local DINO-derived evidence could still remain viable.
+
+---
+
+# 32. Research papers: selective acceptance and governance
+
+These papers directly address the distinction between prediction and acceptance.
+
+## One-sided selective classification
+
+**Gangrade, Kag and Saligrama — “Selective Classification via One-Sided Prediction”**
+
+* Paper:
+  https://proceedings.mlr.press/v130/gangrade21a.html
+
+Why it matters:
+
+It seeks large class-specific decision regions with very few false positives.
+
+Potential ZeroModel use:
+
+* row-specific acceptance regions;
+* action-specific safety gates;
+* coverage maximization under strict false-positive constraints.
+
+## Selective classification with OOD data
+
+**Xia and Bouganis — “Augmenting Softmax Information for Selective Classification with Out-of-Distribution Data”**
+
+* Paper:
+  https://arxiv.org/abs/2207.07506
+
+Why it matters:
+
+It distinguishes:
+
+* correct in-domain predictions;
+* incorrect in-domain predictions;
+* out-of-distribution observations.
+
+ZeroModel currently needs all three distinctions.
+
+## LEC
+
+**Wang et al. — “Linear Expectation Constraints for Selection-Conditioned Risk Control in Selective Prediction and Routing Systems”**
+
+* Paper:
+  https://openreview.net/forum?id=auEvgVBpSF
+
+Why it matters:
+
+It targets risk among the predictions actually selected or accepted.
+
+Potential ZeroModel use:
+
+* formal accepted-risk objectives;
+* route or reject decisions;
+* sequence-conditioned selection.
+
+Do not claim a formal guarantee merely by citing the paper. Any guarantee must match the implemented assumptions and calibration protocol.
+
+---
+
+# 33. Research papers: visual primitives
+
+## Thinking with Visual Primitives
+
+**Lu et al. — “Thinking with Visual Primitives”**
+
+The original official source has not remained reliably available. Use mirrors cautiously:
+
+* Community mirror:
+  https://github.com/mitkox/Thinking-with-Visual-Primitives
+
+* Archived mirror with provenance warning:
+  https://github.com/ailuntx/Thinking-with-Visual-Primitives
+
+Why it matters:
+
+The work frames points and boxes as explicit visual-reference units and identifies a “reference gap” where language cannot precisely anchor dense spatial reasoning.
+
+Potential ZeroModel relevance:
+
+* explicit point and box identities;
+* referenceable local evidence;
+* structured spatial claims;
+* coordinates as first-class reasoning evidence.
+
+Do not treat a community mirror as authoritative provenance.
+
+## Action with Visual Primitives
+
+**Guo et al. — “Action with Visual Primitives”**
+
+* Paper:
+  https://arxiv.org/abs/2605.22183
+
+Why it matters:
+
+It separates:
+
+```text
+instruction comprehension
+spatial scene understanding
+action generation
+```
+
+and uses visual primitives as an interface between perception and action.
+
+That separation is strongly aligned with ZeroModel’s intended architecture:
+
+```text
+visual evidence
+→ explicit state claims
+→ independently identified policy
+→ action
+```
+
+This is a conceptual reference, not evidence that ZeroModel should adopt a vision-language-action model.
+
+---
+
+# 34. How to use the papers
+
+Do not implement every paper.
+
+For each paper, record:
+
+```text
+paper
+specific architectural idea
+ZeroModel question it informs
+smallest bounded experiment
+new dependency required
+evidence needed
+reason to adopt or reject
+```
+
+The intended order is:
+
+```text
+1. Deterministic weighted local correlation
+2. Deterministic temporal transition evidence
+3. Deterministic geometry
+4. Learned local correspondence baseline
+5. Learned temporal tracking baseline
+6. Fixed-camera validation
+```
+
+Do not jump directly to SAM 2, RAFT, TAPIR or CoTracker merely because they are more capable.
+
+The programme’s discipline is to measure the simplest mechanism first.
+
+---
+
+# 35. 1.0.12 implementation sequence
+
+## Phase A: inherited-state audit
+
+* verify latest `main`;
+* verify package version;
+* run full tests;
+* read logbook, status cut and claims audit;
+* verify frozen evidence;
+* inspect v3 preparation;
+* write the Stage 2 protocol before final-data evaluation.
+
+## Phase B: video transport
+
+* deterministic frame identity;
+* clip manifest;
+* lossless canonical clip format;
+* optional real-video adapter;
+* decode and trace tests.
+
+## Phase C: exact canonical video baseline
+
+* generate known arcade trajectory;
+* replay through exact visual reader;
+* prove symbolic-policy equivalence;
+* serialize temporal trace.
+
+## Phase D: frame-local Stage 2 provider
+
+* weighted local correlation;
+* multiple regions;
+* critical-region semantics;
+* competing rows;
+* explicit rejection reasons.
+
+## Phase E: temporal provider
+
+* candidate paths;
+* transition specification;
+* persistence;
+* occlusion handling;
+* no silent carry-forward;
+* temporal rejection.
+
+## Phase F: fresh benchmark and calibration
+
+* freeze splits;
+* calculate evidence once;
+* choose gates using calibration only;
+* evaluate final clips once;
+* produce all reports and atlases.
+
+## Phase G: documentation and claims
+
+Update:
+
+```text
+README.md
+docs/claims-audit.md
+docs/research/visual-research-logbook.md
+docs/research/visual-programme-status-cut-2026-07-18.md
+```
+
+Create:
+
+```text
+docs/research/visual-video-stage-two.md
+docs/research/video-policy-reader.md
+```
+
+Update the dated status cut only through a new entry or successor status document when appropriate. Do not silently rewrite historical state.
+
+## Phase H: release
+
+Only after implementation, tests, evidence and claims pass:
+
+* bump `pyproject.toml` to `1.0.12`;
+* update installation examples;
+* update release notes or changelog;
+* build distributions;
+* run Twine checks;
+* verify clean install;
+* tag only through the repository’s declared release process.
+
+---
+
+# 36. Branch and commit discipline
+
+Create:
+
+```text
+research/video-policy-reader-1.0.12
+```
+
+Suggested commit sequence:
+
+```text
+feat(video): add deterministic frame and clip contracts
+feat(video): add canonical video policy baseline
+feat(visual): add local correlation evidence provider
+feat(video): add temporal policy evidence
+test(video): cover temporal safety and replay contracts
+data(results): add bounded video stage-two evidence
+docs(research): record temporal visual-address result
+release: prepare zeromodel 1.0.12
+```
+
+Do not combine implementation, evidence and release metadata into one opaque commit.
+
+Open a draft PR:
+
+```text
+research: add bounded temporal visual policy reader
+```
+
+Do not merge automatically.
+
+---
+
+# 37. Claims discipline
+
+Permitted bounded claims may include:
+
+> ZeroModel can consume a declared video clip, preserve frame and clip identity, and produce a reconstructable temporal policy-decision trace.
+
+> On the declared canonical arcade clips, the video path reproduces the same exact rows and actions as the symbolic policy path.
+
+> On the declared fresh synthetic temporal fixture, the local temporal provider achieved the recorded accepted exact-row coverage with zero observed distinguishable false accepts at the selected operating point.
+
+Do not claim:
+
+```text
+general video understanding
+general object permanence
+general zero false-accept risk
+production-ready camera perception
+arbitrary motion invariance
+semantic scene understanding
+real-world safety
+human-level temporal reasoning
+a complete Visual State Compiler
+```
+
+If the approximate provider fails, state that plainly.
+
+The release may still ship:
+
+* video contracts;
+* deterministic transport;
+* canonical exact video baseline;
+* research provider;
+* negative evidence.
+
+Do not promote a failed research provider as a production reader.
+
+---
+
+# 38. Stop conditions
+
+Stop and report rather than improvising when:
+
+* current tests fail before implementation;
+* predecessor evidence identities fail;
+* the v3 fixture is not reproducible;
+* video decoding cannot be made deterministic enough for the declared contract;
+* final data enters calibration;
+* templates use final frames;
+* temporal rules are derived from final outcomes;
+* sequence metrics cannot be reconstructed;
+* codec differences alter canonical evidence;
+* frame ordering is ambiguous;
+* the implementation requires silently carrying state;
+* a learned dependency is required before deterministic baselines are measured;
+* claims cannot be supported honestly;
+* evidence manifests fail.
+
+---
+
+# 39. Definition of done
+
+ZeroModel 1.0.12 is complete only when:
+
+```text
+[ ] latest main audited
+[ ] inherited evidence verified
+[ ] full baseline suite green
+[ ] deterministic video frame contract implemented
+[ ] clip manifest implemented
+[ ] actual video adapter implemented
+[ ] lossless canonical clip format implemented
+[ ] exact canonical video baseline measured
+[ ] symbolic and video action sequences compared
+[ ] local region evidence implemented
+[ ] competing-action evidence implemented
+[ ] temporal transition specification implemented
+[ ] no-silent-carry-forward rule enforced
+[ ] temporal candidate paths implemented
+[ ] outside-bound safety control implemented
+[ ] fresh calibration/final isolation proven
+[ ] final temporal benchmark executed once
+[ ] frame metrics reconstructed from traces
+[ ] sequence metrics reconstructed from traces
+[ ] evidence bundle hashes verify
+[ ] focused tests pass
+[ ] full tests pass
+[ ] package build passes
+[ ] Twine check passes
+[ ] claims audit updated
+[ ] research logbook updated
+[ ] public README wording remains bounded
+[ ] package version changed to 1.0.12 only after all above
+[ ] draft PR opened
+```
+
+---
+
+# 40. First response in the new chat
+
+After reading the repository, respond first with:
+
+```text
+## Inherited ZeroModel position
+
+Current main:
+Current version:
+Current tests:
+
+Stable policy core:
+Measured visual systems:
+Confirmed mechanisms:
+Retired approaches:
+Preparation-only work:
+Frozen evidence:
+Open Stage 2 question:
+
+## Proposed 1.0.12 boundary
+
+What “video working” will mean:
+Minimum shippable capability:
+Research provider:
+Canonical positive baseline:
+Fresh temporal benchmark:
 Explicit non-goals:
-Expected implementation files:
+
+## Architecture
+
+Video input:
+Frame-local evidence:
+Temporal evidence:
+Acceptance:
+Policy delegation:
+Evidence output:
+
+## First implementation sequence
+
+1.
+2.
+3.
+4.
+5.
+
+## Risks requiring early tests
+
+...
 ```
 
-## I. Recommended next PR
+Do not ask the user to repeat information already present in the linked repository documents.
 
-Describe one PR only.
-
-Include:
-
-- branch purpose;
-- files to add;
-- files to change;
-- tests;
-- report artifacts;
-- claims-audit changes;
-- what must not be included.
-
-## J. Claim rewrite
-
-Provide:
-
-1. the strongest claim the current repository can honestly make;
-2. the strongest visual-address claim;
-3. claims that should be removed;
-4. claims that may be tested next.
-
-## K. Research opportunity
-
-State whether the result contains a genuinely interesting research observation.
-
-Possible answers include:
-
-- action-equivalent wrong-address behaviour is publishable;
-- semantic invariance versus governed identity is interesting;
-- rejection is the main contribution;
-- this is established nearest-neighbour/OOD behaviour;
-- the result is too fixture-specific;
-- the artifact-governance layer is the real novelty;
-- no substantial novelty remains.
-
-Explain the reasoning and cite relevant prior-art categories.
+After presenting that inherited-state synthesis, proceed through the bounded implementation sequence unless a genuine stop condition is encountered.
 
 ---
 
-# 16. Information available on request
+# 41. Final completion report
 
-Do not invent missing details.
-
-The reviewer may request any of the following before finalizing the review:
-
-- exact Git commit SHA;
-- original full benchmark JSON;
-- compact derived summary JSON;
-- complete environment manifest;
-- exact local command;
-- Python, NumPy, PyTorch, Transformers, and platform versions;
-- encoder manifest;
-- loaded-weights digest;
-- preprocessing digest;
-- per-family counts;
-- complete per-observation traces;
-- B-versus-D paired outcome table;
-- nearest-neighbour examples;
-- confusion matrix;
-- calibration thresholds per row;
-- score and margin distributions;
-- workflow logs;
-- relevant pull-request patches;
-- test files;
-- claims-audit diff;
-- prior visual-sign-reader design brief;
-- public blog text;
-- intended deployment scenarios.
-
-When a missing item materially affects the verdict, say:
+At completion, report:
 
 ```text
-Review blocked pending:
-Why it is required:
-What decision it could change:
+Branch:
+Draft PR:
+
+Starting main SHA:
+Release candidate SHA:
+Version:
+
+Baseline tests before work:
+Focused tests:
+Full tests:
+Build:
+Twine:
+
+Video adapter:
+Canonical clip format:
+Canonical clip digest:
+Frame count:
+Nominal FPS:
+
+Exact canonical video result:
+Exact rows:
+Exact actions:
+Sequence equivalence:
+
+Frame-local provider:
+Provider ID:
+Calibration ID:
+Raw exact-row:
+Raw action:
+Accepted coverage:
+False accepts:
+Conflicting-action accepts:
+
+Temporal provider:
+Provider ID:
+Transition spec ID:
+Raw exact-row:
+Raw action:
+Accepted exact-row coverage:
+Accepted exact-row precision:
+Accepted action precision:
+False accepts:
+Conflicting-action accepts:
+Identity switches:
+Impossible-transition accepts:
+Occlusion recovery:
+Outside-bound result:
+Outcome:
+
+Evidence directory:
+Dataset digest:
+Clip manifest digest:
+Selection digest:
+Trace digest:
+Bundle digest:
+
+Files added:
+Files modified:
+
+Claims added:
+Claims rejected:
+Known limitations:
+Next declared experiment:
 ```
 
-Do not fill gaps with confident assumptions.
-
----
-
-# 17. Suggested repository reading order
-
-1. `docs/claims-audit.md`
-2. `docs/research/visual-address-phase-one.md`
-3. `docs/results/visual-address-phase-one-dinov2-full.md`
-4. `examples/arcade_shooter_policy.py`
-5. `examples/arcade_visual_sign_reader.py`
-6. `zeromodel/visual.py`
-7. `zeromodel/visual_address.py`
-8. `zeromodel/visual_address_manifest.py`
-9. `zeromodel/matrix_blob.py`
-10. `zeromodel/visual_encoder.py`
-11. `zeromodel/visual_retrieval.py`
-12. `zeromodel/visual_experiment.py`
-13. `zeromodel/visual_benchmark.py`
-14. `examples/arcade_visual_address_benchmark.py`
-15. `tests/test_visual_sign_reader.py`
-16. `tests/test_visual_retrieval.py`
-17. `tests/test_arcade_visual_address_benchmark.py`
-18. `.github/scripts/run_visual_address_smoke.py`
-19. `.github/workflows/visual-address-benchmark.yml`
-
-Review implementation and tests before accepting the prose interpretation.
-
----
-
-# 18. Pre-review facts versus hypotheses
-
-## Facts currently evidenced
-
-- the bounded policy has 112 rows and four actions;
-- canonical deterministic visual addressing succeeds on the committed exact fixture;
-- the held-out benchmark machinery executes;
-- the full local DINOv2 run produced the recorded counts;
-- B has substantially higher exact-row accuracy than C, D, and G;
-- D has a 1.34-point higher benign action point estimate than B;
-- B, C, D, and G have high FAR at the measured operating point;
-- G accepts every distinguishable rejection opportunity;
-- hundreds of learned-system correct actions come from wrong rows.
-
-## Current interpretations
-
-- exact row identity should be primary;
-- global semantic embeddings are structurally mismatched;
-- rejection is the central problem;
-- D does not meaningfully beat B;
-- the learned Phase 1 path should stop;
-- factorized visual state compilation is the best next direction.
-
-## Open hypotheses
-
-- patch-level learned evidence can preserve local facts;
-- deterministic factor extraction will outperform global retrieval;
-- a task-specific representation can recover exact states safely;
-- factorized evidence improves governance;
-- a fixed-camera real-world environment will retain the observed pattern;
-- direct instrumentation may dominate vision.
-
-Keep these categories separate in the review.
-
----
-
-# 19. Decision standard
-
-The review should not ask whether the work is interesting in isolation.
-
-It should ask whether the next unit of engineering effort is justified.
-
-A continuation recommendation should require:
-
-- a precise unresolved hypothesis;
-- evidence that the next experiment distinguishes competing explanations;
-- a conventional baseline;
-- an operationally meaningful target;
-- a credible rejection method;
-- bounded implementation cost;
-- an explicit stop condition.
-
-A stop or pause recommendation is valid and useful.
-
----
-
-# 20. Final instruction to the reviewer
-
-Assume the authors are capable of implementing almost any proposed extension.
-
-Therefore do not recommend complexity merely because it is technically possible.
-
-Prefer the answer that most rapidly reveals whether ZeroModel has:
-
-- a distinct research contribution;
-- a useful bounded engineering pattern;
-- a governance layer worth retaining;
-- or an attractive metaphor wrapped around conventional mechanisms.
-
-The desired outcome is not encouragement.
-
-The desired outcome is a more accurate map of reality.
+Never report 1.0.12 as released unless the repository’s actual release process has been completed.

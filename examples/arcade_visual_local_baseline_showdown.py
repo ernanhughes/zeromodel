@@ -86,6 +86,10 @@ def _runtime() -> Dict[str, Any]:
     }
 
 
+def _calendar_date_label(moment: datetime) -> str:
+    return f"{moment.strftime('%A, %B')} {moment.day}, {moment.year}"
+
+
 def _frozen_system_b_reference() -> Dict[str, Any]:
     summary = json.loads((FROZEN_SYSTEM_B_DIR / "final-summary.json").read_text(encoding="utf-8"))
     run_manifest = json.loads((FROZEN_SYSTEM_B_DIR / "run-manifest.json").read_text(encoding="utf-8"))
@@ -540,7 +544,7 @@ def run_showdown(
     _write_json(output_dir / "residual-error-atlas.json", residual_atlas)
     readme = (
         "# Visual local baseline showdown v1\n\n"
-        f"- date: Friday, July 17, 2026\n"
+        f"- date: {_calendar_date_label(datetime.now(timezone.utc))}\n"
         f"- system: `{SYSTEM_ID}` / `{SYSTEM_NAME}`\n"
         f"- outcome: `{outcome}`\n"
         f"- usefulness status: `{usefulness_status}`\n"

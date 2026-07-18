@@ -1,0 +1,11 @@
+{
+  "benchmark_manifest_digest": "sha256:589bb074e1b53b06657cfb75bf7b8d67eae43cc5f76e7237ab07f23ccca49c75",
+  "final_metrics_digest": "sha256:27dfbea50adec996965a3ca237113ff936a518bb634818eb35fa994cde49fc8f",
+  "output_dir": "C:\\Projects\\zeromodel\\docs\\results\\video-policy-reader-v1",
+  "paired_results_digest": "sha256:67157ec601563da171f8a26d78ee05fef8478f58d9cbe046c192d59acadabb38",
+  "provider_contract_digest": "ec138008d3c3ebb8ae8653ae98a25d42d0925ea8b1ca20cbc898052ec196f1ac",
+  "selected_operating_point_digest": "sha256:e43f57ce41e014c1f08a8e16d8991f4545846884cd99feb4e023236423e3c15a",
+  "sequence_results_digest": "sha256:e32fedd19c34531b3f99ee52dff247d11d276813fdc3a8ec37d960defd11a4b6",
+  "split_manifest_digest": "sha256:d25b694b3cce93bf93f58239163331f3f6370d32a2b5cce53b4541902b0f8c23",
+  "transition_contract_digest": "sha256:1d2424f19655f96ef701842a001ddd7788f9b4c5f5b2f1c45ff5b87ea354e9ce"
+}

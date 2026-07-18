@@ -1,0 +1,53 @@
+{
+  "benchmark_version": "zeromodel-video-policy-reader-stage2/v1",
+  "case_summaries": [
+    {
+      "case_id": "video-final-benign-exact",
+      "family": "exact_frames",
+      "frame_count": 22,
+      "manifest_id": "sha256:892e09f9ae6897bea8d4ae63c8ab11c8055a3f39f75e426ff1f50081cfe2b5e0",
+      "temporal_classification": "benign_exact"
+    },
+    {
+      "case_id": "video-final-benign-shift",
+      "family": "bounded_translation_photometric",
+      "frame_count": 22,
+      "manifest_id": "sha256:68f0edc2ca3bfcb60bd8ba09907870034f25d0f2af9701940734de9567e76e8c",
+      "temporal_classification": "benign_shift"
+    },
+    {
+      "case_id": "video-final-benign-occlusion",
+      "family": "bounded_translation_occlusion",
+      "frame_count": 22,
+      "manifest_id": "sha256:f52c4406bcf3a4ce6c111875bd1f6ecfd0decc87d79a01ae887163da3ad28349",
+      "temporal_classification": "benign_occlusion"
+    },
+    {
+      "case_id": "video-final-negative-critical",
+      "family": "critical_evidence_removed",
+      "frame_count": 22,
+      "manifest_id": "sha256:f4fe96b3161fb493081dc629b9aadc75c79a256826cea8083164a5efdf49c13d",
+      "temporal_classification": "critical_evidence_removed"
+    },
+    {
+      "case_id": "video-final-negative-reordered",
+      "family": "reordered_frames",
+      "frame_count": 22,
+      "manifest_id": "sha256:0c77e325357c4a08f08898d699888190ba7483da96cea69d50d71657b8ab6463",
+      "temporal_classification": "reordered_frames"
+    },
+    {
+      "case_id": "video-final-negative-stale",
+      "family": "stale_repeated_pixels",
+      "frame_count": 22,
+      "manifest_id": "sha256:aea96088e4768600fb1415aa5ba4a98a5281770bd48a7fd661451e836f4f7f17",
+      "temporal_classification": "stale_repeated_pixels"
+    }
+  ],
+  "frame_split_counts": {
+    "benign_calibration": 448,
+    "final_evaluation": 994,
+    "prototype": 448,
+    "rejection_calibration": 336
+  }
+}

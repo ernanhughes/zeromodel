@@ -1,0 +1,224 @@
+{
+  "V1": [
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-exact",
+      "complete_exact_sequence": false,
+      "family": "exact_frames",
+      "first_rejected_or_incorrect_frame": "sha256:57a9111f281258195b71fff71f580229d1f6a7852b44ed11068913924dfe9748",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-shift",
+      "complete_exact_sequence": false,
+      "family": "bounded_translation_photometric",
+      "first_rejected_or_incorrect_frame": "sha256:6ca1c994d9c47377478862762d9c1749f1bee3b219fa5e3b5a0d8b85514bf36c",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-occlusion",
+      "complete_exact_sequence": false,
+      "family": "bounded_translation_occlusion",
+      "first_rejected_or_incorrect_frame": "sha256:26730ee7658c81111b3c9a29ebd31cb4da6a110842c22731b866b164fb3d4d83",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-critical",
+      "complete_exact_sequence": true,
+      "family": "critical_evidence_removed",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-reordered",
+      "complete_exact_sequence": true,
+      "family": "reordered_frames",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-stale",
+      "complete_exact_sequence": true,
+      "family": "stale_repeated_pixels",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    }
+  ],
+  "V2": [
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-exact",
+      "complete_exact_sequence": false,
+      "family": "exact_frames",
+      "first_rejected_or_incorrect_frame": "sha256:57a9111f281258195b71fff71f580229d1f6a7852b44ed11068913924dfe9748",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-shift",
+      "complete_exact_sequence": false,
+      "family": "bounded_translation_photometric",
+      "first_rejected_or_incorrect_frame": "sha256:6ca1c994d9c47377478862762d9c1749f1bee3b219fa5e3b5a0d8b85514bf36c",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-occlusion",
+      "complete_exact_sequence": false,
+      "family": "bounded_translation_occlusion",
+      "first_rejected_or_incorrect_frame": "sha256:26730ee7658c81111b3c9a29ebd31cb4da6a110842c22731b866b164fb3d4d83",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-critical",
+      "complete_exact_sequence": true,
+      "family": "critical_evidence_removed",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-reordered",
+      "complete_exact_sequence": true,
+      "family": "reordered_frames",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-stale",
+      "complete_exact_sequence": true,
+      "family": "stale_repeated_pixels",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    }
+  ],
+  "V3": [
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-exact",
+      "complete_exact_sequence": false,
+      "family": "exact_frames",
+      "first_rejected_or_incorrect_frame": "sha256:57a9111f281258195b71fff71f580229d1f6a7852b44ed11068913924dfe9748",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-shift",
+      "complete_exact_sequence": false,
+      "family": "bounded_translation_photometric",
+      "first_rejected_or_incorrect_frame": "sha256:6ca1c994d9c47377478862762d9c1749f1bee3b219fa5e3b5a0d8b85514bf36c",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-benign-occlusion",
+      "complete_exact_sequence": false,
+      "family": "bounded_translation_occlusion",
+      "first_rejected_or_incorrect_frame": "sha256:26730ee7658c81111b3c9a29ebd31cb4da6a110842c22731b866b164fb3d4d83",
+      "longest_contiguous_exact_accepted_run": 0,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 22,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-critical",
+      "complete_exact_sequence": true,
+      "family": "critical_evidence_removed",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-reordered",
+      "complete_exact_sequence": true,
+      "family": "reordered_frames",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    },
+    {
+      "accepted_relied_on_stale_state": false,
+      "case_id": "video-final-negative-stale",
+      "complete_exact_sequence": true,
+      "family": "stale_repeated_pixels",
+      "first_rejected_or_incorrect_frame": null,
+      "longest_contiguous_exact_accepted_run": 22,
+      "recovery_after_declared_gaps": null,
+      "recovery_after_impossible_transitions": null,
+      "sequence_break_count": 0,
+      "total_frames": 22
+    }
+  ]
+}

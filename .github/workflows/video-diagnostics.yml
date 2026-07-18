@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  focused-video-tests:
+  full-suite-diagnostics:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,25 +28,21 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .[dev]
-      - name: Capture focused pytest output
-        id: focused
+      - name: Capture full pytest output
+        id: full
         shell: bash
         run: |
           set +e
-          python -m pytest -q \
-            tests/test_video_source.py \
-            tests/test_policy_transitions.py \
-            tests/test_video_policy.py \
-            --tb=short > video-test-output.txt 2>&1
+          python -m pytest -q --tb=short > full-test-output.txt 2>&1
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
-          cat video-test-output.txt
+          tail -n 120 full-test-output.txt
           exit 0
       - name: Upload diagnostic output
         uses: actions/upload-artifact@v4
         with:
-          name: video-test-output
-          path: video-test-output.txt
+          name: full-test-output
+          path: full-test-output.txt
           if-no-files-found: error
-      - name: Enforce focused test result
-        run: test "${{ steps.focused.outputs.exit_code }}" = "0"
+      - name: Enforce full test result
+        run: test "${{ steps.full.outputs.exit_code }}" = "0"

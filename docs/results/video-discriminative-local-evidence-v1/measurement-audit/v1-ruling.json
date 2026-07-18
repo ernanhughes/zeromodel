@@ -1,0 +1,20 @@
+{
+  "affected_artifacts": [
+    "architecture-grid.csv",
+    "benchmark-manifest.json",
+    "phase-access-audits.json",
+    "selected-architecture.json",
+    "split-manifest.json"
+  ],
+  "architecture_selection_usable": false,
+  "calibration_status_usable": false,
+  "evidence": [
+    "Current committed code does not regenerate the frozen v1 artifact set semantically.",
+    "The provider prototype universe is larger than the prototype split manifest.",
+    "Architecture-selection rows lack development-backed stable evidence."
+  ],
+  "final_identities_usable": true,
+  "invalidation_boundary": "pre-final measurement integrity audit",
+  "next_permitted_action": "freeze_stage3_v2_measurement_amendment",
+  "ruling": "invalid_multiple_failures"
+}

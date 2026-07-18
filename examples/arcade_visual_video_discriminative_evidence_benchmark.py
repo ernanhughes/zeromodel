@@ -8,7 +8,9 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import sys
+import tempfile
 from types import MappingProxyType
 from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
 
@@ -46,6 +48,7 @@ from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"
 DIAGNOSTICS_DIR = OUTPUT_DIR / "diagnostics"
+MEASUREMENT_AUDIT_DIR = OUTPUT_DIR / "measurement-audit"
 BENCHMARK_VERSION = "zeromodel-video-discriminative-evidence-stage3/v1"
 BENCHMARK_GENERATOR_VERSION = "zeromodel-video-discriminative-generator/v1"
 PREREGISTRATION_COMMIT = "e6d3c2461a3e7fc783026907aa1ab5b803c878f3"
@@ -69,6 +72,26 @@ SPLIT_ROLES = (
     "information_theoretic_control",
 )
 ARCHITECTURES = ("A", "B", "C", "D")
+AUDIT_ARTIFACT_NAMES = (
+    "benchmark-manifest.json",
+    "split-manifest.json",
+    "region-manifest.json",
+    "mask-manifest.json",
+    "architecture-grid-definition.json",
+    "architecture-grid.csv",
+    "architecture-d-gateway.json",
+    "selected-architecture.json",
+    "selected-operating-point.json",
+    "phase-access-audits.json",
+)
+VALID_V1_RULINGS = {
+    "valid_no_safe_architecture",
+    "invalid_generator_artifact_mismatch",
+    "invalid_prototype_closure",
+    "invalid_mask_development_closure",
+    "invalid_provider_benchmark_wiring",
+    "invalid_multiple_failures",
+}
 
 
 def _json_ready(value: Any) -> Any:
@@ -127,6 +150,17 @@ def _csv_cell(value: Any) -> str:
 
 def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _git_output(*args: str) -> Optional[str]:
+    try:
+        return (
+            __import__("subprocess")
+            .check_output(["git", *args], cwd=REPO_ROOT, text=True, stderr=__import__("subprocess").DEVNULL)
+            .strip()
+        )
+    except Exception:
+        return None
 
 
 def _array_digest(array: np.ndarray) -> str:
@@ -257,6 +291,55 @@ def _sample_nonprototype_rows(rows: Sequence[Tuple[str, str, ImageObservation]])
             seen.add(row[0])
             deduped.append(row)
     return tuple(deduped)
+
+
+def _generator_source_blob_digest() -> str:
+    return "sha256:" + hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+
+
+def _sampled_rows(benchmark: Stage3Benchmark) -> Tuple[Tuple[str, str, ImageObservation], ...]:
+    rows = []
+    seen = set()
+    for record in benchmark.record_by_split("prototype"):
+        if record.row_id in seen or record.row_id is None or record.action_id is None:
+            continue
+        seen.add(record.row_id)
+        rows.append((record.row_id, record.action_id, benchmark.prototypes[record.row_id][3]))
+    return tuple(rows)
+
+
+def _generator_identity(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    sampled = _sampled_rows(benchmark)
+    canonical_rows = tuple(sorted(benchmark.prototypes))
+    family_definitions = _split_family_definitions()
+    final_descriptors = [record.observation_id for record in benchmark.records if record.split.startswith("final_") or record.split == "information_theoretic_control"]
+    identity = {
+        "source_file": str(Path(__file__).resolve()),
+        "source_file_blob_digest": _generator_source_blob_digest(),
+        "benchmark_version": BENCHMARK_VERSION,
+        "generator_version": BENCHMARK_GENERATOR_VERSION,
+        "constants": {
+            "preregistration_commit": PREREGISTRATION_COMMIT,
+            "final_seed_material": FINAL_SEED_MATERIAL,
+            "maximum_useful_candidate_set_size": MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+            "selection_negative_candidate_set_support_blocks_feasibility": SELECTION_NEGATIVE_CANDIDATE_SET_SUPPORT_BLOCKS_FEASIBILITY,
+            "sample_size_constant": NON_PROTOTYPE_ROW_SAMPLE_SIZE,
+        },
+        "canonical_row_count": len(canonical_rows),
+        "canonical_row_ids": list(canonical_rows),
+        "evaluated_row_sample_algorithm": "step_sample_with_midpoint_and_last_dedup",
+        "evaluated_row_ids": [row_id for row_id, _action_id, _observation in sampled],
+        "prototype_row_ids": list(canonical_rows),
+        "diagnostic_development_row_ids": sorted({record.row_id for record in benchmark.record_by_split("diagnostic_development") if record.row_id is not None}),
+        "architecture_selection_row_ids": sorted({record.row_id for record in benchmark.records if record.split.startswith("architecture_selection_") and record.row_id is not None}),
+        "calibration_row_ids": sorted({record.row_id for record in benchmark.records if record.split.endswith("calibration") and record.row_id is not None}),
+        "final_row_descriptors": final_descriptors,
+        "transformation_family_definitions": _json_ready(family_definitions),
+        "transformation_family_digest": _sha256(family_definitions),
+        "current_head": _git_output("rev-parse", "HEAD"),
+    }
+    identity["generator_identity_digest"] = _sha256(identity)
+    return identity
 
 
 def _nearest_same_action(row_id: str, action_id: str, rows: Sequence[Tuple[str, str, ImageObservation]]) -> Tuple[str, ImageObservation]:
@@ -539,6 +622,7 @@ def _build_stage3_benchmark(*, materialize_final: bool = False) -> Stage3Benchma
 
 
 def _benchmark_manifest(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    generator_identity = _generator_identity(benchmark)
     return {
         "benchmark_version": BENCHMARK_VERSION,
         "generator_version": BENCHMARK_GENERATOR_VERSION,
@@ -550,6 +634,7 @@ def _benchmark_manifest(benchmark: Stage3Benchmark) -> Dict[str, Any]:
         "metadata": _json_ready(benchmark.metadata),
         "record_count": len(benchmark.records),
         "benchmark_digest": _sha256([record.to_dict() for record in benchmark.records]),
+        "generator_identity": generator_identity,
     }
 
 
@@ -601,6 +686,110 @@ def _freeze_regions_and_masks(benchmark: Stage3Benchmark, *, output_dir: Path) -
     _write_json(output_dir / "region-manifest.json", region_manifest)
     _write_json(output_dir / "mask-manifest.json", mask_manifest)
     return {"regions": regions, "masks": masks, "region_manifest": region_manifest, "mask_manifest": mask_manifest}
+
+
+def validate_prototype_and_development_closure(
+    *,
+    benchmark: Stage3Benchmark,
+    masks: Mapping[str, Any],
+) -> Dict[str, Any]:
+    provider_prototype_rows = sorted(benchmark.prototypes)
+    prototype_split_rows = sorted({record.row_id for record in benchmark.record_by_split("prototype") if record.row_id is not None})
+    development_rows = sorted({record.row_id for record in benchmark.record_by_split("diagnostic_development") if record.row_id is not None})
+    architecture_selection_rows = sorted({record.row_id for record in benchmark.records if record.split.startswith("architecture_selection_") and record.row_id is not None})
+    calibration_rows = sorted({record.row_id for record in benchmark.records if record.split.endswith("calibration") and record.row_id is not None})
+    final_descriptor_rows = sorted({record.row_id for record in benchmark.records if (record.split.startswith("final_") or record.split == "information_theoretic_control") and record.row_id is not None})
+    mask_rows = sorted(masks)
+    rows_with_nonzero_stability = sorted(row_id for row_id, mask in masks.items() if int(mask.spec.stable_pixel_count) > 0)
+    rows_with_zero_stability = sorted(row_id for row_id, mask in masks.items() if int(mask.spec.stable_pixel_count) == 0)
+    missing_prototype_manifest_rows = sorted(set(provider_prototype_rows) - set(prototype_split_rows))
+    missing_mask_rows = sorted(set(provider_prototype_rows) - set(mask_rows))
+    missing_development_rows = sorted(set(provider_prototype_rows) - set(development_rows))
+    evaluated_rows_with_zero_stability = sorted(set(architecture_selection_rows) & set(rows_with_zero_stability))
+    closure_failures = []
+    if missing_prototype_manifest_rows:
+        closure_failures.append("missing_prototype_manifest_rows")
+    if missing_mask_rows:
+        closure_failures.append("missing_mask_rows")
+    if missing_development_rows:
+        closure_failures.append("missing_development_rows")
+    if evaluated_rows_with_zero_stability:
+        closure_failures.append("evaluated_rows_with_zero_stability")
+    return {
+        "provider_prototype_rows": provider_prototype_rows,
+        "prototype_split_rows": prototype_split_rows,
+        "development_rows": development_rows,
+        "architecture_selection_rows": architecture_selection_rows,
+        "calibration_rows": calibration_rows,
+        "final_descriptor_rows": final_descriptor_rows,
+        "mask_rows": mask_rows,
+        "rows_with_nonzero_stability": rows_with_nonzero_stability,
+        "rows_with_zero_stability": rows_with_zero_stability,
+        "missing_prototype_manifest_rows": missing_prototype_manifest_rows,
+        "missing_mask_rows": missing_mask_rows,
+        "missing_development_rows": missing_development_rows,
+        "evaluated_rows_with_zero_stability": evaluated_rows_with_zero_stability,
+        "closure_failures": closure_failures,
+    }
+
+
+def _mask_coverage_report(*, benchmark: Stage3Benchmark, masks: Mapping[str, Any], output_dir: Path) -> Dict[str, Any]:
+    prototype_rows = sorted(benchmark.prototypes)
+    prototype_split = {record.row_id for record in benchmark.record_by_split("prototype") if record.row_id is not None}
+    development_by_row = defaultdict(list)
+    for record in benchmark.record_by_split("diagnostic_development"):
+        if record.row_id is not None:
+            development_by_row[record.row_id].append(record.family_id)
+    architecture_rows = {record.row_id for record in benchmark.records if record.split.startswith("architecture_selection_") and record.row_id is not None}
+    calibration_rows = {record.row_id for record in benchmark.records if record.split.endswith("calibration") and record.row_id is not None}
+    final_rows = {record.row_id for record in benchmark.records if (record.split.startswith("final_") or record.split == "information_theoretic_control") and record.row_id is not None}
+    rows = []
+    for row_id in prototype_rows:
+        action_id = benchmark.prototypes[row_id][1]
+        mask = masks.get(row_id)
+        stable_pixel_count = None if mask is None else int(mask.spec.stable_pixel_count)
+        effective_mass = None if mask is None else float(mask.stable_weights.sum(dtype=np.float64) * mask.row_informative_weights.sum(dtype=np.float64))
+        closure_failure_reason = []
+        if row_id not in prototype_split:
+            closure_failure_reason.append("missing_prototype_manifest_row")
+        if mask is None:
+            closure_failure_reason.append("missing_mask")
+        if row_id not in development_by_row:
+            closure_failure_reason.append("missing_development_row")
+        elif stable_pixel_count == 0:
+            closure_failure_reason.append("zero_stability")
+        rows.append(
+            {
+                "row_id": row_id,
+                "action_id": action_id,
+                "prototype_split_membership": row_id in prototype_split,
+                "development_observation_count": len(development_by_row.get(row_id, ())),
+                "development_family_ids": sorted(development_by_row.get(row_id, ())),
+                "informative_pixel_count": None if mask is None else int(mask.spec.informative_pixel_count),
+                "action_conflict_pixel_count": None if mask is None else int(mask.spec.action_conflict_pixel_count),
+                "stable_pixel_count": stable_pixel_count,
+                "effective_informative_and_stable_mass": effective_mass,
+                "mask_payload_digest": None if mask is None else mask.payload_digest,
+                "appears_in_architecture_selection_expected_rows": row_id in architecture_rows,
+                "appears_in_calibration_expected_rows": row_id in calibration_rows,
+                "appears_in_final_descriptors": row_id in final_rows,
+                "closure_status": "closed" if not closure_failure_reason else "open",
+                "closure_failure_reason": "|".join(closure_failure_reason),
+            }
+        )
+    summary = {
+        "total_prototypes": len(prototype_rows),
+        "nonzero_stability_masks": sum(1 for row in rows if (row["stable_pixel_count"] or 0) > 0),
+        "zero_stability_masks": sum(1 for row in rows if row["stable_pixel_count"] == 0),
+        "evaluated_rows_with_zero_stability": sum(1 for row in rows if row["appears_in_architecture_selection_expected_rows"] and row["stable_pixel_count"] == 0),
+        "candidate_rows_with_zero_stability": sum(1 for row in rows if row["stable_pixel_count"] == 0),
+        "actions_affected": sorted({row["action_id"] for row in rows if row["stable_pixel_count"] == 0}),
+        "state_dimensions_affected": ["tank_x", "target_x", "cooldown"],
+        "rows": rows,
+    }
+    _write_json(output_dir / "mask-coverage.json", summary)
+    _write_csv(output_dir / "mask-coverage.csv", rows)
+    return summary
 
 
 def _calibration(
@@ -807,6 +996,82 @@ def _evaluate_ranked_candidates(
         "cache_hits": 0,
         "cache_misses": len(ranked_by_observation),
     }
+
+
+def _ranked_candidates_for_architecture(
+    *,
+    architecture_id: str,
+    benchmark: Stage3Benchmark,
+    freeze: Mapping[str, Any],
+    records: Sequence[Stage3Record],
+    observations: Mapping[str, ImageObservation],
+    calibration_values: Optional[Mapping[str, Any]] = None,
+) -> Dict[str, Tuple[Any, ...]]:
+    if calibration_values is None:
+        return _raw_ranked_candidates(
+            architecture_id=architecture_id,
+            benchmark=benchmark,
+            freeze=freeze,
+            records=records,
+            observations=observations,
+        )
+    calibration = _calibration(
+        architecture_id=architecture_id,
+        benchmark=benchmark,
+        region_manifest=freeze["region_manifest"],
+        mask_manifest=freeze["mask_manifest"],
+        values=calibration_values,
+    )
+    provider = DiscriminativeEvidenceProvider(
+        prototypes=benchmark.prototypes,
+        masks=freeze["masks"],
+        regions=freeze["regions"],
+        calibration=calibration,
+        policy_artifact_id=benchmark.policy_artifact_id,
+        source_scope=benchmark.source_scope,
+    )
+    return {record.observation_id: provider._rank(observations[record.observation_id]) for record in records}
+
+
+def _artifact_comparison(expected_dir: Path, actual_dir: Path) -> Dict[str, Any]:
+    results = []
+    semantic_mismatch = False
+    expected_names = set(AUDIT_ARTIFACT_NAMES)
+    actual_names = {path.name for path in actual_dir.iterdir() if path.is_file()}
+    for name in sorted(expected_names | actual_names):
+        expected_path = expected_dir / name
+        actual_path = actual_dir / name
+        if not expected_path.exists():
+            results.append({"artifact": name, "status": "unexpected_artifact"})
+            semantic_mismatch = True
+            continue
+        if not actual_path.exists():
+            results.append({"artifact": name, "status": "missing_artifact"})
+            semantic_mismatch = True
+            continue
+        expected_bytes = expected_path.read_bytes()
+        actual_bytes = actual_path.read_bytes()
+        if expected_bytes == actual_bytes:
+            status = "byte_identical"
+        else:
+            try:
+                expected_json = _load_json(expected_path)
+                actual_json = _load_json(actual_path)
+            except Exception:
+                status = "semantic_mismatch"
+            else:
+                status = "semantic_identical" if expected_json == actual_json else "semantic_mismatch"
+        if status == "semantic_mismatch":
+            semantic_mismatch = True
+        results.append(
+            {
+                "artifact": name,
+                "status": status,
+                "expected_digest": _sha256(expected_bytes.decode("utf-8", errors="replace")),
+                "actual_digest": _sha256(actual_bytes.decode("utf-8", errors="replace")),
+            }
+        )
+    return {"semantic_match": not semantic_mismatch, "artifacts": results}
 
 
 def _selection_rank_key(result: Mapping[str, Any]) -> Tuple[Any, ...]:
@@ -1215,6 +1480,260 @@ def _verify_pre_final(output_dir: Path) -> Dict[str, Any]:
     return payload
 
 
+def _audit_exact_frames(*, output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark(materialize_final=False)
+    freeze = _freeze_regions_and_masks(benchmark, output_dir=output_dir)
+    records, observations = benchmark.access(
+        phase="select_architecture",
+        allowed_splits=("prototype", "diagnostic_development", "architecture_selection_benign"),
+    )
+    exact_records = tuple(record for record in records if record.family_id == "selection_exact")
+    rows = []
+    summary: Dict[str, Any] = {"architectures": {}, "exact_observation_count": len(exact_records)}
+    for architecture_id in ("A", "B", "C"):
+        ranked_by_observation = _ranked_candidates_for_architecture(
+            architecture_id=architecture_id,
+            benchmark=benchmark,
+            freeze=freeze,
+            records=exact_records,
+            observations=observations,
+        )
+        top1 = 0
+        eligible = 0
+        rejection_reasons = Counter()
+        nonzero_evidence = 0
+        for record in exact_records:
+            ranked = tuple(
+                evaluate_candidate_eligibility(
+                    candidate=candidate,
+                    ranked_candidates=ranked_by_observation[record.observation_id],
+                    calibration=_calibration(
+                        architecture_id=architecture_id,
+                        benchmark=benchmark,
+                        region_manifest=freeze["region_manifest"],
+                        mask_manifest=freeze["mask_manifest"],
+                        values={
+                            "minimum_available_mass": 0.0,
+                            "minimum_available_fraction": 0.0,
+                            "minimum_support": 0.0,
+                            "maximum_contradiction": 1.0,
+                            "maximum_critical_contradiction": 1.0,
+                            "exact_winner_threshold": 0.0,
+                            "exact_winner_margin": 0.0,
+                            "candidate_relative_margin": 0.0,
+                            "conflicting_action_separation": 0.0,
+                            "minimum_supporting_regions": 0,
+                            "maximum_candidate_set_size": MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+                        },
+                    ),
+                )
+                for candidate in ranked_by_observation[record.observation_id]
+            )
+            ranked = tuple(sorted(ranked, key=lambda candidate: (-float(candidate.candidate_strength), -float(candidate.available_informative_mass), -float(candidate.available_informative_fraction), float(candidate.aggregate_contradiction), float(candidate.aggregate_critical_contradiction), -int(candidate.supporting_region_count), candidate.row_id, candidate.prototype_observation_id)))
+            calibration = _calibration(
+                architecture_id=architecture_id,
+                benchmark=benchmark,
+                region_manifest=freeze["region_manifest"],
+                mask_manifest=freeze["mask_manifest"],
+                values={
+                    "minimum_available_mass": 1.0,
+                    "minimum_available_fraction": 0.25,
+                    "minimum_support": 0.0,
+                    "maximum_contradiction": 1.0 if architecture_id == "A" else 0.5,
+                    "maximum_critical_contradiction": 1.0 if architecture_id in {"A", "B"} else 0.25,
+                    "exact_winner_threshold": 0.5,
+                    "exact_winner_margin": 0.05,
+                    "candidate_relative_margin": 0.0,
+                    "conflicting_action_separation": 0.0,
+                    "minimum_supporting_regions": 0,
+                    "maximum_candidate_set_size": MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+                },
+            )
+            candidate_set = build_discriminative_candidate_set(
+                ranked_candidates=ranked,
+                calibration=calibration,
+                provider_digest=f"audit:{architecture_id}:{calibration.digest}",
+                observation_digest=ranked[0].observation_digest,
+            )
+            expected = next((candidate for candidate in ranked if candidate.row_id == record.row_id), None)
+            winner = ranked[0]
+            runner_up = ranked[1] if len(ranked) > 1 else None
+            if expected is not None and expected.available_informative_mass > 0:
+                nonzero_evidence += 1
+            if expected is not None and expected.eligible_for_candidate_set:
+                eligible += 1
+            if expected is not None and winner.row_id == record.row_id:
+                top1 += 1
+            rejection_reasons[candidate_set.rejection_reason or candidate_set.outcome] += 1
+            rows.append(
+                {
+                    "observation_id": record.observation_id,
+                    "expected_row": record.row_id,
+                    "expected_action": record.action_id,
+                    "architecture": architecture_id,
+                    "expected_mask_stability_count": None if expected is None else int(freeze["masks"][record.row_id].spec.stable_pixel_count),
+                    "expected_informative_count": None if expected is None else int(freeze["masks"][record.row_id].spec.informative_pixel_count),
+                    "expected_row_rank": None if expected is None else next((index for index, candidate in enumerate(ranked, start=1) if candidate.row_id == record.row_id), None),
+                    "expected_row_strength": None if expected is None else float(expected.candidate_strength),
+                    "available_mass": None if expected is None else float(expected.available_informative_mass),
+                    "available_fraction": None if expected is None else float(expected.available_informative_fraction),
+                    "support": None if expected is None else float(expected.aggregate_support),
+                    "contradiction": None if expected is None else float(expected.aggregate_contradiction),
+                    "critical_contradiction": None if expected is None else float(expected.aggregate_critical_contradiction),
+                    "supporting_regions": None if expected is None else int(expected.supporting_region_count),
+                    "winner": winner.row_id,
+                    "winner_action": winner.action_id,
+                    "winner_strength": float(winner.candidate_strength),
+                    "runner_up": None if runner_up is None else runner_up.row_id,
+                    "winner_margin": None if expected is None else expected.exact_winner_margin,
+                    "conflicting_action_separation": None if expected is None else expected.conflicting_action_separation,
+                    "expected_row_candidate_eligible": None if expected is None else bool(expected.eligible_for_candidate_set),
+                    "expected_row_exact_eligible": None if expected is None else bool(expected.eligible_for_exact),
+                    "candidate_ineligibility_reasons": [] if expected is None else list(expected.ineligibility_reasons),
+                    "candidate_set_outcome": candidate_set.outcome,
+                    "candidate_set_rows": list(candidate_set.rows),
+                    "rejection_reason": candidate_set.rejection_reason,
+                }
+            )
+        summary["architectures"][architecture_id] = {
+            "expected_row_top1_count": top1,
+            "expected_row_candidate_eligible_count": eligible,
+            "expected_rows_with_nonzero_evidence": nonzero_evidence,
+            "rejection_reasons": dict(sorted(rejection_reasons.items())),
+        }
+    _write_csv(output_dir / "exact-frame-audit.csv", rows)
+    _write_json(output_dir / "exact-frame-summary.json", summary)
+    return summary
+
+
+def _render_v1_ruling_markdown(ruling: Mapping[str, Any]) -> str:
+    lines = [
+        "# Stage 3 v1 measurement ruling",
+        "",
+        f"- Ruling: `{ruling['ruling']}`",
+        f"- Architecture selection usable: `{ruling['architecture_selection_usable']}`",
+        f"- Calibration status usable: `{ruling['calibration_status_usable']}`",
+        f"- Final identities usable: `{ruling['final_identities_usable']}`",
+        f"- Next permitted action: {ruling['next_permitted_action']}",
+        "",
+        "## Evidence",
+    ]
+    for item in ruling["evidence"]:
+        lines.append(f"- {item}")
+    return "\n".join(lines)
+
+
+def _classify_v1(*, regeneration: Mapping[str, Any], closure: Mapping[str, Any], exact_summary: Mapping[str, Any]) -> Dict[str, Any]:
+    evidence = []
+    generator_mismatch = not bool(regeneration["semantic_match"])
+    prototype_failure = bool(closure["missing_prototype_manifest_rows"])
+    development_failure = bool(closure["missing_development_rows"] or closure["evaluated_rows_with_zero_stability"])
+    wiring_failure = all(
+        exact_summary["architectures"][architecture_id]["expected_rows_with_nonzero_evidence"] == 0
+        for architecture_id in ("A", "B", "C")
+    )
+    if generator_mismatch:
+        evidence.append("Current committed code does not regenerate the frozen v1 artifact set semantically.")
+    if prototype_failure:
+        evidence.append("The provider prototype universe is larger than the prototype split manifest.")
+    if development_failure:
+        evidence.append("Architecture-selection rows lack development-backed stable evidence.")
+    if wiring_failure:
+        evidence.append("All audited exact frames lose expected-row evidence before the architecture-specific gates are meaningfully exercised.")
+    if generator_mismatch and (prototype_failure or development_failure or wiring_failure):
+        label = "invalid_multiple_failures"
+    elif generator_mismatch:
+        label = "invalid_generator_artifact_mismatch"
+    elif prototype_failure:
+        label = "invalid_prototype_closure"
+    elif development_failure:
+        label = "invalid_mask_development_closure"
+    elif wiring_failure:
+        label = "invalid_provider_benchmark_wiring"
+    else:
+        label = "valid_no_safe_architecture"
+        evidence.append("Committed code regenerates v1, prototype closure is complete, and exact rows retain evidence.")
+    return {
+        "ruling": label,
+        "evidence": evidence,
+        "affected_artifacts": [item["artifact"] for item in regeneration["artifacts"] if item["status"] in {"semantic_mismatch", "missing_artifact", "unexpected_artifact"}],
+        "architecture_selection_usable": label == "valid_no_safe_architecture",
+        "calibration_status_usable": label == "valid_no_safe_architecture",
+        "final_identities_usable": True,
+        "invalidation_boundary": "pre-final measurement integrity audit",
+        "next_permitted_action": (
+            "freeze_stage3_v2_measurement_amendment"
+            if label != "valid_no_safe_architecture"
+            else "stage3_v1_may_remain_negative_without_v5_or_final_evaluation"
+        ),
+    }
+
+
+def _run_audit_pre_final_v1(output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark(materialize_final=False)
+    audit_dir = output_dir / "measurement-audit"
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="stage3-v1-audit-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        _run_selection(temp_output)
+        _run_calibrate(temp_output)
+        regeneration = _artifact_comparison(output_dir, temp_output)
+        freeze = _freeze_regions_and_masks(benchmark, output_dir=temp_output)
+        closure = validate_prototype_and_development_closure(benchmark=benchmark, masks=freeze["masks"])
+        mask_coverage = _mask_coverage_report(benchmark=benchmark, masks=freeze["masks"], output_dir=audit_dir)
+        exact_summary = _audit_exact_frames(output_dir=audit_dir)
+    report = {
+        "audited_branch_head": _git_output("rev-parse", "HEAD"),
+        "audited_generator_blob_digest": _generator_source_blob_digest(),
+        "artifact_generation_commit": None,
+        "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"],
+        "split_digest": _split_manifest(benchmark)["split_digest"],
+        "architecture_grid_digest": _sha256(_architecture_grid_definition()),
+        "mask_digest": freeze["mask_manifest"]["mask_spec_digest"],
+        "region_digest": freeze["region_manifest"]["region_spec_digest"],
+        "generator_identity": _generator_identity(benchmark),
+        "current_code_sample_size_constant": NON_PROTOTYPE_ROW_SAMPLE_SIZE,
+        "committed_manifest_sample_size": _load_json(output_dir / "benchmark-manifest.json")["metadata"]["nonprototype_row_sample_size"],
+        "regeneration_audit": regeneration,
+        "prototype_and_development_closure": closure,
+        "mask_coverage_summary": {key: value for key, value in mask_coverage.items() if key != "rows"},
+        "exact_frame_summary": exact_summary,
+    }
+    ruling = _classify_v1(regeneration=regeneration, closure=closure, exact_summary=exact_summary)
+    _write_json(audit_dir / "regeneration-audit.json", report)
+    _write_json(audit_dir / "prototype-closure.json", closure)
+    _write_json(audit_dir / "v1-ruling.json", ruling)
+    _write_markdown(audit_dir / "v1-ruling.md", _render_v1_ruling_markdown(ruling))
+    result = {
+        "mode": "audit-pre-final-v1",
+        "report_digest": _sha256(report),
+        "ruling": ruling["ruling"],
+        "semantic_match": regeneration["semantic_match"],
+    }
+    if ruling["ruling"] != "valid_no_safe_architecture":
+        raise SystemExit(json.dumps(_json_ready(result), indent=2, sort_keys=True))
+    return result
+
+
+def _load_v1_ruling(output_dir: Path) -> Optional[Dict[str, Any]]:
+    path = output_dir / "measurement-audit" / "v1-ruling.json"
+    if not path.exists():
+        return None
+    payload = _load_json(path)
+    if payload.get("ruling") not in VALID_V1_RULINGS:
+        raise VPMValidationError("invalid v1 ruling payload")
+    return payload
+
+
+def _run_evaluate(output_dir: Path) -> Dict[str, Any]:
+    ruling = _load_v1_ruling(output_dir)
+    if ruling is None:
+        raise SystemExit("Stage 3 v1 evaluation is blocked until measurement-audit/v1-ruling.json exists.")
+    if ruling["ruling"] != "valid_no_safe_architecture":
+        raise SystemExit("Stage 3 v1 evaluation is blocked because the frozen measurement failed the integrity audit.")
+    raise SystemExit("Final evaluation remains intentionally blocked in this task.")
+
+
 def _stage2_diagnosis_file_digests(output_dir: Path) -> Dict[str, Any]:
     files = {
         "summary_json": output_dir / "diagnostics" / "stage2-posthoc-summary.json",
@@ -1387,6 +1906,9 @@ def main() -> None:
     parser.add_argument("--select-architecture", action="store_true")
     parser.add_argument("--calibrate", action="store_true")
     parser.add_argument("--verify-pre-final", action="store_true")
+    parser.add_argument("--audit-pre-final-v1", action="store_true")
+    parser.add_argument("--audit-v1-exact-frames", action="store_true")
+    parser.add_argument("--evaluate", action="store_true")
     args = parser.parse_args()
     if args.verify_stage2_diagnosis:
         payload = run_verify_stage2_diagnosis(args.output_dir)
@@ -1398,6 +1920,12 @@ def main() -> None:
         payload = _run_calibrate(args.output_dir)
     elif args.verify_pre_final:
         payload = _verify_pre_final(args.output_dir)
+    elif args.audit_pre_final_v1:
+        payload = _run_audit_pre_final_v1(args.output_dir)
+    elif args.audit_v1_exact_frames:
+        payload = _audit_exact_frames(output_dir=args.output_dir / "measurement-audit")
+    elif args.evaluate:
+        payload = _run_evaluate(args.output_dir)
     else:
         raise SystemExit("one stage flag is required")
     print(json.dumps(_json_ready(payload), indent=2, sort_keys=True))

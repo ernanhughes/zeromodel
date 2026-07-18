@@ -33,6 +33,16 @@ This slice establishes the dependency-light exact temporal baseline required bef
 7. an exact canonical arcade clip whose row and action sequences must reproduce the symbolic policy path;
 8. tests for ownership, identity, ordering, timestamps, shape changes, legal and impossible transitions, explicit gap recovery, stale repeated pixels, and raw-evidence retention after rejection.
 
+## Validation
+
+The implementation branch produced a clean full-suite result of:
+
+```text
+221 passed, 1 skipped
+```
+
+The repository CI matrix also passed on Python 3.10, 3.11, and 3.12, together with the Lua policy fixture, package build, Twine metadata check, claims-audit participation, and visual evidence-impact guard.
+
 ## Claim boundary
 
 Valid wording after this slice passes CI:

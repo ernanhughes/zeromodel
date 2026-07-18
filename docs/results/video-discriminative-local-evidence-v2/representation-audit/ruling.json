@@ -1,0 +1,29 @@
+{
+  "architecture_a_ruling": "architecture_a_implementation_defect",
+  "architecture_b_ruling": "pointwise_representation_limitation",
+  "architecture_c_ruling": "pointwise_representation_limitation",
+  "benchmark_wiring_ruling": "valid",
+  "diagnostic_top1": {
+    "J1": 112,
+    "J2": 112,
+    "J3": 112,
+    "J4": 112
+  },
+  "exact_tie_ruling": "exact_tie_implementation_defect",
+  "identity_integrity_ruling": "valid",
+  "mask_separation_ruling": "implementation_conformance_defect",
+  "pointwise_support_ruling": "pointwise_representation_limitation",
+  "primary_ruling": "multiple_representation_failures",
+  "provider_wiring_ruling": "valid",
+  "supported_v2_claim": "Stage 3 v2 established a reproducible, fully closed benchmark and showed that the frozen V4 implementation is not a valid architecture-selection instrument: its pointwise evidence representation collapses unique compositional exact rows into zero-strength ties, Architecture A does not independently exercise its declared correlation mechanism, and exact tie handling can convert lexical ordering into apparent uniqueness.",
+  "unsupported_claims": [
+    "no safe discriminative visual reader exists",
+    "candidate sets are scientifically useless",
+    "joint evidence cannot work",
+    "temporal narrowing cannot work",
+    "local correlation cannot work",
+    "the policy rows are visually indistinguishable",
+    "Kill B",
+    "final performance conclusions"
+  ]
+}

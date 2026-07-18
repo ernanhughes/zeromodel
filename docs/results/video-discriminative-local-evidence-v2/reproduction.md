@@ -1,0 +1,1 @@
+Rebuild with `python examples/arcade_visual_video_discriminative_evidence_benchmark.py --freeze-benchmark-v2`, then validate with `--verify-v2-benchmark`, `--select-architecture-v2`, `--calibrate-v2`, and `--verify-pre-final-v2`.

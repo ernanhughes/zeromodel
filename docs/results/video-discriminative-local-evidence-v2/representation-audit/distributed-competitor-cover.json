@@ -1,0 +1,790 @@
+{
+  "distributed_competitor_cover_row_count": 112,
+  "row_count": 112,
+  "rows": [
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=0|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=0|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=1|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=1|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=2|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=2|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=3|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=0|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=0|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=1|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=1|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=2|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=2|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=3|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=1|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=1|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=2|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=2|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=3|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=2|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=2|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=3|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=3|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=4|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=3|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=2|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=3|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=3|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=4|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=4|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=5|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=4|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=2|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=3|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=3|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=4|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=4|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=5|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=5|cooldown=1"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=6|cooldown=0"
+    },
+    {
+      "action_id": "RIGHT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=5|target=none|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=0|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=0|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=1|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=1|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=2|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=2|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=3|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=3|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=4|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=4|cooldown=1"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=5|cooldown=0"
+    },
+    {
+      "action_id": "LEFT",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=5|cooldown=1"
+    },
+    {
+      "action_id": "FIRE",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=6|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=6|cooldown=1"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=none|cooldown=0"
+    },
+    {
+      "action_id": "STAY",
+      "different_competitors_with_matching_pixels": 111,
+      "distributed_competitor_cover": true,
+      "minimum_competitor_cover_size": 2,
+      "row_id": "tank=6|target=none|cooldown=1"
+    }
+  ]
+}

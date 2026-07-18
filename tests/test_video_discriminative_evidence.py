@@ -1,17 +1,23 @@
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 from zeromodel.artifact import VPMValidationError
 from zeromodel.video_discriminative_evidence import (
+    DiscriminativeMask,
     DiscriminativeCandidateSet,
     DiscriminativeEvidenceCalibration,
     DiscriminativeMaskSpec,
     DiscriminativeRegionSpec,
+    InformativeRegistrationResult,
     RegionDiscriminativeEvidence,
+    build_discriminative_masks,
     discriminative_mask_digest,
     discriminative_provider_contract,
     discriminative_region_digest,
+    extract_candidate_region_evidence,
+    register_informative_translation,
 )
 from zeromodel.visual_registration import RegistrationConfig
 
@@ -170,3 +176,131 @@ def test_discriminative_candidate_set_requires_exact_row_only_for_exact_outcome(
             actions=("LEFT",),
             candidate_digest="sha256:candidates",
         )
+
+
+def test_register_informative_translation_prefers_higher_available_mass_under_distance_tie() -> None:
+    prototype = np.array(
+        [
+            [255, 0, 255],
+        ],
+        dtype=np.uint8,
+    )
+    observation = np.array(
+        [
+            [0, 255, 0],
+        ],
+        dtype=np.uint8,
+    )
+    informative = np.array(
+        [
+            [1.0, 0.0, 0.0],
+        ],
+        dtype=np.float32,
+    )
+    result = register_informative_translation(
+        prototype,
+        observation,
+        informative_weights=informative,
+        region_id="cooldown_indicator",
+        config=RegistrationConfig(max_dx=1, max_dy=0, minimum_overlap_fraction=0.5),
+    )
+    assert isinstance(result, InformativeRegistrationResult)
+    assert (result.dx, result.dy) == (-1, 0)
+    assert result.tie_break_reason == "available_informative_mass"
+    assert result.available_informative_mass == pytest.approx(1.0)
+    assert result.runner_up_dx == 1
+
+
+def test_build_discriminative_masks_uses_conservative_zero_stability_without_development() -> None:
+    prototypes = {
+        "obs-a": ("row-a", "LEFT", "sha256:a", np.array([[0, 255], [0, 0]], dtype=np.uint8)),
+        "obs-b": ("row-b", "RIGHT", "sha256:b", np.array([[255, 255], [0, 0]], dtype=np.uint8)),
+    }
+    masks = build_discriminative_masks(
+        prototypes=prototypes,
+        development_observations={},
+        intensity_tolerance=0,
+        stability_tolerance=0,
+        separation_cap=255,
+    )
+    assert set(masks) == {"row-a", "row-b"}
+    assert masks["row-a"].spec.stable_pixel_count == 0
+    assert float(masks["row-a"].stable_weights.sum()) == pytest.approx(0.0)
+
+
+def test_extract_candidate_region_evidence_tracks_support_and_conflicting_contradiction() -> None:
+    candidate = np.array(
+        [
+            [0, 255],
+            [255, 255],
+        ],
+        dtype=np.uint8,
+    )
+    same_action = np.array(
+        [
+            [255, 255],
+            [255, 255],
+        ],
+        dtype=np.uint8,
+    )
+    conflicting = np.array(
+        [
+            [255, 0],
+            [255, 255],
+        ],
+        dtype=np.uint8,
+    )
+    observation = np.array(
+        [
+            [0, 0],
+            [255, 255],
+        ],
+        dtype=np.uint8,
+    )
+    spec = DiscriminativeMaskSpec(
+        mask_id="row-a|mask",
+        row_id="row-a",
+        action_id="LEFT",
+        shape=(2, 2),
+        informative_pixel_count=2,
+        action_conflict_pixel_count=2,
+        stable_pixel_count=4,
+        prototype_digest="sha256:a",
+        development_digest="sha256:dev",
+        derivation_contract="test",
+        intensity_tolerance=0,
+    )
+    mask = DiscriminativeMask(
+        spec=spec,
+        row_informative_weights=np.array([[1.0, 1.0], [0.0, 0.0]], dtype=np.float32),
+        action_conflict_weights=np.array([[1.0, 1.0], [0.0, 0.0]], dtype=np.float32),
+        stable_weights=np.ones((2, 2), dtype=np.float32),
+        separation_weights=np.ones((2, 2), dtype=np.float32),
+    )
+    evidence = extract_candidate_region_evidence(
+        candidate_row_id="row-a",
+        candidate_action_id="LEFT",
+        candidate_prototype=candidate,
+        observation=observation,
+        mask=mask,
+        competing_prototypes={
+            "same": ("row-b", "LEFT", "sha256:b", same_action),
+            "conflict": ("row-c", "RIGHT", "sha256:c", conflicting),
+        },
+        region=DiscriminativeRegionSpec(
+            region_id="target",
+            top=0,
+            left=0,
+            height=2,
+            width=2,
+            weight=1.0,
+            critical=True,
+            registration_config=RegistrationConfig(max_dx=0, max_dy=0, minimum_overlap_fraction=1.0),
+        ),
+    )
+    assert evidence.available_informative_mass == pytest.approx(2.0)
+    assert evidence.support_mass == pytest.approx(1.0)
+    assert evidence.contradiction_mass == pytest.approx(1.0)
+    assert evidence.critical_contradiction_mass == pytest.approx(1.0)
+    assert evidence.conflicting_action_support_mass == pytest.approx(1.0)
+    assert evidence.conflicting_action_contradiction_mass == pytest.approx(1.0)

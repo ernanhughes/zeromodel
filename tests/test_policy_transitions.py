@@ -3,7 +3,10 @@ from __future__ import annotations
 import pytest
 
 from zeromodel.artifact import VPMValidationError
-from zeromodel.policy_transitions import PolicyTransitionSpec
+from zeromodel.policy_transitions import (
+    ROW_UNION_TRANSITION_SCOPE,
+    PolicyTransitionSpec,
+)
 
 
 def _spec() -> PolicyTransitionSpec:
@@ -32,8 +35,27 @@ def test_transition_identity_round_trips() -> None:
     loaded = PolicyTransitionSpec.from_dict(spec.to_dict())
     assert loaded.spec_id == spec.spec_id
     assert loaded.row_ids == ("A", "B", "C")
+    assert loaded.transition_scope == ROW_UNION_TRANSITION_SCOPE
 
 
 def test_transition_graph_rejects_unknown_destinations() -> None:
     with pytest.raises(VPMValidationError, match="unknown rows"):
         PolicyTransitionSpec(allowed_row_transitions={"A": ("B",)})
+
+
+def test_transition_scope_rejects_unimplemented_action_conditioning() -> None:
+    with pytest.raises(VPMValidationError, match="action-conditioned transitions are not implemented"):
+        PolicyTransitionSpec.from_dict(
+            {
+                "allowed_row_transitions": {"A": ["A"]},
+                "action_conditioned": True,
+            }
+        )
+
+
+def test_transition_spec_rejects_unsupported_transition_scope() -> None:
+    with pytest.raises(VPMValidationError, match="unsupported transition_scope"):
+        PolicyTransitionSpec(
+            allowed_row_transitions={"A": ("A",)},
+            transition_scope="action_conditioned",
+        )

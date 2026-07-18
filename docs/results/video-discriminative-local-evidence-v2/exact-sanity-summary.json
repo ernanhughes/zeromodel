@@ -1,0 +1,19 @@
+{
+  "architectures": {
+    "A": {
+      "observation_count": 12,
+      "unique_exact_expected_row_top1_count": 1
+    },
+    "B": {
+      "observation_count": 12,
+      "unique_exact_expected_row_top1_count": 1
+    },
+    "C": {
+      "observation_count": 12,
+      "unique_exact_expected_row_top1_count": 1
+    }
+  },
+  "direct_provider_equivalence": true,
+  "observation_count": 12,
+  "sanity_valid": false
+}

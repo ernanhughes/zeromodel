@@ -1,0 +1,435 @@
+{
+  "amendment_commit_sha": "6e1e18a8613085b63040283ac3b785b183294357",
+  "benchmark_version": "zeromodel-video-discriminative-evidence-stage3/v2",
+  "evaluation_sample_row_ids": [
+    "tank=0|target=none|cooldown=0",
+    "tank=0|target=3|cooldown=1",
+    "tank=1|target=0|cooldown=0",
+    "tank=1|target=4|cooldown=1",
+    "tank=2|target=1|cooldown=0",
+    "tank=2|target=5|cooldown=1",
+    "tank=3|target=2|cooldown=0",
+    "tank=3|target=6|cooldown=1",
+    "tank=4|target=3|cooldown=0",
+    "tank=5|target=none|cooldown=1",
+    "tank=3|target=3|cooldown=0",
+    "tank=6|target=6|cooldown=1"
+  ],
+  "evaluation_sample_size": 12,
+  "family_definitions": {
+    "architecture_selection_benign": [
+      [
+        "selection_exact",
+        "exact frames"
+      ],
+      [
+        "selection_translation_x",
+        "horizontal translations"
+      ],
+      [
+        "selection_translation_y",
+        "vertical translations"
+      ],
+      [
+        "selection_translation_xy",
+        "two-axis translations"
+      ],
+      [
+        "selection_photometric",
+        "mild photometric changes"
+      ],
+      [
+        "selection_noncritical_occlusion",
+        "noncritical occlusion"
+      ],
+      [
+        "selection_critical_partial",
+        "critical-region partial occlusion"
+      ],
+      [
+        "selection_translation_photometric",
+        "translation plus photometric change"
+      ],
+      [
+        "selection_translation_occlusion",
+        "translation plus occlusion"
+      ],
+      [
+        "selection_repeated_state",
+        "legitimate repeated-state frames"
+      ],
+      [
+        "selection_same_action_ambiguous",
+        "same-action ambiguous rows"
+      ],
+      [
+        "selection_mixed_action_ambiguous",
+        "mixed-action ambiguous rows"
+      ]
+    ],
+    "architecture_selection_negative": [
+      [
+        "selection_negative_critical_removed",
+        "critical evidence removal"
+      ],
+      [
+        "selection_negative_action_critical_removed",
+        "action-critical evidence removal"
+      ],
+      [
+        "selection_negative_same_action_wrong_row",
+        "same-action wrong-row construction"
+      ],
+      [
+        "selection_negative_conflicting_action",
+        "conflicting-action near neighbour"
+      ],
+      [
+        "selection_negative_compositional_invalid",
+        "compositional invalid observation"
+      ],
+      [
+        "selection_negative_conflicting_regions",
+        "conflicting regional evidence"
+      ],
+      [
+        "selection_negative_out_of_bounds",
+        "out-of-bounds translation"
+      ]
+    ],
+    "benign_calibration": [
+      [
+        "calibration_exact",
+        "fresh exact frames"
+      ],
+      [
+        "calibration_translation_x",
+        "fresh horizontal translations"
+      ],
+      [
+        "calibration_translation_xy",
+        "fresh two-axis translations"
+      ],
+      [
+        "calibration_photometric",
+        "fresh photometric changes"
+      ],
+      [
+        "calibration_occlusion",
+        "fresh noncritical occlusion"
+      ],
+      [
+        "calibration_same_action_ambiguous",
+        "fresh same-action ambiguity"
+      ],
+      [
+        "calibration_mixed_action_ambiguous",
+        "fresh mixed-action ambiguity"
+      ]
+    ],
+    "diagnostic_development": [
+      [
+        "development_photometric",
+        "mild photometric variation for mask stability"
+      ],
+      [
+        "development_shift",
+        "bounded translation variation for mask stability"
+      ]
+    ],
+    "final_benign": [
+      [
+        "final_exact",
+        "frozen future exact family"
+      ],
+      [
+        "final_translation",
+        "frozen future translation family"
+      ],
+      [
+        "final_photometric",
+        "frozen future photometric family"
+      ],
+      [
+        "final_occlusion",
+        "frozen future occlusion family"
+      ]
+    ],
+    "final_distinguishable_negative": [
+      [
+        "final_negative_critical_removed",
+        "frozen future critical removal"
+      ],
+      [
+        "final_negative_conflicting_action",
+        "frozen future conflicting-action neighbour"
+      ],
+      [
+        "final_negative_compositional_invalid",
+        "frozen future compositional invalid"
+      ]
+    ],
+    "information_theoretic_control": [
+      [
+        "final_information_control",
+        "frozen future information-theoretic controls"
+      ]
+    ],
+    "prototype": [
+      [
+        "prototype_clean_v2",
+        "canonical prototype observations"
+      ]
+    ],
+    "rejection_calibration": [
+      [
+        "calibration_negative_critical_removed",
+        "fresh critical evidence removal"
+      ],
+      [
+        "calibration_negative_action_critical_removed",
+        "fresh action-critical evidence removal"
+      ],
+      [
+        "calibration_negative_same_action_wrong_row",
+        "fresh same-action wrong-row"
+      ],
+      [
+        "calibration_negative_conflicting_action",
+        "fresh conflicting-action neighbour"
+      ],
+      [
+        "calibration_negative_compositional_invalid",
+        "fresh compositional invalid"
+      ],
+      [
+        "calibration_negative_conflicting_regions",
+        "fresh conflicting regions"
+      ],
+      [
+        "calibration_negative_out_of_bounds",
+        "fresh out-of-bounds translation"
+      ]
+    ]
+  },
+  "generator_identity_digest": "sha256:775a9c10838d8ed34d8158fe7f68a2816f9643f5144d809ea23428831abff12e",
+  "generator_version": "zeromodel-video-discriminative-generator/v2",
+  "grid_definitions": {
+    "A": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ]
+    },
+    "B": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ],
+      "minimum_support": [
+        0.0,
+        0.4
+      ]
+    },
+    "C": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "maximum_contradiction": [
+        0.5
+      ],
+      "maximum_critical_contradiction": [
+        0.0,
+        0.25
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ],
+      "minimum_support": [
+        0.0,
+        0.4
+      ],
+      "minimum_supporting_regions": [
+        0
+      ]
+    },
+    "D": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "maximum_contradiction": [
+        0.5
+      ],
+      "maximum_critical_contradiction": [
+        0.0,
+        0.25
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ],
+      "minimum_support": [
+        0.0,
+        0.4
+      ],
+      "minimum_supporting_regions": [
+        0
+      ]
+    }
+  },
+  "mask_parameters": {
+    "intensity_tolerance": 8,
+    "separation_cap": 64,
+    "stability_tolerance": 12
+  },
+  "region_definitions": [
+    {
+      "critical": true,
+      "height": 6,
+      "left": 0,
+      "metadata": {
+        "reason_for_inclusion": "target alignment and ambiguity",
+        "semantic_role": "target evidence"
+      },
+      "region_id": "target_band",
+      "registration_config": {
+        "max_dx": 2,
+        "max_dy": 2,
+        "metric": "normalized_l2",
+        "minimum_overlap_fraction": 0.5,
+        "padding_value": 0,
+        "version": "zeromodel-registration-config/v1"
+      },
+      "top": 0,
+      "version": "zeromodel-video-discriminative-region-spec/v1",
+      "weight": 2.0,
+      "width": 28
+    },
+    {
+      "critical": true,
+      "height": 2,
+      "left": 25,
+      "metadata": {
+        "reason_for_inclusion": "action-critical evidence",
+        "semantic_role": "cooldown evidence"
+      },
+      "region_id": "cooldown_indicator",
+      "registration_config": {
+        "max_dx": 2,
+        "max_dy": 2,
+        "metric": "normalized_l2",
+        "minimum_overlap_fraction": 0.5,
+        "padding_value": 0,
+        "version": "zeromodel-registration-config/v1"
+      },
+      "top": 7,
+      "version": "zeromodel-video-discriminative-region-spec/v1",
+      "weight": 1.5,
+      "width": 2
+    },
+    {
+      "critical": true,
+      "height": 4,
+      "left": 0,
+      "metadata": {
+        "reason_for_inclusion": "pose and local displacement evidence",
+        "semantic_role": "tank evidence"
+      },
+      "region_id": "tank_band",
+      "registration_config": {
+        "max_dx": 2,
+        "max_dy": 2,
+        "metric": "normalized_l2",
+        "minimum_overlap_fraction": 0.5,
+        "padding_value": 0,
+        "version": "zeromodel-registration-config/v1"
+      },
+      "top": 10,
+      "version": "zeromodel-video-discriminative-region-spec/v1",
+      "weight": 2.0,
+      "width": 28
+    }
+  ],
+  "repository_commit_sha": "6e1e18a8613085b63040283ac3b785b183294357",
+  "sampling_algorithm_version": "step_sample_with_midpoint_and_last_dedup/v1",
+  "seed_digest": "sha256:d740c41178cfe660b3d10d680eafc1f6e20177ba2968ebb5057aa99abd2652cd",
+  "seed_material": "zeromodel-stage3-v2-final|6e1e18a8613085b63040283ac3b785b183294357",
+  "source_file_digests": {
+    "examples/arcade_shooter_policy.py": "sha256:7d444214c9419693dfd37dbe6c63cb21caf08856885d0e4792705e385eeb75ea",
+    "examples/arcade_visual_sign_reader.py": "sha256:2b885017bf928a292b4308dcc6873b18c5bd7249b0b63fb1b81f73731f5c7572",
+    "examples/arcade_visual_video_discriminative_evidence_benchmark.py": "sha256:5b3478d7717bd20e7515f578e986565ebbd318cfa2fe80bd5b7b0ed26e1ecd1a",
+    "zeromodel/video_discriminative_evidence.py": "sha256:2ca6f4570dea202eae6256365757cbe2cf6cd2b65e108e085eaa1ac9de57906f",
+    "zeromodel/visual_registration.py": "sha256:8dcbb900daee3acce862865a4145f815200aa09df3e883927b7e61450958cbb4"
+  }
+}

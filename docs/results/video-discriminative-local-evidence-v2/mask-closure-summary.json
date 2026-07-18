@@ -1,0 +1,10 @@
+{
+  "closure_valid": true,
+  "development_covered_row_count": 112,
+  "mask_closure_digest": "sha256:9aa9a97037ee67f8d1d0e0ed17f61ed3be7417e66f72ccf69be9932c01d45aeb",
+  "mask_count": 112,
+  "masks_with_development_closure": 112,
+  "masks_with_nonzero_effective_evidence": 112,
+  "provider_prototype_count": 112,
+  "remaining_zero_evidence_masks": 0
+}

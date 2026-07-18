@@ -1,0 +1,52 @@
+name: Video diagnostics
+
+on:
+  pull_request:
+    paths:
+      - "zeromodel/video.py"
+      - "zeromodel/video_policy.py"
+      - "zeromodel/policy_transitions.py"
+      - "tests/test_video_source.py"
+      - "tests/test_video_policy.py"
+      - "tests/test_policy_transitions.py"
+      - "examples/arcade_visual_video_baseline.py"
+      - ".github/workflows/video-diagnostics.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  focused-video-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install package and tests
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+      - name: Capture focused pytest output
+        id: focused
+        shell: bash
+        run: |
+          set +e
+          python -m pytest -q \
+            tests/test_video_source.py \
+            tests/test_policy_transitions.py \
+            tests/test_video_policy.py \
+            --tb=short > video-test-output.txt 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          cat video-test-output.txt
+          exit 0
+      - name: Upload diagnostic output
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-test-output
+          path: video-test-output.txt
+          if-no-files-found: error
+      - name: Enforce focused test result
+        run: test "${{ steps.focused.outputs.exit_code }}" = "0"

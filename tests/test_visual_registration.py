@@ -108,6 +108,28 @@ def test_deterministic_displacement_tie_break_prefers_smallest_manhattan() -> No
     assert (result.dx, result.dy) == (0, 0)
 
 
+def test_stage2_registration_keeps_tiny_region_overlap_pathology_unchanged() -> None:
+    prototype = np.array(
+        [
+            [255, 0],
+            [255, 0],
+        ],
+        dtype=np.uint8,
+    )
+    observation = np.array(
+        [
+            [0, 255],
+            [0, 255],
+        ],
+        dtype=np.uint8,
+    )
+    config = RegistrationConfig(max_dx=1, max_dy=0, minimum_overlap_fraction=0.5)
+    result = register_integer_translation(prototype, observation, config=config)
+    assert (result.dx, result.dy) == (-1, 0)
+    assert result.distance_after == pytest.approx(0.0)
+    assert result.overlap_fraction == pytest.approx(0.5)
+
+
 def test_config_digest_is_stable() -> None:
     left = RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6)
     right = RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6)

@@ -1,0 +1,137 @@
+{
+  "definition": {
+    "A": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ]
+    },
+    "B": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ],
+      "minimum_support": [
+        0.0,
+        0.4
+      ]
+    },
+    "C": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "maximum_contradiction": [
+        0.5
+      ],
+      "maximum_critical_contradiction": [
+        0.0,
+        0.25
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ],
+      "minimum_support": [
+        0.0,
+        0.4
+      ],
+      "minimum_supporting_regions": [
+        0
+      ]
+    },
+    "D": {
+      "candidate_relative_margin": [
+        0.0
+      ],
+      "conflicting_action_separation": [
+        0.0
+      ],
+      "exact_winner_margin": [
+        0.05,
+        0.15
+      ],
+      "exact_winner_threshold": [
+        0.5
+      ],
+      "maximum_candidate_set_size": [
+        3
+      ],
+      "maximum_contradiction": [
+        0.5
+      ],
+      "maximum_critical_contradiction": [
+        0.0,
+        0.25
+      ],
+      "minimum_available_fraction": [
+        0.25
+      ],
+      "minimum_available_mass": [
+        1.0,
+        2.0
+      ],
+      "minimum_support": [
+        0.0,
+        0.4
+      ],
+      "minimum_supporting_regions": [
+        0
+      ]
+    }
+  },
+  "digest": "sha256:276f9d872f61b73468e3b1b6ac767682a9a4cb244ec36582c68524d82ade703e"
+}

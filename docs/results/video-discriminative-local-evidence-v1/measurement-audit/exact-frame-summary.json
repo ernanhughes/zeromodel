@@ -1,0 +1,29 @@
+{
+  "architectures": {
+    "A": {
+      "expected_row_candidate_eligible_count": 4,
+      "expected_row_top1_count": 3,
+      "expected_rows_with_nonzero_evidence": 4,
+      "rejection_reasons": {
+        "exact_row_accepted": 4
+      }
+    },
+    "B": {
+      "expected_row_candidate_eligible_count": 4,
+      "expected_row_top1_count": 3,
+      "expected_rows_with_nonzero_evidence": 4,
+      "rejection_reasons": {
+        "exact_row_accepted": 4
+      }
+    },
+    "C": {
+      "expected_row_candidate_eligible_count": 4,
+      "expected_row_top1_count": 3,
+      "expected_rows_with_nonzero_evidence": 4,
+      "rejection_reasons": {
+        "exact_row_accepted": 4
+      }
+    }
+  },
+  "exact_observation_count": 4
+}

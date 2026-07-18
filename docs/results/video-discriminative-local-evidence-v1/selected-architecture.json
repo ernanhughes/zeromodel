@@ -1,0 +1,20 @@
+{
+  "all_results_digest": "sha256:0b90f34df9eede1eeeefba473313b74274c3a9c7606bd4a5159e576a796a8795",
+  "architecture_selection_split_digest": "sha256:d30ba26e59d144eba300ed2608347319d40591d106ee0b56c015e3a6b1ac5342",
+  "benchmark_digest": "sha256:74d2a443e7d651dac0c0ad352d85c08ec75f910768030a7995548b04325df2f4",
+  "d_gateway_digest": "sha256:1c1964c7d5106173310bab0d831fc298d3e99de4621f7430360d7b6f43fa5f0b",
+  "grid_digest": "sha256:276f9d872f61b73468e3b1b6ac767682a9a4cb244ec36582c68524d82ade703e",
+  "mask_digest": "sha256:0f8d8e9f53bf68d68cd4568b0e5c5f05b4e51350fc8fe09034da656f0656f890",
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "region_digest": "sha256:d50e49a1940e0c2b1c730996b369b0064d65af77dfcfb706e0a21f1e7be59774",
+  "selected_architecture": null,
+  "selected_calibration_digest": null,
+  "selection_status": "no_safe_architecture",
+  "simplicity_order": {
+    "A": 0,
+    "B": 1,
+    "C": 2,
+    "D": 3
+  },
+  "source_scope": "arcade-visual-local-evidence-v3"
+}

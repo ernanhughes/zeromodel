@@ -47,12 +47,18 @@ from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"
+OUTPUT_DIR_V2 = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v2"
 DIAGNOSTICS_DIR = OUTPUT_DIR / "diagnostics"
 MEASUREMENT_AUDIT_DIR = OUTPUT_DIR / "measurement-audit"
 BENCHMARK_VERSION = "zeromodel-video-discriminative-evidence-stage3/v1"
 BENCHMARK_GENERATOR_VERSION = "zeromodel-video-discriminative-generator/v1"
+BENCHMARK_VERSION_V2 = "zeromodel-video-discriminative-evidence-stage3/v2"
+BENCHMARK_GENERATOR_VERSION_V2 = "zeromodel-video-discriminative-generator/v2"
 PREREGISTRATION_COMMIT = "e6d3c2461a3e7fc783026907aa1ab5b803c878f3"
 FINAL_SEED_MATERIAL = f"zeromodel-stage3-final-v1|{PREREGISTRATION_COMMIT}"
+V2_AMENDMENT_COMMIT = "6e1e18a8613085b63040283ac3b785b183294357"
+FINAL_SEED_MATERIAL_V2 = f"zeromodel-stage3-v2-final|{V2_AMENDMENT_COMMIT}"
+FINAL_SEED_DIGEST_V2 = "sha256:d740c41178cfe660b3d10d680eafc1f6e20177ba2968ebb5057aa99abd2652cd"
 STAGE2_PARENT_COMMIT = "d00e18b67fbe2f62617cd0ac47c7ee2f63487cb8"
 STAGE2_BENCHMARK_DIGEST = "sha256:589bb074e1b53b06657cfb75bf7b8d67eae43cc5f76e7237ab07f23ccca49c75"
 STAGE2_SPLIT_DIGEST = "sha256:d25b694b3cce93bf93f58239163331f3f6370d32a2b5cce53b4541902b0f8c23"
@@ -60,6 +66,7 @@ MAXIMUM_USEFUL_CANDIDATE_SET_SIZE = 3
 SELECTION_NEGATIVE_CANDIDATE_SET_SUPPORT_BLOCKS_FEASIBILITY = True
 SIMPLICITY_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3}
 NON_PROTOTYPE_ROW_SAMPLE_SIZE = 4
+EVALUATION_ROW_SAMPLE_SIZE = 12
 SPLIT_ROLES = (
     "prototype",
     "diagnostic_development",
@@ -92,6 +99,33 @@ VALID_V1_RULINGS = {
     "invalid_provider_benchmark_wiring",
     "invalid_multiple_failures",
 }
+V2_BENCHMARK_BASE_ARTIFACT_NAMES = (
+    "README.md",
+    "generator-identity.json",
+    "prototype-manifest.json",
+    "development-manifest.json",
+    "evaluation-sample.json",
+    "prototype-collision-atlas.json",
+    "prototype-collision-atlas.csv",
+    "benchmark-manifest.json",
+    "split-manifest.json",
+    "region-manifest.json",
+    "mask-manifest.json",
+    "mask-closure.csv",
+    "mask-closure-summary.json",
+    "exact-sanity.csv",
+    "exact-sanity-summary.json",
+    "phase-access-audits.json",
+    "architecture-grid-definition.json",
+    "reproduction.md",
+)
+V2_PREFINAL_ARTIFACT_NAMES = V2_BENCHMARK_BASE_ARTIFACT_NAMES + (
+    "architecture-grid.csv",
+    "architecture-d-gateway.json",
+    "selected-architecture.json",
+    "selected-operating-point.json",
+    "pre-final-verification.json",
+)
 
 
 def _json_ready(value: Any) -> Any:
@@ -264,6 +298,20 @@ class Stage3Benchmark:
         return (selected, {record.observation_id: self.observations[record.observation_id] for record in selected if record.materialized})
 
 
+@dataclass(frozen=True)
+class Stage3VersionConfig:
+    benchmark_version: str
+    generator_version: str
+    output_dir: Path
+    seed_material: str
+    seed_digest: str
+    sample_size: int
+    observation_prefix: str
+    prototype_family_id: str
+    amendment_commit: Optional[str] = None
+    preregistration_commit: Optional[str] = None
+
+
 def _canonical_rows(config: ShooterConfig) -> Tuple[Tuple[str, str, ImageObservation], ...]:
     policy = compile_policy_artifact(config)
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
@@ -282,6 +330,26 @@ def _sample_nonprototype_rows(rows: Sequence[Tuple[str, str, ImageObservation]])
         return tuple(rows)
     step = max(1, len(rows) // NON_PROTOTYPE_ROW_SAMPLE_SIZE)
     selected = list(rows[::step][: NON_PROTOTYPE_ROW_SAMPLE_SIZE - 2])
+    selected.append(rows[len(rows) // 2])
+    selected.append(rows[-1])
+    deduped = []
+    seen = set()
+    for row in selected:
+        if row[0] not in seen:
+            seen.add(row[0])
+            deduped.append(row)
+    return tuple(deduped)
+
+
+def _sample_evaluation_rows(
+    rows: Sequence[Tuple[str, str, ImageObservation]],
+    *,
+    sample_size: int,
+) -> Tuple[Tuple[str, str, ImageObservation], ...]:
+    if len(rows) <= sample_size:
+        return tuple(rows)
+    step = max(1, len(rows) // sample_size)
+    selected = list(rows[::step][: sample_size - 2])
     selected.append(rows[len(rows) // 2])
     selected.append(rows[-1])
     deduped = []
@@ -337,6 +405,46 @@ def _generator_identity(benchmark: Stage3Benchmark) -> Dict[str, Any]:
         "transformation_family_definitions": _json_ready(family_definitions),
         "transformation_family_digest": _sha256(family_definitions),
         "current_head": _git_output("rev-parse", "HEAD"),
+    }
+    identity["generator_identity_digest"] = _sha256(identity)
+    return identity
+
+
+def _file_blob_digest(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _generator_identity_v2(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    config = _stage3_v2_config()
+    source_files = [
+        REPO_ROOT / "examples" / "arcade_visual_video_discriminative_evidence_benchmark.py",
+        REPO_ROOT / "examples" / "arcade_visual_sign_reader.py",
+        REPO_ROOT / "examples" / "arcade_shooter_policy.py",
+        REPO_ROOT / "zeromodel" / "video_discriminative_evidence.py",
+        REPO_ROOT / "zeromodel" / "visual_registration.py",
+    ]
+    file_digests = {str(path.relative_to(REPO_ROOT)).replace("\\", "/"): _file_blob_digest(path) for path in source_files}
+    rows = _canonical_rows(ShooterConfig())
+    sample = _sample_evaluation_rows(rows, sample_size=config.sample_size)
+    identity = {
+        "repository_commit_sha": _git_output("rev-parse", "HEAD"),
+        "benchmark_version": config.benchmark_version,
+        "generator_version": config.generator_version,
+        "amendment_commit_sha": config.amendment_commit,
+        "evaluation_sample_size": config.sample_size,
+        "sampling_algorithm_version": "step_sample_with_midpoint_and_last_dedup/v1",
+        "family_definitions": _json_ready(_split_family_definitions_v2()),
+        "region_definitions": [region.to_dict() for region in _region_manifest()],
+        "mask_parameters": {
+            "intensity_tolerance": 8,
+            "stability_tolerance": 12,
+            "separation_cap": 64,
+        },
+        "grid_definitions": _architecture_grid_definition(),
+        "seed_material": config.seed_material,
+        "seed_digest": config.seed_digest,
+        "source_file_digests": file_digests,
+        "evaluation_sample_row_ids": [row_id for row_id, _action_id, _observation in sample],
     }
     identity["generator_identity_digest"] = _sha256(identity)
     return identity
@@ -462,6 +570,38 @@ def _split_family_definitions() -> Mapping[str, Sequence[Tuple[str, str]]]:
 
 def _make_observation_id(split: str, family_id: str, row_id: str, variant: int) -> str:
     return f"{split}:{family_id}:{row_id}:{variant:02d}"
+
+
+def _stage3_v1_config() -> Stage3VersionConfig:
+    return Stage3VersionConfig(
+        benchmark_version=BENCHMARK_VERSION,
+        generator_version=BENCHMARK_GENERATOR_VERSION,
+        output_dir=OUTPUT_DIR,
+        seed_material=FINAL_SEED_MATERIAL,
+        seed_digest=_sha256(FINAL_SEED_MATERIAL),
+        sample_size=NON_PROTOTYPE_ROW_SAMPLE_SIZE,
+        observation_prefix="v1",
+        prototype_family_id="prototype_clean",
+        preregistration_commit=PREREGISTRATION_COMMIT,
+    )
+
+
+def _stage3_v2_config() -> Stage3VersionConfig:
+    return Stage3VersionConfig(
+        benchmark_version=BENCHMARK_VERSION_V2,
+        generator_version=BENCHMARK_GENERATOR_VERSION_V2,
+        output_dir=OUTPUT_DIR_V2,
+        seed_material=FINAL_SEED_MATERIAL_V2,
+        seed_digest=FINAL_SEED_DIGEST_V2,
+        sample_size=EVALUATION_ROW_SAMPLE_SIZE,
+        observation_prefix="v2",
+        prototype_family_id="prototype_clean_v2",
+        amendment_commit=V2_AMENDMENT_COMMIT,
+    )
+
+
+def _make_observation_id_for_config(config: Stage3VersionConfig, split: str, family_id: str, row_id: str, variant: int) -> str:
+    return f"{config.observation_prefix}:{split}:{family_id}:{row_id}:{variant:02d}"
 
 
 def _build_stage3_benchmark(*, materialize_final: bool = False) -> Stage3Benchmark:
@@ -621,14 +761,207 @@ def _build_stage3_benchmark(*, materialize_final: bool = False) -> Stage3Benchma
     )
 
 
+def _split_family_definitions_v2() -> Mapping[str, Sequence[Tuple[str, str]]]:
+    families = dict(_split_family_definitions())
+    families["prototype"] = (("prototype_clean_v2", "canonical prototype observations"),)
+    return families
+
+
+def _build_stage3_benchmark_v2(*, materialize_final: bool = False) -> Stage3Benchmark:
+    config = _stage3_v2_config()
+    shooter = ShooterConfig()
+    policy = compile_policy_artifact(shooter)
+    rows = _canonical_rows(shooter)
+    sampled_rows = _sample_evaluation_rows(rows, sample_size=config.sample_size)
+    observations: Dict[str, ImageObservation] = {}
+    records: list[Stage3Record] = []
+    prototypes: Dict[str, Tuple[str, str, str, ImageObservation]] = {}
+    families = _split_family_definitions_v2()
+
+    for row_id, action_id, observation in rows:
+        prototypes[row_id] = (row_id, action_id, observation.raw_digest, observation)
+
+    def _make_stage_record(
+        *,
+        split: str,
+        family_id: str,
+        row_id: str,
+        action_id: str,
+        pixels: Optional[np.ndarray],
+        materialized: bool,
+        expected_disposition: str,
+        metadata: Mapping[str, Any],
+    ) -> Stage3Record:
+        observation_id = _make_observation_id_for_config(config, split, family_id, row_id, 0)
+        clip_id = f"{config.observation_prefix}:{split}:{family_id}:{row_id}"
+        frame_id = observation_id
+        if materialized:
+            image = ImageObservation(np.ascontiguousarray(pixels, dtype=np.uint8), source_id=observation_id, metadata=metadata)
+            observations[observation_id] = image
+            observation_digest = image.raw_digest
+        else:
+            observation_digest = _sha256(
+                {
+                    "benchmark_version": config.benchmark_version,
+                    "generator_version": config.generator_version,
+                    "observation_id": observation_id,
+                    "seed_material": config.seed_material,
+                    "family_id": family_id,
+                    "row_id": row_id,
+                    "action_id": action_id,
+                }
+            )
+        return Stage3Record(
+            observation_id=observation_id,
+            split=split,
+            family_id=family_id,
+            row_id=row_id,
+            action_id=action_id,
+            expected_disposition=expected_disposition,
+            clip_id=clip_id,
+            frame_id=frame_id,
+            materialized=materialized,
+            metadata=metadata,
+            observation_digest=observation_digest,
+        )
+
+    # Prototype and development cover the complete provider prototype universe.
+    for row_id, action_id, observation in rows:
+        same_row_id, same_observation = _nearest_same_action(row_id, action_id, rows)
+        conflicting_row_id, conflicting_observation = _nearest_conflicting_action(row_id, action_id, rows)
+        transform_map = {
+            "prototype_clean_v2": lambda base=observation.pixels: base,
+            "development_photometric": lambda base=observation.pixels: _scale_intensity(base, numerator=96, offset=3),
+            "development_shift": lambda base=observation.pixels: _translate(base, dx=1, dy=0),
+            "selection_exact": lambda base=observation.pixels: base,
+            "selection_translation_x": lambda base=observation.pixels: _translate(base, dx=1, dy=0),
+            "selection_translation_y": lambda base=observation.pixels: _translate(base, dx=0, dy=1),
+            "selection_translation_xy": lambda base=observation.pixels: _translate(base, dx=1, dy=1),
+            "selection_photometric": lambda base=observation.pixels: _scale_intensity(base, numerator=92, offset=4),
+            "selection_noncritical_occlusion": lambda base=observation.pixels: _mask_box(base, top=0, left=0, height=2, width=3, value=90),
+            "selection_critical_partial": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=1, width=2, value=0),
+            "selection_translation_photometric": lambda base=observation.pixels: _scale_intensity(_translate(base, dx=1, dy=0), numerator=94, offset=2),
+            "selection_translation_occlusion": lambda base=observation.pixels: _mask_box(_translate(base, dx=1, dy=0), top=0, left=0, height=2, width=3, value=90),
+            "selection_repeated_state": lambda base=observation.pixels: base,
+            "selection_same_action_ambiguous": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=0, left=0, height=6, width=28),
+            "selection_mixed_action_ambiguous": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "selection_negative_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=0),
+            "selection_negative_action_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=255),
+            "selection_negative_same_action_wrong_row": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=0, left=0, height=6, width=28),
+            "selection_negative_conflicting_action": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "selection_negative_compositional_invalid": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=10, left=0, height=4, width=28), other, top=0, left=0, height=6, width=28),
+            "selection_negative_conflicting_regions": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=0, left=0, height=6, width=28), other, top=10, left=0, height=4, width=28),
+            "selection_negative_out_of_bounds": lambda base=observation.pixels: _translate(base, dx=4, dy=0),
+            "calibration_exact": lambda base=observation.pixels: _scale_intensity(base, numerator=100, offset=1),
+            "calibration_translation_x": lambda base=observation.pixels: _translate(base, dx=-1, dy=0),
+            "calibration_translation_xy": lambda base=observation.pixels: _translate(base, dx=-1, dy=1),
+            "calibration_photometric": lambda base=observation.pixels: _scale_intensity(base, numerator=90, offset=6),
+            "calibration_occlusion": lambda base=observation.pixels: _mask_box(base, top=1, left=1, height=2, width=3, value=120),
+            "calibration_same_action_ambiguous": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=10, left=0, height=4, width=28),
+            "calibration_mixed_action_ambiguous": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "calibration_negative_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=0),
+            "calibration_negative_action_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=255),
+            "calibration_negative_same_action_wrong_row": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=0, left=0, height=6, width=28),
+            "calibration_negative_conflicting_action": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "calibration_negative_compositional_invalid": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=10, left=0, height=4, width=28), other, top=0, left=0, height=6, width=28),
+            "calibration_negative_conflicting_regions": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=0, left=0, height=6, width=28), other, top=10, left=0, height=4, width=28),
+            "calibration_negative_out_of_bounds": lambda base=observation.pixels: _translate(base, dx=-4, dy=0),
+        }
+        for split, family_items in families.items():
+            if split in {"architecture_selection_benign", "architecture_selection_negative", "benign_calibration", "rejection_calibration", "final_benign", "final_distinguishable_negative", "information_theoretic_control"} and row_id not in {item[0] for item in sampled_rows}:
+                continue
+            for family_id, description in family_items:
+                if split == "prototype":
+                    pixels = transform_map[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "diagnostic_development":
+                    pixels = transform_map[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "architecture_selection_benign":
+                    pixels = transform_map[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "architecture_selection_negative":
+                    pixels = transform_map[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_reject"
+                elif split == "benign_calibration":
+                    pixels = transform_map[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "rejection_calibration":
+                    pixels = transform_map[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_reject"
+                else:
+                    materialized = bool(materialize_final)
+                    expected_disposition = "information_theoretic_control" if split == "information_theoretic_control" else ("expected_accept" if split == "final_benign" else "expected_reject")
+                    if materialized:
+                        pixels = observation.pixels if family_id in {"final_exact", "final_information_control"} else _scale_intensity(observation.pixels, numerator=97, offset=(len(family_id) % 7) + 1)
+                    else:
+                        pixels = None
+                metadata = {
+                    "split_role": split,
+                    "family_id": family_id,
+                    "description": description,
+                    "expected_disposition_class": expected_disposition,
+                    "row_id": row_id,
+                    "action_id": action_id,
+                    "source_row_id": row_id,
+                    "same_action_row_id": same_row_id,
+                    "conflicting_action_row_id": conflicting_row_id,
+                    "distinguishable_negative": split in {"architecture_selection_negative", "rejection_calibration", "final_distinguishable_negative"},
+                    "information_theoretic_control": split == "information_theoretic_control",
+                    "benchmark_version": config.benchmark_version,
+                }
+                records.append(
+                    _make_stage_record(
+                        split=split,
+                        family_id=family_id,
+                        row_id=row_id,
+                        action_id=action_id,
+                        pixels=pixels,
+                        materialized=materialized,
+                        expected_disposition=expected_disposition,
+                        metadata=metadata,
+                    )
+                )
+    split_counts = {split: sum(record.split == split for record in records) for split in SPLIT_ROLES}
+    return Stage3Benchmark(
+        policy_artifact_id=policy.artifact_id,
+        source_scope=SOURCE_SCOPE,
+        prototypes=prototypes,
+        records=tuple(records),
+        observations=observations,
+        family_specs={family_id: {"description": description, "split": split} for split, items in families.items() for family_id, description in items},
+        metadata={
+            "benchmark_version": config.benchmark_version,
+            "generator_version": config.generator_version,
+            "amendment_commit": config.amendment_commit,
+            "final_seed_material": config.seed_material,
+            "final_seed_digest": config.seed_digest,
+            "split_counts": split_counts,
+            "materialized_final": bool(materialize_final),
+            "evaluation_row_sample_size": config.sample_size,
+            "provider_prototype_count": len(rows),
+            "development_record_count": len(rows) * 2,
+        },
+        phase_audits=[],
+    )
+
+
 def _benchmark_manifest(benchmark: Stage3Benchmark) -> Dict[str, Any]:
-    generator_identity = _generator_identity(benchmark)
+    metadata = benchmark.metadata
+    generator_identity = _generator_identity_v2(benchmark) if metadata.get("benchmark_version") == BENCHMARK_VERSION_V2 else _generator_identity(benchmark)
     return {
-        "benchmark_version": BENCHMARK_VERSION,
-        "generator_version": BENCHMARK_GENERATOR_VERSION,
-        "preregistration_commit": PREREGISTRATION_COMMIT,
-        "final_seed_material": FINAL_SEED_MATERIAL,
-        "final_seed_digest": _sha256(FINAL_SEED_MATERIAL),
+        "benchmark_version": metadata["benchmark_version"],
+        "generator_version": metadata["generator_version"],
+        "preregistration_commit": metadata.get("preregistration_commit"),
+        "amendment_commit": metadata.get("amendment_commit"),
+        "final_seed_material": metadata["final_seed_material"],
+        "final_seed_digest": metadata["final_seed_digest"],
         "policy_artifact_id": benchmark.policy_artifact_id,
         "source_scope": benchmark.source_scope,
         "metadata": _json_ready(benchmark.metadata),
@@ -790,6 +1123,180 @@ def _mask_coverage_report(*, benchmark: Stage3Benchmark, masks: Mapping[str, Any
     _write_json(output_dir / "mask-coverage.json", summary)
     _write_csv(output_dir / "mask-coverage.csv", rows)
     return summary
+
+
+def _v2_sample_rows(benchmark: Stage3Benchmark) -> Tuple[str, ...]:
+    return tuple(
+        sorted(
+            {
+                record.row_id
+                for record in benchmark.record_by_split("architecture_selection_benign")
+                if record.row_id is not None and record.family_id == "selection_exact"
+            }
+        )
+    )
+
+
+def _prototype_manifest_v2(benchmark: Stage3Benchmark, *, generator_identity: Mapping[str, Any]) -> Dict[str, Any]:
+    rows = []
+    prototype_records = [record for record in benchmark.record_by_split("prototype") if record.row_id is not None]
+    for record in prototype_records:
+        prototype = benchmark.prototypes[record.row_id]
+        rows.append(
+            {
+                "split": record.split,
+                "family_id": record.family_id,
+                "row_id": record.row_id,
+                "action_id": record.action_id,
+                "prototype_observation_id": prototype[0],
+                "observation_id": record.observation_id,
+                "frame_id": record.frame_id,
+                "clip_id": record.clip_id,
+                "pixel_digest": prototype[3].raw_digest,
+                "raw_pixel_digest": prototype[2],
+                "geometry": list(prototype[3].pixels.shape),
+                "policy_artifact_id": benchmark.policy_artifact_id,
+                "generator_identity_digest": generator_identity["generator_identity_digest"],
+            }
+        )
+    return {
+        "provider_prototype_count": len(benchmark.prototypes),
+        "prototype_manifest_count": len(rows),
+        "rows": rows,
+        "prototype_manifest_digest": _sha256(rows),
+    }
+
+
+def _development_manifest_v2(benchmark: Stage3Benchmark, *, generator_identity: Mapping[str, Any]) -> Dict[str, Any]:
+    rows = []
+    for record in benchmark.record_by_split("diagnostic_development"):
+        if record.row_id is None:
+            continue
+        rows.append(
+            {
+                "observation_id": record.observation_id,
+                "row_id": record.row_id,
+                "action_id": record.action_id,
+                "family_id": record.family_id,
+                "frame_id": record.frame_id,
+                "clip_id": record.clip_id,
+                "pixel_digest": benchmark.observations[record.observation_id].raw_digest,
+                "generator_identity_digest": generator_identity["generator_identity_digest"],
+                "split": record.split,
+            }
+        )
+    return {
+        "development_record_count": len(rows),
+        "development_covered_row_count": len({row["row_id"] for row in rows}),
+        "rows": rows,
+        "development_manifest_digest": _sha256(rows),
+    }
+
+
+def _evaluation_sample_manifest_v2(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    sample_rows = _v2_sample_rows(benchmark)
+    action_by_row = {row_id: benchmark.prototypes[row_id][1] for row_id in sample_rows}
+    payload = {
+        "sampling_algorithm_version": "step_sample_with_midpoint_and_last_dedup/v1",
+        "sample_size": EVALUATION_ROW_SAMPLE_SIZE,
+        "selected_row_ids": list(sample_rows),
+        "selected_action_ids": [action_by_row[row_id] for row_id in sample_rows],
+        "sampling_digest": _sha256({"rows": sample_rows, "actions": action_by_row}),
+    }
+    return payload
+
+
+def _prototype_collision_atlas_v2(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    groups = defaultdict(list)
+    for row_id, (prototype_observation_id, action_id, _digest, observation) in sorted(benchmark.prototypes.items()):
+        groups[observation.raw_digest].append({"row_id": row_id, "action_id": action_id, "prototype_observation_id": prototype_observation_id})
+    rows = []
+    same_action = 0
+    conflicting_action = 0
+    for digest, items in sorted(groups.items()):
+        actions = sorted({item["action_id"] for item in items})
+        if len(items) == 1:
+            collision_class = "unique_visual_row"
+        elif len(actions) == 1:
+            collision_class = "same_action_visual_alias"
+            same_action += 1
+        else:
+            collision_class = "conflicting_action_visual_alias"
+            conflicting_action += 1
+        rows.append(
+            {
+                "prototype_pixel_digest": digest,
+                "row_ids": [item["row_id"] for item in items],
+                "action_ids": [item["action_id"] for item in items],
+                "group_size": len(items),
+                "unique_action": len(actions) == 1,
+                "collision_class": collision_class,
+            }
+        )
+    return {
+        "collision_group_count": len(rows),
+        "same_action_alias_groups": same_action,
+        "conflicting_action_alias_groups": conflicting_action,
+        "rows": rows,
+        "collision_atlas_digest": _sha256(rows),
+    }
+
+
+def _mask_closure_v2(benchmark: Stage3Benchmark, masks: Mapping[str, Any]) -> Dict[str, Any]:
+    development = defaultdict(list)
+    for record in benchmark.record_by_split("diagnostic_development"):
+        if record.row_id is not None:
+            development[record.row_id].append(record.family_id)
+    sample_rows = set(_v2_sample_rows(benchmark))
+    rows = []
+    effective_count = 0
+    closure_valid = True
+    for row_id in sorted(benchmark.prototypes):
+        mask = masks[row_id]
+        stable = int(mask.spec.stable_pixel_count)
+        informative = int(mask.spec.informative_pixel_count)
+        effective = stable * informative
+        if effective > 0:
+            effective_count += 1
+        fallback = str(mask.spec.metadata.get("stability_fallback", ""))
+        failure_reason = []
+        if row_id not in development:
+            failure_reason.append("missing_development")
+        if sorted(development[row_id]) != ["development_photometric", "development_shift"]:
+            failure_reason.append("incomplete_development_families")
+        if fallback == "zero_stable_mass_without_development":
+            failure_reason.append("forbidden_missing_development_fallback")
+        if row_id in sample_rows and effective <= 0:
+            failure_reason.append("zero_effective_evidence_for_evaluation_row")
+        if failure_reason:
+            closure_valid = False
+        rows.append(
+            {
+                "row_id": row_id,
+                "action_id": benchmark.prototypes[row_id][1],
+                "prototype_present": True,
+                "development_observation_count": len(development[row_id]),
+                "development_family_ids": sorted(development[row_id]),
+                "informative_pixel_count": informative,
+                "action_conflict_pixel_count": int(mask.spec.action_conflict_pixel_count),
+                "stable_pixel_count": stable,
+                "effective_informative_stable_mass": effective,
+                "mask_payload_digest": mask.payload_digest,
+                "closure_status": "closed" if not failure_reason else "open",
+                "closure_failure_reason": "|".join(failure_reason),
+            }
+        )
+    return {
+        "closure_valid": closure_valid,
+        "provider_prototype_count": len(benchmark.prototypes),
+        "mask_count": len(masks),
+        "development_covered_row_count": len(development),
+        "masks_with_development_closure": sum(1 for row in rows if row["closure_status"] == "closed"),
+        "masks_with_nonzero_effective_evidence": effective_count,
+        "remaining_zero_evidence_masks": sum(1 for row in rows if int(row["effective_informative_stable_mass"]) <= 0),
+        "rows": rows,
+        "mask_closure_digest": _sha256(rows),
+    }
 
 
 def _calibration(
@@ -1033,10 +1540,10 @@ def _ranked_candidates_for_architecture(
     return {record.observation_id: provider._rank(observations[record.observation_id]) for record in records}
 
 
-def _artifact_comparison(expected_dir: Path, actual_dir: Path) -> Dict[str, Any]:
+def _artifact_comparison(expected_dir: Path, actual_dir: Path, *, artifact_names: Optional[Sequence[str]] = None) -> Dict[str, Any]:
     results = []
     semantic_mismatch = False
-    expected_names = set(AUDIT_ARTIFACT_NAMES)
+    expected_names = set(artifact_names or AUDIT_ARTIFACT_NAMES)
     actual_names = {path.name for path in actual_dir.iterdir() if path.is_file()}
     for name in sorted(expected_names | actual_names):
         expected_path = expected_dir / name
@@ -1669,6 +2176,209 @@ def _classify_v1(*, regeneration: Mapping[str, Any], closure: Mapping[str, Any],
     }
 
 
+def _exact_sanity_v2(*, benchmark: Stage3Benchmark, freeze: Mapping[str, Any], collision_atlas: Mapping[str, Any], output_dir: Path) -> Dict[str, Any]:
+    collision_by_row = {}
+    for group in collision_atlas["rows"]:
+        for row_id in group["row_ids"]:
+            collision_by_row[row_id] = group
+    records, observations = benchmark.access(
+        phase="v2_exact_sanity",
+        allowed_splits=("prototype", "diagnostic_development", "architecture_selection_benign"),
+    )
+    exact_records = tuple(record for record in records if record.family_id == "selection_exact")
+    rows = []
+    architectures = {}
+    sanity_valid = True
+    for architecture_id in ("A", "B", "C"):
+        raw = _raw_ranked_candidates(
+            architecture_id=architecture_id,
+            benchmark=benchmark,
+            freeze=freeze,
+            records=exact_records,
+            observations=observations,
+        )
+        provider = DiscriminativeEvidenceProvider(
+            prototypes=benchmark.prototypes,
+            masks=freeze["masks"],
+            regions=freeze["regions"],
+            calibration=_calibration(
+                architecture_id=architecture_id,
+                benchmark=benchmark,
+                region_manifest=freeze["region_manifest"],
+                mask_manifest=freeze["mask_manifest"],
+                values={
+                    "minimum_available_mass": 0.0,
+                    "minimum_available_fraction": 0.0,
+                    "minimum_support": 0.0,
+                    "maximum_contradiction": 1.0,
+                    "maximum_critical_contradiction": 1.0,
+                    "exact_winner_threshold": 0.0,
+                    "exact_winner_margin": 0.0,
+                    "candidate_relative_margin": 0.0,
+                    "conflicting_action_separation": 0.0,
+                    "minimum_supporting_regions": 0,
+                    "maximum_candidate_set_size": MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+                },
+            ),
+            policy_artifact_id=benchmark.policy_artifact_id,
+            source_scope=benchmark.source_scope,
+        )
+        direct_provider = DiscriminativeEvidenceProvider(
+            prototypes=benchmark.prototypes,
+            masks=freeze["masks"],
+            regions=freeze["regions"],
+            calibration=provider._calibration,
+            policy_artifact_id=benchmark.policy_artifact_id,
+            source_scope=benchmark.source_scope,
+        )
+        unique_top1 = 0
+        for record in exact_records:
+            ranked = tuple(
+                evaluate_candidate_eligibility(candidate=candidate, ranked_candidates=raw[record.observation_id], calibration=provider._calibration)
+                for candidate in raw[record.observation_id]
+            )
+            ranked = tuple(sorted(ranked, key=lambda candidate: (-float(candidate.candidate_strength), -float(candidate.available_informative_mass), -float(candidate.available_informative_fraction), float(candidate.aggregate_contradiction), float(candidate.aggregate_critical_contradiction), -int(candidate.supporting_region_count), candidate.row_id, candidate.prototype_observation_id)))
+            candidate_set = build_discriminative_candidate_set(
+                ranked_candidates=ranked,
+                calibration=provider._calibration,
+                provider_digest=provider.contract().address_artifact_id,
+                observation_digest=ranked[0].observation_digest,
+            )
+            direct_ranked = direct_provider._rank(observations[record.observation_id])
+            if [candidate.to_dict() for candidate in raw[record.observation_id]] != [candidate.to_dict() for candidate in direct_ranked]:
+                sanity_valid = False
+            collision = collision_by_row[record.row_id]
+            expected = next(candidate for candidate in ranked if candidate.row_id == record.row_id)
+            top_strength = ranked[0].candidate_strength
+            max_group = sorted(candidate.row_id for candidate in ranked if abs(candidate.candidate_strength - top_strength) <= 1e-12)
+            if collision["collision_class"] == "unique_visual_row":
+                if expected.available_informative_mass <= 0 or ranked[0].row_id != record.row_id or not expected.eligible_for_candidate_set:
+                    sanity_valid = False
+                else:
+                    unique_top1 += 1
+            elif collision["collision_class"] == "conflicting_action_visual_alias" and candidate_set.outcome == "exact_row_accepted":
+                sanity_valid = False
+            rows.append(
+                {
+                    "observation_id": record.observation_id,
+                    "expected_row": record.row_id,
+                    "expected_action": record.action_id,
+                    "architecture": architecture_id,
+                    "prototype_collision_class": collision["collision_class"],
+                    "collision_group_rows": collision["row_ids"],
+                    "collision_group_actions": collision["action_ids"],
+                    "expected_row_rank": next((index for index, candidate in enumerate(ranked, start=1) if candidate.row_id == record.row_id), None),
+                    "expected_row_strength": float(expected.candidate_strength),
+                    "maximum_strength": float(top_strength),
+                    "expected_row_available_mass": float(expected.available_informative_mass),
+                    "expected_row_available_fraction": float(expected.available_informative_fraction),
+                    "expected_row_support": float(expected.aggregate_support),
+                    "expected_row_contradiction": float(expected.aggregate_contradiction),
+                    "expected_row_critical_contradiction": float(expected.aggregate_critical_contradiction),
+                    "expected_row_supporting_regions": int(expected.supporting_region_count),
+                    "winner_row": ranked[0].row_id,
+                    "winner_action": ranked[0].action_id,
+                    "winner_margin": expected.exact_winner_margin,
+                    "conflicting_action_separation": expected.conflicting_action_separation,
+                    "expected_row_candidate_eligible": bool(expected.eligible_for_candidate_set),
+                    "expected_row_exact_eligible": bool(expected.eligible_for_exact),
+                    "candidate_set_outcome": candidate_set.outcome,
+                    "candidate_set_rows": list(candidate_set.rows),
+                    "rejection_reason": candidate_set.rejection_reason,
+                }
+            )
+        architectures[architecture_id] = {
+            "unique_exact_expected_row_top1_count": unique_top1,
+            "observation_count": len(exact_records),
+        }
+    _write_csv(output_dir / "exact-sanity.csv", rows)
+    summary = {
+        "sanity_valid": sanity_valid,
+        "direct_provider_equivalence": True,
+        "architectures": architectures,
+        "observation_count": len(exact_records),
+    }
+    _write_json(output_dir / "exact-sanity-summary.json", summary)
+    return summary
+
+
+def _stage3_v2_preselection_valid(closure: Mapping[str, Any], exact_summary: Mapping[str, Any]) -> bool:
+    return bool(closure["closure_valid"]) and bool(exact_summary["sanity_valid"]) and bool(exact_summary["direct_provider_equivalence"])
+
+
+def _write_stage3_v2_docs(output_dir: Path, *, generator_identity: Mapping[str, Any], benchmark_manifest: Mapping[str, Any], split_manifest: Mapping[str, Any]) -> None:
+    _write_markdown(
+        output_dir / "README.md",
+        f"# Stage 3 v2 pre-final benchmark\n\nBenchmark version: `{benchmark_manifest['benchmark_version']}`\nGenerator version: `{benchmark_manifest['generator_version']}`\nSeed digest: `{benchmark_manifest['final_seed_digest']}`\nBenchmark digest: `{benchmark_manifest['benchmark_digest']}`\nSplit digest: `{split_manifest['split_digest']}`",
+    )
+    _write_markdown(
+        output_dir / "reproduction.md",
+        "Rebuild with `python examples/arcade_visual_video_discriminative_evidence_benchmark.py --freeze-benchmark-v2`, then validate with `--verify-v2-benchmark`, `--select-architecture-v2`, `--calibrate-v2`, and `--verify-pre-final-v2`.",
+    )
+
+
+def _freeze_benchmark_v2_into(output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark_v2(materialize_final=False)
+    generator_identity = _generator_identity_v2(benchmark)
+    _write_json(output_dir / "generator-identity.json", generator_identity)
+    prototype_manifest = _prototype_manifest_v2(benchmark, generator_identity=generator_identity)
+    development_manifest = _development_manifest_v2(benchmark, generator_identity=generator_identity)
+    evaluation_sample = _evaluation_sample_manifest_v2(benchmark)
+    freeze = _freeze_regions_and_masks(benchmark, output_dir=output_dir)
+    prototype_rows = sorted(benchmark.prototypes)
+    prototype_manifest_rows = sorted(row["row_id"] for row in prototype_manifest["rows"])
+    mask_rows = sorted(freeze["masks"])
+    if prototype_rows != prototype_manifest_rows or prototype_rows != mask_rows:
+        raise VPMValidationError("provider prototype, prototype manifest, and mask rows must match exactly")
+    collision_atlas = _prototype_collision_atlas_v2(benchmark)
+    closure = _mask_closure_v2(benchmark, freeze["masks"])
+    if not closure["closure_valid"]:
+        raise VPMValidationError("v2 closure failed before benchmark freeze")
+    _write_json(output_dir / "prototype-manifest.json", prototype_manifest)
+    _write_json(output_dir / "development-manifest.json", development_manifest)
+    _write_json(output_dir / "evaluation-sample.json", evaluation_sample)
+    _write_json(output_dir / "prototype-collision-atlas.json", collision_atlas)
+    _write_csv(output_dir / "prototype-collision-atlas.csv", collision_atlas["rows"])
+    _write_csv(output_dir / "mask-closure.csv", closure["rows"])
+    _write_json(output_dir / "mask-closure-summary.json", {key: value for key, value in closure.items() if key != "rows"})
+    exact_summary = _exact_sanity_v2(benchmark=benchmark, freeze=freeze, collision_atlas=collision_atlas, output_dir=output_dir)
+    benchmark_manifest = _benchmark_manifest(benchmark)
+    split_manifest = _split_manifest(benchmark)
+    _write_json(output_dir / "benchmark-manifest.json", benchmark_manifest)
+    _write_json(output_dir / "split-manifest.json", split_manifest)
+    _write_json(output_dir / "architecture-grid-definition.json", {"definition": _json_ready(_architecture_grid_definition()), "digest": _sha256(_architecture_grid_definition()), "amendment_parent": V2_AMENDMENT_COMMIT})
+    _write_json(output_dir / "phase-access-audits.json", benchmark.phase_audits)
+    _write_stage3_v2_docs(output_dir, generator_identity=generator_identity, benchmark_manifest=benchmark_manifest, split_manifest=split_manifest)
+    return {
+        "benchmark": benchmark,
+        "freeze": freeze,
+        "generator_identity": generator_identity,
+        "prototype_manifest": prototype_manifest,
+        "development_manifest": development_manifest,
+        "evaluation_sample": evaluation_sample,
+        "collision_atlas": collision_atlas,
+        "closure": closure,
+        "exact_summary": exact_summary,
+        "benchmark_manifest": benchmark_manifest,
+        "split_manifest": split_manifest,
+    }
+
+
+def run_freeze_benchmark_v2(output_dir: Path) -> Dict[str, Any]:
+    with tempfile.TemporaryDirectory(prefix="stage3-v2-freeze-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        result = _freeze_benchmark_v2_into(temp_output)
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+        shutil.copytree(temp_output, output_dir)
+    return {
+        "mode": "freeze-benchmark-v2",
+        "benchmark_digest": result["benchmark_manifest"]["benchmark_digest"],
+        "split_digest": result["split_manifest"]["split_digest"],
+        "generator_identity_digest": result["generator_identity"]["generator_identity_digest"],
+    }
+
+
 def _run_audit_pre_final_v1(output_dir: Path) -> Dict[str, Any]:
     benchmark = _build_stage3_benchmark(materialize_final=False)
     audit_dir = output_dir / "measurement-audit"
@@ -1732,6 +2442,160 @@ def _run_evaluate(output_dir: Path) -> Dict[str, Any]:
     if ruling["ruling"] != "valid_no_safe_architecture":
         raise SystemExit("Stage 3 v1 evaluation is blocked because the frozen measurement failed the integrity audit.")
     raise SystemExit("Final evaluation remains intentionally blocked in this task.")
+
+
+def run_verify_v2_benchmark(output_dir: Path) -> Dict[str, Any]:
+    with tempfile.TemporaryDirectory(prefix="stage3-v2-verify-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        _freeze_benchmark_v2_into(temp_output)
+        artifact_names = sorted(({path.name for path in temp_output.iterdir() if path.is_file()} | ({path.name for path in output_dir.iterdir() if path.is_file()} if output_dir.exists() else set())) - {"pre-final-verification.json"})
+        comparison = _artifact_comparison(output_dir, temp_output, artifact_names=artifact_names) if output_dir.exists() else {"semantic_match": False, "artifacts": []}
+    payload = {"mode": "verify-v2-benchmark", "verified": bool(comparison["semantic_match"]), "comparison": comparison}
+    if not comparison["semantic_match"]:
+        raise SystemExit(json.dumps(_json_ready(payload), indent=2, sort_keys=True))
+    return payload
+
+
+def run_select_architecture_v2(output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark_v2(materialize_final=False)
+    freeze = _freeze_regions_and_masks(benchmark, output_dir=output_dir)
+    exact_summary = _load_json(output_dir / "exact-sanity-summary.json")
+    closure = _load_json(output_dir / "mask-closure-summary.json")
+    if not _stage3_v2_preselection_valid(closure, exact_summary):
+        artifact = {"selection_status": "invalid_architecture_measurement", "selected_architecture": None, "selected_calibration_digest": None}
+        _write_json(output_dir / "selected-architecture.json", artifact)
+        return artifact
+    return _run_selection_v2(output_dir=output_dir, benchmark=benchmark, freeze=freeze)
+
+
+def _run_selection_v2(*, output_dir: Path, benchmark: Stage3Benchmark, freeze: Mapping[str, Any]) -> Dict[str, Any]:
+    benign_records, benign_observations = benchmark.access(
+        phase="select_architecture",
+        allowed_splits=("prototype", "diagnostic_development", "architecture_selection_benign"),
+    )
+    negative_records, negative_observations = benchmark.access(
+        phase="select_architecture",
+        allowed_splits=("prototype", "diagnostic_development", "architecture_selection_negative"),
+    )
+    benign_eval = tuple(record for record in benign_records if record.split == "architecture_selection_benign")
+    negative_eval = tuple(record for record in negative_records if record.split == "architecture_selection_negative")
+    grid_definition = _architecture_grid_definition()
+    results = []
+    raw_benign = {architecture_id: _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=benign_eval, observations=benign_observations) for architecture_id in ("A", "B", "C")}
+    raw_negative = {architecture_id: _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=negative_eval, observations=negative_observations) for architecture_id in ("A", "B", "C")}
+    for architecture_id in ("A", "B", "C"):
+        for point in _grid_points(grid_definition[architecture_id]):
+            calibration = _calibration(architecture_id=architecture_id, benchmark=benchmark, region_manifest=freeze["region_manifest"], mask_manifest=freeze["mask_manifest"], values=point)
+            benign_metrics = _evaluate_ranked_candidates(ranked_by_observation=raw_benign[architecture_id], calibration=calibration, provider_digest=f"{architecture_id}:{calibration.digest}", records=benign_eval)
+            negative_metrics = _evaluate_ranked_candidates(ranked_by_observation=raw_negative[architecture_id], calibration=calibration, provider_digest=f"{architecture_id}:{calibration.digest}", records=negative_eval)
+            combined_metrics = {**benign_metrics, "exact_false_accepts": negative_metrics["exact_false_accepts"], "negative_candidate_set_support": negative_metrics["negative_candidate_set_support"], "conflicting_action_exact_accepts": negative_metrics["conflicting_action_exact_accepts"], "same_action_wrong_row_exact_accepts": negative_metrics["same_action_wrong_row_exact_accepts"], "critical_contradiction_exact_accepts": negative_metrics["critical_contradiction_exact_accepts"], "negative_per_family_outcomes": negative_metrics["per_family_outcomes"]}
+            feasible, infeasible_reasons = _feasible_for_selection({"combined_metrics": combined_metrics})
+            results.append({"architecture_id": architecture_id, "calibration_values": point, "calibration_digest": calibration.digest, "feasible": feasible, "infeasible_reasons": list(infeasible_reasons), "combined_metrics": combined_metrics})
+    best_by_architecture = {architecture_id: min((result for result in results if result["architecture_id"] == architecture_id), key=_selection_rank_key) for architecture_id in ("A", "B", "C")}
+    a = best_by_architecture["A"]
+    d_gateway = {
+        "conditions": {
+            "a_nonzero_safe_utility": (a["combined_metrics"]["exact_correct_count"] + a["combined_metrics"]["useful_candidate_set_count"]) > 0,
+            "b_or_c_additional_recovery": False,
+            "added_recovery_zero_new_safety_failures": False,
+            "distinct_failure_mode": False,
+        },
+        "supporting_frame_identities": [],
+        "supporting_family_identities": [],
+    }
+    for architecture_id in ("B", "C"):
+        candidate = best_by_architecture[architecture_id]
+        if candidate["combined_metrics"]["exact_correct_count"] + candidate["combined_metrics"]["useful_candidate_set_count"] > a["combined_metrics"]["exact_correct_count"] + a["combined_metrics"]["useful_candidate_set_count"]:
+            d_gateway["conditions"]["b_or_c_additional_recovery"] = True
+            if candidate["combined_metrics"]["exact_false_accepts"] == 0 and candidate["combined_metrics"]["conflicting_action_exact_accepts"] == 0 and candidate["combined_metrics"]["critical_contradiction_exact_accepts"] == 0:
+                d_gateway["conditions"]["added_recovery_zero_new_safety_failures"] = True
+            break
+    d_gateway["eligible"] = all(bool(value) for value in d_gateway["conditions"].values())
+    _write_json(output_dir / "architecture-d-gateway.json", {**d_gateway, "digest": _sha256(d_gateway)})
+    _write_csv(output_dir / "architecture-grid.csv", [{**result["calibration_values"], "architecture_id": result["architecture_id"], "calibration_digest": result["calibration_digest"], "feasible": result["feasible"], "infeasible_reasons": "|".join(result["infeasible_reasons"]), **result["combined_metrics"]} for result in results])
+    feasible_results = [result for result in results if result["feasible"]]
+    if not feasible_results:
+        selection = {"selection_status": "no_safe_architecture", "selected_architecture": None, "selected_calibration_digest": None, "all_results_digest": _sha256(results), "d_gateway_digest": _sha256(d_gateway), "grid_digest": _sha256(grid_definition), "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"], "architecture_selection_split_digest": _sha256({"benign": [record.observation_id for record in benign_eval], "negative": [record.observation_id for record in negative_eval]}), "region_digest": freeze["region_manifest"]["region_spec_digest"], "mask_digest": freeze["mask_manifest"]["mask_spec_digest"], "policy_artifact_id": benchmark.policy_artifact_id, "source_scope": benchmark.source_scope, "simplicity_order": SIMPLICITY_ORDER, "tie_break_path": None}
+    else:
+        selected = min(feasible_results, key=_selection_rank_key)
+        selection = {"selection_status": "selected_architecture", "selected_architecture": selected["architecture_id"], "selected_calibration_digest": selected["calibration_digest"], "selected_architecture_selection_point": selected["calibration_values"], "selected_result": selected, "all_results_digest": _sha256(results), "d_gateway_digest": _sha256(d_gateway), "grid_digest": _sha256(grid_definition), "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"], "architecture_selection_split_digest": _sha256({"benign": [record.observation_id for record in benign_eval], "negative": [record.observation_id for record in negative_eval]}), "region_digest": freeze["region_manifest"]["region_spec_digest"], "mask_digest": freeze["mask_manifest"]["mask_spec_digest"], "policy_artifact_id": benchmark.policy_artifact_id, "source_scope": benchmark.source_scope, "simplicity_order": SIMPLICITY_ORDER, "tie_break_path": _selection_rank_key(selected)}
+    _write_json(output_dir / "selected-architecture.json", selection)
+    _write_json(output_dir / "phase-access-audits.json", benchmark.phase_audits)
+    return selection
+
+
+def run_calibrate_v2(output_dir: Path) -> Dict[str, Any]:
+    selection = _load_json(output_dir / "selected-architecture.json")
+    if selection["selection_status"] == "invalid_architecture_measurement":
+        artifact = {"selection_status": "invalid_calibration_measurement", "selected_architecture": None, "selected_calibration_digest": None}
+        _write_json(output_dir / "selected-operating-point.json", artifact)
+        return artifact
+    if selection["selection_status"] != "selected_architecture":
+        artifact = {"selection_status": "not_run_no_selected_architecture", "selected_architecture": None, "selected_calibration_digest": None}
+        _write_json(output_dir / "selected-operating-point.json", artifact)
+        return artifact
+    benchmark = _build_stage3_benchmark_v2(materialize_final=False)
+    freeze = _freeze_regions_and_masks(benchmark, output_dir=output_dir)
+    records, observations = benchmark.access(phase="calibrate", allowed_splits=("prototype", "diagnostic_development", "benign_calibration", "rejection_calibration"))
+    benign_eval = tuple(record for record in records if record.split == "benign_calibration")
+    rejection_eval = tuple(record for record in records if record.split == "rejection_calibration")
+    architecture_id = str(selection["selected_architecture"])
+    grid_definition = _calibration_grid_definition(architecture_id)
+    _write_json(output_dir / "calibration-grid-definition.json", {"architecture_id": architecture_id, "definition": _json_ready(grid_definition), "digest": _sha256(grid_definition)})
+    results = []
+    raw_benign = _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=benign_eval, observations=observations)
+    raw_rejection = _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=rejection_eval, observations=observations)
+    for point in _grid_points(grid_definition):
+        calibration = _calibration(architecture_id=architecture_id, benchmark=benchmark, region_manifest=freeze["region_manifest"], mask_manifest=freeze["mask_manifest"], values=point)
+        benign_metrics = _evaluate_ranked_candidates(ranked_by_observation=raw_benign, calibration=calibration, provider_digest=f"{architecture_id}:{calibration.digest}", records=benign_eval)
+        rejection_metrics = _evaluate_ranked_candidates(ranked_by_observation=raw_rejection, calibration=calibration, provider_digest=f"{architecture_id}:{calibration.digest}", records=rejection_eval)
+        metrics = {**benign_metrics, "exact_false_accepts": rejection_metrics["exact_false_accepts"], "negative_candidate_set_support": rejection_metrics["negative_candidate_set_support"], "conflicting_action_exact_accepts": rejection_metrics["conflicting_action_exact_accepts"], "same_action_wrong_row_exact_accepts": rejection_metrics["same_action_wrong_row_exact_accepts"], "critical_contradiction_exact_accepts": rejection_metrics["critical_contradiction_exact_accepts"], "rejection_histogram": rejection_metrics["negative_per_family_outcomes"]}
+        feasible, infeasible_reasons = _calibration_feasible(metrics)
+        results.append({"architecture_id": architecture_id, "calibration_values": point, "calibration_digest": calibration.digest, "feasible": feasible, "infeasible_reasons": list(infeasible_reasons), "metrics": metrics})
+    _write_csv(output_dir / "calibration-grid.csv", [{**result["calibration_values"], "architecture_id": architecture_id, "calibration_digest": result["calibration_digest"], "feasible": result["feasible"], "infeasible_reasons": "|".join(result["infeasible_reasons"]), **result["metrics"]} for result in results])
+    feasible_results = [result for result in results if result["feasible"]]
+    if not feasible_results:
+        artifact = {"selection_status": "no_feasible_operating_point", "selected_architecture": architecture_id, "selected_calibration_digest": None, "calibration_grid_digest": _sha256(results)}
+    else:
+        selected = min(feasible_results, key=_calibration_rank_key)
+        artifact = {"selection_status": "selected_operating_point", "selected_architecture": architecture_id, "selected_calibration_digest": selected["calibration_digest"], "selected_calibration_values": selected["calibration_values"], "selected_result": selected, "calibration_grid_digest": _sha256(results)}
+    _write_json(output_dir / "selected-operating-point.json", artifact)
+    _write_json(output_dir / "phase-access-audits.json", benchmark.phase_audits)
+    return artifact
+
+
+def run_verify_pre_final_v2(output_dir: Path) -> Dict[str, Any]:
+    with tempfile.TemporaryDirectory(prefix="stage3-v2-prefinal-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        _freeze_benchmark_v2_into(temp_output)
+        selection = run_select_architecture_v2(temp_output)
+        calibration = run_calibrate_v2(temp_output)
+        artifact_names = sorted(({path.name for path in temp_output.iterdir() if path.is_file()} | ({path.name for path in output_dir.iterdir() if path.is_file()} if output_dir.exists() else set())) - {"pre-final-verification.json"})
+        comparison = _artifact_comparison(output_dir, temp_output, artifact_names=artifact_names)
+    payload = {
+        "mode": "verify-pre-final-v2",
+        "verified": bool(comparison["semantic_match"]),
+        "comparison": comparison,
+        "selection_status": selection["selection_status"],
+        "calibration_status": calibration["selection_status"],
+    }
+    _write_json(output_dir / "pre-final-verification.json", payload)
+    if not comparison["semantic_match"]:
+        raise SystemExit(json.dumps(_json_ready(payload), indent=2, sort_keys=True))
+    return payload
+
+
+def run_evaluate_v2(output_dir: Path) -> Dict[str, Any]:
+    selection = _load_json(output_dir / "selected-architecture.json")
+    calibration = _load_json(output_dir / "selected-operating-point.json") if (output_dir / "selected-operating-point.json").exists() else None
+    verification = _load_json(output_dir / "pre-final-verification.json") if (output_dir / "pre-final-verification.json").exists() else None
+    if selection.get("selection_status") != "selected_architecture":
+        raise SystemExit("V2 evaluation is blocked because no architecture has been validly selected.")
+    if calibration is None or calibration.get("selection_status") != "selected_operating_point":
+        raise SystemExit("V2 evaluation is blocked because no valid operating point has been selected.")
+    if verification is None or not verification.get("verified"):
+        raise SystemExit("V2 evaluation is blocked because pre-final verification has not passed.")
+    raise SystemExit("V5 and final evaluation remain intentionally out of scope for this block.")
 
 
 def _stage2_diagnosis_file_digests(output_dir: Path) -> Dict[str, Any]:
@@ -1909,6 +2773,12 @@ def main() -> None:
     parser.add_argument("--audit-pre-final-v1", action="store_true")
     parser.add_argument("--audit-v1-exact-frames", action="store_true")
     parser.add_argument("--evaluate", action="store_true")
+    parser.add_argument("--freeze-benchmark-v2", action="store_true")
+    parser.add_argument("--verify-v2-benchmark", action="store_true")
+    parser.add_argument("--select-architecture-v2", action="store_true")
+    parser.add_argument("--calibrate-v2", action="store_true")
+    parser.add_argument("--verify-pre-final-v2", action="store_true")
+    parser.add_argument("--evaluate-v2", action="store_true")
     args = parser.parse_args()
     if args.verify_stage2_diagnosis:
         payload = run_verify_stage2_diagnosis(args.output_dir)
@@ -1926,6 +2796,18 @@ def main() -> None:
         payload = _audit_exact_frames(output_dir=args.output_dir / "measurement-audit")
     elif args.evaluate:
         payload = _run_evaluate(args.output_dir)
+    elif args.freeze_benchmark_v2:
+        payload = run_freeze_benchmark_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.verify_v2_benchmark:
+        payload = run_verify_v2_benchmark(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.select_architecture_v2:
+        payload = run_select_architecture_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.calibrate_v2:
+        payload = run_calibrate_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.verify_pre_final_v2:
+        payload = run_verify_pre_final_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.evaluate_v2:
+        payload = run_evaluate_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
     else:
         raise SystemExit("one stage flag is required")
     print(json.dumps(_json_ready(payload), indent=2, sort_keys=True))

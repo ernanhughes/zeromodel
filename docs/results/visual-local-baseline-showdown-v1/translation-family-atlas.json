@@ -1,0 +1,17 @@
+{
+  "families": {
+    "final-shift-two": {
+      "accepted_count": 0,
+      "count": 336,
+      "false_rejects": 336,
+      "raw_action_correct": 322,
+      "raw_row_correct": 224,
+      "registered_action_correct": 336,
+      "registered_row_correct": 336,
+      "selected_displacements": {
+        "0,-2": 224,
+        "0,2": 112
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "calibration_digest": "b3efc2a4687ba97a5b899961a8d3b53b91f1e0f2c73afc7bde92a1bb8e805265",
+  "next_action": "translation_equivariant_template_correlation",
+  "outcome": "C",
+  "selection_digest": "881d63866587aec8d87d4d3419431ccd195f6fe57828e9f70580ebea1e0337f4",
+  "selection_status": "selected_operating_point",
+  "usefulness_status": "bounded_registration_insufficient"
+}

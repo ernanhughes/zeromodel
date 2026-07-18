@@ -1,0 +1,15 @@
+{
+  "action": {
+    "b_only": 0,
+    "both_correct": 1302,
+    "neither": 21,
+    "r1_only": 21
+  },
+  "observation_count": 1344,
+  "row": {
+    "b_only": 0,
+    "both_correct": 1008,
+    "neither": 168,
+    "r1_only": 168
+  }
+}

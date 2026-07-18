@@ -1,0 +1,8 @@
+{
+  "argv": [
+    "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "examples/arcade_visual_local_baseline_showdown.py",
+    "--output-dir",
+    "C:\\Users\\ernan\\AppData\\Local\\Temp\\zeromodel-r1-showdown-rerun-jvcnr00c\\visual-local-baseline-showdown-v1"
+  ]
+}

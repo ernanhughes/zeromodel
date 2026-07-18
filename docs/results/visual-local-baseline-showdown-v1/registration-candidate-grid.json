@@ -1,0 +1,1709 @@
+{
+  "candidates": [
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 6,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.004464285714285714,
+      "ambiguity_margin": 0.6782577226161598,
+      "benign_coverage": 0.004464285714285714,
+      "benign_result": {
+        "contract_digest": "edfd55d2c7229be1a590126c9814de178af2cf763d67eb3ef71374c60a1cdcf6",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 6,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 6,
+          "action_accuracy": 0.004464285714285714,
+          "benign_action_accuracy": 0.004464285714285714,
+          "benign_row_accuracy": 0.004464285714285714,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.6096657120978346,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.6096657120978346,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.0020475798425546718,
+              0.009705626528285674
+            ],
+            "benign_row_accuracy": [
+              0.0020475798425546718,
+              0.009705626528285674
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.9902943734717143,
+              0.9979524201574453
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 6,
+          "correct_disposition_rate": 0.004464285714285714,
+          "correct_reject_count": 0,
+          "correct_row_count": 6,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1338,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.9955357142857143,
+          "rejected_count": 1338,
+          "row_accuracy": 0.004464285714285714,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "b3efc2a4687ba97a5b899961a8d3b53b91f1e0f2c73afc7bde92a1bb8e805265",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 0,
+      "false_rejects": 1338,
+      "feasible": true,
+      "infeasible_reasons": [],
+      "quantile": 0.0,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "edfd55d2c7229be1a590126c9814de178af2cf763d67eb3ef71374c60a1cdcf6",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 0,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              2.168404344971009e-19,
+              0.0037965026904228285
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 1.0,
+          "correct_reject_count": 1008,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 1008,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.07306751140001405
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 145,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.10788690476190477,
+      "ambiguity_margin": 0.6491458071319933,
+      "benign_coverage": 0.10788690476190477,
+      "benign_result": {
+        "contract_digest": "b1592b6def4007b543dce44a585a87cbc139c363c7032f4491cbca0dd7dbf3ab",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 145,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 145,
+          "action_accuracy": 0.10788690476190477,
+          "benign_action_accuracy": 0.10788690476190477,
+          "benign_row_accuracy": 0.10788690476190477,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9741909354347176,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.9741909354347176,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.0924044082556408,
+              0.12560451029906322
+            ],
+            "benign_row_accuracy": [
+              0.0924044082556408,
+              0.12560451029906322
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.8743954897009367,
+              0.9075955917443592
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 145,
+          "correct_disposition_rate": 0.10788690476190477,
+          "correct_reject_count": 0,
+          "correct_row_count": 145,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1199,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.8921130952380952,
+          "rejected_count": 1199,
+          "row_accuracy": 0.10788690476190477,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "83c2a0d26a7f886d978f5b9347cd74e66086802b84bbba97734bb120966d5de2",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 18,
+      "false_rejects": 1199,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.1,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "b1592b6def4007b543dce44a585a87cbc139c363c7032f4491cbca0dd7dbf3ab",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 18,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.011324905987035148,
+              0.02805029303587257
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.9821428571428571,
+          "correct_reject_count": 990,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 18,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.017857142857142856,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 990,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.05478646253182988
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 228,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.16964285714285715,
+      "ambiguity_margin": 0.6385610012681884,
+      "benign_coverage": 0.16964285714285715,
+      "benign_result": {
+        "contract_digest": "84d2f3d992891394d2042da4e964a6a454221a77c17aacda34bdb8b28cd8da60",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 228,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 228,
+          "action_accuracy": 0.16964285714285715,
+          "benign_action_accuracy": 0.16964285714285715,
+          "benign_row_accuracy": 0.16964285714285715,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9834306649024968,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.9834306649024968,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.15052546588027307,
+              0.19064333836695388
+            ],
+            "benign_row_accuracy": [
+              0.15052546588027307,
+              0.19064333836695388
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.8093566616330462,
+              0.8494745341197271
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 228,
+          "correct_disposition_rate": 0.16964285714285715,
+          "correct_reject_count": 0,
+          "correct_row_count": 228,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1116,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.8303571428571429,
+          "rejected_count": 1116,
+          "row_accuracy": 0.16964285714285715,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "ed8779ff626ba838aa0b836d66b1ef382a3532322362afa43cb74d8bf553ecec",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 147,
+      "false_rejects": 1116,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.2,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "84d2f3d992891394d2042da4e964a6a454221a77c17aacda34bdb8b28cd8da60",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 147,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.1253897894375925,
+              0.1689660666347903
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.8541666666666666,
+          "correct_reject_count": 861,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 147,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.14583333333333334,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 861,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.03766804124455201
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 330,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.24553571428571427,
+      "ambiguity_margin": 0.6162399051622468,
+      "benign_coverage": 0.24553571428571427,
+      "benign_result": {
+        "contract_digest": "b5d174cc56e3ba7c81f3c4e852923fd764887239d007afd2c1127ec545dd2f1e",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 330,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 330,
+          "action_accuracy": 0.24553571428571427,
+          "benign_action_accuracy": 0.24553571428571427,
+          "benign_row_accuracy": 0.24553571428571427,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9884931642874307,
+              0.9999999999999999
+            ],
+            "accepted_benign_row_correctness": [
+              0.9884931642874307,
+              0.9999999999999999
+            ],
+            "benign_action_accuracy": [
+              0.22327187878094218,
+              0.269250038004084
+            ],
+            "benign_row_accuracy": [
+              0.22327187878094218,
+              0.269250038004084
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.730749961995916,
+              0.7767281212190579
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 330,
+          "correct_disposition_rate": 0.24553571428571427,
+          "correct_reject_count": 0,
+          "correct_row_count": 330,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1014,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.7544642857142857,
+          "rejected_count": 1014,
+          "row_accuracy": 0.24553571428571427,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "784205e379e8a89deed6c669add7b10814921499ef4fb6503c768c02411a3364",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 165,
+      "false_rejects": 1014,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.3,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "b5d174cc56e3ba7c81f3c4e852923fd764887239d007afd2c1127ec545dd2f1e",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 165,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.14213405726916117,
+              0.1878004951357065
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.8363095238095238,
+          "correct_reject_count": 843,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 165,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.1636904761904762,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 843,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.03551510272626444
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 453,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.33705357142857145,
+      "ambiguity_margin": 0.6127366469206249,
+      "benign_coverage": 0.33705357142857145,
+      "benign_result": {
+        "contract_digest": "0cdcef3c6f44f759951a3d36f4d4780386ec8d979ca047eac7973aa4a3153aac",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 453,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 453,
+          "action_accuracy": 0.33705357142857145,
+          "benign_action_accuracy": 0.33705357142857145,
+          "benign_row_accuracy": 0.33705357142857145,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9915912648764178,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.9915912648764178,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.31227789222525415,
+              0.362758072031824
+            ],
+            "benign_row_accuracy": [
+              0.31227789222525415,
+              0.362758072031824
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.637241927968176,
+              0.687722107774746
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 453,
+          "correct_disposition_rate": 0.33705357142857145,
+          "correct_reject_count": 0,
+          "correct_row_count": 453,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 891,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.6629464285714286,
+          "rejected_count": 891,
+          "row_accuracy": 0.33705357142857145,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "175ebf132d9b31a539ef0d9f6afe1fd9f2b83a33d2c6ac11d02f5628fad989d2",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 186,
+      "false_rejects": 891,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.4,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "0cdcef3c6f44f759951a3d36f4d4780386ec8d979ca047eac7973aa4a3153aac",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 186,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.16179010579189482,
+              0.2096529256675386
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.8154761904761905,
+          "correct_reject_count": 822,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 186,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.18452380952380953,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 822,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.02983908734570035
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 414,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.3080357142857143,
+      "ambiguity_margin": 0.6070702875584469,
+      "benign_coverage": 0.3080357142857143,
+      "benign_result": {
+        "contract_digest": "6a7e6143abf1cf8d2bc2bcf23c35d20db49af8932c808a0d0e7f669255c54c43",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 414,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 414,
+          "action_accuracy": 0.3080357142857143,
+          "benign_action_accuracy": 0.3080357142857143,
+          "benign_row_accuracy": 0.3080357142857143,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9908064201395042,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.9908064201395042,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.28392935961650295,
+              0.3332362969055343
+            ],
+            "benign_row_accuracy": [
+              0.28392935961650295,
+              0.3332362969055343
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.6667637030944656,
+              0.716070640383497
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 414,
+          "correct_disposition_rate": 0.3080357142857143,
+          "correct_reject_count": 0,
+          "correct_row_count": 414,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 930,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.6919642857142857,
+          "rejected_count": 930,
+          "row_accuracy": 0.3080357142857143,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "540b5ffffb982826443ece9930332f365aac797732ca4f88656030935c289c01",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 312,
+      "false_rejects": 930,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.5,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "6a7e6143abf1cf8d2bc2bcf23c35d20db49af8932c808a0d0e7f669255c54c43",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 312,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.28175297081423867,
+              0.33874093497258906
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.6904761904761905,
+          "correct_reject_count": 696,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 312,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.30952380952380953,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 696,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.01861482699582847
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 426,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.3169642857142857,
+      "ambiguity_margin": 0.5859647871588606,
+      "benign_coverage": 0.3169642857142857,
+      "benign_result": {
+        "contract_digest": "caf2c8c8f8e323619d9ff997ae39905f6d7d80b6e83d35979b4cc741ee2e7692",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 426,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 426,
+          "action_accuracy": 0.3169642857142857,
+          "benign_action_accuracy": 0.3169642857142857,
+          "benign_row_accuracy": 0.3169642857142857,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9910630797893867,
+              0.9999999999999998
+            ],
+            "accepted_benign_row_correctness": [
+              0.9910630797893867,
+              0.9999999999999998
+            ],
+            "benign_action_accuracy": [
+              0.29264024858572907,
+              0.3423316564701669
+            ],
+            "benign_row_accuracy": [
+              0.29264024858572907,
+              0.3423316564701669
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.657668343529833,
+              0.707359751414271
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 426,
+          "correct_disposition_rate": 0.3169642857142857,
+          "correct_reject_count": 0,
+          "correct_row_count": 426,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 918,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.6830357142857143,
+          "rejected_count": 918,
+          "row_accuracy": 0.3169642857142857,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "ee87a82ce5bfee2b8b46efe0b6d46b0f247e75ad7ec131a9e4fba70019ef2638",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 315,
+      "false_rejects": 918,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.6,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "caf2c8c8f8e323619d9ff997ae39905f6d7d80b6e83d35979b4cc741ee2e7692",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 315,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.2846433021646288,
+              0.3417803863442797
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.6875,
+          "correct_reject_count": 693,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 315,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.3125,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 693,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.014889109003702865
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 359,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.26711309523809523,
+      "ambiguity_margin": 0.577387469033052,
+      "benign_coverage": 0.26711309523809523,
+      "benign_result": {
+        "contract_digest": "d019e4e3757391d18984cb5e1d5d4f47799d7f9800e74ad48697e206185ff702",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 359,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 359,
+          "action_accuracy": 0.26711309523809523,
+          "benign_action_accuracy": 0.26711309523809523,
+          "benign_row_accuracy": 0.26711309523809523,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9894128448463978,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.9894128448463978,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.24414670983078737,
+              0.2914069742443973
+            ],
+            "benign_row_accuracy": [
+              0.24414670983078737,
+              0.2914069742443973
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.7085930257556027,
+              0.7558532901692127
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 359,
+          "correct_disposition_rate": 0.26711309523809523,
+          "correct_reject_count": 0,
+          "correct_row_count": 359,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 985,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.7328869047619048,
+          "rejected_count": 985,
+          "row_accuracy": 0.26711309523809523,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "36faf74e5fce4dd3b22de97c24b8ab2a22b14fc8e2534866beb48daba85b48ab",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 336,
+      "false_rejects": 985,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.7,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "d019e4e3757391d18984cb5e1d5d4f47799d7f9800e74ad48697e206185ff702",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 336,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.30491324162011096,
+              0.3630189259433632
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.6666666666666666,
+          "correct_reject_count": 672,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 336,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.3333333333333333,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 672,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.011197983658180852
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 294,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.21875,
+      "ambiguity_margin": 0.5448283242937713,
+      "benign_coverage": 0.21875,
+      "benign_result": {
+        "contract_digest": "92de4759a708322e1fdcd44cca889aaa76028bd56b265a6ba4b64dcb9ba96e00",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 294,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 294,
+          "action_accuracy": 0.21875,
+          "benign_action_accuracy": 0.21875,
+          "benign_row_accuracy": 0.21875,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.987102336807292,
+              1.0
+            ],
+            "accepted_benign_row_correctness": [
+              0.987102336807292,
+              1.0
+            ],
+            "benign_action_accuracy": [
+              0.19746726722402433,
+              0.2416359039594256
+            ],
+            "benign_row_accuracy": [
+              0.19746726722402433,
+              0.2416359039594256
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.7583640960405744,
+              0.8025327327759757
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 294,
+          "correct_disposition_rate": 0.21875,
+          "correct_reject_count": 0,
+          "correct_row_count": 294,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1050,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.78125,
+          "rejected_count": 1050,
+          "row_accuracy": 0.21875,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "740898ddce5b43b4fda8696ffda6fc6399b50d1608204688cd1e4a11c482e3f5",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 336,
+      "false_rejects": 1050,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.8,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "92de4759a708322e1fdcd44cca889aaa76028bd56b265a6ba4b64dcb9ba96e00",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 336,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.30491324162011096,
+              0.3630189259433632
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.6666666666666666,
+          "correct_reject_count": 672,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 336,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.3333333333333333,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 672,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.0
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 315,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.234375,
+      "ambiguity_margin": 0.22423151102680308,
+      "benign_coverage": 0.234375,
+      "benign_result": {
+        "contract_digest": "b7208c432b1d3db715d7078f4db06df19c3faaca031d58427244d7963f57e7ee",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 315,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 315,
+          "action_accuracy": 0.234375,
+          "benign_action_accuracy": 0.234375,
+          "benign_row_accuracy": 0.234375,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9879518214635491,
+              0.9999999999999999
+            ],
+            "accepted_benign_row_correctness": [
+              0.9879518214635491,
+              0.9999999999999999
+            ],
+            "benign_action_accuracy": [
+              0.21250460431723955,
+              0.2577595018004632
+            ],
+            "benign_row_accuracy": [
+              0.21250460431723955,
+              0.2577595018004632
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.7422404981995369,
+              0.7874953956827605
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 315,
+          "correct_disposition_rate": 0.234375,
+          "correct_reject_count": 0,
+          "correct_row_count": 315,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1029,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.765625,
+          "rejected_count": 1029,
+          "row_accuracy": 0.234375,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "1eabd0fc6e413a69020cbadcb02fbaf0e50d2b59d641f1b1b31324c890ae6960",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 360,
+      "false_rejects": 1029,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 0.9,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "b7208c432b1d3db715d7078f4db06df19c3faaca031d58427244d7963f57e7ee",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 360,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.32815658148886323,
+              0.3872138478512575
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.6428571428571429,
+          "correct_reject_count": 648,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 360,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.35714285714285715,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 648,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.0
+    },
+    {
+      "accepted_action_precision": 1.0,
+      "accepted_benign_count": 336,
+      "accepted_exact_row_precision": 1.0,
+      "accepted_exact_row_recall": 0.25,
+      "ambiguity_margin": 0.06930393818799112,
+      "benign_coverage": 0.25,
+      "benign_result": {
+        "contract_digest": "fe1c1a042543e258bc0af01df416be55f9a2ddbde3c4ffed336cbc493fcb7975",
+        "metrics": {
+          "accepted_benign_action_correctness": 1.0,
+          "accepted_benign_count": 336,
+          "accepted_benign_row_correctness": 1.0,
+          "accepted_count": 336,
+          "action_accuracy": 0.25,
+          "benign_action_accuracy": 0.25,
+          "benign_row_accuracy": 0.25,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": [
+              0.9886963208255265,
+              0.9999999999999999
+            ],
+            "accepted_benign_row_correctness": [
+              0.9886963208255265,
+              0.9999999999999999
+            ],
+            "benign_action_accuracy": [
+              0.22758465681176396,
+              0.2738403842401916
+            ],
+            "benign_row_accuracy": [
+              0.22758465681176396,
+              0.2738403842401916
+            ],
+            "false_acceptance_rate": [
+              0.0,
+              0.0
+            ],
+            "false_rejection_rate": [
+              0.7261596157598085,
+              0.7724153431882361
+            ],
+            "top1_benign_action_accuracy": [
+              0.997149917896089,
+              1.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.997149917896089,
+              1.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 336,
+          "correct_disposition_rate": 0.25,
+          "correct_reject_count": 0,
+          "correct_row_count": 336,
+          "evaluation_count": 1344,
+          "false_accept_count": 0,
+          "false_accept_opportunities": 0,
+          "false_acceptance_rate": 0.0,
+          "false_reject_count": 1008,
+          "false_reject_opportunities": 1344,
+          "false_rejection_rate": 0.75,
+          "rejected_count": 1008,
+          "row_accuracy": 0.25,
+          "top1_benign_action_accuracy": 1.0,
+          "top1_benign_row_accuracy": 1.0,
+          "top1_correct_action_count": 1344,
+          "top1_correct_row_count": 1344
+        },
+        "notes": {
+          "cached_rankings": 1344,
+          "evaluated_split": "benign_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "calibration_artifact_id": "15b592f092e728b35ed3705c28573d1e5d391d7fdbdf058409c587dff2a6c823",
+      "conflicting_action_accepts": 0,
+      "false_accepts": 384,
+      "false_rejects": 1008,
+      "feasible": false,
+      "infeasible_reasons": [
+        "distinguishable_false_acceptance"
+      ],
+      "quantile": 1.0,
+      "raw_benign_exact_row_accuracy": 1.0,
+      "rejection_result": {
+        "contract_digest": "fe1c1a042543e258bc0af01df416be55f9a2ddbde3c4ffed336cbc493fcb7975",
+        "metrics": {
+          "accepted_benign_action_correctness": null,
+          "accepted_benign_count": 0,
+          "accepted_benign_row_correctness": null,
+          "accepted_count": 384,
+          "action_accuracy": 0.0,
+          "benign_action_accuracy": 0.0,
+          "benign_row_accuracy": 0.0,
+          "confidence_interval_note": "Observation-level Wilson intervals are descriptive. Use paired and state/family-clustered analyses for system comparisons.",
+          "confidence_intervals_95": {
+            "accepted_benign_action_correctness": null,
+            "accepted_benign_row_correctness": null,
+            "benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "benign_row_accuracy": [
+              0.0,
+              0.0
+            ],
+            "false_acceptance_rate": [
+              0.35147902794315405,
+              0.41132966317361314
+            ],
+            "false_rejection_rate": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_action_accuracy": [
+              0.0,
+              0.0
+            ],
+            "top1_benign_row_accuracy": [
+              0.0,
+              0.0
+            ]
+          },
+          "conflicting_action_error_count": 0,
+          "correct_action_count": 0,
+          "correct_disposition_rate": 0.6190476190476191,
+          "correct_reject_count": 624,
+          "correct_row_count": 0,
+          "evaluation_count": 1008,
+          "false_accept_count": 384,
+          "false_accept_opportunities": 1008,
+          "false_acceptance_rate": 0.38095238095238093,
+          "false_reject_count": 0,
+          "false_reject_opportunities": 0,
+          "false_rejection_rate": 0.0,
+          "rejected_count": 624,
+          "row_accuracy": 0.0,
+          "top1_benign_action_accuracy": 0.0,
+          "top1_benign_row_accuracy": 0.0,
+          "top1_correct_action_count": 0,
+          "top1_correct_row_count": 0
+        },
+        "notes": {
+          "cached_rankings": 1008,
+          "evaluated_split": "rejection_calibration"
+        },
+        "system_id": "R1",
+        "system_name": "registered_local_normalized_pixels"
+      },
+      "threshold": 0.0
+    }
+  ],
+  "registration_config_digest": "6d7d87840d7da9c0260b3664c905981dd440595fef0467ba70343b7b54d2dff5",
+  "version": "zeromodel-visual-local-showdown/v1"
+}

@@ -266,6 +266,8 @@ class VideoPolicyReader:
     def _validate_frame(manifest: VideoClipManifest, frame: VideoFrame, index: int) -> None:
         if frame.clip_id != manifest.clip_id:
             raise VPMValidationError("frame clip_id does not match manifest")
+        if frame.source_digest != manifest.source_digest:
+            raise VPMValidationError("frame source digest does not match manifest")
         if frame.frame_index != index or frame.decoding_order != index:
             raise VPMValidationError("frame order does not match manifest")
         if frame.frame_id != manifest.frame_ids[index]:
@@ -391,3 +393,14 @@ class VideoPolicyReader:
                 "maximum_identical_frame_run": self.maximum_identical_frame_run,
             },
         )
+
+
+__all__ = [
+    "TemporalEvidence",
+    "VIDEO_POLICY_DECISION_VERSION",
+    "VIDEO_POLICY_TRACE_VERSION",
+    "VIDEO_TEMPORAL_EVIDENCE_VERSION",
+    "VideoPolicyDecision",
+    "VideoPolicyReader",
+    "VideoPolicyTrace",
+]

@@ -1,0 +1,15 @@
+{
+  "V1": {
+    "ambiguous_registered_local_address": 86,
+    "registered_distance_above_threshold": 46
+  },
+  "V2": {
+    "minimum_visible_fraction": 112,
+    "winner_threshold": 20
+  },
+  "V3": {
+    "frame order does not match manifest": 22,
+    "minimum_visible_fraction": 90,
+    "winner_threshold": 20
+  }
+}

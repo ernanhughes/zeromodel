@@ -35,13 +35,22 @@ This slice establishes the dependency-light exact temporal baseline required bef
 
 ## Validation
 
-The implementation branch produced a clean full-suite result of:
+The current implementation branch produced a clean local validation result of:
 
 ```text
-221 passed, 1 skipped
+233 passed, 1 skipped
 ```
 
-The repository CI matrix also passed on Python 3.10, 3.11, and 3.12, together with the Lua policy fixture, package build, Twine metadata check, claims-audit participation, and visual evidence-impact guard.
+Stage 1 required commands also passed locally:
+
+```text
+python -m pytest -q
+python -m build
+python -m twine check dist/*
+python examples/arcade_visual_video_baseline.py
+```
+
+The canonical video baseline reproduced the full `22`-frame symbolic row and action path without rejection. The repository CI matrix for the inherited PR state had already passed on Python 3.10, 3.11, and 3.12 together with the Lua policy fixture, package build, Twine metadata check, claims-audit participation, and visual evidence-impact guard.
 
 ## Claim boundary
 

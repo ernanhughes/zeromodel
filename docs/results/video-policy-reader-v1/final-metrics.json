@@ -1,0 +1,100 @@
+{
+  "V0": {
+    "accepted_frames": 22,
+    "action_sequence_match": true,
+    "exact_row_sequence_match": true,
+    "frame_count": 22,
+    "provider_contract_digest": "bd51ec567dbf3fbfefcaf40bee56aa0e3c998d62b5efff4321e899112de412b0",
+    "transition_contract_digest": "sha256:1d2424f19655f96ef701842a001ddd7788f9b4c5f5b2f1c45ff5b87ea354e9ce"
+  },
+  "V1": {
+    "accepted_exact_action_accuracy": null,
+    "accepted_exact_row_accuracy": null,
+    "accepted_frames": 0,
+    "benign_accepted_frames": 0,
+    "benign_correct_action_frames": 0,
+    "benign_correct_row_frames": 0,
+    "benign_exact_row_coverage": 0.0,
+    "benign_total_frames": 66,
+    "conflicting_action_accepts": 0,
+    "distinguishable_false_accept_rate": 0.0,
+    "distinguishable_false_accepts": 0,
+    "distinguishable_negative_frames": 66,
+    "gap_related_outcomes": 0,
+    "identity_related_outcomes": 0,
+    "impossible_transition_accepts": 0,
+    "information_theoretic_control_count": 0,
+    "ordering_related_outcomes": 0,
+    "overall_exact_row_recovery": 0.0,
+    "rejected_frames": 132,
+    "rejection_reason_histogram": {
+      "ambiguous_registered_local_address": 86,
+      "registered_distance_above_threshold": 46
+    },
+    "same_action_wrong_row_accepts": 0,
+    "stale_state_accepts": 0,
+    "total_frames": 132
+  },
+  "V2": {
+    "accepted_exact_action_accuracy": null,
+    "accepted_exact_row_accuracy": null,
+    "accepted_frames": 0,
+    "benign_accepted_frames": 0,
+    "benign_correct_action_frames": 0,
+    "benign_correct_row_frames": 0,
+    "benign_exact_row_coverage": 0.0,
+    "benign_total_frames": 66,
+    "conflicting_action_accepts": 0,
+    "distinguishable_false_accept_rate": 0.0,
+    "distinguishable_false_accepts": 0,
+    "distinguishable_negative_frames": 66,
+    "gap_related_outcomes": 0,
+    "identity_related_outcomes": 0,
+    "impossible_transition_accepts": 0,
+    "information_theoretic_control_count": 0,
+    "ordering_related_outcomes": 0,
+    "overall_exact_row_recovery": 0.0,
+    "rejected_frames": 132,
+    "rejection_reason_histogram": {
+      "minimum_visible_fraction": 112,
+      "winner_threshold": 20
+    },
+    "same_action_wrong_row_accepts": 0,
+    "stale_state_accepts": 0,
+    "total_frames": 132
+  },
+  "V3": {
+    "accepted_exact_action_accuracy": null,
+    "accepted_exact_row_accuracy": null,
+    "accepted_frames": 0,
+    "benign_accepted_frames": 0,
+    "benign_correct_action_frames": 0,
+    "benign_correct_row_frames": 0,
+    "benign_exact_row_coverage": 0.0,
+    "benign_total_frames": 66,
+    "conflicting_action_accepts": 0,
+    "distinguishable_false_accept_rate": 0.0,
+    "distinguishable_false_accepts": 0,
+    "distinguishable_negative_frames": 66,
+    "gap_related_outcomes": 0,
+    "identity_related_outcomes": 22,
+    "impossible_transition_accepts": 0,
+    "information_theoretic_control_count": 0,
+    "ordering_related_outcomes": 22,
+    "overall_exact_row_recovery": 0.0,
+    "rejected_frames": 132,
+    "rejection_reason_histogram": {
+      "frame order does not match manifest": 22,
+      "minimum_visible_fraction": 90,
+      "winner_threshold": 20
+    },
+    "same_action_wrong_row_accepts": 0,
+    "stale_state_accepts": 0,
+    "total_frames": 132
+  },
+  "benchmark_version": "zeromodel-video-policy-reader-stage2/v1",
+  "materially_improved": false,
+  "paired_v2_v3": {
+    "rejected_by_both": 132
+  }
+}

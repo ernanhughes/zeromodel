@@ -28,7 +28,10 @@ from examples.arcade_visual_sign_reader import (  # noqa: E402
     render_state_frame,
 )
 from zeromodel import VPMPolicyLookup  # noqa: E402
-from zeromodel.policy_transitions import PolicyTransitionSpec  # noqa: E402
+from zeromodel.policy_transitions import (  # noqa: E402
+    PolicyTransitionSpec,
+    ROW_UNION_TRANSITION_SCOPE,
+)
 from zeromodel.video import InMemoryVideoFrameSource  # noqa: E402
 from zeromodel.video_policy import VideoPolicyReader  # noqa: E402
 from zeromodel.visual_policy import DeterministicVisualAddressProvider  # noqa: E402
@@ -104,7 +107,7 @@ def arcade_transition_spec(
         allowed_row_transitions=transitions,
         maximum_frame_gap=maximum_frame_gap,
         maximum_position_delta=1,
-        action_conditioned=False,
+        transition_scope=ROW_UNION_TRANSITION_SCOPE,
         metadata={
             "world": "tiny_arcade_shooter",
             "derivation": "declared_environment_dynamics",

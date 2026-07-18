@@ -13,6 +13,7 @@ from .artifact import VPMValidationError
 
 POLICY_TRANSITION_SPEC_VERSION = "zeromodel-policy-transition-spec/v1"
 POLICY_TRANSITION_EVIDENCE_VERSION = "zeromodel-policy-transition-evidence/v1"
+ROW_UNION_TRANSITION_SCOPE = "row_union_over_actions"
 _TRANSITION_STATUSES = {
     "initial",
     "possible",
@@ -63,7 +64,7 @@ class PolicyTransitionSpec:
     allowed_row_transitions: Mapping[str, Tuple[str, ...]]
     maximum_frame_gap: int = 1
     maximum_position_delta: Optional[int] = None
-    action_conditioned: bool = False
+    transition_scope: str = ROW_UNION_TRANSITION_SCOPE
     metadata: Mapping[str, Any] = field(default_factory=dict)
     version: str = POLICY_TRANSITION_SPEC_VERSION
 
@@ -74,6 +75,10 @@ class PolicyTransitionSpec:
             raise VPMValidationError("maximum_frame_gap must be at least one")
         if self.maximum_position_delta is not None and int(self.maximum_position_delta) < 0:
             raise VPMValidationError("maximum_position_delta must be non-negative")
+        if str(self.transition_scope) != ROW_UNION_TRANSITION_SCOPE:
+            raise VPMValidationError(
+                "unsupported transition_scope; only row_union_over_actions is implemented"
+            )
         frozen: Dict[str, Tuple[str, ...]] = {}
         for source, destinations in self.allowed_row_transitions.items():
             source_id = str(source)
@@ -100,7 +105,7 @@ class PolicyTransitionSpec:
             "maximum_position_delta",
             None if self.maximum_position_delta is None else int(self.maximum_position_delta),
         )
-        object.__setattr__(self, "action_conditioned", bool(self.action_conditioned))
+        object.__setattr__(self, "transition_scope", ROW_UNION_TRANSITION_SCOPE)
         object.__setattr__(self, "metadata", metadata)
 
     @property
@@ -119,12 +124,17 @@ class PolicyTransitionSpec:
             },
             "maximum_frame_gap": self.maximum_frame_gap,
             "maximum_position_delta": self.maximum_position_delta,
-            "action_conditioned": self.action_conditioned,
+            "transition_scope": self.transition_scope,
             "metadata": _thaw(self.metadata),
         }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "PolicyTransitionSpec":
+        if "action_conditioned" in data and bool(data["action_conditioned"]):
+            raise VPMValidationError(
+                "action-conditioned transitions are not implemented; "
+                "use transition_scope=row_union_over_actions"
+            )
         return cls(
             allowed_row_transitions={
                 str(key): tuple(str(item) for item in value)
@@ -136,7 +146,7 @@ class PolicyTransitionSpec:
                 if data.get("maximum_position_delta") is None
                 else int(data["maximum_position_delta"])
             ),
-            action_conditioned=bool(data.get("action_conditioned", False)),
+            transition_scope=str(data.get("transition_scope", ROW_UNION_TRANSITION_SCOPE)),
             metadata=data.get("metadata") or {},
             version=str(data.get("version", POLICY_TRANSITION_SPEC_VERSION)),
         )
@@ -227,3 +237,12 @@ class PolicyTransitionEvidence:
             "status": self.status,
             "transition_spec_id": self.transition_spec_id,
         }
+
+
+__all__ = [
+    "POLICY_TRANSITION_EVIDENCE_VERSION",
+    "POLICY_TRANSITION_SPEC_VERSION",
+    "ROW_UNION_TRANSITION_SCOPE",
+    "PolicyTransitionEvidence",
+    "PolicyTransitionSpec",
+]

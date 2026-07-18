@@ -1,0 +1,12 @@
+{
+  "conditions": [
+    "V3 introduces zero new distinguishable false accepts.",
+    "V3 introduces zero new conflicting-action accepts.",
+    "V3 never turns a correct V2 result into an incorrect accepted result.",
+    "V3 rejects at least one incorrect V2 acceptance, or enables at least one justified recovery supported by sufficient current-frame evidence.",
+    "The improvement is visible in paired frame counts.",
+    "The result does not depend on stale-state carry-forward.",
+    "Any loss of benign coverage is explicitly reported."
+  ],
+  "rule_version": "video-local-correlation-materiality/v1"
+}

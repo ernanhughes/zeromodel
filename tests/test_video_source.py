@@ -81,3 +81,54 @@ def test_frame_indices_and_decoding_order_must_be_contiguous() -> None:
     )
     with pytest.raises(VPMValidationError, match="contiguous and ordered"):
         InMemoryVideoFrameSource((first, skipped), nominal_fps=10.0)
+
+
+def test_negative_and_non_finite_timestamps_are_rejected() -> None:
+    with pytest.raises(VPMValidationError, match="non-negative"):
+        VideoFrame(
+            clip_id="clip",
+            frame_index=0,
+            timestamp_seconds=-0.1,
+            pixels=np.zeros((2, 2), dtype=np.uint8),
+            source_digest="sha256:source",
+        )
+    with pytest.raises(VPMValidationError, match="finite and non-negative"):
+        VideoFrame(
+            clip_id="clip",
+            frame_index=0,
+            timestamp_seconds=float("nan"),
+            pixels=np.zeros((2, 2), dtype=np.uint8),
+            source_digest="sha256:source",
+        )
+
+
+def test_duplicate_frame_ids_are_rejected() -> None:
+    first = VideoFrame(
+        clip_id="clip",
+        frame_index=0,
+        timestamp_seconds=0.0,
+        pixels=np.zeros((2, 2), dtype=np.uint8),
+        source_digest="sha256:source",
+        frame_id="frame-0",
+    )
+    second = VideoFrame(
+        clip_id="clip",
+        frame_index=1,
+        timestamp_seconds=0.1,
+        pixels=np.ones((2, 2), dtype=np.uint8),
+        source_digest="sha256:source",
+        frame_id="frame-0",
+    )
+    with pytest.raises(VPMValidationError, match="frame IDs must be unique"):
+        InMemoryVideoFrameSource((first, second), nominal_fps=10.0)
+
+
+def test_owned_frame_pixels_cannot_be_mutated_by_callers() -> None:
+    source = InMemoryVideoFrameSource.from_arrays(
+        [np.zeros((2, 2), dtype=np.uint8)],
+        clip_id="clip",
+        nominal_fps=10.0,
+    )
+    frame = next(source.frames())
+    with pytest.raises(ValueError):
+        frame.pixels[0, 0] = 255

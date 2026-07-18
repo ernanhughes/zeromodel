@@ -250,6 +250,7 @@ class InMemoryVideoFrameSource:
         if not owned:
             raise VPMValidationError("video source requires at least one frame")
         first, shape = owned[0], owned[0].pixels.shape
+        frame_ids = set()
         for expected, frame in enumerate(owned):
             if not isinstance(frame, VideoFrame):
                 raise VPMValidationError("video source requires VideoFrame values")
@@ -261,6 +262,9 @@ class InMemoryVideoFrameSource:
                 raise VPMValidationError("frame shape changes are not allowed")
             if expected and frame.timestamp_seconds < owned[expected - 1].timestamp_seconds:
                 raise VPMValidationError("frame timestamps must be monotonic")
+            if frame.frame_id in frame_ids:
+                raise VPMValidationError("frame IDs must be unique")
+            frame_ids.add(frame.frame_id)
         frame_digests = tuple(frame.frame_digest for frame in owned)
         payload_digest = _digest(
             b"zeromodel.video-clip-payload.v1\0",
@@ -329,3 +333,14 @@ class InMemoryVideoFrameSource:
 
     def frames(self) -> Iterator[VideoFrame]:
         return iter(self._frames)
+
+
+__all__ = [
+    "InMemoryVideoFrameSource",
+    "VIDEO_CLIP_MANIFEST_VERSION",
+    "VIDEO_FRAME_SOURCE_VERSION",
+    "VIDEO_FRAME_VERSION",
+    "VideoClipManifest",
+    "VideoFrame",
+    "VideoFrameSource",
+]

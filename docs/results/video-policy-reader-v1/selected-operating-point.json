@@ -1,0 +1,56 @@
+{
+  "V1": {
+    "candidate_grid_digest": "sha256:bbcb5932bc13946f5c9937c1bdafa611c6eb7394a1fb5c3543c66c5227e23f4c",
+    "selected_calibration": {
+      "ambiguity_margin": 0.6747226986824819,
+      "benign_calibration_digest": "41710439956c2413187c0737aec78be5eaf175b875154992c33260d14fdc4eba",
+      "metadata": {
+        "ambiguity_margin_quantile": 0.0,
+        "distance_quantile": 0.6,
+        "selection_version": "zeromodel-registered-pixel-selection/v2"
+      },
+      "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "prototype_digest": "20f5231eedeab0e83c5db265edaffc636375f0db036c641d4ef804cbb5535971",
+      "quantile": 0.0,
+      "registration_config_digest": "6d7d87840d7da9c0260b3664c905981dd440595fef0467ba70343b7b54d2dff5",
+      "rejection_calibration_digest": "b37e34bb3250ac895c4a9608986e4a89c69fcd306755af8eac33950e524658b1",
+      "source_scope": "arcade-visual-local-evidence-v3",
+      "threshold": 0.0016048521473078022,
+      "version": "zeromodel-registered-pixel-provider/v1"
+    },
+    "selected_calibration_digest": "743e75ef5b15d704c33d09043a6bbd15746d75a2acbb37029d2c07a43b40e471",
+    "selection_digest": "d7c241d6869f4767a9ccd07820cbfb3b0c5a2f73e1003c330c69e52dc7fecd54",
+    "selection_status": "selected_operating_point"
+  },
+  "V2": {
+    "candidate_grid_digest": "sha256:66f15302bb762231f3fea3596d28bf2d0d39448c41f1ae023b800828a5d5e752",
+    "safe_nonzero_operating_point_exists": false,
+    "selected_calibration": {
+      "benign_calibration_digest": "sha256:41710439956c2413187c0737aec78be5eaf175b875154992c33260d14fdc4eba",
+      "conflicting_action_margin": 0.03,
+      "metadata": {},
+      "minimum_visible_fraction": 0.8,
+      "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "prototype_digest": "sha256:20f5231eedeab0e83c5db265edaffc636375f0db036c641d4ef804cbb5535971",
+      "region_spec_digest": "sha256:74348cc2cd04d57ca0c84910d09295a6096bc12f738ca6e3a9a191d422842e83",
+      "rejection_calibration_digest": "sha256:b37e34bb3250ac895c4a9608986e4a89c69fcd306755af8eac33950e524658b1",
+      "runner_up_margin": 0.0,
+      "source_scope": "arcade-visual-local-evidence-v3",
+      "version": "zeromodel-video-local-correlation-calibration/v1",
+      "winner_threshold": 0.1
+    },
+    "selected_calibration_digest": "sha256:09ec935571e2e9e7d8a7c0b5fe35961aee9a19560acabe97425eb1fda0e57a88",
+    "selection_digest": "sha256:fc05d26bb85025cfee2fed92127a435811ec099eeb32b86d13edf58bb4357a9c",
+    "selection_status": "no_feasible_operating_point"
+  },
+  "benchmark_version": "zeromodel-video-policy-reader-stage2/v1",
+  "frozen_calibration_rule": [
+    "Zero distinguishable false accepts on rejection-calibration examples.",
+    "Zero accepted conflicting-action errors on benign-calibration examples.",
+    "Nonzero benign coverage.",
+    "Maximize benign exact-row coverage.",
+    "Maximize exact-row accuracy among accepted frames.",
+    "Prefer the more conservative operating point.",
+    "Resolve ties by deterministic parameter ordering."
+  ]
+}

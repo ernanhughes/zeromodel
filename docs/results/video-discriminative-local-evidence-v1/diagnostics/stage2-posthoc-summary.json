@@ -1,0 +1,240 @@
+{
+  "candidate_grid_digest": "sha256:66f15302bb762231f3fea3596d28bf2d0d39448c41f1ae023b800828a5d5e752",
+  "diagnostic_row_count": 132,
+  "family_rejections": {
+    "bounded_translation_occlusion": {
+      "minimum_visible_fraction": 2,
+      "winner_threshold": 20
+    },
+    "bounded_translation_photometric": {
+      "minimum_visible_fraction": 22
+    },
+    "critical_evidence_removed": {
+      "minimum_visible_fraction": 22
+    },
+    "exact_frames": {
+      "minimum_visible_fraction": 22
+    },
+    "reordered_frames": {
+      "minimum_visible_fraction": 22
+    },
+    "stale_repeated_pixels": {
+      "minimum_visible_fraction": 22
+    }
+  },
+  "generated_utc": "2026-07-18T15:33:45.869711+00:00",
+  "region_contract_digest": "sha256:74348cc2cd04d57ca0c84910d09295a6096bc12f738ca6e3a9a191d422842e83",
+  "region_summaries": [
+    {
+      "family": "bounded_translation_occlusion",
+      "low_visibility_count": 8,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.8181818181818182,
+      "mean_visible_fraction": 0.8181818181818182,
+      "min_overlap_fraction": 0.5,
+      "min_visible_fraction": 0.5,
+      "region_id": "cooldown_indicator"
+    },
+    {
+      "family": "bounded_translation_occlusion",
+      "low_visibility_count": 0,
+      "mean_distance": 0.00013091912806299048,
+      "mean_overlap_fraction": 0.987012987012987,
+      "mean_visible_fraction": 0.987012987012987,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "tank_band"
+    },
+    {
+      "family": "bounded_translation_occlusion",
+      "low_visibility_count": 2,
+      "mean_distance": 0.3158169278637098,
+      "mean_overlap_fraction": 0.9556277056277057,
+      "mean_visible_fraction": 0.9556277056277057,
+      "min_overlap_fraction": 0.6190476190476191,
+      "min_visible_fraction": 0.6190476190476191,
+      "region_id": "target_band"
+    },
+    {
+      "family": "bounded_translation_photometric",
+      "low_visibility_count": 22,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.5,
+      "mean_visible_fraction": 0.5,
+      "min_overlap_fraction": 0.5,
+      "min_visible_fraction": 0.5,
+      "region_id": "cooldown_indicator"
+    },
+    {
+      "family": "bounded_translation_photometric",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "tank_band"
+    },
+    {
+      "family": "bounded_translation_photometric",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "target_band"
+    },
+    {
+      "family": "critical_evidence_removed",
+      "low_visibility_count": 22,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.5,
+      "mean_visible_fraction": 0.5,
+      "min_overlap_fraction": 0.5,
+      "min_visible_fraction": 0.5,
+      "region_id": "cooldown_indicator"
+    },
+    {
+      "family": "critical_evidence_removed",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "tank_band"
+    },
+    {
+      "family": "critical_evidence_removed",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "target_band"
+    },
+    {
+      "family": "exact_frames",
+      "low_visibility_count": 22,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.5,
+      "mean_visible_fraction": 0.5,
+      "min_overlap_fraction": 0.5,
+      "min_visible_fraction": 0.5,
+      "region_id": "cooldown_indicator"
+    },
+    {
+      "family": "exact_frames",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "tank_band"
+    },
+    {
+      "family": "exact_frames",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "target_band"
+    },
+    {
+      "family": "reordered_frames",
+      "low_visibility_count": 22,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.5,
+      "mean_visible_fraction": 0.5,
+      "min_overlap_fraction": 0.5,
+      "min_visible_fraction": 0.5,
+      "region_id": "cooldown_indicator"
+    },
+    {
+      "family": "reordered_frames",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "tank_band"
+    },
+    {
+      "family": "reordered_frames",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "target_band"
+    },
+    {
+      "family": "stale_repeated_pixels",
+      "low_visibility_count": 22,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.5,
+      "mean_visible_fraction": 0.5,
+      "min_overlap_fraction": 0.5,
+      "min_visible_fraction": 0.5,
+      "region_id": "cooldown_indicator"
+    },
+    {
+      "family": "stale_repeated_pixels",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "tank_band"
+    },
+    {
+      "family": "stale_repeated_pixels",
+      "low_visibility_count": 0,
+      "mean_distance": 0.0,
+      "mean_overlap_fraction": 0.9642857142857145,
+      "mean_visible_fraction": 0.9642857142857145,
+      "min_overlap_fraction": 0.9642857142857143,
+      "min_visible_fraction": 0.9642857142857143,
+      "region_id": "target_band"
+    }
+  ],
+  "selected_calibration": {
+    "benign_calibration_digest": "sha256:41710439956c2413187c0737aec78be5eaf175b875154992c33260d14fdc4eba",
+    "conflicting_action_margin": 0.03,
+    "metadata": {},
+    "minimum_visible_fraction": 0.8,
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "prototype_digest": "sha256:20f5231eedeab0e83c5db265edaffc636375f0db036c641d4ef804cbb5535971",
+    "region_spec_digest": "sha256:74348cc2cd04d57ca0c84910d09295a6096bc12f738ca6e3a9a191d422842e83",
+    "rejection_calibration_digest": "sha256:b37e34bb3250ac895c4a9608986e4a89c69fcd306755af8eac33950e524658b1",
+    "runner_up_margin": 0.0,
+    "source_scope": "arcade-visual-local-evidence-v3",
+    "version": "zeromodel-video-local-correlation-calibration/v1",
+    "winner_threshold": 0.1
+  },
+  "selected_calibration_digest": "sha256:09ec935571e2e9e7d8a7c0b5fe35961aee9a19560acabe97425eb1fda0e57a88",
+  "selection_status": "no_feasible_operating_point",
+  "stage2_benchmark_digest": "sha256:589bb074e1b53b06657cfb75bf7b8d67eae43cc5f76e7237ab07f23ccca49c75",
+  "stage2_parent_commit": "d00e18b67fbe2f62617cd0ac47c7ee2f63487cb8",
+  "stage2_split_digest": "sha256:d25b694b3cce93bf93f58239163331f3f6370d32a2b5cce53b4541902b0f8c23",
+  "topk_correct_action_hits": {
+    "top1": 64,
+    "top2": 64,
+    "top3": 64,
+    "top5": 64
+  },
+  "topk_correct_row_hits": {
+    "top1": 55,
+    "top2": 62,
+    "top3": 64,
+    "top5": 64
+  }
+}

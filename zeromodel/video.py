@@ -1,9 +1,4 @@
-"""Deterministic video transport and identity contracts.
-
-The canonical benchmark path uses owned lossless frame arrays rather than codec
-bytes. Optional file decoders may produce these contracts, but codec output is
-not itself the canonical clip identity unless a caller explicitly pins it.
-"""
+"""Deterministic, dependency-light video transport contracts."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,12 +6,11 @@ import hashlib
 import json
 import math
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Iterator, Mapping, Optional, Protocol, Sequence, Tuple, runtime_checkable
+from typing import Any, Iterable, Iterator, Mapping, Optional, Protocol, Sequence, Tuple, runtime_checkable
 
 import numpy as np
 
 from .artifact import VPMValidationError
-
 
 VIDEO_FRAME_VERSION = "zeromodel-video-frame/v1"
 VIDEO_CLIP_MANIFEST_VERSION = "zeromodel-video-clip-manifest/v1"
@@ -44,23 +38,21 @@ def _freeze(value: Any) -> Any:
 def _json_bytes(value: Any) -> bytes:
     try:
         return json.dumps(
-            _thaw(value),
-            sort_keys=True,
-            separators=(",", ":"),
-            ensure_ascii=False,
-            allow_nan=False,
+            _thaw(value), sort_keys=True, separators=(",", ":"),
+            ensure_ascii=False, allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
         raise VPMValidationError("video values must be JSON-serializable") from exc
 
 
-def _sha256(prefix: bytes, descriptor: Any, payload: bytes = b"") -> str:
-    digest = hashlib.sha256(prefix + _json_bytes(descriptor) + payload).hexdigest()
-    return "sha256:" + digest
+def _digest(prefix: bytes, descriptor: Any, payload: bytes = b"") -> str:
+    return "sha256:" + hashlib.sha256(
+        prefix + _json_bytes(descriptor) + payload
+    ).hexdigest()
 
 
-def _validate_pixels(pixels: np.ndarray) -> np.ndarray:
-    array = np.asarray(pixels)
+def _owned_pixels(value: np.ndarray) -> np.ndarray:
+    array = np.asarray(value)
     if array.dtype != np.uint8:
         raise VPMValidationError("video frames must use uint8 samples")
     if not (array.ndim == 2 or (array.ndim == 3 and array.shape[2] in {3, 4})):
@@ -74,8 +66,6 @@ def _validate_pixels(pixels: np.ndarray) -> np.ndarray:
 
 @dataclass(frozen=True)
 class VideoFrame:
-    """One owned frame with stable source, order, time, and payload identity."""
-
     clip_id: str
     frame_index: int
     timestamp_seconds: float
@@ -89,54 +79,56 @@ class VideoFrame:
     def __post_init__(self) -> None:
         if self.version != VIDEO_FRAME_VERSION:
             raise VPMValidationError("unsupported video frame version")
-        if not str(self.clip_id):
-            raise VPMValidationError("clip_id cannot be empty")
-        if not str(self.source_digest):
-            raise VPMValidationError("source_digest cannot be empty")
-        if int(self.frame_index) < 0:
-            raise VPMValidationError("frame_index must be non-negative")
+        if not str(self.clip_id) or not str(self.source_digest):
+            raise VPMValidationError("clip_id and source_digest cannot be empty")
+        index = int(self.frame_index)
+        order = index if self.decoding_order is None else int(self.decoding_order)
         timestamp = float(self.timestamp_seconds)
+        if index < 0 or order < 0:
+            raise VPMValidationError("frame index and decoding order must be non-negative")
         if not math.isfinite(timestamp) or timestamp < 0.0:
             raise VPMValidationError("timestamp_seconds must be finite and non-negative")
-        decoding_order = self.frame_index if self.decoding_order is None else int(self.decoding_order)
-        if decoding_order < 0:
-            raise VPMValidationError("decoding_order must be non-negative")
-        owned = _validate_pixels(self.pixels)
         metadata = _freeze(self.metadata)
         _json_bytes(metadata)
-        object.__setattr__(self, "pixels", owned)
-        object.__setattr__(self, "frame_index", int(self.frame_index))
-        object.__setattr__(self, "timestamp_seconds", timestamp)
-        object.__setattr__(self, "decoding_order", decoding_order)
+        object.__setattr__(self, "pixels", _owned_pixels(self.pixels))
         object.__setattr__(self, "clip_id", str(self.clip_id))
         object.__setattr__(self, "source_digest", str(self.source_digest))
+        object.__setattr__(self, "frame_index", index)
+        object.__setattr__(self, "decoding_order", order)
+        object.__setattr__(self, "timestamp_seconds", timestamp)
         object.__setattr__(self, "metadata", metadata)
-        computed_id = self.frame_digest
-        object.__setattr__(self, "frame_id", str(self.frame_id) or computed_id)
+        object.__setattr__(self, "frame_id", str(self.frame_id) or self.frame_digest)
 
     @property
     def channels(self) -> int:
         return 1 if self.pixels.ndim == 2 else int(self.pixels.shape[2])
 
     @property
+    def pixel_digest(self) -> str:
+        return _digest(
+            b"zeromodel.video-frame-pixels.v1\0",
+            {"shape": list(self.pixels.shape)},
+            self.pixels.tobytes(order="C"),
+        )
+
+    @property
     def frame_digest(self) -> str:
         descriptor = {
             "version": self.version,
-            "clip_id": str(self.clip_id),
-            "frame_index": int(self.frame_index),
-            "decoding_order": int(self.frame_index if self.decoding_order is None else self.decoding_order),
-            "timestamp_seconds": float(self.timestamp_seconds),
-            "source_digest": str(self.source_digest),
-            "shape": list(np.asarray(self.pixels).shape),
+            "clip_id": self.clip_id,
+            "frame_index": self.frame_index,
+            "decoding_order": self.decoding_order,
+            "timestamp_seconds": self.timestamp_seconds,
+            "source_digest": self.source_digest,
+            "shape": list(self.pixels.shape),
             "metadata": _thaw(self.metadata),
         }
-        return _sha256(
-            b"zeromodel.video-frame.v1\0",
-            descriptor,
-            np.asarray(self.pixels, dtype=np.uint8).tobytes(order="C"),
+        return _digest(
+            b"zeromodel.video-frame.v1\0", descriptor,
+            self.pixels.tobytes(order="C"),
         )
 
-    def to_descriptor(self) -> Dict[str, Any]:
+    def to_descriptor(self) -> dict[str, Any]:
         return {
             "version": self.version,
             "clip_id": self.clip_id,
@@ -146,6 +138,7 @@ class VideoFrame:
             "timestamp_seconds": self.timestamp_seconds,
             "source_digest": self.source_digest,
             "frame_digest": self.frame_digest,
+            "pixel_digest": self.pixel_digest,
             "shape": list(self.pixels.shape),
             "channels": self.channels,
             "metadata": _thaw(self.metadata),
@@ -154,8 +147,6 @@ class VideoFrame:
 
 @dataclass(frozen=True)
 class VideoClipManifest:
-    """Ordered identity record for one lossless decoded clip."""
-
     clip_id: str
     source_kind: str
     source_digest: str
@@ -175,50 +166,48 @@ class VideoClipManifest:
     def __post_init__(self) -> None:
         if self.version != VIDEO_CLIP_MANIFEST_VERSION:
             raise VPMValidationError("unsupported video clip manifest version")
-        for name in ("clip_id", "source_kind", "source_digest", "payload_digest"):
-            if not str(getattr(self, name)):
-                raise VPMValidationError("%s cannot be empty" % name)
-        if int(self.frame_count) <= 0:
-            raise VPMValidationError("frame_count must be positive")
-        if int(self.width) <= 0 or int(self.height) <= 0 or int(self.channels) not in {1, 3, 4}:
-            raise VPMValidationError("invalid clip dimensions or channels")
+        if any(not str(getattr(self, name)) for name in (
+            "clip_id", "source_kind", "source_digest", "payload_digest"
+        )):
+            raise VPMValidationError("manifest identities cannot be empty")
+        count, width, height, channels = (
+            int(self.frame_count), int(self.width), int(self.height), int(self.channels)
+        )
+        if count <= 0 or width <= 0 or height <= 0 or channels not in {1, 3, 4}:
+            raise VPMValidationError("invalid clip dimensions or frame count")
         fps = None if self.nominal_fps is None else float(self.nominal_fps)
         if fps is not None and (not math.isfinite(fps) or fps <= 0.0):
             raise VPMValidationError("nominal_fps must be finite and positive")
-        frame_ids = tuple(str(value) for value in self.frame_ids)
-        frame_digests = tuple(str(value) for value in self.frame_digests)
-        timestamps = tuple(float(value) for value in self.timestamps_seconds)
-        warnings = tuple(str(value) for value in self.decode_warnings)
-        expected = int(self.frame_count)
-        if not (len(frame_ids) == len(frame_digests) == len(timestamps) == expected):
+        ids = tuple(str(item) for item in self.frame_ids)
+        digests = tuple(str(item) for item in self.frame_digests)
+        timestamps = tuple(float(item) for item in self.timestamps_seconds)
+        if not (len(ids) == len(digests) == len(timestamps) == count):
             raise VPMValidationError("manifest frame vectors must match frame_count")
-        if len(set(frame_ids)) != len(frame_ids):
+        if len(set(ids)) != len(ids):
             raise VPMValidationError("frame_ids must be unique")
-        if any(not math.isfinite(value) or value < 0.0 for value in timestamps):
+        if any(not math.isfinite(item) or item < 0.0 for item in timestamps):
             raise VPMValidationError("manifest timestamps must be finite and non-negative")
         if any(right < left for left, right in zip(timestamps, timestamps[1:])):
             raise VPMValidationError("manifest timestamps must be monotonic")
         metadata = _freeze(self.metadata)
         _json_bytes(metadata)
-        object.__setattr__(self, "frame_count", expected)
-        object.__setattr__(self, "width", int(self.width))
-        object.__setattr__(self, "height", int(self.height))
-        object.__setattr__(self, "channels", int(self.channels))
-        object.__setattr__(self, "nominal_fps", fps)
-        object.__setattr__(self, "frame_ids", frame_ids)
-        object.__setattr__(self, "frame_digests", frame_digests)
-        object.__setattr__(self, "timestamps_seconds", timestamps)
-        object.__setattr__(self, "decode_warnings", warnings)
-        object.__setattr__(self, "metadata", metadata)
+        for name, value in (
+            ("frame_count", count), ("width", width), ("height", height),
+            ("channels", channels), ("nominal_fps", fps), ("frame_ids", ids),
+            ("frame_digests", digests), ("timestamps_seconds", timestamps),
+            ("decode_warnings", tuple(str(item) for item in self.decode_warnings)),
+            ("metadata", metadata),
+        ):
+            object.__setattr__(self, name, value)
 
     @property
     def manifest_id(self) -> str:
-        return _sha256(
+        return _digest(
             b"zeromodel.video-clip-manifest.v1\0",
             self.to_dict(include_manifest_id=False),
         )
 
-    def to_dict(self, *, include_manifest_id: bool = True) -> Dict[str, Any]:
+    def to_dict(self, *, include_manifest_id: bool = True) -> dict[str, Any]:
         result = {
             "version": self.version,
             "clip_id": self.clip_id,
@@ -243,16 +232,11 @@ class VideoClipManifest:
 
 @runtime_checkable
 class VideoFrameSource(Protocol):
-    def manifest(self) -> VideoClipManifest:
-        ...
-
-    def frames(self) -> Iterable[VideoFrame]:
-        ...
+    def manifest(self) -> VideoClipManifest: ...
+    def frames(self) -> Iterable[VideoFrame]: ...
 
 
 class InMemoryVideoFrameSource:
-    """Canonical dependency-light source backed by owned lossless frames."""
-
     def __init__(
         self,
         frames: Sequence[VideoFrame],
@@ -265,44 +249,35 @@ class InMemoryVideoFrameSource:
         owned = tuple(frames)
         if not owned:
             raise VPMValidationError("video source requires at least one frame")
-        first = owned[0]
-        expected_shape = first.pixels.shape
-        for expected_index, frame in enumerate(owned):
+        first, shape = owned[0], owned[0].pixels.shape
+        for expected, frame in enumerate(owned):
             if not isinstance(frame, VideoFrame):
                 raise VPMValidationError("video source requires VideoFrame values")
-            if frame.clip_id != first.clip_id:
-                raise VPMValidationError("all frames must share one clip_id")
-            if frame.source_digest != first.source_digest:
-                raise VPMValidationError("all frames must share one source_digest")
-            if frame.frame_index != expected_index:
-                raise VPMValidationError("frame indices must be contiguous and ordered")
-            if frame.decoding_order != expected_index:
-                raise VPMValidationError("decoding order must be contiguous and ordered")
-            if frame.pixels.shape != expected_shape:
+            if frame.clip_id != first.clip_id or frame.source_digest != first.source_digest:
+                raise VPMValidationError("all frames must share clip and source identity")
+            if frame.frame_index != expected or frame.decoding_order != expected:
+                raise VPMValidationError("frame indices and decoding order must be contiguous and ordered")
+            if frame.pixels.shape != shape:
                 raise VPMValidationError("frame shape changes are not allowed")
-            if expected_index and frame.timestamp_seconds < owned[expected_index - 1].timestamp_seconds:
+            if expected and frame.timestamp_seconds < owned[expected - 1].timestamp_seconds:
                 raise VPMValidationError("frame timestamps must be monotonic")
-        payload_digest = _sha256(
+        frame_digests = tuple(frame.frame_digest for frame in owned)
+        payload_digest = _digest(
             b"zeromodel.video-clip-payload.v1\0",
-            {
-                "clip_id": first.clip_id,
-                "source_digest": first.source_digest,
-                "frame_digests": [frame.frame_digest for frame in owned],
-            },
+            {"clip_id": first.clip_id, "source_digest": first.source_digest,
+             "frame_digests": list(frame_digests)},
         )
-        channels = 1 if len(expected_shape) == 2 else int(expected_shape[2])
         self._frames = owned
         self._manifest = VideoClipManifest(
             clip_id=first.clip_id,
             source_kind=str(source_kind),
             source_digest=first.source_digest,
             frame_count=len(owned),
-            width=int(expected_shape[1]),
-            height=int(expected_shape[0]),
-            channels=channels,
+            width=int(shape[1]), height=int(shape[0]),
+            channels=1 if len(shape) == 2 else int(shape[2]),
             nominal_fps=nominal_fps,
             frame_ids=tuple(frame.frame_id for frame in owned),
-            frame_digests=tuple(frame.frame_digest for frame in owned),
+            frame_digests=frame_digests,
             timestamps_seconds=tuple(frame.timestamp_seconds for frame in owned),
             payload_digest=payload_digest,
             decode_warnings=tuple(decode_warnings),
@@ -320,45 +295,34 @@ class InMemoryVideoFrameSource:
         timestamps_seconds: Optional[Sequence[float]] = None,
         metadata: Optional[Mapping[str, Any]] = None,
     ) -> "InMemoryVideoFrameSource":
-        arrays = tuple(_validate_pixels(frame) for frame in frames)
+        arrays = tuple(_owned_pixels(frame) for frame in frames)
+        fps = float(nominal_fps)
         if not arrays:
             raise VPMValidationError("video source requires at least one frame")
-        if not math.isfinite(float(nominal_fps)) or float(nominal_fps) <= 0.0:
+        if not math.isfinite(fps) or fps <= 0.0:
             raise VPMValidationError("nominal_fps must be finite and positive")
-        if timestamps_seconds is None:
-            timestamps = tuple(index / float(nominal_fps) for index in range(len(arrays)))
-        else:
-            timestamps = tuple(float(value) for value in timestamps_seconds)
-            if len(timestamps) != len(arrays):
-                raise VPMValidationError("timestamps must match frame count")
-        source_digest = _sha256(
-            b"zeromodel.video-source.v1\0",
-            {
-                "clip_id": str(clip_id),
-                "source_id": str(source_id),
-                "nominal_fps": float(nominal_fps),
-                "shapes": [list(array.shape) for array in arrays],
-            },
-            b"".join(array.tobytes(order="C") for array in arrays),
+        timestamps = (
+            tuple(index / fps for index in range(len(arrays)))
+            if timestamps_seconds is None
+            else tuple(float(item) for item in timestamps_seconds)
         )
-        video_frames = tuple(
+        if len(timestamps) != len(arrays):
+            raise VPMValidationError("timestamps must match frame count")
+        source_digest = _digest(
+            b"zeromodel.video-source.v1\0",
+            {"clip_id": str(clip_id), "source_id": str(source_id),
+             "nominal_fps": fps, "shapes": [list(item.shape) for item in arrays]},
+            b"".join(item.tobytes(order="C") for item in arrays),
+        )
+        values = tuple(
             VideoFrame(
-                clip_id=str(clip_id),
-                frame_index=index,
-                decoding_order=index,
-                timestamp_seconds=timestamps[index],
-                pixels=array,
-                source_digest=source_digest,
-                metadata={"source_id": str(source_id)},
+                clip_id=str(clip_id), frame_index=index, decoding_order=index,
+                timestamp_seconds=timestamps[index], pixels=array,
+                source_digest=source_digest, metadata={"source_id": str(source_id)},
             )
             for index, array in enumerate(arrays)
         )
-        return cls(
-            video_frames,
-            source_kind="lossless_frame_stream",
-            nominal_fps=float(nominal_fps),
-            metadata=metadata,
-        )
+        return cls(values, nominal_fps=fps, metadata=metadata)
 
     def manifest(self) -> VideoClipManifest:
         return self._manifest

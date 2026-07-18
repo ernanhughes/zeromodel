@@ -203,6 +203,18 @@ from .video_policy import (
     VideoPolicyReader,
     VideoPolicyTrace,
 )
+from .video_local_correlation import (
+    VIDEO_LOCAL_CORRELATION_CALIBRATION_VERSION,
+    VIDEO_LOCAL_CORRELATION_PROVIDER_VERSION,
+    LocalCorrelationCalibration,
+    LocalCorrelationSelectionArtifact,
+    LocalCorrelationVideoAddressProvider,
+    LocalRegionSpec,
+    build_local_correlation_candidates,
+    build_local_correlation_prototypes,
+    local_region_digest,
+    select_local_correlation_candidate,
+)
 
 
 __version__ = "1.0.11"
@@ -274,6 +286,8 @@ __all__ = [
     "VIDEO_CLIP_MANIFEST_VERSION",
     "VIDEO_FRAME_SOURCE_VERSION",
     "VIDEO_FRAME_VERSION",
+    "VIDEO_LOCAL_CORRELATION_CALIBRATION_VERSION",
+    "VIDEO_LOCAL_CORRELATION_PROVIDER_VERSION",
     "VIDEO_POLICY_DECISION_VERSION",
     "VIDEO_POLICY_TRACE_VERSION",
     "VIDEO_TEMPORAL_EVIDENCE_VERSION",
@@ -299,6 +313,10 @@ __all__ = [
     "VPMValidationError",
     "ViewProfile",
     "ViewSet",
+    "LocalCorrelationCalibration",
+    "LocalCorrelationSelectionArtifact",
+    "LocalCorrelationVideoAddressProvider",
+    "LocalRegionSpec",
     "VideoClipManifest",
     "VideoFrame",
     "VideoFrameSource",
@@ -326,6 +344,8 @@ __all__ = [
     "build_decision_manifold",
     "build_discovered_view",
     "build_learning_vpm",
+    "build_local_correlation_candidates",
+    "build_local_correlation_prototypes",
     "build_optimized_view",
     "build_pyramid",
     "build_training_progress_vpm",
@@ -345,6 +365,7 @@ __all__ = [
     "guarded_pack_artifact",
     "image_entropy",
     "learning_recipe",
+    "local_region_digest",
     "lua_policy_source",
     "metric_ids_for_rows",
     "observations_from_critic_lines",
@@ -374,4 +395,5 @@ __all__ = [
     "write_lua_policy",
     "write_png",
     "write_svg",
+    "select_local_correlation_candidate",
 ]

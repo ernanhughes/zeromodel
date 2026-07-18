@@ -24,6 +24,7 @@ from zeromodel.video_policy import VideoPolicyReader
 from zeromodel.visual_policy import DeterministicVisualAddressProvider
 
 
+# The reader is immutable; sharing it avoids recompiling the 112-row visual index.
 @lru_cache(maxsize=None)
 def _reader(*, maximum_identical_frame_run: int | None = None) -> VideoPolicyReader:
     config = ShooterConfig()

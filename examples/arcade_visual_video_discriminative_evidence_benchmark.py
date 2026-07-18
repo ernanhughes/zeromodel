@@ -1,15 +1,16 @@
-"""Stage 3 discriminative-evidence benchmark driver for ZeroModel."""
+"""Stage 3 discriminative-evidence benchmark preparation and selection."""
 from __future__ import annotations
 
 import argparse
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
 import sys
 from types import MappingProxyType
-from typing import Any, Dict, Mapping, Sequence
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -17,25 +18,57 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_shooter_policy import ACTIONS, compile_policy_artifact  # noqa: E402
-from examples.arcade_visual_local_evidence_benchmark import (  # noqa: E402
-    build_arcade_local_evidence_dataset,
-)
+from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
+from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE  # noqa: E402
+from examples.arcade_visual_sign_reader import render_state_frame  # noqa: E402
 from examples.arcade_visual_video_local_correlation_benchmark import (  # noqa: E402
     _build_v2_provider,
     _build_v2_selection,
-    _regions,
+    _regions as _stage2_regions,
     build_video_cases,
 )
-from zeromodel import ImageObservation, VPMPolicyLookup  # noqa: E402
+from zeromodel import (  # noqa: E402
+    DiscriminativeEvidenceCalibration,
+    DiscriminativeEvidenceProvider,
+    DiscriminativeRegionSpec,
+    ImageObservation,
+    VPMPolicyLookup,
+    build_discriminative_masks,
+    build_discriminative_candidate_set,
+    discriminative_mask_digest,
+    discriminative_region_digest,
+    evaluate_candidate_eligibility,
+)
+from zeromodel import video_discriminative_evidence as zde  # noqa: E402
+from zeromodel.artifact import VPMValidationError  # noqa: E402
+from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"
 DIAGNOSTICS_DIR = OUTPUT_DIR / "diagnostics"
 BENCHMARK_VERSION = "zeromodel-video-discriminative-evidence-stage3/v1"
+BENCHMARK_GENERATOR_VERSION = "zeromodel-video-discriminative-generator/v1"
+PREREGISTRATION_COMMIT = "e6d3c2461a3e7fc783026907aa1ab5b803c878f3"
+FINAL_SEED_MATERIAL = f"zeromodel-stage3-final-v1|{PREREGISTRATION_COMMIT}"
 STAGE2_PARENT_COMMIT = "d00e18b67fbe2f62617cd0ac47c7ee2f63487cb8"
 STAGE2_BENCHMARK_DIGEST = "sha256:589bb074e1b53b06657cfb75bf7b8d67eae43cc5f76e7237ab07f23ccca49c75"
 STAGE2_SPLIT_DIGEST = "sha256:d25b694b3cce93bf93f58239163331f3f6370d32a2b5cce53b4541902b0f8c23"
+MAXIMUM_USEFUL_CANDIDATE_SET_SIZE = 3
+SELECTION_NEGATIVE_CANDIDATE_SET_SUPPORT_BLOCKS_FEASIBILITY = True
+SIMPLICITY_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3}
+NON_PROTOTYPE_ROW_SAMPLE_SIZE = 4
+SPLIT_ROLES = (
+    "prototype",
+    "diagnostic_development",
+    "architecture_selection_benign",
+    "architecture_selection_negative",
+    "benign_calibration",
+    "rejection_calibration",
+    "final_benign",
+    "final_distinguishable_negative",
+    "information_theoretic_control",
+)
+ARCHITECTURES = ("A", "B", "C", "D")
 
 
 def _json_ready(value: Any) -> Any:
@@ -67,11 +100,6 @@ def _write_json(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _write_markdown(path: Path, text: str) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text.rstrip() + "\n", encoding="utf-8")
-
-
 def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     import csv
 
@@ -84,6 +112,11 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
             writer.writerow({key: _csv_cell(row.get(key)) for key in fieldnames})
 
 
+def _write_markdown(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.rstrip() + "\n", encoding="utf-8")
+
+
 def _csv_cell(value: Any) -> str:
     if value is None:
         return ""
@@ -92,14 +125,1128 @@ def _csv_cell(value: Any) -> str:
     return str(value)
 
 
+def _load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _array_digest(array: np.ndarray) -> str:
+    contiguous = np.ascontiguousarray(array)
+    return "sha256:" + hashlib.sha256(contiguous.tobytes(order="C")).hexdigest()
+
+
+def _translate(frame: np.ndarray, *, dx: int = 0, dy: int = 0, fill: int = 0) -> np.ndarray:
+    result = np.full_like(frame, fill)
+    height, width = frame.shape
+    x0 = max(0, dx)
+    x1 = min(width, width + dx)
+    y0 = max(0, dy)
+    y1 = min(height, height + dy)
+    if x1 > x0 and y1 > y0:
+        result[y0:y1, x0:x1] = frame[y0 - dy : y1 - dy, x0 - dx : x1 - dx]
+    return result
+
+
+def _scale_intensity(frame: np.ndarray, *, numerator: int = 100, offset: int = 0) -> np.ndarray:
+    scaled = np.round(frame.astype(np.float32) * (float(numerator) / 100.0)) + float(offset)
+    return np.clip(scaled, 0, 255).astype(np.uint8)
+
+
+def _mask_box(frame: np.ndarray, *, top: int, left: int, height: int, width: int, value: int) -> np.ndarray:
+    result = np.array(frame, copy=True)
+    result[top : top + height, left : left + width] = np.uint8(value)
+    return result
+
+
+def _blend_region(frame: np.ndarray, other: np.ndarray, *, top: int, left: int, height: int, width: int) -> np.ndarray:
+    result = np.array(frame, copy=True)
+    result[top : top + height, left : left + width] = other[top : top + height, left : left + width]
+    return result
+
+
+@dataclass(frozen=True)
+class Stage3Record:
+    observation_id: str
+    split: str
+    family_id: str
+    row_id: Optional[str]
+    action_id: Optional[str]
+    expected_disposition: str
+    clip_id: str
+    frame_id: str
+    materialized: bool
+    metadata: Mapping[str, Any]
+    observation_digest: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "observation_id": self.observation_id,
+            "split": self.split,
+            "family_id": self.family_id,
+            "row_id": self.row_id,
+            "action_id": self.action_id,
+            "expected_disposition": self.expected_disposition,
+            "clip_id": self.clip_id,
+            "frame_id": self.frame_id,
+            "materialized": self.materialized,
+            "metadata": _json_ready(self.metadata),
+            "observation_digest": self.observation_digest,
+        }
+
+
+@dataclass
+class Stage3Benchmark:
+    policy_artifact_id: str
+    source_scope: str
+    prototypes: Mapping[str, Tuple[str, str, str, ImageObservation]]
+    records: Tuple[Stage3Record, ...]
+    observations: Mapping[str, ImageObservation]
+    family_specs: Mapping[str, Mapping[str, Any]]
+    metadata: Mapping[str, Any]
+    phase_audits: list[Dict[str, Any]]
+
+    def record_by_split(self, split: str) -> Tuple[Stage3Record, ...]:
+        return tuple(record for record in self.records if record.split == split)
+
+    def access(self, *, phase: str, allowed_splits: Sequence[str]) -> Tuple[Tuple[Stage3Record, ...], Dict[str, ImageObservation]]:
+        allowed = tuple(str(item) for item in allowed_splits)
+        allowed_set = set(allowed)
+        selected = tuple(record for record in self.records if record.split in allowed_set)
+        accessed_splits = tuple(sorted({record.split for record in selected}))
+        violations = tuple(split for split in accessed_splits if split not in allowed_set)
+        audit = {
+            "phase": phase,
+            "allowed_splits": list(allowed),
+            "accessed_splits": list(accessed_splits),
+            "observation_ids": [record.observation_id for record in selected],
+            "clip_ids": sorted({record.clip_id for record in selected}),
+            "access_digest": _sha256([record.to_dict() for record in selected]),
+            "violations": list(violations),
+        }
+        if any(split.startswith("final_") for split in accessed_splits if phase in {"select_architecture", "calibrate"}):
+            audit["violations"] = list(audit["violations"]) + ["forbidden_final_split_access"]
+        self.phase_audits.append(audit)
+        if audit["violations"]:
+            raise VPMValidationError(f"phase access violation for {phase}: {audit['violations']}")
+        return (selected, {record.observation_id: self.observations[record.observation_id] for record in selected if record.materialized})
+
+
+def _canonical_rows(config: ShooterConfig) -> Tuple[Tuple[str, str, ImageObservation], ...]:
+    policy = compile_policy_artifact(config)
+    lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
+    rows = []
+    for tank_x in range(config.width):
+        for target_x in (None, *range(config.width)):
+            for cooldown in (0, 1):
+                row_id = f"tank={tank_x}|target={'none' if target_x is None else target_x}|cooldown={cooldown}"
+                pixels = render_state_frame(tank_x, target_x, cooldown, width=config.width)
+                rows.append((row_id, lookup.choose(row_id), ImageObservation(pixels, source_id=row_id)))
+    return tuple(rows)
+
+
+def _sample_nonprototype_rows(rows: Sequence[Tuple[str, str, ImageObservation]]) -> Tuple[Tuple[str, str, ImageObservation], ...]:
+    if len(rows) <= NON_PROTOTYPE_ROW_SAMPLE_SIZE:
+        return tuple(rows)
+    step = max(1, len(rows) // NON_PROTOTYPE_ROW_SAMPLE_SIZE)
+    selected = list(rows[::step][: NON_PROTOTYPE_ROW_SAMPLE_SIZE - 2])
+    selected.append(rows[len(rows) // 2])
+    selected.append(rows[-1])
+    deduped = []
+    seen = set()
+    for row in selected:
+        if row[0] not in seen:
+            seen.add(row[0])
+            deduped.append(row)
+    return tuple(deduped)
+
+
+def _nearest_same_action(row_id: str, action_id: str, rows: Sequence[Tuple[str, str, ImageObservation]]) -> Tuple[str, ImageObservation]:
+    for other_row_id, other_action_id, observation in rows:
+        if other_row_id != row_id and other_action_id == action_id:
+            return (other_row_id, observation)
+    raise VPMValidationError("same-action competitor not found")
+
+
+def _nearest_conflicting_action(row_id: str, action_id: str, rows: Sequence[Tuple[str, str, ImageObservation]]) -> Tuple[str, ImageObservation]:
+    for other_row_id, other_action_id, observation in rows:
+        if other_row_id != row_id and other_action_id != action_id:
+            return (other_row_id, observation)
+    raise VPMValidationError("conflicting-action competitor not found")
+
+
+def _region_manifest() -> Tuple[DiscriminativeRegionSpec, ...]:
+    registration = RegistrationConfig(max_dx=2, max_dy=2, minimum_overlap_fraction=0.5)
+    return (
+        DiscriminativeRegionSpec(
+            region_id="target_band",
+            top=0,
+            left=0,
+            height=6,
+            width=28,
+            weight=2.0,
+            critical=True,
+            registration_config=registration,
+            metadata={"semantic_role": "target evidence", "reason_for_inclusion": "target alignment and ambiguity"},
+        ),
+        DiscriminativeRegionSpec(
+            region_id="cooldown_indicator",
+            top=7,
+            left=25,
+            height=2,
+            width=2,
+            weight=1.5,
+            critical=True,
+            registration_config=registration,
+            metadata={"semantic_role": "cooldown evidence", "reason_for_inclusion": "action-critical evidence"},
+        ),
+        DiscriminativeRegionSpec(
+            region_id="tank_band",
+            top=10,
+            left=0,
+            height=4,
+            width=28,
+            weight=2.0,
+            critical=True,
+            registration_config=registration,
+            metadata={"semantic_role": "tank evidence", "reason_for_inclusion": "pose and local displacement evidence"},
+        ),
+    )
+
+
+def _split_family_definitions() -> Mapping[str, Sequence[Tuple[str, str]]]:
+    return {
+        "prototype": (("prototype_clean", "canonical prototype observations"),),
+        "diagnostic_development": (
+            ("development_photometric", "mild photometric variation for mask stability"),
+            ("development_shift", "bounded translation variation for mask stability"),
+        ),
+        "architecture_selection_benign": (
+            ("selection_exact", "exact frames"),
+            ("selection_translation_x", "horizontal translations"),
+            ("selection_translation_y", "vertical translations"),
+            ("selection_translation_xy", "two-axis translations"),
+            ("selection_photometric", "mild photometric changes"),
+            ("selection_noncritical_occlusion", "noncritical occlusion"),
+            ("selection_critical_partial", "critical-region partial occlusion"),
+            ("selection_translation_photometric", "translation plus photometric change"),
+            ("selection_translation_occlusion", "translation plus occlusion"),
+            ("selection_repeated_state", "legitimate repeated-state frames"),
+            ("selection_same_action_ambiguous", "same-action ambiguous rows"),
+            ("selection_mixed_action_ambiguous", "mixed-action ambiguous rows"),
+        ),
+        "architecture_selection_negative": (
+            ("selection_negative_critical_removed", "critical evidence removal"),
+            ("selection_negative_action_critical_removed", "action-critical evidence removal"),
+            ("selection_negative_same_action_wrong_row", "same-action wrong-row construction"),
+            ("selection_negative_conflicting_action", "conflicting-action near neighbour"),
+            ("selection_negative_compositional_invalid", "compositional invalid observation"),
+            ("selection_negative_conflicting_regions", "conflicting regional evidence"),
+            ("selection_negative_out_of_bounds", "out-of-bounds translation"),
+        ),
+        "benign_calibration": (
+            ("calibration_exact", "fresh exact frames"),
+            ("calibration_translation_x", "fresh horizontal translations"),
+            ("calibration_translation_xy", "fresh two-axis translations"),
+            ("calibration_photometric", "fresh photometric changes"),
+            ("calibration_occlusion", "fresh noncritical occlusion"),
+            ("calibration_same_action_ambiguous", "fresh same-action ambiguity"),
+            ("calibration_mixed_action_ambiguous", "fresh mixed-action ambiguity"),
+        ),
+        "rejection_calibration": (
+            ("calibration_negative_critical_removed", "fresh critical evidence removal"),
+            ("calibration_negative_action_critical_removed", "fresh action-critical evidence removal"),
+            ("calibration_negative_same_action_wrong_row", "fresh same-action wrong-row"),
+            ("calibration_negative_conflicting_action", "fresh conflicting-action neighbour"),
+            ("calibration_negative_compositional_invalid", "fresh compositional invalid"),
+            ("calibration_negative_conflicting_regions", "fresh conflicting regions"),
+            ("calibration_negative_out_of_bounds", "fresh out-of-bounds translation"),
+        ),
+        "final_benign": (
+            ("final_exact", "frozen future exact family"),
+            ("final_translation", "frozen future translation family"),
+            ("final_photometric", "frozen future photometric family"),
+            ("final_occlusion", "frozen future occlusion family"),
+        ),
+        "final_distinguishable_negative": (
+            ("final_negative_critical_removed", "frozen future critical removal"),
+            ("final_negative_conflicting_action", "frozen future conflicting-action neighbour"),
+            ("final_negative_compositional_invalid", "frozen future compositional invalid"),
+        ),
+        "information_theoretic_control": (
+            ("final_information_control", "frozen future information-theoretic controls"),
+        ),
+    }
+
+
+def _make_observation_id(split: str, family_id: str, row_id: str, variant: int) -> str:
+    return f"{split}:{family_id}:{row_id}:{variant:02d}"
+
+
+def _build_stage3_benchmark(*, materialize_final: bool = False) -> Stage3Benchmark:
+    config = ShooterConfig()
+    policy = compile_policy_artifact(config)
+    rows = _canonical_rows(config)
+    sampled_rows = _sample_nonprototype_rows(rows)
+    observations: Dict[str, ImageObservation] = {}
+    records: list[Stage3Record] = []
+    prototypes: Dict[str, Tuple[str, str, str, ImageObservation]] = {}
+    families = _split_family_definitions()
+    row_map = {row_id: (action_id, observation) for row_id, action_id, observation in rows}
+
+    for row_id, action_id, observation in rows:
+        prototypes[row_id] = (row_id, action_id, observation.raw_digest, observation)
+    for row_id, action_id, observation in sampled_rows:
+        same_row_id, same_observation = _nearest_same_action(row_id, action_id, rows)
+        conflicting_row_id, conflicting_observation = _nearest_conflicting_action(row_id, action_id, rows)
+        transformations = {
+            "prototype_clean": lambda base=observation.pixels: base,
+            "development_photometric": lambda base=observation.pixels: _scale_intensity(base, numerator=96, offset=3),
+            "development_shift": lambda base=observation.pixels: _translate(base, dx=1, dy=0),
+            "selection_exact": lambda base=observation.pixels: base,
+            "selection_translation_x": lambda base=observation.pixels: _translate(base, dx=1, dy=0),
+            "selection_translation_y": lambda base=observation.pixels: _translate(base, dx=0, dy=1),
+            "selection_translation_xy": lambda base=observation.pixels: _translate(base, dx=1, dy=1),
+            "selection_photometric": lambda base=observation.pixels: _scale_intensity(base, numerator=92, offset=4),
+            "selection_noncritical_occlusion": lambda base=observation.pixels: _mask_box(base, top=0, left=0, height=2, width=3, value=90),
+            "selection_critical_partial": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=1, width=2, value=0),
+            "selection_translation_photometric": lambda base=observation.pixels: _scale_intensity(_translate(base, dx=1, dy=0), numerator=94, offset=2),
+            "selection_translation_occlusion": lambda base=observation.pixels: _mask_box(_translate(base, dx=1, dy=0), top=0, left=0, height=2, width=3, value=90),
+            "selection_repeated_state": lambda base=observation.pixels: base,
+            "selection_same_action_ambiguous": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=0, left=0, height=6, width=28),
+            "selection_mixed_action_ambiguous": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "selection_negative_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=0),
+            "selection_negative_action_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=255),
+            "selection_negative_same_action_wrong_row": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=0, left=0, height=6, width=28),
+            "selection_negative_conflicting_action": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "selection_negative_compositional_invalid": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=10, left=0, height=4, width=28), other, top=0, left=0, height=6, width=28),
+            "selection_negative_conflicting_regions": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=0, left=0, height=6, width=28), other, top=10, left=0, height=4, width=28),
+            "selection_negative_out_of_bounds": lambda base=observation.pixels: _translate(base, dx=4, dy=0),
+            "calibration_exact": lambda base=observation.pixels: _scale_intensity(base, numerator=100, offset=1),
+            "calibration_translation_x": lambda base=observation.pixels: _translate(base, dx=-1, dy=0),
+            "calibration_translation_xy": lambda base=observation.pixels: _translate(base, dx=-1, dy=1),
+            "calibration_photometric": lambda base=observation.pixels: _scale_intensity(base, numerator=90, offset=6),
+            "calibration_occlusion": lambda base=observation.pixels: _mask_box(base, top=1, left=1, height=2, width=3, value=120),
+            "calibration_same_action_ambiguous": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=10, left=0, height=4, width=28),
+            "calibration_mixed_action_ambiguous": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "calibration_negative_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=0),
+            "calibration_negative_action_critical_removed": lambda base=observation.pixels: _mask_box(base, top=7, left=25, height=2, width=2, value=255),
+            "calibration_negative_same_action_wrong_row": lambda base=observation.pixels, same=same_observation.pixels: _blend_region(base, same, top=0, left=0, height=6, width=28),
+            "calibration_negative_conflicting_action": lambda base=observation.pixels, other=conflicting_observation.pixels: _blend_region(base, other, top=7, left=25, height=2, width=2),
+            "calibration_negative_compositional_invalid": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=10, left=0, height=4, width=28), other, top=0, left=0, height=6, width=28),
+            "calibration_negative_conflicting_regions": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=0, left=0, height=6, width=28), other, top=10, left=0, height=4, width=28),
+            "calibration_negative_out_of_bounds": lambda base=observation.pixels: _translate(base, dx=-4, dy=0),
+        }
+        final_families = {"final_exact", "final_translation", "final_photometric", "final_occlusion", "final_negative_critical_removed", "final_negative_conflicting_action", "final_negative_compositional_invalid", "final_information_control"}
+        for split, family_items in families.items():
+            for family_id, description in family_items:
+                observation_id = _make_observation_id(split, family_id, row_id, 0)
+                clip_id = f"{split}:{family_id}:{row_id}"
+                frame_id = observation_id
+                if split == "prototype":
+                    pixels = transformations["prototype_clean"]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "diagnostic_development":
+                    pixels = transformations["development_photometric"]() if family_id == "development_photometric" else transformations["development_shift"]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "architecture_selection_benign":
+                    pixels = transformations[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "architecture_selection_negative":
+                    pixels = transformations[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_reject"
+                elif split == "benign_calibration":
+                    pixels = transformations[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_accept"
+                elif split == "rejection_calibration":
+                    pixels = transformations[family_id]()
+                    materialized = True
+                    expected_disposition = "expected_reject"
+                else:
+                    materialized = bool(materialize_final)
+                    expected_disposition = "information_theoretic_control" if split == "information_theoretic_control" else ("expected_accept" if split == "final_benign" else "expected_reject")
+                    if materialized:
+                        pixels = observation.pixels if family_id in {"final_exact", "final_information_control"} else _scale_intensity(observation.pixels, numerator=97, offset=(len(family_id) % 7) + 1)
+                    else:
+                        pixels = None
+                metadata = {
+                    "split_role": split,
+                    "family_id": family_id,
+                    "description": description,
+                    "expected_disposition_class": expected_disposition,
+                    "row_id": row_id,
+                    "action_id": action_id,
+                    "source_row_id": row_id,
+                    "same_action_row_id": same_row_id,
+                    "conflicting_action_row_id": conflicting_row_id,
+                    "distinguishable_negative": split in {"architecture_selection_negative", "rejection_calibration", "final_distinguishable_negative"},
+                    "information_theoretic_control": split == "information_theoretic_control",
+                }
+                if materialized:
+                    image = ImageObservation(np.ascontiguousarray(pixels, dtype=np.uint8), source_id=observation_id, metadata=metadata)
+                    observations[observation_id] = image
+                    observation_digest = image.raw_digest
+                else:
+                    observation_digest = _sha256(
+                        {
+                            "benchmark_version": BENCHMARK_VERSION,
+                            "generator_version": BENCHMARK_GENERATOR_VERSION,
+                            "observation_id": observation_id,
+                            "seed_material": FINAL_SEED_MATERIAL,
+                            "family_id": family_id,
+                            "row_id": row_id,
+                            "action_id": action_id,
+                        }
+                    )
+                records.append(
+                    Stage3Record(
+                        observation_id=observation_id,
+                        split=split,
+                        family_id=family_id,
+                        row_id=row_id,
+                        action_id=action_id,
+                        expected_disposition=expected_disposition,
+                        clip_id=clip_id,
+                        frame_id=frame_id,
+                        materialized=materialized,
+                        metadata=metadata,
+                        observation_digest=observation_digest,
+                    )
+                )
+    split_counts = {split: sum(record.split == split for record in records) for split in SPLIT_ROLES}
+    return Stage3Benchmark(
+        policy_artifact_id=policy.artifact_id,
+        source_scope=SOURCE_SCOPE,
+        prototypes=prototypes,
+        records=tuple(records),
+        observations=observations,
+        family_specs={family_id: {"description": description, "split": split} for split, items in families.items() for family_id, description in items},
+        metadata={
+            "benchmark_version": BENCHMARK_VERSION,
+            "generator_version": BENCHMARK_GENERATOR_VERSION,
+            "preregistration_commit": PREREGISTRATION_COMMIT,
+            "final_seed_material": FINAL_SEED_MATERIAL,
+            "final_seed_digest": _sha256(FINAL_SEED_MATERIAL),
+            "split_counts": split_counts,
+            "materialized_final": bool(materialize_final),
+            "nonprototype_row_sample_size": len(sampled_rows),
+        },
+        phase_audits=[],
+    )
+
+
+def _benchmark_manifest(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    return {
+        "benchmark_version": BENCHMARK_VERSION,
+        "generator_version": BENCHMARK_GENERATOR_VERSION,
+        "preregistration_commit": PREREGISTRATION_COMMIT,
+        "final_seed_material": FINAL_SEED_MATERIAL,
+        "final_seed_digest": _sha256(FINAL_SEED_MATERIAL),
+        "policy_artifact_id": benchmark.policy_artifact_id,
+        "source_scope": benchmark.source_scope,
+        "metadata": _json_ready(benchmark.metadata),
+        "record_count": len(benchmark.records),
+        "benchmark_digest": _sha256([record.to_dict() for record in benchmark.records]),
+    }
+
+
+def _split_manifest(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    membership = {split: [record.observation_id for record in benchmark.record_by_split(split)] for split in SPLIT_ROLES}
+    clip_membership = {split: sorted({record.clip_id for record in benchmark.record_by_split(split)}) for split in SPLIT_ROLES}
+    return {
+        "split_roles": list(SPLIT_ROLES),
+        "observation_membership": membership,
+        "clip_membership": clip_membership,
+        "split_counts": {split: len(ids) for split, ids in membership.items()},
+        "split_digest": _sha256(membership),
+    }
+
+
+def _development_observations(benchmark: Stage3Benchmark) -> Mapping[str, Tuple[ImageObservation, ...]]:
+    result: Dict[str, list[ImageObservation]] = defaultdict(list)
+    for record in benchmark.record_by_split("diagnostic_development"):
+        if record.materialized and record.row_id is not None:
+            result[record.row_id].append(benchmark.observations[record.observation_id])
+    return {row_id: tuple(items) for row_id, items in sorted(result.items())}
+
+
+def _freeze_regions_and_masks(benchmark: Stage3Benchmark, *, output_dir: Path) -> Dict[str, Any]:
+    regions = _region_manifest()
+    masks = build_discriminative_masks(
+        prototypes=benchmark.prototypes,
+        development_observations=_development_observations(benchmark),
+        intensity_tolerance=8,
+        stability_tolerance=12,
+        separation_cap=64,
+    )
+    region_manifest = {
+        "regions": [region.to_dict() for region in regions],
+        "region_spec_digest": discriminative_region_digest(regions),
+        "registration_contract_digest_set": sorted({region.registration_config.digest for region in regions}),
+    }
+    mask_manifest = {
+        "mask_specs": [mask.spec.to_dict() for _row_id, mask in sorted(masks.items())],
+        "mask_payload_digests": {row_id: mask.payload_digest for row_id, mask in sorted(masks.items())},
+        "mask_spec_digest": discriminative_mask_digest(tuple(mask.spec for mask in masks.values())),
+        "prototype_digest": _sha256({key: value[2] for key, value in sorted(benchmark.prototypes.items())}),
+        "development_digest": _sha256({row_id: [item.raw_digest for item in values] for row_id, values in sorted(_development_observations(benchmark).items())}),
+        "derivation_contract": next(iter(masks.values())).spec.derivation_contract,
+        "intensity_tolerance": next(iter(masks.values())).spec.intensity_tolerance,
+        "stability_tolerance": 12,
+        "separation_cap": 64,
+    }
+    _write_json(output_dir / "region-manifest.json", region_manifest)
+    _write_json(output_dir / "mask-manifest.json", mask_manifest)
+    return {"regions": regions, "masks": masks, "region_manifest": region_manifest, "mask_manifest": mask_manifest}
+
+
+def _calibration(
+    *,
+    architecture_id: str,
+    benchmark: Stage3Benchmark,
+    region_manifest: Mapping[str, Any],
+    mask_manifest: Mapping[str, Any],
+    values: Mapping[str, Any],
+) -> DiscriminativeEvidenceCalibration:
+    return DiscriminativeEvidenceCalibration(
+        architecture_id=architecture_id,
+        minimum_available_mass=float(values.get("minimum_available_mass", 1.0)),
+        minimum_available_fraction=float(values.get("minimum_available_fraction", 0.3)),
+        minimum_support=float(values.get("minimum_support", 0.0)),
+        maximum_contradiction=float(values.get("maximum_contradiction", 1.0)),
+        maximum_critical_contradiction=float(values.get("maximum_critical_contradiction", 1.0)),
+        exact_winner_threshold=float(values.get("exact_winner_threshold", 0.5)),
+        exact_winner_margin=float(values.get("exact_winner_margin", 0.1)),
+        candidate_relative_margin=float(values.get("candidate_relative_margin", 0.0)),
+        conflicting_action_separation=float(values.get("conflicting_action_separation", 0.0)),
+        minimum_supporting_regions=int(values.get("minimum_supporting_regions", 0)),
+        maximum_candidate_set_size=int(values.get("maximum_candidate_set_size", 3)),
+        prototype_digest=zde._prototype_payload_digest(benchmark.prototypes),
+        region_spec_digest=str(region_manifest["region_spec_digest"]),
+        mask_spec_digest=str(mask_manifest["mask_spec_digest"]),
+        policy_artifact_id=benchmark.policy_artifact_id,
+        source_scope=benchmark.source_scope,
+        metadata={"grid_values": _json_ready(values)},
+    )
+
+
+def _architecture_grid_definition() -> Dict[str, Any]:
+    common = {
+        "minimum_available_mass": (1.0, 2.0),
+        "minimum_available_fraction": (0.25,),
+        "exact_winner_threshold": (0.5,),
+        "exact_winner_margin": (0.05, 0.15),
+        "candidate_relative_margin": (0.0,),
+        "conflicting_action_separation": (0.0,),
+        "maximum_candidate_set_size": (3,),
+    }
+    return {
+        "A": common,
+        "B": {**common, "minimum_support": (0.0, 0.4)},
+        "C": {**common, "minimum_support": (0.0, 0.4), "maximum_contradiction": (0.5,), "maximum_critical_contradiction": (0.0, 0.25), "minimum_supporting_regions": (0,)},
+        "D": {**common, "minimum_support": (0.0, 0.4), "maximum_contradiction": (0.5,), "maximum_critical_contradiction": (0.0, 0.25), "minimum_supporting_regions": (0,)},
+    }
+
+
+def _grid_points(definition: Mapping[str, Sequence[Any]]) -> Tuple[Dict[str, Any], ...]:
+    keys = sorted(definition)
+    points = [{}]
+    for key in keys:
+        next_points = []
+        for point in points:
+            for value in definition[key]:
+                updated = dict(point)
+                updated[key] = value
+                next_points.append(updated)
+        points = next_points
+    return tuple(points)
+
+
+def _evaluate_provider(
+    *,
+    provider: DiscriminativeEvidenceProvider,
+    records: Sequence[Stage3Record],
+    observations: Mapping[str, ImageObservation],
+) -> Dict[str, Any]:
+    return _evaluate_ranked_candidates(
+        ranked_by_observation={record.observation_id: provider._rank(observations[record.observation_id]) for record in records},
+        calibration=provider._calibration,
+        provider_digest=provider.contract().address_artifact_id,
+        records=records,
+    )
+
+
+def _raw_ranked_candidates(
+    *,
+    architecture_id: str,
+    benchmark: Stage3Benchmark,
+    freeze: Mapping[str, Any],
+    records: Sequence[Stage3Record],
+    observations: Mapping[str, ImageObservation],
+) -> Dict[str, Tuple[Any, ...]]:
+    permissive = _calibration(
+        architecture_id=architecture_id,
+        benchmark=benchmark,
+        region_manifest=freeze["region_manifest"],
+        mask_manifest=freeze["mask_manifest"],
+        values={
+            "minimum_available_mass": 0.0,
+            "minimum_available_fraction": 0.0,
+            "minimum_support": 0.0,
+            "maximum_contradiction": 1.0,
+            "maximum_critical_contradiction": 1.0,
+            "exact_winner_threshold": 0.0,
+            "exact_winner_margin": 0.0,
+            "candidate_relative_margin": 0.0,
+            "conflicting_action_separation": 0.0,
+            "minimum_supporting_regions": 0,
+            "maximum_candidate_set_size": MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+        },
+    )
+    provider = DiscriminativeEvidenceProvider(
+        prototypes=benchmark.prototypes,
+        masks=freeze["masks"],
+        regions=freeze["regions"],
+        calibration=permissive,
+        policy_artifact_id=benchmark.policy_artifact_id,
+        source_scope=benchmark.source_scope,
+    )
+    return {record.observation_id: provider._rank(observations[record.observation_id]) for record in records}
+
+
+def _evaluate_ranked_candidates(
+    *,
+    ranked_by_observation: Mapping[str, Tuple[Any, ...]],
+    calibration: DiscriminativeEvidenceCalibration,
+    provider_digest: str,
+    records: Sequence[Stage3Record],
+) -> Dict[str, Any]:
+    benign_total = 0
+    exact_accepted = 0
+    exact_correct = 0
+    candidate_set_count = 0
+    useful_candidate_set_count = 0
+    useful_truth_in_set_count = 0
+    unique_action_useful_sets = 0
+    mixed_action_useful_sets = 0
+    exact_false_accepts = 0
+    negative_candidate_set_support = 0
+    conflicting_action_exact_accepts = 0
+    same_action_wrong_row_exact_accepts = 0
+    critical_contradiction_exact_accepts = 0
+    per_family = Counter()
+    set_sizes = []
+    for record in records:
+        raw_ranked = ranked_by_observation[record.observation_id]
+        evaluated = tuple(
+            evaluate_candidate_eligibility(candidate=candidate, ranked_candidates=raw_ranked, calibration=calibration)
+            for candidate in raw_ranked
+        )
+        ranked = tuple(sorted(evaluated, key=lambda candidate: (-float(candidate.candidate_strength), -float(candidate.available_informative_mass), -float(candidate.available_informative_fraction), float(candidate.aggregate_contradiction), float(candidate.aggregate_critical_contradiction), -int(candidate.supporting_region_count), candidate.row_id, candidate.prototype_observation_id)))
+        candidate_set = build_discriminative_candidate_set(
+            ranked_candidates=ranked,
+            calibration=calibration,
+            provider_digest=provider_digest,
+            observation_digest=ranked[0].observation_digest,
+        )
+        if record.expected_disposition == "expected_accept":
+            benign_total += 1
+            if candidate_set.outcome == "exact_row_accepted":
+                exact_accepted += 1
+                if candidate_set.exact_row_id == record.row_id:
+                    exact_correct += 1
+            elif candidate_set.outcome == "candidate_set_available":
+                candidate_set_count += 1
+                set_sizes.append(len(candidate_set.rows))
+                if record.row_id in candidate_set.rows and len(candidate_set.rows) <= MAXIMUM_USEFUL_CANDIDATE_SET_SIZE:
+                    useful_candidate_set_count += 1
+                    useful_truth_in_set_count += 1
+                    if len(set(candidate_set.actions)) == 1:
+                        unique_action_useful_sets += 1
+                    else:
+                        mixed_action_useful_sets += 1
+            per_family[(record.family_id, candidate_set.outcome)] += 1
+        elif record.expected_disposition == "expected_reject":
+            if candidate_set.outcome == "exact_row_accepted":
+                exact_false_accepts += 1
+                if candidate_set.exact_row_id is not None and record.action_id is not None:
+                    if next((candidate.action_id for candidate in ranked if candidate.row_id == candidate_set.exact_row_id), None) != record.action_id:
+                        conflicting_action_exact_accepts += 1
+                    elif candidate_set.exact_row_id != record.row_id:
+                        same_action_wrong_row_exact_accepts += 1
+                    if next((candidate.aggregate_critical_contradiction for candidate in ranked if candidate.row_id == candidate_set.exact_row_id), 0.0) > 0.0:
+                        critical_contradiction_exact_accepts += 1
+            elif candidate_set.outcome == "candidate_set_available":
+                negative_candidate_set_support += 1
+            per_family[(record.family_id, candidate_set.outcome)] += 1
+    exact_row_coverage = 0.0 if benign_total == 0 else exact_correct / float(benign_total)
+    exact_precision = None if exact_accepted == 0 else exact_correct / float(exact_accepted)
+    return {
+        "benign_total": benign_total,
+        "exact_accepted_count": exact_accepted,
+        "exact_correct_count": exact_correct,
+        "exact_row_coverage": exact_row_coverage,
+        "exact_accepted_precision": exact_precision,
+        "candidate_set_count": candidate_set_count,
+        "useful_candidate_set_count": useful_candidate_set_count,
+        "truth_in_set_count": useful_truth_in_set_count,
+        "useful_candidate_set_recall": 0.0 if benign_total == 0 else useful_candidate_set_count / float(benign_total),
+        "unique_action_useful_sets": unique_action_useful_sets,
+        "mixed_action_useful_sets": mixed_action_useful_sets,
+        "mean_set_size": None if not set_sizes else float(np.mean(set_sizes)),
+        "maximum_set_size": 0 if not set_sizes else max(set_sizes),
+        "exact_false_accepts": exact_false_accepts,
+        "negative_candidate_set_support": negative_candidate_set_support,
+        "conflicting_action_exact_accepts": conflicting_action_exact_accepts,
+        "same_action_wrong_row_exact_accepts": same_action_wrong_row_exact_accepts,
+        "critical_contradiction_exact_accepts": critical_contradiction_exact_accepts,
+        "per_family_outcomes": {f"{family}:{outcome}": count for (family, outcome), count in sorted(per_family.items())},
+        "cache_hits": 0,
+        "cache_misses": len(ranked_by_observation),
+    }
+
+
+def _selection_rank_key(result: Mapping[str, Any]) -> Tuple[Any, ...]:
+    metrics = result["combined_metrics"]
+    conservative = result["calibration_values"]
+    return (
+        int(metrics["exact_false_accepts"]),
+        int(metrics["conflicting_action_exact_accepts"]),
+        int(metrics["critical_contradiction_exact_accepts"]),
+        0 if (metrics["exact_correct_count"] + metrics["useful_candidate_set_count"]) > 0 else 1,
+        -float(metrics["exact_row_coverage"]),
+        -int(metrics["useful_candidate_set_count"]),
+        float(metrics["mean_set_size"] if metrics["mean_set_size"] is not None else 99.0),
+        SIMPLICITY_ORDER[result["architecture_id"]],
+        -float(conservative["minimum_available_mass"]),
+        float(conservative.get("maximum_contradiction", 1.0)),
+        float(conservative.get("maximum_critical_contradiction", 1.0)),
+        -float(conservative["exact_winner_margin"]),
+        int(conservative["maximum_candidate_set_size"]),
+        float(conservative["candidate_relative_margin"]),
+        -int(conservative.get("minimum_supporting_regions", 0)),
+        json.dumps(_json_ready(conservative), sort_keys=True),
+    )
+
+
+def _feasible_for_selection(result: Mapping[str, Any]) -> Tuple[bool, Tuple[str, ...]]:
+    metrics = result["combined_metrics"]
+    reasons = []
+    if int(metrics["exact_false_accepts"]) != 0:
+        reasons.append("exact_false_accepts")
+    if int(metrics["conflicting_action_exact_accepts"]) != 0:
+        reasons.append("conflicting_action_exact_accepts")
+    if int(metrics["critical_contradiction_exact_accepts"]) != 0:
+        reasons.append("critical_contradiction_exact_accepts")
+    if SELECTION_NEGATIVE_CANDIDATE_SET_SUPPORT_BLOCKS_FEASIBILITY and int(metrics["negative_candidate_set_support"]) != 0:
+        reasons.append("negative_candidate_set_support")
+    if int(metrics["exact_correct_count"]) + int(metrics["useful_candidate_set_count"]) == 0:
+        reasons.append("zero_safe_utility")
+    return (len(reasons) == 0, tuple(reasons))
+
+
+def _run_selection(output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark(materialize_final=False)
+    freeze = _freeze_regions_and_masks(benchmark, output_dir=output_dir)
+    benign_records, benign_observations = benchmark.access(
+        phase="select_architecture",
+        allowed_splits=("prototype", "diagnostic_development", "architecture_selection_benign"),
+    )
+    negative_records, negative_observations = benchmark.access(
+        phase="select_architecture",
+        allowed_splits=("prototype", "diagnostic_development", "architecture_selection_negative"),
+    )
+    benign_eval = tuple(record for record in benign_records if record.split == "architecture_selection_benign")
+    negative_eval = tuple(record for record in negative_records if record.split == "architecture_selection_negative")
+    grid_definition = _architecture_grid_definition()
+    _write_json(output_dir / "architecture-grid-definition.json", {"definition": _json_ready(grid_definition), "digest": _sha256(grid_definition)})
+    results = []
+    raw_benign = {architecture_id: _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=benign_eval, observations=benign_observations) for architecture_id in ("A", "B", "C")}
+    raw_negative = {architecture_id: _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=negative_eval, observations=negative_observations) for architecture_id in ("A", "B", "C")}
+    for architecture_id in ("A", "B", "C"):
+        for point in _grid_points(grid_definition[architecture_id]):
+            calibration = _calibration(
+                architecture_id=architecture_id,
+                benchmark=benchmark,
+                region_manifest=freeze["region_manifest"],
+                mask_manifest=freeze["mask_manifest"],
+                values=point,
+            )
+            benign_metrics = _evaluate_ranked_candidates(
+                ranked_by_observation=raw_benign[architecture_id],
+                calibration=calibration,
+                provider_digest=f"{architecture_id}:{calibration.digest}",
+                records=benign_eval,
+            )
+            negative_metrics = _evaluate_ranked_candidates(
+                ranked_by_observation=raw_negative[architecture_id],
+                calibration=calibration,
+                provider_digest=f"{architecture_id}:{calibration.digest}",
+                records=negative_eval,
+            )
+            combined_metrics = {
+                **benign_metrics,
+                "exact_false_accepts": negative_metrics["exact_false_accepts"],
+                "negative_candidate_set_support": negative_metrics["negative_candidate_set_support"],
+                "conflicting_action_exact_accepts": negative_metrics["conflicting_action_exact_accepts"],
+                "same_action_wrong_row_exact_accepts": negative_metrics["same_action_wrong_row_exact_accepts"],
+                "critical_contradiction_exact_accepts": negative_metrics["critical_contradiction_exact_accepts"],
+                "negative_per_family_outcomes": negative_metrics["per_family_outcomes"],
+            }
+            feasible, infeasible_reasons = _feasible_for_selection({"combined_metrics": combined_metrics})
+            results.append(
+                {
+                    "architecture_id": architecture_id,
+                    "calibration_values": point,
+                    "calibration_digest": calibration.digest,
+                    "feasible": feasible,
+                    "infeasible_reasons": list(infeasible_reasons),
+                    "combined_metrics": combined_metrics,
+                }
+            )
+    best_by_architecture = {architecture_id: min((result for result in results if result["architecture_id"] == architecture_id), key=_selection_rank_key) for architecture_id in ("A", "B", "C")}
+    a = best_by_architecture["A"]
+    d_gateway = {
+        "conditions": {
+            "a_nonzero_safe_utility": (a["combined_metrics"]["exact_correct_count"] + a["combined_metrics"]["useful_candidate_set_count"]) > 0,
+            "b_or_c_additional_recovery": False,
+            "added_recovery_zero_new_safety_failures": False,
+            "distinct_failure_mode": False,
+        },
+        "supporting_frame_identities": [],
+        "supporting_family_identities": [],
+    }
+    for architecture_id in ("B", "C"):
+        candidate = best_by_architecture[architecture_id]
+        if candidate["combined_metrics"]["exact_correct_count"] + candidate["combined_metrics"]["useful_candidate_set_count"] > a["combined_metrics"]["exact_correct_count"] + a["combined_metrics"]["useful_candidate_set_count"]:
+            d_gateway["conditions"]["b_or_c_additional_recovery"] = True
+            if candidate["combined_metrics"]["exact_false_accepts"] == 0 and candidate["combined_metrics"]["conflicting_action_exact_accepts"] == 0 and candidate["combined_metrics"]["critical_contradiction_exact_accepts"] == 0:
+                d_gateway["conditions"]["added_recovery_zero_new_safety_failures"] = True
+            recovered_families = sorted({key.split(":")[0] for key, value in candidate["combined_metrics"]["per_family_outcomes"].items() if key.endswith("exact_row_accepted") or key.endswith("candidate_set_available")})
+            a_families = sorted({key.split(":")[0] for key, value in a["combined_metrics"]["per_family_outcomes"].items() if key.endswith("exact_row_accepted") or key.endswith("candidate_set_available")})
+            distinct = sorted(set(recovered_families) - set(a_families))
+            if distinct:
+                d_gateway["conditions"]["distinct_failure_mode"] = True
+                d_gateway["supporting_family_identities"] = distinct
+            break
+    d_gateway["eligible"] = all(bool(value) for value in d_gateway["conditions"].values())
+    _write_json(output_dir / "architecture-d-gateway.json", {**d_gateway, "digest": _sha256(d_gateway)})
+    if d_gateway["eligible"]:
+        raw_benign["D"] = _raw_ranked_candidates(architecture_id="D", benchmark=benchmark, freeze=freeze, records=benign_eval, observations=benign_observations)
+        raw_negative["D"] = _raw_ranked_candidates(architecture_id="D", benchmark=benchmark, freeze=freeze, records=negative_eval, observations=negative_observations)
+        for point in _grid_points(grid_definition["D"]):
+            calibration = _calibration(
+                architecture_id="D",
+                benchmark=benchmark,
+                region_manifest=freeze["region_manifest"],
+                mask_manifest=freeze["mask_manifest"],
+                values=point,
+            )
+            benign_metrics = _evaluate_ranked_candidates(
+                ranked_by_observation=raw_benign["D"],
+                calibration=calibration,
+                provider_digest=f"D:{calibration.digest}",
+                records=benign_eval,
+            )
+            negative_metrics = _evaluate_ranked_candidates(
+                ranked_by_observation=raw_negative["D"],
+                calibration=calibration,
+                provider_digest=f"D:{calibration.digest}",
+                records=negative_eval,
+            )
+            combined_metrics = {
+                **benign_metrics,
+                "exact_false_accepts": negative_metrics["exact_false_accepts"],
+                "negative_candidate_set_support": negative_metrics["negative_candidate_set_support"],
+                "conflicting_action_exact_accepts": negative_metrics["conflicting_action_exact_accepts"],
+                "same_action_wrong_row_exact_accepts": negative_metrics["same_action_wrong_row_exact_accepts"],
+                "critical_contradiction_exact_accepts": negative_metrics["critical_contradiction_exact_accepts"],
+                "negative_per_family_outcomes": negative_metrics["per_family_outcomes"],
+            }
+            feasible, infeasible_reasons = _feasible_for_selection({"combined_metrics": combined_metrics})
+            results.append(
+                {
+                    "architecture_id": "D",
+                    "calibration_values": point,
+                    "calibration_digest": calibration.digest,
+                    "feasible": feasible,
+                    "infeasible_reasons": list(infeasible_reasons),
+                    "combined_metrics": combined_metrics,
+                }
+            )
+    _write_csv(output_dir / "architecture-grid.csv", [{**result["calibration_values"], "architecture_id": result["architecture_id"], "calibration_digest": result["calibration_digest"], "feasible": result["feasible"], "infeasible_reasons": "|".join(result["infeasible_reasons"]), **result["combined_metrics"]} for result in results])
+    feasible_results = [result for result in results if result["feasible"]]
+    if not feasible_results:
+        selection = {
+            "selection_status": "no_safe_architecture",
+            "selected_architecture": None,
+            "selected_calibration_digest": None,
+            "all_results_digest": _sha256(results),
+            "d_gateway_digest": _sha256(d_gateway),
+            "grid_digest": _sha256(grid_definition),
+            "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"],
+            "architecture_selection_split_digest": _sha256({"benign": [record.observation_id for record in benign_eval], "negative": [record.observation_id for record in negative_eval]}),
+            "region_digest": freeze["region_manifest"]["region_spec_digest"],
+            "mask_digest": freeze["mask_manifest"]["mask_spec_digest"],
+            "policy_artifact_id": benchmark.policy_artifact_id,
+            "source_scope": benchmark.source_scope,
+            "simplicity_order": SIMPLICITY_ORDER,
+        }
+    else:
+        selected = min(feasible_results, key=_selection_rank_key)
+        selection = {
+            "selection_status": "selected_architecture",
+            "selected_architecture": selected["architecture_id"],
+            "selected_calibration_digest": selected["calibration_digest"],
+            "selected_architecture_selection_point": selected["calibration_values"],
+            "selected_result": selected,
+            "all_results_digest": _sha256(results),
+            "d_gateway_digest": _sha256(d_gateway),
+            "grid_digest": _sha256(grid_definition),
+            "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"],
+            "architecture_selection_split_digest": _sha256({"benign": [record.observation_id for record in benign_eval], "negative": [record.observation_id for record in negative_eval]}),
+            "region_digest": freeze["region_manifest"]["region_spec_digest"],
+            "mask_digest": freeze["mask_manifest"]["mask_spec_digest"],
+            "policy_artifact_id": benchmark.policy_artifact_id,
+            "source_scope": benchmark.source_scope,
+            "simplicity_order": SIMPLICITY_ORDER,
+            "tie_break_path": _selection_rank_key(selected),
+        }
+    _write_json(output_dir / "selected-architecture.json", selection)
+    _write_json(output_dir / "phase-access-audits.json", benchmark.phase_audits)
+    _write_json(output_dir / "benchmark-manifest.json", _benchmark_manifest(benchmark))
+    _write_json(output_dir / "split-manifest.json", _split_manifest(benchmark))
+    return selection
+
+
+def _calibration_grid_definition(architecture_id: str) -> Dict[str, Sequence[Any]]:
+    base = _architecture_grid_definition()[architecture_id]
+    if architecture_id in {"A", "B"}:
+        return dict(base)
+    return dict(base)
+
+
+def _calibration_rank_key(result: Mapping[str, Any]) -> Tuple[Any, ...]:
+    metrics = result["metrics"]
+    values = result["calibration_values"]
+    return (
+        int(metrics["exact_false_accepts"]),
+        int(metrics["conflicting_action_exact_accepts"]),
+        int(metrics["critical_contradiction_exact_accepts"]),
+        0 if (metrics["exact_correct_count"] + metrics["useful_candidate_set_count"]) > 0 else 1,
+        -float(metrics["exact_row_coverage"]),
+        -int(metrics["useful_candidate_set_count"]),
+        -(0.0 if metrics["exact_accepted_precision"] is None else float(metrics["exact_accepted_precision"])),
+        float(metrics["mean_set_size"] if metrics["mean_set_size"] is not None else 99.0),
+        -float(values["minimum_available_mass"]),
+        float(values.get("maximum_contradiction", 1.0)),
+        float(values.get("maximum_critical_contradiction", 1.0)),
+        -float(values["exact_winner_margin"]),
+        int(values["maximum_candidate_set_size"]),
+        float(values["candidate_relative_margin"]),
+        -int(values.get("minimum_supporting_regions", 0)),
+        json.dumps(_json_ready(values), sort_keys=True),
+    )
+
+
+def _calibration_feasible(metrics: Mapping[str, Any]) -> Tuple[bool, Tuple[str, ...]]:
+    reasons = []
+    if int(metrics["exact_false_accepts"]) != 0:
+        reasons.append("exact_false_accepts")
+    if int(metrics["conflicting_action_exact_accepts"]) != 0:
+        reasons.append("conflicting_action_exact_accepts")
+    if int(metrics["critical_contradiction_exact_accepts"]) != 0:
+        reasons.append("critical_contradiction_exact_accepts")
+    if SELECTION_NEGATIVE_CANDIDATE_SET_SUPPORT_BLOCKS_FEASIBILITY and int(metrics["negative_candidate_set_support"]) != 0:
+        reasons.append("negative_candidate_set_support")
+    if int(metrics["exact_correct_count"]) + int(metrics["useful_candidate_set_count"]) == 0:
+        reasons.append("zero_utility")
+    return (len(reasons) == 0, tuple(reasons))
+
+
+def _run_calibrate(output_dir: Path) -> Dict[str, Any]:
+    selection = _load_json(output_dir / "selected-architecture.json")
+    if selection["selection_status"] != "selected_architecture":
+        artifact = {
+            "selection_status": "no_feasible_operating_point",
+            "selected_calibration_digest": None,
+            "selected_architecture": selection["selected_architecture"],
+        }
+        _write_json(output_dir / "selected-operating-point.json", artifact)
+        return artifact
+    benchmark = _build_stage3_benchmark(materialize_final=False)
+    freeze = _freeze_regions_and_masks(benchmark, output_dir=output_dir)
+    records, observations = benchmark.access(
+        phase="calibrate",
+        allowed_splits=("prototype", "diagnostic_development", "benign_calibration", "rejection_calibration"),
+    )
+    benign_eval = tuple(record for record in records if record.split == "benign_calibration")
+    rejection_eval = tuple(record for record in records if record.split == "rejection_calibration")
+    architecture_id = str(selection["selected_architecture"])
+    grid_definition = _calibration_grid_definition(architecture_id)
+    _write_json(output_dir / "calibration-grid-definition.json", {"architecture_id": architecture_id, "definition": _json_ready(grid_definition), "digest": _sha256(grid_definition)})
+    results = []
+    raw_benign = _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=benign_eval, observations=observations)
+    raw_rejection = _raw_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, records=rejection_eval, observations=observations)
+    for point in _grid_points(grid_definition):
+        calibration = _calibration(
+            architecture_id=architecture_id,
+            benchmark=benchmark,
+            region_manifest=freeze["region_manifest"],
+            mask_manifest=freeze["mask_manifest"],
+            values=point,
+        )
+        benign_metrics = _evaluate_ranked_candidates(
+            ranked_by_observation=raw_benign,
+            calibration=calibration,
+            provider_digest=f"{architecture_id}:{calibration.digest}",
+            records=benign_eval,
+        )
+        rejection_metrics = _evaluate_ranked_candidates(
+            ranked_by_observation=raw_rejection,
+            calibration=calibration,
+            provider_digest=f"{architecture_id}:{calibration.digest}",
+            records=rejection_eval,
+        )
+        metrics = {
+            **benign_metrics,
+            "exact_false_accepts": rejection_metrics["exact_false_accepts"],
+            "negative_candidate_set_support": rejection_metrics["negative_candidate_set_support"],
+            "conflicting_action_exact_accepts": rejection_metrics["conflicting_action_exact_accepts"],
+            "same_action_wrong_row_exact_accepts": rejection_metrics["same_action_wrong_row_exact_accepts"],
+            "critical_contradiction_exact_accepts": rejection_metrics["critical_contradiction_exact_accepts"],
+            "rejection_histogram": rejection_metrics["negative_per_family_outcomes"],
+        }
+        feasible, infeasible_reasons = _calibration_feasible(metrics)
+        results.append(
+            {
+                "architecture_id": architecture_id,
+                "calibration_values": point,
+                "calibration_digest": calibration.digest,
+                "feasible": feasible,
+                "infeasible_reasons": list(infeasible_reasons),
+                "metrics": metrics,
+            }
+        )
+    _write_csv(output_dir / "calibration-grid.csv", [{**result["calibration_values"], "architecture_id": architecture_id, "calibration_digest": result["calibration_digest"], "feasible": result["feasible"], "infeasible_reasons": "|".join(result["infeasible_reasons"]), **result["metrics"]} for result in results])
+    feasible_results = [result for result in results if result["feasible"]]
+    if not feasible_results:
+        artifact = {
+            "selection_status": "no_feasible_operating_point",
+            "selected_architecture": architecture_id,
+            "selected_calibration_digest": None,
+            "calibration_grid_digest": _sha256(results),
+            "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"],
+            "split_digest": _sha256({"benign": [record.observation_id for record in benign_eval], "rejection": [record.observation_id for record in rejection_eval]}),
+            "region_digest": freeze["region_manifest"]["region_spec_digest"],
+            "mask_digest": freeze["mask_manifest"]["mask_spec_digest"],
+            "policy_artifact_id": benchmark.policy_artifact_id,
+            "source_scope": benchmark.source_scope,
+        }
+    else:
+        selected = min(feasible_results, key=_calibration_rank_key)
+        artifact = {
+            "selection_status": "selected_operating_point",
+            "selected_architecture": architecture_id,
+            "selected_calibration_digest": selected["calibration_digest"],
+            "selected_calibration_values": selected["calibration_values"],
+            "selected_result": selected,
+            "calibration_grid_digest": _sha256(results),
+            "benchmark_digest": _benchmark_manifest(benchmark)["benchmark_digest"],
+            "split_digest": _sha256({"benign": [record.observation_id for record in benign_eval], "rejection": [record.observation_id for record in rejection_eval]}),
+            "region_digest": freeze["region_manifest"]["region_spec_digest"],
+            "mask_digest": freeze["mask_manifest"]["mask_spec_digest"],
+            "policy_artifact_id": benchmark.policy_artifact_id,
+            "source_scope": benchmark.source_scope,
+            "tie_break_path": _calibration_rank_key(selected),
+        }
+    _write_json(output_dir / "selected-operating-point.json", artifact)
+    _write_json(output_dir / "phase-access-audits.json", benchmark.phase_audits)
+    _write_json(output_dir / "benchmark-manifest.json", _benchmark_manifest(benchmark))
+    _write_json(output_dir / "split-manifest.json", _split_manifest(benchmark))
+    return artifact
+
+
+def _freeze_final_identities(output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark(materialize_final=False)
+    manifest = _benchmark_manifest(benchmark)
+    split_manifest = _split_manifest(benchmark)
+    _write_json(output_dir / "benchmark-manifest.json", manifest)
+    _write_json(output_dir / "split-manifest.json", split_manifest)
+    return {"benchmark_manifest_digest": _sha256(manifest), "split_manifest_digest": _sha256(split_manifest)}
+
+
+def _verify_pre_final(output_dir: Path) -> Dict[str, Any]:
+    benchmark_manifest = _load_json(output_dir / "benchmark-manifest.json")
+    split_manifest = _load_json(output_dir / "split-manifest.json")
+    region_manifest = _load_json(output_dir / "region-manifest.json")
+    mask_manifest = _load_json(output_dir / "mask-manifest.json")
+    architecture_grid_definition = _load_json(output_dir / "architecture-grid-definition.json")
+    selected_architecture = _load_json(output_dir / "selected-architecture.json")
+    architecture_d_gateway = _load_json(output_dir / "architecture-d-gateway.json")
+    calibration_grid_definition = _load_json(output_dir / "calibration-grid-definition.json") if (output_dir / "calibration-grid-definition.json").exists() else None
+    selected_operating_point = _load_json(output_dir / "selected-operating-point.json") if (output_dir / "selected-operating-point.json").exists() else None
+    phase_audits = _load_json(output_dir / "phase-access-audits.json")
+    violations = []
+    for audit in phase_audits:
+        if any(split.startswith("final_") for split in audit["accessed_splits"]) and audit["phase"] in {"select_architecture", "calibrate"}:
+            violations.append("final_split_accessed_early")
+    forbidden_final_outputs = [name for name in ("final-metrics.json", "final-evaluation.json") if (output_dir / name).exists()]
+    if forbidden_final_outputs:
+        violations.append("final_metrics_already_exist")
+    payload = {
+        "verified": len(violations) == 0,
+        "violations": violations,
+        "benchmark_manifest_digest": _sha256(benchmark_manifest),
+        "split_manifest_digest": _sha256(split_manifest),
+        "region_manifest_digest": _sha256(region_manifest),
+        "mask_manifest_digest": _sha256(mask_manifest),
+        "architecture_grid_digest": architecture_grid_definition["digest"],
+        "selected_architecture_digest": _sha256(selected_architecture),
+        "architecture_d_gateway_digest": _sha256(architecture_d_gateway),
+        "calibration_grid_digest": None if calibration_grid_definition is None else calibration_grid_definition["digest"],
+        "selected_operating_point_digest": None if selected_operating_point is None else _sha256(selected_operating_point),
+    }
+    if violations:
+        raise SystemExit(json.dumps(payload, indent=2, sort_keys=True))
+    return payload
+
+
+def _stage2_diagnosis_file_digests(output_dir: Path) -> Dict[str, Any]:
+    files = {
+        "summary_json": output_dir / "diagnostics" / "stage2-posthoc-summary.json",
+        "region_summary_csv": output_dir / "diagnostics" / "stage2-region-summary.csv",
+        "frame_candidates_csv": output_dir / "diagnostics" / "stage2-frame-candidates.csv",
+        "correct_row_ranks_json": output_dir / "diagnostics" / "stage2-correct-row-ranks.json",
+        "same_action_ranks_json": output_dir / "diagnostics" / "stage2-same-action-ranks.json",
+        "conflicting_action_ranks_json": output_dir / "diagnostics" / "stage2-conflicting-action-ranks.json",
+    }
+    return {name: _sha256(path.read_text(encoding="utf-8")) for name, path in files.items()}
+
+
+def _write_stage2_diagnosis_digest_manifest(output_dir: Path) -> Dict[str, Any]:
+    manifest = {
+        "stage2_parent_commit": STAGE2_PARENT_COMMIT,
+        "stage2_benchmark_digest": STAGE2_BENCHMARK_DIGEST,
+        "stage2_split_digest": STAGE2_SPLIT_DIGEST,
+        "diagnostics": _stage2_diagnosis_file_digests(output_dir),
+    }
+    _write_json(output_dir / "diagnostics" / "stage2-diagnosis-digests.json", manifest)
+    return manifest
+
+
 def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
     policy = compile_policy_artifact()
     policy_lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
+    from examples.arcade_visual_local_evidence_benchmark import build_arcade_local_evidence_dataset
+
     dataset = build_arcade_local_evidence_dataset(variants_per_family=1)
     selection = _build_v2_selection(dataset, policy_lookup)
     provider = _build_v2_provider(dataset, selection["selected_calibration"])
     cases = build_video_cases()
-    prototypes = provider._items
     topk_hits = Counter()
     topk_action_hits = Counter()
     family_rejections = Counter()
@@ -111,9 +1258,8 @@ def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
     conflicting_action_rank_positions = []
     exact_rank_positions = []
     candidate_rows = []
-
     for case in cases:
-        for frame, expected_row, expected_action, disposition in zip(case.source.frames(), case.expected_rows, case.expected_actions, case.expected_dispositions):
+        for frame, expected_row, expected_action, _disposition in zip(case.source.frames(), case.expected_rows, case.expected_actions, case.expected_dispositions):
             observation = ImageObservation(frame.pixels, source_id=frame.frame_id, metadata=frame.metadata)
             ranked = provider._rank(observation)
             decision = provider.read(observation)
@@ -123,17 +1269,11 @@ def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
                 exact_rank_positions.append({"family": case.family, "frame_id": frame.frame_id, "rank": matching_rank})
                 for k in (1, 2, 3, 5):
                     topk_hits[f"top{k}"] += int(matching_rank is not None and matching_rank <= k)
-                same_action_rank = next(
-                    (idx for idx, candidate in enumerate(ranked, start=1) if candidate.action_id == expected_action),
-                    None,
-                )
+                same_action_rank = next((idx for idx, candidate in enumerate(ranked, start=1) if candidate.action_id == expected_action), None)
                 same_action_rank_positions.append({"family": case.family, "frame_id": frame.frame_id, "rank": same_action_rank})
                 for k in (1, 2, 3, 5):
                     topk_action_hits[f"top{k}"] += int(same_action_rank is not None and same_action_rank <= k)
-                conflicting_rank = next(
-                    (idx for idx, candidate in enumerate(ranked, start=1) if candidate.action_id != expected_action),
-                    None,
-                )
+                conflicting_rank = next((idx for idx, candidate in enumerate(ranked, start=1) if candidate.action_id != expected_action), None)
                 conflicting_action_rank_positions.append({"family": case.family, "frame_id": frame.frame_id, "rank": conflicting_rank})
             best = ranked[0]
             for region in best.region_evidence:
@@ -162,7 +1302,6 @@ def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
                     "top5_actions": [candidate.action_id for candidate in ranked[:5]],
                 }
             )
-
     region_summary_rows = []
     for family, regions in sorted(region_visibility_by_family.items()):
         for region_id, visibilities in sorted(regions.items()):
@@ -180,7 +1319,6 @@ def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
                     "low_visibility_count": int(region_failure_by_family[family].get(region_id, 0)),
                 }
             )
-
     diagnostics = {
         "stage2_parent_commit": STAGE2_PARENT_COMMIT,
         "stage2_benchmark_digest": STAGE2_BENCHMARK_DIGEST,
@@ -189,7 +1327,7 @@ def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
         "selection_status": selection["selection"]["selection_status"],
         "selected_calibration_digest": selection["selected_calibration_digest"],
         "selected_calibration": selection["selected_calibration"],
-        "region_contract_digest": _sha256([region.to_dict() for region in _regions()]),
+        "region_contract_digest": _sha256([region.to_dict() for region in _stage2_regions()]),
         "candidate_grid_digest": selection["candidate_grid_digest"],
         "family_rejections": {
             family: {reason: count for (fam, reason), count in sorted(family_rejections.items()) if fam == family}
@@ -200,42 +1338,66 @@ def _diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
         "region_summaries": region_summary_rows,
         "diagnostic_row_count": len(candidate_rows),
     }
-
     _write_json(output_dir / "diagnostics" / "stage2-posthoc-summary.json", diagnostics)
     _write_csv(output_dir / "diagnostics" / "stage2-region-summary.csv", region_summary_rows)
     _write_csv(output_dir / "diagnostics" / "stage2-frame-candidates.csv", candidate_rows)
     _write_json(output_dir / "diagnostics" / "stage2-correct-row-ranks.json", exact_rank_positions)
     _write_json(output_dir / "diagnostics" / "stage2-same-action-ranks.json", same_action_rank_positions)
     _write_json(output_dir / "diagnostics" / "stage2-conflicting-action-ranks.json", conflicting_action_rank_positions)
+    _write_stage2_diagnosis_digest_manifest(output_dir)
     return diagnostics
 
 
-def run_diagnose_stage2(output_dir: Path) -> Dict[str, Any]:
-    output_dir.mkdir(parents=True, exist_ok=True)
+def run_verify_stage2_diagnosis(output_dir: Path) -> Dict[str, Any]:
+    expected = _load_json(output_dir / "diagnostics" / "stage2-diagnosis-digests.json")
+    actual = {
+        "stage2_parent_commit": STAGE2_PARENT_COMMIT,
+        "stage2_benchmark_digest": STAGE2_BENCHMARK_DIGEST,
+        "stage2_split_digest": STAGE2_SPLIT_DIGEST,
+        "diagnostics": _stage2_diagnosis_file_digests(output_dir),
+    }
+    verified = expected == actual
+    payload = {
+        "mode": "verify-stage2-diagnosis",
+        "verified": verified,
+        "expected_digest": _sha256(expected),
+        "actual_digest": _sha256(actual),
+    }
+    if not verified:
+        raise SystemExit(json.dumps(payload, indent=2, sort_keys=True))
+    return payload
+
+
+def run_rebuild_stage2_diagnosis(output_dir: Path) -> Dict[str, Any]:
     diagnostics = _diagnose_stage2(output_dir)
     return {
-        "mode": "diagnose-stage2",
+        "mode": "rebuild-stage2-diagnosis",
         "benchmark_version": BENCHMARK_VERSION,
         "diagnostic_summary_digest": _sha256(diagnostics),
         "selection_status": diagnostics["selection_status"],
-        "region_contract_digest": diagnostics["region_contract_digest"],
-        "diagnostic_row_count": diagnostics["diagnostic_row_count"],
     }
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
+    parser.add_argument("--verify-stage2-diagnosis", action="store_true")
+    parser.add_argument("--rebuild-stage2-diagnosis", action="store_true")
     parser.add_argument("--diagnose-stage2", action="store_true")
     parser.add_argument("--select-architecture", action="store_true")
     parser.add_argument("--calibrate", action="store_true")
-    parser.add_argument("--evaluate", action="store_true")
-    parser.add_argument("--verify", action="store_true")
+    parser.add_argument("--verify-pre-final", action="store_true")
     args = parser.parse_args()
-    if args.diagnose_stage2:
-        payload = run_diagnose_stage2(args.output_dir)
-    elif args.select_architecture or args.calibrate or args.evaluate or args.verify:
-        raise SystemExit("Stage 3 implementation is not complete yet; only --diagnose-stage2 is currently implemented on this branch state.")
+    if args.verify_stage2_diagnosis:
+        payload = run_verify_stage2_diagnosis(args.output_dir)
+    elif args.rebuild_stage2_diagnosis or args.diagnose_stage2:
+        payload = run_rebuild_stage2_diagnosis(args.output_dir)
+    elif args.select_architecture:
+        payload = _run_selection(args.output_dir)
+    elif args.calibrate:
+        payload = _run_calibrate(args.output_dir)
+    elif args.verify_pre_final:
+        payload = _verify_pre_final(args.output_dir)
     else:
         raise SystemExit("one stage flag is required")
     print(json.dumps(_json_ready(payload), indent=2, sort_keys=True))

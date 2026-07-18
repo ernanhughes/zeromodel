@@ -1,0 +1,31 @@
+{
+  "benchmark_digest": "sha256:74d2a443e7d651dac0c0ad352d85c08ec75f910768030a7995548b04325df2f4",
+  "benchmark_version": "zeromodel-video-discriminative-evidence-stage3/v1",
+  "final_seed_digest": "sha256:c70519dcfb1ed60edcca99e404120c8ccd0d03a3d7c33450956026016da2b7aa",
+  "final_seed_material": "zeromodel-stage3-final-v1|e6d3c2461a3e7fc783026907aa1ab5b803c878f3",
+  "generator_version": "zeromodel-video-discriminative-generator/v1",
+  "metadata": {
+    "benchmark_version": "zeromodel-video-discriminative-evidence-stage3/v1",
+    "final_seed_digest": "sha256:c70519dcfb1ed60edcca99e404120c8ccd0d03a3d7c33450956026016da2b7aa",
+    "final_seed_material": "zeromodel-stage3-final-v1|e6d3c2461a3e7fc783026907aa1ab5b803c878f3",
+    "generator_version": "zeromodel-video-discriminative-generator/v1",
+    "materialized_final": false,
+    "nonprototype_row_sample_size": 12,
+    "preregistration_commit": "e6d3c2461a3e7fc783026907aa1ab5b803c878f3",
+    "split_counts": {
+      "architecture_selection_benign": 144,
+      "architecture_selection_negative": 84,
+      "benign_calibration": 84,
+      "diagnostic_development": 24,
+      "final_benign": 48,
+      "final_distinguishable_negative": 36,
+      "information_theoretic_control": 12,
+      "prototype": 12,
+      "rejection_calibration": 84
+    }
+  },
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "preregistration_commit": "e6d3c2461a3e7fc783026907aa1ab5b803c878f3",
+  "record_count": 528,
+  "source_scope": "arcade-visual-local-evidence-v3"
+}

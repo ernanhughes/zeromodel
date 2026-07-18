@@ -1,0 +1,12 @@
+{
+  "conditions": {
+    "a_nonzero_safe_utility": false,
+    "added_recovery_zero_new_safety_failures": false,
+    "b_or_c_additional_recovery": false,
+    "distinct_failure_mode": false
+  },
+  "digest": "sha256:1c1964c7d5106173310bab0d831fc298d3e99de4621f7430360d7b6f43fa5f0b",
+  "eligible": false,
+  "supporting_family_identities": [],
+  "supporting_frame_identities": []
+}

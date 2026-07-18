@@ -1316,6 +1316,16 @@ def _architecture_active_gates(architecture_id: str) -> Tuple[Tuple[str, ...], T
             "exact_winner_margin",
         )
         inactive = ()
+    elif architecture_id == "D":
+        active = common + (
+            "minimum_support",
+            "maximum_contradiction",
+            "maximum_critical_contradiction",
+            "minimum_supporting_regions",
+            "exact_winner_threshold",
+            "exact_winner_margin",
+        )
+        inactive = ()
     else:
         raise VPMValidationError("unsupported architecture_id")
     return (active, inactive)
@@ -1405,6 +1415,24 @@ def _aggregate_candidate(
             candidate_strength=float(candidate_strength),
             raw_score=float(candidate_strength),
             raw_score_kind="support_minus_contradiction",
+            available_informative_mass=float(total_available_mass),
+            available_informative_fraction=float(available_fraction),
+            aggregate_support=float(support_ratio),
+            aggregate_contradiction=float(contradiction_ratio),
+            aggregate_critical_contradiction=float(critical_ratio),
+            aggregate_conflicting_action_support=float(total_conflict_support / total_available_mass) if total_available_mass > 0.0 else 0.0,
+            aggregate_conflicting_action_contradiction=float(total_conflict_contradiction / total_available_mass) if total_available_mass > 0.0 else 0.0,
+            supporting_region_count=int(supporting_region_count),
+            expected_informative_mass=float(total_expected_mass),
+        )
+    if architecture_id == "D":
+        candidate_strength = max(0.0, support_ratio - contradiction_ratio - critical_ratio)
+        return RawCandidateAggregate(
+            architecture_id=architecture_id,
+            score_semantics="similarity",
+            candidate_strength=float(candidate_strength),
+            raw_score=float(candidate_strength),
+            raw_score_kind="combined_support_minus_contradiction",
             available_informative_mass=float(total_available_mass),
             available_informative_fraction=float(available_fraction),
             aggregate_support=float(support_ratio),

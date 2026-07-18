@@ -1,0 +1,13 @@
+{
+  "diagnostics": {
+    "conflicting_action_ranks_json": "sha256:c4a21a5f0e4d75ff9e46b79ebc4d50930a2ecdff788f6a2b0ccbdf107219f223",
+    "correct_row_ranks_json": "sha256:8836cc1c6f357e31e2322ec13ba99bf68665382bf0cbac333410576bfc3013c3",
+    "frame_candidates_csv": "sha256:10125ceed7af22d902ec3ca34dba2fdc59392077594a63248ecd38100067beca",
+    "region_summary_csv": "sha256:6cf452fc946346078f41af0d0ba0586d35feaafe128020d87fa128a023bca077",
+    "same_action_ranks_json": "sha256:e4e37ea557db925ede087678f0d003c4023b7901627ee24837656f0d5e00ddd3",
+    "summary_json": "sha256:83473201dae68b28dddee9bae69aaed24a1d539df948abcc2870f9901b4b23fe"
+  },
+  "stage2_benchmark_digest": "sha256:589bb074e1b53b06657cfb75bf7b8d67eae43cc5f76e7237ab07f23ccca49c75",
+  "stage2_parent_commit": "d00e18b67fbe2f62617cd0ac47c7ee2f63487cb8",
+  "stage2_split_digest": "sha256:d25b694b3cce93bf93f58239163331f3f6370d32a2b5cce53b4541902b0f8c23"
+}

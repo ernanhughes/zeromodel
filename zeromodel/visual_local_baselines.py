@@ -28,6 +28,7 @@ from .visual_registration import (
 
 REGISTERED_PIXEL_PROVIDER_VERSION = "zeromodel-registered-pixel-provider/v1"
 LOCAL_BASELINE_SELECTION_VERSION = "zeromodel-local-baseline-selection/v1"
+REGISTERED_PIXEL_SELECTION_V2_VERSION = "zeromodel-registered-pixel-selection/v2"
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -265,6 +266,100 @@ class RegisteredPixelSelectionArtifact:
         }
 
 
+@dataclass(frozen=True)
+class RegisteredPixelCandidateEvaluationV2:
+    distance_quantile: float
+    ambiguity_margin_quantile: float
+    threshold: float
+    ambiguity_margin: float
+    feasible: bool
+    infeasible_reasons: Tuple[str, ...]
+    calibration: RegisteredPixelCalibration
+    benign_result: Any
+    rejection_result: Any
+
+    def to_dict(self) -> Dict[str, Any]:
+        benign_metrics = self.benign_result.metrics
+        rejection_metrics = self.rejection_result.metrics
+        return {
+            "distance_quantile": float(self.distance_quantile),
+            "ambiguity_margin_quantile": float(self.ambiguity_margin_quantile),
+            "distance_threshold": float(self.threshold),
+            "ambiguity_margin_threshold": float(self.ambiguity_margin),
+            "feasible": bool(self.feasible),
+            "infeasible_reasons": list(self.infeasible_reasons),
+            "accepted_benign_count": int(benign_metrics.accepted_benign_count),
+            "accepted_exact_row_precision": (
+                None
+                if benign_metrics.accepted_benign_count == 0
+                else float(benign_metrics.accepted_benign_row_correctness)
+            ),
+            "accepted_action_precision": (
+                None
+                if benign_metrics.accepted_benign_count == 0
+                else float(benign_metrics.accepted_benign_action_correctness)
+            ),
+            "benign_coverage": float(
+                benign_metrics.accepted_benign_count
+                / float(benign_metrics.false_reject_opportunities or 1)
+            ),
+            "accepted_exact_row_recall": float(benign_metrics.benign_row_accuracy),
+            "raw_exact_row_accuracy": float(benign_metrics.top1_benign_row_accuracy),
+            "false_accepts": int(rejection_metrics.false_accept_count),
+            "conflicting_action_accepts": int(benign_metrics.conflicting_action_error_count),
+            "false_rejects": int(benign_metrics.false_reject_count),
+            "calibration_artifact_id": self.calibration.digest,
+            "benign_result": self.benign_result.to_dict(),
+            "rejection_result": self.rejection_result.to_dict(),
+        }
+
+
+@dataclass(frozen=True)
+class RegisteredPixelSelectionArtifactV2:
+    registration_config_digest: str
+    prototype_digest: str
+    benign_calibration_digest: str
+    rejection_calibration_digest: str
+    candidate_grid_digest: str
+    selection_status: str
+    selected_distance_quantile: Optional[float]
+    selected_ambiguity_margin_quantile: Optional[float]
+    selected_threshold: Optional[float]
+    selected_ambiguity_margin: Optional[float]
+    selected_calibration_digest: Optional[str]
+    selection_rule: str
+    source_scope: str
+    policy_artifact_id: str
+    candidates: Tuple[RegisteredPixelCandidateEvaluationV2, ...]
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+    version: str = REGISTERED_PIXEL_SELECTION_V2_VERSION
+
+    @property
+    def digest(self) -> str:
+        return _sha256_json(self.to_dict())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "version": self.version,
+            "registration_config_digest": self.registration_config_digest,
+            "prototype_digest": self.prototype_digest,
+            "benign_calibration_digest": self.benign_calibration_digest,
+            "rejection_calibration_digest": self.rejection_calibration_digest,
+            "candidate_grid_digest": self.candidate_grid_digest,
+            "selection_status": self.selection_status,
+            "selected_distance_quantile": self.selected_distance_quantile,
+            "selected_ambiguity_margin_quantile": self.selected_ambiguity_margin_quantile,
+            "selected_threshold": self.selected_threshold,
+            "selected_ambiguity_margin": self.selected_ambiguity_margin,
+            "selected_calibration_digest": self.selected_calibration_digest,
+            "selection_rule": self.selection_rule,
+            "source_scope": self.source_scope,
+            "policy_artifact_id": self.policy_artifact_id,
+            "candidates": [candidate.to_dict() for candidate in self.candidates],
+            "metadata": _freeze(self.metadata),
+        }
+
+
 class RegisteredPixelAddressProvider:
     def __init__(
         self,
@@ -324,16 +419,17 @@ class RegisteredPixelAddressProvider:
         candidate: RegisteredPixelCandidate,
         *,
         use_registered_distance: bool,
-    ) -> Tuple[float, float, int, str, str]:
-        target_distance = (
-            float(candidate.registration.distance_after)
-            if use_registered_distance
-            else float(candidate.registration.distance_before)
-        )
+    ) -> Tuple[float, ...] | Tuple[float, str, str]:
+        if use_registered_distance:
+            return (
+                float(candidate.registration.distance_after),
+                -float(candidate.registration.overlap_fraction),
+                float(candidate.displacement_magnitude),
+                candidate.row_id,
+                candidate.prototype_observation_id,
+            )
         return (
-            target_distance,
-            -float(candidate.registration.overlap_fraction),
-            candidate.displacement_magnitude,
+            float(candidate.registration.distance_before),
             candidate.row_id,
             candidate.prototype_observation_id,
         )
@@ -695,6 +791,190 @@ def build_registered_pixel_candidates(
     return tuple(evaluations)
 
 
+def _build_rankings(
+    *,
+    dataset_manifest: VisualDatasetManifest,
+    observations: Mapping[str, ImageObservation],
+    registration_config: RegistrationConfig,
+    source_scope: str,
+    capture_ids: Optional[set[str]] = None,
+) -> Tuple[
+    Mapping[str, Tuple[RegisteredPixelPrototype, ImageObservation]],
+    Tuple[VisualExampleRecord, ...],
+    Tuple[VisualExampleRecord, ...],
+    Tuple[VisualExampleRecord, ...],
+    Tuple[RegisteredPixelObservationRanking, ...],
+    Tuple[RegisteredPixelObservationRanking, ...],
+    Tuple[float, ...],
+    Tuple[float, ...],
+]:
+    prototype_records = _require_split(dataset_manifest.records, "prototype")
+    benign_records = _require_split(dataset_manifest.records, "benign_calibration")
+    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    prototype_map = build_registered_pixel_prototypes(
+        dataset_manifest=dataset_manifest,
+        observations=observations,
+    )
+    provisional = RegisteredPixelCalibration(
+        threshold=2.0,
+        ambiguity_margin=0.0,
+        quantile=0.0,
+        registration_config_digest=registration_config.digest,
+        prototype_digest=_records_digest(prototype_records),
+        benign_calibration_digest=_records_digest(benign_records),
+        rejection_calibration_digest=_records_digest(rejection_records),
+        source_scope=source_scope,
+        policy_artifact_id=dataset_manifest.policy_artifact_id,
+    )
+    rank_provider = RegisteredPixelAddressProvider(
+        prototypes=prototype_map,
+        calibration=provisional,
+        registration_config=registration_config,
+        provider_id=_provider_id(registration_config=registration_config, calibration=provisional),
+    )
+    benign_distances = []
+    benign_margins = []
+    benign_rankings = []
+    for record in benign_records:
+        if capture_ids is not None:
+            capture_ids.add(record.observation_id)
+        best, second, raw_best = rank_provider._rank(observations[record.observation_id])
+        benign_rankings.append(
+            RegisteredPixelObservationRanking(
+                observation_id=record.observation_id,
+                best=best,
+                second=second,
+                raw_best=raw_best,
+                expected_row_id=record.row_id,
+                expected_action_id=record.action_id,
+                expected_disposition=EXPECTED_ACCEPT,
+            )
+        )
+        if best.row_id == str(record.row_id):
+            benign_distances.append(float(best.distance))
+            benign_margins.append(float("inf") if second is None else float(second.distance - best.distance))
+    rejection_rankings = []
+    for record in rejection_records:
+        if capture_ids is not None:
+            capture_ids.add(record.observation_id)
+        best, second, raw_best = rank_provider._rank(observations[record.observation_id])
+        rejection_rankings.append(
+            RegisteredPixelObservationRanking(
+                observation_id=record.observation_id,
+                best=best,
+                second=second,
+                raw_best=raw_best,
+                expected_row_id=record.row_id,
+                expected_action_id=record.action_id,
+                expected_disposition=EXPECTED_REJECT,
+            )
+        )
+    if not benign_distances:
+        raise VPMValidationError("registered local baseline calibration found no correct benign rankings")
+    return (
+        prototype_map,
+        prototype_records,
+        benign_records,
+        rejection_records,
+        tuple(benign_rankings),
+        tuple(rejection_rankings),
+        tuple(benign_distances),
+        tuple(benign_margins),
+    )
+
+
+def build_registered_pixel_candidates_v2(
+    *,
+    dataset_manifest: VisualDatasetManifest,
+    observations: Mapping[str, ImageObservation],
+    policy_lookup: Any,
+    registration_config: RegistrationConfig,
+    distance_quantiles: Sequence[float],
+    ambiguity_margin_quantiles: Sequence[float],
+    source_scope: str,
+    capture_ids: Optional[set[str]] = None,
+) -> Tuple[RegisteredPixelCandidateEvaluationV2, ...]:
+    (
+        prototype_map,
+        prototype_records,
+        benign_records,
+        rejection_records,
+        benign_rankings,
+        rejection_rankings,
+        benign_distances,
+        benign_margins,
+    ) = _build_rankings(
+        dataset_manifest=dataset_manifest,
+        observations=observations,
+        registration_config=registration_config,
+        source_scope=source_scope,
+        capture_ids=capture_ids,
+    )
+    finite_margins = tuple(value for value in benign_margins if np.isfinite(value))
+    evaluations = []
+    for distance_quantile in tuple(float(value) for value in distance_quantiles):
+        threshold = _conservative_distance_quantile(benign_distances, distance_quantile)
+        for ambiguity_margin_quantile in tuple(float(value) for value in ambiguity_margin_quantiles):
+            ambiguity_margin = (
+                _conservative_distance_quantile(finite_margins, ambiguity_margin_quantile)
+                if finite_margins
+                else 0.0
+            )
+            calibration = RegisteredPixelCalibration(
+                threshold=float(threshold),
+                ambiguity_margin=float(ambiguity_margin),
+                quantile=0.0,
+                registration_config_digest=registration_config.digest,
+                prototype_digest=_records_digest(prototype_records),
+                benign_calibration_digest=_records_digest(benign_records),
+                rejection_calibration_digest=_records_digest(rejection_records),
+                source_scope=source_scope,
+                policy_artifact_id=dataset_manifest.policy_artifact_id,
+                metadata={
+                    "distance_quantile": float(distance_quantile),
+                    "ambiguity_margin_quantile": float(ambiguity_margin_quantile),
+                    "selection_version": REGISTERED_PIXEL_SELECTION_V2_VERSION,
+                },
+            )
+            provider = RegisteredPixelAddressProvider(
+                prototypes=prototype_map,
+                calibration=calibration,
+                registration_config=registration_config,
+                provider_id=_provider_id(registration_config=registration_config, calibration=calibration),
+            )
+            benign_result = _evaluate_cached_rankings(
+                rankings=benign_rankings,
+                calibration=calibration,
+                provider=provider,
+                split_name="benign_calibration",
+            )
+            rejection_result = _evaluate_cached_rankings(
+                rankings=rejection_rankings,
+                calibration=calibration,
+                provider=provider,
+                split_name="rejection_calibration",
+            )
+            reasons = []
+            if rejection_result.metrics.false_accept_count > 0:
+                reasons.append("distinguishable_false_acceptance")
+            if benign_result.metrics.conflicting_action_error_count > 0:
+                reasons.append("conflicting_action_acceptance")
+            evaluations.append(
+                RegisteredPixelCandidateEvaluationV2(
+                    distance_quantile=float(distance_quantile),
+                    ambiguity_margin_quantile=float(ambiguity_margin_quantile),
+                    threshold=float(threshold),
+                    ambiguity_margin=float(ambiguity_margin),
+                    feasible=(len(reasons) == 0),
+                    infeasible_reasons=tuple(reasons),
+                    calibration=calibration,
+                    benign_result=benign_result,
+                    rejection_result=rejection_result,
+                )
+            )
+    return tuple(evaluations)
+
+
 def select_registered_pixel_candidate(
     *,
     dataset_manifest: VisualDatasetManifest,
@@ -750,6 +1030,78 @@ def select_registered_pixel_candidate(
         candidates=candidate_items,
         metadata={
             "candidate_quantiles": [float(candidate.quantile) for candidate in candidate_items],
+        },
+    )
+
+
+def select_registered_pixel_candidate_v2(
+    *,
+    dataset_manifest: VisualDatasetManifest,
+    registration_config: RegistrationConfig,
+    candidates: Sequence[RegisteredPixelCandidateEvaluationV2],
+    source_scope: str,
+) -> RegisteredPixelSelectionArtifactV2:
+    candidate_items = tuple(candidates)
+    if not candidate_items:
+        raise VPMValidationError("registered local baseline selection v2 requires candidates")
+    feasible = tuple(candidate for candidate in candidate_items if candidate.feasible)
+
+    def key(candidate: RegisteredPixelCandidateEvaluationV2) -> Tuple[float, float, float, float, float, float, float, float]:
+        benign = candidate.benign_result.metrics
+        accepted_precision = (
+            -1.0
+            if benign.accepted_benign_row_correctness is None
+            else float(benign.accepted_benign_row_correctness)
+        )
+        accepted_action_precision = (
+            -1.0
+            if benign.accepted_benign_action_correctness is None
+            else float(benign.accepted_benign_action_correctness)
+        )
+        coverage = float(benign.accepted_benign_count) / float(benign.false_reject_opportunities or 1)
+        recall = float(benign.correct_row_count) / float(benign.false_reject_opportunities or 1)
+        raw_rank = float(benign.top1_benign_row_accuracy)
+        return (
+            accepted_precision,
+            coverage,
+            recall,
+            accepted_action_precision,
+            raw_rank,
+            -float(candidate.threshold),
+            float(candidate.ambiguity_margin),
+            -float(candidate.distance_quantile),
+        )
+
+    selected = max(feasible, key=key) if feasible else None
+    prototype_records = _require_split(dataset_manifest.records, "prototype")
+    benign_records = _require_split(dataset_manifest.records, "benign_calibration")
+    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    return RegisteredPixelSelectionArtifactV2(
+        registration_config_digest=registration_config.digest,
+        prototype_digest=_records_digest(prototype_records),
+        benign_calibration_digest=_records_digest(benign_records),
+        rejection_calibration_digest=_records_digest(rejection_records),
+        candidate_grid_digest=_sha256_json([candidate.to_dict() for candidate in candidate_items]),
+        selection_status=("selected_operating_point" if selected is not None else "no_feasible_operating_point"),
+        selected_distance_quantile=(None if selected is None else float(selected.distance_quantile)),
+        selected_ambiguity_margin_quantile=(None if selected is None else float(selected.ambiguity_margin_quantile)),
+        selected_threshold=(None if selected is None else float(selected.threshold)),
+        selected_ambiguity_margin=(None if selected is None else float(selected.ambiguity_margin)),
+        selected_calibration_digest=(None if selected is None else selected.calibration.digest),
+        selection_rule=(
+            "Among feasible candidates maximize accepted exact-row precision, "
+            "then benign accepted coverage, then accepted exact-row recall, "
+            "then accepted action precision, then raw benign exact-row ranking accuracy, "
+            "then prefer the stricter distance threshold (lower is stricter), "
+            "then prefer the stricter ambiguity-margin threshold (higher is stricter), "
+            "then deterministic distance-quantile ordering, then deterministic margin-quantile ordering."
+        ),
+        source_scope=source_scope,
+        policy_artifact_id=dataset_manifest.policy_artifact_id,
+        candidates=candidate_items,
+        metadata={
+            "distance_quantiles": [float(candidate.distance_quantile) for candidate in candidate_items],
+            "ambiguity_margin_quantiles": [float(candidate.ambiguity_margin_quantile) for candidate in candidate_items],
         },
     )
 

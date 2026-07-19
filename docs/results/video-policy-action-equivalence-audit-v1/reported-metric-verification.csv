@@ -1,5 +1,5 @@
-calculation_method,difference,match_status,metric_name,notes,provider_id,reported_claim_id,reported_value,repository_derived_value,source_artifact,unit
-read final_metrics field from committed repository artifact,0.0,exact_match,top1_benign_row_accuracy,external-review numbers treated as hypotheses,system-b-v2,review-brief-system-b-top1-row,0.75,0.75,docs/results/visual-address-system-b-v2/final-summary.json,fraction
-read final_metrics field from committed repository artifact,0.0,exact_match,top1_benign_action_accuracy,external-review numbers treated as hypotheses,system-b-v2,review-brief-system-b-top1-action,0.96875,0.96875,docs/results/visual-address-system-b-v2/final-summary.json,fraction
-read final_metrics field from committed repository artifact,0.0,exact_match,top1_benign_row_accuracy,external-review numbers treated as hypotheses,r1-local-correlation,review-brief-r1-top1-row,0.875,0.875,docs/results/visual-local-baseline-showdown-v1/final-summary.json,fraction
-read final_metrics field from committed repository artifact,0.0,exact_match,top1_benign_action_accuracy,external-review numbers treated as hypotheses,r1-local-correlation,review-brief-r1-top1-action,0.984375,0.984375,docs/results/visual-local-baseline-showdown-v1/final-summary.json,fraction
+difference,match_status,metric_name,provider_id,reported_value,repository_derived_value,source_artifact
+0.0,exact_match,top1_benign_row_accuracy,system-b-v2,0.75,0.75,docs/results/visual-address-system-b-v2/final-summary.json
+0.0,exact_match,top1_benign_action_accuracy,system-b-v2,0.96875,0.96875,docs/results/visual-address-system-b-v2/final-summary.json
+0.0,exact_match,top1_benign_row_accuracy,r1-local-correlation,0.875,0.875,docs/results/visual-local-baseline-showdown-v1/final-summary.json
+0.0,exact_match,top1_benign_action_accuracy,r1-local-correlation,0.984375,0.984375,docs/results/visual-local-baseline-showdown-v1/final-summary.json

@@ -1,7 +1,9 @@
 {
+  "frozen_v3_preserved": true,
   "new_observation_generation_count": 0,
   "pr_42_calibration_grid_execution_count": 0,
   "pr_42_selection_grid_execution_count": 0,
   "production_temporal_reader_artifact_count": 0,
-  "v3_final_access_count": 0
+  "v3_final_access_count": 0,
+  "verified": true
 }

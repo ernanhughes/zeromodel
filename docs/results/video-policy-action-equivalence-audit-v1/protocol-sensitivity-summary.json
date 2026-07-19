@@ -1,0 +1,39 @@
+{
+  "audit_contract_commit": "c4aa9c41484d0b8d65386ba296767832683c1597",
+  "audit_version": "zeromodel-video-action-equivalence-audit/v1",
+  "claims_amendment_digest": "sha256:2fc01476a2eefc2ed5d73eaedfcfd874c708806f1fce7d304aa64e090d211d29",
+  "corrected_inventory_digest": "sha256:ba3c6caaccb4a411660a8bfa2790ef8049d7e5c713481dd5dff5dff500ae21af",
+  "corrected_inventory_version": "zeromodel-video-retrospective-evidence-inventory/v2",
+  "evidence_closure_amendment_commit": "c1e84c01bd352a4fe4b521409013b1cd1a8f6a8b",
+  "final_audit_verification_digest": "sha256:8876e208f6c781760c25c951a24b7a3802c27625f93791dec1053f7df008e036",
+  "next_experiment_recommendation": "prospective_evidence_preserving_action_set_and_reachability_benchmark",
+  "phase_access_audit_digest": "sha256:d0c3799920c57e6de4c210931d01e1fb3c3fd7a433a335aab08e640d1e1d76fa",
+  "preliminary_inventory_digest": "sha256:9a7fe1a38c5685519e877e80fe7c66cb3bcbfbd5d1ec36c0cd474b14a7608cb0",
+  "primary_status": "insufficient_historical_artifacts",
+  "reachability_tile_digest": "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df",
+  "replay_eligibility_digest": "sha256:0f0c4506de13d4e94f2b3c33c849e6c7c6484f30dad246997ba8312ae9071b87",
+  "row_action_map_digest": "sha256:62bce640bee5d6843124cdebcc46229560850b7bbe80eddf4994ec7ea43bcf5a",
+  "source_identity_digest": "sha256:8dc216dbbab614398992e5abe2b1d98d392c5760d94714162ded99a85aa7cf49",
+  "supported_claim": "The historical experiments preserved enough evidence to verify top-1 row and action outcomes, but not enough evidence to reconstruct governed row candidate sets, calibrate conformal sets, or replay reachability-constrained visual beliefs.",
+  "top1_result_digest": "sha256:5a377efeaf9727b668ba7e55ca6421abbb5ba70bd23afbbb283711b3eb217bc4",
+  "unsupported_claims": [
+    "action_equivalence_materially_changes_protocol_result",
+    "reachability_required_for_material_policy_utility",
+    "no_material_policy_utility_recovered",
+    "invalid_protocol_sensitivity_measurement",
+    "action-unanimous candidate sets improve governed coverage",
+    "action-unanimous candidate sets fail to improve coverage",
+    "conformal prediction is useful",
+    "conformal prediction is ineffective",
+    "reachability improves ambiguity",
+    "reachability fails to improve ambiguity",
+    "the visual branch is dead",
+    "the visual branch is production-ready"
+  ],
+  "unsupported_method_status_digests": {
+    "conformal": "sha256:3abd84d25b6698e8792e6abf7bc264b562d836d6895fa739cc4768128de05ade",
+    "fixed_top_k": "sha256:f978942041258084a04464e5a1bd2e927168b5e8abb4cae15a7679bd1b3e1623",
+    "score_gap": "sha256:0ed13bb1b104f834a7836e282e0fdeff48b3056cdeb3a1b36b3b4b63f5887a39"
+  },
+  "visual_branch_recommendation": "undetermined_due_to_missing_artifacts"
+}

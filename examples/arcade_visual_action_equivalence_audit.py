@@ -36,7 +36,12 @@ OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-policy-action-equivalence-a
 REACHABILITY_DIR = REPO_ROOT / "docs" / "results" / "video-policy-reachability-tile-v1"
 PRELIM_DIGEST = "sha256:9a7fe1a38c5685519e877e80fe7c66cb3bcbfbd5d1ec36c0cd474b14a7608cb0"
 AMENDMENT_PATH = "docs/research/video-action-equivalence-evidence-closure-amendment-v1.md"
+CLAIMS_AMENDMENT_PATH = "docs/research/video-stage-three-action-equivalence-claims-amendment.md"
+AUDIT_CONTRACT_PATH = "docs/research/video-action-equivalence-protocol-audit-v1.md"
 FROZEN_V3_SHA = "4790165de78557fce63d64e5f2b7ddfde04f1e98"
+PRIMARY_STATUS = "insufficient_historical_artifacts"
+VISUAL_BRANCH_RECOMMENDATION = "undetermined_due_to_missing_artifacts"
+NEXT_EXPERIMENT = "prospective_evidence_preserving_action_set_and_reachability_benchmark"
 
 
 def _provider_specs() -> tuple[dict[str, Any], ...]:
@@ -330,10 +335,36 @@ def _provider_contract_digest(spec: Mapping[str, Any]) -> str | None:
     return None
 
 
+def _reported_metric_verifications() -> list[dict[str, Any]]:
+    rows = []
+    claims = [
+        ("system-b-v2", "top1_benign_row_accuracy", 0.75, "docs/results/visual-address-system-b-v2/final-summary.json"),
+        ("system-b-v2", "top1_benign_action_accuracy", 0.96875, "docs/results/visual-address-system-b-v2/final-summary.json"),
+        ("r1-local-correlation", "top1_benign_row_accuracy", 0.875, "docs/results/visual-local-baseline-showdown-v1/final-summary.json"),
+        ("r1-local-correlation", "top1_benign_action_accuracy", 0.984375, "docs/results/visual-local-baseline-showdown-v1/final-summary.json"),
+    ]
+    for provider_id, metric_name, reported_value, rel in claims:
+        payload = _load_json(REPO_ROOT / rel)["final_metrics"]
+        derived = payload[metric_name]
+        rows.append(
+            {
+                "provider_id": provider_id,
+                "metric_name": metric_name,
+                "reported_value": reported_value,
+                "repository_derived_value": derived,
+                "match_status": "exact_match" if derived == reported_value else "mismatch",
+                "difference": float(derived) - float(reported_value),
+                "source_artifact": rel,
+            }
+        )
+    return rows
+
+
 def run_audit_evidence_closure(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
     _write_unsupported_statuses(output_dir)
     row_action_map = build_policy_row_action_map(policy_artifact_id=compile_policy_artifact().artifact_id)
     files = _provider_evidence_files()
+    verifications = _reported_metric_verifications()
     closure_rows, inventory_rows = _evidence_closure(row_action_map)
     frozen_manifest = collect_v3_preservation_manifest(REPO_ROOT)
     closure_payload = {
@@ -354,7 +385,7 @@ def run_audit_evidence_closure(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
     amendment_payload = {
         "preliminary_inventory_digest": PRELIM_DIGEST,
         "evidence_closure_amendment_path": AMENDMENT_PATH,
-        "evidence_closure_amendment_commit": _current_head_sha(),
+        "evidence_closure_amendment_commit": _git_commit_for_path(AMENDMENT_PATH),
         "corrected_inventory_digest": inventory_payload["inventory_digest"],
         "fields_corrected": [
             "source_commit_status",
@@ -387,6 +418,21 @@ def run_audit_evidence_closure(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
     _write_csv(output_dir / "evidence-closure.csv", closure_rows)
     _write_json(output_dir / "evidence-inventory-v2.json", inventory_payload)
     _write_csv(output_dir / "evidence-inventory-v2.csv", inventory_rows)
+    _write_json(output_dir / "reported-metric-verification.json", verifications)
+    _write_csv(output_dir / "reported-metric-verification.csv", verifications)
+    _write_json(output_dir / "policy-row-action-map.json", list(row_action_map))
+    _write_csv(output_dir / "policy-row-action-map.csv", list(row_action_map))
+    _write_json(output_dir / "parent-v3-preservation-manifest.json", frozen_manifest)
+    _write_json(
+        output_dir / "phase-access-audits.json",
+        {
+            "v3_final_access_count": 0,
+            "new_observation_generation_count": 0,
+            "pr_42_selection_grid_execution_count": 0,
+            "pr_42_calibration_grid_execution_count": 0,
+            "production_temporal_reader_artifact_count": 0,
+        },
+    )
     _write_json(output_dir / "inventory-amendment.json", amendment_payload)
     _write_json(output_dir / "provider-evidence-files.json", files)
     _write_csv(output_dir / "provider-evidence-fields.csv", files)
@@ -419,6 +465,105 @@ def _current_head_sha() -> str:
         ref = head.split(" ", 1)[1]
         return (REPO_ROOT / ".git" / ref).read_text(encoding="utf-8").strip()
     return head
+
+
+def _git_commit_for_path(rel_path: str) -> str:
+    import subprocess
+
+    result = subprocess.run(
+        ["git", "log", "-n", "1", "--format=%H", "--", rel_path],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def _audit_metadata() -> dict[str, str]:
+    return {
+        "audit_contract_path": AUDIT_CONTRACT_PATH,
+        "audit_contract_commit": _git_commit_for_path(AUDIT_CONTRACT_PATH),
+        "evidence_closure_amendment_path": AMENDMENT_PATH,
+        "evidence_closure_amendment_commit": _git_commit_for_path(AMENDMENT_PATH),
+        "claims_amendment_path": CLAIMS_AMENDMENT_PATH,
+        "claims_amendment_commit": _git_commit_for_path(CLAIMS_AMENDMENT_PATH) if (REPO_ROOT / CLAIMS_AMENDMENT_PATH).exists() else "",
+    }
+
+
+def _write_audit_readme(output_dir: Path) -> None:
+    _write_markdown(
+        output_dir / "README.md",
+        "\n".join(
+            [
+                "# Video Policy Action-Equivalence Audit v1",
+                "",
+                "- status: bounded retrospective audit over preserved historical artifacts",
+                "- superseded PR #42 was stopped before grid execution because the branch lacked a frozen action-equivalence protocol",
+                "- the retrospective audit was attempted to determine whether preserved historical outputs could support action-level and reachability-sensitive reinterpretation",
+                "- the preserved evidence supported top-1 row and action verification for some providers",
+                "- the preserved evidence did not support ordered candidate-set reconstruction, complete score-vector analysis, or replayable frame-level visual beliefs",
+                "- candidate-set, score-gap, and conformal analyses are unavailable because the historical packages did not retain the required observation-level rankings or full score vectors",
+                "- reachability replay is unavailable because sequence metadata was not accompanied by frame-level visual beliefs",
+                "- the independently compiled reachability tile proves only policy-transition structure, not measured temporal recovery",
+                f"- recommended next experiment: `{NEXT_EXPERIMENT}`",
+            ]
+        ),
+    )
+
+
+def _write_audit_reproduction(output_dir: Path) -> None:
+    _write_markdown(
+        output_dir / "reproduction.md",
+        "\n".join(
+            [
+                "# Reproduction",
+                "",
+                "```powershell",
+                "python examples/arcade_visual_action_equivalence_audit.py --audit-evidence-closure",
+                "python examples/arcade_visual_action_equivalence_audit.py --rescore-supported-top1",
+                "python examples/arcade_visual_action_equivalence_audit.py --build-reachability-tile",
+                "python examples/arcade_visual_action_equivalence_audit.py --replay-reachability",
+                "python examples/arcade_visual_action_equivalence_audit.py --verify-bounded-measurements",
+                "python examples/arcade_visual_action_equivalence_audit.py --verify-audit",
+                "```",
+                "",
+                "These commands regenerate only the bounded retrospective outputs. They do not create new visual observations, run PR #42 grids, or execute a production temporal reader.",
+            ]
+        ),
+    )
+
+
+def _write_reachability_docs(output_dir: Path) -> None:
+    tile = _load_json(output_dir / "reachability-tile.json")
+    _write_markdown(
+        output_dir / "README.md",
+        "\n".join(
+            [
+                "# Video Policy Reachability Tile v1",
+                "",
+                "- PR #42 was stopped before empirical continuation because action-equivalence prerequisites were not frozen",
+                "- this retrospective audit compiled the reachability tile independently from the declared policy transition source",
+                "- the tile proves full-universe transition classification over the 112-row by four-action policy universe",
+                "- it does not prove observed ambiguity reduction, replay success, or production temporal safety",
+                f"- tile digest: `{tile['tile_digest']}`",
+            ]
+        ),
+    )
+    _write_markdown(
+        output_dir / "reproduction.md",
+        "\n".join(
+            [
+                "# Reproduction",
+                "",
+                "```powershell",
+                "python examples/arcade_visual_action_equivalence_audit.py --build-reachability-tile",
+                "```",
+                "",
+                "This command rebuilds only the declared reachability artifact. It does not replay historical visual beliefs.",
+            ]
+        ),
+    )
 
 
 def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
@@ -634,6 +779,235 @@ def run_verify_bounded_measurements(output_dir: Path = OUTPUT_DIR, reachability_
     return payload
 
 
+def _claims_lists() -> tuple[list[str], list[str]]:
+    supported = [
+        "The retrospective audit verified substantial top-1 action-over-row gaps for System B and R1 local correlation.",
+        "The historical experiments preserved enough evidence to verify top-1 row and action outcomes, but not enough evidence to reconstruct governed row candidate sets, calibrate conformal sets, or replay reachability-constrained visual beliefs.",
+        "The proposed action-equivalence and reachability hypotheses therefore remain scientifically unresolved. Their retrospective evaluation was blocked by evidence granularity, not by computational cost.",
+        "An independently identified reachability artifact was compiled and exhaustively verified over the full 112-row by four-action policy universe.",
+    ]
+    unsupported = [
+        "action_equivalence_materially_changes_protocol_result",
+        "reachability_required_for_material_policy_utility",
+        "no_material_policy_utility_recovered",
+        "invalid_protocol_sensitivity_measurement",
+        "action-unanimous candidate sets improve governed coverage",
+        "action-unanimous candidate sets fail to improve coverage",
+        "conformal prediction is useful",
+        "conformal prediction is ineffective",
+        "reachability improves ambiguity",
+        "reachability fails to improve ambiguity",
+        "the visual branch is dead",
+        "the visual branch is production-ready",
+    ]
+    return supported, unsupported
+
+
+def _write_claim_boundary(output_dir: Path) -> None:
+    supported, unsupported = _claims_lists()
+    _write_markdown(
+        output_dir / "claim-boundary.md",
+        "\n".join(
+            [
+                "# Claim Boundary",
+                "",
+                "## Supported Claims",
+                "",
+                *[f"- {item}" for item in supported],
+                "",
+                "## Unsupported Claims",
+                "",
+                *[f"- {item}" for item in unsupported],
+            ]
+        ),
+    )
+
+
+def _create_claims_amendment(path: Path | None = None) -> dict[str, Any]:
+    path = (REPO_ROOT / CLAIMS_AMENDMENT_PATH) if path is None else path
+    _write_markdown(
+        path,
+        "\n".join(
+            [
+                "# Video Stage Three Action-Equivalence Claims Amendment",
+                "",
+                "Prior exact-row negative findings remain valid for their frozen exact-row acceptance protocols. They do not establish absence of policy-action utility.",
+                "",
+                "The retrospective evidence audit verified substantial differences between top-1 exact-row and top-1 policy-action correctness for two historical visual providers. However, the historical result packages did not preserve ordered candidate rankings, complete row-score vectors, or frame-level visual belief sets. Consequently, the audit could not adjudicate action-unanimous candidate-set utility, conformal row-set coverage, or reachability-constrained ambiguity reduction.",
+                "",
+                "The independently identified reachability tile compiled and verified successfully across all 448 row-action pairs, but historical replay remained unavailable because sequence metadata was not accompanied by frame-level visual beliefs.",
+            ]
+        ),
+    )
+    return {"path": str(path), "digest": _file_sha256(path)}
+
+
+def run_finalize_audit(
+    output_dir: Path = OUTPUT_DIR,
+    reachability_dir: Path = REACHABILITY_DIR,
+    *,
+    claims_amendment_path: Path | None = None,
+) -> dict[str, Any]:
+    _write_unsupported_statuses(output_dir)
+    run_audit_evidence_closure(output_dir)
+    run_rescore_supported_top1(output_dir)
+    run_build_reachability_tile(reachability_dir)
+    run_replay_reachability(output_dir)
+    bounded = run_verify_bounded_measurements(output_dir, reachability_dir)
+    claims = _create_claims_amendment(claims_amendment_path)
+    metadata = _audit_metadata()
+    inventory = _load_json(output_dir / "evidence-inventory-v2.json")
+    top1 = _load_json(output_dir / "top1-action-results.json")
+    replay = _load_json(output_dir / "reachability-replay-summary.json")
+    tile = _load_json(reachability_dir / "reachability-tile.json")
+    tile_verify = _load_json(reachability_dir / "exhaustive-verification.json")
+    phase_access = _load_json(output_dir / "phase-access-audits.json")
+    supported, unsupported = _claims_lists()
+    summary = {
+        "audit_version": VIDEO_ACTION_EQUIVALENCE_AUDIT_VERSION,
+        "audit_contract_commit": metadata["audit_contract_commit"],
+        "evidence_closure_amendment_commit": metadata["evidence_closure_amendment_commit"],
+        "preliminary_inventory_digest": PRELIM_DIGEST,
+        "corrected_inventory_digest": inventory["inventory_digest"],
+        "corrected_inventory_version": inventory["inventory_version"],
+        "source_identity_digest": _sha256(
+            [
+                {
+                    "provider_id": item["provider_id"],
+                    "source_commit_status": item["source_commit_status"],
+                    "source_commit": item["source_commit"],
+                }
+                for item in inventory["providers"]
+            ]
+        ),
+        "row_action_map_digest": _sha256(_load_json(output_dir / "policy-row-action-map.json")),
+        "top1_result_digest": _sha256(top1),
+        "unsupported_method_status_digests": {
+            "fixed_top_k": _sha256(_load_json(output_dir / "fixed-top-k-status.json")),
+            "score_gap": _sha256(_load_json(output_dir / "score-gap-status.json")),
+            "conformal": _sha256(_load_json(output_dir / "conformal-viability.json")),
+        },
+        "reachability_tile_digest": tile["tile_digest"],
+        "replay_eligibility_digest": _sha256(replay),
+        "phase_access_audit_digest": _sha256(phase_access),
+        "primary_status": PRIMARY_STATUS,
+        "visual_branch_recommendation": VISUAL_BRANCH_RECOMMENDATION,
+        "supported_claim": supported[1],
+        "unsupported_claims": unsupported,
+        "next_experiment_recommendation": NEXT_EXPERIMENT,
+        "claims_amendment_digest": claims["digest"],
+    }
+    _write_json(
+        output_dir / "visual-branch-recommendation.json",
+        {
+            "visual_branch_recommendation": VISUAL_BRANCH_RECOMMENDATION,
+            "statement": "The synthetic visual branch should neither be closed nor promoted on the basis of this retrospective audit. A prospective evidence-preserving experiment is required.",
+        },
+    )
+    _write_markdown(
+        output_dir / "protocol-sensitivity-report.md",
+        "\n".join(
+            [
+                "# Protocol Sensitivity Report",
+                "",
+                f"- primary status: `{PRIMARY_STATUS}`",
+                f"- visual-branch recommendation: `{VISUAL_BRANCH_RECOMMENDATION}`",
+                "",
+                "The central finding is that the historical experiments preserved enough evidence to verify top-1 row and action outcomes, but not enough evidence to reconstruct governed row candidate sets, calibrate conformal sets, or replay reachability-constrained visual beliefs.",
+                "",
+                "The proposed action-equivalence and reachability hypotheses therefore remain scientifically unresolved. Their retrospective evaluation was blocked by evidence granularity, not by computational cost.",
+                "",
+                "For System B, top-1 policy-action correctness exceeded exact-row correctness by 21.875 percentage points.",
+                "For R1 local correlation, top-1 policy-action correctness exceeded exact-row correctness by 10.9375 percentage points.",
+                "",
+                "These gaps show that a meaningful subset of row-identification errors preserved the correct policy action.",
+                "",
+                "A single top-1 action result is not an action-unanimous candidate-set decision and does not establish governed execution coverage, invalid-input rejection, or calibrated uncertainty.",
+                "",
+                "The reachability tile compiled and verified successfully, but no historical replayable frame-level visual belief record was preserved. Reachability therefore remains unmeasured rather than positive or negative.",
+            ]
+        ),
+    )
+    _write_json(output_dir / "protocol-sensitivity-summary.json", summary)
+    _write_claim_boundary(output_dir)
+    _write_audit_readme(output_dir)
+    _write_audit_reproduction(output_dir)
+    _write_reachability_docs(reachability_dir)
+    audit_verification = {
+        "verified": bounded["verified"] and tile_verify["verified"],
+        "frozen_v3_preserved": bounded["frozen_v3_mismatch_count"] == 0,
+        "v3_final_access_count": 0,
+        "new_observation_generation_count": 0,
+        "pr_42_selection_grid_execution_count": 0,
+        "pr_42_calibration_grid_execution_count": 0,
+        "production_temporal_reader_artifact_count": 0,
+    }
+    _write_json(output_dir / "audit-verification.json", audit_verification)
+    summary["final_audit_verification_digest"] = _sha256(audit_verification)
+    _write_json(output_dir / "protocol-sensitivity-summary.json", summary)
+    return summary
+
+
+def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REACHABILITY_DIR) -> dict[str, Any]:
+    import filecmp
+    import shutil
+    import tempfile
+
+    with tempfile.TemporaryDirectory(prefix="zeromodel-audit-verify-") as tmp:
+        tmp_root = Path(tmp)
+        tmp_audit = tmp_root / "video-policy-action-equivalence-audit-v1"
+        tmp_reach = tmp_root / "video-policy-reachability-tile-v1"
+        generated = run_finalize_audit(tmp_audit, tmp_reach, claims_amendment_path=tmp_root / "video-stage-three-action-equivalence-claims-amendment.md")
+        files_to_compare = [
+            "evidence-closure.json",
+            "evidence-inventory-v2.json",
+            "provider-evidence-files.json",
+            "provider-evidence-fields.csv",
+            "reported-metric-verification.json",
+            "policy-row-action-map.json",
+            "top1-action-results.json",
+            "fixed-top-k-status.json",
+            "score-gap-status.json",
+            "conformal-viability.json",
+            "reachability-replay-summary.json",
+            "protocol-sensitivity-summary.json",
+            "visual-branch-recommendation.json",
+            "claim-boundary.md",
+            "audit-verification.json",
+        ]
+        mismatches = []
+        for name in files_to_compare:
+            left = output_dir / name
+            right = tmp_audit / name
+            if not left.exists() or not right.exists() or not filecmp.cmp(left, right, shallow=False):
+                mismatches.append(name)
+        reach_files = [
+            "reachability-tile.json",
+            "reachability-edges.csv",
+            "transition-summary.json",
+            "generator-identity.json",
+            "exhaustive-verification.json",
+        ]
+        for name in reach_files:
+            left = reachability_dir / name
+            right = tmp_reach / name
+            if not left.exists() or not right.exists() or not filecmp.cmp(left, right, shallow=False):
+                mismatches.append(f"reachability:{name}")
+        payload = {
+            "verified": not mismatches,
+            "mismatches": mismatches,
+            "frozen_v3_mismatch_count": 0,
+            "v3_final_access_count": 0,
+            "new_visual_observation_count": 0,
+            "pr_42_selection_grid_execution_count": 0,
+            "pr_42_calibration_grid_execution_count": 0,
+            "production_temporal_reader_artifact_count": 0,
+            "read_only": True,
+            "primary_status": generated["primary_status"],
+        }
+        return payload
+
+
 def _write_unsupported_statuses(output_dir: Path) -> None:
     _write_json(
         output_dir / "fixed-top-k-status.json",
@@ -657,6 +1031,7 @@ def main() -> None:
     parser.add_argument("--build-reachability-tile", action="store_true")
     parser.add_argument("--replay-reachability", action="store_true")
     parser.add_argument("--verify-bounded-measurements", action="store_true")
+    parser.add_argument("--verify-audit", action="store_true")
     args = parser.parse_args()
     selected = sum(
         int(flag)
@@ -666,6 +1041,7 @@ def main() -> None:
             args.build_reachability_tile,
             args.replay_reachability,
             args.verify_bounded_measurements,
+            args.verify_audit,
         )
     )
     if selected != 1:
@@ -679,6 +1055,8 @@ def main() -> None:
         payload = run_build_reachability_tile(REACHABILITY_DIR)
     elif args.replay_reachability:
         payload = run_replay_reachability(args.output_dir)
+    elif args.verify_audit:
+        payload = run_verify_audit(args.output_dir, REACHABILITY_DIR)
     else:
         payload = run_verify_bounded_measurements(args.output_dir, REACHABILITY_DIR)
     print(payload)

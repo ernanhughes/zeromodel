@@ -1,54 +1,38 @@
 [
   {
-    "calculation_method": "read final_metrics field from committed repository artifact",
     "difference": 0.0,
     "match_status": "exact_match",
     "metric_name": "top1_benign_row_accuracy",
-    "notes": "external-review numbers treated as hypotheses",
     "provider_id": "system-b-v2",
-    "reported_claim_id": "review-brief-system-b-top1-row",
     "reported_value": 0.75,
     "repository_derived_value": 0.75,
-    "source_artifact": "docs/results/visual-address-system-b-v2/final-summary.json",
-    "unit": "fraction"
+    "source_artifact": "docs/results/visual-address-system-b-v2/final-summary.json"
   },
   {
-    "calculation_method": "read final_metrics field from committed repository artifact",
     "difference": 0.0,
     "match_status": "exact_match",
     "metric_name": "top1_benign_action_accuracy",
-    "notes": "external-review numbers treated as hypotheses",
     "provider_id": "system-b-v2",
-    "reported_claim_id": "review-brief-system-b-top1-action",
     "reported_value": 0.96875,
     "repository_derived_value": 0.96875,
-    "source_artifact": "docs/results/visual-address-system-b-v2/final-summary.json",
-    "unit": "fraction"
+    "source_artifact": "docs/results/visual-address-system-b-v2/final-summary.json"
   },
   {
-    "calculation_method": "read final_metrics field from committed repository artifact",
     "difference": 0.0,
     "match_status": "exact_match",
     "metric_name": "top1_benign_row_accuracy",
-    "notes": "external-review numbers treated as hypotheses",
     "provider_id": "r1-local-correlation",
-    "reported_claim_id": "review-brief-r1-top1-row",
     "reported_value": 0.875,
     "repository_derived_value": 0.875,
-    "source_artifact": "docs/results/visual-local-baseline-showdown-v1/final-summary.json",
-    "unit": "fraction"
+    "source_artifact": "docs/results/visual-local-baseline-showdown-v1/final-summary.json"
   },
   {
-    "calculation_method": "read final_metrics field from committed repository artifact",
     "difference": 0.0,
     "match_status": "exact_match",
     "metric_name": "top1_benign_action_accuracy",
-    "notes": "external-review numbers treated as hypotheses",
     "provider_id": "r1-local-correlation",
-    "reported_claim_id": "review-brief-r1-top1-action",
     "reported_value": 0.984375,
     "repository_derived_value": 0.984375,
-    "source_artifact": "docs/results/visual-local-baseline-showdown-v1/final-summary.json",
-    "unit": "fraction"
+    "source_artifact": "docs/results/visual-local-baseline-showdown-v1/final-summary.json"
   }
 ]

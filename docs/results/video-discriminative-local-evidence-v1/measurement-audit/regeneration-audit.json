@@ -1,7 +1,7 @@
 {
   "architecture_grid_digest": "sha256:276f9d872f61b73468e3b1b6ac767682a9a4cb244ec36582c68524d82ade703e",
   "artifact_generation_commit": null,
-  "audited_branch_head": "2ac99aa914f6775b88fccc7955c30afad1fb0366",
+  "audited_branch_head": "898eab1061a4a9586a4a3919a0bcd8dbb67bf074",
   "audited_generator_blob_digest": "sha256:8525c1cc301c94a4663b6b9185a5da727cc174a16663ec353ec68ea95e652fdc",
   "benchmark_digest": "sha256:99625d02047c6b978cc357d42ac0b6fd22718d6cb65f9fc00ecd6d2c5346ff38",
   "committed_manifest_sample_size": 12,
@@ -171,7 +171,7 @@
       "sample_size_constant": 4,
       "selection_negative_candidate_set_support_blocks_feasibility": true
     },
-    "current_head": "2ac99aa914f6775b88fccc7955c30afad1fb0366",
+    "current_head": "898eab1061a4a9586a4a3919a0bcd8dbb67bf074",
     "diagnostic_development_row_ids": [
       "tank=0|target=none|cooldown=0",
       "tank=1|target=5|cooldown=0",
@@ -219,7 +219,7 @@
       "final_distinguishable_negative:final_negative_compositional_invalid:tank=6|target=6|cooldown=1:00",
       "information_theoretic_control:final_information_control:tank=6|target=6|cooldown=1:00"
     ],
-    "generator_identity_digest": "sha256:ab293806c8c74648b71bed81162f52011f27e053fc696e1e635c9edd5c9c66db",
+    "generator_identity_digest": "sha256:41f4177f2e97ccfe9cde22343755ff9cadc5d986e4c692c579bc1a922487b9ba",
     "generator_version": "zeromodel-video-discriminative-generator/v1",
     "prototype_row_ids": [
       "tank=0|target=0|cooldown=0",
@@ -1177,7 +1177,7 @@
         "status": "semantic_mismatch"
       },
       {
-        "actual_digest": "sha256:d5b7e72c132ba3d20343fbba674b613ad0c5628e25f61ce7d27f8c3c0f7227d1",
+        "actual_digest": "sha256:78a1afc5361c8269a52663469115376da51b33047f46c5ad6eaea670c83f0cbd",
         "artifact": "benchmark-manifest.json",
         "expected_digest": "sha256:12fbfc02fdf0db0bc662ce627f5759c1ec449839074c640c69578f08417f2676",
         "status": "semantic_mismatch"

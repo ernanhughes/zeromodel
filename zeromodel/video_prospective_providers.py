@@ -10,7 +10,7 @@ import numpy as np
 from .arcade_policy import ACTIONS
 from .artifact import VPMValidationError
 from .content_identity import PrototypeUniverseIdentity, UnresolvedArtifactIdentity, prototype_universe_identity, sha256_digest
-from .video_complete_row_evidence import CompleteRowEvidence, build_complete_row_evidence
+from .video_complete_row_evidence import CompleteRowEvidence, SemanticTopSetOutcome, build_complete_row_evidence, build_semantic_top_set_outcome
 from .video_discriminative_joint_evidence import (
     JointEvidenceCalibration,
     JointEvidenceProvider,
@@ -84,9 +84,10 @@ class ProspectiveProviderResult:
     provider_id: str
     provider_version: str
     evidence: CompleteRowEvidence
-    winner_row_id: str
-    winner_action_id: str
+    winner_row_id: str | None
+    winner_action_id: str | None
     maximum_tie_size: int
+    semantic_top_set_outcome: SemanticTopSetOutcome
     diagnostics: Mapping[str, Any]
 
 
@@ -399,14 +400,15 @@ def score_normalized_pixel(
         source_scope="",
     )
     evidence = vector.evidence
-    winner_row = evidence.ranking.ranked_row_ids[0]
+    semantic = build_semantic_top_set_outcome(evidence=evidence, row_action=row_action)
     return ProspectiveProviderResult(
         provider_id="P1",
         provider_version=PROSPECTIVE_P1_VERSION,
         evidence=evidence,
-        winner_row_id=winner_row,
-        winner_action_id=row_action[winner_row],
+        winner_row_id=semantic.resolved_row_id,
+        winner_action_id=semantic.resolved_action_id,
         maximum_tie_size=max(len(group.row_ids) for group in evidence.ranking.tie_groups),
+        semantic_top_set_outcome=semantic,
         diagnostics={"score_count": len(vector.row_ids)},
     )
 
@@ -427,14 +429,15 @@ def score_registered_local_correlation(
     )
     evidence = vector.evidence
     row_action = _row_action_map(prototypes)
-    winner_row = evidence.ranking.ranked_row_ids[0]
+    semantic = build_semantic_top_set_outcome(evidence=evidence, row_action=row_action)
     return ProspectiveProviderResult(
         provider_id="P2",
         provider_version=PROSPECTIVE_P2_VERSION,
         evidence=evidence,
-        winner_row_id=winner_row,
-        winner_action_id=row_action[winner_row],
+        winner_row_id=semantic.resolved_row_id,
+        winner_action_id=semantic.resolved_action_id,
         maximum_tie_size=max(len(group.row_ids) for group in evidence.ranking.tie_groups),
+        semantic_top_set_outcome=semantic,
         diagnostics={"candidate_count": len(vector.row_ids)},
     )
 
@@ -495,14 +498,15 @@ def score_b3_joint_fit(
     )
     evidence = vector.evidence
     row_action = _row_action_map(prototypes)
-    winner_row = evidence.ranking.ranked_row_ids[0]
+    semantic = build_semantic_top_set_outcome(evidence=evidence, row_action=row_action)
     return ProspectiveProviderResult(
         provider_id="P3",
         provider_version=PROSPECTIVE_P3_VERSION,
         evidence=evidence,
-        winner_row_id=winner_row,
-        winner_action_id=row_action[winner_row],
+        winner_row_id=semantic.resolved_row_id,
+        winner_action_id=semantic.resolved_action_id,
         maximum_tie_size=max(len(group.row_ids) for group in evidence.ranking.tie_groups),
+        semantic_top_set_outcome=semantic,
         diagnostics={"candidate_count": len(vector.row_ids)},
     )
 

@@ -5,7 +5,9 @@ The files in this directory are preserved historical scaffold, profiling, and ve
 - `historical_stack_integrated`
 - `package_identity_foundations_correct`
 - `evidence_schema_v2_defined`
-- `reference_instrument_invalid`
+- `historical_reference_instrument_invalid`
+- `reference_instrument_correctness_unresolved`
+- `reference_verifier_schema_defined`
 - `optimized_path_unverified`
 - `prospective_materialization_prohibited`
 
@@ -26,10 +28,14 @@ The files in this directory are preserved historical scaffold, profiling, and ve
 
 ## Current Boundary
 
-No development, calibration, or architecture-selection materialization may proceed until the reference instrument is corrected and measured verification fails against known-bad mutations.
+The committed result directory remains a historical scaffold. It is not a completed development, calibration, selection, or final materialization.
+
+No calibration, architecture selection, candidate tuning, benchmark utility measurement, final evaluation, or final-split materialization may proceed in this stage. Prospective materialization remains prohibited even when verifier code is present.
 
 ## Repair Progress
 
-This PR repairs package and identity foundations only.
+This repair series now includes package identity foundations, seeded semantic outcome identity, sealed episode families, causal reachability composition, and a read-only reference verifier with an adversarial mutation matrix.
 
-It does not establish provider semantic correctness, negative-family correctness, reachability correctness, optimized-path equivalence, or benchmark materialization readiness.
+The historical scaffold artifacts remain invalid or vacuous in their original scope. The repaired verifier has focused tests against generated fixtures, but this committed result directory has not been promoted to a completed measured closure artifact.
+
+Repository-wide status remains `reference_instrument_correctness_unresolved`.

@@ -2,6 +2,7 @@ test-results/
 *.codebase.md
 
 .codex_integration_pr_body.md
+.codex_quarantine_pr_body.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

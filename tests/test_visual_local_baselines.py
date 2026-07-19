@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 import sys
 
+import pytest
+
 from zeromodel.visual_experiment import EXPECTED_ACCEPT
 from zeromodel.visual_local_baselines import (
     build_registered_pixel_candidates,
@@ -30,6 +32,7 @@ def _load_demo():
     return module
 
 
+@pytest.mark.slow
 def test_registered_pixel_selection_excludes_final_evaluation_ids() -> None:
     demo = _load_demo()
     dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
@@ -51,6 +54,7 @@ def test_registered_pixel_selection_excludes_final_evaluation_ids() -> None:
     assert final_ids.isdisjoint(seen_ids)
 
 
+@pytest.mark.slow
 def test_registered_pixel_provider_emits_registration_trace_and_raw_top1_when_rejected() -> None:
     demo = _load_demo()
     dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)

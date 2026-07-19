@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from zeromodel.video_action_set_benchmark import profile_runtime, verify_provider_runtime_equivalence
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.slow
 def test_provider_runtime_equivalence_and_profiles(tmp_path: Path) -> None:
     equivalence = verify_provider_runtime_equivalence(tmp_path, REPO_ROOT)
     assert equivalence["providers_verified"] is True

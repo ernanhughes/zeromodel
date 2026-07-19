@@ -113,6 +113,7 @@ def test_video_benchmark_reordered_case_has_distinct_identity() -> None:
     assert cases["video-final-negative-reordered"].source.manifest().manifest_id != cases["video-final-benign-exact"].source.manifest().manifest_id
 
 
+@pytest.mark.slow
 def test_stage2_harness_freezes_and_verifies_negative_result(tmp_path) -> None:
     calibrate = run_calibrate(output_dir=tmp_path)
     assert calibrate["v2_selection_status"] == "no_feasible_operating_point"

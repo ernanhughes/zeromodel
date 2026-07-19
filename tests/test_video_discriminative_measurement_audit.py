@@ -78,6 +78,7 @@ def test_exact_frame_audit_shows_current_code_has_nonzero_evidence(tmp_path: Pat
         assert summary["architectures"][architecture_id]["expected_rows_with_nonzero_evidence"] == 4
 
 
+@pytest.mark.slow
 def test_audit_pre_final_v1_marks_stale_artifacts_invalid() -> None:
     with pytest.raises(SystemExit, match="invalid_multiple_failures"):
         bench._run_audit_pre_final_v1(Path("docs/results/video-discriminative-local-evidence-v1"))

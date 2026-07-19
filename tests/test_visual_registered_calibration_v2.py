@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 import sys
 
+import pytest
+
 from zeromodel.visual_local_baselines import (
     RegisteredPixelCandidate,
     RegisteredPixelAddressProvider,
@@ -24,6 +26,7 @@ def _load_module(name: str, relative: str):
     return module
 
 
+@pytest.mark.slow
 def test_registered_pixel_v2_generates_full_independent_grid_and_excludes_final_ids() -> None:
     demo = _load_module(
         "arcade_visual_local_evidence_benchmark_v3_grid_test",
@@ -51,6 +54,7 @@ def test_registered_pixel_v2_generates_full_independent_grid_and_excludes_final_
     assert final_ids.isdisjoint(seen_ids)
 
 
+@pytest.mark.slow
 def test_registered_pixel_v2_selection_uses_declared_strictness_directions() -> None:
     demo = _load_module(
         "arcade_visual_local_evidence_benchmark_v3_select_test",

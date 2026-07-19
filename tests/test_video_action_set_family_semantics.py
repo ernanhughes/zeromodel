@@ -231,7 +231,9 @@ def test_information_controls_have_hidden_history_ambiguity_and_no_visible_leak(
         history["hidden_history_id"] for history in plan["family_intervention"]["control_group"]["hidden_source_histories"]
     }
     assert len({record["metadata"]["hidden_source_label_digest"] for record in records}) == len(records)
-    assert all(record["metadata"]["provider_visible_fields"] == ["pixels"] for record in records)
+    assert all(record["metadata"]["provider_visible_fields"] == ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"] for record in records)
+    assert len({record["metadata"]["provider_observation_digest"] for record in records}) == 1
+    assert len({benchmark._provider_observation_digest(benchmark.provider_observation_for_record(record).to_descriptor()) for record in records}) == 1
     assert {record["episode_disposition"] for record in records} == {"information_theoretic_control"}
     assert {record["frame_disposition"] for record in records} == {"information_theoretic_control"}
     assert {record["denominator_class"] for record in records} == {"excluded_information_control"}
@@ -280,3 +282,90 @@ def test_episode_dispositions_and_final_observation_provenance_are_explicit() ->
         "observation_payload_included": False,
         "provenance": "sealed_plan_only",
     }
+
+
+def test_information_controls_use_real_convergent_causal_histories() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    control_group = plan["family_intervention"]["control_group"]
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+
+    histories = [record["metadata"]["grounded_causal_history"] for record in records]
+    reconstructed = {benchmark._reconstructed_control_causal_tuple_digest(history) for history in histories}
+    assert len(reconstructed) >= 2
+    assert {history["resulting_row_id"] for history in histories} == {control_group["current_row_id"]}
+    assert {record["metadata"]["control_current_row_id"] for record in records} == {control_group["current_row_id"]}
+    assert len({record["observation_pixel_digest"] for record in records}) == 1
+    assert all(history["actual_executed_action"] in benchmark.ACTIONS for history in histories)
+    assert len({history["predecessor_row_id"] for history in histories}) >= 2
+
+
+def test_information_control_same_causal_tuple_with_distinct_ids_is_rejected() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+    collapsed = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    first_history = dict(collapsed[0]["metadata"]["grounded_causal_history"])
+    for index, record in enumerate(collapsed):
+        history = dict(first_history)
+        synthetic_id = "sha256:" + f"{index + 1:064x}"[-64:]
+        history["history_id"] = synthetic_id
+        history["hidden_history_id"] = synthetic_id
+        history["hidden_source_label_digest"] = "sha256:" + f"{index + 100:064x}"[-64:]
+        record["metadata"]["grounded_causal_history"] = history
+        record["metadata"]["hidden_source_history"] = history
+        record["metadata"]["hidden_source_history_id"] = synthetic_id
+        record["metadata"]["hidden_source_label_digest"] = history["hidden_source_label_digest"]
+    assert benchmark.validate_control_episode_records(collapsed) == "control_ambiguity_absent"
+
+
+def test_control_provider_observation_descriptor_is_identical_across_group() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+    descriptors = [benchmark.provider_observation_for_record(record).to_descriptor() for record in records]
+    probe_visible = [
+        {
+            "source_id": descriptor["source_id"],
+            "timestamp": descriptor["timestamp"],
+            "metadata": descriptor["metadata"],
+            "version": descriptor["version"],
+            "shape": descriptor["shape"],
+            "raw_digest": descriptor["raw_digest"],
+            "pixel_digest": benchmark._array_digest(record["pixels"]),
+        }
+        for record, descriptor in zip(records, descriptors)
+    ]
+
+    assert len({benchmark._provider_observation_digest(descriptor) for descriptor in descriptors}) == 1
+    assert len({benchmark._sha256(item) for item in probe_visible}) == 1
+    assert descriptors[0]["source_id"].startswith("control:")
+
+
+def test_control_actual_provider_source_id_leak_is_rejected() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+    leaked = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    leaked[0]["metadata"]["provider_observation_source_id"] = leaked[0]["frame_id"]
+    descriptor = benchmark.provider_observation_for_record(leaked[0]).to_descriptor()
+    leaked[0]["metadata"]["provider_observation_descriptor"] = descriptor
+    leaked[0]["metadata"]["provider_observation_digest"] = benchmark._provider_observation_digest(descriptor)
+
+    assert benchmark.validate_control_episode_records(leaked) == "control_provider_visible_leak"

@@ -34,7 +34,7 @@ from .video_prospective_providers import (
     score_normalized_pixel,
     score_registered_local_correlation,
 )
-from .visual_address import ImageObservation
+from .visual_address import IMAGE_OBSERVATION_VERSION, ImageObservation
 
 
 BENCHMARK_VERSION = "zeromodel-video-action-set-reachability-benchmark/v1"
@@ -42,7 +42,7 @@ GENERATOR_VERSION = "zeromodel-video-action-set-reachability-generator/v1"
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
 EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
 SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
-EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v3"
+EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v4"
 TRANSFORMATION_FAMILY_VERSION = "zeromodel-video-action-set-transformation-family/v1"
 CRITICAL_COORDINATE_SET_VERSION = "zeromodel-video-action-set-critical-coordinate-set/v1"
 REACHABILITY_COMPOSITION_VERSION = "zeromodel-video-action-set-reachability-composition/v1"
@@ -59,11 +59,14 @@ SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
 CANONICAL_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-canonical-observation-universe/v1"
 VALID_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-valid-observation-universe/v1"
 FRAME_INVALID_CLOSURE_VERSION = "zeromodel-video-action-set-frame-invalid-closure/v1"
-FAMILY_INTERVENTION_VERSION = "zeromodel-video-action-set-family-intervention/v2"
+FAMILY_INTERVENTION_VERSION = "zeromodel-video-action-set-family-intervention/v3"
 CONFLICTING_ACTION_SPLICE_VERSION = "zeromodel-video-action-set-family-conflicting-action-splice/v2"
 SPLICE_MASK_VERSION = "zeromodel-video-action-set-splice-mask/v2"
-INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-control/v2"
-INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v1"
+INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-control/v3"
+INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v2"
+GROUNDED_CONTROL_HISTORY_VERSION = "zeromodel-video-action-set-grounded-control-history/v1"
+AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
+PROVIDER_OBSERVATION_BOUNDARY_VERSION = "zeromodel-video-action-set-provider-observation-boundary/v1"
 FRAME_SHAPE = (16, 28)
 CRITICAL_REGION_ID = "cooldown_indicator"
 TARGET_REGION_ID = "target_band"
@@ -652,6 +655,370 @@ def _frame_disposition_for_episode(family_label: str, mutation_kind: str | None 
 
 
 
+def expected_frame_disposition(
+    episode_family: str,
+    mutation_kind: str | None,
+    frame_index: int,
+    intervention_plan: Mapping[str, Any] | None = None,
+) -> str:
+    family = str(episode_family)
+    kind = None if mutation_kind is None else str(mutation_kind)
+    index = int(frame_index)
+    intervention = dict(intervention_plan or {})
+    if family == "valid":
+        return "valid"
+    if family == "frame_invalid":
+        return "distinguishable_invalid_input"
+    if family == "information_control":
+        return "information_theoretic_control"
+    if family != "temporal_negative":
+        return str(kind or family)
+    if kind == "reordered_frames":
+        return "temporally_reordered_frame_payload"
+    if kind == "stale_repeated_frame":
+        repeat = intervention.get("stale_repeat", {})
+        return "stale_repeated_frame_payload" if index == int(repeat.get("destination_frame_index", -1)) else "valid_frame_payload"
+    if kind == "impossible_transition":
+        transition = intervention.get("impossible_transition", {})
+        return "unreachable_destination_frame_payload" if index == int(transition.get("destination_frame_index", -1)) else "valid_frame_payload"
+    if kind == "declared_gap_or_unknown_action":
+        gap = intervention.get("gap_event", {})
+        return "declared_gap_or_unknown_action" if index == int(gap.get("position", -1)) else "valid_frame_payload"
+    return "valid_frame_payload"
+
+
+
+def _transition_config_payload(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    return {"width": int(config.width), "wave": [int(item) for item in config.wave], "max_steps": int(config.max_steps)}
+
+
+
+def _transition_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    payload = {
+        "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
+        "function": "zeromodel.arcade_policy.transitions.next_rows",
+        "action_universe": list(ACTIONS),
+        "config": _transition_config_payload(config),
+    }
+    return payload | {"transition_identity_digest": _sha256(payload)}
+
+
+
+def _transition_input_digest(predecessor_row_id: str, action: str, *, config: ShooterConfig = ShooterConfig()) -> str:
+    tank, target, cooldown = parse_state_row_id(str(predecessor_row_id))
+    return _sha256(
+        {
+            "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
+            "predecessor_row_id": str(predecessor_row_id),
+            "parsed_state": {"tank_x": tank, "target_x": target, "cooldown": cooldown},
+            "actual_executed_action": str(action),
+            "config_digest": _sha256(_transition_config_payload(config)),
+        }
+    )
+
+
+
+def _transition_result_digest(
+    predecessor_row_id: str,
+    action: str,
+    transition_choice_index: int,
+    resulting_row_id: str,
+    *,
+    config: ShooterConfig = ShooterConfig(),
+) -> str:
+    tank, target, cooldown = parse_state_row_id(str(predecessor_row_id))
+    destinations = list(next_rows(tank, target, cooldown, str(action), width=config.width))
+    return _sha256(
+        {
+            "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
+            "predecessor_row_id": str(predecessor_row_id),
+            "actual_executed_action": str(action),
+            "reachable_row_ids": destinations,
+            "transition_choice_index": int(transition_choice_index),
+            "resulting_row_id": str(resulting_row_id),
+            "config_digest": _sha256(_transition_config_payload(config)),
+        }
+    )
+
+
+
+def _normalized_control_causal_tuple(
+    *,
+    predecessor_row_id: str,
+    actual_executed_action: str,
+    transition_choice_index: int,
+    resulting_row_id: str,
+    config: ShooterConfig = ShooterConfig(),
+) -> dict[str, Any]:
+    transition_identity = _transition_identity(config)
+    return {
+        "version": GROUNDED_CONTROL_HISTORY_VERSION,
+        "predecessor_row_id": str(predecessor_row_id),
+        "actual_executed_action": str(actual_executed_action),
+        "transition_choice_index": int(transition_choice_index),
+        "resulting_row_id": str(resulting_row_id),
+        "transition_identity": transition_identity,
+        "transition_input_digest": _transition_input_digest(str(predecessor_row_id), str(actual_executed_action), config=config),
+        "transition_result_digest": _transition_result_digest(
+            str(predecessor_row_id),
+            str(actual_executed_action),
+            int(transition_choice_index),
+            str(resulting_row_id),
+            config=config,
+        ),
+    }
+
+
+
+def _grounded_control_history(
+    *,
+    control_group_id: str,
+    hidden_history_index: int,
+    predecessor_row_id: str,
+    actual_executed_action: str,
+    transition_choice_index: int,
+    resulting_row_id: str,
+    config: ShooterConfig = ShooterConfig(),
+) -> dict[str, Any]:
+    causal_tuple = _normalized_control_causal_tuple(
+        predecessor_row_id=predecessor_row_id,
+        actual_executed_action=actual_executed_action,
+        transition_choice_index=transition_choice_index,
+        resulting_row_id=resulting_row_id,
+        config=config,
+    )
+    tuple_digest = _sha256(causal_tuple)
+    payload = {
+        "version": GROUNDED_CONTROL_HISTORY_VERSION,
+        "control_group_id": str(control_group_id),
+        "hidden_history_index": int(hidden_history_index),
+        "history_id": tuple_digest,
+        "hidden_history_id": tuple_digest,
+        "predecessor_row_id": str(predecessor_row_id),
+        "actual_executed_action": str(actual_executed_action),
+        "transition_choice_index": int(transition_choice_index),
+        "resulting_row_id": str(resulting_row_id),
+        "transition_identity": causal_tuple["transition_identity"],
+        "transition_input_digest": causal_tuple["transition_input_digest"],
+        "transition_result_digest": causal_tuple["transition_result_digest"],
+        "normalized_causal_tuple_digest": tuple_digest,
+    }
+    payload["history_digest"] = _sha256(payload)
+    payload["hidden_source_label_digest"] = payload["history_digest"]
+    return payload
+
+
+
+def _reconstructed_control_causal_tuple_digest(history: Mapping[str, Any], *, config: ShooterConfig = ShooterConfig()) -> str:
+    if history.get("version") != GROUNDED_CONTROL_HISTORY_VERSION:
+        raise VPMValidationError("unsupported grounded control history version")
+    action = str(history.get("actual_executed_action"))
+    if action not in ACTIONS:
+        raise VPMValidationError("control history action is not declared")
+    predecessor = str(history.get("predecessor_row_id"))
+    resulting = str(history.get("resulting_row_id"))
+    choice_index = int(history.get("transition_choice_index", -1))
+    tank, target, cooldown = parse_state_row_id(predecessor)
+    destinations = list(next_rows(tank, target, cooldown, action, width=config.width))
+    if choice_index < 0 or choice_index >= len(destinations):
+        raise VPMValidationError("control history transition choice is invalid")
+    if str(destinations[choice_index]) != resulting:
+        raise VPMValidationError("control history result does not match the declared choice")
+    causal_tuple = _normalized_control_causal_tuple(
+        predecessor_row_id=predecessor,
+        actual_executed_action=action,
+        transition_choice_index=choice_index,
+        resulting_row_id=resulting,
+        config=config,
+    )
+    tuple_digest = _sha256(causal_tuple)
+    if history.get("transition_identity") != causal_tuple["transition_identity"]:
+        raise VPMValidationError("control history transition identity mismatch")
+    if history.get("transition_input_digest") != causal_tuple["transition_input_digest"]:
+        raise VPMValidationError("control history input digest mismatch")
+    if history.get("transition_result_digest") != causal_tuple["transition_result_digest"]:
+        raise VPMValidationError("control history result digest mismatch")
+    if history.get("normalized_causal_tuple_digest") != tuple_digest:
+        raise VPMValidationError("control history causal tuple digest mismatch")
+    return tuple_digest
+
+
+
+def _grounded_control_histories_for_current_row(
+    current_row_id: str,
+    row_ids: Sequence[str],
+    *,
+    config: ShooterConfig = ShooterConfig(),
+) -> list[dict[str, Any]]:
+    histories: list[dict[str, Any]] = []
+    for predecessor in row_ids:
+        tank, target, cooldown = parse_state_row_id(str(predecessor))
+        for action in ACTIONS:
+            destinations = list(next_rows(tank, target, cooldown, action, width=config.width))
+            for index, destination in enumerate(destinations):
+                if str(destination) != str(current_row_id):
+                    continue
+                histories.append(
+                    {
+                        "predecessor_row_id": str(predecessor),
+                        "actual_executed_action": str(action),
+                        "transition_choice_index": int(index),
+                        "resulting_row_id": str(current_row_id),
+                        "normalized_causal_tuple_digest": _sha256(
+                            _normalized_control_causal_tuple(
+                                predecessor_row_id=str(predecessor),
+                                actual_executed_action=str(action),
+                                transition_choice_index=int(index),
+                                resulting_row_id=str(current_row_id),
+                                config=config,
+                            )
+                        ),
+                    }
+                )
+    return sorted(
+        histories,
+        key=lambda item: (
+            str(item["actual_executed_action"]),
+            str(item["predecessor_row_id"]),
+            int(item["transition_choice_index"]),
+        ),
+    )
+
+
+
+def _select_grounded_control_histories(
+    current_row_id: str,
+    row_ids: Sequence[str],
+    *,
+    control_group_id: str,
+    frame_count: int,
+    config: ShooterConfig = ShooterConfig(),
+) -> list[dict[str, Any]]:
+    candidates = _grounded_control_histories_for_current_row(current_row_id, row_ids, config=config)
+    if len({item["normalized_causal_tuple_digest"] for item in candidates}) < 2:
+        raise VPMValidationError("information control current row lacks grounded causal ambiguity")
+    preferred: list[dict[str, Any]] = []
+    used_predecessors: set[str] = set()
+    used_actions: set[str] = set()
+    for candidate in candidates:
+        predecessor = str(candidate["predecessor_row_id"])
+        action = str(candidate["actual_executed_action"])
+        if predecessor in used_predecessors or action in used_actions:
+            continue
+        preferred.append(candidate)
+        used_predecessors.add(predecessor)
+        used_actions.add(action)
+        if len(preferred) == int(frame_count):
+            break
+    for candidate in candidates:
+        if len(preferred) == int(frame_count):
+            break
+        if candidate in preferred:
+            continue
+        predecessor = str(candidate["predecessor_row_id"])
+        if predecessor in used_predecessors:
+            continue
+        preferred.append(candidate)
+        used_predecessors.add(predecessor)
+    for candidate in candidates:
+        if len(preferred) == int(frame_count):
+            break
+        if candidate not in preferred:
+            preferred.append(candidate)
+    if len(preferred) < min(2, int(frame_count)):
+        raise VPMValidationError("information control needs at least two grounded causal histories")
+    return [
+        _grounded_control_history(
+            control_group_id=control_group_id,
+            hidden_history_index=index,
+            predecessor_row_id=str(item["predecessor_row_id"]),
+            actual_executed_action=str(item["actual_executed_action"]),
+            transition_choice_index=int(item["transition_choice_index"]),
+            resulting_row_id=str(current_row_id),
+            config=config,
+        )
+        for index, item in enumerate(preferred)
+    ]
+
+
+
+def _control_source_rows(row_ids: Sequence[str], *, count: int, frame_count: int, config: ShooterConfig = ShooterConfig()) -> list[str]:
+    selected = []
+    for row_id in row_ids:
+        histories = _grounded_control_histories_for_current_row(str(row_id), row_ids, config=config)
+        if len({item["normalized_causal_tuple_digest"] for item in histories}) >= int(frame_count):
+            selected.append(str(row_id))
+        if len(selected) == int(count):
+            return selected
+    raise VPMValidationError("unable to select enough grounded information-control rows")
+
+
+
+def _provider_observation_digest(descriptor: Mapping[str, Any]) -> str:
+    return _sha256({"version": PROVIDER_OBSERVATION_BOUNDARY_VERSION, "descriptor": descriptor})
+
+
+
+def _control_provider_source_id(record: Mapping[str, Any]) -> str:
+    metadata = record.get("metadata", {})
+    group_id = metadata.get("control_group_id") or metadata.get("family_intervention", {}).get("control_group", {}).get("control_group_id")
+    if not group_id:
+        raise VPMValidationError("information control record lacks a control group id")
+    return str(metadata.get("provider_observation_source_id") or f"control:{group_id}")
+
+
+
+def provider_observation_for_record(record: Mapping[str, Any]) -> ImageObservation:
+    if record.get("pixels") is None:
+        raise VPMValidationError("provider observation requires materialized pixels")
+    pixels = np.ascontiguousarray(record["pixels"], dtype=np.uint8)
+    metadata = record.get("metadata", {})
+    if record.get("expected_disposition") == "information_theoretic_control":
+        source_id = _control_provider_source_id(record)
+        timestamp = metadata.get("provider_observation_timestamp")
+        visible_metadata = metadata.get("provider_observation_metadata", {})
+    else:
+        source_id = str(record.get("frame_id"))
+        timestamp = metadata.get("provider_observation_timestamp") if "provider_observation_timestamp" in metadata else None
+        visible_metadata = metadata.get("provider_observation_metadata", {}) if "provider_observation_metadata" in metadata else {}
+    return ImageObservation(pixels, timestamp=None if timestamp is None else str(timestamp), source_id=source_id, metadata=visible_metadata)
+
+
+
+def provider_observation_descriptor_for_record(record: Mapping[str, Any]) -> dict[str, Any]:
+    if record.get("pixels") is not None:
+        return provider_observation_for_record(record).to_descriptor()
+    metadata = record.get("metadata", {})
+    stored = metadata.get("provider_observation_descriptor")
+    if isinstance(stored, Mapping):
+        raw_digest = stored.get("raw_digest")
+        shape = stored.get("shape")
+        version = stored.get("version", IMAGE_OBSERVATION_VERSION)
+    else:
+        raw_digest = metadata.get("provider_observation_raw_digest")
+        shape = metadata.get("provider_observation_shape")
+        version = IMAGE_OBSERVATION_VERSION
+    if raw_digest is None or shape is None:
+        raise VPMValidationError("stored provider observation descriptor lacks raw digest or shape")
+    if record.get("expected_disposition") == "information_theoretic_control":
+        source_id = _control_provider_source_id(record)
+        timestamp = metadata.get("provider_observation_timestamp")
+        visible_metadata = metadata.get("provider_observation_metadata", {})
+    else:
+        source_id = str(record.get("frame_id"))
+        timestamp = metadata.get("provider_observation_timestamp") if "provider_observation_timestamp" in metadata else None
+        visible_metadata = metadata.get("provider_observation_metadata", {}) if "provider_observation_metadata" in metadata else {}
+    return {
+        "version": str(version),
+        "raw_digest": str(raw_digest),
+        "shape": [int(item) for item in shape],
+        "timestamp": None if timestamp is None else str(timestamp),
+        "source_id": source_id,
+        "metadata": _json_ready(visible_metadata),
+    }
+
+
+
 def _final_observation_provenance(split: str) -> dict[str, Any]:
     if split == "final":
         return {
@@ -848,39 +1215,23 @@ def _family_intervention_plan(
             split=split,
             ordinal=ordinal,
             namespace="information_control_identity",
-            parent_identities=(("family_intervention", seed["seed_digest"]), ("source_row_id", source_row_id)),
+            parent_identities=(("family_intervention", seed["seed_digest"]), ("current_row_id", source_row_id)),
         )
-        hidden_histories = []
-        for frame_index in original_order:
-            history_seed = _derived_seed(
-                identity,
-                split=split,
-                ordinal=ordinal,
-                namespace="information_control_hidden_history",
-                parent_identities=(
-                    ("control_group", control_seed["seed_digest"]),
-                    ("frame_index", str(frame_index)),
-                ),
-            )
-            history = {
-                "version": INFORMATION_CONTROL_AMBIGUITY_VERSION,
-                "control_group_id": control_seed["seed_digest"],
-                "hidden_history_index": int(frame_index),
-                "hidden_history_id": history_seed["seed_digest"],
-                "source_row_id": source_row_id,
-                "source_action_id": row_actions[source_row_id],
-                "source_row_label_digest": _sha256(
-                    {"source_row_id": source_row_id, "source_action_id": row_actions[source_row_id]}
-                ),
-            }
-            history["hidden_source_label_digest"] = _sha256(history)
-            hidden_histories.append(history)
+        hidden_histories = _select_grounded_control_histories(
+            source_row_id,
+            row_ids,
+            control_group_id=control_seed["seed_digest"],
+            frame_count=len(original_order),
+        )
         hidden_label_digests = [history["hidden_source_label_digest"] for history in hidden_histories]
         payload |= {
             "control_group": {
+                "version": INFORMATION_CONTROL_AMBIGUITY_VERSION,
                 "control_group_id": control_seed["seed_digest"],
+                "current_row_id": source_row_id,
                 "byte_identity_required": True,
-                "minimum_hidden_history_cardinality": 2,
+                "minimum_grounded_causal_history_cardinality": 2,
+                "grounded_causal_history_count": len({history["normalized_causal_tuple_digest"] for history in hidden_histories}),
                 "hidden_source_history_count": len(hidden_histories),
                 "hidden_source_histories": hidden_histories,
                 "hidden_source_label_digests": hidden_label_digests,
@@ -890,11 +1241,13 @@ def _family_intervention_plan(
                         "hidden_source_label_digests": hidden_label_digests,
                     }
                 ),
-                "provider_visible_fields": ["pixels"],
+                "provider_observation_boundary_version": PROVIDER_OBSERVATION_BOUNDARY_VERSION,
+                "provider_visible_fields": ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"],
                 "provider_hidden_fields": [
                     "frame_id",
                     "source_row_id",
                     "source_action_id",
+                    "grounded_causal_history",
                     "hidden_source_history_id",
                     "hidden_source_label_digest",
                 ],
@@ -1221,7 +1574,8 @@ def _episode_plans_for_split(identity: BenchmarkIdentity, split: str, row_ids: l
         for group_index, kind in enumerate(kinds):
             for index, row_id in enumerate(temporal_rows[group_index * 14 : (group_index + 1) * 14]):
                 add("temporal_negative", group_index * 14 + index, row_id, mutation_kind=kind)
-        for index, row_id in enumerate(row_ids[:28]):
+        control_rows = _control_source_rows(row_ids, count=28, frame_count=_frame_count_for_plan(split, "information_control"))
+        for index, row_id in enumerate(control_rows):
             add("information_control", index, row_id)
         return plans
     raise VPMValidationError("unsupported split")
@@ -1422,7 +1776,7 @@ def _frame_descriptor(
     frame_id = f"{split}:{episode_id}:frame-{frame_index:02d}"
     clip_id = f"{split}:{episode_id}:clip"
     pixel_digest = _pixel_digest(pixels)
-    return {
+    record = {
         "benchmark_version": BENCHMARK_VERSION,
         "generator_version": GENERATOR_VERSION,
         "split": split,
@@ -1445,6 +1799,12 @@ def _frame_descriptor(
         "observation_pixel_digest": pixel_digest,
         "metadata": dict(metadata),
     }
+    if pixels is not None:
+        descriptor = provider_observation_descriptor_for_record(record | {"pixels": pixels})
+        record["metadata"]["provider_observation_boundary_version"] = PROVIDER_OBSERVATION_BOUNDARY_VERSION
+        record["metadata"]["provider_observation_descriptor"] = descriptor
+        record["metadata"]["provider_observation_digest"] = _provider_observation_digest(descriptor)
+    return record
 
 
 def _tile_edge(tile: Mapping[str, Any], row_id: str, action_id: str) -> Mapping[str, Any]:
@@ -1739,17 +2099,20 @@ def _control_episode(
 ) -> list[dict[str, Any]]:
     split = str(plan["split"])
     episode_id = str(plan["episode_id"])
-    source_row = str(plan["source_row_id"])
-    source_pixels = _render_row_frame(source_row, config=config)
+    current_row = str(plan["source_row_id"])
+    current_pixels = _render_row_frame(current_row, config=config)
     policy = compile_policy_artifact(config)
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
-    action = lookup.choose(source_row)
+    current_action = lookup.choose(current_row)
     intervention = plan["family_intervention"]
     control_group = intervention["control_group"]
+    histories = list(control_group["hidden_source_histories"])
+    if len({history["normalized_causal_tuple_digest"] for history in histories}) < 2:
+        raise VPMValidationError("information controls require grounded causal ambiguity")
     frames = []
     for idx, frame_plan in enumerate(plan["frame_plans"]):
-        pixels = np.array(source_pixels, copy=True)
-        hidden_history = control_group["hidden_source_histories"][idx]
+        pixels = np.array(current_pixels, copy=True)
+        hidden_history = histories[idx % len(histories)]
         descriptor = _frame_descriptor(
             split=split,
             episode_id=episode_id,
@@ -1762,7 +2125,7 @@ def _control_episode(
             expected_disposition="information_theoretic_control",
             episode_family=str(plan["episode_family"]),
             episode_disposition=str(plan["episode_disposition"]),
-            frame_disposition=_frame_disposition_for_episode(str(plan["family_label"]), plan.get("mutation_kind")),
+            frame_disposition=expected_frame_disposition(str(plan["family_label"]), plan.get("mutation_kind"), idx, intervention),
             denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": int(plan["episode_seed"]),
@@ -1770,30 +2133,37 @@ def _control_episode(
                 "derived_seed_identity": plan["derived_seed_identity"],
                 "episode_plan_digest": plan["plan_digest"],
                 "frame_seed_identity": frame_plan["frame_seed_identity"],
-                "source_row_id": source_row,
-                "source_action_id": action,
+                "source_row_id": current_row,
+                "source_action_id": current_action,
                 "family_contract": plan["family_contract"],
                 "family_intervention": intervention,
                 "control_group_id": control_group["control_group_id"],
-                "control_observation_digest": _array_digest(source_pixels),
-                "control_visible_digest": _sha256(
-                    {"provider_visible_fields": control_group["provider_visible_fields"], "pixels": _array_digest(source_pixels)}
-                ),
+                "control_current_row_id": current_row,
+                "control_observation_digest": _array_digest(current_pixels),
+                "grounded_causal_history": hidden_history,
+                "grounded_causal_history_id": hidden_history["history_id"],
                 "hidden_source_history": hidden_history,
                 "hidden_source_history_id": hidden_history["hidden_history_id"],
                 "hidden_source_history_index": hidden_history["hidden_history_index"],
                 "hidden_source_label_digest": hidden_history["hidden_source_label_digest"],
                 "hidden_source_label_digest_group": control_group["hidden_source_label_digest"],
+                "provider_observation_source_id": f"control:{control_group['control_group_id']}",
+                "provider_observation_timestamp": None,
+                "provider_observation_metadata": {},
                 "provider_visible_fields": control_group["provider_visible_fields"],
                 "provider_hidden_fields": control_group["provider_hidden_fields"],
                 "denominator_eligible": False,
-                "control_reason": "byte_identical_multiple_hidden_source_histories",
+                "control_reason": "byte_identical_observation_with_multiple_grounded_causal_histories",
             },
         )
+        descriptor["metadata"]["control_visible_digest"] = descriptor["metadata"]["provider_observation_digest"]
         frames.append(descriptor | {"pixels": pixels})
     digests = {item["observation_pixel_digest"] for item in frames}
+    provider_digests = {item["metadata"]["provider_observation_digest"] for item in frames}
     if len(digests) != 1:
         raise VPMValidationError("information controls require byte-identical observations")
+    if len(provider_digests) != 1:
+        raise VPMValidationError("information controls require identical provider-visible observations")
     return frames
 
 
@@ -2182,27 +2552,65 @@ def validate_control_episode_records(records: Sequence[Mapping[str, Any]]) -> st
     if any(record.get("frame_disposition") != "information_theoretic_control" for record in control_records):
         return "control_disposition_mismatch"
     metadata = [record.get("metadata", {}) for record in control_records]
+    hidden_history_ids = {item.get("hidden_source_history_id") for item in metadata}
+    hidden_label_digests = {item.get("hidden_source_label_digest") for item in metadata}
+    if None in hidden_history_ids or len(hidden_history_ids) < 2:
+        return "control_hidden_history_not_ambiguous"
+    if None in hidden_label_digests or len(hidden_label_digests) < 2:
+        return "control_hidden_label_not_ambiguous"
     control_group_ids = {item.get("control_group_id") for item in metadata}
     if None in control_group_ids or len(control_group_ids) != 1:
         return "control_group_mismatch"
-    provider_visible = [item.get("provider_visible_fields") for item in metadata]
-    if any(fields != ["pixels"] for fields in provider_visible):
+    current_rows = {item.get("control_current_row_id") or item.get("source_row_id") for item in metadata}
+    if None in current_rows or len(current_rows) != 1:
+        return "control_current_state_mismatch"
+    current_row = str(next(iter(current_rows)))
+    current_digest = _array_digest(_render_row_frame(current_row))
+    if current_digest not in digests:
+        return "control_current_state_mismatch"
+
+    expected_visible_fields = ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"]
+    if any(item.get("provider_visible_fields") != expected_visible_fields for item in metadata):
         return "control_provider_visible_leak"
-    forbidden_visible_fields = {"frame_id", "source_row_id", "source_action_id", "hidden_source_history_id", "hidden_source_label_digest"}
-    if any(forbidden_visible_fields.intersection(set(fields or [])) for fields in provider_visible):
+
+    provider_descriptors = []
+    for record in control_records:
+        meta = record.get("metadata", {})
+        try:
+            descriptor = provider_observation_descriptor_for_record(record)
+        except (KeyError, TypeError, VPMValidationError, ValueError):
+            return "control_provider_visible_leak"
+        stored_descriptor = meta.get("provider_observation_descriptor")
+        stored_digest = meta.get("provider_observation_digest")
+        if isinstance(stored_descriptor, Mapping) and dict(stored_descriptor) != descriptor:
+            return "control_provider_visible_leak"
+        if stored_digest is not None and stored_digest != _provider_observation_digest(descriptor):
+            return "control_provider_visible_leak"
+        provider_descriptors.append(descriptor)
+    if len({_provider_observation_digest(descriptor) for descriptor in provider_descriptors}) != 1:
         return "control_provider_visible_leak"
-    hidden_histories = {item.get("hidden_source_history_id") for item in metadata}
-    hidden_labels = {item.get("hidden_source_label_digest") for item in metadata}
-    if None in hidden_histories or len(hidden_histories) < 2:
-        return "control_hidden_history_not_ambiguous"
-    if None in hidden_labels or len(hidden_labels) < 2:
-        return "control_hidden_label_not_ambiguous"
-    control_groups = [item.get("family_intervention", {}).get("control_group", {}) for item in metadata]
-    expected_counts = {group.get("hidden_source_history_count") for group in control_groups}
-    if len(expected_counts) != 1 or next(iter(expected_counts)) != len(control_records):
-        return "control_hidden_history_cardinality_mismatch"
-    if any(group.get("minimum_hidden_history_cardinality", 0) < 2 for group in control_groups):
-        return "control_hidden_history_cardinality_mismatch"
+
+    reconstructed_tuple_digests = set()
+    resulting_rows = set()
+    for meta in metadata:
+        history = meta.get("grounded_causal_history") or meta.get("hidden_source_history")
+        if not isinstance(history, Mapping):
+            return "control_ambiguity_absent"
+        try:
+            tuple_digest = _reconstructed_control_causal_tuple_digest(history)
+        except VPMValidationError as exc:
+            message = str(exc)
+            if "result" in message or "choice" in message:
+                return "control_history_result_mismatch"
+            return "control_history_transition_invalid"
+        if str(history.get("resulting_row_id")) != current_row:
+            return "control_history_result_mismatch"
+        reconstructed_tuple_digests.add(tuple_digest)
+        resulting_rows.add(str(history.get("resulting_row_id")))
+    if len(resulting_rows) != 1 or next(iter(resulting_rows)) != current_row:
+        return "control_current_state_mismatch"
+    if len(reconstructed_tuple_digests) < 2:
+        return "control_ambiguity_absent"
     return "ok"
 
 
@@ -2244,7 +2652,7 @@ def _profile_provider(
     scorer = score_all_rows_reference if implementation == "reference" else score_all_rows_optimized
     durations = []
     for record in records:
-        observation = ImageObservation(np.ascontiguousarray(record["pixels"], dtype=np.uint8), source_id=record["frame_id"])
+        observation = provider_observation_for_record(record)
         start = time.perf_counter()
         scorer(
             provider_id=provider_id,
@@ -2546,7 +2954,9 @@ def _score_record(
         raise VPMValidationError("materialized record missing pixels")
     if record["pixels"] is None:
         raise VPMValidationError("typed gap events cannot be provider-scored as ordinary frames")
-    observation = ImageObservation(np.ascontiguousarray(record["pixels"], dtype=np.uint8), source_id=record["frame_id"])
+    observation = provider_observation_for_record(record)
+    observation_descriptor = observation.to_descriptor()
+    observation_descriptor_digest = _provider_observation_digest(observation_descriptor)
     p1 = score_normalized_pixel(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id)
     p2 = score_registered_local_correlation(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
     p3 = score_b3_joint_fit(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
@@ -2597,6 +3007,8 @@ def _score_record(
                 "score_vector_digest": result.evidence.score_vector_digest,
                 "ranking_digest": result.evidence.ranking.to_dict()["ranking_digest"],
                 "observation_digest": record["observation_pixel_digest"],
+                "provider_observation_descriptor": observation_descriptor,
+                "provider_observation_digest": observation_descriptor_digest,
                 "episode_seed": record["metadata"]["episode_seed"],
                 "generator_identity": {"generator_version": GENERATOR_VERSION, "seed_digest": record["metadata"]["seed_digest"]},
                 "provider_diagnostics": dict(result.diagnostics),

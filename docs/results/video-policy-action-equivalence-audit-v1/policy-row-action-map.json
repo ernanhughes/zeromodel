@@ -1,0 +1,1010 @@
+[
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:ee4337aff1bdb91ed0590a5521cf7f591f9996d4a6016b937285a8fa10c270ae",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:10074fded7d90cdf893586f06c2d5be71df978302b2421f318ea66f19bf3531b"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:5a8f7f6876782432c18b23e42d01e0248dcd83f256f578c2e75b659a7c12b391",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:24a08fcd70ecdfa7cce2078ecbb1a7735c3c128b29d41305ca1330610830711a"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:d4df2aed6badeb7de6adf1dc24aa41608d9408974b7e8799e33d11291ddbb3d5",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:843678596c091692d2b7f2cebd3daa89662bd4cbe3968866aab29b639352dc04"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:91221c4049a27fcbd582d2361528ec9941fc756f3043c361879aee053a11168f",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:066d9b809faa1302f82d92ae8ff0530fa758ad71389cefea5579a0731d541bd6"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:4020246acef6f5ffcf35bfb6a78d77208c374860cb2d864e73d8dc50186f450b",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:6b9dab499281ac69ed604dfad407f3d595b92cf7d4a6e306aacdac24e480d55d"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:1c30c7ca3e0826cc7a12c707a1ffd878a08c0d2c1d4ccef1ebd9d3e33ec51b95",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:8c58494c1b9be294237b48ef9510b830371b6a139fb976f1c90adb8ba3e612cd"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:6756b444852847b1da83db31e09ec369f1a313eedc8034a99fc27b5d978a5ab8",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:10e00062f3d3111f6d6fc01fc5740fab45a4dd9a209b8e2d8c2998a100e714c0"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:9f1ffb81d7aa86adca234a1f8f1a133d56a5243781abaac144f73073f91263a6",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:0711a8fc8539829ab76b97c97f7d07379bf544923c5f48879cda020b006a9795"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:e0e98f6fa9a4499314e19d8943cf3e42d1e191dc7bf283dbedc4d1253b0b3d5b",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:2ee62505a94cd9df8230f84290f7aac97a03aef67113af8a24cfd852a0d1a6cd"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:f4b7122088306bde5ce094432ee69e7539ddf376974e649d515c1f2bafd6170d",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:185ba50659b1a8ec8b7fb1db2a1936ec17418f1a38f6b7fc8c611b533cd38a06"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:98f833b39609d3105ce7935cf0992da869332cca06cb7e5d959ca3dd96f2f7ce",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:b49855d3360d8a7d9f291ec41265c798e5fba734826d1f90a0174124f4fd36f5"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:1bd65d91c9790b0cbb4852e1167bbb9b359420406edbaf39a374eeac60a1e194",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:0c736792e48a28a7bb7264dfbaa2bc492ada2016b17ee32e36d815c6106f85ab"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:234186122be6201c5b9fde0d562569707ae94df0eb69bdbb0fcbd389d913df9d",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:e49b2f4d17de5f47802673e2ac76636dd4c6e08f9a19421da08373042a6962b9"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:5f1b78fda83f51843794dd3d423f880b4bd9c68a723a101d2f0b1f4ff12ed6e4",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:c373bf05d5bd773cef964bf52578934fc7be9aac14d8c51afe5e8423f97851c6"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:6b1cc80cdde4931df5d2db564363fe2810d74e0057836db4a9c3f8331edf0168",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:7bb516ef10539e86569c5ee056796e93a24004c9523cc2ef61552094a6d99c59"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:3d08a912e89ae082c9a9fe08eb375be5e826b8deb54f42713888f46f7e23ed4e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=0|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:aaabd581b514c12e7fd25fe25933a16465c532266d982988430272f8604da4fa"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:47f41217f2639b9e930eccdb8615400569e6e17e307e0fea482ad5a3b61c0105",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:8a6ddcabb7abdb77f5719a84f81edb674294b29554fbf51c7c7693f90b824bea"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:c13332a130ba419361d011852e1707ea15d91433df9add8a71b9b2a0f5b376e2",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:600074d1c0df4894b350aca3016972d851c2e5852af08031ae76dc90f575d912"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:d6f5a871d6f303413b1daa91ca6d21ea43f09a76c5eb494b9dd66180c2574a5b",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:df2f3597060d92af0af3d3689278a79e987a3b0fd0be4810b6730257a52af2cd"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:498fa9b5bb8f8dc63096e31c65e11e90beb71400fad12c51f916b683fc920efb",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:e7f6ab865941fdcaa6d7dc2b077b7e23e981a814c5f8603193c598ffebd81911"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:9ff5ad01f62816f8b8e7f361ade2d2622631c29b4cb7112a8d8581e9224dab2e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:2da86f98fbd17c985e10efeea6b4d2f8e4ea3558fbf36341ffa3323a1ca64227"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:bd6a8ba8db23a4bc0485b2d3c3b8846c0fa4552f1d68fcf842bcd9bc4107e787",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:8683c102843dbb62b65deac6e320af53dffa1a02b65418d993a2358d721dfe77"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:dd22381c52c46078ebee8ee70a23c0762ccefb125a214ff4d361a4ba3b9d588e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:fb32344ac8386235a8df0063dc719592abca71e65dc4b197dadcbd093b690b7a"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:91f9621044aaa147acbf41f5c661412a62442c789a6df5329e7570c537191532",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:fbf68a7fbf492d86f4bd3bbff8c19636797ad257c3c70f673ca86660104d7499"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:3ae2038ebd1f85140d9180c22ce5a85c78fa9e36931d8d01e8b6d39589444f06",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:e0f9b7ba6fe65625db72bfa73cb8e2a5114b224fb5bcbcefd57de5009c126a96"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:83578fa97bab0cd3aec834f593d2559097018b6e75c22432206966f96e188941",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:a32eaa1f714bdee86e6dc83629d8d7667852040bcc34722b621bc2f6c387597f"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:1de5f802bc87bb77875e35b38a48acf05d3355b4087e161959fa3933bb84b0ee",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:f2710422a282c538c11951c9bc8ef13b7af4597f6ae0e6af529e1e02c0e30c19"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:8909072cc46ed3d03a97d0164a495154210e5cd9c6178edb04a13be8a0f4cce9",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:18f8c0c4c808d5ebb1ff459930a23dde21fbe6272fc8f139f6022215a34bfb5d"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:448c11a5b85bfcd52a85b67cf63086dd60b82e6f25fa80b7ae9ac0d73680cbfa",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:5fa64eaf24635cc3d03b2c3cac9610765cfae44b5910bcdf96d205837a86cc7e"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:fb29f0df1285ad4345f0ed85c09593d0c54d8f4303414e3bbbd65638d83473a4",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:4d81d02a349f3446073d3e36e3c9ae59b782782896a91ec9dee964db7a27f43e"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:d52f6725d3fe5fcbcf3d59efff5ac49626807a14c97f0fb2fecffbfab013845a",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:87ea5ba132acfe0880ba07489c8b875916e691ed120a7ec4324471250d48e687"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:39e7af1c79b0fe8c507abc7955f1002d4ae8bd0509648db8b654ddfb9730fba1",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=1|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:fcd5659557ba416848b2fc4c09acfa9ea417e80ad784283ccab746b9ad663be9"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:8cd35f34b7c487bea654ecb992af4a80bde3266087bd5f99fc0fa047d7d64a39",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:d51edcf23d34c1472109d0ae46cbd68e4f84f904df89aa607248cb6622617c56"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:d4b2d7788da8caf7eec3dc172452ee8633625c7bd9e0a7e243fa08546cd7d10f",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:21acd3ed600dd25752abac8fee8bbb0db91a9a475709575200e9f8db8c6fb725"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:b39f51a8d6c4f632414bf7f7d43eec0f2d44ae42fb9e981cb15973c517f57e5f",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:c6a8b0c5ce589f4d395b910674db4d17120f5174e03c7b9e96c029945577e1cd"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:02d561bccb2ae49ec899cf788ca6e15678f8c3ed4047c610fab1826df9ce980c",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:5731c5a30e368eaa58b2b46e019c9e8fd58d4d166b5fe644330391e35421e7f7"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:e3089a011dea161efed35ad2e2327dd240c8230adb28241b97eb8a6d549ab0d9",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:37727a28f7b82ee031c76d8cd988ce6dea13ebe68b8fb593a1f7f8df4c990193"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:8842d43117dac598a4d31d6897b326235dff07ee4a31401ef36e5f263335a70d",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:888cbec7fa92a0945037554dd04b80a85a65a0d1ebc1fa418bbdca3ca14f78ab"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:152843ae8b45063821ee426a831e1bc55b1161bdea4fdac1289b66a1490b34dd",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:cc155a74c631341a598dc9a927ad2d7af0d6b4d55e45cc6496a2b48bc7f9b659"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:472acaf21d4c807b5a177043b79572b22582ab14eab5d158195c21451b811062",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:09309b512e044e843e031797a26b778316f462a0fd3edfdcdb9ed5ff97800bca"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:8e1820ae3a91abb4c4f7dfb4d9d896e8dd0249e2b4201c3a6e04576efe4f3258",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:3d92991b34a5d1dc4d010fccdecdb546c0582e779fc506070aa45e52b2cc5003"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:e6284f8afca70306075e5d3d7a9f03fee70d4aa384e3c5a8155b1f2712691411",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:9fb3888f7643d0e75fc566aa4f0ee1a3c5e1077958bc938484562ebc6aa8ffde"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:57058e45fb38f93faa892fd743863d514049031395a0f7df527d42cdef492afa",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:d1c03555c971fb01b1bd6d72cbcb8f28da207a80c99335766a4b3f9f30d47ef7"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:7ae38cc613c3ab67d2a4a980628fd122d01b6e8628132728a896345f206f187b",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:7906e358ce6d7c5b0e61d139bdea3823be68104ec40c69d211f719bfeb162b2c"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:2ae1be72d3647cad78b7257bc8a2d527989bdb6d5e9b485d07eb967072986ff1",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:72065db96f41e4ee201df0c31bf5c6a8686fa8fc8c2f111eef9f323438bf1b5f"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:6358c79a2bd003863ee1150b467263fba330c9274c00de399ab4b86258592807",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:0d8f9ab17348faa0ba669b4ce96f5acb939d9c843a6b5b142d8cce46b3edf882"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:2bd78c29ec41ad16ec003991dce410579b702752fb5df6c95af871d66df6e652",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:b60981d26a02813cf3f363fae8391000d333cdc4008f8b006a545fcaa0b8724a"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:b105dc2bff46eedc369e21986ef835d25fc05f905015c73b12851adcf48c9250",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=2|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:b32b27ee69e21b99f3f20fbbda0c2932ab22bdd1519e10671af992fae9c5be62"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:960fc62ff7b45077b4054e6258c247cb1fd49d9767bc8d20f0a2bf3120917db7",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:23b6a52da724755e8f5f43c781564d20bf15cb122294b0c4c196fa593dab2b39"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:5744b499bf7edb00555d664975e1a0e389281311484f4941bda549bdfbcdc6c5",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:839ea55a12184c25d52c10009237c9a2f5c8c1d57c75500a5120d02ea92340ca"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:fd3ad8f1b6801fc11fe5a014a2e782f36cfeaf81fbccbd62823a4c7c254063e7",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:b985f0c0a21e6cb8d152d6a189479dc381a61fa22a9dee6fb94e1e23116da70b"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:bfb5284864f84e8342da8a58c3f16e50d47909f7dca30b4f5add0805ac87e5c6",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:08890aa62af0338f7cfda85d786a9f8d14636e14918e07784af13d5646d04ab3"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:08533e2ff8be377ca0a3fa11a5912777ef986aee3fcdd20204f313f3f3c45d36",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:41cfb0cac3821872c0700da66ae33ea6475803e531538a697f3db8618fa2ec76"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:9818a7bd4326ab31d2e379c6b46207999ff14004fefb7a85c26540329d822eb3",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:c5610175c1f713df7d9b3ff993d509044f13c6e8164f491173d41756b5c0d7fc"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:22ef08392b2c778205c3ba3f0db25592f18f5cd12dfbc87178bae90c3f6fec61",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:95a968123ef65ab7fd4ae046597f3af795b0c5d7e5b0a9d64a30552c96e8298b"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:8dcb7e6e2115ea24fc0703f9f995543a9f019dd4b1fb1866ec8c2402652993e3",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:a8df3a9b5d41fecc7cb6f49bcdd574fe2604005076f203f0cd1f444c08f605c4"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:d0441d24338eea4a575c61ee973a0c58622e2ab2e6a8d09c7930cd10b5ac1aff",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:ff92affba2ca57a82e30de2e5b3e737a84b4a6654f1ad03856ef0b7868b3db4d"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:2f33cd7e24abac1987b3669891235b0431b9f164bf52df659fbce6ec14a05fd4",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:4150fc24c1f76975c399914e511dafacac158734dcf0a5cb4918326d803dabf1"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:b73b66ccdf6b96e4216bed386b8f2e1a8f897a1411c9ecfb4d07ce0ad12b31d3",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:07e6ba59ec6d96d26ba4d0b2d4336278cd79859b5dded7cf20db1417a8d4b0e1"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:9201b8dd22665f89465d37a00c2ede9dac0b1a7444db3de0c47722d546ff1cb8",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:1d22a7e5649a14f60c5994ca5bcba6dc82b5fc77c39063715794d522ef2ac0c2"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:e87180113cbce8a7910914d9a54bca992dbc6963e62626a9ff96eb00ae5a400e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:293175a52cf2381ac65f88feb07d0878643dda674720bec8a0447c33e723a2e3"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:65a8cc13cfb4d9e2e52a24d5188fa73b143a2e875101a061fb71c181725ee427",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:32a42d05b8b3f8cadd9c9b0f108012dc8a9532ca8c963b158e0e250b3484ff1f"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:fce934f0a46647cd2e6b92cae5de81668fa01005fb3245ac963517b37552a597",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:0c8f81b2a616e8cc98753c34c26fcc12682fb591f6283531aabc4e71074f8352"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:5828acdfb4ebedaa9094c9e6d1848a64a72a9a14c3d628eb1e4b84c24abc9b21",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=3|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:4a98c647f9866ee39dcfed2ad988b147bb9a6d87b8808d6792c460c4632f43a3"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:7507d1783da266a8f5545575937172f901f4edb3d66a482498c8a7b447b29d23",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:3e5bcf0ce6057bfe2af9267364192dad10de433e9d54ececd478fcc3dd70e2f9"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:3118431605745a54e9b514ad6e7eaadd49c0957bdc39daa371f5fa2dfd2173d8",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:e50677884f9b4c10d6dcbdf133e2a0a60700193669630aecb5a8600e1977803f"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:6d5bf3b9187bf2712625ec4e8fc5934f180cbe96167e36fd6ee7914202d42183",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:1793bd313937236518ed1d7307de09c24a46b476939376eadb3a10810f67ebb8"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:2fba933216eea2b2616969e59037970d2e474ebc0d74a22d44e8913ece4a64da",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:c4482651b46021097aa4a8fb08c03c5aabeb61fa1700f49ab36526756bf5d8a6"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:7dbb9e449fec81ca7b210e565dd2cb66fab9565a23e85239fa890013b46b8f38",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:1299ffe16276be63c968faae510016a62bf6dd7456019eb6e371d938057d9159"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:475f1c465c8f9a7e924be882040ebaf627428e4f74457b68b7098eebb59145e7",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:067f5f2cf4e8d849a0b1be0912f87fd1889d5163808b9cc7d944f59805203575"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:33ea3a46da61d657574a715325ae2a89890ac3a57d5109fa2d997a7b2263ee8e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:0fb7b77360cb8d4c317e9ba9087234718673e143135af8b262d6bd0435a9d489"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:6bb5bce72c417fd538e0c964355e418b6f09d8b538fb53119cd155cbe1ca0646",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:f1dfbb9dc0386cffd93057e6dd8c12907ab187311bd950c6546ca12dc980edd2"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:6046cd788c4fd4f02fd59c6ce5b5131cd822fc8ee8853dd2c0c4e58787851a2e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:2cd8d024c2d3b86b7ac6721827afd51a0656c8da17888aac4bb5dab9dad6655d"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:5fe9c685fbfe6eee12c553b9b670f3daa4a95c5e8c7aa4937e38492b7100555e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:417971f62fe6b562d2db44bb10dc6b48321b64cdbfd818ab281494737a3ac3c4"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:3a03f218abf26e366eb8e68aa84d91d4d744d80843b80e2aa3a12da5174b9feb",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:5240a82d8942fbe31ead04d873464114703e1d10f7b2239fbe6ee31022245264"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:dc2e05f1c7e1b98ee492e2aedc5431d85dbf68fe73762a49d0e193db3bf285ff",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:aa5733411972e7c4ca2fa22a2b48ecbba6898c8f03210ea47d1a8405ffd3f340"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:39bd8247d5c732513a1a458e4cc542f93de8662f23b096c3583bd17374baaf12",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:e01845b39855775c1f134992e984dbe3a50daac4f1eeaad2c60b2a72337753a4"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:ea17e526379c492f3af0e244b91df4b9b8d1f74f43587a05921e63463cf37406",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:079428a71827b9f66237b60f9666344faefa4498a32e105ecaac86bbc8439cb7"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:ff05b5eb5a6fe5e989c7cb330c9a2cd25b8f4c75094943aaf0d1bd90cca9b592",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:93f563f2b1b4798608a6a04e438b97a96c0be1fecdf1c73530aac624a3db18e6"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:42980d5e084c030901845906cd03d1d688610ca7e3277804969e2d4291895749",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=4|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:f2b5068b89ab2b2f5227c04a3e121eef1d5081ba71b11fa17f101b3caccf15be"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:06c2f7da2672e746945ce2f6759ad529fd585e75b48b1e4eaad61c1b3019fab6",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:f669b88004a0f478a398e4a2264988e9bb482e5f3c2f0b16d7aabe7fdd333579"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:5d7c2ec968e7d7701a5744b6443626ea61afa1db1ada9f60439e92a20d7cf2bb",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:f16287db0e7659a7cc2e1ac5b05c436901c6dbc389242845116279b56450434d"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:2c84735fd83ff656bf117658e230b22f1885d6cb634199d465bcb1a8cc33abc3",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:aa315c5ea9b48076db13eda8da29363ed753a9cc66a950c9b3d0f7971a4d140b"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:a6f3cccce1f3aa93887c9fdf1988154cf67fff9c29f5577951864fc37e15b08c",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:4551eb24b24b0f3531b7b3a8b917c34656953cb158ece21fb8fd3ca20203e767"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:a5c833451d8ea0fe74c8716968cef00f6f9199ae83d4e5815fd95b32839261e5",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:0baa28ebafb70259f387368078b3c6c8b5ae60b8f71787f57d11e1c03030f99e"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:d54481a405bbb01adf55b916cba9231a7145b020a96dae1c5e35d53db86e0d49",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:68ca2cd4348928332fd99b3c3397eacf28f299f691c2ee8de05edbf49a36d372"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:7a7a441d43c121161ca3d29b69ed651698a4f039a4c749aed633e10a1152dec7",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:7f93b86b69d08b243a9a413dca4a261eb67563dd42ec4891805804eb368f8a76"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:6253571f6ed5139a1063ce5b0b02fad2328edb4b59c8c791da85b346634ae74d",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:1c7555ad84fe5b8e0133981175292d35f6e58fe467c2b09995468ac705639d86"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:84dae89495123973dcba23a97c001eef9ad5272484ead0d114271ae351cc12d3",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:53a7b383f7e4d71f576bb82cc2fadcf1e78059ec61d119782a9b4da7148a6db7"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:253c7d363679981d1d4cf62c088ce7ca5c7a4e9ecacd7423a703a86d591ca50e",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:7962fb987238c6fb897222563ee9f950368f4a41a6a4cef0cf25b8b8e77e8e80"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:f5c75c110109e5ec2b7fff22b3434a8e970f59fd1011a930e42b2c8e417b1584",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:11a387e88684906eb723a96086003852f13dd67933787316c1deeb0939a61060"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:1c8e5c7f1cf065547f5b3547552ff64d24ead4f53eea9b94b3fc3252a0e78de7",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:fad20dd71a1c3ee2a291461a80fc95f15f90c2fd3a0786fb4a7daf467b0acada"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:b901cb2e77e92fa6c023fe46038364dea5b8a220f11f716cbec5a52246ca7d19",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:aa20be87fe6bd2ba2e9d68998e2fb8b0dc81d78c3821bb48dd094a24197d3db6"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:19cf39ebba5a652ae078ba9bce2cd5c97154d0ab786e6516e96719d5edf0f6f4",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:df3f1a2272de42dae73a397abea39605cb7f3651f84f23f355f1e5e6a343f931"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:11ab6974f77373531cfaca1b83cde40bd70536a7996704e5652cefbf497febeb",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:2b225fa491c8bf84e5a42ad05ba9d76795cb5933aaebcb0dec0eed526b834f95"
+  },
+  {
+    "action_id": "RIGHT",
+    "lookup_digest": "sha256:c30a88da36fd97d1ce8ecef1aed48360d6c7cd1368c233c1fc9cb30908ee0807",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=5|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:e701b86ee2895b6a394bf723ab4f75b80472fdba6706e70c12bbfc515e039dec"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:7398557c6fe359a088e8a21894217a4d1f7147481ccb060b0b69689c46ce6797",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=none|cooldown=0",
+    "source_mapping_digest": "sha256:295566fa2e2ac1ef4c766d3c391fb3519e150c94785267ad5c0237512cd7ed61"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:037c9027b1cda9d86d25d0721feb4482fb94b6346b0e85b7a1d55db6da8c989a",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=none|cooldown=1",
+    "source_mapping_digest": "sha256:51ed7ad1eca1a3d43ab06dc13420a0525574f4a5c99605211ad51ea8cd1397b2"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:0bfd10098e77dabd5f0c8a860fa0455af9c473925bcc7fa3b84c54a535d32110",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=0|cooldown=0",
+    "source_mapping_digest": "sha256:97058e6a52aa08ba07fc69fc6dbedec5fd29909fd9e796b093a8a7004e81fa2c"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:63557ae6e714d66bad00446c24c5ddad77e1652d48e30253698c485a35e7bd62",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=0|cooldown=1",
+    "source_mapping_digest": "sha256:250a14cf1fc85ed2b43040bdbc3f8d3d587397b536cf7c1392582a434d5f3f30"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:f79f81f9cd440d9e048931ef38e4f1dd956c6918144d051ed9363d38425d7b73",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=1|cooldown=0",
+    "source_mapping_digest": "sha256:07298b0542bd01c5742d8a0f3fdf188f30b69e35c47500a8706e43203d4d6d3e"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:48c17f0b4e18a73f1088e76909f161bcca9a31f198547a5cf7f5720d4385b989",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=1|cooldown=1",
+    "source_mapping_digest": "sha256:b4198dd0a8fe1ae734c69070aa6739c41586651ed21830dbfbe6f3fa79ba832c"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:48a9afd34dd56b024c540b4bfd89634f05e17927fc79ee4a1647744670ca9f22",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=2|cooldown=0",
+    "source_mapping_digest": "sha256:7d93b4441c5d63dd646c9dbaae53fc36f8ac2605a0eea68c26927d7ab250a851"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:ee7cea19fbfeb7649527ba8ebfc39297b13d72405ecd94a44817a0252ae69ddc",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=2|cooldown=1",
+    "source_mapping_digest": "sha256:439deb93fa4bd8e36aa6e3622f675445ffff76067f34ba4cfccd2649f0956a7d"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:d2675ffc4a8fda14773341c2c886b2ef19701eb783deef18da39f0e2b17dae8a",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=3|cooldown=0",
+    "source_mapping_digest": "sha256:c73b00b9aa0bfd27a9317d333ceb3c6f8bda5cd9337a279fe48ddba198b6f719"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:16666113461eb1b6301a2423c02815e868144c61508207711def6b34a19cd733",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=3|cooldown=1",
+    "source_mapping_digest": "sha256:ef8823839d7b18e448f348e6d986c16044979d27b0109c5ca0ba9165629b5c3b"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:0044019478ed32a0e5c2ec69d9e6b02f0fc0416a5bf391318b8bb369af905fff",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=4|cooldown=0",
+    "source_mapping_digest": "sha256:04b9db46110e213bff98180e3e79e4a97b7fa9b0139223ce1c098fd5a0dc2562"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:5428583db72443773f376de497a2cb083f362ad718ee6998bc35ecf67d08cdf9",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=4|cooldown=1",
+    "source_mapping_digest": "sha256:830d13cbd5d97b9dce845ceadfe9ff9da4f39c0000b02d807e5f63ba347b2d79"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:a7600f0c79d93d5df6a65791915e39608b4f5b278f704e757f81c7f099211c9d",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=5|cooldown=0",
+    "source_mapping_digest": "sha256:94e9ed4d39605d1bfcbbfa92e3325e4549e7b987315599e11340132403e3712b"
+  },
+  {
+    "action_id": "LEFT",
+    "lookup_digest": "sha256:2cd98d61f59815a9d7f0f558341e37aff8a5ea8912cc2b285edbffc324ee04d5",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=5|cooldown=1",
+    "source_mapping_digest": "sha256:23709e4af0a4c5e6a3b89f39961eae0f417289f5c9324e2a7e4abc2579828881"
+  },
+  {
+    "action_id": "FIRE",
+    "lookup_digest": "sha256:010aa64262a82f8914d78e5ebdc0e2d5984b0df288d9250fae091cd17976b1d7",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=6|cooldown=0",
+    "source_mapping_digest": "sha256:3402ade257c716e341dafb3d42bc1579361612aaf81a78bc9285e7c188281b68"
+  },
+  {
+    "action_id": "STAY",
+    "lookup_digest": "sha256:37f58ac576004cd0e13e4a9330343aaa10553d48d31cf3eae9d6e805c3a2b226",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "policy_source_digest": "sha256:ec2e6b13f9c0b9b9a44b1ebf0fc4fbad7d3a33766d392757f875e0f7ddaf280b",
+    "policy_version": "arcade_shooter_policy/v1",
+    "row_id": "tank=6|target=6|cooldown=1",
+    "source_mapping_digest": "sha256:80d8a3b4297613be70812059f1f6644c4bd3d34a0983e64340bf073024c15e26"
+  }
+]

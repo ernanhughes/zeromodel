@@ -34,31 +34,49 @@ from zeromodel import (  # noqa: E402
     DiscriminativeEvidenceProvider,
     DiscriminativeRegionSpec,
     ImageObservation,
+    JointEvidenceCalibration,
+    JointEvidenceProvider,
+    JointEvidenceRegionSpec,
     VPMPolicyLookup,
     build_discriminative_masks,
     build_discriminative_candidate_set,
+    build_joint_candidate_masks,
+    build_joint_candidate_set,
+    build_pairwise_discriminative_masks,
     discriminative_mask_digest,
     discriminative_region_digest,
     evaluate_candidate_eligibility,
+    evaluate_joint_candidate_eligibility,
+    joint_candidate_mask_digest,
+    joint_region_digest,
+    pairwise_mask_digest,
 )
 from zeromodel import video_discriminative_evidence as zde  # noqa: E402
+from zeromodel import video_discriminative_joint_evidence as zje  # noqa: E402
 from zeromodel.artifact import VPMValidationError  # noqa: E402
 from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"
 OUTPUT_DIR_V2 = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v2"
+OUTPUT_DIR_V3 = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v3"
 DIAGNOSTICS_DIR = OUTPUT_DIR / "diagnostics"
 MEASUREMENT_AUDIT_DIR = OUTPUT_DIR / "measurement-audit"
 BENCHMARK_VERSION = "zeromodel-video-discriminative-evidence-stage3/v1"
 BENCHMARK_GENERATOR_VERSION = "zeromodel-video-discriminative-generator/v1"
 BENCHMARK_VERSION_V2 = "zeromodel-video-discriminative-evidence-stage3/v2"
 BENCHMARK_GENERATOR_VERSION_V2 = "zeromodel-video-discriminative-generator/v2"
+BENCHMARK_VERSION_V3 = "zeromodel-video-discriminative-evidence-stage3/v3"
+BENCHMARK_GENERATOR_VERSION_V3 = "zeromodel-video-discriminative-generator/v3"
+BENCHMARK_PROVIDER_VERSION_V3 = "zeromodel-video-discriminative-provider/v3"
 PREREGISTRATION_COMMIT = "e6d3c2461a3e7fc783026907aa1ab5b803c878f3"
 FINAL_SEED_MATERIAL = f"zeromodel-stage3-final-v1|{PREREGISTRATION_COMMIT}"
 V2_AMENDMENT_COMMIT = "6e1e18a8613085b63040283ac3b785b183294357"
 FINAL_SEED_MATERIAL_V2 = f"zeromodel-stage3-v2-final|{V2_AMENDMENT_COMMIT}"
 FINAL_SEED_DIGEST_V2 = "sha256:d740c41178cfe660b3d10d680eafc1f6e20177ba2968ebb5057aa99abd2652cd"
+V3_AMENDMENT_COMMIT = "ad2093590cde95ad1dc984f0573f452693002717"
+FINAL_SEED_MATERIAL_V3 = f"zeromodel-stage3-v3-final|{V3_AMENDMENT_COMMIT}"
+FINAL_SEED_DIGEST_V3 = "sha256:cf1c355325f847d7359243a9d0943d7a770dc9f99f78973b2a94d49bca43c2ef"
 STAGE2_PARENT_COMMIT = "d00e18b67fbe2f62617cd0ac47c7ee2f63487cb8"
 STAGE2_BENCHMARK_DIGEST = "sha256:589bb074e1b53b06657cfb75bf7b8d67eae43cc5f76e7237ab07f23ccca49c75"
 STAGE2_SPLIT_DIGEST = "sha256:d25b694b3cce93bf93f58239163331f3f6370d32a2b5cce53b4541902b0f8c23"
@@ -464,6 +482,47 @@ def _generator_identity_v2(benchmark: Stage3Benchmark) -> Dict[str, Any]:
     return identity
 
 
+def _generator_identity_v3(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    config = _stage3_v3_config()
+    source_files = [
+        REPO_ROOT / "examples" / "arcade_visual_video_discriminative_evidence_benchmark.py",
+        REPO_ROOT / "examples" / "arcade_visual_sign_reader.py",
+        REPO_ROOT / "examples" / "arcade_shooter_policy.py",
+        REPO_ROOT / "zeromodel" / "video_discriminative_joint_evidence.py",
+        REPO_ROOT / "zeromodel" / "video_discriminative_evidence.py",
+        REPO_ROOT / "zeromodel" / "visual_registration.py",
+        REPO_ROOT / "docs" / "research" / "video-stage-three-v3-joint-evidence-amendment.md",
+        REPO_ROOT / "docs" / "research" / "video-stage-three-v3-operational-contract.md",
+    ]
+    file_digests = {str(path.relative_to(REPO_ROOT)).replace("\\", "/"): _file_blob_digest(path) for path in source_files}
+    rows = _canonical_rows(ShooterConfig())
+    sample = _sample_evaluation_rows(rows, sample_size=config.sample_size)
+    operational_contract = REPO_ROOT / "docs" / "research" / "video-stage-three-v3-operational-contract.md"
+    identity = {
+        "repository_commit_sha": _git_output("rev-parse", "HEAD"),
+        "benchmark_version": config.benchmark_version,
+        "generator_version": config.generator_version,
+        "provider_version": BENCHMARK_PROVIDER_VERSION_V3,
+        "mechanics_version": zje.VIDEO_JOINT_EVIDENCE_MECHANICS_VERSION,
+        "amendment_commit_sha": config.amendment_commit,
+        "operational_contract_digest": _file_blob_digest(operational_contract),
+        "evaluation_sample_size": config.sample_size,
+        "sampling_algorithm_version": "step_sample_with_midpoint_and_last_dedup/v1",
+        "family_definitions": _json_ready(_split_family_definitions_v2()),
+        "region_definitions": [region.to_dict() for region in _joint_region_manifest()],
+        "mask_parameters": {
+            "intensity_tolerance": 8,
+            "stability_tolerance": 12,
+        },
+        "seed_material": config.seed_material,
+        "seed_digest": config.seed_digest,
+        "source_file_digests": file_digests,
+        "evaluation_sample_row_ids": [row_id for row_id, _action_id, _observation in sample],
+    }
+    identity["generator_identity_digest"] = _sha256(identity)
+    return identity
+
+
 def _nearest_same_action(row_id: str, action_id: str, rows: Sequence[Tuple[str, str, ImageObservation]]) -> Tuple[str, ImageObservation]:
     for other_row_id, other_action_id, observation in rows:
         if other_row_id != row_id and other_action_id == action_id:
@@ -504,6 +563,45 @@ def _region_manifest() -> Tuple[DiscriminativeRegionSpec, ...]:
             metadata={"semantic_role": "cooldown evidence", "reason_for_inclusion": "action-critical evidence"},
         ),
         DiscriminativeRegionSpec(
+            region_id="tank_band",
+            top=10,
+            left=0,
+            height=4,
+            width=28,
+            weight=2.0,
+            critical=True,
+            registration_config=registration,
+            metadata={"semantic_role": "tank evidence", "reason_for_inclusion": "pose and local displacement evidence"},
+        ),
+    )
+
+
+def _joint_region_manifest() -> Tuple[JointEvidenceRegionSpec, ...]:
+    registration = RegistrationConfig(max_dx=2, max_dy=2, minimum_overlap_fraction=0.5)
+    return (
+        JointEvidenceRegionSpec(
+            region_id="target_band",
+            top=0,
+            left=0,
+            height=6,
+            width=28,
+            weight=2.0,
+            critical=True,
+            registration_config=registration,
+            metadata={"semantic_role": "target evidence", "reason_for_inclusion": "target alignment and ambiguity"},
+        ),
+        JointEvidenceRegionSpec(
+            region_id="cooldown_indicator",
+            top=7,
+            left=25,
+            height=2,
+            width=2,
+            weight=1.5,
+            critical=True,
+            registration_config=registration,
+            metadata={"semantic_role": "cooldown evidence", "reason_for_inclusion": "action-critical evidence"},
+        ),
+        JointEvidenceRegionSpec(
             region_id="tank_band",
             top=10,
             left=0,
@@ -611,6 +709,20 @@ def _stage3_v2_config() -> Stage3VersionConfig:
         observation_prefix="v2",
         prototype_family_id="prototype_clean_v2",
         amendment_commit=V2_AMENDMENT_COMMIT,
+    )
+
+
+def _stage3_v3_config() -> Stage3VersionConfig:
+    return Stage3VersionConfig(
+        benchmark_version=BENCHMARK_VERSION_V3,
+        generator_version=BENCHMARK_GENERATOR_VERSION_V3,
+        output_dir=OUTPUT_DIR_V3,
+        seed_material=FINAL_SEED_MATERIAL_V3,
+        seed_digest=FINAL_SEED_DIGEST_V3,
+        sample_size=EVALUATION_ROW_SAMPLE_SIZE,
+        observation_prefix="v3",
+        prototype_family_id="prototype_clean_v2",
+        amendment_commit=V3_AMENDMENT_COMMIT,
     )
 
 
@@ -966,9 +1078,80 @@ def _build_stage3_benchmark_v2(*, materialize_final: bool = False) -> Stage3Benc
     )
 
 
+def _build_stage3_benchmark_v3(*, materialize_final: bool = False) -> Stage3Benchmark:
+    config = _stage3_v3_config()
+    benchmark = _build_stage3_benchmark_v2(materialize_final=materialize_final)
+    rebuilt_records = []
+    rebuilt_observations: Dict[str, ImageObservation] = {}
+    for record in benchmark.records:
+        observation_id = record.observation_id.replace("v2:", "v3:", 1)
+        clip_id = record.clip_id.replace("v2:", "v3:", 1)
+        frame_id = record.frame_id.replace("v2:", "v3:", 1)
+        metadata = {**_json_ready(record.metadata), "benchmark_version": config.benchmark_version}
+        if record.materialized:
+            original = benchmark.observations[record.observation_id]
+            image = ImageObservation(original.pixels, source_id=observation_id, metadata=metadata)
+            rebuilt_observations[observation_id] = image
+            observation_digest = image.raw_digest
+        else:
+            observation_digest = _sha256(
+                {
+                    "benchmark_version": config.benchmark_version,
+                    "generator_version": config.generator_version,
+                    "observation_id": observation_id,
+                    "seed_material": config.seed_material,
+                    "family_id": record.family_id,
+                    "row_id": record.row_id,
+                    "action_id": record.action_id,
+                }
+            )
+        rebuilt_records.append(
+            Stage3Record(
+                observation_id=observation_id,
+                split=record.split,
+                family_id=record.family_id,
+                row_id=record.row_id,
+                action_id=record.action_id,
+                expected_disposition=record.expected_disposition,
+                clip_id=clip_id,
+                frame_id=frame_id,
+                materialized=record.materialized,
+                metadata=metadata,
+                observation_digest=observation_digest,
+            )
+        )
+    split_counts = {split: sum(record.split == split for record in rebuilt_records) for split in SPLIT_ROLES}
+    return Stage3Benchmark(
+        policy_artifact_id=benchmark.policy_artifact_id,
+        source_scope=benchmark.source_scope,
+        prototypes=benchmark.prototypes,
+        records=tuple(rebuilt_records),
+        observations=rebuilt_observations,
+        family_specs=benchmark.family_specs,
+        metadata={
+            "benchmark_version": config.benchmark_version,
+            "generator_version": config.generator_version,
+            "amendment_commit": config.amendment_commit,
+            "final_seed_material": config.seed_material,
+            "final_seed_digest": config.seed_digest,
+            "split_counts": split_counts,
+            "materialized_final": bool(materialize_final),
+            "evaluation_row_sample_size": config.sample_size,
+            "provider_prototype_count": len(benchmark.prototypes),
+            "development_record_count": len(benchmark.prototypes) * 2,
+        },
+        phase_audits=[],
+    )
+
+
 def _benchmark_manifest(benchmark: Stage3Benchmark) -> Dict[str, Any]:
     metadata = benchmark.metadata
-    generator_identity = _generator_identity_v2(benchmark) if metadata.get("benchmark_version") == BENCHMARK_VERSION_V2 else _generator_identity(benchmark)
+    if metadata.get("benchmark_version") == BENCHMARK_VERSION_V3:
+        generator_identity = _generator_identity_v3(benchmark)
+    elif metadata.get("benchmark_version") == BENCHMARK_VERSION_V2:
+        generator_identity = _generator_identity_v2(benchmark)
+    else:
+        generator_identity = _generator_identity(benchmark)
     return {
         "benchmark_version": metadata["benchmark_version"],
         "generator_version": metadata["generator_version"],
@@ -3106,6 +3289,384 @@ def run_evaluate_v2(output_dir: Path) -> Dict[str, Any]:
     raise SystemExit("V5 and final evaluation remain intentionally out of scope for this block.")
 
 
+V3_ARTIFACT_NAMES = (
+    "README.md",
+    "generator-identity.json",
+    "benchmark-manifest.json",
+    "split-manifest.json",
+    "prototype-manifest.json",
+    "development-manifest.json",
+    "evaluation-sample.json",
+    "region-manifest.json",
+    "candidate-mask-manifest.json",
+    "pairwise-mask-manifest.json",
+    "pairwise-mask-summary.json",
+    "evidence-accounting-summary.json",
+    "canonical-self-retrieval.csv",
+    "canonical-self-retrieval-summary.json",
+    "architecture-self-retrieval-status.json",
+    "tie-safety-results.json",
+    "pairwise-symmetry-results.json",
+    "provider-equivalence-results.json",
+    "instrument-verification.json",
+    "reproduction.md",
+)
+
+
+def _v3_operational_contract_path() -> Path:
+    return REPO_ROOT / "docs" / "research" / "video-stage-three-v3-operational-contract.md"
+
+
+def _v3_operational_contract_digest() -> str:
+    return _file_blob_digest(_v3_operational_contract_path())
+
+
+def _prototype_manifest_v3(benchmark: Stage3Benchmark, *, generator_identity: Mapping[str, Any]) -> Dict[str, Any]:
+    return _prototype_manifest_v2(benchmark, generator_identity=generator_identity)
+
+
+def _development_manifest_v3(benchmark: Stage3Benchmark, *, generator_identity: Mapping[str, Any]) -> Dict[str, Any]:
+    return _development_manifest_v2(benchmark, generator_identity=generator_identity)
+
+
+def _evaluation_sample_manifest_v3(benchmark: Stage3Benchmark) -> Dict[str, Any]:
+    return _evaluation_sample_manifest_v2(benchmark)
+
+
+def _freeze_joint_regions_and_masks(benchmark: Stage3Benchmark, *, output_dir: Path) -> Dict[str, Any]:
+    regions = _joint_region_manifest()
+    candidate_masks = build_joint_candidate_masks(
+        prototypes=benchmark.prototypes,
+        development_observations=_development_observations(benchmark),
+        intensity_tolerance=8,
+        stability_tolerance=12,
+        amendment_commit_sha=V3_AMENDMENT_COMMIT,
+        operational_contract_digest=_v3_operational_contract_digest(),
+        source_scope=benchmark.source_scope,
+    )
+    pairwise_masks = build_pairwise_discriminative_masks(
+        prototypes=benchmark.prototypes,
+        candidate_masks=candidate_masks,
+        intensity_tolerance=8,
+        amendment_commit_sha=V3_AMENDMENT_COMMIT,
+        operational_contract_digest=_v3_operational_contract_digest(),
+        source_scope=benchmark.source_scope,
+    )
+    region_manifest = {
+        "regions": [region.to_dict() for region in regions],
+        "region_spec_digest": joint_region_digest(regions),
+        "registration_contract_digest_set": sorted({region.registration_config.digest for region in regions}),
+    }
+    candidate_mask_manifest = {
+        "mask_specs": [mask.spec.to_dict() for _row_id, mask in sorted(candidate_masks.items())],
+        "mask_payload_digests": {row_id: mask.payload_digest for row_id, mask in sorted(candidate_masks.items())},
+        "candidate_mask_digest": joint_candidate_mask_digest(tuple(mask.spec for mask in candidate_masks.values())),
+        "prototype_digest": _sha256({key: value[2] for key, value in sorted(benchmark.prototypes.items())}),
+        "development_digest": _sha256({row_id: [item.raw_digest for item in values] for row_id, values in sorted(_development_observations(benchmark).items())}),
+        "intensity_tolerance": 8,
+        "stability_tolerance": 12,
+        "operational_contract_digest": _v3_operational_contract_digest(),
+        "amendment_commit_sha": V3_AMENDMENT_COMMIT,
+    }
+    pairwise_mask_manifest = {
+        "pairwise_mask_specs": [mask.spec.to_dict() for _pair, mask in sorted(pairwise_masks.items())],
+        "pairwise_mask_payload_digests": {f"{row_a}|{row_b}": mask.payload_digest for (row_a, row_b), mask in sorted(pairwise_masks.items())},
+        "pairwise_mask_digest": pairwise_mask_digest(tuple(mask.spec for mask in pairwise_masks.values())),
+    }
+    same_action_pairs = sum(int(mask.spec.action_a == mask.spec.action_b) for mask in pairwise_masks.values())
+    different_action_pairs = len(pairwise_masks) - same_action_pairs
+    pairwise_mask_summary = {
+        "pairwise_mask_count": len(pairwise_masks),
+        "nonzero_pairwise_mask_count": sum(int(mask.spec.pairwise_pixel_count > 0) for mask in pairwise_masks.values()),
+        "zero_mass_pair_count": sum(int(mask.spec.pairwise_pixel_count == 0) for mask in pairwise_masks.values()),
+        "same_action_pair_count": same_action_pairs,
+        "different_action_pair_count": different_action_pairs,
+        "maximum_pairwise_mass": max(mask.spec.pairwise_pixel_count for mask in pairwise_masks.values()),
+        "minimum_nonzero_pairwise_mass": min(mask.spec.pairwise_pixel_count for mask in pairwise_masks.values() if mask.spec.pairwise_pixel_count > 0),
+        "candidate_mask_count": len(candidate_masks),
+        "pairwise_mask_digest": pairwise_mask_manifest["pairwise_mask_digest"],
+    }
+    _write_json(output_dir / "region-manifest.json", region_manifest)
+    _write_json(output_dir / "candidate-mask-manifest.json", candidate_mask_manifest)
+    _write_json(output_dir / "pairwise-mask-manifest.json", pairwise_mask_manifest)
+    _write_json(output_dir / "pairwise-mask-summary.json", pairwise_mask_summary)
+    return {
+        "regions": regions,
+        "candidate_masks": candidate_masks,
+        "pairwise_masks": pairwise_masks,
+        "region_manifest": region_manifest,
+        "candidate_mask_manifest": candidate_mask_manifest,
+        "pairwise_mask_manifest": pairwise_mask_manifest,
+        "pairwise_mask_summary": pairwise_mask_summary,
+    }
+
+
+def _v3_calibration(*, architecture_id: str, benchmark: Stage3Benchmark, freeze: Mapping[str, Any]) -> JointEvidenceCalibration:
+    return JointEvidenceCalibration(
+        architecture_id=architecture_id,
+        minimum_actual_scored_mass=0.0,
+        minimum_available_candidate_fit_fraction=0.0,
+        minimum_candidate_joint_fit=0.0,
+        minimum_pairwise_margin=-1.0,
+        minimum_conflicting_action_margin=-1.0,
+        exact_winner_threshold=0.0,
+        exact_winner_margin=0.0,
+        candidate_relative_margin=0.0,
+        maximum_candidate_set_size=MAXIMUM_USEFUL_CANDIDATE_SET_SIZE,
+        prototype_digest=freeze["candidate_mask_manifest"]["prototype_digest"],
+        region_spec_digest=freeze["region_manifest"]["region_spec_digest"],
+        candidate_mask_digest=freeze["candidate_mask_manifest"]["candidate_mask_digest"],
+        pairwise_mask_digest=freeze["pairwise_mask_manifest"]["pairwise_mask_digest"],
+        policy_artifact_id=benchmark.policy_artifact_id,
+        source_scope=benchmark.source_scope,
+        amendment_commit_sha=V3_AMENDMENT_COMMIT,
+        operational_contract_digest=_v3_operational_contract_digest(),
+    )
+
+
+def _direct_joint_ranked_candidates(
+    *,
+    architecture_id: str,
+    benchmark: Stage3Benchmark,
+    freeze: Mapping[str, Any],
+    observation: ImageObservation,
+) -> Tuple[Any, ...]:
+    calibration = _v3_calibration(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze)
+    raw = zje.build_joint_row_candidates(
+        observation=observation,
+        prototypes=benchmark.prototypes,
+        candidate_masks=freeze["candidate_masks"],
+        pairwise_masks=freeze["pairwise_masks"],
+        regions=freeze["regions"],
+        architecture_id=architecture_id,
+    )
+    ranked = zje.rank_joint_row_candidates(raw)
+    return tuple(evaluate_joint_candidate_eligibility(candidate=item, ranked_candidates=ranked, calibration=calibration) for item in ranked)
+
+
+def _freeze_benchmark_v3_into(output_dir: Path) -> Dict[str, Any]:
+    benchmark = _build_stage3_benchmark_v3(materialize_final=False)
+    generator_identity = _generator_identity_v3(benchmark)
+    prototype_manifest = _prototype_manifest_v3(benchmark, generator_identity=generator_identity)
+    development_manifest = _development_manifest_v3(benchmark, generator_identity=generator_identity)
+    evaluation_sample = _evaluation_sample_manifest_v3(benchmark)
+    freeze = _freeze_joint_regions_and_masks(benchmark, output_dir=output_dir)
+    benchmark_manifest = _benchmark_manifest(benchmark)
+    split_manifest = _split_manifest(benchmark)
+    _write_json(output_dir / "generator-identity.json", generator_identity)
+    _write_json(output_dir / "prototype-manifest.json", prototype_manifest)
+    _write_json(output_dir / "development-manifest.json", development_manifest)
+    _write_json(output_dir / "evaluation-sample.json", evaluation_sample)
+    _write_json(output_dir / "benchmark-manifest.json", benchmark_manifest)
+    _write_json(output_dir / "split-manifest.json", split_manifest)
+    _write_markdown(
+        output_dir / "README.md",
+        f"# Stage 3 v3 current-frame joint evidence\n\nBenchmark version: `{benchmark_manifest['benchmark_version']}`\nGenerator version: `{benchmark_manifest['generator_version']}`\nSeed digest: `{benchmark_manifest['final_seed_digest']}`\nBenchmark digest: `{benchmark_manifest['benchmark_digest']}`\nSplit digest: `{split_manifest['split_digest']}`",
+    )
+    _write_markdown(
+        output_dir / "reproduction.md",
+        "Rebuild with `python examples/arcade_visual_video_discriminative_evidence_benchmark.py --freeze-benchmark-v3`, then audit with `--audit-v3-self-retrieval`, and verify with `--verify-v3-instrument`.",
+    )
+    return {
+        "benchmark": benchmark,
+        "freeze": freeze,
+        "generator_identity": generator_identity,
+        "prototype_manifest": prototype_manifest,
+        "development_manifest": development_manifest,
+        "evaluation_sample": evaluation_sample,
+        "benchmark_manifest": benchmark_manifest,
+        "split_manifest": split_manifest,
+    }
+
+
+def run_freeze_benchmark_v3(output_dir: Path) -> Dict[str, Any]:
+    with tempfile.TemporaryDirectory(prefix="stage3-v3-freeze-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        result = _freeze_benchmark_v3_into(temp_output)
+        if output_dir.exists():
+            shutil.rmtree(output_dir)
+        shutil.copytree(temp_output, output_dir)
+    return {
+        "mode": "freeze-benchmark-v3",
+        "benchmark_digest": result["benchmark_manifest"]["benchmark_digest"],
+        "split_digest": result["split_manifest"]["split_digest"],
+        "generator_identity_digest": result["generator_identity"]["generator_identity_digest"],
+        "candidate_mask_digest": result["freeze"]["candidate_mask_manifest"]["candidate_mask_digest"],
+        "pairwise_mask_digest": result["freeze"]["pairwise_mask_manifest"]["pairwise_mask_digest"],
+    }
+
+
+def run_audit_v3_self_retrieval(output_dir: Path) -> Dict[str, Any]:
+    output_dir = OUTPUT_DIR_V3 if output_dir == OUTPUT_DIR else output_dir
+    if not output_dir.exists():
+        run_freeze_benchmark_v3(output_dir)
+    benchmark = _build_stage3_benchmark_v3(materialize_final=False)
+    with tempfile.TemporaryDirectory(prefix="stage3-v3-audit-freeze-", dir=str(REPO_ROOT)) as tmp:
+        freeze = _freeze_joint_regions_and_masks(benchmark, output_dir=Path(tmp))
+    rows = []
+    by_arch = {}
+    incorrect_lexical_exact_accepts = 0
+    provider_equivalence = {"architectures": {}, "all_match": True}
+    tie_safety = {"architectures": {}, "incorrect_lexical_exact_accepts": 0, "equal_score_exact_accept_count": 0}
+    accounting = {
+        "row_count": len(benchmark.prototypes),
+        "declared_informative_mass_total": 0.0,
+        "stable_informative_mass_total": 0.0,
+        "available_geometric_mass_total": 0.0,
+        "available_candidate_fit_mass_total": 0.0,
+        "pairwise_discriminative_mass_total": 0.0,
+        "actual_scored_mass_total": 0.0,
+    }
+    pairwise_symmetry = {
+        "pairwise_mask_count": len(freeze["pairwise_masks"]),
+        "mask_symmetry_valid": True,
+        "pairwise_antisymmetry_valid": True,
+        "cache_hits": 0,
+        "cache_misses": len(freeze["pairwise_masks"]),
+    }
+    for (row_a, row_b), mask in freeze["pairwise_masks"].items():
+        if row_a >= row_b:
+            pairwise_symmetry["mask_symmetry_valid"] = False
+        if not np.array_equal(mask.pairwise_weights, freeze["pairwise_masks"][(row_a, row_b)].pairwise_weights):
+            pairwise_symmetry["mask_symmetry_valid"] = False
+    for architecture_id in ("A3", "B3", "C3", "D3"):
+        calibration = _v3_calibration(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze)
+        provider = JointEvidenceProvider(
+            prototypes=benchmark.prototypes,
+            candidate_masks=freeze["candidate_masks"],
+            pairwise_masks=freeze["pairwise_masks"],
+            regions=freeze["regions"],
+            calibration=calibration,
+            policy_artifact_id=benchmark.policy_artifact_id,
+            source_scope=benchmark.source_scope,
+        )
+        top1 = 0
+        tie_sizes = []
+        outcome_counter = Counter()
+        arch_equal_exact_accepts = 0
+        arch_provider_equivalent = True
+        for row_id, (_prototype_observation_id, action_id, _digest, observation) in sorted(benchmark.prototypes.items()):
+            direct = _direct_joint_ranked_candidates(architecture_id=architecture_id, benchmark=benchmark, freeze=freeze, observation=observation)
+            ranked = provider._rank(observation)
+            if [item.to_dict() for item in direct] != [item.to_dict() for item in ranked]:
+                arch_provider_equivalent = False
+                provider_equivalence["all_match"] = False
+            candidate_set = build_joint_candidate_set(ranked_candidates=ranked, calibration=calibration)
+            outcome_counter[candidate_set.outcome] += 1
+            expected = next(candidate for candidate in ranked if candidate.row_id == row_id)
+            winner = ranked[0]
+            runner_up = ranked[1] if len(ranked) > 1 else None
+            top1 += int(winner.row_id == row_id and winner.semantic_tie_group_size == 1)
+            tie_sizes.append(int(winner.semantic_tie_group_size))
+            lexical_affected = bool(winner.semantic_tie_group_size > 1)
+            accepted_row = candidate_set.rows[0] if candidate_set.outcome == "exact_row_accepted" and candidate_set.rows else None
+            if lexical_affected and accepted_row is not None:
+                incorrect_lexical_exact_accepts += 1
+                arch_equal_exact_accepts += 1
+            if winner.semantic_tie_group_size > 1 and accepted_row is not None:
+                tie_safety["equal_score_exact_accept_count"] += 1
+            accounting["declared_informative_mass_total"] += float(expected.declared_informative_mass)
+            accounting["stable_informative_mass_total"] += float(expected.stable_informative_mass)
+            accounting["available_geometric_mass_total"] += float(expected.available_geometric_mass)
+            accounting["available_candidate_fit_mass_total"] += float(expected.available_candidate_fit_mass)
+            accounting["pairwise_discriminative_mass_total"] += float(expected.pairwise_discriminative_mass)
+            accounting["actual_scored_mass_total"] += float(expected.actual_scored_mass)
+            rows.append(
+                {
+                    "architecture": architecture_id,
+                    "observation_row": row_id,
+                    "observation_action": action_id,
+                    "expected_candidate_rank": next(index for index, candidate in enumerate(ranked, start=1) if candidate.row_id == row_id),
+                    "expected_candidate_strength": float(expected.candidate_strength),
+                    "expected_candidate_scored_mass": float(expected.actual_scored_mass),
+                    "expected_candidate_joint_fit": float(expected.candidate_joint_fit),
+                    "expected_minimum_pairwise_margin": expected.minimum_pairwise_margin,
+                    "expected_conflicting_action_margin": expected.minimum_conflicting_action_margin,
+                    "winner_row": winner.row_id,
+                    "winner_strength": float(winner.candidate_strength),
+                    "runner_up_row": None if runner_up is None else runner_up.row_id,
+                    "runner_up_strength": None if runner_up is None else float(runner_up.candidate_strength),
+                    "semantic_tie_size": int(winner.semantic_tie_group_size),
+                    "semantic_tie_rows": list(winner.semantic_tie_group_rows),
+                    "winner_superiority_margin": winner.candidate_superiority_margin,
+                    "expected_row_candidate_set_eligibility": bool(expected.eligible_for_candidate_set),
+                    "expected_row_exact_eligibility": bool(expected.eligible_for_exact),
+                    "candidate_set_outcome": candidate_set.outcome,
+                    "exact_accepted_row": accepted_row,
+                    "lexical_ordering_affected_outcome": lexical_affected,
+                }
+            )
+            if architecture_id == "C3":
+                direct_by_row = {item.competitor_row_id: item.margin for item in expected.pairwise_evidence if item.region_id == "target_band"}
+                for candidate in ranked:
+                    if candidate.row_id == row_id:
+                        continue
+                    reverse = next((item.margin for item in candidate.pairwise_evidence if item.competitor_row_id == row_id and item.region_id == "target_band"), None)
+                    forward = direct_by_row.get(candidate.row_id)
+                    if reverse is not None and forward is not None and abs(forward + reverse) > 1e-6:
+                        pairwise_symmetry["pairwise_antisymmetry_valid"] = False
+        status = "eligible_self_retrieval" if top1 == len(benchmark.prototypes) else "ineligible_self_retrieval"
+        by_arch[architecture_id] = {
+            "canonical_top1_count": top1,
+            "canonical_observation_count": len(benchmark.prototypes),
+            "mean_semantic_tie_size": float(np.mean(tie_sizes)),
+            "maximum_semantic_tie_size": max(tie_sizes),
+            "candidate_set_outcomes": dict(sorted(outcome_counter.items())),
+            "self_retrieval_status": status,
+        }
+        provider_equivalence["architectures"][architecture_id] = arch_provider_equivalent
+        tie_safety["architectures"][architecture_id] = {
+            "incorrect_lexical_exact_accepts": arch_equal_exact_accepts,
+        }
+    tie_safety["incorrect_lexical_exact_accepts"] = incorrect_lexical_exact_accepts
+    _write_csv(output_dir / "canonical-self-retrieval.csv", rows)
+    _write_json(output_dir / "canonical-self-retrieval-summary.json", {"architectures": by_arch, "canonical_observation_count": len(benchmark.prototypes)})
+    shared_valid = bool(provider_equivalence["all_match"] and pairwise_symmetry["mask_symmetry_valid"] and pairwise_symmetry["pairwise_antisymmetry_valid"] and incorrect_lexical_exact_accepts == 0)
+    if shared_valid and any(item["self_retrieval_status"] == "eligible_self_retrieval" for item in by_arch.values()):
+        stop_outcome = "Outcome B" if any(item["self_retrieval_status"] != "eligible_self_retrieval" for item in by_arch.values()) else "Outcome A"
+    elif shared_valid:
+        stop_outcome = "Outcome C"
+    else:
+        stop_outcome = "Outcome D"
+    _write_json(output_dir / "architecture-self-retrieval-status.json", {"shared_instrument_valid": shared_valid, "architectures": by_arch, "stop_outcome": stop_outcome})
+    _write_json(output_dir / "tie-safety-results.json", tie_safety)
+    _write_json(output_dir / "pairwise-symmetry-results.json", pairwise_symmetry)
+    _write_json(output_dir / "provider-equivalence-results.json", provider_equivalence)
+    _write_json(output_dir / "evidence-accounting-summary.json", accounting)
+    return {
+        "mode": "audit-v3-self-retrieval",
+        "canonical_observation_count": len(benchmark.prototypes),
+        "architectures": by_arch,
+        "tie_safety": tie_safety,
+        "pairwise_symmetry": pairwise_symmetry,
+        "provider_equivalence": provider_equivalence,
+        "evidence_accounting": accounting,
+        "stop_outcome": stop_outcome,
+    }
+
+
+def run_verify_v3_instrument(output_dir: Path) -> Dict[str, Any]:
+    output_dir = OUTPUT_DIR_V3 if output_dir == OUTPUT_DIR else output_dir
+    with tempfile.TemporaryDirectory(prefix="stage3-v3-verify-", dir=str(REPO_ROOT)) as tmp:
+        temp_output = Path(tmp)
+        run_freeze_benchmark_v3(temp_output)
+        run_audit_v3_self_retrieval(temp_output)
+        artifacts = [name for name in V3_ARTIFACT_NAMES if name != "instrument-verification.json"]
+        comparison = _artifact_comparison(output_dir, temp_output, artifact_names=artifacts)
+    forbidden = [name for name in ("architecture-grid.csv", "selected-architecture.json", "calibration-grid.csv", "selected-operating-point.json", "final-metrics.json") if (output_dir / name).exists()]
+    payload = {
+        "mode": "verify-v3-instrument",
+        "verified": bool(comparison["semantic_match"]) and not forbidden,
+        "comparison": comparison,
+        "forbidden_artifacts_present": forbidden,
+        "required_artifacts": list(V3_ARTIFACT_NAMES),
+    }
+    _write_json(output_dir / "instrument-verification.json", payload)
+    if not payload["verified"]:
+        raise SystemExit(json.dumps(_json_ready(payload), indent=2, sort_keys=True))
+    return payload
+
+
 def _stage2_diagnosis_file_digests(output_dir: Path) -> Dict[str, Any]:
     files = {
         "summary_json": output_dir / "diagnostics" / "stage2-posthoc-summary.json",
@@ -3288,6 +3849,9 @@ def main() -> None:
     parser.add_argument("--verify-pre-final-v2", action="store_true")
     parser.add_argument("--audit-v2-representation", action="store_true")
     parser.add_argument("--evaluate-v2", action="store_true")
+    parser.add_argument("--freeze-benchmark-v3", action="store_true")
+    parser.add_argument("--audit-v3-self-retrieval", action="store_true")
+    parser.add_argument("--verify-v3-instrument", action="store_true")
     args = parser.parse_args()
     if args.verify_stage2_diagnosis:
         payload = run_verify_stage2_diagnosis(args.output_dir)
@@ -3319,6 +3883,12 @@ def main() -> None:
         payload = _run_representation_audit_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
     elif args.evaluate_v2:
         payload = run_evaluate_v2(OUTPUT_DIR_V2 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.freeze_benchmark_v3:
+        payload = run_freeze_benchmark_v3(OUTPUT_DIR_V3 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.audit_v3_self_retrieval:
+        payload = run_audit_v3_self_retrieval(OUTPUT_DIR_V3 if args.output_dir == OUTPUT_DIR else args.output_dir)
+    elif args.verify_v3_instrument:
+        payload = run_verify_v3_instrument(OUTPUT_DIR_V3 if args.output_dir == OUTPUT_DIR else args.output_dir)
     else:
         raise SystemExit("one stage flag is required")
     print(json.dumps(_json_ready(payload), indent=2, sort_keys=True))

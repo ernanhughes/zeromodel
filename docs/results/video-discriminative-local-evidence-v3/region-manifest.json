@@ -1,0 +1,74 @@
+{
+  "region_spec_digest": "sha256:63847a56e756a8f86903cc2fe45fdab4de8a03d993dc24274e85f27a1c711853",
+  "regions": [
+    {
+      "critical": true,
+      "height": 6,
+      "left": 0,
+      "metadata": {
+        "reason_for_inclusion": "target alignment and ambiguity",
+        "semantic_role": "target evidence"
+      },
+      "region_id": "target_band",
+      "registration_config": {
+        "max_dx": 2,
+        "max_dy": 2,
+        "metric": "normalized_l2",
+        "minimum_overlap_fraction": 0.5,
+        "padding_value": 0,
+        "version": "zeromodel-registration-config/v1"
+      },
+      "top": 0,
+      "version": "zeromodel-video-joint-region-spec/v1",
+      "weight": 2.0,
+      "width": 28
+    },
+    {
+      "critical": true,
+      "height": 2,
+      "left": 25,
+      "metadata": {
+        "reason_for_inclusion": "action-critical evidence",
+        "semantic_role": "cooldown evidence"
+      },
+      "region_id": "cooldown_indicator",
+      "registration_config": {
+        "max_dx": 2,
+        "max_dy": 2,
+        "metric": "normalized_l2",
+        "minimum_overlap_fraction": 0.5,
+        "padding_value": 0,
+        "version": "zeromodel-registration-config/v1"
+      },
+      "top": 7,
+      "version": "zeromodel-video-joint-region-spec/v1",
+      "weight": 1.5,
+      "width": 2
+    },
+    {
+      "critical": true,
+      "height": 4,
+      "left": 0,
+      "metadata": {
+        "reason_for_inclusion": "pose and local displacement evidence",
+        "semantic_role": "tank evidence"
+      },
+      "region_id": "tank_band",
+      "registration_config": {
+        "max_dx": 2,
+        "max_dy": 2,
+        "metric": "normalized_l2",
+        "minimum_overlap_fraction": 0.5,
+        "padding_value": 0,
+        "version": "zeromodel-registration-config/v1"
+      },
+      "top": 10,
+      "version": "zeromodel-video-joint-region-spec/v1",
+      "weight": 2.0,
+      "width": 28
+    }
+  ],
+  "registration_contract_digest_set": [
+    "3b040de5ee9e2b1e4f949c65ff4210ae2248e3201009de9404f419c680b24dc6"
+  ]
+}

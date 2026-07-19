@@ -1,0 +1,48 @@
+{
+  "architectures": {
+    "A3": {
+      "candidate_set_outcomes": {
+        "no_sufficient_evidence": 112
+      },
+      "canonical_observation_count": 112,
+      "canonical_top1_count": 0,
+      "maximum_semantic_tie_size": 2,
+      "mean_semantic_tie_size": 2.0,
+      "self_retrieval_status": "ineligible_self_retrieval"
+    },
+    "B3": {
+      "candidate_set_outcomes": {
+        "exact_row_accepted": 112
+      },
+      "canonical_observation_count": 112,
+      "canonical_top1_count": 112,
+      "maximum_semantic_tie_size": 1,
+      "mean_semantic_tie_size": 1.0,
+      "self_retrieval_status": "eligible_self_retrieval"
+    },
+    "C3": {
+      "candidate_set_outcomes": {
+        "exact_row_accepted": 108,
+        "no_sufficient_evidence": 4
+      },
+      "canonical_observation_count": 112,
+      "canonical_top1_count": 4,
+      "maximum_semantic_tie_size": 2,
+      "mean_semantic_tie_size": 1.0357142857142858,
+      "self_retrieval_status": "ineligible_self_retrieval"
+    },
+    "D3": {
+      "candidate_set_outcomes": {
+        "exact_row_accepted": 108,
+        "no_sufficient_evidence": 4
+      },
+      "canonical_observation_count": 112,
+      "canonical_top1_count": 4,
+      "maximum_semantic_tie_size": 2,
+      "mean_semantic_tie_size": 1.0357142857142858,
+      "self_retrieval_status": "ineligible_self_retrieval"
+    }
+  },
+  "shared_instrument_valid": true,
+  "stop_outcome": "Outcome B"
+}

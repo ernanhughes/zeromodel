@@ -1,0 +1,18 @@
+{
+  "architectures": {
+    "A3": {
+      "incorrect_lexical_exact_accepts": 0
+    },
+    "B3": {
+      "incorrect_lexical_exact_accepts": 0
+    },
+    "C3": {
+      "incorrect_lexical_exact_accepts": 0
+    },
+    "D3": {
+      "incorrect_lexical_exact_accepts": 0
+    }
+  },
+  "equal_score_exact_accept_count": 0,
+  "incorrect_lexical_exact_accepts": 0
+}

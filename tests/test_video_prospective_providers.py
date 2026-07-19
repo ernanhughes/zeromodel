@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from zeromodel.video_action_set_benchmark import SOURCE_SCOPE, canonical_prototypes
 from zeromodel.video_complete_row_evidence import VIDEO_COMPLETE_ROW_EVIDENCE_VERSION
 from zeromodel.video_prospective_providers import (
@@ -43,6 +45,7 @@ def test_prospective_providers_emit_complete_112_row_evidence() -> None:
     assert p3.winner_action_id == action_id
 
 
+@pytest.mark.slow
 def test_prospective_provider_caches_are_bounded_and_clearable() -> None:
     clear_prospective_provider_caches()
     prototypes = canonical_prototypes()

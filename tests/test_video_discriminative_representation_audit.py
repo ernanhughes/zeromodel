@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
 
 
@@ -10,6 +12,7 @@ def _load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.slow
 def test_representation_audit_freezes_expected_v2_failures(tmp_path: Path) -> None:
     bench.run_freeze_benchmark_v2(tmp_path)
     bench.run_select_architecture_v2(tmp_path)
@@ -53,6 +56,7 @@ def test_representation_audit_quantifies_separation_collapse(tmp_path: Path) -> 
     assert all(effective == 0 for _row_id, _zeroed, _stable, effective in rows)
 
 
+@pytest.mark.slow
 def test_strict_exact_tie_check_rejects_lexical_ties(tmp_path: Path) -> None:
     benchmark = bench._build_stage3_benchmark_v2(materialize_final=False)
     freeze = bench._freeze_regions_and_masks(benchmark, output_dir=tmp_path)

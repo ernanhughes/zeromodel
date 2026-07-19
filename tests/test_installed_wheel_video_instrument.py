@@ -6,6 +6,8 @@ import textwrap
 import venv
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -19,6 +21,7 @@ def test_zeromodel_package_does_not_import_examples_or_tests() -> None:
         assert "import tests" not in text
 
 
+@pytest.mark.slow
 def test_installed_wheel_imports_prospective_modules(tmp_path: Path) -> None:
     dist_dir = tmp_path / "dist"
     subprocess.run([sys.executable, "-m", "build", "--wheel", "--outdir", str(dist_dir)], cwd=REPO_ROOT, check=True)

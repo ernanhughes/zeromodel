@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 import sys
 
+import pytest
+
 
 def _load_module():
     path = (
@@ -22,6 +24,7 @@ def _load_module():
     return module
 
 
+@pytest.mark.slow
 def test_showdown_generates_required_artifacts(tmp_path: Path, monkeypatch) -> None:
     module = _load_module()
     dataset = module.build_arcade_benchmark_dataset(variants_per_family=1)

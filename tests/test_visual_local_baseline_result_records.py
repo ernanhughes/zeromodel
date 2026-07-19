@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import sys
 
+import pytest
+
 
 def _load_module():
     path = (
@@ -23,6 +25,7 @@ def _load_module():
     return module
 
 
+@pytest.mark.slow
 def test_result_records_reconstruct_metrics_and_verify_bundle(tmp_path: Path, monkeypatch) -> None:
     module = _load_module()
     dataset = module.build_arcade_benchmark_dataset(variants_per_family=1)

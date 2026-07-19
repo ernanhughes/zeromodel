@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import sys
 
+import pytest
+
 
 def _load_adjudication_module():
     path = (
@@ -38,6 +40,7 @@ def test_phase_one_recovery_manifest_matches_attached_files() -> None:
         assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"], item["name"]
 
 
+@pytest.mark.slow
 def test_system_b_adjudication_writes_run_manifest_and_row_confusion_atlas(tmp_path: Path) -> None:
     module = _load_adjudication_module()
     summary = module.run(

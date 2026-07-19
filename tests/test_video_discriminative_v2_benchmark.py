@@ -3,9 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
 
 
+@pytest.mark.slow
 def test_v2_prototype_and_development_counts_match_full_universe(tmp_path: Path) -> None:
     payload = bench._freeze_benchmark_v2_into(tmp_path)
     assert payload["prototype_manifest"]["provider_prototype_count"] == 112
@@ -16,6 +19,7 @@ def test_v2_prototype_and_development_counts_match_full_universe(tmp_path: Path)
     assert len(payload["evaluation_sample"]["selected_row_ids"]) == 12
 
 
+@pytest.mark.slow
 def test_v2_ids_are_disjoint_from_v1_frozen_artifacts(tmp_path: Path) -> None:
     payload = bench._freeze_benchmark_v2_into(tmp_path)
     v1_split = json.loads(Path("docs/results/video-discriminative-local-evidence-v1/split-manifest.json").read_text(encoding="utf-8"))
@@ -25,6 +29,7 @@ def test_v2_ids_are_disjoint_from_v1_frozen_artifacts(tmp_path: Path) -> None:
     assert v1_ids.isdisjoint(v2_ids)
 
 
+@pytest.mark.slow
 def test_v2_freeze_writes_under_v2_output_only(tmp_path: Path) -> None:
     before = Path("docs/results/video-discriminative-local-evidence-v1/benchmark-manifest.json").read_text(encoding="utf-8")
     bench.run_freeze_benchmark_v2(tmp_path)

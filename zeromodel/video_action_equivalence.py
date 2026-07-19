@@ -1,21 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import csv
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Iterable, Mapping, Sequence
 
 from .artifact import VPMValidationError
 
 
 VIDEO_ACTION_EQUIVALENCE_AUDIT_VERSION = "zeromodel-video-action-equivalence-audit/v1"
 VIDEO_ACTION_SET_DECISION_VERSION = "zeromodel-video-action-set-decision/v1"
-VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION = "zeromodel-video-retrospective-evidence-inventory/v1"
-VIDEO_ROW_SET_CONFORMAL_VERSION = "zeromodel-video-row-set-conformal/v1"
-VIDEO_POLICY_REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 VIDEO_REACHABILITY_REPLAY_VERSION = "zeromodel-video-reachability-replay/v1"
+VIDEO_RETROSPECTIVE_EVIDENCE_CLOSURE_VERSION = "zeromodel-video-retrospective-evidence-closure/v1"
+VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION = "zeromodel-video-retrospective-evidence-inventory/v2"
+VIDEO_POLICY_REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
+VIDEO_ROW_SET_CONFORMAL_VERSION = "zeromodel-video-row-set-conformal/v1"
 VIDEO_TILE_COMPOSITION_TRACE_VERSION = "zeromodel-video-tile-composition-trace/v1"
 
 
@@ -52,6 +52,20 @@ def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _load_jsonl(path: Path) -> list[dict[str, Any]]:
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        text = line.strip()
+        if text:
+            rows.append(json.loads(text))
+    return rows
+
+
+def _load_csv(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
 def _write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -75,200 +89,12 @@ def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
             writer.writerow({key: _csv_cell(row.get(key)) for key in fieldnames})
 
 
-def _require(value: Optional[str], name: str) -> str:
-    text = "" if value is None else str(value)
-    if not text:
-        raise VPMValidationError(f"{name} cannot be empty")
-    return text
+def _write_markdown(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.rstrip() + "\n", encoding="utf-8")
 
 
-@dataclass(frozen=True)
-class ScoreVectorAvailability:
-    status: str
-    detail: str
-
-    def __post_init__(self) -> None:
-        allowed = {
-            "stored_original_scores",
-            "recomputed_from_frozen_committed_artifacts",
-            "aggregate_only",
-            "top1_only",
-            "missing",
-        }
-        if self.status not in allowed:
-            raise VPMValidationError("unsupported score vector availability status")
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {"status": self.status, "detail": self.detail}
-
-
-@dataclass(frozen=True)
-class SequenceReplayAvailability:
-    clip_ids_available: bool
-    episode_ids_available: bool
-    frame_order_available: bool
-    executed_actions_available: bool
-    recommended_actions_available: bool
-    expected_actions_available: bool
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "clip_ids_available": bool(self.clip_ids_available),
-            "episode_ids_available": bool(self.episode_ids_available),
-            "frame_order_available": bool(self.frame_order_available),
-            "executed_actions_available": bool(self.executed_actions_available),
-            "recommended_actions_available": bool(self.recommended_actions_available),
-            "expected_actions_available": bool(self.expected_actions_available),
-        }
-
-
-@dataclass(frozen=True)
-class HistoricalProviderEvidence:
-    system_id: str
-    system_version: str
-    provider_family: str
-    source_commit: str
-    source_result_directory: str
-    benchmark_version: str
-    benchmark_digest: str
-    policy_artifact_id: str
-    provider_contract_digest: str
-    score_semantics: str
-    higher_or_lower_is_better: str
-    score_range: str
-    full_112_score_vector_available: str
-    ordered_full_ranking_available: str
-    top_k_available: str
-    top_1_only: bool
-    raw_observation_pixels_available: bool
-    provider_reproducible_from_committed_code: bool
-    reproduction_command: str
-    calibration_split_available: bool
-    evaluation_split_available: bool
-    negative_split_available: bool
-    clip_ids_available: bool
-    episode_ids_available: bool
-    frame_order_available: bool
-    executed_actions_available: bool
-    recommended_actions_available: bool
-    expected_actions_available: bool
-    row_to_action_map_available: bool
-    information_theoretic_controls_identified: bool
-    historical_final_data_already_unblinded: bool
-    eligible_for_top1_action_rescore: bool
-    eligible_for_top_k_rescore: bool
-    eligible_for_score_gap_rescore: bool
-    eligible_for_conformal_rescore: bool
-    eligible_for_reachability_replay: bool
-    ineligibility_reasons: Tuple[str, ...] = field(default_factory=tuple)
-    notes: Mapping[str, Any] = field(default_factory=dict)
-    version: str = VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION
-
-    def to_dict(self) -> Dict[str, Any]:
-        payload = {
-            "version": self.version,
-            "system_id": self.system_id,
-            "system_version": self.system_version,
-            "provider_family": self.provider_family,
-            "source_commit": self.source_commit,
-            "source_result_directory": self.source_result_directory,
-            "benchmark_version": self.benchmark_version,
-            "benchmark_digest": self.benchmark_digest,
-            "policy_artifact_id": self.policy_artifact_id,
-            "provider_contract_digest": self.provider_contract_digest,
-            "score_semantics": self.score_semantics,
-            "higher_or_lower_is_better": self.higher_or_lower_is_better,
-            "score_range": self.score_range,
-            "full_112_score_vector_available": self.full_112_score_vector_available,
-            "ordered_full_ranking_available": self.ordered_full_ranking_available,
-            "top_k_available": self.top_k_available,
-            "top_1_only": bool(self.top_1_only),
-            "raw_observation_pixels_available": bool(self.raw_observation_pixels_available),
-            "provider_reproducible_from_committed_code": bool(self.provider_reproducible_from_committed_code),
-            "reproduction_command": self.reproduction_command,
-            "calibration_split_available": bool(self.calibration_split_available),
-            "evaluation_split_available": bool(self.evaluation_split_available),
-            "negative_split_available": bool(self.negative_split_available),
-            "clip_ids_available": bool(self.clip_ids_available),
-            "episode_ids_available": bool(self.episode_ids_available),
-            "frame_order_available": bool(self.frame_order_available),
-            "executed_actions_available": bool(self.executed_actions_available),
-            "recommended_actions_available": bool(self.recommended_actions_available),
-            "expected_actions_available": bool(self.expected_actions_available),
-            "row_to_action_map_available": bool(self.row_to_action_map_available),
-            "information_theoretic_controls_identified": bool(self.information_theoretic_controls_identified),
-            "historical_final_data_already_unblinded": bool(self.historical_final_data_already_unblinded),
-            "eligible_for_top1_action_rescore": bool(self.eligible_for_top1_action_rescore),
-            "eligible_for_top_k_rescore": bool(self.eligible_for_top_k_rescore),
-            "eligible_for_score_gap_rescore": bool(self.eligible_for_score_gap_rescore),
-            "eligible_for_conformal_rescore": bool(self.eligible_for_conformal_rescore),
-            "eligible_for_reachability_replay": bool(self.eligible_for_reachability_replay),
-            "ineligibility_reasons": list(self.ineligibility_reasons),
-            "notes": _json_ready(self.notes),
-        }
-        payload["evidence_digest"] = _sha256(payload)
-        return payload
-
-
-@dataclass(frozen=True)
-class MetricVerificationRecord:
-    reported_claim_id: str
-    provider_id: str
-    metric_name: str
-    reported_value: Optional[float]
-    repository_derived_value: Optional[float]
-    unit: str
-    source_artifact: str
-    calculation_method: str
-    match_status: str
-    difference: Optional[float]
-    notes: str
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self.__dict__)
-
-
-@dataclass(frozen=True)
-class PolicyRowActionMapEntry:
-    policy_artifact_id: str
-    policy_version: str
-    policy_source_digest: str
-    row_id: str
-    action_id: str
-    source_mapping_digest: str
-    lookup_digest: str
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(self.__dict__)
-
-
-@dataclass(frozen=True)
-class EvidenceInventory:
-    audit_version: str
-    inventory_version: str
-    providers: Tuple[HistoricalProviderEvidence, ...]
-    verification_records: Tuple[MetricVerificationRecord, ...]
-    row_action_map: Tuple[PolicyRowActionMapEntry, ...]
-    frozen_v3_manifest: Mapping[str, str]
-    phase_access_audits: Mapping[str, int]
-    superseded_experiment: Mapping[str, Any]
-
-    def to_dict(self) -> Dict[str, Any]:
-        payload = {
-            "audit_version": self.audit_version,
-            "inventory_version": self.inventory_version,
-            "providers": [item.to_dict() for item in self.providers],
-            "verification_records": [item.to_dict() for item in self.verification_records],
-            "row_action_map": [item.to_dict() for item in self.row_action_map],
-            "frozen_v3_manifest": dict(self.frozen_v3_manifest),
-            "phase_access_audits": dict(self.phase_access_audits),
-            "superseded_experiment": _json_ready(self.superseded_experiment),
-        }
-        payload["inventory_digest"] = _sha256(payload)
-        return payload
-
-
-def build_policy_row_action_map(*, policy_artifact_id: str) -> Tuple[PolicyRowActionMapEntry, ...]:
+def build_policy_row_action_map(*, policy_artifact_id: str) -> tuple[dict[str, str], ...]:
     from examples.arcade_shooter_policy import ACTIONS, compile_policy_artifact
     from .policy_lookup import VPMPolicyLookup
 
@@ -285,18 +111,19 @@ def build_policy_row_action_map(*, policy_artifact_id: str) -> Tuple[PolicyRowAc
     )
     rows = []
     for row_id in artifact.source.row_ids:
-        action_id = lookup.choose(row_id)
-        source_mapping_digest = _sha256({"row_id": row_id, "action_id": action_id, "policy_artifact_id": artifact.artifact_id})
+        action_id = lookup.choose(str(row_id))
         rows.append(
-            PolicyRowActionMapEntry(
-                policy_artifact_id=artifact.artifact_id,
-                policy_version="arcade_shooter_policy/v1",
-                policy_source_digest=source_digest,
-                row_id=str(row_id),
-                action_id=str(action_id),
-                source_mapping_digest=source_mapping_digest,
-                lookup_digest=_sha256({"row_id": row_id, "winner": action_id}),
-            )
+            {
+                "policy_artifact_id": artifact.artifact_id,
+                "policy_version": "arcade_shooter_policy/v1",
+                "policy_source_digest": source_digest,
+                "row_id": str(row_id),
+                "action_id": str(action_id),
+                "source_mapping_digest": _sha256(
+                    {"row_id": str(row_id), "action_id": str(action_id), "policy_artifact_id": artifact.artifact_id}
+                ),
+                "lookup_digest": _sha256({"row_id": str(row_id), "winner": str(action_id)}),
+            }
         )
     return tuple(rows)
 
@@ -304,26 +131,25 @@ def build_policy_row_action_map(*, policy_artifact_id: str) -> Tuple[PolicyRowAc
 def policy_action_for_row(
     row_id: str,
     *,
-    row_action_map: Sequence[PolicyRowActionMapEntry],
+    row_action_map: Sequence[Mapping[str, str]],
     policy_artifact_id: str,
 ) -> str:
     for entry in row_action_map:
-        if entry.policy_artifact_id == policy_artifact_id and entry.row_id == row_id:
-            return entry.action_id
+        if entry["policy_artifact_id"] == policy_artifact_id and entry["row_id"] == row_id:
+            return entry["action_id"]
     raise VPMValidationError(f"unknown policy row: {row_id}")
 
 
-def collect_v3_preservation_manifest(repo_root: Path) -> Dict[str, str]:
+def collect_v3_preservation_manifest(repo_root: Path) -> dict[str, str]:
     target = repo_root / "docs" / "results" / "video-discriminative-local-evidence-v3"
-    rows: Dict[str, str] = {}
+    rows: dict[str, str] = {}
     for path in sorted(target.rglob("*")):
         if path.is_file():
-            rel = path.relative_to(repo_root).as_posix()
-            rows[rel] = _file_sha256(path)
+            rows[path.relative_to(repo_root).as_posix()] = _file_sha256(path)
     return rows
 
 
-def verify_v3_preservation(repo_root: Path, manifest: Mapping[str, str]) -> Dict[str, Any]:
+def verify_v3_preservation(repo_root: Path, manifest: Mapping[str, str]) -> dict[str, Any]:
     current = collect_v3_preservation_manifest(repo_root)
     mismatches = []
     for path, digest in sorted(manifest.items()):
@@ -338,6 +164,40 @@ def verify_v3_preservation(repo_root: Path, manifest: Mapping[str, str]) -> Dict
     }
 
 
+def summarize_top1_records(
+    rows: Iterable[Mapping[str, Any]],
+    *,
+    expected_row_field: str,
+    predicted_row_field: str,
+    predicted_action_field: str,
+    expected_action_field: str,
+) -> dict[str, Any]:
+    total = 0
+    row_correct = 0
+    action_correct = 0
+    same_action_wrong_row = 0
+    for row in rows:
+        expected_row = row.get(expected_row_field)
+        predicted_row = row.get(predicted_row_field)
+        expected_action = row.get(expected_action_field)
+        predicted_action = row.get(predicted_action_field)
+        if not expected_row or not predicted_row or not expected_action or not predicted_action:
+            continue
+        total += 1
+        row_ok = predicted_row == expected_row
+        action_ok = predicted_action == expected_action
+        row_correct += int(row_ok)
+        action_correct += int(action_ok)
+        same_action_wrong_row += int((not row_ok) and action_ok)
+    return {
+        "observation_count": total,
+        "row_top1_accuracy": None if total == 0 else row_correct / float(total),
+        "action_top1_accuracy": None if total == 0 else action_correct / float(total),
+        "same_action_wrong_row_count": same_action_wrong_row,
+        "raw_action_gap": None if total == 0 else (action_correct - row_correct) / float(total),
+    }
+
+
 def classify_score_evidence(
     *,
     full_vector: bool,
@@ -346,7 +206,7 @@ def classify_score_evidence(
     top1_only: bool,
     aggregate_only: bool,
     reproducible: bool,
-) -> Tuple[str, str, str]:
+) -> tuple[str, str, str]:
     if full_vector:
         return ("stored_original_scores", "stored_original_scores", "stored_original_scores")
     if full_ranking:
@@ -371,7 +231,7 @@ def replay_eligibility(
     frame_order_available: bool,
     executed_actions_available: bool,
     recommended_actions_available: bool,
-) -> Tuple[bool, Tuple[str, ...]]:
+) -> tuple[bool, tuple[str, ...]]:
     reasons = []
     if not frame_order_available:
         reasons.append("missing_sequence_order")
@@ -381,3 +241,60 @@ def replay_eligibility(
         reasons.append("recommended_action_is_not_executed_action")
     return (len(reasons) == 0, tuple(reasons))
 
+
+class ScoreVectorAvailability(dict):
+    pass
+
+
+class SequenceReplayAvailability(dict):
+    pass
+
+
+class HistoricalProviderEvidence(dict):
+    pass
+
+
+class MetricVerificationRecord(dict):
+    pass
+
+
+class PolicyRowActionMapEntry(dict):
+    pass
+
+
+class EvidenceInventory(dict):
+    pass
+
+
+__all__ = [
+    "VIDEO_ACTION_EQUIVALENCE_AUDIT_VERSION",
+    "VIDEO_ACTION_SET_DECISION_VERSION",
+    "VIDEO_POLICY_REACHABILITY_TILE_VERSION",
+    "VIDEO_REACHABILITY_REPLAY_VERSION",
+    "VIDEO_RETROSPECTIVE_EVIDENCE_CLOSURE_VERSION",
+    "VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION",
+    "VIDEO_ROW_SET_CONFORMAL_VERSION",
+    "VIDEO_TILE_COMPOSITION_TRACE_VERSION",
+    "EvidenceInventory",
+    "HistoricalProviderEvidence",
+    "MetricVerificationRecord",
+    "PolicyRowActionMapEntry",
+    "ScoreVectorAvailability",
+    "SequenceReplayAvailability",
+    "_file_sha256",
+    "_json_ready",
+    "_load_csv",
+    "_load_json",
+    "_load_jsonl",
+    "_sha256",
+    "_write_csv",
+    "_write_json",
+    "_write_markdown",
+    "build_policy_row_action_map",
+    "classify_score_evidence",
+    "collect_v3_preservation_manifest",
+    "policy_action_for_row",
+    "replay_eligibility",
+    "summarize_top1_records",
+    "verify_v3_preservation",
+]

@@ -1,0 +1,8 @@
+{
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "source_action_pair_count": 448,
+  "status_counts": {
+    "known_reachable_set": 448
+  },
+  "tile_version": "zeromodel-video-policy-reachability-tile/v1"
+}

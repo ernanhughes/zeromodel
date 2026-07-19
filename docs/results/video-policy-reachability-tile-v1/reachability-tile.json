@@ -1,0 +1,5016 @@
+{
+  "action_universe": [
+    "LEFT",
+    "RIGHT",
+    "STAY",
+    "FIRE"
+  ],
+  "edges": [
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=0|target=1|cooldown=1",
+        "tank=0|target=2|cooldown=1",
+        "tank=0|target=3|cooldown=1",
+        "tank=0|target=4|cooldown=1",
+        "tank=0|target=5|cooldown=1",
+        "tank=0|target=6|cooldown=1",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=0|target=1|cooldown=1",
+        "tank=0|target=2|cooldown=1",
+        "tank=0|target=3|cooldown=1",
+        "tank=0|target=4|cooldown=1",
+        "tank=0|target=5|cooldown=1",
+        "tank=0|target=6|cooldown=1",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=0|target=1|cooldown=1",
+        "tank=0|target=2|cooldown=1",
+        "tank=0|target=3|cooldown=1",
+        "tank=0|target=4|cooldown=1",
+        "tank=0|target=5|cooldown=1",
+        "tank=0|target=6|cooldown=1",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=0|target=1|cooldown=1",
+        "tank=0|target=2|cooldown=1",
+        "tank=0|target=3|cooldown=1",
+        "tank=0|target=4|cooldown=1",
+        "tank=0|target=5|cooldown=1",
+        "tank=0|target=6|cooldown=1",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=0|target=0|cooldown=1",
+        "tank=1|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=0|target=1|cooldown=1",
+        "tank=1|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=0|target=2|cooldown=1",
+        "tank=1|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=0|target=3|cooldown=1",
+        "tank=1|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=0|target=4|cooldown=1",
+        "tank=1|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=0|target=5|cooldown=1",
+        "tank=1|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=0|target=6|cooldown=1",
+        "tank=1|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=0|target=none|cooldown=1",
+        "tank=1|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=0|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=2|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=1|target=2|cooldown=1",
+        "tank=1|target=3|cooldown=1",
+        "tank=1|target=4|cooldown=1",
+        "tank=1|target=5|cooldown=1",
+        "tank=1|target=6|cooldown=1",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=1|target=2|cooldown=1",
+        "tank=1|target=3|cooldown=1",
+        "tank=1|target=4|cooldown=1",
+        "tank=1|target=5|cooldown=1",
+        "tank=1|target=6|cooldown=1",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=1|target=2|cooldown=1",
+        "tank=1|target=3|cooldown=1",
+        "tank=1|target=4|cooldown=1",
+        "tank=1|target=5|cooldown=1",
+        "tank=1|target=6|cooldown=1",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=0|cooldown=1",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=1|target=2|cooldown=1",
+        "tank=1|target=3|cooldown=1",
+        "tank=1|target=4|cooldown=1",
+        "tank=1|target=5|cooldown=1",
+        "tank=1|target=6|cooldown=1",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=0",
+        "tank=1|target=1|cooldown=1",
+        "tank=2|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=0",
+        "tank=1|target=2|cooldown=1",
+        "tank=2|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=0",
+        "tank=1|target=3|cooldown=1",
+        "tank=2|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=0",
+        "tank=1|target=4|cooldown=1",
+        "tank=2|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=0",
+        "tank=1|target=5|cooldown=1",
+        "tank=2|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=0",
+        "tank=1|target=6|cooldown=1",
+        "tank=2|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=0|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=0",
+        "tank=1|target=none|cooldown=1",
+        "tank=2|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=1|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=3|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=0",
+        "tank=2|target=1|cooldown=1",
+        "tank=3|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=2|target=1|cooldown=1",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=2|target=3|cooldown=1",
+        "tank=2|target=4|cooldown=1",
+        "tank=2|target=5|cooldown=1",
+        "tank=2|target=6|cooldown=1",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=2|target=1|cooldown=1",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=2|target=3|cooldown=1",
+        "tank=2|target=4|cooldown=1",
+        "tank=2|target=5|cooldown=1",
+        "tank=2|target=6|cooldown=1",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=2|target=1|cooldown=1",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=2|target=3|cooldown=1",
+        "tank=2|target=4|cooldown=1",
+        "tank=2|target=5|cooldown=1",
+        "tank=2|target=6|cooldown=1",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=0|cooldown=1",
+        "tank=2|target=1|cooldown=1",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=2|target=3|cooldown=1",
+        "tank=2|target=4|cooldown=1",
+        "tank=2|target=5|cooldown=1",
+        "tank=2|target=6|cooldown=1",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=0",
+        "tank=2|target=2|cooldown=1",
+        "tank=3|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=0",
+        "tank=2|target=3|cooldown=1",
+        "tank=3|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=0",
+        "tank=2|target=4|cooldown=1",
+        "tank=3|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=0",
+        "tank=2|target=5|cooldown=1",
+        "tank=3|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=0",
+        "tank=2|target=6|cooldown=1",
+        "tank=3|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=1|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=0",
+        "tank=2|target=none|cooldown=1",
+        "tank=3|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=2|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=4|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=0",
+        "tank=3|target=1|cooldown=1",
+        "tank=4|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=0",
+        "tank=3|target=2|cooldown=1",
+        "tank=4|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=3|target=1|cooldown=1",
+        "tank=3|target=2|cooldown=1",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=3|target=4|cooldown=1",
+        "tank=3|target=5|cooldown=1",
+        "tank=3|target=6|cooldown=1",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=3|target=1|cooldown=1",
+        "tank=3|target=2|cooldown=1",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=3|target=4|cooldown=1",
+        "tank=3|target=5|cooldown=1",
+        "tank=3|target=6|cooldown=1",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=3|target=1|cooldown=1",
+        "tank=3|target=2|cooldown=1",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=3|target=4|cooldown=1",
+        "tank=3|target=5|cooldown=1",
+        "tank=3|target=6|cooldown=1",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=0|cooldown=1",
+        "tank=3|target=1|cooldown=1",
+        "tank=3|target=2|cooldown=1",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=3|target=4|cooldown=1",
+        "tank=3|target=5|cooldown=1",
+        "tank=3|target=6|cooldown=1",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=0",
+        "tank=3|target=3|cooldown=1",
+        "tank=4|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=0",
+        "tank=3|target=4|cooldown=1",
+        "tank=4|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=0",
+        "tank=3|target=5|cooldown=1",
+        "tank=4|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=6|cooldown=1",
+        "tank=4|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=2|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=0",
+        "tank=3|target=none|cooldown=1",
+        "tank=4|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=3|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=5|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=0",
+        "tank=4|target=1|cooldown=1",
+        "tank=5|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=0",
+        "tank=4|target=2|cooldown=1",
+        "tank=5|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=0",
+        "tank=4|target=3|cooldown=1",
+        "tank=5|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=4|target=1|cooldown=1",
+        "tank=4|target=2|cooldown=1",
+        "tank=4|target=3|cooldown=1",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=4|target=5|cooldown=1",
+        "tank=4|target=6|cooldown=1",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=4|target=1|cooldown=1",
+        "tank=4|target=2|cooldown=1",
+        "tank=4|target=3|cooldown=1",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=4|target=5|cooldown=1",
+        "tank=4|target=6|cooldown=1",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=4|target=1|cooldown=1",
+        "tank=4|target=2|cooldown=1",
+        "tank=4|target=3|cooldown=1",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=4|target=5|cooldown=1",
+        "tank=4|target=6|cooldown=1",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=0|cooldown=1",
+        "tank=4|target=1|cooldown=1",
+        "tank=4|target=2|cooldown=1",
+        "tank=4|target=3|cooldown=1",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=4|target=5|cooldown=1",
+        "tank=4|target=6|cooldown=1",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=0",
+        "tank=4|target=4|cooldown=1",
+        "tank=5|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=0",
+        "tank=4|target=5|cooldown=1",
+        "tank=5|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=0",
+        "tank=4|target=6|cooldown=1",
+        "tank=5|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=3|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=0",
+        "tank=4|target=none|cooldown=1",
+        "tank=5|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=4|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=6|target=0|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=0",
+        "tank=5|target=1|cooldown=1",
+        "tank=6|target=1|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=0",
+        "tank=5|target=2|cooldown=1",
+        "tank=6|target=2|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=0",
+        "tank=5|target=3|cooldown=1",
+        "tank=6|target=3|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=0",
+        "tank=5|target=4|cooldown=1",
+        "tank=6|target=4|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=5|target=1|cooldown=1",
+        "tank=5|target=2|cooldown=1",
+        "tank=5|target=3|cooldown=1",
+        "tank=5|target=4|cooldown=1",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=5|target=6|cooldown=1",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=5|target=1|cooldown=1",
+        "tank=5|target=2|cooldown=1",
+        "tank=5|target=3|cooldown=1",
+        "tank=5|target=4|cooldown=1",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=5|target=6|cooldown=1",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=5|target=1|cooldown=1",
+        "tank=5|target=2|cooldown=1",
+        "tank=5|target=3|cooldown=1",
+        "tank=5|target=4|cooldown=1",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=5|target=6|cooldown=1",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=0|cooldown=1",
+        "tank=5|target=1|cooldown=1",
+        "tank=5|target=2|cooldown=1",
+        "tank=5|target=3|cooldown=1",
+        "tank=5|target=4|cooldown=1",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=5|target=6|cooldown=1",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=0",
+        "tank=5|target=5|cooldown=1",
+        "tank=6|target=5|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=0",
+        "tank=5|target=6|cooldown=1",
+        "tank=6|target=6|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=4|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=0",
+        "tank=5|target=none|cooldown=1",
+        "tank=6|target=none|cooldown=0"
+      ],
+      "source_row_id": "tank=5|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=0",
+        "tank=6|target=0|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=0|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=0",
+        "tank=6|target=1|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=1|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=0",
+        "tank=6|target=2|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=2|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=0",
+        "tank=6|target=3|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=3|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=0",
+        "tank=6|target=4|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=4|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=0",
+        "tank=6|target=5|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=5|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=0|cooldown=1",
+        "tank=6|target=1|cooldown=1",
+        "tank=6|target=2|cooldown=1",
+        "tank=6|target=3|cooldown=1",
+        "tank=6|target=4|cooldown=1",
+        "tank=6|target=5|cooldown=1",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=0|cooldown=1",
+        "tank=6|target=1|cooldown=1",
+        "tank=6|target=2|cooldown=1",
+        "tank=6|target=3|cooldown=1",
+        "tank=6|target=4|cooldown=1",
+        "tank=6|target=5|cooldown=1",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=0|cooldown=1",
+        "tank=6|target=1|cooldown=1",
+        "tank=6|target=2|cooldown=1",
+        "tank=6|target=3|cooldown=1",
+        "tank=6|target=4|cooldown=1",
+        "tank=6|target=5|cooldown=1",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=0|cooldown=1",
+        "tank=6|target=1|cooldown=1",
+        "tank=6|target=2|cooldown=1",
+        "tank=6|target=3|cooldown=1",
+        "tank=6|target=4|cooldown=1",
+        "tank=6|target=5|cooldown=1",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=0",
+        "tank=6|target=6|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=6|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=0",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "LEFT",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "RIGHT",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "STAY",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    },
+    {
+      "action_id": "FIRE",
+      "reachable_row_ids": [
+        "tank=5|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=0",
+        "tank=6|target=none|cooldown=1"
+      ],
+      "source_row_id": "tank=6|target=none|cooldown=1",
+      "status": "known_reachable_set"
+    }
+  ],
+  "gap_semantics": {
+    "maximum_frame_gap": 2,
+    "transition_scope": "row_union_over_actions"
+  },
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "row_universe_size": 112,
+  "source_action_pair_count": 448,
+  "tile_digest": "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df",
+  "tile_version": "zeromodel-video-policy-reachability-tile/v1",
+  "unknown_transition_semantics": "row-union transition scope without action-conditioned branching"
+}

@@ -1,0 +1,31 @@
+{
+  "audit_version": "zeromodel-video-action-equivalence-audit/v1",
+  "digest": "sha256:5a377efeaf9727b668ba7e55ca6421abbb5ba70bd23afbbb283711b3eb217bc4",
+  "results": [
+    {
+      "mode": "per_observation_top1_rescore",
+      "provider_id": "system-b-v2",
+      "status": "supported"
+    },
+    {
+      "mode": "per_observation_top1_rescore",
+      "provider_id": "r1-local-correlation",
+      "status": "supported"
+    },
+    {
+      "mode": "not_supported",
+      "provider_id": "stage3-v1",
+      "status": "not_supported"
+    },
+    {
+      "mode": "canonical_diagnostic_rescore",
+      "provider_id": "stage3-v2",
+      "status": "supported"
+    },
+    {
+      "mode": "canonical_diagnostic_rescore",
+      "provider_id": "stage3-v3-b3",
+      "status": "supported"
+    }
+  ]
+}

@@ -6,32 +6,59 @@ from pathlib import Path
 import pytest
 
 import zeromodel.video_action_set_benchmark as benchmark
+from zeromodel.video_complete_row_evidence import build_complete_row_evidence, build_semantic_top_set_outcome
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_instrument_audits_and_verification(tmp_path: Path) -> None:
-    benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
-    fake_provider_rows = [
+def _fake_provider_rows() -> list[dict[str, object]]:
+    policy = benchmark.compile_policy_artifact()
+    lookup = benchmark.VPMPolicyLookup(policy, action_metric_ids=benchmark.ACTIONS)
+    row_ids = [str(row_id) for row_id in policy.source.row_ids]
+    row_actions = {row_id: lookup.choose(row_id) for row_id in row_ids}
+    evidence = build_complete_row_evidence(
+        row_scores=[(row_id, 1.0) for row_id in row_ids],
+        policy_artifact_id=policy.artifact_id,
+        provider_id="P1",
+        provider_version=benchmark.PROSPECTIVE_P1_VERSION,
+        policy_row_ids=row_ids,
+    )
+    outcome = build_semantic_top_set_outcome(evidence=evidence, row_action=row_actions)
+    return [
         {
             "frame_id": "frame-001",
             "provider_id": "P1",
-            "all_112_row_ids": [f"row-{index:03d}" for index in range(112)],
+            "provider_version": benchmark.PROSPECTIVE_P1_VERSION,
+            "policy_artifact_id": policy.artifact_id,
+            "all_112_row_ids": row_ids,
             "all_112_raw_scores": [1.0] * 112,
             "all_112_quantized_scores": [1_000_000] * 112,
-            "complete_ordered_ranking": [f"row-{index:03d}" for index in range(112)],
-            "tie_groups": [{"tie_group_index": 0, "quantized_score": 1_000_000, "row_ids": [f"row-{index:03d}" for index in range(112)]}],
-            "winner_row": "row-000",
-            "winner_action": "left",
-            "winner_quantized_score": 1_000_000,
-            "runner_up_row": "row-001",
+            "complete_ordered_ranking": list(evidence.ranking.ranked_row_ids),
+            "tie_groups": [group.to_dict() for group in evidence.ranking.tie_groups],
+            "semantic_top_set_outcome": outcome.to_dict(),
+            "semantic_status": outcome.status,
+            "resolved_row": outcome.resolved_row_id,
+            "resolved_action": outcome.resolved_action_id,
+            "top_quantized_score": outcome.top_quantized_score,
+            "top_row_ids": list(outcome.top_row_ids),
+            "top_action_ids": list(outcome.top_action_ids),
+            "semantic_outcome_digest": outcome.semantic_outcome_digest,
+            "winner_row": outcome.resolved_row_id,
+            "winner_action": outcome.resolved_action_id,
+            "winner_quantized_score": None,
+            "runner_up_row": evidence.ranking.ranked_row_ids[1],
             "runner_up_quantized_score": 1_000_000,
-            "score_vector_digest": "sha256:test",
-            "ranking_digest": "sha256:test",
+            "score_vector_digest": evidence.score_vector_digest,
+            "ranking_digest": evidence.ranking.to_dict()["ranking_digest"],
             "provider_diagnostics": {},
         }
     ]
+
+
+def test_instrument_audits_and_verification(tmp_path: Path) -> None:
+    benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
+    fake_provider_rows = _fake_provider_rows()
     monkeypatch = pytest.MonkeyPatch()
     fake_records = [
         {
@@ -47,6 +74,7 @@ def test_instrument_audits_and_verification(tmp_path: Path) -> None:
             "actual_executed_action": "left",
             "action_known": True,
             "gap_declaration": None,
+            "metadata": {"episode_seed": 1, "seed_digest": "sha256:test", "reachability_trace": {"reachable_row_ids": ["row-000"]}},
             "pixels": [[0]],
         }
     ]
@@ -82,3 +110,43 @@ def test_instrument_audits_and_verification(tmp_path: Path) -> None:
     assert not (tmp_path / "selected-method.json").exists()
     assert not (tmp_path / "reachability-replay.json").exists()
     assert not (tmp_path / "final-results.json").exists()
+def test_mutation_gate_detects_protected_field_changes(tmp_path: Path) -> None:
+    benchmark._write_json(
+        tmp_path / "final-split-sealed-plan.json",
+        {
+            "sealed_episode_ids": {
+                "valid": ["final:valid:abc"],
+                "frame_invalid": [],
+                "temporal_negative": [],
+                "information_control": [],
+            }
+        },
+    )
+    frame_row = {
+        "split": "selection",
+        "episode_id": "selection:valid:abc",
+        "frame_id": "selection:valid:abc:frame-00",
+        "sequence_number": 0,
+        "actual_executed_action": "LEFT",
+        "episode_seed": 1,
+        "metadata": {
+            "episode_seed": 1,
+            "frame_transform_seed": 2,
+            "reachability_trace": {"reachable_row_ids": ["row-000", "row-001"]},
+        },
+    }
+    evidence_row = {
+        "split": "selection",
+        "episode_id": "selection:valid:abc",
+        "all_112_row_ids": [f"row-{index:03d}" for index in range(112)],
+        "all_112_quantized_scores": [1000] * 112,
+        "tie_groups": [{"row_ids": [f"row-{index:03d}" for index in range(2)]}],
+        "winner_action": "LEFT",
+        "score_vector_digest": "sha256:test",
+        "metadata": {"observation_pixel_digest": "sha256:obs"},
+        "episode_seed": 1,
+    }
+    for split in ("development", "calibration", "selection"):
+        benchmark._write_jsonl(tmp_path / split / "frame-metadata.jsonl", [frame_row])
+        benchmark._write_jsonl(tmp_path / split / "provider-evidence.jsonl", [evidence_row])
+    assert benchmark._run_adversarial_mutation_checks(tmp_path) == []

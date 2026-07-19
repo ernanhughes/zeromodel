@@ -425,3 +425,76 @@ def test_laundered_stale_repeat_operation_removal_is_rejected() -> None:
     assert mutated["observation_pixel_digest"] == stale["metadata"]["stale_repeat"]["replacement_digest"]
     assert original_digest != mutated["observation_pixel_digest"]
     assert benchmark.validate_observation_operation_chain(mutated) == "final_observation_provenance_mismatch"
+
+
+def test_conflicting_splice_final_visible_targets_imply_distinct_actions() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    splice_records = [record for record in records if record["family"] == "conflicting_action_splice"]
+    assert splice_records
+    for record in splice_records:
+        replay = benchmark.replay_observation_operation_chain(record["metadata"]["observation_operation_chain"])
+        evidence = benchmark._final_visible_target_action_evidence(replay["pixels"], row_actions)
+        trace = record["metadata"]["family_intervention_trace"]
+        assert evidence["conflicting_action_evidence_present"] is True
+        assert len(evidence["visible_action_set"]) >= 2
+        assert trace["visible_action_evidence_digest"] == evidence["visible_action_evidence_digest"]
+
+
+def test_action_unanimous_two_target_splice_is_rejected() -> None:
+    _identity, row_ids, row_actions = _identity_rows_actions()
+    primary = "tank=0|target=1|cooldown=0"
+    secondary = "tank=2|target=2|cooldown=0"
+    assert row_actions[primary] != row_actions[secondary]
+    assert benchmark._splice_pair_has_final_visible_action_conflict(primary, secondary, row_actions) is False
+
+    with pytest.raises(VPMValidationError, match="final visible target evidence"):
+        benchmark._apply_conflicting_splice(
+            primary_pixels=benchmark._render_row_frame(primary),
+            secondary_pixels=benchmark._render_row_frame(secondary),
+            primary_row_id=primary,
+            secondary_row_id=secondary,
+            primary_action_id=row_actions[primary],
+            secondary_action_id=row_actions[secondary],
+            mask_manifest=benchmark._splice_mask_manifest(),
+        )
+
+
+def test_exact_frame_disposition_reconstruction_for_temporal_families() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    tile = benchmark._load_reachability_tile(REPO_ROOT)
+    plans = [plan for plan in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions) if plan["family_label"] == "temporal_negative"]
+    by_kind = {plan["mutation_kind"]: plan for plan in plans}
+    expected_specific = {
+        "reordered_frames": "temporally_reordered_frame_payload",
+        "stale_repeated_frame": "stale_repeated_frame_payload",
+        "impossible_transition": "unreachable_destination_frame_payload",
+        "declared_gap_or_unknown_action": "declared_gap_or_unknown_action",
+    }
+    for kind, plan in by_kind.items():
+        records = benchmark._materialize_plan(plan, identity, tile)
+        intervention = plan["family_intervention"]
+        reconstructed = [
+            benchmark.expected_frame_disposition("temporal_negative", kind, int(record["sequence_number"]), intervention)
+            for record in records
+        ]
+        assert [record["frame_disposition"] for record in records] == reconstructed
+        assert expected_specific[kind] in reconstructed
+
+
+@pytest.mark.slow
+def test_bounded_transformed_valid_universe_closes_frame_invalid_outputs() -> None:
+    universe = benchmark.valid_observation_universe()
+    transformed = benchmark._valid_transformed_observation_digest_index()
+    canonical = set(benchmark.canonical_observation_universe()["digest_to_rows"])
+    transformed_only = set(transformed["digest_index"]) - canonical
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    invalid = [record for record in records if record["expected_disposition"] == "distinguishable_invalid_input"]
+
+    assert universe["parameter_universe_count"] == 8640
+    assert universe["transformed_valid_output_count"] == 112 * 8640
+    assert universe["transformed_valid_digest_count"] == len(transformed["digest_index"])
+    assert universe["policy_artifact_id"] == benchmark.compile_policy_artifact().artifact_id
+    assert universe["renderer_identity"]["renderer_identity_digest"].startswith("sha256:")
+    assert all(record["observation_pixel_digest"] not in canonical for record in invalid)
+    assert all(record["observation_pixel_digest"] not in transformed_only for record in invalid)

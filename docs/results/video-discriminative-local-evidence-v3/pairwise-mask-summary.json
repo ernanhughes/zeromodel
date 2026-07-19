@@ -1,0 +1,11 @@
+{
+  "candidate_mask_count": 112,
+  "different_action_pair_count": 4263,
+  "maximum_pairwise_mass": 22,
+  "minimum_nonzero_pairwise_mass": 2,
+  "nonzero_pairwise_mask_count": 6216,
+  "pairwise_mask_count": 6216,
+  "pairwise_mask_digest": "sha256:add3ebef070672b796653c51c529fc67a5a2b9e9bb1d6b9cded82352b78ce585",
+  "same_action_pair_count": 1953,
+  "zero_mass_pair_count": 0
+}

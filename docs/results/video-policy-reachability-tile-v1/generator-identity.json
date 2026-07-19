@@ -1,0 +1,17 @@
+{
+  "gap_semantics": {
+    "maximum_frame_gap": 2,
+    "transition_scope": "row_union_over_actions"
+  },
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "state_factor_schema": [
+    "tank",
+    "target",
+    "cooldown"
+  ],
+  "tile_version": "zeromodel-video-policy-reachability-tile/v1",
+  "transition_semantics_version": "sha256:1d2424f19655f96ef701842a001ddd7788f9b4c5f5b2f1c45ff5b87ea354e9ce",
+  "transition_source_digest": "sha256:f08c3ee8813b45c5e594d852ccb00098a068184f9c57cd7d767fa5fba78a5148",
+  "transition_source_path": "examples/arcade_visual_video_baseline.py",
+  "unknown_transition_semantics": "row-union transition scope without action-conditioned branching"
+}

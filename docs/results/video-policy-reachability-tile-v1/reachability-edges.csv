@@ -1,0 +1,449 @@
+action_id,reachable_row_count,reachable_row_ids,source_row_id,status
+LEFT,10,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=0|target=1|cooldown=1"", ""tank=0|target=2|cooldown=1"", ""tank=0|target=3|cooldown=1"", ""tank=0|target=4|cooldown=1"", ""tank=0|target=5|cooldown=1"", ""tank=0|target=6|cooldown=1"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=0,known_reachable_set
+RIGHT,10,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=0|target=1|cooldown=1"", ""tank=0|target=2|cooldown=1"", ""tank=0|target=3|cooldown=1"", ""tank=0|target=4|cooldown=1"", ""tank=0|target=5|cooldown=1"", ""tank=0|target=6|cooldown=1"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=0,known_reachable_set
+STAY,10,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=0|target=1|cooldown=1"", ""tank=0|target=2|cooldown=1"", ""tank=0|target=3|cooldown=1"", ""tank=0|target=4|cooldown=1"", ""tank=0|target=5|cooldown=1"", ""tank=0|target=6|cooldown=1"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=0,known_reachable_set
+FIRE,10,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=0|target=1|cooldown=1"", ""tank=0|target=2|cooldown=1"", ""tank=0|target=3|cooldown=1"", ""tank=0|target=4|cooldown=1"", ""tank=0|target=5|cooldown=1"", ""tank=0|target=6|cooldown=1"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=0|cooldown=0"", ""tank=0|target=0|cooldown=1"", ""tank=1|target=0|cooldown=0""]",tank=0|target=0|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=1|cooldown=0"", ""tank=0|target=1|cooldown=1"", ""tank=1|target=1|cooldown=0""]",tank=0|target=1|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=2|cooldown=0"", ""tank=0|target=2|cooldown=1"", ""tank=1|target=2|cooldown=0""]",tank=0|target=2|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=3|cooldown=0"", ""tank=0|target=3|cooldown=1"", ""tank=1|target=3|cooldown=0""]",tank=0|target=3|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=4|cooldown=0"", ""tank=0|target=4|cooldown=1"", ""tank=1|target=4|cooldown=0""]",tank=0|target=4|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=5|cooldown=0"", ""tank=0|target=5|cooldown=1"", ""tank=1|target=5|cooldown=0""]",tank=0|target=5|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=6|cooldown=0"", ""tank=0|target=6|cooldown=1"", ""tank=1|target=6|cooldown=0""]",tank=0|target=6|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=0,known_reachable_set
+STAY,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=1,known_reachable_set
+STAY,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=0|target=none|cooldown=0"", ""tank=0|target=none|cooldown=1"", ""tank=1|target=none|cooldown=0""]",tank=0|target=none|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=0|cooldown=0"", ""tank=1|target=0|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=2|target=0|cooldown=0""]",tank=1|target=0|cooldown=1,known_reachable_set
+LEFT,11,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=1|target=2|cooldown=1"", ""tank=1|target=3|cooldown=1"", ""tank=1|target=4|cooldown=1"", ""tank=1|target=5|cooldown=1"", ""tank=1|target=6|cooldown=1"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=0,known_reachable_set
+RIGHT,11,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=1|target=2|cooldown=1"", ""tank=1|target=3|cooldown=1"", ""tank=1|target=4|cooldown=1"", ""tank=1|target=5|cooldown=1"", ""tank=1|target=6|cooldown=1"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=0,known_reachable_set
+STAY,11,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=1|target=2|cooldown=1"", ""tank=1|target=3|cooldown=1"", ""tank=1|target=4|cooldown=1"", ""tank=1|target=5|cooldown=1"", ""tank=1|target=6|cooldown=1"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=0,known_reachable_set
+FIRE,11,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=0|cooldown=1"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=1|target=2|cooldown=1"", ""tank=1|target=3|cooldown=1"", ""tank=1|target=4|cooldown=1"", ""tank=1|target=5|cooldown=1"", ""tank=1|target=6|cooldown=1"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=1|cooldown=0"", ""tank=1|target=1|cooldown=0"", ""tank=1|target=1|cooldown=1"", ""tank=2|target=1|cooldown=0""]",tank=1|target=1|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=2|cooldown=0"", ""tank=1|target=2|cooldown=0"", ""tank=1|target=2|cooldown=1"", ""tank=2|target=2|cooldown=0""]",tank=1|target=2|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=3|cooldown=0"", ""tank=1|target=3|cooldown=0"", ""tank=1|target=3|cooldown=1"", ""tank=2|target=3|cooldown=0""]",tank=1|target=3|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=4|cooldown=0"", ""tank=1|target=4|cooldown=0"", ""tank=1|target=4|cooldown=1"", ""tank=2|target=4|cooldown=0""]",tank=1|target=4|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=5|cooldown=0"", ""tank=1|target=5|cooldown=0"", ""tank=1|target=5|cooldown=1"", ""tank=2|target=5|cooldown=0""]",tank=1|target=5|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=6|cooldown=0"", ""tank=1|target=6|cooldown=0"", ""tank=1|target=6|cooldown=1"", ""tank=2|target=6|cooldown=0""]",tank=1|target=6|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=0,known_reachable_set
+STAY,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=1,known_reachable_set
+STAY,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=0|target=none|cooldown=0"", ""tank=1|target=none|cooldown=0"", ""tank=1|target=none|cooldown=1"", ""tank=2|target=none|cooldown=0""]",tank=1|target=none|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=0|cooldown=0"", ""tank=2|target=0|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=3|target=0|cooldown=0""]",tank=2|target=0|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=1|cooldown=0"", ""tank=2|target=1|cooldown=0"", ""tank=2|target=1|cooldown=1"", ""tank=3|target=1|cooldown=0""]",tank=2|target=1|cooldown=1,known_reachable_set
+LEFT,11,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=2|target=1|cooldown=1"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=2|target=3|cooldown=1"", ""tank=2|target=4|cooldown=1"", ""tank=2|target=5|cooldown=1"", ""tank=2|target=6|cooldown=1"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=0,known_reachable_set
+RIGHT,11,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=2|target=1|cooldown=1"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=2|target=3|cooldown=1"", ""tank=2|target=4|cooldown=1"", ""tank=2|target=5|cooldown=1"", ""tank=2|target=6|cooldown=1"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=0,known_reachable_set
+STAY,11,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=2|target=1|cooldown=1"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=2|target=3|cooldown=1"", ""tank=2|target=4|cooldown=1"", ""tank=2|target=5|cooldown=1"", ""tank=2|target=6|cooldown=1"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=0,known_reachable_set
+FIRE,11,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=0|cooldown=1"", ""tank=2|target=1|cooldown=1"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=2|target=3|cooldown=1"", ""tank=2|target=4|cooldown=1"", ""tank=2|target=5|cooldown=1"", ""tank=2|target=6|cooldown=1"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=2|cooldown=0"", ""tank=2|target=2|cooldown=0"", ""tank=2|target=2|cooldown=1"", ""tank=3|target=2|cooldown=0""]",tank=2|target=2|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=3|cooldown=0"", ""tank=2|target=3|cooldown=0"", ""tank=2|target=3|cooldown=1"", ""tank=3|target=3|cooldown=0""]",tank=2|target=3|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=4|cooldown=0"", ""tank=2|target=4|cooldown=0"", ""tank=2|target=4|cooldown=1"", ""tank=3|target=4|cooldown=0""]",tank=2|target=4|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=5|cooldown=0"", ""tank=2|target=5|cooldown=0"", ""tank=2|target=5|cooldown=1"", ""tank=3|target=5|cooldown=0""]",tank=2|target=5|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=6|cooldown=0"", ""tank=2|target=6|cooldown=0"", ""tank=2|target=6|cooldown=1"", ""tank=3|target=6|cooldown=0""]",tank=2|target=6|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=0,known_reachable_set
+STAY,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=1,known_reachable_set
+STAY,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=1|target=none|cooldown=0"", ""tank=2|target=none|cooldown=0"", ""tank=2|target=none|cooldown=1"", ""tank=3|target=none|cooldown=0""]",tank=2|target=none|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=0|cooldown=0"", ""tank=3|target=0|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=4|target=0|cooldown=0""]",tank=3|target=0|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=1|cooldown=0"", ""tank=3|target=1|cooldown=0"", ""tank=3|target=1|cooldown=1"", ""tank=4|target=1|cooldown=0""]",tank=3|target=1|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=2|cooldown=0"", ""tank=3|target=2|cooldown=0"", ""tank=3|target=2|cooldown=1"", ""tank=4|target=2|cooldown=0""]",tank=3|target=2|cooldown=1,known_reachable_set
+LEFT,11,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=3|target=1|cooldown=1"", ""tank=3|target=2|cooldown=1"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=3|target=4|cooldown=1"", ""tank=3|target=5|cooldown=1"", ""tank=3|target=6|cooldown=1"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=0,known_reachable_set
+RIGHT,11,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=3|target=1|cooldown=1"", ""tank=3|target=2|cooldown=1"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=3|target=4|cooldown=1"", ""tank=3|target=5|cooldown=1"", ""tank=3|target=6|cooldown=1"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=0,known_reachable_set
+STAY,11,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=3|target=1|cooldown=1"", ""tank=3|target=2|cooldown=1"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=3|target=4|cooldown=1"", ""tank=3|target=5|cooldown=1"", ""tank=3|target=6|cooldown=1"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=0,known_reachable_set
+FIRE,11,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=0|cooldown=1"", ""tank=3|target=1|cooldown=1"", ""tank=3|target=2|cooldown=1"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=3|target=4|cooldown=1"", ""tank=3|target=5|cooldown=1"", ""tank=3|target=6|cooldown=1"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=3|cooldown=0"", ""tank=3|target=3|cooldown=0"", ""tank=3|target=3|cooldown=1"", ""tank=4|target=3|cooldown=0""]",tank=3|target=3|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=4|cooldown=0"", ""tank=3|target=4|cooldown=0"", ""tank=3|target=4|cooldown=1"", ""tank=4|target=4|cooldown=0""]",tank=3|target=4|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=5|cooldown=0"", ""tank=3|target=5|cooldown=0"", ""tank=3|target=5|cooldown=1"", ""tank=4|target=5|cooldown=0""]",tank=3|target=5|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=6|cooldown=0"", ""tank=3|target=6|cooldown=0"", ""tank=3|target=6|cooldown=1"", ""tank=4|target=6|cooldown=0""]",tank=3|target=6|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=0,known_reachable_set
+STAY,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=1,known_reachable_set
+STAY,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=2|target=none|cooldown=0"", ""tank=3|target=none|cooldown=0"", ""tank=3|target=none|cooldown=1"", ""tank=4|target=none|cooldown=0""]",tank=3|target=none|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=0|cooldown=0"", ""tank=4|target=0|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=5|target=0|cooldown=0""]",tank=4|target=0|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=1|cooldown=0"", ""tank=4|target=1|cooldown=0"", ""tank=4|target=1|cooldown=1"", ""tank=5|target=1|cooldown=0""]",tank=4|target=1|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=2|cooldown=0"", ""tank=4|target=2|cooldown=0"", ""tank=4|target=2|cooldown=1"", ""tank=5|target=2|cooldown=0""]",tank=4|target=2|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=3|cooldown=0"", ""tank=4|target=3|cooldown=0"", ""tank=4|target=3|cooldown=1"", ""tank=5|target=3|cooldown=0""]",tank=4|target=3|cooldown=1,known_reachable_set
+LEFT,11,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=4|target=1|cooldown=1"", ""tank=4|target=2|cooldown=1"", ""tank=4|target=3|cooldown=1"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=4|target=5|cooldown=1"", ""tank=4|target=6|cooldown=1"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=0,known_reachable_set
+RIGHT,11,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=4|target=1|cooldown=1"", ""tank=4|target=2|cooldown=1"", ""tank=4|target=3|cooldown=1"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=4|target=5|cooldown=1"", ""tank=4|target=6|cooldown=1"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=0,known_reachable_set
+STAY,11,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=4|target=1|cooldown=1"", ""tank=4|target=2|cooldown=1"", ""tank=4|target=3|cooldown=1"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=4|target=5|cooldown=1"", ""tank=4|target=6|cooldown=1"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=0,known_reachable_set
+FIRE,11,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=0|cooldown=1"", ""tank=4|target=1|cooldown=1"", ""tank=4|target=2|cooldown=1"", ""tank=4|target=3|cooldown=1"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=4|target=5|cooldown=1"", ""tank=4|target=6|cooldown=1"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=4|cooldown=0"", ""tank=4|target=4|cooldown=0"", ""tank=4|target=4|cooldown=1"", ""tank=5|target=4|cooldown=0""]",tank=4|target=4|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=5|cooldown=0"", ""tank=4|target=5|cooldown=0"", ""tank=4|target=5|cooldown=1"", ""tank=5|target=5|cooldown=0""]",tank=4|target=5|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=6|cooldown=0"", ""tank=4|target=6|cooldown=0"", ""tank=4|target=6|cooldown=1"", ""tank=5|target=6|cooldown=0""]",tank=4|target=6|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=0,known_reachable_set
+STAY,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=1,known_reachable_set
+STAY,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=3|target=none|cooldown=0"", ""tank=4|target=none|cooldown=0"", ""tank=4|target=none|cooldown=1"", ""tank=5|target=none|cooldown=0""]",tank=4|target=none|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=0|cooldown=0"", ""tank=5|target=0|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=6|target=0|cooldown=0""]",tank=5|target=0|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=1|cooldown=0"", ""tank=5|target=1|cooldown=0"", ""tank=5|target=1|cooldown=1"", ""tank=6|target=1|cooldown=0""]",tank=5|target=1|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=2|cooldown=0"", ""tank=5|target=2|cooldown=0"", ""tank=5|target=2|cooldown=1"", ""tank=6|target=2|cooldown=0""]",tank=5|target=2|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=3|cooldown=0"", ""tank=5|target=3|cooldown=0"", ""tank=5|target=3|cooldown=1"", ""tank=6|target=3|cooldown=0""]",tank=5|target=3|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=4|cooldown=0"", ""tank=5|target=4|cooldown=0"", ""tank=5|target=4|cooldown=1"", ""tank=6|target=4|cooldown=0""]",tank=5|target=4|cooldown=1,known_reachable_set
+LEFT,11,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=5|target=1|cooldown=1"", ""tank=5|target=2|cooldown=1"", ""tank=5|target=3|cooldown=1"", ""tank=5|target=4|cooldown=1"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=5|target=6|cooldown=1"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=0,known_reachable_set
+RIGHT,11,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=5|target=1|cooldown=1"", ""tank=5|target=2|cooldown=1"", ""tank=5|target=3|cooldown=1"", ""tank=5|target=4|cooldown=1"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=5|target=6|cooldown=1"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=0,known_reachable_set
+STAY,11,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=5|target=1|cooldown=1"", ""tank=5|target=2|cooldown=1"", ""tank=5|target=3|cooldown=1"", ""tank=5|target=4|cooldown=1"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=5|target=6|cooldown=1"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=0,known_reachable_set
+FIRE,11,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=0|cooldown=1"", ""tank=5|target=1|cooldown=1"", ""tank=5|target=2|cooldown=1"", ""tank=5|target=3|cooldown=1"", ""tank=5|target=4|cooldown=1"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=5|target=6|cooldown=1"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=5|cooldown=0"", ""tank=5|target=5|cooldown=0"", ""tank=5|target=5|cooldown=1"", ""tank=6|target=5|cooldown=0""]",tank=5|target=5|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=6|cooldown=0"", ""tank=5|target=6|cooldown=0"", ""tank=5|target=6|cooldown=1"", ""tank=6|target=6|cooldown=0""]",tank=5|target=6|cooldown=1,known_reachable_set
+LEFT,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=0,known_reachable_set
+RIGHT,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=0,known_reachable_set
+STAY,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=0,known_reachable_set
+FIRE,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=0,known_reachable_set
+LEFT,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=1,known_reachable_set
+RIGHT,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=1,known_reachable_set
+STAY,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=1,known_reachable_set
+FIRE,4,"[""tank=4|target=none|cooldown=0"", ""tank=5|target=none|cooldown=0"", ""tank=5|target=none|cooldown=1"", ""tank=6|target=none|cooldown=0""]",tank=5|target=none|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=0|cooldown=0"", ""tank=6|target=0|cooldown=0"", ""tank=6|target=0|cooldown=1""]",tank=6|target=0|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=1|cooldown=0"", ""tank=6|target=1|cooldown=0"", ""tank=6|target=1|cooldown=1""]",tank=6|target=1|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=2|cooldown=0"", ""tank=6|target=2|cooldown=0"", ""tank=6|target=2|cooldown=1""]",tank=6|target=2|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=3|cooldown=0"", ""tank=6|target=3|cooldown=0"", ""tank=6|target=3|cooldown=1""]",tank=6|target=3|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=4|cooldown=0"", ""tank=6|target=4|cooldown=0"", ""tank=6|target=4|cooldown=1""]",tank=6|target=4|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=5|cooldown=0"", ""tank=6|target=5|cooldown=0"", ""tank=6|target=5|cooldown=1""]",tank=6|target=5|cooldown=1,known_reachable_set
+LEFT,10,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=0|cooldown=1"", ""tank=6|target=1|cooldown=1"", ""tank=6|target=2|cooldown=1"", ""tank=6|target=3|cooldown=1"", ""tank=6|target=4|cooldown=1"", ""tank=6|target=5|cooldown=1"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1"", ""tank=6|target=none|cooldown=1""]",tank=6|target=6|cooldown=0,known_reachable_set
+RIGHT,10,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=0|cooldown=1"", ""tank=6|target=1|cooldown=1"", ""tank=6|target=2|cooldown=1"", ""tank=6|target=3|cooldown=1"", ""tank=6|target=4|cooldown=1"", ""tank=6|target=5|cooldown=1"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1"", ""tank=6|target=none|cooldown=1""]",tank=6|target=6|cooldown=0,known_reachable_set
+STAY,10,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=0|cooldown=1"", ""tank=6|target=1|cooldown=1"", ""tank=6|target=2|cooldown=1"", ""tank=6|target=3|cooldown=1"", ""tank=6|target=4|cooldown=1"", ""tank=6|target=5|cooldown=1"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1"", ""tank=6|target=none|cooldown=1""]",tank=6|target=6|cooldown=0,known_reachable_set
+FIRE,10,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=0|cooldown=1"", ""tank=6|target=1|cooldown=1"", ""tank=6|target=2|cooldown=1"", ""tank=6|target=3|cooldown=1"", ""tank=6|target=4|cooldown=1"", ""tank=6|target=5|cooldown=1"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1"", ""tank=6|target=none|cooldown=1""]",tank=6|target=6|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1""]",tank=6|target=6|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1""]",tank=6|target=6|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1""]",tank=6|target=6|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=6|cooldown=0"", ""tank=6|target=6|cooldown=0"", ""tank=6|target=6|cooldown=1""]",tank=6|target=6|cooldown=1,known_reachable_set
+LEFT,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=0,known_reachable_set
+RIGHT,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=0,known_reachable_set
+STAY,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=0,known_reachable_set
+FIRE,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=0,known_reachable_set
+LEFT,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=1,known_reachable_set
+RIGHT,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=1,known_reachable_set
+STAY,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=1,known_reachable_set
+FIRE,3,"[""tank=5|target=none|cooldown=0"", ""tank=6|target=none|cooldown=0"", ""tank=6|target=none|cooldown=1""]",tank=6|target=none|cooldown=1,known_reachable_set

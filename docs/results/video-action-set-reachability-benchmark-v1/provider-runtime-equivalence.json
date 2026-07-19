@@ -1,0 +1,24 @@
+{
+  "mismatching_providers": [],
+  "providers_verified": true,
+  "summary": {
+    "P1": {
+      "digest_mismatch_count": 0,
+      "quantized_mismatch_count": 0,
+      "ranking_mismatch_count": 0,
+      "tie_group_mismatch_count": 0
+    },
+    "P2": {
+      "digest_mismatch_count": 0,
+      "quantized_mismatch_count": 0,
+      "ranking_mismatch_count": 0,
+      "tie_group_mismatch_count": 0
+    },
+    "P3": {
+      "digest_mismatch_count": 0,
+      "quantized_mismatch_count": 0,
+      "ranking_mismatch_count": 0,
+      "tie_group_mismatch_count": 0
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "episode_counts": {
+    "frame_invalid": 56,
+    "information_control": 28,
+    "temporal_negative": 56,
+    "valid": 112
+  },
+  "episode_id_prefixes": [
+    "final:valid",
+    "final:invalid",
+    "final:temporal",
+    "final:control"
+  ],
+  "frame_count": 1008,
+  "seed_commitment": "sha256:22f0b8b706198c4d00df0f8e1d6e09dd324aefdd6ac1dc0768fb9b24a8b519c9",
+  "split": "final"
+}

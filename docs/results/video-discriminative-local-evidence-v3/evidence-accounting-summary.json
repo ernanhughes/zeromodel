@@ -1,0 +1,9 @@
+{
+  "actual_scored_mass_total": 239550.0,
+  "available_candidate_fit_mass_total": 45032.0,
+  "available_geometric_mass_total": 45032.0,
+  "declared_informative_mass_total": 48832.0,
+  "pairwise_discriminative_mass_total": 823104.0,
+  "row_count": 112,
+  "stable_informative_mass_total": 45032.0
+}

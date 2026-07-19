@@ -1,0 +1,57 @@
+[
+  {
+    "action_top1_accuracy": 0.96875,
+    "mode": "per_observation_top1_rescore",
+    "observation_count": 1862,
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "provider_id": "system-b-v2",
+    "raw_action_gap": 0.21875,
+    "row_top1_accuracy": 0.75,
+    "same_action_wrong_row_count": 413,
+    "status": "supported"
+  },
+  {
+    "action_top1_accuracy": 0.984375,
+    "mode": "per_observation_top1_rescore",
+    "observation_count": 1862,
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "provider_id": "r1-local-correlation",
+    "raw_action_gap": 0.109375,
+    "row_top1_accuracy": 0.875,
+    "same_action_wrong_row_count": 260,
+    "status": "supported"
+  },
+  {
+    "mode": "not_supported",
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "provider_id": "stage3-v1",
+    "reason": "aggregate sequence evidence only",
+    "status": "not_supported"
+  },
+  {
+    "action_top1_accuracy": 0.25,
+    "diagnostic_label": "canonical_or_exact_sanity_diagnostic",
+    "invalid_boundary": true,
+    "mode": "canonical_diagnostic_rescore",
+    "observation_count": 36,
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "provider_id": "stage3-v2",
+    "raw_action_gap": 0.16666666666666666,
+    "row_top1_accuracy": 0.08333333333333333,
+    "same_action_wrong_row_count": 6,
+    "status": "supported"
+  },
+  {
+    "action_top1_accuracy": 1.0,
+    "diagnostic_label": "canonical_instrument_diagnostic",
+    "invalid_boundary": false,
+    "mode": "canonical_diagnostic_rescore",
+    "observation_count": 448,
+    "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "provider_id": "stage3-v3-b3",
+    "raw_action_gap": 0.5267857142857143,
+    "row_top1_accuracy": 0.4732142857142857,
+    "same_action_wrong_row_count": 236,
+    "status": "supported"
+  }
+]

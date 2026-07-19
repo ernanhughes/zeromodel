@@ -1,0 +1,32 @@
+{
+  "corrected_inventory_digest": "sha256:ba3c6caaccb4a411660a8bfa2790ef8049d7e5c713481dd5dff5dff500ae21af",
+  "eligibility_changes": [
+    {
+      "field": "reachability_replay_eligible",
+      "from": true,
+      "provider_id": "stage3-v1",
+      "reason": "sequence metadata is not frame-level visual belief evidence",
+      "to": false
+    },
+    {
+      "field": "final_status",
+      "from": "historical_measurement_candidate",
+      "provider_id": "stage3-v2",
+      "reason": "invalid historical measurement boundary remains frozen",
+      "to": "diagnostic_only"
+    }
+  ],
+  "evidence_closure_amendment_commit": "c1e84c01bd352a4fe4b521409013b1cd1a8f6a8b",
+  "evidence_closure_amendment_path": "docs/research/video-action-equivalence-evidence-closure-amendment-v1.md",
+  "fields_corrected": [
+    "source_commit_status",
+    "source_commit",
+    "source_commit_evidence",
+    "reproducibility_status",
+    "per_observation_top1_available",
+    "ordered_rankings_available",
+    "complete_score_vectors_available",
+    "reachability_replay_eligible"
+  ],
+  "preliminary_inventory_digest": "sha256:9a7fe1a38c5685519e877e80fe7c66cb3bcbfbd5d1ec36c0cd474b14a7608cb0"
+}

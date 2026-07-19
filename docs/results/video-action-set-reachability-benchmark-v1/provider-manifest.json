@@ -1,0 +1,16 @@
+{
+  "providers": [
+    {
+      "provider_id": "P1",
+      "provider_version": "zeromodel-video-prospective-normalized-pixel/v1"
+    },
+    {
+      "provider_id": "P2",
+      "provider_version": "zeromodel-video-prospective-local-correlation/v1"
+    },
+    {
+      "provider_id": "P3",
+      "provider_version": "zeromodel-video-prospective-b3-joint-fit/v1"
+    }
+  ]
+}

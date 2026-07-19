@@ -1,0 +1,13 @@
+{
+  "calibration_grid_ran": false,
+  "closed_unmerged": true,
+  "contract_commit": "1bdf0af6c854006b13b4dca61883b25f0b813778",
+  "contract_path": "research/video-discriminative-joint-evidence-v3-selection",
+  "final_evaluation_ran": false,
+  "head_sha": "1bdf0af6c854006b13b4dca61883b25f0b813778",
+  "pr_number": 42,
+  "pr_url": "https://github.com/ernanhughes/zeromodel/pull/42",
+  "selection_grid_ran": false,
+  "superseded_reason": "Superseded before empirical execution by a frozen protocol-sensitivity audit.",
+  "v5_implemented": false
+}

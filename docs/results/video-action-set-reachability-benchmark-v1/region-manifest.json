@@ -1,0 +1,12 @@
+{
+  "joint_regions": [
+    "target_band",
+    "cooldown_indicator",
+    "tank_band"
+  ],
+  "local_regions": [
+    "target_band",
+    "cooldown_indicator",
+    "tank_band"
+  ]
+}

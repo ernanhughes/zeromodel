@@ -1,0 +1,87 @@
+{
+  "audit_version": "zeromodel-video-action-equivalence-audit/v1",
+  "closure_version": "zeromodel-video-retrospective-evidence-closure/v1",
+  "digest": "sha256:7b698c0461b50572ba5af29c5e82b744816cc6e1ed00a6b12b607071f4407f60",
+  "providers": [
+    {
+      "aggregate_metric_evidence": true,
+      "closure_version": "zeromodel-video-retrospective-evidence-closure/v1",
+      "complete_score_vector_evidence": false,
+      "frame_level_visual_belief_evidence": false,
+      "ordered_ranking_evidence": false,
+      "per_observation_top1_evidence": true,
+      "provider_id": "system-b-v2",
+      "reachability_replay_classification": "reachability_replay_unavailable",
+      "reachability_replay_closure": false,
+      "reachability_replay_reasons": [
+        "missing_frame_level_visual_beliefs"
+      ],
+      "reproducible_score_evidence": false,
+      "sequence_metadata_evidence": false
+    },
+    {
+      "aggregate_metric_evidence": true,
+      "closure_version": "zeromodel-video-retrospective-evidence-closure/v1",
+      "complete_score_vector_evidence": false,
+      "frame_level_visual_belief_evidence": false,
+      "ordered_ranking_evidence": false,
+      "per_observation_top1_evidence": true,
+      "provider_id": "r1-local-correlation",
+      "reachability_replay_classification": "reachability_replay_unavailable",
+      "reachability_replay_closure": false,
+      "reachability_replay_reasons": [
+        "missing_frame_level_visual_beliefs"
+      ],
+      "reproducible_score_evidence": false,
+      "sequence_metadata_evidence": false
+    },
+    {
+      "aggregate_metric_evidence": true,
+      "closure_version": "zeromodel-video-retrospective-evidence-closure/v1",
+      "complete_score_vector_evidence": false,
+      "frame_level_visual_belief_evidence": false,
+      "ordered_ranking_evidence": false,
+      "per_observation_top1_evidence": false,
+      "provider_id": "stage3-v1",
+      "reachability_replay_classification": "sequence_metadata_without_visual_beliefs",
+      "reachability_replay_closure": false,
+      "reachability_replay_reasons": [
+        "sequence summaries and paired frame outcomes do not preserve visual candidate rows or executed actions"
+      ],
+      "reproducible_score_evidence": false,
+      "sequence_metadata_evidence": true
+    },
+    {
+      "aggregate_metric_evidence": true,
+      "closure_version": "zeromodel-video-retrospective-evidence-closure/v1",
+      "complete_score_vector_evidence": false,
+      "frame_level_visual_belief_evidence": false,
+      "ordered_ranking_evidence": false,
+      "per_observation_top1_evidence": true,
+      "provider_id": "stage3-v2",
+      "reachability_replay_classification": "reachability_replay_unavailable",
+      "reachability_replay_closure": false,
+      "reachability_replay_reasons": [
+        "missing_frame_level_visual_beliefs"
+      ],
+      "reproducible_score_evidence": false,
+      "sequence_metadata_evidence": false
+    },
+    {
+      "aggregate_metric_evidence": true,
+      "closure_version": "zeromodel-video-retrospective-evidence-closure/v1",
+      "complete_score_vector_evidence": false,
+      "frame_level_visual_belief_evidence": false,
+      "ordered_ranking_evidence": false,
+      "per_observation_top1_evidence": true,
+      "provider_id": "stage3-v3-b3",
+      "reachability_replay_classification": "reachability_replay_unavailable",
+      "reachability_replay_closure": false,
+      "reachability_replay_reasons": [
+        "missing_frame_level_visual_beliefs"
+      ],
+      "reproducible_score_evidence": false,
+      "sequence_metadata_evidence": false
+    }
+  ]
+}

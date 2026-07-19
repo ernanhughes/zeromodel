@@ -1,0 +1,87 @@
+{
+  "artifacts": [
+    {
+      "artifact status": "invalid_measurement",
+      "historical preservation rationale": "Preserve the historical profiling outputs without treating them as evidence.",
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/runtime-comparison.json",
+      "reason": "Compares cold-cache reference execution against warm delegated execution through the same implementation.",
+      "replacement status document": "docs/results/video-action-set-reachability-benchmark-v1/STATUS.md",
+      "withdrawn claims": [
+        "measured runtime speedup",
+        "runtime blocked after genuine optimization"
+      ]
+    },
+    {
+      "artifact status": "invalid_measurement",
+      "historical preservation rationale": "Preserve the historical profiling payload as scaffold only.",
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/runtime-profile-optimized.json",
+      "reason": "The optimized path delegates to the reference path.",
+      "replacement status document": "docs/results/video-action-set-reachability-benchmark-v1/STATUS.md",
+      "withdrawn claims": [
+        "optimized provider path implemented",
+        "measured runtime speedup"
+      ]
+    },
+    {
+      "artifact status": "invalid_measurement",
+      "historical preservation rationale": "Preserve the markdown report while marking it scientifically unusable.",
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/runtime-profile-optimized.md",
+      "reason": "Markdown summary derived from invalid optimized-path measurements.",
+      "replacement status document": "docs/results/video-action-set-reachability-benchmark-v1/STATUS.md",
+      "withdrawn claims": [
+        "measured runtime speedup"
+      ]
+    },
+    {
+      "artifact status": "vacuous_verification",
+      "historical preservation rationale": "Preserve the historical verification payload with explicit quarantine.",
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/provider-runtime-equivalence.json",
+      "reason": "Reference-versus-optimized verification compared delegated calls into the same implementation.",
+      "replacement status document": "docs/results/video-action-set-reachability-benchmark-v1/STATUS.md",
+      "withdrawn claims": [
+        "runtime equivalence verified",
+        "providers verified"
+      ]
+    },
+    {
+      "artifact status": "vacuous_verification",
+      "historical preservation rationale": "Preserve row-level output while preventing scientific use.",
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/provider-runtime-equivalence.csv",
+      "reason": "CSV rows are derived from the same delegated verification procedure.",
+      "replacement status document": "docs/results/video-action-set-reachability-benchmark-v1/STATUS.md",
+      "withdrawn claims": [
+        "runtime equivalence verified"
+      ]
+    },
+    {
+      "artifact status": "assigned_status_not_measurement",
+      "historical preservation rationale": "Preserve the historical phase-access scaffold without accepting its counters as proof.",
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/phase-access-audits.json",
+      "reason": "Zero counters are assigned rather than derived from an append-only access-event log.",
+      "replacement status document": "docs/results/video-action-set-reachability-benchmark-v1/STATUS.md",
+      "withdrawn claims": [
+        "final access verified through zero counters"
+      ]
+    }
+<<<<<<< ours
+=======
+  ],
+  "inspected_absent_artifacts": [
+    {
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/provider-equivalence-results.json",
+      "status": "not_committed_at_quarantine_sha",
+      "producer_status": "producer_contains_assigned_status_fields"
+    },
+    {
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/tie-safety-results.json",
+      "status": "not_committed_at_quarantine_sha",
+      "producer_status": "producer_contains_assigned_status_fields"
+    },
+    {
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/instrument-verification.json",
+      "status": "not_committed_at_quarantine_sha",
+      "producer_status": "producer_contains_assigned_status_fields"
+    }
+>>>>>>> theirs
+  ]
+}

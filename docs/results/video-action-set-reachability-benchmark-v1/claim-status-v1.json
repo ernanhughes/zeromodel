@@ -1,0 +1,156 @@
+{
+  "claims": [
+    {
+      "claim": "B3 canonical self-retrieval 112/112",
+      "evidence": "historical frozen canonical diagnostic from the merged Stage 3 stack",
+      "reason": "Supported only within the narrow frozen canonical diagnostic scope.",
+      "required future proof": "None for the historical canonical claim; separate proof required for prospective benchmark validity.",
+      "scope": "historical Stage 3 v3 canonical diagnostic",
+      "status": "supported_within_narrow_scope"
+    },
+    {
+      "claim": "historical System B row/action gap",
+      "evidence": "retrospective historical audit",
+      "reason": "Historical row top-1 errors often preserved the correct action.",
+      "required future proof": "None for the historical descriptive claim.",
+      "scope": "historical retrospective audit only",
+      "status": "supported_within_narrow_scope"
+    },
+    {
+      "claim": "historical R1 row/action gap",
+      "evidence": "retrospective historical audit",
+      "reason": "Historical R1 top-1 errors often preserved the correct action.",
+      "required future proof": "None for the historical descriptive claim.",
+      "scope": "historical retrospective audit only",
+      "status": "supported_within_narrow_scope"
+    },
+    {
+      "claim": "prospective benchmark contract frozen",
+      "evidence": "docs/research/video-action-set-reachability-benchmark-v1.md",
+      "reason": "The contract document exists in merged history.",
+      "required future proof": "Reference-instrument correctness closure.",
+      "scope": "document freeze only",
+      "status": "supported"
+    },
+    {
+      "claim": "complete evidence design frozen",
+      "evidence": "contract and identity documents",
+      "reason": "Design intent is frozen but not validated in implementation.",
+      "required future proof": "Complete evidence validation against known-bad mutations.",
+      "scope": "design only",
+      "status": "supported_within_narrow_scope"
+    },
+    {
+      "claim": "optimized path implemented",
+      "evidence": "withdrawn claims document",
+      "reason": "score_all_rows_optimized delegates to score_all_rows_reference.",
+      "required future proof": "Independent optimized implementation with mutation-sensitive equivalence proof.",
+      "scope": "prospective runtime layer",
+      "status": "withdrawn"
+    },
+    {
+      "claim": "runtime equivalence verified",
+      "evidence": "withdrawn claims document",
+      "reason": "The previous comparison measured one implementation against itself.",
+      "required future proof": "Independent optimized provider path plus adversarial equivalence suite.",
+      "scope": "prospective runtime layer",
+      "status": "withdrawn"
+    },
+    {
+      "claim": "runtime speedup measured",
+      "evidence": "withdrawn claims document",
+      "reason": "Speedup figures were contaminated by warm-cache delegated execution.",
+      "required future proof": "Independent optimized implementation with cold/warm controlled profiling.",
+      "scope": "prospective runtime layer",
+      "status": "invalid_measurement"
+    },
+    {
+      "claim": "reference path expensive",
+      "evidence": "historical profiling scaffold",
+      "reason": "Only the narrow claim that the reference path was measured as expensive is supported.",
+      "required future proof": "None for the narrow descriptive claim.",
+      "scope": "historical profiling scaffold",
+      "status": "supported_within_narrow_scope"
+    },
+    {
+      "claim": "development evidence complete",
+      "evidence": "result directory status",
+      "reason": "No completed development materialization exists.",
+      "required future proof": "Reference correctness closure and completed resumable development materialization.",
+      "scope": "prospective benchmark materialization",
+      "status": "unsupported"
+    },
+    {
+      "claim": "calibration evidence complete",
+      "evidence": "result directory status",
+      "reason": "No completed calibration materialization exists.",
+      "required future proof": "Reference correctness closure and completed calibration materialization.",
+      "scope": "prospective benchmark materialization",
+      "status": "unsupported"
+    },
+    {
+      "claim": "selection evidence complete",
+      "evidence": "result directory status",
+      "reason": "No completed selection materialization exists.",
+      "required future proof": "Reference correctness closure and completed selection materialization.",
+      "scope": "prospective benchmark materialization",
+      "status": "unsupported"
+    },
+    {
+      "claim": "invalid-input safety established",
+      "evidence": "withdrawn claims document",
+      "reason": "Invalid construction, collision handling, and controls are unresolved.",
+      "required future proof": "Reference-correct invalid families and measured verification.",
+      "scope": "prospective benchmark science",
+      "status": "unresolved"
+    },
+    {
+      "claim": "temporal negatives verified",
+      "evidence": "withdrawn claims document",
+      "reason": "Impossible transitions and temporal negatives are not reference-correct.",
+      "required future proof": "Correct temporal-negative generation and measured verification.",
+      "scope": "prospective benchmark science",
+      "status": "unresolved"
+    },
+    {
+      "claim": "reachability tile action-conditioned",
+      "evidence": "withdrawn claims document",
+      "reason": "Reachability use is not yet genuinely action-conditioned in the generator.",
+      "required future proof": "Causal tile-driven generation and exhaustive helper equivalence proof.",
+      "scope": "prospective benchmark generation",
+      "status": "unresolved"
+    },
+    {
+      "claim": "final split unmaterialized",
+      "evidence": "historical scaffold",
+      "reason": "No final artifacts or scores are present in the result directory.",
+      "required future proof": "Append-only access-event verification.",
+      "scope": "prospective final split",
+      "status": "supported_within_narrow_scope"
+    },
+    {
+      "claim": "final non-access verified",
+      "evidence": "withdrawn claims document",
+      "reason": "Zero counters were assigned constants rather than measured events.",
+      "required future proof": "Phase-access event log derived from actual execution gates.",
+      "scope": "prospective final split",
+      "status": "withdrawn"
+    },
+    {
+      "claim": "prospective instrument complete",
+      "evidence": "result directory status",
+      "reason": "Reference instrument correctness is unresolved and materialization is prohibited.",
+      "required future proof": "Reference correctness closure, sharding, and complete non-final materialization.",
+      "scope": "prospective benchmark overall",
+      "status": "unsupported"
+    },
+    {
+      "claim": "production readiness",
+      "evidence": "withdrawn claims document",
+      "reason": "The integrated stack is historical scaffold only and not validated for production use.",
+      "required future proof": "Correctness closure, measured verification, and materialization completion.",
+      "scope": "operational readiness",
+      "status": "unsupported"
+    }
+  ]
+}

@@ -164,6 +164,12 @@ def test_reference_verifier_read_only_and_deterministic(reference_fixture: Path)
         ("evidence_quantized_score_changed", "quantized_score_vector_mismatch", ("structural_identity", "semantic_outcome")),
         ("semantic_resolved_row_for_action_unanimous_tie", "resolved_row_not_permitted", ("structural_identity", "semantic_outcome")),
         ("seed_alter_final_sealed_identity", "sealed_episode_identity_mismatch", ("structural_identity", "seed_and_plan")),
+        ("seed_final_observation_provenance_materialized", "final_observation_provenance_mismatch", ("structural_identity", "seed_and_plan")),
+        ("family_splice_valid_state_collision", "invalid_family_valid_state_collision", ("structural_identity", "family_contract")),
+        ("family_splice_target_evidence_count_removed", "family_contract_violation", ("structural_identity", "family_contract")),
+        ("family_control_hidden_history_collapse", "control_hidden_history_not_ambiguous", ("structural_identity", "family_contract")),
+        ("family_control_visible_source_leak", "control_provider_visible_leak", ("structural_identity", "family_contract")),
+        ("family_episode_disposition_mismatch", "family_disposition_mismatch", ("structural_identity", "family_contract")),
         ("access_add_final_observation_artifact", "forbidden_final_materialization", ("structural_identity", "access_prohibition")),
         ("semantic_lexically_reorder_tied_rows", None, ("structural_identity", "semantic_outcome")),
     ],
@@ -183,20 +189,26 @@ def test_selected_adversarial_mutations_have_expected_primary_codes(
 
 
 def test_mutation_audit_schema_declares_required_matrix() -> None:
-    assert benchmark.MUTATION_MATRIX_VERSION == "zeromodel-video-action-set-reference-mutation-matrix/v2"
+    assert benchmark.MUTATION_MATRIX_VERSION == "zeromodel-video-action-set-reference-mutation-matrix/v3"
     catalogue_findings = benchmark.validate_mutation_catalogue()
     assert catalogue_findings == []
     catalogue = benchmark.mutation_catalogue()
-    assert len(catalogue) == 87
-    assert sum(1 for case in catalogue if case["expected_result_type"] == "detected") == 85
+    assert len(catalogue) == 93
+    assert sum(1 for case in catalogue if case["expected_result_type"] == "detected") == 91
     assert sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant") == 2
     cases = {case["name"]: case for case in benchmark._MUTATION_CASES}
     for required in (
         "evidence_quantized_score_changed",
         "semantic_alter_outcome_digest",
         "seed_alter_final_sealed_identity",
+        "seed_final_observation_provenance_materialized",
         "observation_change_pixels_and_recompute_digest",
         "family_clipping_quantization_noop",
+        "family_splice_valid_state_collision",
+        "family_control_hidden_history_collapse",
+        "family_splice_target_evidence_count_removed",
+        "family_control_visible_source_leak",
+        "family_episode_disposition_mismatch",
         "reachability_change_tile_identity",
         "access_increment_forbidden_access_counter",
     ):
@@ -213,10 +225,10 @@ def test_complete_adversarial_mutation_audit_executes_all_cases(reference_fixtur
     assert repeated["first_audit_digest"] == repeated["second_audit_digest"]
     assert audit["status"] == "passed"
     assert audit["matrix_version"] == benchmark.MUTATION_MATRIX_VERSION
-    assert audit["declared_mutation_count"] == 87
-    assert audit["executable_mutation_count"] == 87
-    assert audit["expected_detection_count"] == 85
-    assert audit["detected_mutation_count"] == 85
+    assert audit["declared_mutation_count"] == 93
+    assert audit["executable_mutation_count"] == 93
+    assert audit["expected_detection_count"] == 91
+    assert audit["detected_mutation_count"] == 91
     assert audit["missed_mutation_count"] == 0
     assert audit["unexpected_failure_code_count"] == 0
     assert audit["invariant_count"] == 2

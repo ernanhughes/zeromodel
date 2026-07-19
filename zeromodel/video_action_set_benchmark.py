@@ -51,7 +51,7 @@ PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
 REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
 MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1"
 CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
-MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v2"
+MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 REACHABILITY_TILE_DIGEST = "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df"
 REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
@@ -3225,6 +3225,8 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any], *, max_fin
                 if max_findings is not None and len(findings) >= max_findings:
                     return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[item]) for item in _ALL_SPLITS)})
                 continue
+            if stored.get("episode_disposition") != expected.get("episode_disposition") or stored.get("denominator_class") != expected.get("denominator_class"):
+                findings.append(_finding("family_disposition_mismatch", "stored episode disposition fields do not match deterministic derivation", episode_id=episode_id))
             if dict(stored) != expected:
                 findings.append(_finding("sealed_episode_identity_mismatch", "stored sealed episode plan does not match deterministic regeneration", episode_id=episode_id))
             if max_findings is not None and len(findings) >= max_findings:
@@ -3247,6 +3249,17 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any], *, max_fin
         "seed_commitment": identity.seed_digest,
     }
     expected_final = expected_final | {"sealed_plan_digest": _sha256(expected_final)}
+    for plan in final_payload.get("episodes", []):
+        if plan.get("final_observation_provenance") != _final_observation_provenance("final"):
+            findings.append(
+                _finding(
+                    "final_observation_provenance_mismatch",
+                    "final split episode claims materialized observation provenance",
+                    episode_id=plan.get("episode_id"),
+                )
+            )
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[split]) for split in _ALL_SPLITS)})
     if final_payload != expected_final:
         findings.append(_finding("sealed_episode_identity_mismatch", "final sealed split identity does not match deterministic regeneration"))
         if max_findings is not None and len(findings) >= max_findings:
@@ -3384,6 +3397,17 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
             ordered = sorted(rows, key=lambda item: int(item.get("sequence_number", -1)))
             counts["family_records_checked"] += len(ordered)
             family = ordered[0].get("family")
+            for row in ordered:
+                episode_family = row.get("episode_family")
+                if episode_family not in {"valid", "frame_invalid", "temporal_negative", "information_control"}:
+                    findings.append(_finding("family_disposition_mismatch", "frame omits a recognized episode family", split=split, episode_id=episode_id))
+                    continue
+                if row.get("episode_disposition") != _episode_disposition(str(episode_family)):
+                    findings.append(_finding("family_disposition_mismatch", "frame episode disposition does not match its family", split=split, episode_id=episode_id))
+                if row.get("denominator_class") != _denominator_class(str(episode_family)):
+                    findings.append(_finding("family_disposition_mismatch", "frame denominator class does not match its family", split=split, episode_id=episode_id))
+                if not row.get("frame_disposition"):
+                    findings.append(_finding("family_disposition_mismatch", "frame disposition is missing", split=split, episode_id=episode_id))
             if any(row.get("event_type") == "gap_unknown" and (row.get("observation_pixel_digest") is not None or row.get("pixels") is not None) for row in ordered):
                 findings.append(_finding("gap_event_has_pixels", "typed gap event carries ordinary observation identity", split=split, episode_id=episode_id))
             if family == "conflicting_action_splice":
@@ -3394,8 +3418,15 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
                         findings.append(_finding("family_contract_violation", "conflicting splice uses two rows governed by the same action", split=split, episode_id=episode_id))
                     if int(trace.get("primary_contributing_pixel_count", 0)) <= 0 or int(trace.get("secondary_contributing_pixel_count", 0)) <= 0:
                         findings.append(_finding("family_contract_violation", "conflicting splice does not include nonzero contributions from both sources", split=split, episode_id=episode_id))
+                    splice_counts = trace.get("action_relevant_region_contribution_counts", {})
+                    if int(splice_counts.get("primary_target_pixel_count", 0)) <= 0 or int(splice_counts.get("secondary_additive_target_pixel_count", 0)) <= 0:
+                        findings.append(_finding("family_contract_violation", "conflicting splice lacks two visible target evidence contributions", split=split, episode_id=episode_id))
+                    if trace.get("splice_mask_version") != SPLICE_MASK_VERSION or trace.get("target_region_id") != TARGET_REGION_ID:
+                        findings.append(_finding("family_contract_violation", "conflicting splice trace does not use the frozen target-evidence mask", split=split, episode_id=episode_id))
                     if trace.get("output_observation_digest") != row.get("observation_pixel_digest"):
                         findings.append(_finding("family_regeneration_mismatch", "conflicting splice output digest does not match stored observation", split=split, episode_id=episode_id))
+                    if _canonical_observation_digest_index().get(str(row.get("observation_pixel_digest"))):
+                        findings.append(_finding("invalid_family_valid_state_collision", "conflicting splice output decodes as a canonical valid observation", split=split, episode_id=episode_id))
             elif family == "critical_evidence_corruption":
                 for row in ordered:
                     metadata = row.get("metadata", {})
@@ -3405,6 +3436,8 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
                         findings.append(_finding("family_contract_violation", "critical corruption has an empty changed-coordinate set", split=split, episode_id=episode_id))
                     if trace.get("changed_pixel_count") == 0:
                         findings.append(_finding("family_no_op", "critical corruption is a no-op", split=split, episode_id=episode_id))
+                    if _canonical_observation_digest_index().get(str(row.get("observation_pixel_digest"))):
+                        findings.append(_finding("invalid_family_valid_state_collision", "critical corruption output decodes as a canonical valid observation", split=split, episode_id=episode_id))
                     for change in changes:
                         coord = (int(change.get("y", -1)), int(change.get("x", -1)))
                         if coord not in set(_critical_coordinates()) or change.get("original") == change.get("replacement"):
@@ -3419,7 +3452,7 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
             if any(row.get("expected_disposition") == "information_theoretic_control" for row in ordered):
                 code = validate_control_episode_records(ordered)
                 if code != "ok":
-                    findings.append(_finding(code, "information control records violate byte-identity or denominator rules", split=split, episode_id=episode_id))
+                    findings.append(_finding(code, "information control records violate byte-identity, hidden-history, or denominator rules", split=split, episode_id=episode_id))
             if any("stale_repeat" in row.get("metadata", {}) for row in ordered):
                 repeat_rows = [row for row in ordered if "stale_repeat" in row.get("metadata", {})]
                 for row in repeat_rows:
@@ -3757,9 +3790,12 @@ _MUTATION_CASES: tuple[dict[str, Any], ...] = (
     {"name": "seed_alter_planned_family", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
     {"name": "seed_alter_sealed_plan_digest", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
     {"name": "seed_alter_final_sealed_identity", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
+    {"name": "seed_final_observation_provenance_materialized", "expected_primary_failure_code": "final_observation_provenance_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
     {"name": "family_conflicting_splice_same_action_rows", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_splice_zero_source_contribution", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_splice_output_equal_one_source", "expected_primary_failure_code": "family_regeneration_mismatch", "artifact_class": "family_output"},
+    {"name": "family_splice_valid_state_collision", "expected_primary_failure_code": "invalid_family_valid_state_collision", "artifact_class": "family_output"},
+    {"name": "family_splice_target_evidence_count_removed", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_critical_empty_coordinate_set", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_corrupt_noncritical_coordinates", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_replacement_value_identical", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
@@ -3772,6 +3808,9 @@ _MUTATION_CASES: tuple[dict[str, Any], ...] = (
     {"name": "family_gap_event_carrying_pixels", "expected_primary_failure_code": "gap_event_has_pixels", "artifact_class": "family_output"},
     {"name": "family_information_control_pixel_difference", "expected_primary_failure_code": "control_byte_identity_mismatch", "artifact_class": "family_output"},
     {"name": "family_control_denominator_leak", "expected_primary_failure_code": "control_denominator_leak", "artifact_class": "family_output"},
+    {"name": "family_control_hidden_history_collapse", "expected_primary_failure_code": "control_hidden_history_not_ambiguous", "artifact_class": "family_output"},
+    {"name": "family_control_visible_source_leak", "expected_primary_failure_code": "control_provider_visible_leak", "artifact_class": "family_output"},
+    {"name": "family_episode_disposition_mismatch", "expected_primary_failure_code": "family_disposition_mismatch", "artifact_class": "family_output"},
     {"name": "reachability_remove_applicable_edge", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
     {"name": "reachability_redirect_applicable_edge", "expected_primary_failure_code": "reachable_pair_mismatch", "artifact_class": "reachability_trace"},
     {"name": "reachability_alter_destination_action", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "reachability_trace"},
@@ -3837,6 +3876,7 @@ _PRIMARY_FAILURE_CODE_PRECEDENCE = {
             "episode_seed_derivation_mismatch",
             "episode_split_reassignment",
             "duplicate_episode_id",
+            "final_observation_provenance_mismatch",
             "sealed_episode_identity_mismatch",
             "expected_record_missing",
             "orphan_observation_record",
@@ -3851,6 +3891,12 @@ _PRIMARY_FAILURE_CODE_PRECEDENCE = {
             "gap_event_has_pixels",
             "control_byte_identity_mismatch",
             "control_denominator_leak",
+            "control_provider_visible_leak",
+            "control_hidden_history_not_ambiguous",
+            "control_hidden_label_not_ambiguous",
+            "control_hidden_history_cardinality_mismatch",
+            "family_disposition_mismatch",
+            "invalid_family_valid_state_collision",
             "consulted_edge_mismatch",
             "reachable_pair_mismatch",
             "reachability_trace_mismatch",
@@ -3917,7 +3963,7 @@ def _mutation_expected_files(case: Mapping[str, Any]) -> tuple[str, ...]:
     if artifact_class in {"observation", "family_output"}:
         return ("selection/frame-metadata.jsonl", "selection-manifest.json")
     if artifact_class == "episode_plan":
-        if name == "seed_alter_final_sealed_identity":
+        if name in {"seed_alter_final_sealed_identity", "seed_final_observation_provenance_materialized"}:
             return ("final-split-sealed-plan.json", "final-split-sealed-digest.json")
         if name in {"seed_alter_root_seed_material", "seed_alter_root_seed_digest"}:
             return ("generator-identity.json",) if name == "seed_alter_root_seed_material" else ("benchmark-contract-identity.json",)
@@ -3984,7 +4030,7 @@ def validate_mutation_catalogue() -> list[dict[str, Any]]:
             findings.append(_finding("mutation_expected_change_missing", "mutation lacks expected changed file metadata", mutation=case["mutation_id"]))
     detected = sum(1 for case in catalogue if case["expected_result_type"] == "detected")
     invariants = sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant")
-    if len(catalogue) != 87 or detected != 85 or invariants != 2:
+    if len(catalogue) != 93 or detected != 91 or invariants != 2:
         findings.append(
             _finding(
                 "mutation_matrix_count_mismatch",
@@ -4316,6 +4362,18 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
             _write_json(final_path, final)
             _write_json(output_dir / "final-split-sealed-digest.json", {"digest": final["sealed_plan_digest"]})
             return
+        elif case_name == "seed_final_observation_provenance_materialized":
+            final_path = output_dir / "final-split-sealed-plan.json"
+            final = _read_json(final_path)
+            final["episodes"][0]["final_observation_provenance"] = {
+                "materialization_status": "materialized",
+                "observation_payload_included": True,
+                "provenance": "mutated_final_payload_claim",
+            }
+            final["sealed_plan_digest"] = _sha256({key: value for key, value in final.items() if key != "sealed_plan_digest"})
+            _write_json(final_path, final)
+            _write_json(output_dir / "final-split-sealed-digest.json", {"digest": final["sealed_plan_digest"]})
+            return
         _write_json(path, payload)
         return
 
@@ -4329,6 +4387,14 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
                 trace["secondary_contributing_pixel_count"] = 0
             elif case_name == "family_splice_output_equal_one_source":
                 trace["output_observation_digest"] = trace.get("primary_source_digest")
+            elif case_name == "family_splice_valid_state_collision":
+                canonical = canonical_observation_universe()["rows"][0]
+                row["observation_pixel_digest"] = canonical["observation_pixel_digest"]
+                trace["output_observation_digest"] = canonical["observation_pixel_digest"]
+                trace["canonical_collision_count"] = 1
+                trace["canonical_collision_rows"] = [{"row_id": canonical["row_id"], "action_id": canonical["action_id"]}]
+            elif case_name == "family_splice_target_evidence_count_removed":
+                trace.setdefault("action_relevant_region_contribution_counts", {})["secondary_additive_target_pixel_count"] = 0
             elif case_name == "family_critical_empty_coordinate_set":
                 trace["changes"] = []
             elif case_name == "family_corrupt_noncritical_coordinates":
@@ -4359,6 +4425,26 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
                 row["observation_pixel_digest"] = "sha256:" + "7" * 64
             elif case_name == "family_control_denominator_leak":
                 metadata["denominator_eligible"] = True
+            elif case_name == "family_control_visible_source_leak":
+                metadata["provider_visible_fields"] = ["pixels", "source_row_id"]
+            elif case_name == "family_episode_disposition_mismatch":
+                row["episode_disposition"] = "valid"
+                row["denominator_class"] = "valid_denominator"
+        if case_name == "family_control_hidden_history_collapse":
+            path = output_dir / "selection" / "frame-metadata.jsonl"
+            rows = _read_jsonl(path)
+            control_episode = next(row["episode_id"] for row in rows if row.get("expected_disposition") == "information_theoretic_control")
+            control_rows = [row for row in rows if row.get("episode_id") == control_episode]
+            first_metadata = control_rows[0].setdefault("metadata", {})
+            hidden_history_id = first_metadata.get("hidden_source_history_id")
+            hidden_label = first_metadata.get("hidden_source_label_digest")
+            for row in control_rows:
+                metadata = row.setdefault("metadata", {})
+                metadata["hidden_source_history_id"] = hidden_history_id
+                metadata["hidden_source_label_digest"] = hidden_label
+            _rewrite_jsonl(path, rows)
+            _launder_split_manifest(output_dir, "selection")
+            return
         if "splice" in case_name:
             _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("family") == "conflicting_action_splice")
         elif "critical" in case_name or "corrupt" in case_name or "replacement" in case_name or "noop" in case_name:
@@ -4740,10 +4826,10 @@ def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include
     supported = (
         verification["verified"]
         and mutation_audit.get("status") == "passed"
-        and mutation_audit.get("declared_mutation_count") == 87
-        and mutation_audit.get("executable_mutation_count") == 87
-        and mutation_audit.get("expected_detection_count") == 85
-        and mutation_audit.get("detected_mutation_count") == 85
+        and mutation_audit.get("declared_mutation_count") == 93
+        and mutation_audit.get("executable_mutation_count") == 93
+        and mutation_audit.get("expected_detection_count") == 91
+        and mutation_audit.get("detected_mutation_count") == 91
         and mutation_audit.get("missed_mutation_count") == 0
         and mutation_audit.get("unexpected_failure_code_count") == 0
         and mutation_audit.get("invariant_count") == 2

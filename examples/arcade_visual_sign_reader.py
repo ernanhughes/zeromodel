@@ -25,70 +25,27 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_shooter_policy import (  # noqa: E402
+from zeromodel import to_bundle  # noqa: E402
+from zeromodel.arcade_policy import (  # noqa: E402
     ACTIONS,
+    CELL_PIXELS,
+    COOLDOWN_BLOCKED_VALUE,
+    COOLDOWN_READY_VALUE,
+    FRAME_HEIGHT,
     ShooterConfig,
+    TANK_VALUE,
+    TARGET_VALUE,
     TinyArcadeShooter,
     compile_policy_artifact,
-    state_row_id,
+    enumerate_visual_frames as package_enumerate_visual_frames,
+    render_state_frame,
 )
-from zeromodel import to_bundle  # noqa: E402
 from zeromodel.visual import (  # noqa: E402
     VisualFeatureSpec,
     VisualIndexBuild,
     VisualSignReader,
     build_visual_index,
 )
-
-FRAME_HEIGHT = 16
-CELL_PIXELS = 4
-TARGET_VALUE = 220
-TANK_VALUE = 255
-COOLDOWN_READY_VALUE = 40
-COOLDOWN_BLOCKED_VALUE = 160
-
-
-def render_state_frame(
-    tank_x: int,
-    target_x: Optional[int],
-    cooldown: int,
-    *,
-    width: int = 7,
-) -> np.ndarray:
-    """Render one canonical uint8 observation without fonts or graphics APIs.
-
-    Every policy-relevant state component is visible: tank location, current
-    target location (or absence), and cooldown. The renderer uses only integer
-    array writes, making the input fixture stable across operating systems.
-    """
-
-    if width <= 1:
-        raise ValueError("width must be greater than one")
-    if not (0 <= int(tank_x) < width):
-        raise ValueError("tank_x must be inside the screen")
-    if target_x is not None and not (0 <= int(target_x) < width):
-        raise ValueError("target_x must be inside the screen")
-    if int(cooldown) not in {0, 1}:
-        raise ValueError("cooldown must be 0 or 1")
-
-    frame = np.zeros((FRAME_HEIGHT, width * CELL_PIXELS), dtype=np.uint8)
-
-    if target_x is not None:
-        centre = int(target_x) * CELL_PIXELS + CELL_PIXELS // 2
-        frame[2:4, centre - 1 : centre + 2] = TARGET_VALUE
-        frame[4, centre] = TARGET_VALUE
-
-    centre = int(tank_x) * CELL_PIXELS + CELL_PIXELS // 2
-    frame[11, centre] = TANK_VALUE
-    frame[12, centre - 1 : centre + 2] = TANK_VALUE
-    frame[13, centre - 2 : centre + 3] = TANK_VALUE
-
-    frame[7:9, -3:-1] = (
-        COOLDOWN_BLOCKED_VALUE if int(cooldown) else COOLDOWN_READY_VALUE
-    )
-    frame.flags.writeable = False
-    return frame
-
 
 def arcade_visual_feature_spec(config: ShooterConfig = ShooterConfig()) -> VisualFeatureSpec:
     return VisualFeatureSpec(
@@ -103,19 +60,7 @@ def arcade_visual_feature_spec(config: ShooterConfig = ShooterConfig()) -> Visua
 def enumerate_visual_frames(
     config: ShooterConfig = ShooterConfig(),
 ) -> Mapping[str, np.ndarray]:
-    frames: dict[str, np.ndarray] = {}
-    targets: Tuple[Optional[int], ...] = (None,) + tuple(range(config.width))
-    for tank_x in range(config.width):
-        for target_x in targets:
-            for cooldown in (0, 1):
-                row_id = state_row_id(tank_x, target_x, cooldown)
-                frames[row_id] = render_state_frame(
-                    tank_x,
-                    target_x,
-                    cooldown,
-                    width=config.width,
-                )
-    return frames
+    return dict(package_enumerate_visual_frames(config))
 
 
 def compile_visual_index_artifact(

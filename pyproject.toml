@@ -50,3 +50,4 @@ include = ["zeromodel*"]
 log_cli = true
 log_cli_level = "INFO"
 testpaths = ["tests"]
+pythonpath = ["."]

@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from threading import RLock
+from typing import Any, Generic, Mapping, Sequence, TypeVar
 
 import numpy as np
 
-from examples.arcade_shooter_policy import ACTIONS
+from .arcade_policy import ACTIONS
 from .artifact import VPMValidationError
+from .content_identity import PrototypeUniverseIdentity, UnresolvedArtifactIdentity, prototype_universe_identity, sha256_digest
 from .video_complete_row_evidence import CompleteRowEvidence, build_complete_row_evidence
 from .video_discriminative_joint_evidence import (
     JointEvidenceCalibration,
@@ -15,6 +18,9 @@ from .video_discriminative_joint_evidence import (
     build_joint_candidate_masks,
     build_joint_row_candidates,
     build_pairwise_discriminative_masks,
+    joint_candidate_mask_digest,
+    joint_region_digest,
+    pairwise_mask_digest,
 )
 from .video_local_correlation import (
     LocalCorrelationCalibration,
@@ -29,6 +35,48 @@ from .visual_registration import RegistrationConfig
 PROSPECTIVE_P1_VERSION = "zeromodel-video-prospective-normalized-pixel/v1"
 PROSPECTIVE_P2_VERSION = "zeromodel-video-prospective-local-correlation/v1"
 PROSPECTIVE_P3_VERSION = "zeromodel-video-prospective-b3-joint-fit/v1"
+_DEFAULT_CACHE_CAPACITY = 8
+
+
+T = TypeVar("T")
+
+
+class _LRUCache(Generic[T]):
+    def __init__(self, capacity: int) -> None:
+        self._capacity = int(capacity)
+        self._data: OrderedDict[tuple[Any, ...], T] = OrderedDict()
+        self._hits = 0
+        self._misses = 0
+        self._lock = RLock()
+
+    def get(self, key: tuple[Any, ...]) -> T | None:
+        with self._lock:
+            if key in self._data:
+                self._hits += 1
+                value = self._data.pop(key)
+                self._data[key] = value
+                return value
+            self._misses += 1
+            return None
+
+    def put(self, key: tuple[Any, ...], value: T) -> T:
+        with self._lock:
+            if key in self._data:
+                self._data.pop(key)
+            self._data[key] = value
+            while len(self._data) > self._capacity:
+                self._data.popitem(last=False)
+            return value
+
+    def clear(self) -> None:
+        with self._lock:
+            self._data.clear()
+            self._hits = 0
+            self._misses = 0
+
+    def info(self) -> dict[str, int]:
+        with self._lock:
+            return {"capacity": self._capacity, "size": len(self._data), "hits": self._hits, "misses": self._misses}
 
 
 @dataclass(frozen=True)
@@ -52,8 +100,30 @@ class ProviderScoreVector:
     evidence: CompleteRowEvidence
 
 
-_P2_PROVIDER_CACHE: dict[tuple[int, str, str], LocalCorrelationVideoAddressProvider] = {}
-_P3_STATE_CACHE: dict[tuple[int, str, str], dict[str, Any]] = {}
+_P2_PROVIDER_CACHE: _LRUCache[LocalCorrelationVideoAddressProvider] = _LRUCache(_DEFAULT_CACHE_CAPACITY)
+_P3_STATE_CACHE: _LRUCache[dict[str, Any]] = _LRUCache(_DEFAULT_CACHE_CAPACITY)
+
+
+def clear_prospective_provider_caches() -> None:
+    _P2_PROVIDER_CACHE.clear()
+    _P3_STATE_CACHE.clear()
+
+
+def prospective_provider_cache_info() -> dict[str, dict[str, int]]:
+    return {"P2": _P2_PROVIDER_CACHE.info(), "P3": _P3_STATE_CACHE.info()}
+
+
+def _policy_row_ids(prototypes: Mapping[str, tuple[str, str, str, ImageObservation]]) -> tuple[str, ...]:
+    return tuple(row_id for row_id, *_rest in (value for _key, value in sorted(prototypes.items())))
+
+
+def _prototype_identity(
+    *,
+    prototypes: Mapping[str, tuple[str, str, str, ImageObservation]],
+    policy_artifact_id: str,
+    source_scope: str,
+) -> PrototypeUniverseIdentity:
+    return prototype_universe_identity(prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=source_scope)
 
 
 def _row_action_map(
@@ -82,6 +152,7 @@ def _build_provider_score_vector(
     provider_id: str,
     provider_version: str,
     policy_artifact_id: str,
+    policy_row_ids: Sequence[str],
     rows: Sequence[tuple[str, float]],
 ) -> ProviderScoreVector:
     evidence = build_complete_row_evidence(
@@ -89,6 +160,7 @@ def _build_provider_score_vector(
         policy_artifact_id=policy_artifact_id,
         provider_id=provider_id,
         provider_version=provider_version,
+        policy_row_ids=policy_row_ids,
     )
     row_scores = evidence.row_scores
     return ProviderScoreVector(
@@ -101,6 +173,42 @@ def _build_provider_score_vector(
     )
 
 
+def _p2_cache_key(
+    *,
+    prototype_identity: PrototypeUniverseIdentity,
+    policy_artifact_id: str,
+    source_scope: str,
+    region_digest: str,
+    registration_config_digest: str,
+    scoring_config_digest: str,
+) -> tuple[Any, ...]:
+    return (PROSPECTIVE_P2_VERSION, policy_artifact_id, source_scope, prototype_identity.digest, region_digest, registration_config_digest, scoring_config_digest)
+
+
+def _p3_cache_key(
+    *,
+    prototype_identity: PrototypeUniverseIdentity,
+    policy_artifact_id: str,
+    source_scope: str,
+    development_digest: str,
+    region_digest: str,
+    candidate_mask_digest_value: str,
+    pairwise_mask_digest_value: str,
+    calibration_digest: str,
+) -> tuple[Any, ...]:
+    return (
+        PROSPECTIVE_P3_VERSION,
+        policy_artifact_id,
+        source_scope,
+        prototype_identity.digest,
+        development_digest,
+        region_digest,
+        candidate_mask_digest_value,
+        pairwise_mask_digest_value,
+        calibration_digest,
+    )
+
+
 def score_all_rows_reference(
     *,
     provider_id: str,
@@ -109,6 +217,7 @@ def score_all_rows_reference(
     policy_artifact_id: str,
     source_scope: str,
 ) -> ProviderScoreVector:
+    policy_row_ids = _policy_row_ids(prototypes)
     if provider_id == "P1":
         rows = []
         for row_id, _action_id, _digest, proto in prototypes.values():
@@ -120,80 +229,126 @@ def score_all_rows_reference(
             provider_id="P1",
             provider_version=PROSPECTIVE_P1_VERSION,
             policy_artifact_id=policy_artifact_id,
+            policy_row_ids=policy_row_ids,
             rows=rows,
         )
     if provider_id == "P2":
-        cache_key = (id(prototypes), policy_artifact_id, source_scope)
+        prototype_id = _prototype_identity(prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=source_scope)
+        regions = _canonical_regions()
+        region_digest = local_region_digest(regions)
+        registration_config_digest = sha256_digest([region.registration_config.to_dict() for region in regions])
+        scoring_config_digest = sha256_digest(
+            {
+                "winner_threshold": 1.0,
+                "runner_up_margin": 0.0,
+                "conflicting_action_margin": 0.0,
+                "minimum_visible_fraction": 0.5,
+            }
+        )
+        cache_key = _p2_cache_key(
+            prototype_identity=prototype_id,
+            policy_artifact_id=policy_artifact_id,
+            source_scope=source_scope,
+            region_digest=region_digest,
+            registration_config_digest=registration_config_digest,
+            scoring_config_digest=scoring_config_digest,
+        )
         provider = _P2_PROVIDER_CACHE.get(cache_key)
         if provider is None:
-            regions = _canonical_regions()
             calibration = LocalCorrelationCalibration(
                 winner_threshold=1.0,
                 runner_up_margin=0.0,
                 conflicting_action_margin=0.0,
                 minimum_visible_fraction=0.5,
-                region_spec_digest=local_region_digest(regions),
-                prototype_digest="sha256:prospective-prototypes",
-                benign_calibration_digest="sha256:prospective-calibration",
-                rejection_calibration_digest="sha256:prospective-selection",
+                region_spec_digest=region_digest,
+                prototype_digest=prototype_id.digest,
+                benign_calibration_digest=UnresolvedArtifactIdentity("label:prospective-calibration", "prospective calibration evidence not yet materialized").label,
+                rejection_calibration_digest=UnresolvedArtifactIdentity("label:prospective-selection", "prospective selection evidence not yet materialized").label,
                 policy_artifact_id=policy_artifact_id,
                 source_scope=source_scope,
             )
-            provider = LocalCorrelationVideoAddressProvider(
-                prototypes={observation_id: (row_id, action_id, digest, proto) for observation_id, (row_id, action_id, digest, proto) in prototypes.items()},
-                calibration=calibration,
-                regions=regions,
+            provider = _P2_PROVIDER_CACHE.put(
+                cache_key,
+                LocalCorrelationVideoAddressProvider(
+                    prototypes={observation_id: (row_id, action_id, digest, proto) for observation_id, (row_id, action_id, digest, proto) in prototypes.items()},
+                    calibration=calibration,
+                    regions=regions,
+                ),
             )
-            _P2_PROVIDER_CACHE[cache_key] = provider
         ranked = provider._rank(observation)
         return _build_provider_score_vector(
             provider_id="P2",
             provider_version=PROSPECTIVE_P2_VERSION,
             policy_artifact_id=policy_artifact_id,
+            policy_row_ids=policy_row_ids,
             rows=[(candidate.row_id, _bounded_similarity_from_distance(candidate.total_distance)) for candidate in ranked],
         )
     if provider_id == "P3":
-        cache_key = (id(prototypes), policy_artifact_id, source_scope)
+        prototype_id = _prototype_identity(prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=source_scope)
+        joint_prototypes = {row_id: (row_id, action_id, digest, proto) for _obs_id, (row_id, action_id, digest, proto) in prototypes.items()}
+        development = {row_id: (proto, proto) for row_id, (_row, _action, _digest, proto) in joint_prototypes.items()}
+        development_digest = sha256_digest({row_id: [left.raw_digest, right.raw_digest] for row_id, (left, right) in sorted(development.items())})
+        regions = _joint_regions()
+        region_digest = joint_region_digest(regions)
+        candidate_masks = build_joint_candidate_masks(
+            prototypes=joint_prototypes,
+            development_observations=development,
+            intensity_tolerance=8,
+            stability_tolerance=12,
+            amendment_commit_sha="ad2093590cde95ad1dc984f0573f452693002717",
+            operational_contract_digest=UnresolvedArtifactIdentity("label:prospective-b3-wrapper", "prospective B3 wrapper contract not yet closed").label,
+            source_scope=source_scope,
+        )
+        pairwise_masks = build_pairwise_discriminative_masks(
+            prototypes=joint_prototypes,
+            candidate_masks=candidate_masks,
+            intensity_tolerance=8,
+            amendment_commit_sha="ad2093590cde95ad1dc984f0573f452693002717",
+            operational_contract_digest=UnresolvedArtifactIdentity("label:prospective-b3-wrapper", "prospective B3 wrapper contract not yet closed").label,
+            source_scope=source_scope,
+        )
+        candidate_mask_digest_value = joint_candidate_mask_digest([mask.spec for mask in candidate_masks.values()])
+        pairwise_mask_digest_value = pairwise_mask_digest([mask.spec for mask in pairwise_masks.values()])
+        calibration = _joint_calibration(
+            policy_artifact_id=policy_artifact_id,
+            source_scope=source_scope,
+            prototype_digest=prototype_id.digest,
+            region_digest=region_digest,
+            candidate_mask_digest_value=candidate_mask_digest_value,
+            pairwise_mask_digest_value=pairwise_mask_digest_value,
+        )
+        cache_key = _p3_cache_key(
+            prototype_identity=prototype_id,
+            policy_artifact_id=policy_artifact_id,
+            source_scope=source_scope,
+            development_digest=development_digest,
+            region_digest=region_digest,
+            candidate_mask_digest_value=candidate_mask_digest_value,
+            pairwise_mask_digest_value=pairwise_mask_digest_value,
+            calibration_digest=calibration.digest,
+        )
         state = _P3_STATE_CACHE.get(cache_key)
         if state is None:
-            joint_prototypes = {row_id: (row_id, action_id, digest, proto) for _obs_id, (row_id, action_id, digest, proto) in prototypes.items()}
-            development = {row_id: (proto, proto) for row_id, (_row, _action, _digest, proto) in joint_prototypes.items()}
-            regions = _joint_regions()
-            candidate_masks = build_joint_candidate_masks(
-                prototypes=joint_prototypes,
-                development_observations=development,
-                intensity_tolerance=8,
-                stability_tolerance=12,
-                amendment_commit_sha="ad2093590cde95ad1dc984f0573f452693002717",
-                operational_contract_digest="sha256:prospective-b3-wrapper",
-                source_scope=source_scope,
-            )
-            pairwise_masks = build_pairwise_discriminative_masks(
-                prototypes=joint_prototypes,
-                candidate_masks=candidate_masks,
-                intensity_tolerance=8,
-                amendment_commit_sha="ad2093590cde95ad1dc984f0573f452693002717",
-                operational_contract_digest="sha256:prospective-b3-wrapper",
-                source_scope=source_scope,
-            )
             provider = JointEvidenceProvider(
                 prototypes=joint_prototypes,
                 candidate_masks=candidate_masks,
                 pairwise_masks=pairwise_masks,
                 regions=regions,
-                calibration=_joint_calibration(policy_artifact_id, source_scope),
+                calibration=calibration,
                 policy_artifact_id=policy_artifact_id,
                 source_scope=source_scope,
             )
-            state = {
-                "joint_prototypes": joint_prototypes,
-                "regions": regions,
-                "candidate_masks": candidate_masks,
-                "pairwise_masks": pairwise_masks,
-                "provider_contract_digest": provider.contract().digest,
-                "row_action": _row_action_map(prototypes),
-            }
-            _P3_STATE_CACHE[cache_key] = state
+            state = _P3_STATE_CACHE.put(
+                cache_key,
+                {
+                    "joint_prototypes": joint_prototypes,
+                    "regions": regions,
+                    "candidate_masks": candidate_masks,
+                    "pairwise_masks": pairwise_masks,
+                    "provider_contract_digest": provider.contract().digest,
+                    "row_action": _row_action_map(prototypes),
+                },
+            )
         ranked = build_joint_row_candidates(
             observation=observation,
             prototypes=state["joint_prototypes"],
@@ -206,6 +361,7 @@ def score_all_rows_reference(
             provider_id="P3",
             provider_version=PROSPECTIVE_P3_VERSION,
             policy_artifact_id=policy_artifact_id,
+            policy_row_ids=policy_row_ids,
             rows=[(candidate.row_id, float(candidate.candidate_strength)) for candidate in ranked],
         )
     raise VPMValidationError("unsupported provider_id")
@@ -219,14 +375,6 @@ def score_all_rows_optimized(
     policy_artifact_id: str,
     source_scope: str,
 ) -> ProviderScoreVector:
-    if provider_id == "P1":
-        return score_all_rows_reference(
-            provider_id=provider_id,
-            observation=observation,
-            prototypes=prototypes,
-            policy_artifact_id=policy_artifact_id,
-            source_scope=source_scope,
-        )
     return score_all_rows_reference(
         provider_id=provider_id,
         observation=observation,
@@ -252,13 +400,12 @@ def score_normalized_pixel(
     )
     evidence = vector.evidence
     winner_row = evidence.ranking.ranked_row_ids[0]
-    winner_action = row_action[winner_row]
     return ProspectiveProviderResult(
         provider_id="P1",
         provider_version=PROSPECTIVE_P1_VERSION,
         evidence=evidence,
         winner_row_id=winner_row,
-        winner_action_id=winner_action,
+        winner_action_id=row_action[winner_row],
         maximum_tie_size=max(len(group.row_ids) for group in evidence.ranking.tie_groups),
         diagnostics={"score_count": len(vector.row_ids)},
     )
@@ -271,18 +418,6 @@ def score_registered_local_correlation(
     policy_artifact_id: str,
     source_scope: str,
 ) -> ProspectiveProviderResult:
-    cache_key = (id(prototypes), policy_artifact_id, source_scope)
-    provider = _P2_PROVIDER_CACHE.get(cache_key)
-    if provider is None:
-        score_all_rows_reference(
-            provider_id="P2",
-            observation=observation,
-            prototypes=prototypes,
-            policy_artifact_id=policy_artifact_id,
-            source_scope=source_scope,
-        )
-        provider = _P2_PROVIDER_CACHE[cache_key]
-    ranked = provider._rank(observation)
     vector = score_all_rows_reference(
         provider_id="P2",
         observation=observation,
@@ -291,15 +426,16 @@ def score_registered_local_correlation(
         source_scope=source_scope,
     )
     evidence = vector.evidence
-    winner = ranked[0]
+    row_action = _row_action_map(prototypes)
+    winner_row = evidence.ranking.ranked_row_ids[0]
     return ProspectiveProviderResult(
         provider_id="P2",
         provider_version=PROSPECTIVE_P2_VERSION,
         evidence=evidence,
-        winner_row_id=winner.row_id,
-        winner_action_id=winner.action_id,
+        winner_row_id=winner_row,
+        winner_action_id=row_action[winner_row],
         maximum_tie_size=max(len(group.row_ids) for group in evidence.ranking.tie_groups),
-        diagnostics={"candidate_count": len(ranked)},
+        diagnostics={"candidate_count": len(vector.row_ids)},
     )
 
 
@@ -312,7 +448,15 @@ def _joint_regions() -> tuple[JointEvidenceRegionSpec, ...]:
     )
 
 
-def _joint_calibration(policy_artifact_id: str, source_scope: str) -> JointEvidenceCalibration:
+def _joint_calibration(
+    *,
+    policy_artifact_id: str,
+    source_scope: str,
+    prototype_digest: str,
+    region_digest: str,
+    candidate_mask_digest_value: str,
+    pairwise_mask_digest_value: str,
+) -> JointEvidenceCalibration:
     return JointEvidenceCalibration(
         architecture_id="B3",
         minimum_actual_scored_mass=0.0,
@@ -324,14 +468,14 @@ def _joint_calibration(policy_artifact_id: str, source_scope: str) -> JointEvide
         exact_winner_margin=0.0,
         candidate_relative_margin=0.0,
         maximum_candidate_set_size=3,
-        prototype_digest="sha256:prospective-prototypes",
-        region_spec_digest="sha256:prospective-joint-regions",
-        candidate_mask_digest="sha256:prospective-joint-candidate-masks",
-        pairwise_mask_digest="sha256:prospective-joint-pairwise-masks",
+        prototype_digest=prototype_digest,
+        region_spec_digest=region_digest,
+        candidate_mask_digest=candidate_mask_digest_value,
+        pairwise_mask_digest=pairwise_mask_digest_value,
         policy_artifact_id=policy_artifact_id,
         source_scope=source_scope,
         amendment_commit_sha="ad2093590cde95ad1dc984f0573f452693002717",
-        operational_contract_digest="sha256:prospective-b3-wrapper",
+        operational_contract_digest=UnresolvedArtifactIdentity("label:prospective-b3-wrapper", "prospective B3 wrapper contract not yet closed").label,
     )
 
 
@@ -342,7 +486,6 @@ def score_b3_joint_fit(
     policy_artifact_id: str,
     source_scope: str,
 ) -> ProspectiveProviderResult:
-    cache_key = (id(prototypes), policy_artifact_id, source_scope)
     vector = score_all_rows_reference(
         provider_id="P3",
         observation=observation,
@@ -350,18 +493,17 @@ def score_b3_joint_fit(
         policy_artifact_id=policy_artifact_id,
         source_scope=source_scope,
     )
-    state = _P3_STATE_CACHE[cache_key]
     evidence = vector.evidence
+    row_action = _row_action_map(prototypes)
     winner_row = evidence.ranking.ranked_row_ids[0]
-    winner_action = state["row_action"][winner_row]
     return ProspectiveProviderResult(
         provider_id="P3",
         provider_version=PROSPECTIVE_P3_VERSION,
         evidence=evidence,
         winner_row_id=winner_row,
-        winner_action_id=winner_action,
+        winner_action_id=row_action[winner_row],
         maximum_tie_size=max(len(group.row_ids) for group in evidence.ranking.tie_groups),
-        diagnostics={"candidate_count": len(vector.row_ids), "provider_contract_digest": state["provider_contract_digest"]},
+        diagnostics={"candidate_count": len(vector.row_ids)},
     )
 
 
@@ -371,6 +513,8 @@ __all__ = [
     "PROSPECTIVE_P3_VERSION",
     "ProviderScoreVector",
     "ProspectiveProviderResult",
+    "clear_prospective_provider_caches",
+    "prospective_provider_cache_info",
     "score_all_rows_optimized",
     "score_all_rows_reference",
     "score_b3_joint_fit",

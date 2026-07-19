@@ -1,0 +1,33 @@
+{
+  "sample_size": 12,
+  "sampling_algorithm_version": "step_sample_with_midpoint_and_last_dedup/v1",
+  "sampling_digest": "sha256:2a810987782b57612362bc88aa9b51655f1cab2ba00a1f2e21ea66c709a05638",
+  "selected_action_ids": [
+    "RIGHT",
+    "STAY",
+    "LEFT",
+    "RIGHT",
+    "LEFT",
+    "RIGHT",
+    "LEFT",
+    "FIRE",
+    "RIGHT",
+    "LEFT",
+    "STAY",
+    "STAY"
+  ],
+  "selected_row_ids": [
+    "tank=0|target=3|cooldown=1",
+    "tank=0|target=none|cooldown=0",
+    "tank=1|target=0|cooldown=0",
+    "tank=1|target=4|cooldown=1",
+    "tank=2|target=1|cooldown=0",
+    "tank=2|target=5|cooldown=1",
+    "tank=3|target=2|cooldown=0",
+    "tank=3|target=3|cooldown=0",
+    "tank=3|target=6|cooldown=1",
+    "tank=4|target=3|cooldown=0",
+    "tank=5|target=none|cooldown=1",
+    "tank=6|target=6|cooldown=1"
+  ]
+}

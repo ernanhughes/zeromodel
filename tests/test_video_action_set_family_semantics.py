@@ -214,3 +214,69 @@ def test_changing_either_splice_source_changes_trace_identity() -> None:
     assert benchmark._array_digest(first_output) != benchmark._array_digest(third_output)
     assert first_trace["splice_trace_digest"] != second_trace["splice_trace_digest"]
     assert first_trace["splice_trace_digest"] != third_trace["splice_trace_digest"]
+
+
+def test_information_controls_have_hidden_history_ambiguity_and_no_visible_leak() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+
+    assert benchmark.validate_control_episode_records(records) == "ok"
+    assert {record["observation_pixel_digest"] for record in records} == {records[0]["observation_pixel_digest"]}
+    assert {record["metadata"]["hidden_source_history_id"] for record in records} == {
+        history["hidden_history_id"] for history in plan["family_intervention"]["control_group"]["hidden_source_histories"]
+    }
+    assert len({record["metadata"]["hidden_source_label_digest"] for record in records}) == len(records)
+    assert all(record["metadata"]["provider_visible_fields"] == ["pixels"] for record in records)
+    assert {record["episode_disposition"] for record in records} == {"information_theoretic_control"}
+    assert {record["frame_disposition"] for record in records} == {"information_theoretic_control"}
+    assert {record["denominator_class"] for record in records} == {"excluded_information_control"}
+
+
+def test_information_control_validator_rejects_hidden_label_collapse_and_visible_leak() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+
+    collapsed = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    for record in collapsed[1:]:
+        record["metadata"]["hidden_source_history_id"] = collapsed[0]["metadata"]["hidden_source_history_id"]
+        record["metadata"]["hidden_source_label_digest"] = collapsed[0]["metadata"]["hidden_source_label_digest"]
+    assert benchmark.validate_control_episode_records(collapsed) == "control_hidden_history_not_ambiguous"
+
+    leaked = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    leaked[0]["metadata"]["provider_visible_fields"] = ["pixels", "source_row_id"]
+    assert benchmark.validate_control_episode_records(leaked) == "control_provider_visible_leak"
+
+
+def test_episode_dispositions_and_final_observation_provenance_are_explicit() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    tile = benchmark._load_reachability_tile(REPO_ROOT)
+    plans = benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+    temporal_plan = next(item for item in plans if item["mutation_kind"] == "stale_repeated_frame")
+    temporal_records = benchmark._materialize_plan(temporal_plan, identity, tile)
+
+    assert temporal_plan["episode_disposition"] == "distinguishable_temporal_invalid"
+    assert temporal_plan["denominator_class"] == "temporal_negative_denominator"
+    assert {record["episode_family"] for record in temporal_records} == {"temporal_negative"}
+    assert {record["episode_disposition"] for record in temporal_records} == {"distinguishable_temporal_invalid"}
+    assert "stale_repeated_frame_payload" in {record["frame_disposition"] for record in temporal_records}
+
+    final_plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "final", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    assert final_plan["final_observation_provenance"] == {
+        "materialization_status": "prospective_materialization_prohibited",
+        "observation_payload_included": False,
+        "provenance": "sealed_plan_only",
+    }

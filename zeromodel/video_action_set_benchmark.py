@@ -42,7 +42,7 @@ GENERATOR_VERSION = "zeromodel-video-action-set-reachability-generator/v1"
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
 EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
 SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
-EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v2"
+EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v3"
 TRANSFORMATION_FAMILY_VERSION = "zeromodel-video-action-set-transformation-family/v1"
 CRITICAL_COORDINATE_SET_VERSION = "zeromodel-video-action-set-critical-coordinate-set/v1"
 REACHABILITY_COMPOSITION_VERSION = "zeromodel-video-action-set-reachability-composition/v1"
@@ -62,6 +62,8 @@ FRAME_INVALID_CLOSURE_VERSION = "zeromodel-video-action-set-frame-invalid-closur
 FAMILY_INTERVENTION_VERSION = "zeromodel-video-action-set-family-intervention/v2"
 CONFLICTING_ACTION_SPLICE_VERSION = "zeromodel-video-action-set-family-conflicting-action-splice/v2"
 SPLICE_MASK_VERSION = "zeromodel-video-action-set-splice-mask/v2"
+INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-control/v2"
+INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v1"
 FRAME_SHAPE = (16, 28)
 CRITICAL_REGION_ID = "cooldown_indicator"
 TARGET_REGION_ID = "target_band"
@@ -267,16 +269,22 @@ def _episode_family_registry() -> dict[str, Any]:
         },
         {
             "family_id": "information_control",
-            "family_version": "zeromodel-video-action-set-family-information-control/v1",
+            "family_version": INFORMATION_CONTROL_VERSION,
             "classification": "information-theoretic-control",
             "source_row_required": True,
             "source_action_required": False,
-            "pixel_intervention": "byte-identical control observations with hidden source-history labels",
+            "pixel_intervention": "byte-identical control observations with multiple hidden source-history labels",
             "sequence_intervention": "control-only grouping",
             "expected_semantic_effect": "hidden distinction unavailable to providers",
             "distinguishability_status": "information_theoretic_control",
             "denominator_treatment": "excluded from distinguishable-invalid denominators",
-            "regeneration_requirements": ["control group", "byte identity digest", "hidden-label digest"],
+            "regeneration_requirements": [
+                "control group",
+                "byte identity digest",
+                "hidden history labels",
+                "hidden-label cardinality",
+                "provider-visible field closure",
+            ],
             "implementation_status": "implemented_bounded_scaffold",
         },
     ]
@@ -507,7 +515,8 @@ def canonical_prototypes(config: ShooterConfig = ShooterConfig()) -> dict[str, t
 def canonical_observation_universe(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     digest_to_rows: dict[str, list[dict[str, str]]] = {}
-    for prototype_id, (row_id, action_id, observation_raw_digest, observation) in canonical_prototypes(config).items():
+    prototypes = canonical_prototypes() if config == ShooterConfig() else canonical_prototypes(config)
+    for prototype_id, (row_id, action_id, observation_raw_digest, observation) in prototypes.items():
         pixel_digest = _array_digest(observation.pixels)
         entry = {
             "prototype_id": prototype_id,
@@ -603,6 +612,60 @@ def _family_schedule() -> tuple[str, ...]:
     )
 
 
+
+def _episode_disposition(family_label: str, mutation_kind: str | None = None) -> str:
+    if family_label == "valid":
+        return "valid"
+    if family_label == "frame_invalid":
+        return "distinguishable_invalid_input"
+    if family_label == "temporal_negative":
+        return "distinguishable_temporal_invalid"
+    if family_label == "information_control":
+        return "information_theoretic_control"
+    return str(mutation_kind or family_label)
+
+
+
+def _denominator_class(family_label: str, mutation_kind: str | None = None) -> str:
+    if family_label == "valid":
+        return "valid_denominator"
+    if family_label == "frame_invalid":
+        return "distinguishable_invalid_denominator"
+    if family_label == "temporal_negative":
+        return "temporal_negative_denominator"
+    if family_label == "information_control":
+        return "excluded_information_control"
+    return str(mutation_kind or family_label)
+
+
+
+def _frame_disposition_for_episode(family_label: str, mutation_kind: str | None = None) -> str:
+    if family_label == "valid":
+        return "valid"
+    if family_label == "frame_invalid":
+        return "distinguishable_invalid_input"
+    if family_label == "information_control":
+        return "information_theoretic_control"
+    if family_label == "temporal_negative":
+        return "valid_frame_payload"
+    return str(mutation_kind or family_label)
+
+
+
+def _final_observation_provenance(split: str) -> dict[str, Any]:
+    if split == "final":
+        return {
+            "materialization_status": "prospective_materialization_prohibited",
+            "observation_payload_included": False,
+            "provenance": "sealed_plan_only",
+        }
+    return {
+        "materialization_status": "materialized",
+        "observation_payload_included": True,
+        "provenance": "in_memory_generation",
+    }
+
+
 def _frame_count_for_plan(split: str, family_label: str) -> int:
     if split == "development":
         return 1
@@ -660,7 +723,6 @@ def _secondary_row_for_splice(row_ids: list[str], row_actions: Mapping[str, str]
     _source_tank, source_target, _source_cooldown = _state_row_values(source_row_id)
     if source_target is None:
         raise VPMValidationError("conflicting splice source row must contain visible target evidence")
-    source_pixels = _render_row_frame(source_row_id)
     for row_id in row_ids:
         if row_id == source_row_id:
             continue
@@ -668,9 +730,6 @@ def _secondary_row_for_splice(row_ids: list[str], row_actions: Mapping[str, str]
             continue
         _tank, target, _cooldown = _state_row_values(row_id)
         if target is None or target == source_target:
-            continue
-        counts = _splice_evidence_counts(source_pixels, _render_row_frame(row_id))
-        if counts["primary_target_pixel_count"] == 0 or counts["secondary_additive_target_pixel_count"] == 0:
             continue
         return row_id
     raise VPMValidationError("frame splice requires a secondary row with conflicting action and distinct visible target evidence")
@@ -791,12 +850,54 @@ def _family_intervention_plan(
             namespace="information_control_identity",
             parent_identities=(("family_intervention", seed["seed_digest"]), ("source_row_id", source_row_id)),
         )
+        hidden_histories = []
+        for frame_index in original_order:
+            history_seed = _derived_seed(
+                identity,
+                split=split,
+                ordinal=ordinal,
+                namespace="information_control_hidden_history",
+                parent_identities=(
+                    ("control_group", control_seed["seed_digest"]),
+                    ("frame_index", str(frame_index)),
+                ),
+            )
+            history = {
+                "version": INFORMATION_CONTROL_AMBIGUITY_VERSION,
+                "control_group_id": control_seed["seed_digest"],
+                "hidden_history_index": int(frame_index),
+                "hidden_history_id": history_seed["seed_digest"],
+                "source_row_id": source_row_id,
+                "source_action_id": row_actions[source_row_id],
+                "source_row_label_digest": _sha256(
+                    {"source_row_id": source_row_id, "source_action_id": row_actions[source_row_id]}
+                ),
+            }
+            history["hidden_source_label_digest"] = _sha256(history)
+            hidden_histories.append(history)
+        hidden_label_digests = [history["hidden_source_label_digest"] for history in hidden_histories]
         payload |= {
             "control_group": {
                 "control_group_id": control_seed["seed_digest"],
                 "byte_identity_required": True,
-                "hidden_source_label_digest": _sha256({"source_row_id": source_row_id, "control_seed": control_seed["seed_digest"]}),
-                "provider_visible_fields": ["pixels", "frame_id"],
+                "minimum_hidden_history_cardinality": 2,
+                "hidden_source_history_count": len(hidden_histories),
+                "hidden_source_histories": hidden_histories,
+                "hidden_source_label_digests": hidden_label_digests,
+                "hidden_source_label_digest": _sha256(
+                    {
+                        "control_group_id": control_seed["seed_digest"],
+                        "hidden_source_label_digests": hidden_label_digests,
+                    }
+                ),
+                "provider_visible_fields": ["pixels"],
+                "provider_hidden_fields": [
+                    "frame_id",
+                    "source_row_id",
+                    "source_action_id",
+                    "hidden_source_history_id",
+                    "hidden_source_label_digest",
+                ],
             }
         }
     payload["sequence_digest"] = _sha256({"order": payload["materialized_order"], "event_type": payload["event_type"], "family_id": family_id})
@@ -1022,6 +1123,9 @@ def _make_episode_plan(
         row_ids=tuple(row_actions.keys()),
         row_actions=row_actions,
     )
+    episode_disposition = _episode_disposition(family_label, mutation_kind)
+    denominator_class = _denominator_class(family_label, mutation_kind)
+    final_observation_provenance = _final_observation_provenance(split)
     episode_id_seed = _derived_seed(
         identity,
         split=split,
@@ -1031,6 +1135,8 @@ def _make_episode_plan(
             ("concrete_episode_seed", episode_seed["seed_digest"]),
             ("family_contract", family_contract["family_version"]),
             ("family_intervention", family_intervention["intervention_digest"]),
+            ("episode_disposition", episode_disposition),
+            ("denominator_class", denominator_class),
             ("source_row_id", source_row_id),
             ("secondary_row_id", secondary_row_id or "none"),
         ),
@@ -1044,6 +1150,10 @@ def _make_episode_plan(
         "ordinal": int(ordinal),
         "family_label": family_label,
         "family_ordinal": int(family_ordinal),
+        "episode_family": family_label,
+        "episode_disposition": episode_disposition,
+        "denominator_class": denominator_class,
+        "final_observation_provenance": final_observation_provenance,
         "mutation_kind": mutation_kind,
         "source_row_id": source_row_id,
         "secondary_row_id": secondary_row_id,
@@ -1303,6 +1413,10 @@ def _frame_descriptor(
     family: str,
     pixels: np.ndarray | None,
     expected_disposition: str,
+    episode_family: str,
+    episode_disposition: str,
+    frame_disposition: str,
+    denominator_class: str,
     metadata: Mapping[str, Any],
 ) -> dict[str, Any]:
     frame_id = f"{split}:{episode_id}:frame-{frame_index:02d}"
@@ -1319,6 +1433,10 @@ def _frame_descriptor(
         "event_type": metadata.get("event_type", "frame"),
         "family": family,
         "expected_disposition": expected_disposition,
+        "episode_family": episode_family,
+        "episode_disposition": episode_disposition,
+        "frame_disposition": frame_disposition,
+        "denominator_class": denominator_class,
         "expected_row": row_id,
         "expected_action": expected_action,
         "actual_executed_action": actual_action,
@@ -1404,6 +1522,10 @@ def _valid_episode(
             family=family,
             pixels=pixels,
             expected_disposition="valid",
+            episode_family=str(plan["episode_family"]),
+            episode_disposition=str(plan["episode_disposition"]),
+            frame_disposition=_frame_disposition_for_episode(str(plan["family_label"]), plan.get("mutation_kind")),
+            denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": episode_seed,
                 "seed_digest": identity.seed_digest,
@@ -1480,6 +1602,10 @@ def _invalid_episode(
             family=kind,
             pixels=pixels,
             expected_disposition="distinguishable_invalid_input",
+            episode_family=str(plan["episode_family"]),
+            episode_disposition=str(plan["episode_disposition"]),
+            frame_disposition=_frame_disposition_for_episode(str(plan["family_label"]), plan.get("mutation_kind")),
+            denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": episode_seed,
                 "seed_digest": identity.seed_digest,
@@ -1523,6 +1649,10 @@ def _temporal_negative_episode(
     kind = str(plan["mutation_kind"])
     intervention = plan["family_intervention"]
     for item in valid:
+        item["episode_family"] = "temporal_negative"
+        item["episode_disposition"] = str(plan["episode_disposition"])
+        item["frame_disposition"] = "valid_frame_payload"
+        item["denominator_class"] = str(plan["denominator_class"])
         item["metadata"]["family_contract"] = plan["family_contract"]
         item["metadata"]["family_intervention"] = intervention
         item["metadata"]["sequence_digest"] = intervention["sequence_digest"]
@@ -1535,6 +1665,7 @@ def _temporal_negative_episode(
         frames = [valid[i] for i in order]
         for idx, item in enumerate(frames):
             item["sequence_number"] = idx
+            item["frame_disposition"] = "temporally_reordered_frame_payload"
             item["metadata"]["original_frame_index"] = order[idx]
             item["metadata"]["materialized_order"] = order
             item["metadata"]["sequence_rule"] = intervention["sequence_rule"]
@@ -1549,6 +1680,7 @@ def _temporal_negative_episode(
             raise VPMValidationError("stale repeat requires an actual payload replacement")
         valid[destination_index]["pixels"] = np.array(valid[source_index]["pixels"], copy=True)
         valid[destination_index]["observation_pixel_digest"] = replacement_digest
+        valid[destination_index]["frame_disposition"] = "stale_repeated_frame_payload"
         valid[destination_index]["metadata"]["stale_repeat"] = {
             **repeat,
             "original_destination_digest": original_destination_digest,
@@ -1567,6 +1699,7 @@ def _temporal_negative_episode(
         destination_pixels = _render_row_frame(destination_row, config=config)
         valid[destination_index]["pixels"] = destination_pixels
         valid[destination_index]["observation_pixel_digest"] = _pixel_digest(destination_pixels)
+        valid[destination_index]["frame_disposition"] = "unreachable_destination_frame_payload"
         valid[destination_index]["expected_row"] = destination_row
         valid[destination_index]["expected_action"] = transition_plan["destination_action_id"]
         valid[destination_index]["metadata"]["impossible_transition"] = {
@@ -1584,6 +1717,7 @@ def _temporal_negative_episode(
         position = int(gap["position"])
         valid[position]["pixels"] = None
         valid[position]["event_type"] = "gap_unknown"
+        valid[position]["frame_disposition"] = "declared_gap_or_unknown_action"
         valid[position]["expected_row"] = None
         valid[position]["expected_action"] = None
         valid[position]["actual_executed_action"] = None
@@ -1615,6 +1749,7 @@ def _control_episode(
     frames = []
     for idx, frame_plan in enumerate(plan["frame_plans"]):
         pixels = np.array(source_pixels, copy=True)
+        hidden_history = control_group["hidden_source_histories"][idx]
         descriptor = _frame_descriptor(
             split=split,
             episode_id=episode_id,
@@ -1625,6 +1760,10 @@ def _control_episode(
             family="information_control",
             pixels=pixels,
             expected_disposition="information_theoretic_control",
+            episode_family=str(plan["episode_family"]),
+            episode_disposition=str(plan["episode_disposition"]),
+            frame_disposition=_frame_disposition_for_episode(str(plan["family_label"]), plan.get("mutation_kind")),
+            denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": int(plan["episode_seed"]),
                 "seed_digest": identity.seed_digest,
@@ -1637,10 +1776,18 @@ def _control_episode(
                 "family_intervention": intervention,
                 "control_group_id": control_group["control_group_id"],
                 "control_observation_digest": _array_digest(source_pixels),
-                "hidden_source_label_digest": control_group["hidden_source_label_digest"],
-                "provider_hidden_fields": ["source_row_id", "source_action_id", "hidden_source_label_digest"],
+                "control_visible_digest": _sha256(
+                    {"provider_visible_fields": control_group["provider_visible_fields"], "pixels": _array_digest(source_pixels)}
+                ),
+                "hidden_source_history": hidden_history,
+                "hidden_source_history_id": hidden_history["hidden_history_id"],
+                "hidden_source_history_index": hidden_history["hidden_history_index"],
+                "hidden_source_label_digest": hidden_history["hidden_source_label_digest"],
+                "hidden_source_label_digest_group": control_group["hidden_source_label_digest"],
+                "provider_visible_fields": control_group["provider_visible_fields"],
+                "provider_hidden_fields": control_group["provider_hidden_fields"],
                 "denominator_eligible": False,
-                "control_reason": "byte_identical_hidden_source_history",
+                "control_reason": "byte_identical_multiple_hidden_source_histories",
             },
         )
         frames.append(descriptor | {"pixels": pixels})
@@ -1822,6 +1969,10 @@ def _record_regeneration_view(record: Mapping[str, Any]) -> dict[str, Any]:
         "event_type": record.get("event_type", "frame"),
         "family": record["family"],
         "expected_disposition": record["expected_disposition"],
+        "episode_family": record.get("episode_family"),
+        "episode_disposition": record.get("episode_disposition"),
+        "frame_disposition": record.get("frame_disposition"),
+        "denominator_class": record.get("denominator_class"),
         "expected_row": record.get("expected_row"),
         "expected_action": record.get("expected_action"),
         "actual_executed_action": record.get("actual_executed_action"),
@@ -1898,6 +2049,7 @@ def _frame_invalid_closure_summary(records: Sequence[Mapping[str, Any]]) -> dict
     }
     payload["closure_digest"] = _sha256(payload)
     return payload
+
 
 def _family_closure_report(
     *,
@@ -2025,6 +2177,32 @@ def validate_control_episode_records(records: Sequence[Mapping[str, Any]]) -> st
         return "control_byte_identity_mismatch"
     if any(record.get("metadata", {}).get("denominator_eligible") for record in control_records):
         return "control_denominator_leak"
+    if any(record.get("episode_disposition") != "information_theoretic_control" for record in control_records):
+        return "control_disposition_mismatch"
+    if any(record.get("frame_disposition") != "information_theoretic_control" for record in control_records):
+        return "control_disposition_mismatch"
+    metadata = [record.get("metadata", {}) for record in control_records]
+    control_group_ids = {item.get("control_group_id") for item in metadata}
+    if None in control_group_ids or len(control_group_ids) != 1:
+        return "control_group_mismatch"
+    provider_visible = [item.get("provider_visible_fields") for item in metadata]
+    if any(fields != ["pixels"] for fields in provider_visible):
+        return "control_provider_visible_leak"
+    forbidden_visible_fields = {"frame_id", "source_row_id", "source_action_id", "hidden_source_history_id", "hidden_source_label_digest"}
+    if any(forbidden_visible_fields.intersection(set(fields or [])) for fields in provider_visible):
+        return "control_provider_visible_leak"
+    hidden_histories = {item.get("hidden_source_history_id") for item in metadata}
+    hidden_labels = {item.get("hidden_source_label_digest") for item in metadata}
+    if None in hidden_histories or len(hidden_histories) < 2:
+        return "control_hidden_history_not_ambiguous"
+    if None in hidden_labels or len(hidden_labels) < 2:
+        return "control_hidden_label_not_ambiguous"
+    control_groups = [item.get("family_intervention", {}).get("control_group", {}) for item in metadata]
+    expected_counts = {group.get("hidden_source_history_count") for group in control_groups}
+    if len(expected_counts) != 1 or next(iter(expected_counts)) != len(control_records):
+        return "control_hidden_history_cardinality_mismatch"
+    if any(group.get("minimum_hidden_history_cardinality", 0) < 2 for group in control_groups):
+        return "control_hidden_history_cardinality_mismatch"
     return "ok"
 
 

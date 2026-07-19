@@ -1,0 +1,6 @@
+{
+  "requires_complete_ranking": true,
+  "requires_tie_groups": true,
+  "row_count": 112,
+  "version": "zeromodel-video-complete-row-evidence/v1"
+}

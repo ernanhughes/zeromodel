@@ -1,0 +1,90 @@
+{
+  "comparison": {
+    "P1": {
+      "optimized_mean_seconds_per_frame": 0.0005423500115284696,
+      "reference_mean_seconds_per_frame": 0.000599899998633191,
+      "speedup": 1.1061122630799471
+    },
+    "P2": {
+      "optimized_mean_seconds_per_frame": 0.0002980499994009733,
+      "reference_mean_seconds_per_frame": 0.07662235001043882,
+      "speedup": 257.0788463829422
+    },
+    "P3": {
+      "optimized_mean_seconds_per_frame": 0.028700100010610186,
+      "reference_mean_seconds_per_frame": 15.856470500002615,
+      "speedup": 552.4883360734148
+    }
+  },
+  "optimized": [
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "optimized",
+      "mean_seconds_per_candidate": 4.842410817218479e-06,
+      "mean_seconds_per_frame": 0.0005423500115284696,
+      "provider_id": "P1",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.0010847000230569392
+    },
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "optimized",
+      "mean_seconds_per_candidate": 2.6611607089372617e-06,
+      "mean_seconds_per_frame": 0.0002980499994009733,
+      "provider_id": "P2",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.0005960999988019466
+    },
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "optimized",
+      "mean_seconds_per_candidate": 0.00025625089295187663,
+      "mean_seconds_per_frame": 0.028700100010610186,
+      "provider_id": "P3",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.05740020002122037
+    }
+  ],
+  "profile_frame_count": 2,
+  "projected_runtime_seconds": {
+    "calibration": 13.234144009649754,
+    "development": 3.3085360024124384,
+    "selection": 29.776824021711946
+  },
+  "provider_scope": "all",
+  "reference": [
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "reference",
+      "mean_seconds_per_candidate": 5.356249987796348e-06,
+      "mean_seconds_per_frame": 0.000599899998633191,
+      "provider_id": "P1",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.001199799997266382
+    },
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "reference",
+      "mean_seconds_per_candidate": 0.0006841281250932038,
+      "mean_seconds_per_frame": 0.07662235001043882,
+      "provider_id": "P2",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.15324470002087764
+    },
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "reference",
+      "mean_seconds_per_candidate": 0.14157562946430907,
+      "mean_seconds_per_frame": 15.856470500002615,
+      "provider_id": "P3",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 31.71294100000523
+    }
+  ]
+}

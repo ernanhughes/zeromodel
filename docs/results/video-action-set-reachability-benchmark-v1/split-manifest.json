@@ -1,0 +1,14 @@
+{
+  "calibration_episode_count": 112,
+  "calibration_frame_count": 448,
+  "final_control_episode_count": 28,
+  "final_frame_invalid_episode_count": 56,
+  "final_temporal_negative_episode_count": 56,
+  "final_total_expected_frame_count": 1008,
+  "final_valid_episode_count": 112,
+  "selection_control_episode_count": 28,
+  "selection_frame_invalid_episode_count": 56,
+  "selection_temporal_negative_episode_count": 56,
+  "selection_total_frame_count": 1008,
+  "selection_valid_episode_count": 112
+}

@@ -23,6 +23,7 @@ def test_claim_quarantine_status_files() -> None:
     assert status_path.exists()
     status_text = status_path.read_text(encoding="utf-8")
     assert "reference_instrument_invalid" in status_text
+    assert "reference_instrument_correctness_unresolved" in status_text
     assert "prospective_materialization_prohibited" in status_text
     assert "package_identity_foundations_correct" in status_text
     assert "evidence_schema_v2_defined" in status_text

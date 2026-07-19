@@ -139,8 +139,8 @@
     {
       "claim": "prospective instrument complete",
       "evidence": "result directory status",
-      "reason": "Reference instrument correctness is unresolved and materialization is prohibited.",
-      "required future proof": "Reference correctness closure, sharding, and complete non-final materialization.",
+      "reason": "A repaired reference verifier and adversarial mutation schema now exist in code, but this committed result directory has not been promoted to a completed measured closure artifact and materialization is still prohibited.",
+      "required future proof": "Measured reference closure on committed materialized non-final evidence, sharding if required, and a later separate materialization authorization.",
       "scope": "prospective benchmark overall",
       "status": "unsupported"
     },

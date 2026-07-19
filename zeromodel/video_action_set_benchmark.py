@@ -15,9 +15,13 @@ from .artifact import VPMValidationError
 from .policy_lookup import VPMPolicyLookup
 from .video_complete_row_evidence import (
     QUANTIZATION_SCALE,
+    RowScore,
     VIDEO_SCORE_QUANTIZER_VERSION,
     VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION,
+    build_complete_ranking,
     build_complete_row_evidence,
+    build_semantic_top_set_outcome,
+    quantize_similarity,
     semantic_top_set_outcome_from_dict,
 )
 from .video_prospective_providers import (
@@ -44,6 +48,9 @@ CRITICAL_COORDINATE_SET_VERSION = "zeromodel-video-action-set-critical-coordinat
 REACHABILITY_COMPOSITION_VERSION = "zeromodel-video-action-set-reachability-composition/v1"
 REACHABILITY_TRACE_VERSION = "zeromodel-video-action-set-reachability-trace/v1"
 PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
+REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
+MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1"
+CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 REACHABILITY_TILE_DIGEST = "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df"
 REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
@@ -1546,7 +1553,22 @@ def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
     _write_json(output_dir / "benchmark-contract-identity.json", identity.to_dict())
     _write_json(output_dir / "generator-identity.json", {"generator_version": GENERATOR_VERSION, "seed_digest": identity.seed_digest, "seed_material": identity.seed_material})
     _write_json(output_dir / "benchmark-manifest.json", {"benchmark_version": BENCHMARK_VERSION, "policy_artifact_id": policy.artifact_id, "row_count": len(row_ids)})
-    _write_json(output_dir / "policy-artifact.json", {"policy_artifact_id": policy.artifact_id, "row_count": len(row_ids), "action_count": len(ACTIONS)})
+    _write_json(
+        output_dir / "policy-artifact.json",
+        {
+            "policy_artifact_id": policy.artifact_id,
+            "row_count": len(row_ids),
+            "action_count": len(ACTIONS),
+            "row_ids": row_ids,
+            "row_action": row_actions,
+            "row_action_digest": _sha256(
+                {
+                    "policy_artifact_id": policy.artifact_id,
+                    "row_action": [{"row_id": row_id, "action_id": row_actions[row_id]} for row_id in row_ids],
+                }
+            ),
+        },
+    )
     _write_json(output_dir / "reachability-tile-reference.json", {"tile_version": REACHABILITY_TILE_VERSION, "tile_digest": REACHABILITY_TILE_DIGEST})
     _write_json(output_dir / "episode-family-registry.json", _episode_family_registry())
     _write_json(output_dir / "transformation-family-contract.json", _transformation_contract())
@@ -2156,6 +2178,9 @@ def _score_record(
                 "winner_quantized_score": winner_quantized_score,
                 "runner_up_row": result.evidence.ranking.ranked_row_ids[1],
                 "runner_up_quantized_score": result.evidence.row_scores[[item.row_id for item in result.evidence.row_scores].index(result.evidence.ranking.ranked_row_ids[1])].quantized_score,
+                "policy_row_universe_digest": result.evidence.policy_row_universe_digest,
+                "quantized_score_vector_digest": result.evidence.quantized_score_vector_digest,
+                "raw_score_diagnostic_digest": result.evidence.raw_score_diagnostic_digest,
                 "score_vector_digest": result.evidence.score_vector_digest,
                 "ranking_digest": result.evidence.ranking.to_dict()["ranking_digest"],
                 "observation_digest": record["observation_pixel_digest"],
@@ -2220,20 +2245,65 @@ def _measured_phase_access_counts(output_dir: Path) -> dict[str, Any]:
     final_ids = {episode_id for values in final_plan.get("sealed_episode_ids", {}).values() for episode_id in values}
     final_materialization_count = 0
     final_score_access_count = 0
+    final_reachability_execution_count = 0
     for split in ("development", "calibration", "selection", "final"):
         frame_rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
         evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
         final_materialization_count += sum(1 for row in frame_rows if row.get("episode_id") in final_ids or row.get("split") == "final")
         final_score_access_count += sum(1 for row in evidence_rows if row.get("episode_id") in final_ids or row.get("split") == "final")
+        final_reachability_execution_count += sum(
+            1
+            for row in evidence_rows
+            if (row.get("episode_id") in final_ids or row.get("split") == "final") and row.get("reachability_composition_trace") is not None
+        )
+    calibration_execution_count = sum(
+        int((output_dir / name).exists())
+        for name in (
+            "selected-calibration.json",
+            "calibration-grid.json",
+            "calibration-results.json",
+            "conformal-calibration.json",
+        )
+    )
+    architecture_selection_execution_count = sum(
+        int((output_dir / name).exists())
+        for name in (
+            "selected-architecture.json",
+            "architecture-grid.json",
+            "architecture-selection.json",
+            "selected-method.json",
+        )
+    )
+    candidate_tuning_execution_count = sum(
+        int((output_dir / name).exists())
+        for name in (
+            "candidate-tuning.json",
+            "candidate-set-tuning.json",
+            "candidate-grid.json",
+            "reachability-replay.json",
+        )
+    )
+    final_evaluation_count = sum(
+        int((output_dir / name).exists())
+        for name in (
+            "final-results.json",
+            "final-summary.json",
+            "final-evaluation.json",
+        )
+    )
     return {
         "version": PHASE_ACCESS_VERSION,
         "final_materialization_count": final_materialization_count,
         "final_score_access_count": final_score_access_count,
-        "candidate_set_selection_count": 0,
-        "conformal_calibration_count": 0,
-        "reachability_replay_count": 0,
-        "final_evaluation_count": 0,
-        "forbidden_final_access_counter": final_materialization_count + final_score_access_count,
+        "final_reachability_execution_count": final_reachability_execution_count,
+        "candidate_set_selection_count": candidate_tuning_execution_count,
+        "candidate_tuning_execution_count": candidate_tuning_execution_count,
+        "conformal_calibration_count": calibration_execution_count,
+        "calibration_execution_count": calibration_execution_count,
+        "architecture_selection_execution_count": architecture_selection_execution_count,
+        "reachability_replay_count": candidate_tuning_execution_count,
+        "final_evaluation_count": final_evaluation_count,
+        "forbidden_final_access_counter": final_materialization_count + final_score_access_count + final_reachability_execution_count,
     }
 
 
@@ -2396,112 +2466,1365 @@ def audit_canonical_providers(output_dir: Path) -> dict[str, Any]:
     return summary
 
 
-def verify_instrument(output_dir: Path, repo_root: Path) -> dict[str, Any]:
-    import filecmp
+_NON_FINAL_SPLITS = ("development", "calibration", "selection")
+_ALL_SPLITS = ("development", "calibration", "selection", "final")
+_REQUIRED_VERIFICATION_GATES = (
+    "structural_identity",
+    "semantic_outcome",
+    "seed_and_plan",
+    "episode_regeneration",
+    "family_contract",
+    "reachability",
+    "completeness_orphan",
+    "access_prohibition",
+)
+
+
+def _policy_row_action_digest(policy_artifact_id: str, row_ids: Sequence[str], row_actions: Mapping[str, str]) -> str:
+    return _sha256(
+        {
+            "policy_artifact_id": policy_artifact_id,
+            "row_action": [{"row_id": row_id, "action_id": row_actions[row_id]} for row_id in row_ids],
+        }
+    )
+
+
+def _reference_context(repo_root: Path) -> dict[str, Any]:
+    identity = load_identity(repo_root)
+    policy = compile_policy_artifact()
+    lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
+    row_ids = [str(row_id) for row_id in policy.source.row_ids]
+    row_actions = {row_id: lookup.choose(row_id) for row_id in row_ids}
+    reachability_tile = _load_reachability_tile(repo_root)
+    plans = {split: _episode_plans_for_split(identity, split, row_ids, row_actions) for split in _ALL_SPLITS}
+    return {
+        "identity": identity,
+        "policy": policy,
+        "row_ids": row_ids,
+        "row_actions": row_actions,
+        "reachability_tile": reachability_tile,
+        "plans": plans,
+        "policy_row_action_digest": _policy_row_action_digest(policy.artifact_id, row_ids, row_actions),
+    }
+
+
+def _finding(code: str, message: str, **details: Any) -> dict[str, Any]:
+    payload = {"code": code, "message": message}
+    payload.update({key: _json_ready(value) for key, value in details.items() if value is not None})
+    return payload
+
+
+def _gate(name: str, findings: Sequence[Mapping[str, Any]], *, counts: Mapping[str, Any] | None = None, unavailable: bool = False) -> dict[str, Any]:
+    status = "unavailable" if unavailable else ("failed" if findings else "passed")
+    return {
+        "gate": name,
+        "status": status,
+        "finding_count": len(findings),
+        "findings": [dict(item) for item in findings],
+        "counts": dict(counts or {}),
+    }
+
+
+def _first_failure_code(report: Mapping[str, Any]) -> str | None:
+    for gate in report.get("gates", []):
+        for finding in gate.get("findings", []):
+            return str(finding["code"])
+    return None
+
+
+def _raw_score_diagnostic_from_row(row: Mapping[str, Any], policy_row_ids: Sequence[str]) -> str:
+    scores = {str(row_id): float(score) for row_id, score in zip(row["all_112_row_ids"], row["all_112_raw_scores"])}
+    return build_complete_row_evidence(
+        row_scores=[(row_id, scores[row_id]) for row_id in policy_row_ids],
+        policy_artifact_id=str(row["policy_artifact_id"]),
+        provider_id=str(row["provider_id"]),
+        provider_version=str(row["provider_version"]),
+        policy_row_ids=policy_row_ids,
+    ).raw_score_diagnostic_digest
+
+
+def _stored_quantized_evidence(row: Mapping[str, Any], policy_row_ids: Sequence[str]) -> tuple[Any | None, list[dict[str, Any]]]:
+    findings: list[dict[str, Any]] = []
+    row_ids = [str(row_id) for row_id in row.get("all_112_row_ids", [])]
+    raw_scores = list(row.get("all_112_raw_scores", []))
+    quantized_scores = list(row.get("all_112_quantized_scores", []))
+    if row_ids != list(policy_row_ids) or len(row_ids) != 112 or len(set(row_ids)) != 112 or len(raw_scores) != 112 or len(quantized_scores) != 112:
+        findings.append(_finding("score_row_universe_mismatch", "score vector does not contain the exact frozen 112-row policy universe", frame_id=row.get("frame_id")))
+        return None, findings
+    try:
+        expected_quantized = [quantize_similarity(float(score)) for score in raw_scores]
+    except VPMValidationError:
+        findings.append(_finding("raw_diagnostic_digest_mismatch", "raw scores are not finite or quantizable", frame_id=row.get("frame_id")))
+        return None, findings
+    if [int(score) for score in quantized_scores] != expected_quantized:
+        findings.append(_finding("quantized_score_vector_mismatch", "stored quantized scores do not reconstruct from raw scores", frame_id=row.get("frame_id")))
+    try:
+        evidence = build_complete_row_evidence(
+            row_scores=[(row_id, float(score)) for row_id, score in zip(row_ids, raw_scores)],
+            policy_artifact_id=str(row["policy_artifact_id"]),
+            provider_id=str(row["provider_id"]),
+            provider_version=str(row["provider_version"]),
+            policy_row_ids=policy_row_ids,
+        )
+    except (KeyError, VPMValidationError) as exc:
+        findings.append(_finding("quantized_score_vector_mismatch", "complete row evidence could not be reconstructed", frame_id=row.get("frame_id"), error=str(exc)))
+        return None, findings
+    stored_score_digest = str(row.get("quantized_score_vector_digest", row.get("score_vector_digest")))
+    if stored_score_digest != evidence.quantized_score_vector_digest or str(row.get("score_vector_digest")) != evidence.quantized_score_vector_digest:
+        findings.append(_finding("quantized_score_vector_mismatch", "quantized score-vector identity does not match reconstructed evidence", frame_id=row.get("frame_id")))
+    if row.get("raw_score_diagnostic_digest") is not None and str(row.get("raw_score_diagnostic_digest")) != evidence.raw_score_diagnostic_digest:
+        findings.append(_finding("raw_diagnostic_digest_mismatch", "raw diagnostic identity does not match reconstructed raw scores", frame_id=row.get("frame_id")))
+    ranking_scores = tuple(RowScore(row_id=row_id, raw_score=float(raw), quantized_score=int(quantized)) for row_id, raw, quantized in zip(row_ids, raw_scores, quantized_scores))
+    expected_ranking = build_complete_ranking(ranking_scores)
+    if list(row.get("complete_ordered_ranking", [])) != list(expected_ranking.ranked_row_ids):
+        findings.append(_finding("ranking_reconstruction_mismatch", "stored ranking does not reconstruct from quantized scores", frame_id=row.get("frame_id")))
+    if list(row.get("tie_groups", [])) != [group.to_dict() for group in expected_ranking.tie_groups]:
+        findings.append(_finding("tie_group_reconstruction_mismatch", "stored tie groups do not reconstruct from quantized scores", frame_id=row.get("frame_id")))
+    if row.get("ranking_digest") is not None and str(row.get("ranking_digest")) != expected_ranking.ranking_digest:
+        findings.append(_finding("ranking_reconstruction_mismatch", "ranking digest does not match reconstructed ranking", frame_id=row.get("frame_id")))
+    return evidence, findings
+
+
+def _semantic_cache_key(row: Mapping[str, Any]) -> str:
+    return _sha256(
+        {
+            "policy_artifact_id": row.get("policy_artifact_id"),
+            "provider_id": row.get("provider_id"),
+            "provider_version": row.get("provider_version"),
+            "all_112_row_ids": row.get("all_112_row_ids"),
+            "all_112_raw_scores": row.get("all_112_raw_scores"),
+            "all_112_quantized_scores": row.get("all_112_quantized_scores"),
+            "complete_ordered_ranking": row.get("complete_ordered_ranking"),
+            "tie_groups": row.get("tie_groups"),
+            "score_vector_digest": row.get("score_vector_digest"),
+            "quantized_score_vector_digest": row.get("quantized_score_vector_digest"),
+            "raw_score_diagnostic_digest": row.get("raw_score_diagnostic_digest"),
+            "ranking_digest": row.get("ranking_digest"),
+        }
+    )
+
+
+def _expected_semantic_for_row(
+    row: Mapping[str, Any],
+    row_actions: Mapping[str, str],
+    policy_row_ids: Sequence[str],
+    cache: dict[str, Any] | None = None,
+) -> tuple[Any | None, list[dict[str, Any]]]:
+    key = _semantic_cache_key(row)
+    if cache is not None and key in cache:
+        return cache[key], []
+    evidence, findings = _stored_quantized_evidence(row, policy_row_ids)
+    if evidence is None:
+        return None, findings
+    try:
+        outcome = build_semantic_top_set_outcome(evidence=evidence, row_action=row_actions)
+    except VPMValidationError as exc:
+        return None, findings + [_finding("semantic_status_mismatch", "semantic outcome could not be reconstructed", frame_id=row.get("frame_id"), error=str(exc))]
+    if cache is not None and not findings:
+        cache[key] = outcome
+    return outcome, findings
+
+
+def _structural_identity_gate(
+    output_dir: Path,
+    repo_root: Path,
+    context: Mapping[str, Any],
+    *,
+    validate_stored_closure: bool = True,
+) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    required_files = (
+        "benchmark-contract-identity.json",
+        "generator-identity.json",
+        "benchmark-manifest.json",
+        "policy-artifact.json",
+        "reachability-tile-reference.json",
+        "episode-family-registry.json",
+        "transformation-family-contract.json",
+        "provider-manifest.json",
+        "score-quantizer.json",
+        "split-manifest.json",
+        "episode-plan.json",
+        "final-split-sealed-plan.json",
+        "final-split-sealed-digest.json",
+        "evidence-schema.json",
+        "phase-access-audits.json",
+    )
+    for name in required_files:
+        if not (output_dir / name).exists():
+            findings.append(_finding("expected_file_missing", "required benchmark artifact is missing", path=name))
+    if findings:
+        return _gate("structural_identity", findings, unavailable=False)
+
+    identity: BenchmarkIdentity = context["identity"]
+    policy = context["policy"]
+    row_ids = list(context["row_ids"])
+    row_actions = dict(context["row_actions"])
+    root_identity = _read_json(output_dir / "benchmark-contract-identity.json")
+    if root_identity != identity.to_dict():
+        findings.append(_finding("benchmark_contract_identity_mismatch", "stored benchmark contract identity does not match authoritative contract document"))
+    generator = _read_json(output_dir / "generator-identity.json")
+    if generator.get("generator_version") != GENERATOR_VERSION or generator.get("seed_digest") != identity.seed_digest or generator.get("seed_material") != identity.seed_material:
+        findings.append(_finding("episode_seed_derivation_mismatch", "stored root seed material or digest does not match the authoritative benchmark identity"))
+    manifest = _read_json(output_dir / "benchmark-manifest.json")
+    if manifest.get("benchmark_version") != BENCHMARK_VERSION or manifest.get("policy_artifact_id") != policy.artifact_id or int(manifest.get("row_count", -1)) != len(row_ids):
+        findings.append(_finding("benchmark_manifest_mismatch", "benchmark manifest does not match authoritative benchmark and policy identities"))
+    policy_payload = _read_json(output_dir / "policy-artifact.json")
+    expected_policy_payload = {
+        "policy_artifact_id": policy.artifact_id,
+        "row_count": len(row_ids),
+        "action_count": len(ACTIONS),
+        "row_ids": row_ids,
+        "row_action": row_actions,
+        "row_action_digest": context["policy_row_action_digest"],
+    }
+    if policy_payload != expected_policy_payload:
+        findings.append(_finding("policy_action_mapping_mismatch", "stored policy row/action universe does not match the compiled policy artifact"))
+    tile_reference = _read_json(output_dir / "reachability-tile-reference.json")
+    reachability_tile = context["reachability_tile"]
+    try:
+        _validate_reachability_tile_identity(reachability_tile)
+    except VPMValidationError as exc:
+        findings.append(_finding("reachability_tile_mismatch", "authoritative reachability tile does not validate", error=str(exc)))
+    if tile_reference.get("tile_version") != REACHABILITY_TILE_VERSION or tile_reference.get("tile_digest") != reachability_tile.get("tile_digest"):
+        findings.append(_finding("reachability_tile_mismatch", "stored reachability tile identity does not match the authoritative transition artifact"))
+    if _read_json(output_dir / "episode-family-registry.json") != _episode_family_registry():
+        findings.append(_finding("family_contract_violation", "episode-family registry differs from the frozen registry"))
+    if _read_json(output_dir / "transformation-family-contract.json") != _transformation_contract():
+        findings.append(_finding("family_contract_violation", "transformation-family contract differs from the frozen contract"))
+    expected_provider_manifest = {
+        "providers": [
+            {"provider_id": "P1", "provider_version": PROSPECTIVE_P1_VERSION},
+            {"provider_id": "P2", "provider_version": PROSPECTIVE_P2_VERSION},
+            {"provider_id": "P3", "provider_version": PROSPECTIVE_P3_VERSION},
+        ]
+    }
+    if _read_json(output_dir / "provider-manifest.json") != expected_provider_manifest:
+        findings.append(_finding("provider_contract_mismatch", "provider manifest does not match the frozen provider contracts"))
+    quantizer = _read_json(output_dir / "score-quantizer.json")
+    if quantizer.get("version") != VIDEO_SCORE_QUANTIZER_VERSION or int(quantizer.get("scale", -1)) != QUANTIZATION_SCALE:
+        findings.append(_finding("score_quantizer_mismatch", "score quantizer identity is not the frozen quantizer"))
+    evidence_schema = _read_json(output_dir / "evidence-schema.json")
+    if evidence_schema.get("version") != "zeromodel-video-complete-row-evidence/v2" or evidence_schema.get("requires_semantic_top_set_outcome") is not True:
+        findings.append(_finding("evidence_schema_mismatch", "evidence schema does not require complete semantic score evidence"))
+
+    closure_path = output_dir / "reference-closure-report.json"
+    if validate_stored_closure and closure_path.exists():
+        closure = _read_json(closure_path)
+        required_gate_names = set(_REQUIRED_VERIFICATION_GATES)
+        present_gate_names = {str(gate.get("gate")) for gate in closure.get("verification", {}).get("gates", [])}
+        if not required_gate_names <= present_gate_names:
+            findings.append(_finding("closure_gate_missing", "stored closure report omits one or more required verification gates"))
+        expected_closure_digest = _sha256({key: value for key, value in closure.items() if key != "closure_report_digest"})
+        if closure.get("closure_report_digest") != expected_closure_digest:
+            findings.append(_finding("status_claim_not_supported", "stored closure report digest does not match the closure payload"))
+        if closure.get("supported_status") == "reference_instrument_correct":
+            measured = verify_reference_instrument(output_dir, repo_root, validate_stored_closure=False)
+            if not measured.get("verified"):
+                findings.append(_finding("status_claim_not_supported", "stored closure status claims correctness that measured gates do not support"))
+    return _gate("structural_identity", findings)
+
+
+def _expected_split_counts() -> dict[str, int]:
+    return {
+        "development": 112,
+        "calibration": 448,
+        "selection": 1008,
+    }
+
+
+def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    identity: BenchmarkIdentity = context["identity"]
+    row_actions = context["row_actions"]
+    plans_by_split = context["plans"]
+    try:
+        plan_payload = _read_json(output_dir / "episode-plan.json")
+        final_payload = _read_json(output_dir / "final-split-sealed-plan.json")
+    except FileNotFoundError:
+        return _gate("seed_and_plan", [_finding("expected_file_missing", "episode plan file is missing")], unavailable=False)
+    if plan_payload.get("version") != EPISODE_PLAN_VERSION or plan_payload.get("seed_derivation_version") != SEED_DERIVATION_VERSION:
+        findings.append(_finding("episode_seed_derivation_mismatch", "episode plan schema or seed derivation version is unsupported"))
+    seen: dict[str, str] = {}
+    for split in _NON_FINAL_SPLITS:
+        stored_split = plan_payload.get("splits", {}).get(split, {})
+        stored_plans = list(stored_split.get("episodes", []))
+        expected_plans = list(plans_by_split[split])
+        if len(stored_plans) != len(expected_plans):
+            findings.append(_finding("sealed_episode_identity_mismatch", "stored split plan count does not match deterministic regenerated plan count", split=split))
+            continue
+        for expected, stored in zip(expected_plans, stored_plans):
+            episode_id = str(stored.get("episode_id"))
+            if episode_id in seen:
+                findings.append(_finding("duplicate_episode_id", "episode id is duplicated across sealed split plans", episode_id=episode_id, previous_split=seen[episode_id], split=split))
+            seen[episode_id] = split
+            if stored.get("split") != split or not episode_id.startswith(f"{split}:"):
+                findings.append(_finding("episode_split_reassignment", "episode id or split field crosses its sealed split boundary", episode_id=episode_id, split=split))
+            if stored.get("derived_seed_identity") != expected.get("derived_seed_identity") or stored.get("episode_seed") != expected.get("episode_seed"):
+                findings.append(_finding("episode_seed_derivation_mismatch", "stored episode seed lineage does not match deterministic derivation", episode_id=episode_id))
+                continue
+            if stored.get("source_row_id") != expected.get("source_row_id") or stored.get("secondary_row_id") != expected.get("secondary_row_id"):
+                findings.append(_finding("episode_seed_derivation_mismatch", "stored source-row lineage does not match deterministic derivation", episode_id=episode_id))
+                continue
+            if dict(stored) != expected:
+                findings.append(_finding("sealed_episode_identity_mismatch", "stored sealed episode plan does not match deterministic regeneration", episode_id=episode_id))
+    expected_final = {
+        "version": EPISODE_PLAN_VERSION,
+        "seed_derivation_version": SEED_DERIVATION_VERSION,
+        "split": "final",
+        "plan_only": True,
+        "materialization_prohibited": True,
+        "episode_counts": {
+            "valid": 112,
+            "frame_invalid": 56,
+            "temporal_negative": 56,
+            "information_control": 28,
+        },
+        "frame_count": 1008,
+        "sealed_episode_ids": _episode_ids_by_family(plans_by_split["final"]),
+        "episodes": plans_by_split["final"],
+        "seed_commitment": identity.seed_digest,
+    }
+    expected_final = expected_final | {"sealed_plan_digest": _sha256(expected_final)}
+    if final_payload != expected_final:
+        findings.append(_finding("sealed_episode_identity_mismatch", "final sealed split identity does not match deterministic regeneration"))
+    digest_payload = _read_json(output_dir / "final-split-sealed-digest.json")
+    if digest_payload.get("digest") != expected_final["sealed_plan_digest"]:
+        findings.append(_finding("sealed_episode_identity_mismatch", "final sealed split digest sidecar does not match the final sealed plan"))
+    try:
+        _validate_episode_plan_collection(context["identity"], plans_by_split, row_actions)
+    except VPMValidationError as exc:
+        findings.append(_finding("episode_seed_derivation_mismatch", "authoritative regenerated plan collection failed validation", error=str(exc)))
+    return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[split]) for split in _ALL_SPLITS)})
+
+
+def _episode_regeneration_gate(output_dir: Path, repo_root: Path) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    counts: dict[str, int] = {}
+    for split in _NON_FINAL_SPLITS:
+        path = output_dir / split / "frame-metadata.jsonl"
+        if not path.exists():
+            findings.append(_finding("expected_record_missing", "split frame metadata is missing", split=split))
+            continue
+        stored_rows = _read_jsonl(path)
+        expected_rows = [{key: value for key, value in row.items() if key != "pixels"} for row in _materialize_records(split, repo_root)]
+        counts[f"{split}_stored_observations"] = len(stored_rows)
+        counts[f"{split}_expected_observations"] = len(expected_rows)
+        if len(stored_rows) != len(expected_rows):
+            findings.append(_finding("expected_record_missing", "stored observation count does not match regenerated count", split=split))
+        expected_by_key = {(row["episode_id"], int(row["sequence_number"])): row for row in expected_rows}
+        stored_by_key = {(row.get("episode_id"), int(row.get("sequence_number", -1))): row for row in stored_rows}
+        for key in sorted(set(expected_by_key) - set(stored_by_key)):
+            findings.append(_finding("expected_record_missing", "regenerated observation is absent from stored frame metadata", split=split, episode_id=key[0], sequence_number=key[1]))
+        for key in sorted(set(stored_by_key) - set(expected_by_key)):
+            findings.append(_finding("orphan_observation_record", "stored frame metadata has no sealed regenerated observation", split=split, episode_id=key[0], sequence_number=key[1]))
+        for key in sorted(set(expected_by_key) & set(stored_by_key)):
+            expected = expected_by_key[key]
+            stored = stored_by_key[key]
+            if stored.get("frame_id") != expected.get("frame_id") or stored.get("clip_id") != expected.get("clip_id"):
+                findings.append(_finding("frame_identity_mismatch", "stored frame identity does not match regenerated identity", split=split, episode_id=key[0], sequence_number=key[1]))
+            if stored.get("event_type") == "gap_unknown" and stored.get("pixels") is not None:
+                findings.append(_finding("gap_event_has_pixels", "declared gap event carries ordinary pixels", split=split, episode_id=key[0], sequence_number=key[1]))
+            if stored.get("event_type") != expected.get("event_type") or stored.get("gap_declaration") != expected.get("gap_declaration"):
+                findings.append(_finding("gap_event_structure_mismatch", "stored event type or gap declaration does not match regenerated observation", split=split, episode_id=key[0], sequence_number=key[1]))
+            if stored.get("observation_pixel_digest") != expected.get("observation_pixel_digest"):
+                code = "observation_digest_mismatch" if stored.get("observation_pixel_digest") and expected.get("observation_pixel_digest") else "observation_bytes_mismatch"
+                findings.append(_finding(code, "stored observation identity does not match regenerated pixel bytes", split=split, episode_id=key[0], sequence_number=key[1]))
+            comparable_fields = ("family", "expected_disposition", "expected_row", "expected_action", "actual_executed_action", "action_known")
+            for field in comparable_fields:
+                if stored.get(field) != expected.get(field):
+                    findings.append(_finding("family_regeneration_mismatch", "stored frame classification does not match regenerated episode", split=split, episode_id=key[0], sequence_number=key[1], field=field))
+                    break
+            stored_meta = stored.get("metadata", {})
+            expected_meta = expected.get("metadata", {})
+            for field in ("seed_digest", "derived_seed_identity", "episode_plan_digest", "frame_seed_identity"):
+                if stored_meta.get(field) != expected_meta.get(field):
+                    findings.append(_finding("family_regeneration_mismatch", "stored frame seed or plan metadata does not match regenerated episode", split=split, episode_id=key[0], sequence_number=key[1], field=field))
+                    break
+    return _gate("episode_regeneration", findings, counts=counts)
+
+
+def _semantic_outcome_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    row_ids = context["row_ids"]
+    row_actions = context["row_actions"]
+    counts = {"provider_score_records": 0}
+    semantic_cache: dict[str, Any] = {}
+    for split in _NON_FINAL_SPLITS:
+        for row in _read_jsonl(output_dir / split / "provider-evidence.jsonl"):
+            counts["provider_score_records"] += 1
+            if row.get("policy_artifact_id") != context["policy"].artifact_id:
+                findings.append(_finding("policy_action_mapping_mismatch", "provider row references a foreign policy artifact", split=split, frame_id=row.get("frame_id")))
+                continue
+            if row.get("provider_version") != _provider_version(str(row.get("provider_id"))):
+                findings.append(_finding("provider_contract_mismatch", "provider row references a foreign provider contract", split=split, frame_id=row.get("frame_id"), provider_id=row.get("provider_id")))
+                continue
+            expected, evidence_findings = _expected_semantic_for_row(row, row_actions, row_ids, semantic_cache)
+            findings.extend(evidence_findings)
+            if expected is None:
+                continue
+            payload = row.get("semantic_top_set_outcome", {})
+            payload_top_rows = {str(item) for item in payload.get("top_row_ids", [])}
+            expected_top_rows = set(expected.top_row_ids)
+            if payload_top_rows != expected_top_rows or set(row.get("top_row_ids", [])) != expected_top_rows:
+                findings.append(_finding("semantic_status_mismatch", "stored semantic top-row set does not match reconstructed top set", split=split, frame_id=row.get("frame_id")))
+            payload_actions = {str(item.get("row_id")): str(item.get("action_id")) for item in payload.get("top_row_actions", [])}
+            if payload_actions != {row_id: row_actions[row_id] for row_id in expected_top_rows}:
+                findings.append(_finding("policy_action_mapping_mismatch", "stored semantic row/action mapping does not match authoritative policy mapping", split=split, frame_id=row.get("frame_id")))
+            if payload.get("status") != expected.status or row.get("semantic_status") != expected.status:
+                findings.append(_finding("semantic_status_mismatch", "stored semantic status does not match independent reconstruction", split=split, frame_id=row.get("frame_id")))
+            stored_resolved_row = payload.get("resolved_row_id", row.get("resolved_row"))
+            stored_resolved_action = payload.get("resolved_action_id", row.get("resolved_action"))
+            if expected.resolved_row_id is None and stored_resolved_row is not None:
+                findings.append(_finding("resolved_row_not_permitted", "stored semantic outcome resolves a row where the frozen rules do not permit one", split=split, frame_id=row.get("frame_id")))
+            elif stored_resolved_row != expected.resolved_row_id or row.get("resolved_row") != expected.resolved_row_id:
+                findings.append(_finding("semantic_status_mismatch", "stored resolved row does not match independent reconstruction", split=split, frame_id=row.get("frame_id")))
+            if expected.resolved_action_id is None and stored_resolved_action is not None:
+                findings.append(_finding("resolved_action_not_permitted", "stored semantic outcome resolves an action where the frozen rules do not permit one", split=split, frame_id=row.get("frame_id")))
+            elif stored_resolved_action != expected.resolved_action_id or row.get("resolved_action") != expected.resolved_action_id:
+                findings.append(_finding("semantic_status_mismatch", "stored resolved action does not match independent reconstruction", split=split, frame_id=row.get("frame_id")))
+            if payload.get("rejection_reason") != expected.rejection_reason:
+                findings.append(_finding("semantic_status_mismatch", "stored semantic rejection reason does not match independent reconstruction", split=split, frame_id=row.get("frame_id")))
+            if payload.get("semantic_outcome_digest") != expected.semantic_outcome_digest or row.get("semantic_outcome_digest") != expected.semantic_outcome_digest:
+                findings.append(_finding("semantic_outcome_digest_mismatch", "stored semantic outcome digest does not match independent reconstruction", split=split, frame_id=row.get("frame_id")))
+            if row.get("winner_row") != expected.resolved_row_id:
+                code = "resolved_row_not_permitted" if expected.resolved_row_id is None and row.get("winner_row") is not None else "semantic_status_mismatch"
+                findings.append(_finding(code, "stored winner row does not match semantic reconstruction", split=split, frame_id=row.get("frame_id")))
+            if row.get("winner_action") != expected.resolved_action_id:
+                code = "resolved_action_not_permitted" if expected.resolved_action_id is None and row.get("winner_action") is not None else "semantic_status_mismatch"
+                findings.append(_finding(code, "stored winner action does not match semantic reconstruction", split=split, frame_id=row.get("frame_id")))
+    return _gate("semantic_outcome", findings, counts=counts)
+
+
+def _family_contract_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    counts = {"family_records_checked": 0}
+    row_actions = context["row_actions"]
+    reachability_tile = context["reachability_tile"]
+    for split in _NON_FINAL_SPLITS:
+        by_episode: dict[str, list[dict[str, Any]]] = {}
+        for row in _read_jsonl(output_dir / split / "frame-metadata.jsonl"):
+            by_episode.setdefault(str(row.get("episode_id")), []).append(row)
+        for episode_id, rows in by_episode.items():
+            ordered = sorted(rows, key=lambda item: int(item.get("sequence_number", -1)))
+            counts["family_records_checked"] += len(ordered)
+            family = ordered[0].get("family")
+            if any(row.get("event_type") == "gap_unknown" and (row.get("observation_pixel_digest") is not None or row.get("pixels") is not None) for row in ordered):
+                findings.append(_finding("gap_event_has_pixels", "typed gap event carries ordinary observation identity", split=split, episode_id=episode_id))
+            if family == "conflicting_action_splice":
+                for row in ordered:
+                    metadata = row.get("metadata", {})
+                    trace = metadata.get("family_intervention_trace", {})
+                    if metadata.get("source_action_id") == metadata.get("competitor_action_id"):
+                        findings.append(_finding("family_contract_violation", "conflicting splice uses two rows governed by the same action", split=split, episode_id=episode_id))
+                    if int(trace.get("primary_contributing_pixel_count", 0)) <= 0 or int(trace.get("secondary_contributing_pixel_count", 0)) <= 0:
+                        findings.append(_finding("family_contract_violation", "conflicting splice does not include nonzero contributions from both sources", split=split, episode_id=episode_id))
+                    if trace.get("output_observation_digest") != row.get("observation_pixel_digest"):
+                        findings.append(_finding("family_regeneration_mismatch", "conflicting splice output digest does not match stored observation", split=split, episode_id=episode_id))
+            elif family == "critical_evidence_corruption":
+                for row in ordered:
+                    metadata = row.get("metadata", {})
+                    trace = metadata.get("family_intervention_trace", {})
+                    changes = trace.get("changes", [])
+                    if not changes:
+                        findings.append(_finding("family_contract_violation", "critical corruption has an empty changed-coordinate set", split=split, episode_id=episode_id))
+                    if trace.get("changed_pixel_count") == 0:
+                        findings.append(_finding("family_no_op", "critical corruption is a no-op", split=split, episode_id=episode_id))
+                    for change in changes:
+                        coord = (int(change.get("y", -1)), int(change.get("x", -1)))
+                        if coord not in set(_critical_coordinates()) or change.get("original") == change.get("replacement"):
+                            findings.append(_finding("family_contract_violation", "critical corruption changed a non-critical coordinate or preserved the original value", split=split, episode_id=episode_id))
+            elif family == "bounded_translation" or family == "bounded_photometric" or family == "bounded_translation_photometric" or family == "bounded_translation_occlusion" or family == "compound_bounded" or family == "exact":
+                for row in ordered:
+                    metadata = row.get("metadata", {})
+                    try:
+                        _validate_transformation_parameters(metadata.get("transformation_parameters", {}))
+                    except (KeyError, VPMValidationError) as exc:
+                        findings.append(_finding("family_contract_violation", "valid transformation parameters violate the frozen bounds", split=split, episode_id=episode_id, error=str(exc)))
+            if any(row.get("expected_disposition") == "information_theoretic_control" for row in ordered):
+                code = validate_control_episode_records(ordered)
+                if code != "ok":
+                    findings.append(_finding(code, "information control records violate byte-identity or denominator rules", split=split, episode_id=episode_id))
+            if any("stale_repeat" in row.get("metadata", {}) for row in ordered):
+                repeat_rows = [row for row in ordered if "stale_repeat" in row.get("metadata", {})]
+                for row in repeat_rows:
+                    repeat = row["metadata"]["stale_repeat"]
+                    if repeat.get("original_destination_digest") == repeat.get("replacement_digest"):
+                        findings.append(_finding("family_contract_violation", "stale repeat does not replace the destination with different bytes", split=split, episode_id=episode_id))
+                    if row.get("observation_pixel_digest") != repeat.get("replacement_digest"):
+                        findings.append(_finding("family_regeneration_mismatch", "stale repeat stored digest does not match replacement digest", split=split, episode_id=episode_id))
+            if any("impossible_transition" in row.get("metadata", {}) for row in ordered):
+                for row in ordered:
+                    transition = row.get("metadata", {}).get("impossible_transition")
+                    if not transition:
+                        continue
+                    edge = _tile_edge(reachability_tile, str(transition["source_row_id"]), str(transition["source_action_id"]))
+                    if str(transition["destination_row_id"]) in set(edge["reachable_row_ids"]):
+                        findings.append(_finding("transition_classification_mismatch", "impossible-transition episode contains at least one reachable pair", split=split, episode_id=episode_id))
+            if any(row.get("metadata", {}).get("sequence_rule") == "non_identity_permutation" for row in ordered):
+                materialized = [row.get("metadata", {}).get("original_frame_index") for row in ordered]
+                if materialized == sorted(materialized) or sorted(materialized) != list(range(len(ordered))):
+                    findings.append(_finding("family_contract_violation", "reordered-frame metadata is not a non-identity complete permutation", split=split, episode_id=episode_id))
+    return _gate("family_contract", findings, counts=counts)
+
+
+def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    counts = {"reachability_traces_checked": 0}
+    row_ids = context["row_ids"]
+    row_actions = context["row_actions"]
+    reachability_tile = context["reachability_tile"]
+    semantic_cache: dict[str, Any] = {}
+    for split in _NON_FINAL_SPLITS:
+        frames = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+        evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
+        by_frame_provider = {(row.get("frame_id"), row.get("provider_id")): row for row in evidence_rows}
+        reachability_state: dict[str, Mapping[str, Any] | None] = {"P1": None, "P2": None, "P3": None}
+        expected_frames = [{key: value for key, value in row.items() if key != "pixels"} for row in _materialize_records(split, repo_root)]
+        # Use stored order only after sorting by the deterministic frame identity. This keeps JSONL row order non-semantic.
+        if len(expected_frames) != len(frames):
+            expected_frames = sorted(frames, key=lambda row: (str(row.get("episode_id")), int(row.get("sequence_number", -1))))
+        for frame in expected_frames:
+            if frame.get("event_type") == "gap_unknown" or frame.get("observation_pixel_digest") is None:
+                for provider_id in reachability_state:
+                    reachability_state[provider_id] = _gap_reachability_state(frame)
+                continue
+            for provider_id in ("P1", "P2", "P3"):
+                row = by_frame_provider.get((frame.get("frame_id"), provider_id))
+                if row is None:
+                    findings.append(_finding("reachability_trace_mismatch", "provider score row missing for scored frame", split=split, frame_id=frame.get("frame_id"), provider_id=provider_id))
+                    continue
+                expected_outcome, evidence_findings = _expected_semantic_for_row(row, row_actions, row_ids, semantic_cache)
+                if evidence_findings or expected_outcome is None:
+                    continue
+                trace = row.get("reachability_composition_trace")
+                if not trace:
+                    findings.append(_finding("reachability_trace_mismatch", "provider row is missing reachability composition trace", split=split, frame_id=frame.get("frame_id"), provider_id=provider_id))
+                    continue
+                expected_trace = compose_reachability_trace(
+                    frame_id=str(row["frame_id"]),
+                    semantic_outcome=expected_outcome.to_dict(),
+                    previous_state=reachability_state[provider_id],
+                    reachability_tile=reachability_tile,
+                    row_actions=row_actions,
+                )
+                counts["reachability_traces_checked"] += 1
+                if trace.get("reachability_tile_identity") != reachability_tile["tile_digest"]:
+                    findings.append(_finding("reachability_tile_mismatch", "reachability trace references a foreign tile identity", split=split, frame_id=row.get("frame_id"), provider_id=provider_id))
+                elif trace.get("executed_action") != expected_trace.get("executed_action"):
+                    findings.append(_finding("executed_action_mismatch", "reachability trace executed action does not match independent composition", split=split, frame_id=row.get("frame_id"), provider_id=provider_id))
+                else:
+                    code = validate_reachability_trace(
+                        trace,
+                        semantic_outcome=expected_outcome.to_dict(),
+                        previous_state=reachability_state[provider_id],
+                        reachability_tile=reachability_tile,
+                        row_actions=row_actions,
+                    )
+                    if code != "ok":
+                        if code in {"foreign_reachability_tile", "foreign_reachability_trace_digest"}:
+                            code = "reachability_tile_mismatch" if code == "foreign_reachability_tile" else "reachability_trace_mismatch"
+                        findings.append(_finding(code, "stored reachability trace does not match independent composition", split=split, frame_id=row.get("frame_id"), provider_id=provider_id))
+                reachability_state[provider_id] = _state_from_trace(expected_trace)
+    return _gate("reachability", findings, counts=counts)
+
+
+def _completeness_orphan_gate(output_dir: Path, repo_root: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    counts: dict[str, int] = {}
+    final_ids = {episode_id for values in _episode_ids_by_family(context["plans"]["final"]).values() for episode_id in values}
+    known_frame_ids: set[str] = set()
+    known_episode_ids: set[str] = set()
+    non_control_digest_owner: dict[str, str] = {}
+    expected_digest_owners: dict[str, set[str]] = {}
+    for split in _NON_FINAL_SPLITS:
+        for row in _materialize_records(split, repo_root):
+            digest = row.get("observation_pixel_digest")
+            if digest is not None and row.get("expected_disposition") != "information_theoretic_control":
+                expected_digest_owners.setdefault(str(digest), set()).add(str(row.get("episode_id")))
+    for split in _NON_FINAL_SPLITS:
+        frame_rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+        evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
+        counts[f"{split}_frame_records"] = len(frame_rows)
+        counts[f"{split}_provider_records"] = len(evidence_rows)
+        for row in frame_rows:
+            frame_id = str(row.get("frame_id"))
+            episode_id = str(row.get("episode_id"))
+            if frame_id in known_frame_ids:
+                findings.append(_finding("duplicate_observation_record", "frame identity is duplicated", split=split, frame_id=frame_id))
+            known_frame_ids.add(frame_id)
+            known_episode_ids.add(episode_id)
+            if episode_id in final_ids or row.get("split") == "final":
+                findings.append(_finding("forbidden_final_materialization", "final sealed episode has a materialized frame descendant", split=split, episode_id=episode_id))
+            digest = row.get("observation_pixel_digest")
+            if digest is not None and row.get("expected_disposition") != "information_theoretic_control":
+                previous = non_control_digest_owner.get(str(digest))
+                expected_owners = expected_digest_owners.get(str(digest), set())
+                if previous is not None and previous != episode_id and episode_id not in expected_owners:
+                    findings.append(_finding("duplicate_observation_identity_unpermitted", "non-control observation identity is reused by multiple episodes", split=split, episode_id=episode_id, digest=digest))
+                non_control_digest_owner[str(digest)] = episode_id
+        scored_frame_ids = {str(row.get("frame_id")) for row in evidence_rows}
+        for row in evidence_rows:
+            if row.get("frame_id") not in known_frame_ids:
+                findings.append(_finding("orphan_score_vector_record", "score vector references an unknown observation", split=split, frame_id=row.get("frame_id")))
+            if row.get("episode_id") not in known_episode_ids:
+                findings.append(_finding("orphan_score_vector_record", "score vector references an unknown episode", split=split, episode_id=row.get("episode_id")))
+            semantic = row.get("semantic_top_set_outcome", {})
+            if semantic.get("quantized_score_vector_digest") != row.get("score_vector_digest"):
+                findings.append(_finding("semantic_outcome_digest_mismatch", "semantic outcome does not reference the stored score vector identity", split=split, frame_id=row.get("frame_id")))
+            trace = row.get("reachability_composition_trace")
+            if trace and trace.get("semantic_outcome_digest") != row.get("semantic_outcome_digest"):
+                findings.append(_finding("reachability_trace_mismatch", "reachability trace does not reference the stored semantic outcome identity", split=split, frame_id=row.get("frame_id")))
+        gap_frame_ids = {str(row.get("frame_id")) for row in frame_rows if row.get("event_type") == "gap_unknown" or row.get("observation_pixel_digest") is None}
+        if scored_frame_ids & gap_frame_ids:
+            findings.append(_finding("gap_event_has_pixels", "typed gap frame has provider score evidence", split=split))
+    return _gate("completeness_orphan", findings, counts=counts)
+
+
+def _access_prohibition_gate(output_dir: Path) -> dict[str, Any]:
+    findings: list[dict[str, Any]] = []
+    measured = _measured_phase_access_counts(output_dir)
+    stored = _read_json(output_dir / "phase-access-audits.json") if (output_dir / "phase-access-audits.json").exists() else {}
+    if measured["final_materialization_count"]:
+        findings.append(_finding("forbidden_final_materialization", "final split has materialized observations", count=measured["final_materialization_count"]))
+    if measured["final_score_access_count"]:
+        findings.append(_finding("forbidden_final_score_access", "final split has provider score records", count=measured["final_score_access_count"]))
+    if measured["final_reachability_execution_count"]:
+        findings.append(_finding("forbidden_final_reachability_access", "final split has reachability execution traces", count=measured["final_reachability_execution_count"]))
+    if measured["calibration_execution_count"]:
+        findings.append(_finding("forbidden_calibration_execution", "prospective calibration execution artifact is present", count=measured["calibration_execution_count"]))
+    if measured["architecture_selection_execution_count"] or measured["candidate_tuning_execution_count"]:
+        findings.append(_finding("forbidden_selection_execution", "prospective selection or candidate-tuning execution artifact is present", count=measured["architecture_selection_execution_count"] + measured["candidate_tuning_execution_count"]))
+    if measured["final_evaluation_count"]:
+        findings.append(_finding("forbidden_final_evaluation", "final evaluation artifact is present", count=measured["final_evaluation_count"]))
+    if stored and {key: stored.get(key) for key in measured if key in stored} != {key: measured.get(key) for key in measured if key in stored}:
+        findings.append(_finding("status_claim_not_supported", "stored phase-access counters do not match counters measured from concrete artifacts"))
+    return _gate("access_prohibition", findings, counts=measured)
+
+
+def verify_reference_instrument(
+    output_dir: Path,
+    repo_root: Path,
+    *,
+    validate_stored_closure: bool = True,
+    enabled_gates: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    """Read-only independent verification of a materialized reference-instrument directory."""
+
+    context = _reference_context(repo_root)
+    enabled = set(enabled_gates) if enabled_gates is not None else set(_REQUIRED_VERIFICATION_GATES)
+    gate_builders = (
+        ("structural_identity", lambda: _structural_identity_gate(output_dir, repo_root, context, validate_stored_closure=validate_stored_closure)),
+        ("semantic_outcome", lambda: _semantic_outcome_gate(output_dir, context)),
+        ("seed_and_plan", lambda: _seed_and_plan_gate(output_dir, context)),
+        ("episode_regeneration", lambda: _episode_regeneration_gate(output_dir, repo_root)),
+        ("family_contract", lambda: _family_contract_gate(output_dir, context)),
+        ("reachability", lambda: _reachability_gate(output_dir, repo_root, context)),
+        ("completeness_orphan", lambda: _completeness_orphan_gate(output_dir, repo_root, context)),
+        ("access_prohibition", lambda: _access_prohibition_gate(output_dir)),
+    )
+    gates = [builder() for name, builder in gate_builders if name in enabled]
+    passed = [gate["gate"] for gate in gates if gate["status"] == "passed"]
+    failed = [gate["gate"] for gate in gates if gate["status"] == "failed"]
+    unavailable = [gate["gate"] for gate in gates if gate["status"] == "unavailable"]
+    phase_counts = _measured_phase_access_counts(output_dir)
+    payload: dict[str, Any] = {
+        "version": REFERENCE_VERIFICATION_VERSION,
+        "authoritative_roots": {
+            "benchmark_contract_identity": context["identity"].to_dict(),
+            "root_seed_digest": context["identity"].seed_digest,
+            "policy_artifact_id": context["policy"].artifact_id,
+            "policy_row_action_digest": context["policy_row_action_digest"],
+            "episode_family_registry_digest": _episode_family_registry()["registry_digest"],
+            "reachability_tile_digest": context["reachability_tile"]["tile_digest"],
+            "provider_versions": {"P1": PROSPECTIVE_P1_VERSION, "P2": PROSPECTIVE_P2_VERSION, "P3": PROSPECTIVE_P3_VERSION},
+            "evidence_schema_versions": {
+                "complete_row_evidence": "zeromodel-video-complete-row-evidence/v2",
+                "semantic_top_set_outcome": SEMANTIC_OUTCOME_VERSION,
+                "reachability_trace": REACHABILITY_TRACE_VERSION,
+                "sealed_episode_plan": EPISODE_PLAN_VERSION,
+            },
+        },
+        "checks_executed": [gate["gate"] for gate in gates],
+        "passed_checks": passed,
+        "failed_checks": failed,
+        "unavailable_checks": unavailable,
+        "gates": gates,
+        "measured_counts": phase_counts,
+        "final_access_measurements": {
+            "final_plan_count": len(context["plans"]["final"]),
+            "final_observation_materialization_count": phase_counts["final_materialization_count"],
+            "final_provider_score_access_count": phase_counts["final_score_access_count"],
+            "final_reachability_execution_count": phase_counts["final_reachability_execution_count"],
+            "final_evaluation_count": phase_counts["final_evaluation_count"],
+            "calibration_execution_count": phase_counts["calibration_execution_count"],
+            "architecture_selection_execution_count": phase_counts["architecture_selection_execution_count"],
+            "candidate_tuning_execution_count": phase_counts["candidate_tuning_execution_count"],
+        },
+        "verified": not failed and not unavailable,
+        "primary_failure_code": None,
+    }
+    payload["primary_failure_code"] = _first_failure_code(payload)
+    payload["verification_digest"] = _sha256({key: value for key, value in payload.items() if key != "verification_digest"})
+    return payload
+
+
+def _file_digest(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _directory_snapshot(path: Path) -> dict[str, dict[str, Any]]:
+    if not path.exists():
+        return {}
+    snapshot: dict[str, dict[str, Any]] = {}
+    for item in sorted(path.rglob("*")):
+        if item.is_file():
+            stat = item.stat()
+            snapshot[str(item.relative_to(path)).replace("\\", "/")] = {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns, "digest": _file_digest(item)}
+    return snapshot
+
+
+def verify_reference_read_only(output_dir: Path, repo_root: Path) -> dict[str, Any]:
+    before = _directory_snapshot(output_dir)
+    first = verify_reference_instrument(output_dir, repo_root)
+    middle = _directory_snapshot(output_dir)
+    second = verify_reference_instrument(output_dir, repo_root)
+    after = _directory_snapshot(output_dir)
+    payload = {
+        "read_only": before == middle == after,
+        "deterministic": first.get("verification_digest") == second.get("verification_digest") and first == second,
+        "first_verification_digest": first.get("verification_digest"),
+        "second_verification_digest": second.get("verification_digest"),
+        "path_count": len(before),
+    }
+    payload["status"] = "passed" if payload["read_only"] and payload["deterministic"] else "failed"
+    payload["digest"] = _sha256(payload)
+    return payload
+
+
+_MUTATION_CASES: tuple[dict[str, Any], ...] = (
+    {"name": "evidence_raw_score_preserve_quantized_bin", "expected_primary_failure_code": "raw_diagnostic_digest_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_raw_score_cross_quantization_boundary", "expected_primary_failure_code": "quantized_score_vector_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_quantized_score_changed", "expected_primary_failure_code": "quantized_score_vector_mismatch", "artifact_class": "evidence", "digest_laundering": True},
+    {"name": "evidence_remove_row_score", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_duplicate_row_score", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_introduce_foreign_row", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_reorder_stored_rows", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_alter_ranking_order", "expected_primary_failure_code": "ranking_reconstruction_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_alter_tie_group_membership", "expected_primary_failure_code": "tie_group_reconstruction_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_split_tie_group_incorrectly", "expected_primary_failure_code": "tie_group_reconstruction_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_merge_distinct_score_groups", "expected_primary_failure_code": "tie_group_reconstruction_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_alter_quantized_score_vector_digest", "expected_primary_failure_code": "quantized_score_vector_mismatch", "artifact_class": "evidence"},
+    {"name": "evidence_alter_raw_diagnostic_digest", "expected_primary_failure_code": "raw_diagnostic_digest_mismatch", "artifact_class": "evidence"},
+    {"name": "semantic_resolved_row_for_action_unanimous_tie", "expected_primary_failure_code": "resolved_row_not_permitted", "artifact_class": "semantic"},
+    {"name": "semantic_resolved_action_for_conflicting_tie", "expected_primary_failure_code": "resolved_action_not_permitted", "artifact_class": "semantic"},
+    {"name": "semantic_convert_conflicting_tie_to_unique_row", "expected_primary_failure_code": "semantic_status_mismatch", "artifact_class": "semantic"},
+    {"name": "semantic_change_top_row_policy_action", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "semantic"},
+    {"name": "semantic_change_rejection_reason", "expected_primary_failure_code": "semantic_status_mismatch", "artifact_class": "semantic"},
+    {"name": "semantic_alter_outcome_digest", "expected_primary_failure_code": "semantic_outcome_digest_mismatch", "artifact_class": "semantic", "digest_laundering": True},
+    {"name": "semantic_lexically_reorder_tied_rows", "expected_primary_failure_code": None, "artifact_class": "semantic", "invariant": True},
+    {"name": "semantic_reorder_rows_preserving_action_equivalence", "expected_primary_failure_code": None, "artifact_class": "semantic", "invariant": True},
+    {"name": "policy_alter_row_to_action_mapping", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
+    {"name": "policy_remove_policy_row", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
+    {"name": "policy_add_undeclared_row", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
+    {"name": "policy_alter_artifact_identity", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
+    {"name": "policy_mapping_recomputed_superficial_metadata", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy", "digest_laundering": True},
+    {"name": "observation_flip_byte_digest", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
+    {"name": "observation_change_pixels_and_recompute_digest", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation", "digest_laundering": True},
+    {"name": "observation_change_digest_without_pixels", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
+    {"name": "observation_swap_two_frame_payloads", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
+    {"name": "observation_alter_frame_identity", "expected_primary_failure_code": "frame_identity_mismatch", "artifact_class": "observation"},
+    {"name": "observation_reuse_under_two_episode_ids", "expected_primary_failure_code": "duplicate_observation_identity_unpermitted", "artifact_class": "observation"},
+    {"name": "observation_substitute_frame_for_declared_gap", "expected_primary_failure_code": "gap_event_structure_mismatch", "artifact_class": "observation"},
+    {"name": "seed_alter_root_seed_material", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_root_seed_digest", "expected_primary_failure_code": "benchmark_contract_identity_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_derived_seed", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_derivation_namespace", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_episode_ordinal", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_split_identity", "expected_primary_failure_code": "episode_split_reassignment", "artifact_class": "episode_plan"},
+    {"name": "seed_move_episode_between_splits", "expected_primary_failure_code": "episode_split_reassignment", "artifact_class": "episode_plan"},
+    {"name": "seed_duplicate_episode_id", "expected_primary_failure_code": "duplicate_episode_id", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_source_row", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_splice_partner", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_transformation_parameters", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_planned_family", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_sealed_plan_digest", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
+    {"name": "seed_alter_final_sealed_identity", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
+    {"name": "family_conflicting_splice_same_action_rows", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_splice_zero_source_contribution", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_splice_output_equal_one_source", "expected_primary_failure_code": "family_regeneration_mismatch", "artifact_class": "family_output"},
+    {"name": "family_critical_empty_coordinate_set", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_corrupt_noncritical_coordinates", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_replacement_value_identical", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_clipping_quantization_noop", "expected_primary_failure_code": "family_no_op", "artifact_class": "family_output", "digest_laundering": True},
+    {"name": "family_reordered_metadata_original_payload_order", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_identity_permutation_labelled_reordered", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_stale_label_without_repeated_bytes", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_stale_repeat_naturally_identical", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
+    {"name": "family_impossible_transition_reachable_pair", "expected_primary_failure_code": "transition_classification_mismatch", "artifact_class": "family_output"},
+    {"name": "family_gap_event_carrying_pixels", "expected_primary_failure_code": "gap_event_has_pixels", "artifact_class": "family_output"},
+    {"name": "family_information_control_pixel_difference", "expected_primary_failure_code": "control_byte_identity_mismatch", "artifact_class": "family_output"},
+    {"name": "family_control_denominator_leak", "expected_primary_failure_code": "control_denominator_leak", "artifact_class": "family_output"},
+    {"name": "reachability_remove_applicable_edge", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_redirect_applicable_edge", "expected_primary_failure_code": "reachable_pair_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_alter_destination_action", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_add_impossible_edge", "expected_primary_failure_code": "reachability_tile_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_change_tile_identity", "expected_primary_failure_code": "reachability_tile_mismatch", "artifact_class": "reachability_trace", "digest_laundering": True},
+    {"name": "reachability_change_unrelated_edge", "expected_primary_failure_code": "reachability_tile_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_alter_consulted_edge_list", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_omit_consulted_edge", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_add_unconsulted_edge_to_trace", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_alter_reachable_pair_set", "expected_primary_failure_code": "reachable_pair_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_alter_retained_candidate_rows", "expected_primary_failure_code": "reachability_trace_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_alter_removed_candidate_rows", "expected_primary_failure_code": "reachability_trace_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_replace_rejection_with_lexical_winner", "expected_primary_failure_code": "executed_action_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_change_executed_action", "expected_primary_failure_code": "executed_action_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "reachability_use_foreign_trace_digest", "expected_primary_failure_code": "reachability_trace_mismatch", "artifact_class": "reachability_trace"},
+    {"name": "access_increment_final_materialization_count", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status"},
+    {"name": "access_add_final_observation_artifact", "expected_primary_failure_code": "forbidden_final_materialization", "artifact_class": "access_status"},
+    {"name": "access_add_final_score_vector_record", "expected_primary_failure_code": "forbidden_final_score_access", "artifact_class": "access_status"},
+    {"name": "access_add_final_reachability_trace", "expected_primary_failure_code": "forbidden_final_score_access", "artifact_class": "access_status"},
+    {"name": "access_increment_forbidden_access_counter", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status", "digest_laundering": True},
+    {"name": "access_record_calibration_execution", "expected_primary_failure_code": "forbidden_calibration_execution", "artifact_class": "access_status"},
+    {"name": "access_record_architecture_selection_execution", "expected_primary_failure_code": "forbidden_selection_execution", "artifact_class": "access_status"},
+    {"name": "access_change_failed_gate_status_to_passed", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status"},
+    {"name": "access_change_repository_status_to_correct", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status"},
+    {"name": "access_remove_required_gate_from_closure_report", "expected_primary_failure_code": "closure_gate_missing", "artifact_class": "access_status"},
+)
+
+
+_MUTATION_GATE_SCOPE = {
+    "evidence": ("structural_identity", "semantic_outcome"),
+    "semantic": ("structural_identity", "semantic_outcome"),
+    "policy": ("structural_identity",),
+    "observation": ("structural_identity", "episode_regeneration", "completeness_orphan"),
+    "episode_plan": ("structural_identity", "seed_and_plan"),
+    "family_output": ("structural_identity", "family_contract"),
+    "reachability_trace": ("structural_identity", "semantic_outcome", "reachability"),
+    "access_status": ("structural_identity", "access_prohibition"),
+}
+
+
+def _rewrite_jsonl(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
+    _write_jsonl(path, [dict(row) for row in rows])
+
+
+def _launder_split_manifest(output_dir: Path, split: str) -> None:
+    manifest_path = output_dir / f"{split}-manifest.json"
+    if not manifest_path.exists():
+        return
+    frame_rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+    evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
+    manifest = _read_json(manifest_path)
+    manifest["observation_count"] = len(frame_rows)
+    manifest["provider_frame_record_count"] = len(evidence_rows)
+    manifest["frame_digest"] = _sha256(frame_rows)
+    manifest["provider_evidence_digest"] = _sha256(evidence_rows)
+    _write_json(manifest_path, manifest)
+
+
+def _mutate_first_provider_row(output_dir: Path, mutator: Any, *, predicate: Any | None = None) -> None:
+    path = output_dir / "selection" / "provider-evidence.jsonl"
+    rows = _read_jsonl(path)
+    for row in rows:
+        if predicate is None or predicate(row):
+            mutator(row)
+            _rewrite_jsonl(path, rows)
+            _launder_split_manifest(output_dir, "selection")
+            return
+    raise VPMValidationError("mutation fixture lacks a matching provider row")
+
+
+def _mutate_first_frame_row(output_dir: Path, mutator: Any, *, predicate: Any | None = None) -> None:
+    path = output_dir / "selection" / "frame-metadata.jsonl"
+    rows = _read_jsonl(path)
+    for row in rows:
+        if predicate is None or predicate(row):
+            mutator(row)
+            _rewrite_jsonl(path, rows)
+            _launder_split_manifest(output_dir, "selection")
+            return
+    raise VPMValidationError("mutation fixture lacks a matching frame row")
+
+
+def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
+    if case_name.startswith("evidence_"):
+        def mutate(row: dict[str, Any]) -> None:
+            if case_name == "evidence_raw_score_preserve_quantized_bin":
+                row["all_112_raw_scores"][0] = float(row["all_112_raw_scores"][0]) + 1e-12
+            elif case_name == "evidence_raw_score_cross_quantization_boundary":
+                row["all_112_raw_scores"][0] = 0.0 if int(row["all_112_quantized_scores"][0]) else 1.0
+            elif case_name == "evidence_quantized_score_changed":
+                row["all_112_quantized_scores"][0] = min(QUANTIZATION_SCALE, int(row["all_112_quantized_scores"][0]) + 1)
+                row["score_vector_digest"] = _sha256({"laundered": row["all_112_quantized_scores"]})
+                row["quantized_score_vector_digest"] = row["score_vector_digest"]
+            elif case_name == "evidence_remove_row_score":
+                for key in ("all_112_row_ids", "all_112_raw_scores", "all_112_quantized_scores"):
+                    row[key].pop()
+            elif case_name == "evidence_duplicate_row_score":
+                row["all_112_row_ids"][1] = row["all_112_row_ids"][0]
+            elif case_name == "evidence_introduce_foreign_row":
+                row["all_112_row_ids"][0] = "foreign:row"
+            elif case_name == "evidence_reorder_stored_rows":
+                for key in ("all_112_row_ids", "all_112_raw_scores", "all_112_quantized_scores"):
+                    row[key][0], row[key][1] = row[key][1], row[key][0]
+            elif case_name == "evidence_alter_ranking_order":
+                row["complete_ordered_ranking"][0], row["complete_ordered_ranking"][1] = row["complete_ordered_ranking"][1], row["complete_ordered_ranking"][0]
+            elif case_name == "evidence_alter_tie_group_membership":
+                row["tie_groups"][0]["row_ids"][0] = row["complete_ordered_ranking"][-1]
+            elif case_name == "evidence_split_tie_group_incorrectly":
+                top = row["tie_groups"][0]
+                if len(top["row_ids"]) < 2:
+                    top["row_ids"].append(row["complete_ordered_ranking"][1])
+                moved = top["row_ids"].pop()
+                row["tie_groups"].insert(1, {"tie_group_index": 1, "quantized_score": top["quantized_score"], "row_ids": [moved]})
+            elif case_name == "evidence_merge_distinct_score_groups":
+                if len(row["tie_groups"]) > 1:
+                    row["tie_groups"][0]["row_ids"].extend(row["tie_groups"][1]["row_ids"])
+                    row["tie_groups"].pop(1)
+                else:
+                    row["tie_groups"][0]["row_ids"].append(row["complete_ordered_ranking"][-1])
+            elif case_name == "evidence_alter_quantized_score_vector_digest":
+                row["score_vector_digest"] = "sha256:" + "0" * 64
+                row["quantized_score_vector_digest"] = row["score_vector_digest"]
+            elif case_name == "evidence_alter_raw_diagnostic_digest":
+                row["raw_score_diagnostic_digest"] = "sha256:" + "0" * 64
+        _mutate_first_provider_row(output_dir, mutate)
+        return
+
+    if case_name.startswith("semantic_"):
+        def semantic_mutate(row: dict[str, Any]) -> None:
+            payload = row["semantic_top_set_outcome"]
+            if case_name == "semantic_resolved_row_for_action_unanimous_tie":
+                payload["resolved_row_id"] = payload["top_row_ids"][0]
+                row["resolved_row"] = payload["resolved_row_id"]
+            elif case_name == "semantic_resolved_action_for_conflicting_tie":
+                payload["resolved_action_id"] = payload["top_action_ids"][0]
+                row["resolved_action"] = payload["resolved_action_id"]
+                row["winner_action"] = payload["resolved_action_id"]
+            elif case_name == "semantic_convert_conflicting_tie_to_unique_row":
+                payload["status"] = "unique_row"
+                row["semantic_status"] = "unique_row"
+            elif case_name == "semantic_change_top_row_policy_action":
+                payload["top_row_actions"][0]["action_id"] = "FIRE" if payload["top_row_actions"][0]["action_id"] != "FIRE" else "LEFT"
+            elif case_name == "semantic_change_rejection_reason":
+                payload["rejection_reason"] = "mutated rejection reason"
+            elif case_name == "semantic_alter_outcome_digest":
+                payload["semantic_outcome_digest"] = "sha256:" + "1" * 64
+                row["semantic_outcome_digest"] = payload["semantic_outcome_digest"]
+            elif case_name in {"semantic_lexically_reorder_tied_rows", "semantic_reorder_rows_preserving_action_equivalence"}:
+                payload["top_row_ids"] = list(reversed(payload["top_row_ids"]))
+                payload["top_row_actions"] = list(reversed(payload["top_row_actions"]))
+                row["top_row_ids"] = list(reversed(row["top_row_ids"]))
+        if case_name == "semantic_resolved_row_for_action_unanimous_tie":
+            _mutate_first_provider_row(output_dir, semantic_mutate, predicate=lambda row: row.get("semantic_status") == "action_unanimous_tie")
+        elif case_name in {"semantic_resolved_action_for_conflicting_tie", "semantic_convert_conflicting_tie_to_unique_row", "semantic_change_rejection_reason"}:
+            _mutate_first_provider_row(output_dir, semantic_mutate, predicate=lambda row: row.get("semantic_status") == "conflicting_action_tie")
+        elif case_name in {"semantic_lexically_reorder_tied_rows", "semantic_reorder_rows_preserving_action_equivalence"}:
+            _mutate_first_provider_row(output_dir, semantic_mutate, predicate=lambda row: len(row.get("top_row_ids", [])) > 1)
+        else:
+            _mutate_first_provider_row(output_dir, semantic_mutate)
+        return
+
+    if case_name.startswith("policy_"):
+        payload = _read_json(output_dir / "policy-artifact.json")
+        if case_name == "policy_remove_policy_row":
+            payload["row_ids"].pop()
+        elif case_name == "policy_add_undeclared_row":
+            payload["row_ids"].append("foreign:row")
+            payload["row_action"]["foreign:row"] = "LEFT"
+        elif case_name == "policy_alter_artifact_identity":
+            payload["policy_artifact_id"] = "sha256:foreign-policy"
+        else:
+            first = payload["row_ids"][0]
+            payload["row_action"][first] = "FIRE" if payload["row_action"][first] != "FIRE" else "LEFT"
+            payload["row_action_digest"] = _sha256({"laundered": payload["row_action"]})
+        _write_json(output_dir / "policy-artifact.json", payload)
+        return
+
+    if case_name.startswith("observation_"):
+        if case_name == "observation_swap_two_frame_payloads":
+            path = output_dir / "selection" / "frame-metadata.jsonl"
+            rows = _read_jsonl(path)
+            rows[0]["observation_pixel_digest"], rows[1]["observation_pixel_digest"] = rows[1]["observation_pixel_digest"], rows[0]["observation_pixel_digest"]
+            _rewrite_jsonl(path, rows)
+            _launder_split_manifest(output_dir, "selection")
+        elif case_name == "observation_alter_frame_identity":
+            _mutate_first_frame_row(output_dir, lambda row: row.__setitem__("frame_id", str(row["frame_id"]) + ":mutated"))
+        elif case_name == "observation_reuse_under_two_episode_ids":
+            path = output_dir / "selection" / "frame-metadata.jsonl"
+            rows = _read_jsonl(path)
+            first_digest = next(row["observation_pixel_digest"] for row in rows if row.get("observation_pixel_digest") and row.get("expected_disposition") != "information_theoretic_control")
+            for row in rows:
+                if row.get("observation_pixel_digest") and row.get("expected_disposition") != "information_theoretic_control" and row["observation_pixel_digest"] != first_digest:
+                    row["observation_pixel_digest"] = first_digest
+                    break
+            _rewrite_jsonl(path, rows)
+            _launder_split_manifest(output_dir, "selection")
+        elif case_name == "observation_substitute_frame_for_declared_gap":
+            _mutate_first_frame_row(output_dir, lambda row: (row.__setitem__("event_type", "frame"), row.__setitem__("gap_declaration", None), row.__setitem__("observation_pixel_digest", "sha256:" + "2" * 64)), predicate=lambda row: row.get("event_type") == "gap_unknown")
+        else:
+            _mutate_first_frame_row(output_dir, lambda row: row.__setitem__("observation_pixel_digest", "sha256:" + "3" * 64), predicate=lambda row: row.get("observation_pixel_digest") is not None)
+        return
+
+    if case_name.startswith("seed_"):
+        if case_name in {"seed_alter_root_seed_material", "seed_alter_root_seed_digest"}:
+            path = output_dir / ("generator-identity.json" if case_name == "seed_alter_root_seed_material" else "benchmark-contract-identity.json")
+            payload = _read_json(path)
+            if case_name == "seed_alter_root_seed_material":
+                payload["seed_material"] = str(payload["seed_material"]) + "|mutated"
+            else:
+                payload["seed_digest"] = "sha256:" + "4" * 64
+            _write_json(path, payload)
+            return
+        path = output_dir / "episode-plan.json"
+        payload = _read_json(path)
+        plan = payload["splits"]["selection"]["episodes"][0]
+        if case_name == "seed_alter_derived_seed":
+            plan["derived_seed_identity"] = "sha256:" + "5" * 64
+        elif case_name == "seed_alter_derivation_namespace":
+            plan["seed_lineage"]["concrete_episode_seed"]["namespace"] = "mutated_namespace"
+        elif case_name == "seed_alter_episode_ordinal":
+            plan["ordinal"] += 1
+        elif case_name == "seed_alter_split_identity":
+            plan["split"] = "development"
+        elif case_name == "seed_move_episode_between_splits":
+            payload["splits"]["development"]["episodes"].append(plan)
+            payload["splits"]["selection"]["episodes"] = payload["splits"]["selection"]["episodes"][1:]
+        elif case_name == "seed_duplicate_episode_id":
+            payload["splits"]["selection"]["episodes"][1]["episode_id"] = plan["episode_id"]
+        elif case_name == "seed_alter_source_row":
+            plan["source_row_id"] = payload["policy_row_ids"][-1]
+        elif case_name == "seed_alter_splice_partner":
+            target = next(item for item in payload["splits"]["selection"]["episodes"] if item.get("mutation_kind") == "conflicting_action_splice")
+            target["secondary_row_id"] = target["source_row_id"]
+        elif case_name == "seed_alter_transformation_parameters":
+            plan["frame_plans"][0]["transformation_parameters"]["dx"] = 99
+        elif case_name == "seed_alter_planned_family":
+            plan["family_label"] = "temporal_negative"
+        elif case_name == "seed_alter_sealed_plan_digest":
+            plan["plan_digest"] = "sha256:" + "6" * 64
+        elif case_name == "seed_alter_final_sealed_identity":
+            final_path = output_dir / "final-split-sealed-plan.json"
+            final = _read_json(final_path)
+            final["episodes"][0]["episode_id"] = "final:valid:mutated"
+            final["sealed_episode_ids"]["valid"][0] = "final:valid:mutated"
+            final["sealed_plan_digest"] = _sha256({key: value for key, value in final.items() if key != "sealed_plan_digest"})
+            _write_json(final_path, final)
+            _write_json(output_dir / "final-split-sealed-digest.json", {"digest": final["sealed_plan_digest"]})
+            return
+        _write_json(path, payload)
+        return
+
+    if case_name.startswith("family_"):
+        def family_mutate(row: dict[str, Any]) -> None:
+            metadata = row.setdefault("metadata", {})
+            trace = metadata.setdefault("family_intervention_trace", {})
+            if case_name == "family_conflicting_splice_same_action_rows":
+                metadata["competitor_action_id"] = metadata.get("source_action_id")
+            elif case_name == "family_splice_zero_source_contribution":
+                trace["secondary_contributing_pixel_count"] = 0
+            elif case_name == "family_splice_output_equal_one_source":
+                trace["output_observation_digest"] = trace.get("primary_source_digest")
+            elif case_name == "family_critical_empty_coordinate_set":
+                trace["changes"] = []
+            elif case_name == "family_corrupt_noncritical_coordinates":
+                if trace.get("changes"):
+                    trace["changes"][0]["y"] = 0
+                    trace["changes"][0]["x"] = 0
+            elif case_name == "family_replacement_value_identical":
+                if trace.get("changes"):
+                    trace["changes"][0]["replacement"] = trace["changes"][0]["original"]
+            elif case_name == "family_clipping_quantization_noop":
+                trace["changed_pixel_count"] = 0
+            elif case_name in {"family_reordered_metadata_original_payload_order", "family_identity_permutation_labelled_reordered"}:
+                metadata["original_frame_index"] = int(row.get("sequence_number", 0))
+            elif case_name in {"family_stale_label_without_repeated_bytes", "family_stale_repeat_naturally_identical"}:
+                repeat = metadata.setdefault("stale_repeat", {})
+                repeat["replacement_digest"] = repeat.get("original_destination_digest", row.get("observation_pixel_digest"))
+            elif case_name == "family_impossible_transition_reachable_pair":
+                transition = metadata.setdefault("impossible_transition", {})
+                edge = transition.get("consulted_edge", {})
+                if edge.get("reachable_row_ids"):
+                    transition["destination_row_id"] = edge["reachable_row_ids"][0]
+            elif case_name == "family_gap_event_carrying_pixels":
+                row["pixels"] = [[0]]
+            elif case_name == "family_information_control_pixel_difference":
+                row["observation_pixel_digest"] = "sha256:" + "7" * 64
+            elif case_name == "family_control_denominator_leak":
+                metadata["denominator_eligible"] = True
+        if "splice" in case_name:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("family") == "conflicting_action_splice")
+        elif "critical" in case_name or "corrupt" in case_name or "replacement" in case_name or "noop" in case_name:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("family") == "critical_evidence_corruption")
+        elif "reordered" in case_name or "permutation" in case_name:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("metadata", {}).get("sequence_rule") == "non_identity_permutation")
+        elif "stale" in case_name:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: "stale_repeat" in row.get("metadata", {}))
+        elif "impossible" in case_name:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: "impossible_transition" in row.get("metadata", {}))
+        elif "gap" in case_name:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("event_type") == "gap_unknown")
+        else:
+            _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("expected_disposition") == "information_theoretic_control")
+        return
+
+    if case_name.startswith("reachability_"):
+        if case_name in {"reachability_add_impossible_edge", "reachability_change_tile_identity", "reachability_change_unrelated_edge"}:
+            payload = _read_json(output_dir / "reachability-tile-reference.json")
+            payload["tile_digest"] = "sha256:" + "8" * 64
+            _write_json(output_dir / "reachability-tile-reference.json", payload)
+            return
+        def reach_mutate(row: dict[str, Any]) -> None:
+            trace = row["reachability_composition_trace"]
+            if case_name == "reachability_remove_applicable_edge":
+                trace["consulted_edges"] = []
+            elif case_name == "reachability_redirect_applicable_edge":
+                if trace.get("reachable_candidate_pairs"):
+                    trace["reachable_candidate_pairs"][0]["destination_row_id"] = row["all_112_row_ids"][-1]
+            elif case_name == "reachability_alter_destination_action":
+                row["semantic_top_set_outcome"]["top_row_actions"][0]["action_id"] = "FIRE" if row["semantic_top_set_outcome"]["top_row_actions"][0]["action_id"] != "FIRE" else "LEFT"
+            elif case_name in {"reachability_alter_consulted_edge_list", "reachability_omit_consulted_edge"}:
+                trace["consulted_edges"] = []
+            elif case_name == "reachability_add_unconsulted_edge_to_trace":
+                trace["consulted_edges"].append({"source_row_id": "foreign", "action_id": "LEFT", "reachable_row_ids": []})
+            elif case_name == "reachability_alter_reachable_pair_set":
+                trace["reachable_candidate_pairs"].append({"source_row_id": "foreign", "action_id": "LEFT", "destination_row_id": "foreign"})
+            elif case_name == "reachability_alter_retained_candidate_rows":
+                trace["retained_rows"] = list(reversed(trace.get("retained_rows", [])))
+            elif case_name == "reachability_alter_removed_candidate_rows":
+                trace["removed_rows"] = list(reversed(trace.get("removed_rows", []))) + ["foreign"]
+            elif case_name == "reachability_replace_rejection_with_lexical_winner":
+                trace["status"] = "resolved"
+                trace["executed_action"] = "LEFT"
+            elif case_name == "reachability_change_executed_action":
+                trace["executed_action"] = "FIRE" if trace.get("executed_action") != "FIRE" else "LEFT"
+            elif case_name == "reachability_use_foreign_trace_digest":
+                trace["trace_digest"] = "sha256:" + "9" * 64
+        _mutate_first_provider_row(output_dir, reach_mutate, predicate=lambda row: row.get("reachability_composition_trace") is not None)
+        return
+
+    if case_name.startswith("access_"):
+        if case_name in {"access_increment_final_materialization_count", "access_increment_forbidden_access_counter"}:
+            payload = _read_json(output_dir / "phase-access-audits.json")
+            payload["forbidden_final_access_counter"] = int(payload.get("forbidden_final_access_counter", 0)) + 1
+            if case_name == "access_increment_final_materialization_count":
+                payload["final_materialization_count"] = int(payload.get("final_materialization_count", 0)) + 1
+            _write_json(output_dir / "phase-access-audits.json", payload)
+        elif case_name in {"access_add_final_observation_artifact", "access_add_final_score_vector_record", "access_add_final_reachability_trace"}:
+            final_plan = _read_json(output_dir / "final-split-sealed-plan.json")
+            final_id = final_plan["sealed_episode_ids"]["valid"][0]
+            if case_name == "access_add_final_observation_artifact":
+                _write_jsonl(output_dir / "final" / "frame-metadata.jsonl", [{"split": "final", "episode_id": final_id, "frame_id": f"final:{final_id}:frame-00"}])
+            else:
+                row = _read_jsonl(output_dir / "selection" / "provider-evidence.jsonl")[0]
+                row["split"] = "final"
+                row["episode_id"] = final_id
+                if case_name == "access_add_final_reachability_trace":
+                    row["reachability_composition_trace"] = {"trace_digest": "sha256:" + "a" * 64}
+                _write_jsonl(output_dir / "final" / "provider-evidence.jsonl", [row])
+        elif case_name == "access_record_calibration_execution":
+            _write_json(output_dir / "selected-calibration.json", {"executed": True})
+        elif case_name == "access_record_architecture_selection_execution":
+            _write_json(output_dir / "selected-architecture.json", {"executed": True})
+        else:
+            report = verify_reference_instrument(output_dir, Path(__file__).resolve().parents[1])
+            if case_name == "access_remove_required_gate_from_closure_report":
+                report["gates"] = report["gates"][1:]
+            closure = {"version": CLOSURE_REPORT_VERSION, "supported_status": "reference_instrument_correct", "verification": report}
+            _write_json(output_dir / "reference-closure-report.json", closure)
+        return
+    raise VPMValidationError(f"unsupported mutation case: {case_name}")
+
+
+def run_reference_mutation_audit(output_dir: Path, repo_root: Path, *, mutation_names: Sequence[str] | None = None) -> dict[str, Any]:
+    import shutil
     import tempfile
 
-    with tempfile.TemporaryDirectory(prefix="prospective-benchmark-verify-") as tmp:
-        temp = Path(tmp) / "video-action-set-reachability-benchmark-v1"
-        freeze_benchmark(temp, repo_root)
-        build_split("development", temp, repo_root)
-        build_split("calibration", temp, repo_root)
-        build_split("selection", temp, repo_root)
-        audit_evidence_completeness(temp)
-        audit_canonical_providers(temp)
-        compare_files = [
-            "benchmark-contract-identity.json",
-            "generator-identity.json",
-            "benchmark-manifest.json",
-            "split-manifest.json",
-            "development-manifest.json",
-            "calibration-manifest.json",
-            "selection-manifest.json",
-            "final-split-sealed-plan.json",
-            "family-closure-report.json",
-            "evidence-completeness-summary.json",
-            "canonical-provider-summary.json",
-            "provider-equivalence-results.json",
-            "tie-safety-results.json",
-            "phase-access-audits.json",
-        ]
-        mismatches = []
-        for name in compare_files:
-            if not (output_dir / name).exists() or not (temp / name).exists() or not filecmp.cmp(output_dir / name, temp / name, shallow=False):
-                mismatches.append(name)
-        mutation_failures = _run_adversarial_mutation_checks(temp)
-        phase_counts = _measured_phase_access_counts(output_dir)
+    selected_cases = tuple(case for case in _MUTATION_CASES if mutation_names is None or case["name"] in set(mutation_names))
+    base = verify_reference_instrument(output_dir, repo_root)
+    results: list[dict[str, Any]] = []
+    if not base["verified"]:
         payload = {
-            "verified": not mismatches and not mutation_failures and phase_counts["forbidden_final_access_counter"] == 0,
-            "mismatches": mismatches,
-            "mutation_failures": mutation_failures,
-            "final_materialization_count": phase_counts["final_materialization_count"],
-            "final_score_access_count": phase_counts["final_score_access_count"],
-            "candidate_set_selection_count": phase_counts["candidate_set_selection_count"],
-            "conformal_calibration_count": phase_counts["conformal_calibration_count"],
-            "reachability_replay_count": phase_counts["reachability_replay_count"],
-            "final_evaluation_count": phase_counts["final_evaluation_count"],
-            "forbidden_final_access_counter": phase_counts["forbidden_final_access_counter"],
-            "read_only": True,
+            "version": MUTATION_AUDIT_VERSION,
+            "base_verified": False,
+            "base_primary_failure_code": base.get("primary_failure_code"),
+            "mutations": [],
+            "expected_mutation_count": len(selected_cases),
+            "detected_mutation_count": 0,
+            "undetected_mutation_count": len([case for case in selected_cases if not case.get("invariant")]),
+            "unexpected_failure_code_count": len(selected_cases),
+            "digest_laundering_tests": [],
+            "status": "unavailable",
         }
-        _write_json(output_dir / "instrument-verification.json", payload)
+        payload["mutation_audit_digest"] = _sha256(payload)
         return payload
+    with tempfile.TemporaryDirectory(prefix="reference-mutation-audit-") as tmp:
+        tmp_root = Path(tmp)
+        for case in selected_cases:
+            case_dir = tmp_root / case["name"]
+            shutil.copytree(output_dir, case_dir)
+            apply_error = None
+            try:
+                _apply_reference_mutation(case_dir, str(case["name"]))
+                report = verify_reference_instrument(
+                    case_dir,
+                    repo_root,
+                    enabled_gates=_MUTATION_GATE_SCOPE.get(str(case["artifact_class"]), _REQUIRED_VERIFICATION_GATES),
+                )
+                primary = report.get("primary_failure_code")
+                detected = primary is not None
+            except Exception as exc:  # pragma: no cover - returned in the audit report for deterministic debugging.
+                primary = "mutation_application_error"
+                detected = True
+                apply_error = str(exc)
+            expected = case.get("expected_primary_failure_code")
+            invariant = bool(case.get("invariant"))
+            expected_detected = expected is not None
+            results.append(
+                {
+                    "mutation": case["name"],
+                    "artifact_class": case["artifact_class"],
+                    "expected_primary_failure_code": expected,
+                    "actual_primary_failure_code": primary,
+                    "detected": detected,
+                    "expected_detected": expected_detected,
+                    "invariant": invariant,
+                    "digest_laundering": bool(case.get("digest_laundering", False)),
+                    "expected_code_matched": (primary == expected) if expected_detected else (primary is None),
+                    "application_error": apply_error,
+                }
+            )
+    expected_cases = [row for row in results if row["expected_detected"]]
+    detected = [row for row in expected_cases if row["detected"]]
+    undetected = [row for row in expected_cases if not row["detected"]]
+    unexpected = [row for row in results if not row["expected_code_matched"]]
+    payload = {
+        "version": MUTATION_AUDIT_VERSION,
+        "base_verified": True,
+        "mutations": results,
+        "expected_mutation_count": len(expected_cases),
+        "detected_mutation_count": len(detected),
+        "undetected_mutation_count": len(undetected),
+        "unexpected_failure_code_count": len(unexpected),
+        "digest_laundering_tests": [row["mutation"] for row in results if row["digest_laundering"]],
+        "status": "passed" if not undetected and not unexpected else "failed",
+    }
+    payload["mutation_audit_digest"] = _sha256(payload)
+    return payload
+
+
+def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include_mutation_audit: bool = True) -> dict[str, Any]:
+    verification = verify_reference_instrument(output_dir, repo_root)
+    mutation_audit = run_reference_mutation_audit(output_dir, repo_root) if include_mutation_audit else {
+        "version": MUTATION_AUDIT_VERSION,
+        "status": "unavailable",
+        "expected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
+        "detected_mutation_count": 0,
+        "undetected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
+        "unexpected_failure_code_count": 0,
+        "mutations": [],
+        "digest_laundering_tests": [],
+    }
+    read_only = verify_reference_read_only(output_dir, repo_root)
+    final_counts = verification["final_access_measurements"]
+    required_zero = (
+        final_counts["final_observation_materialization_count"] == 0
+        and final_counts["final_provider_score_access_count"] == 0
+        and final_counts["final_reachability_execution_count"] == 0
+        and final_counts["calibration_execution_count"] == 0
+        and final_counts["architecture_selection_execution_count"] == 0
+        and final_counts["candidate_tuning_execution_count"] == 0
+        and final_counts["final_evaluation_count"] == 0
+    )
+    supported = (
+        verification["verified"]
+        and mutation_audit.get("status") == "passed"
+        and read_only["status"] == "passed"
+        and required_zero
+        and not verification["unavailable_checks"]
+    )
+    payload: dict[str, Any] = {
+        "version": CLOSURE_REPORT_VERSION,
+        "contract_identity": verification["authoritative_roots"]["benchmark_contract_identity"],
+        "policy_identity": verification["authoritative_roots"]["policy_artifact_id"],
+        "root_seed_identity": verification["authoritative_roots"]["root_seed_digest"],
+        "split_plan_identities": {
+            split: _sha256(context)
+            for split, context in _read_json(output_dir / "episode-plan.json").get("splits", {}).items()
+        } if (output_dir / "episode-plan.json").exists() else {},
+        "family_registry_identity": verification["authoritative_roots"]["episode_family_registry_digest"],
+        "reachability_identity": verification["authoritative_roots"]["reachability_tile_digest"],
+        "provider_identities": verification["authoritative_roots"]["provider_versions"],
+        "verification": verification,
+        "mutation_audit": mutation_audit,
+        "read_only_verification": read_only,
+        "expected_mutation_count": mutation_audit.get("expected_mutation_count", 0),
+        "detected_mutation_count": mutation_audit.get("detected_mutation_count", 0),
+        "undetected_mutation_count": mutation_audit.get("undetected_mutation_count", 0),
+        "unexpected_failure_code_count": mutation_audit.get("unexpected_failure_code_count", 0),
+        "final_materialization_access_counts": final_counts,
+        "supported_status": "reference_instrument_correct" if supported else "reference_instrument_correctness_unresolved",
+        "unsupported_statuses": [
+            "materialization_ready",
+            "benchmark_utility_verified",
+            "provider_selected",
+            "calibration_complete",
+            "final_evaluation_complete",
+        ],
+        "materialization_status": "prospective_materialization_prohibited",
+    }
+    payload["closure_report_digest"] = _sha256({key: value for key, value in payload.items() if key != "closure_report_digest"})
+    return payload
+
+
+def verify_instrument(output_dir: Path, repo_root: Path) -> dict[str, Any]:
+    closure = build_reference_closure_report(output_dir, repo_root, include_mutation_audit=False)
+    verification = closure["verification"]
+    return {
+        "verified": verification["verified"],
+        "version": verification["version"],
+        "closure_report_version": closure["version"],
+        "repository_status": closure["supported_status"],
+        "materialization_status": closure["materialization_status"],
+        "primary_failure_code": verification["primary_failure_code"],
+        "gates": verification["gates"],
+        "final_materialization_count": verification["final_access_measurements"]["final_observation_materialization_count"],
+        "final_score_access_count": verification["final_access_measurements"]["final_provider_score_access_count"],
+        "final_reachability_execution_count": verification["final_access_measurements"]["final_reachability_execution_count"],
+        "candidate_set_selection_count": verification["final_access_measurements"]["candidate_tuning_execution_count"],
+        "conformal_calibration_count": verification["final_access_measurements"]["calibration_execution_count"],
+        "reachability_replay_count": verification["measured_counts"]["reachability_replay_count"],
+        "final_evaluation_count": verification["final_access_measurements"]["final_evaluation_count"],
+        "forbidden_final_access_counter": verification["measured_counts"]["forbidden_final_access_counter"],
+        "read_only": closure["read_only_verification"]["read_only"],
+        "verification_digest": verification["verification_digest"],
+    }
 
 
 def _run_adversarial_mutation_checks(output_dir: Path) -> list[str]:
-    failures: list[str] = []
-    evidence_rows = _read_jsonl(output_dir / "selection" / "provider-evidence.jsonl")
-    frame_rows = _read_jsonl(output_dir / "selection" / "frame-metadata.jsonl")
-    phase_counts = _measured_phase_access_counts(output_dir)
-    checks = [
-        ("score", lambda row: row["all_112_quantized_scores"].__setitem__(0, row["all_112_quantized_scores"][0] + 1)),
-        ("tie_group", lambda row: row["tie_groups"][0]["row_ids"].reverse()),
-        ("policy_row_action_mapping", lambda row: row["winner_action"].__class__ and row.__setitem__("winner_action", "FIRE" if row["winner_action"] != "FIRE" else "LEFT")),
-        ("observation_byte", lambda row: row["metadata"].__setitem__("observation_pixel_digest", "sha256:mutated")),
-        ("episode_seed", lambda row: row.__setitem__("episode_seed", row["episode_seed"] + 1)),
-        ("transformation_parameter", lambda row: row["metadata"].__setitem__("frame_transform_seed", row["metadata"]["frame_transform_seed"] + 1)),
-        ("sequence_order", lambda row: row.__setitem__("sequence_number", row["sequence_number"] + 1)),
-        ("reachability_edge", lambda row: row["metadata"]["reachability_trace"].__setitem__("reachable_row_ids", list(reversed(row["metadata"]["reachability_trace"]["reachable_row_ids"])))),
-        ("expected_or_executed_action", lambda row: row.__setitem__("actual_executed_action", "LEFT" if row.get("actual_executed_action") != "LEFT" else "RIGHT")),
-        ("forbidden_final_access_counter", lambda row: phase_counts.__setitem__("forbidden_final_access_counter", 1)),
-    ]
-    for name, mutate in checks:
-        if name == "score":
-            row = json.loads(json.dumps(evidence_rows[0]))
-            before = row["score_vector_digest"]
-            mutate(row)
-            after = _sha256({"rows": row["all_112_row_ids"], "scores": row["all_112_quantized_scores"]})
-            if before == after:
-                failures.append(name)
-        elif name in {"tie_group", "policy_row_action_mapping"}:
-            row = json.loads(json.dumps(evidence_rows[0]))
-            before = _sha256(row)
-            mutate(row)
-            if before == _sha256(row):
-                failures.append(name)
-        elif name == "forbidden_final_access_counter":
-            before = phase_counts["forbidden_final_access_counter"]
-            mutate(phase_counts)
-            if phase_counts["forbidden_final_access_counter"] == before:
-                failures.append(name)
-        else:
-            row = json.loads(json.dumps(frame_rows[0]))
-            before = _sha256(row)
-            mutate(row)
-            if before == _sha256(row):
-                failures.append(name)
-    return failures
+    repo_root = Path(__file__).resolve().parents[1]
+    audit = run_reference_mutation_audit(output_dir, repo_root)
+    return [row["mutation"] for row in audit.get("mutations", []) if not row.get("expected_code_matched", False)]
 
 
 __all__ = [
     "BENCHMARK_VERSION",
     "GENERATOR_VERSION",
+    "REFERENCE_VERIFICATION_VERSION",
+    "MUTATION_AUDIT_VERSION",
+    "CLOSURE_REPORT_VERSION",
     "PHASE_ACCESS_VERSION",
     "SOURCE_SCOPE",
     "audit_canonical_providers",
     "audit_evidence_completeness",
+    "build_reference_closure_report",
     "build_split",
     "canonical_prototypes",
     "freeze_benchmark",
     "load_identity",
+    "run_reference_mutation_audit",
+    "verify_reference_instrument",
+    "verify_reference_read_only",
     "verify_instrument",
 ]

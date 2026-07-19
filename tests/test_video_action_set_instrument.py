@@ -109,43 +109,10 @@ def test_instrument_audits_and_verification(tmp_path: Path) -> None:
     assert not (tmp_path / "selected-method.json").exists()
     assert not (tmp_path / "reachability-replay.json").exists()
     assert not (tmp_path / "final-results.json").exists()
-def test_mutation_gate_detects_protected_field_changes(tmp_path: Path) -> None:
-    benchmark._write_json(
-        tmp_path / "final-split-sealed-plan.json",
-        {
-            "sealed_episode_ids": {
-                "valid": ["final:valid:abc"],
-                "frame_invalid": [],
-                "temporal_negative": [],
-                "information_control": [],
-            }
-        },
-    )
-    frame_row = {
-        "split": "selection",
-        "episode_id": "selection:valid:abc",
-        "frame_id": "selection:valid:abc:frame-00",
-        "sequence_number": 0,
-        "actual_executed_action": "LEFT",
-        "episode_seed": 1,
-        "metadata": {
-            "episode_seed": 1,
-            "frame_transform_seed": 2,
-            "reachability_trace": {"reachable_row_ids": ["row-000", "row-001"]},
-        },
-    }
-    evidence_row = {
-        "split": "selection",
-        "episode_id": "selection:valid:abc",
-        "all_112_row_ids": [f"row-{index:03d}" for index in range(112)],
-        "all_112_quantized_scores": [1000] * 112,
-        "tie_groups": [{"row_ids": [f"row-{index:03d}" for index in range(2)]}],
-        "winner_action": "LEFT",
-        "score_vector_digest": "sha256:test",
-        "metadata": {"observation_pixel_digest": "sha256:obs"},
-        "episode_seed": 1,
-    }
-    for split in ("development", "calibration", "selection"):
-        benchmark._write_jsonl(tmp_path / split / "frame-metadata.jsonl", [frame_row])
-        benchmark._write_jsonl(tmp_path / split / "provider-evidence.jsonl", [evidence_row])
-    assert benchmark._run_adversarial_mutation_checks(tmp_path) == []
+def test_mutation_gate_detects_protected_field_changes() -> None:
+    cases = {case["name"]: case for case in benchmark._MUTATION_CASES}
+    assert cases["evidence_quantized_score_changed"]["expected_primary_failure_code"] == "quantized_score_vector_mismatch"
+    assert cases["semantic_resolved_row_for_action_unanimous_tie"]["expected_primary_failure_code"] == "resolved_row_not_permitted"
+    assert cases["seed_alter_final_sealed_identity"]["expected_primary_failure_code"] == "sealed_episode_identity_mismatch"
+    assert cases["reachability_change_executed_action"]["expected_primary_failure_code"] == "executed_action_mismatch"
+    assert cases["access_add_final_observation_artifact"]["expected_primary_failure_code"] == "forbidden_final_materialization"

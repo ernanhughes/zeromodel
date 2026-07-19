@@ -10,9 +10,7 @@ from typing import Any, Mapping
 
 import numpy as np
 
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
-from examples.arcade_visual_sign_reader import render_state_frame
-from examples.arcade_visual_video_baseline import _next_rows, arcade_transition_spec
+from .arcade_policy import ACTIONS, ShooterConfig, arcade_transition_spec, compile_policy_artifact, next_rows, parse_state_row_id, render_state_frame
 from .artifact import VPMValidationError
 from .policy_lookup import VPMPolicyLookup
 from .video_complete_row_evidence import QUANTIZATION_SCALE, VIDEO_SCORE_QUANTIZER_VERSION
@@ -147,10 +145,7 @@ def canonical_prototypes(config: ShooterConfig = ShooterConfig()) -> dict[str, t
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
     prototypes = {}
     for row_id in policy.source.row_ids:
-        values = {part.split("=", 1)[0]: part.split("=", 1)[1] for part in str(row_id).split("|")}
-        tank = int(values["tank"])
-        target = None if values["target"] == "none" else int(values["target"])
-        cooldown = int(values["cooldown"])
+        tank, target, cooldown = parse_state_row_id(str(row_id))
         frame = render_state_frame(tank, target, cooldown, width=config.width)
         observation = ImageObservation(frame, source_id=f"canonical:{row_id}")
         prototypes[f"prototype:{row_id}"] = (str(row_id), lookup.choose(str(row_id)), observation.raw_digest, observation)
@@ -230,11 +225,8 @@ def _frame_descriptor(
 
 def _next_row(policy_lookup: VPMPolicyLookup, row_id: str, *, choice_seed: int, config: ShooterConfig) -> tuple[str, str, int]:
     action = policy_lookup.choose(row_id)
-    values = {part.split("=", 1)[0]: part.split("=", 1)[1] for part in str(row_id).split("|")}
-    tank = int(values["tank"])
-    target = None if values["target"] == "none" else int(values["target"])
-    cooldown = int(values["cooldown"])
-    rows = _next_rows(tank, target, cooldown, action, width=config.width)
+    tank, target, cooldown = parse_state_row_id(str(row_id))
+    rows = next_rows(tank, target, cooldown, action, width=config.width)
     index = choice_seed % len(rows)
     return str(rows[index]), action, index
 
@@ -246,10 +238,7 @@ def _valid_episode(split: str, row_id: str, *, episode_seed: int, config: Shoote
     current = row_id
     frames = []
     for idx in range(4):
-        values = {part.split("=", 1)[0]: part.split("=", 1)[1] for part in str(current).split("|")}
-        tank = int(values["tank"])
-        target = None if values["target"] == "none" else int(values["target"])
-        cooldown = int(values["cooldown"])
+        tank, target, cooldown = parse_state_row_id(str(current))
         base = render_state_frame(tank, target, cooldown, width=config.width)
         family = family_schedule[(episode_seed + idx) % len(family_schedule)]
         pixels = _apply_family(base, family, seed=episode_seed + idx)
@@ -274,14 +263,11 @@ def _valid_episode(split: str, row_id: str, *, episode_seed: int, config: Shoote
 def _invalid_episode(kind: str, row_id: str, *, episode_seed: int, config: ShooterConfig = ShooterConfig()) -> list[dict[str, Any]]:
     policy = compile_policy_artifact(config)
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
-    base_values = {part.split("=", 1)[0]: part.split("=", 1)[1] for part in str(row_id).split("|")}
-    tank = int(base_values["tank"])
-    target = None if base_values["target"] == "none" else int(base_values["target"])
-    cooldown = int(base_values["cooldown"])
+    tank, target, cooldown = parse_state_row_id(str(row_id))
     base = render_state_frame(tank, target, cooldown, width=config.width)
     other_row = next(item for item in policy.source.row_ids if lookup.choose(str(item)) != lookup.choose(str(row_id)))
-    other_values = {part.split("=", 1)[0]: part.split("=", 1)[1] for part in str(other_row).split("|")}
-    other = render_state_frame(int(other_values["tank"]), None if other_values["target"] == "none" else int(other_values["target"]), int(other_values["cooldown"]), width=config.width)
+    other_tank, other_target, other_cooldown = parse_state_row_id(str(other_row))
+    other = render_state_frame(other_tank, other_target, other_cooldown, width=config.width)
     frames = []
     for idx in range(4):
         if kind == "conflicting_action_splice":

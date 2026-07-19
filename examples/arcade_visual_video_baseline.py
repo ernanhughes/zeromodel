@@ -15,12 +15,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_shooter_policy import (  # noqa: E402
+from zeromodel.arcade_policy import (  # noqa: E402
     ACTIONS,
     ShooterConfig,
     TinyArcadeShooter,
+    arcade_transition_spec,
     compile_policy_artifact,
-    state_row_id,
+    next_rows,
+    parse_state_row_id,
 )
 from examples.arcade_visual_sign_reader import (  # noqa: E402
     compile_visual_index_artifact,
@@ -36,16 +38,6 @@ from zeromodel.video import InMemoryVideoFrameSource  # noqa: E402
 from zeromodel.video_policy import VideoPolicyReader  # noqa: E402
 from zeromodel.visual_policy import DeterministicVisualAddressProvider  # noqa: E402
 
-
-def _parse_row_id(row_id: str) -> Tuple[int, Optional[int], int]:
-    values = {}
-    for part in str(row_id).split("|"):
-        key, value = part.split("=", 1)
-        values[key] = value
-    target = None if values["target"] == "none" else int(values["target"])
-    return int(values["tank"]), target, int(values["cooldown"])
-
-
 def _next_rows(
     tank_x: int,
     target_x: Optional[int],
@@ -54,65 +46,7 @@ def _next_rows(
     *,
     width: int,
 ) -> Tuple[str, ...]:
-    action = str(action)
-    next_tank = tank_x
-    if action == "LEFT":
-        next_tank = max(0, tank_x - 1)
-    elif action == "RIGHT":
-        next_tank = min(width - 1, tank_x + 1)
-
-    if action == "FIRE":
-        next_cooldown = 1 if cooldown == 0 else cooldown
-    else:
-        next_cooldown = max(0, cooldown - 1)
-
-    successful_fire = (
-        action == "FIRE"
-        and cooldown == 0
-        and target_x is not None
-        and tank_x == target_x
-    )
-    if successful_fire:
-        next_targets: Tuple[Optional[int], ...] = (None,) + tuple(range(width))
-    else:
-        next_targets = (target_x,)
-    return tuple(
-        state_row_id(next_tank, next_target, next_cooldown)
-        for next_target in next_targets
-    )
-
-
-def arcade_transition_spec(
-    config: ShooterConfig = ShooterConfig(),
-    *,
-    maximum_frame_gap: int = 2,
-) -> PolicyTransitionSpec:
-    policy = compile_policy_artifact(config)
-    transitions: Dict[str, Tuple[str, ...]] = {}
-    for row_id in policy.source.row_ids:
-        tank_x, target_x, cooldown = _parse_row_id(str(row_id))
-        destinations = set()
-        for action in ACTIONS:
-            destinations.update(
-                _next_rows(
-                    tank_x,
-                    target_x,
-                    cooldown,
-                    action,
-                    width=config.width,
-                )
-            )
-        transitions[str(row_id)] = tuple(sorted(destinations))
-    return PolicyTransitionSpec(
-        allowed_row_transitions=transitions,
-        maximum_frame_gap=maximum_frame_gap,
-        maximum_position_delta=1,
-        transition_scope=ROW_UNION_TRANSITION_SCOPE,
-        metadata={
-            "world": "tiny_arcade_shooter",
-            "derivation": "declared_environment_dynamics",
-        },
-    )
+    return next_rows(tank_x, target_x, cooldown, action, width=width)
 
 
 def build_canonical_arcade_clip(

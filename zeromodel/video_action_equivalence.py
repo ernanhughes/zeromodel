@@ -95,7 +95,7 @@ def _write_markdown(path: Path, text: str) -> None:
 
 
 def build_policy_row_action_map(*, policy_artifact_id: str) -> tuple[dict[str, str], ...]:
-    from examples.arcade_shooter_policy import ACTIONS, compile_policy_artifact
+    from .arcade_policy import ACTIONS, compile_policy_artifact
     from .policy_lookup import VPMPolicyLookup
 
     artifact = compile_policy_artifact()

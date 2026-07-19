@@ -63,8 +63,6 @@
         "final access verified through zero counters"
       ]
     }
-<<<<<<< ours
-=======
   ],
   "inspected_absent_artifacts": [
     {
@@ -82,6 +80,5 @@
       "status": "not_committed_at_quarantine_sha",
       "producer_status": "producer_contains_assigned_status_fields"
     }
->>>>>>> theirs
   ]
 }

@@ -3,6 +3,8 @@
 The files in this directory are preserved historical scaffold, profiling, and verification artifacts. Several contain invalid or vacuous measurements. Their presence does not establish benchmark validity.
 
 - `historical_stack_integrated`
+- `package_identity_foundations_correct`
+- `evidence_schema_v2_defined`
 - `reference_instrument_invalid`
 - `optimized_path_unverified`
 - `prospective_materialization_prohibited`
@@ -25,3 +27,9 @@ The files in this directory are preserved historical scaffold, profiling, and ve
 ## Current Boundary
 
 No development, calibration, or architecture-selection materialization may proceed until the reference instrument is corrected and measured verification fails against known-bad mutations.
+
+## Repair Progress
+
+This PR repairs package and identity foundations only.
+
+It does not establish provider semantic correctness, negative-family correctness, reachability correctness, optimized-path equivalence, or benchmark materialization readiness.

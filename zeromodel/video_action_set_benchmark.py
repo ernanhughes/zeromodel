@@ -51,6 +51,7 @@ PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
 REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
 MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1"
 CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
+MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v2"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 REACHABILITY_TILE_DIGEST = "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df"
 REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
@@ -2490,6 +2491,12 @@ def _policy_row_action_digest(policy_artifact_id: str, row_ids: Sequence[str], r
 
 
 def _reference_context(repo_root: Path) -> dict[str, Any]:
+    cache_key = str(repo_root.resolve())
+    if not hasattr(_reference_context, "_cache"):
+        _reference_context._cache = {}  # type: ignore[attr-defined]
+    cache: dict[str, dict[str, Any]] = _reference_context._cache  # type: ignore[attr-defined]
+    if cache_key in cache:
+        return cache[cache_key]
     identity = load_identity(repo_root)
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
@@ -2497,7 +2504,7 @@ def _reference_context(repo_root: Path) -> dict[str, Any]:
     row_actions = {row_id: lookup.choose(row_id) for row_id in row_ids}
     reachability_tile = _load_reachability_tile(repo_root)
     plans = {split: _episode_plans_for_split(identity, split, row_ids, row_actions) for split in _ALL_SPLITS}
-    return {
+    context = {
         "identity": identity,
         "policy": policy,
         "row_ids": row_ids,
@@ -2506,6 +2513,8 @@ def _reference_context(repo_root: Path) -> dict[str, Any]:
         "plans": plans,
         "policy_row_action_digest": _policy_row_action_digest(policy.artifact_id, row_ids, row_actions),
     }
+    cache[cache_key] = context
+    return context
 
 
 def _finding(code: str, message: str, **details: Any) -> dict[str, Any]:
@@ -2526,10 +2535,37 @@ def _gate(name: str, findings: Sequence[Mapping[str, Any]], *, counts: Mapping[s
 
 
 def _first_failure_code(report: Mapping[str, Any]) -> str | None:
+    primary = _primary_failure(report)
+    return None if primary is None else str(primary["code"])
+
+
+def _primary_failure(report: Mapping[str, Any]) -> dict[str, Any] | None:
+    candidates = []
+    for gate in report.get("gates", []):
+        gate_name = str(gate.get("gate"))
+        for finding in gate.get("findings", []):
+            code = str(finding["code"])
+            candidates.append(
+                (
+                    _PRIMARY_GATE_PRECEDENCE.get(gate_name, 10_000),
+                    _PRIMARY_FAILURE_CODE_PRECEDENCE.get(code, 10_000),
+                    code,
+                    gate_name,
+                    dict(finding),
+                )
+            )
+    if not candidates:
+        return None
+    _gate_index, _code_index, code, gate_name, finding = sorted(candidates, key=lambda item: item[:4])[0]
+    return {"code": code, "gate": gate_name, "finding": finding}
+
+
+def _report_failure_codes(report: Mapping[str, Any]) -> list[dict[str, str]]:
+    rows = []
     for gate in report.get("gates", []):
         for finding in gate.get("findings", []):
-            return str(finding["code"])
-    return None
+            rows.append({"gate": str(gate.get("gate")), "code": str(finding.get("code"))})
+    return sorted(rows, key=lambda row: (_PRIMARY_GATE_PRECEDENCE.get(row["gate"], 10_000), _PRIMARY_FAILURE_CODE_PRECEDENCE.get(row["code"], 10_000), row["gate"], row["code"]))
 
 
 def _raw_score_diagnostic_from_row(row: Mapping[str, Any], policy_row_ids: Sequence[str]) -> str:
@@ -2715,13 +2751,20 @@ def _structural_identity_gate(
         present_gate_names = {str(gate.get("gate")) for gate in closure.get("verification", {}).get("gates", [])}
         if not required_gate_names <= present_gate_names:
             findings.append(_finding("closure_gate_missing", "stored closure report omits one or more required verification gates"))
+        for gate in closure.get("verification", {}).get("gates", []):
+            if gate.get("status") == "passed" and (int(gate.get("finding_count", 0)) > 0 or gate.get("findings")):
+                findings.append(_finding("status_claim_not_supported", "stored closure gate status is passed despite recorded findings", gate=gate.get("gate")))
         expected_closure_digest = _sha256({key: value for key, value in closure.items() if key != "closure_report_digest"})
         if closure.get("closure_report_digest") != expected_closure_digest:
             findings.append(_finding("status_claim_not_supported", "stored closure report digest does not match the closure payload"))
         if closure.get("supported_status") == "reference_instrument_correct":
-            measured = verify_reference_instrument(output_dir, repo_root, validate_stored_closure=False)
-            if not measured.get("verified"):
-                findings.append(_finding("status_claim_not_supported", "stored closure status claims correctness that measured gates do not support"))
+            mutation_audit = closure.get("mutation_audit", {})
+            if mutation_audit.get("status") != "passed":
+                findings.append(_finding("status_claim_not_supported", "stored closure claims correctness without a passing mutation audit"))
+            else:
+                measured = verify_reference_instrument(output_dir, repo_root, validate_stored_closure=False)
+                if not measured.get("verified"):
+                    findings.append(_finding("status_claim_not_supported", "stored closure status claims correctness that measured gates do not support"))
     return _gate("structural_identity", findings)
 
 
@@ -2733,7 +2776,7 @@ def _expected_split_counts() -> dict[str, int]:
     }
 
 
-def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any], *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     identity: BenchmarkIdentity = context["identity"]
     row_actions = context["row_actions"]
@@ -2762,12 +2805,18 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[st
                 findings.append(_finding("episode_split_reassignment", "episode id or split field crosses its sealed split boundary", episode_id=episode_id, split=split))
             if stored.get("derived_seed_identity") != expected.get("derived_seed_identity") or stored.get("episode_seed") != expected.get("episode_seed"):
                 findings.append(_finding("episode_seed_derivation_mismatch", "stored episode seed lineage does not match deterministic derivation", episode_id=episode_id))
+                if max_findings is not None and len(findings) >= max_findings:
+                    return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[item]) for item in _ALL_SPLITS)})
                 continue
             if stored.get("source_row_id") != expected.get("source_row_id") or stored.get("secondary_row_id") != expected.get("secondary_row_id"):
                 findings.append(_finding("episode_seed_derivation_mismatch", "stored source-row lineage does not match deterministic derivation", episode_id=episode_id))
+                if max_findings is not None and len(findings) >= max_findings:
+                    return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[item]) for item in _ALL_SPLITS)})
                 continue
             if dict(stored) != expected:
                 findings.append(_finding("sealed_episode_identity_mismatch", "stored sealed episode plan does not match deterministic regeneration", episode_id=episode_id))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[item]) for item in _ALL_SPLITS)})
     expected_final = {
         "version": EPISODE_PLAN_VERSION,
         "seed_derivation_version": SEED_DERIVATION_VERSION,
@@ -2788,9 +2837,13 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[st
     expected_final = expected_final | {"sealed_plan_digest": _sha256(expected_final)}
     if final_payload != expected_final:
         findings.append(_finding("sealed_episode_identity_mismatch", "final sealed split identity does not match deterministic regeneration"))
+        if max_findings is not None and len(findings) >= max_findings:
+            return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[split]) for split in _ALL_SPLITS)})
     digest_payload = _read_json(output_dir / "final-split-sealed-digest.json")
     if digest_payload.get("digest") != expected_final["sealed_plan_digest"]:
         findings.append(_finding("sealed_episode_identity_mismatch", "final sealed split digest sidecar does not match the final sealed plan"))
+        if max_findings is not None and len(findings) >= max_findings:
+            return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[split]) for split in _ALL_SPLITS)})
     try:
         _validate_episode_plan_collection(context["identity"], plans_by_split, row_actions)
     except VPMValidationError as exc:
@@ -2798,7 +2851,7 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[st
     return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[split]) for split in _ALL_SPLITS)})
 
 
-def _episode_regeneration_gate(output_dir: Path, repo_root: Path) -> dict[str, Any]:
+def _episode_regeneration_gate(output_dir: Path, repo_root: Path, *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     counts: dict[str, int] = {}
     for split in _NON_FINAL_SPLITS:
@@ -2807,7 +2860,7 @@ def _episode_regeneration_gate(output_dir: Path, repo_root: Path) -> dict[str, A
             findings.append(_finding("expected_record_missing", "split frame metadata is missing", split=split))
             continue
         stored_rows = _read_jsonl(path)
-        expected_rows = [{key: value for key, value in row.items() if key != "pixels"} for row in _materialize_records(split, repo_root)]
+        expected_rows = _cached_materialized_metadata(repo_root, split)
         counts[f"{split}_stored_observations"] = len(stored_rows)
         counts[f"{split}_expected_observations"] = len(expected_rows)
         if len(stored_rows) != len(expected_rows):
@@ -2816,8 +2869,12 @@ def _episode_regeneration_gate(output_dir: Path, repo_root: Path) -> dict[str, A
         stored_by_key = {(row.get("episode_id"), int(row.get("sequence_number", -1))): row for row in stored_rows}
         for key in sorted(set(expected_by_key) - set(stored_by_key)):
             findings.append(_finding("expected_record_missing", "regenerated observation is absent from stored frame metadata", split=split, episode_id=key[0], sequence_number=key[1]))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("episode_regeneration", findings, counts=counts)
         for key in sorted(set(stored_by_key) - set(expected_by_key)):
             findings.append(_finding("orphan_observation_record", "stored frame metadata has no sealed regenerated observation", split=split, episode_id=key[0], sequence_number=key[1]))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("episode_regeneration", findings, counts=counts)
         for key in sorted(set(expected_by_key) & set(stored_by_key)):
             expected = expected_by_key[key]
             stored = stored_by_key[key]
@@ -2841,10 +2898,12 @@ def _episode_regeneration_gate(output_dir: Path, repo_root: Path) -> dict[str, A
                 if stored_meta.get(field) != expected_meta.get(field):
                     findings.append(_finding("family_regeneration_mismatch", "stored frame seed or plan metadata does not match regenerated episode", split=split, episode_id=key[0], sequence_number=key[1], field=field))
                     break
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("episode_regeneration", findings, counts=counts)
     return _gate("episode_regeneration", findings, counts=counts)
 
 
-def _semantic_outcome_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+def _semantic_outcome_gate(output_dir: Path, context: Mapping[str, Any], *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     row_ids = context["row_ids"]
     row_actions = context["row_actions"]
@@ -2861,6 +2920,8 @@ def _semantic_outcome_gate(output_dir: Path, context: Mapping[str, Any]) -> dict
                 continue
             expected, evidence_findings = _expected_semantic_for_row(row, row_actions, row_ids, semantic_cache)
             findings.extend(evidence_findings)
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("semantic_outcome", findings, counts=counts)
             if expected is None:
                 continue
             payload = row.get("semantic_top_set_outcome", {})
@@ -2893,10 +2954,12 @@ def _semantic_outcome_gate(output_dir: Path, context: Mapping[str, Any]) -> dict
             if row.get("winner_action") != expected.resolved_action_id:
                 code = "resolved_action_not_permitted" if expected.resolved_action_id is None and row.get("winner_action") is not None else "semantic_status_mismatch"
                 findings.append(_finding(code, "stored winner action does not match semantic reconstruction", split=split, frame_id=row.get("frame_id")))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("semantic_outcome", findings, counts=counts)
     return _gate("semantic_outcome", findings, counts=counts)
 
 
-def _family_contract_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     counts = {"family_records_checked": 0}
     row_actions = context["row_actions"]
@@ -2965,10 +3028,12 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any]) -> dict[
                 materialized = [row.get("metadata", {}).get("original_frame_index") for row in ordered]
                 if materialized == sorted(materialized) or sorted(materialized) != list(range(len(ordered))):
                     findings.append(_finding("family_contract_violation", "reordered-frame metadata is not a non-identity complete permutation", split=split, episode_id=episode_id))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("family_contract", findings, counts=counts)
     return _gate("family_contract", findings, counts=counts)
 
 
-def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, Any], *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     counts = {"reachability_traces_checked": 0}
     row_ids = context["row_ids"]
@@ -2980,7 +3045,7 @@ def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, 
         evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
         by_frame_provider = {(row.get("frame_id"), row.get("provider_id")): row for row in evidence_rows}
         reachability_state: dict[str, Mapping[str, Any] | None] = {"P1": None, "P2": None, "P3": None}
-        expected_frames = [{key: value for key, value in row.items() if key != "pixels"} for row in _materialize_records(split, repo_root)]
+        expected_frames = _cached_materialized_metadata(repo_root, split)
         # Use stored order only after sorting by the deterministic frame identity. This keeps JSONL row order non-semantic.
         if len(expected_frames) != len(frames):
             expected_frames = sorted(frames, key=lambda row: (str(row.get("episode_id")), int(row.get("sequence_number", -1))))
@@ -2993,6 +3058,8 @@ def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, 
                 row = by_frame_provider.get((frame.get("frame_id"), provider_id))
                 if row is None:
                     findings.append(_finding("reachability_trace_mismatch", "provider score row missing for scored frame", split=split, frame_id=frame.get("frame_id"), provider_id=provider_id))
+                    if max_findings is not None and len(findings) >= max_findings:
+                        return _gate("reachability", findings, counts=counts)
                     continue
                 expected_outcome, evidence_findings = _expected_semantic_for_row(row, row_actions, row_ids, semantic_cache)
                 if evidence_findings or expected_outcome is None:
@@ -3000,6 +3067,8 @@ def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, 
                 trace = row.get("reachability_composition_trace")
                 if not trace:
                     findings.append(_finding("reachability_trace_mismatch", "provider row is missing reachability composition trace", split=split, frame_id=frame.get("frame_id"), provider_id=provider_id))
+                    if max_findings is not None and len(findings) >= max_findings:
+                        return _gate("reachability", findings, counts=counts)
                     continue
                 expected_trace = compose_reachability_trace(
                     frame_id=str(row["frame_id"]),
@@ -3025,23 +3094,20 @@ def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, 
                         if code in {"foreign_reachability_tile", "foreign_reachability_trace_digest"}:
                             code = "reachability_tile_mismatch" if code == "foreign_reachability_tile" else "reachability_trace_mismatch"
                         findings.append(_finding(code, "stored reachability trace does not match independent composition", split=split, frame_id=row.get("frame_id"), provider_id=provider_id))
+                if max_findings is not None and len(findings) >= max_findings:
+                    return _gate("reachability", findings, counts=counts)
                 reachability_state[provider_id] = _state_from_trace(expected_trace)
     return _gate("reachability", findings, counts=counts)
 
 
-def _completeness_orphan_gate(output_dir: Path, repo_root: Path, context: Mapping[str, Any]) -> dict[str, Any]:
+def _completeness_orphan_gate(output_dir: Path, repo_root: Path, context: Mapping[str, Any], *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     counts: dict[str, int] = {}
     final_ids = {episode_id for values in _episode_ids_by_family(context["plans"]["final"]).values() for episode_id in values}
     known_frame_ids: set[str] = set()
     known_episode_ids: set[str] = set()
     non_control_digest_owner: dict[str, str] = {}
-    expected_digest_owners: dict[str, set[str]] = {}
-    for split in _NON_FINAL_SPLITS:
-        for row in _materialize_records(split, repo_root):
-            digest = row.get("observation_pixel_digest")
-            if digest is not None and row.get("expected_disposition") != "information_theoretic_control":
-                expected_digest_owners.setdefault(str(digest), set()).add(str(row.get("episode_id")))
+    expected_digest_owners = _expected_digest_owners(repo_root)
     for split in _NON_FINAL_SPLITS:
         frame_rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
         evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
@@ -3052,16 +3118,22 @@ def _completeness_orphan_gate(output_dir: Path, repo_root: Path, context: Mappin
             episode_id = str(row.get("episode_id"))
             if frame_id in known_frame_ids:
                 findings.append(_finding("duplicate_observation_record", "frame identity is duplicated", split=split, frame_id=frame_id))
+                if max_findings is not None and len(findings) >= max_findings:
+                    return _gate("completeness_orphan", findings, counts=counts)
             known_frame_ids.add(frame_id)
             known_episode_ids.add(episode_id)
             if episode_id in final_ids or row.get("split") == "final":
                 findings.append(_finding("forbidden_final_materialization", "final sealed episode has a materialized frame descendant", split=split, episode_id=episode_id))
+                if max_findings is not None and len(findings) >= max_findings:
+                    return _gate("completeness_orphan", findings, counts=counts)
             digest = row.get("observation_pixel_digest")
             if digest is not None and row.get("expected_disposition") != "information_theoretic_control":
                 previous = non_control_digest_owner.get(str(digest))
                 expected_owners = expected_digest_owners.get(str(digest), set())
                 if previous is not None and previous != episode_id and episode_id not in expected_owners:
                     findings.append(_finding("duplicate_observation_identity_unpermitted", "non-control observation identity is reused by multiple episodes", split=split, episode_id=episode_id, digest=digest))
+                    if max_findings is not None and len(findings) >= max_findings:
+                        return _gate("completeness_orphan", findings, counts=counts)
                 non_control_digest_owner[str(digest)] = episode_id
         scored_frame_ids = {str(row.get("frame_id")) for row in evidence_rows}
         for row in evidence_rows:
@@ -3075,13 +3147,17 @@ def _completeness_orphan_gate(output_dir: Path, repo_root: Path, context: Mappin
             trace = row.get("reachability_composition_trace")
             if trace and trace.get("semantic_outcome_digest") != row.get("semantic_outcome_digest"):
                 findings.append(_finding("reachability_trace_mismatch", "reachability trace does not reference the stored semantic outcome identity", split=split, frame_id=row.get("frame_id")))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("completeness_orphan", findings, counts=counts)
         gap_frame_ids = {str(row.get("frame_id")) for row in frame_rows if row.get("event_type") == "gap_unknown" or row.get("observation_pixel_digest") is None}
         if scored_frame_ids & gap_frame_ids:
             findings.append(_finding("gap_event_has_pixels", "typed gap frame has provider score evidence", split=split))
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("completeness_orphan", findings, counts=counts)
     return _gate("completeness_orphan", findings, counts=counts)
 
 
-def _access_prohibition_gate(output_dir: Path) -> dict[str, Any]:
+def _access_prohibition_gate(output_dir: Path, *, max_findings: int | None = None) -> dict[str, Any]:
     findings: list[dict[str, Any]] = []
     measured = _measured_phase_access_counts(output_dir)
     stored = _read_json(output_dir / "phase-access-audits.json") if (output_dir / "phase-access-audits.json").exists() else {}
@@ -3099,6 +3175,8 @@ def _access_prohibition_gate(output_dir: Path) -> dict[str, Any]:
         findings.append(_finding("forbidden_final_evaluation", "final evaluation artifact is present", count=measured["final_evaluation_count"]))
     if stored and {key: stored.get(key) for key in measured if key in stored} != {key: measured.get(key) for key in measured if key in stored}:
         findings.append(_finding("status_claim_not_supported", "stored phase-access counters do not match counters measured from concrete artifacts"))
+    if max_findings is not None and len(findings) >= max_findings:
+        return _gate("access_prohibition", findings, counts=measured)
     return _gate("access_prohibition", findings, counts=measured)
 
 
@@ -3108,22 +3186,31 @@ def verify_reference_instrument(
     *,
     validate_stored_closure: bool = True,
     enabled_gates: Sequence[str] | None = None,
+    stop_after_first_failure: bool = False,
 ) -> dict[str, Any]:
     """Read-only independent verification of a materialized reference-instrument directory."""
 
     context = _reference_context(repo_root)
     enabled = set(enabled_gates) if enabled_gates is not None else set(_REQUIRED_VERIFICATION_GATES)
+    max_findings = 1 if stop_after_first_failure else None
     gate_builders = (
         ("structural_identity", lambda: _structural_identity_gate(output_dir, repo_root, context, validate_stored_closure=validate_stored_closure)),
-        ("semantic_outcome", lambda: _semantic_outcome_gate(output_dir, context)),
-        ("seed_and_plan", lambda: _seed_and_plan_gate(output_dir, context)),
-        ("episode_regeneration", lambda: _episode_regeneration_gate(output_dir, repo_root)),
-        ("family_contract", lambda: _family_contract_gate(output_dir, context)),
-        ("reachability", lambda: _reachability_gate(output_dir, repo_root, context)),
-        ("completeness_orphan", lambda: _completeness_orphan_gate(output_dir, repo_root, context)),
-        ("access_prohibition", lambda: _access_prohibition_gate(output_dir)),
+        ("semantic_outcome", lambda: _semantic_outcome_gate(output_dir, context, max_findings=max_findings)),
+        ("seed_and_plan", lambda: _seed_and_plan_gate(output_dir, context, max_findings=max_findings)),
+        ("episode_regeneration", lambda: _episode_regeneration_gate(output_dir, repo_root, max_findings=max_findings)),
+        ("family_contract", lambda: _family_contract_gate(output_dir, context, max_findings=max_findings)),
+        ("reachability", lambda: _reachability_gate(output_dir, repo_root, context, max_findings=max_findings)),
+        ("completeness_orphan", lambda: _completeness_orphan_gate(output_dir, repo_root, context, max_findings=max_findings)),
+        ("access_prohibition", lambda: _access_prohibition_gate(output_dir, max_findings=max_findings)),
     )
-    gates = [builder() for name, builder in gate_builders if name in enabled]
+    gates = []
+    for name, builder in gate_builders:
+        if name not in enabled:
+            continue
+        gate = builder()
+        gates.append(gate)
+        if stop_after_first_failure and gate["status"] == "failed":
+            break
     passed = [gate["gate"] for gate in gates if gate["status"] == "passed"]
     failed = [gate["gate"] for gate in gates if gate["status"] == "failed"]
     unavailable = [gate["gate"] for gate in gates if gate["status"] == "unavailable"]
@@ -3163,8 +3250,11 @@ def verify_reference_instrument(
         },
         "verified": not failed and not unavailable,
         "primary_failure_code": None,
+        "primary_failure_gate": None,
     }
-    payload["primary_failure_code"] = _first_failure_code(payload)
+    primary = _primary_failure(payload)
+    payload["primary_failure_code"] = None if primary is None else primary["code"]
+    payload["primary_failure_gate"] = None if primary is None else primary["gate"]
     payload["verification_digest"] = _sha256({key: value for key, value in payload.items() if key != "verification_digest"})
     return payload
 
@@ -3228,13 +3318,18 @@ _MUTATION_CASES: tuple[dict[str, Any], ...] = (
     {"name": "policy_remove_policy_row", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
     {"name": "policy_add_undeclared_row", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
     {"name": "policy_alter_artifact_identity", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
-    {"name": "policy_mapping_recomputed_superficial_metadata", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy", "digest_laundering": True},
+    {"name": "policy_mapping_recomputed_superficial_metadata", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
     {"name": "observation_flip_byte_digest", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
     {"name": "observation_change_pixels_and_recompute_digest", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation", "digest_laundering": True},
     {"name": "observation_change_digest_without_pixels", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
     {"name": "observation_swap_two_frame_payloads", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
     {"name": "observation_alter_frame_identity", "expected_primary_failure_code": "frame_identity_mismatch", "artifact_class": "observation"},
-    {"name": "observation_reuse_under_two_episode_ids", "expected_primary_failure_code": "duplicate_observation_identity_unpermitted", "artifact_class": "observation"},
+    {
+        "name": "observation_reuse_under_two_episode_ids",
+        "expected_primary_failure_code": "duplicate_observation_identity_unpermitted",
+        "artifact_class": "observation",
+        "gate_scope": ("structural_identity", "completeness_orphan"),
+    },
     {"name": "observation_substitute_frame_for_declared_gap", "expected_primary_failure_code": "gap_event_structure_mismatch", "artifact_class": "observation"},
     {"name": "seed_alter_root_seed_material", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
     {"name": "seed_alter_root_seed_digest", "expected_primary_failure_code": "benchmark_contract_identity_mismatch", "artifact_class": "episode_plan"},
@@ -3304,6 +3399,290 @@ _MUTATION_GATE_SCOPE = {
     "access_status": ("structural_identity", "access_prohibition"),
 }
 
+_PRIMARY_GATE_PRECEDENCE = {name: index for index, name in enumerate(_REQUIRED_VERIFICATION_GATES)}
+_PRIMARY_FAILURE_CODE_PRECEDENCE = {
+    code: index
+    for index, code in enumerate(
+        (
+            "expected_file_missing",
+            "benchmark_contract_identity_mismatch",
+            "benchmark_manifest_mismatch",
+            "policy_action_mapping_mismatch",
+            "provider_contract_mismatch",
+            "reachability_tile_mismatch",
+            "score_quantizer_mismatch",
+            "evidence_schema_mismatch",
+            "closure_gate_missing",
+            "score_row_universe_mismatch",
+            "quantized_score_vector_mismatch",
+            "raw_diagnostic_digest_mismatch",
+            "ranking_reconstruction_mismatch",
+            "tie_group_reconstruction_mismatch",
+            "semantic_status_mismatch",
+            "resolved_row_not_permitted",
+            "resolved_action_not_permitted",
+            "semantic_outcome_digest_mismatch",
+            "episode_seed_derivation_mismatch",
+            "episode_split_reassignment",
+            "duplicate_episode_id",
+            "sealed_episode_identity_mismatch",
+            "expected_record_missing",
+            "orphan_observation_record",
+            "frame_identity_mismatch",
+            "gap_event_structure_mismatch",
+            "observation_bytes_mismatch",
+            "observation_digest_mismatch",
+            "family_contract_violation",
+            "family_regeneration_mismatch",
+            "family_no_op",
+            "transition_classification_mismatch",
+            "gap_event_has_pixels",
+            "control_byte_identity_mismatch",
+            "control_denominator_leak",
+            "consulted_edge_mismatch",
+            "reachable_pair_mismatch",
+            "reachability_trace_mismatch",
+            "executed_action_mismatch",
+            "duplicate_observation_record",
+            "duplicate_observation_identity_unpermitted",
+            "orphan_score_vector_record",
+            "forbidden_final_materialization",
+            "forbidden_final_score_access",
+            "forbidden_final_reachability_access",
+            "forbidden_calibration_execution",
+            "forbidden_selection_execution",
+            "forbidden_final_evaluation",
+            "status_claim_not_supported",
+        )
+    )
+}
+
+
+def _mutation_case_by_name() -> dict[str, dict[str, Any]]:
+    return {str(case["name"]): dict(case) for case in _MUTATION_CASES}
+
+
+def _cached_materialized_metadata(repo_root: Path, split: str) -> list[dict[str, Any]]:
+    cache_key = (str(repo_root.resolve()), str(split))
+    if not hasattr(_cached_materialized_metadata, "_cache"):
+        _cached_materialized_metadata._cache = {}  # type: ignore[attr-defined]
+    cache: dict[tuple[str, str], list[dict[str, Any]]] = _cached_materialized_metadata._cache  # type: ignore[attr-defined]
+    if cache_key not in cache:
+        cache[cache_key] = [{key: value for key, value in row.items() if key != "pixels"} for row in _materialize_records(split, repo_root)]
+    return cache[cache_key]
+
+
+def _expected_digest_owners(repo_root: Path) -> dict[str, set[str]]:
+    cache_key = str(repo_root.resolve())
+    if not hasattr(_expected_digest_owners, "_cache"):
+        _expected_digest_owners._cache = {}  # type: ignore[attr-defined]
+    cache: dict[str, dict[str, set[str]]] = _expected_digest_owners._cache  # type: ignore[attr-defined]
+    if cache_key not in cache:
+        owners: dict[str, set[str]] = {}
+        for split in _NON_FINAL_SPLITS:
+            for row in _cached_materialized_metadata(repo_root, split):
+                digest = row.get("observation_pixel_digest")
+                if digest is not None and row.get("expected_disposition") != "information_theoretic_control":
+                    owners.setdefault(str(digest), set()).add(str(row.get("episode_id")))
+        cache[cache_key] = owners
+    return cache[cache_key]
+
+
+def _mutation_property(case: Mapping[str, Any]) -> str:
+    return str(case.get("protected_scientific_property") or str(case["name"]).replace("_", " "))
+
+
+def _mutation_expected_files(case: Mapping[str, Any]) -> tuple[str, ...]:
+    artifact_class = str(case["artifact_class"])
+    name = str(case.get("name", case.get("mutation_id", "")))
+    if artifact_class in {"evidence", "semantic", "reachability_trace"}:
+        files = ["development/provider-evidence.jsonl", "development-manifest.json"]
+        if name in {"reachability_add_impossible_edge", "reachability_change_tile_identity", "reachability_change_unrelated_edge"}:
+            files = ["reachability-tile-reference.json"]
+        return tuple(files)
+    if artifact_class == "policy":
+        return ("policy-artifact.json",)
+    if artifact_class in {"observation", "family_output"}:
+        return ("selection/frame-metadata.jsonl", "selection-manifest.json")
+    if artifact_class == "episode_plan":
+        if name == "seed_alter_final_sealed_identity":
+            return ("final-split-sealed-plan.json", "final-split-sealed-digest.json")
+        if name in {"seed_alter_root_seed_material", "seed_alter_root_seed_digest"}:
+            return ("generator-identity.json",) if name == "seed_alter_root_seed_material" else ("benchmark-contract-identity.json",)
+        return ("episode-plan.json",)
+    if artifact_class == "access_status":
+        if name in {"access_increment_final_materialization_count", "access_increment_forbidden_access_counter"}:
+            return ("phase-access-audits.json",)
+        if name == "access_add_final_observation_artifact":
+            return ("final/frame-metadata.jsonl",)
+        if name in {"access_add_final_score_vector_record", "access_add_final_reachability_trace"}:
+            return ("final/provider-evidence.jsonl",)
+        if name == "access_record_calibration_execution":
+            return ("selected-calibration.json",)
+        if name == "access_record_architecture_selection_execution":
+            return ("selected-architecture.json",)
+        return ("reference-closure-report.json",)
+    return ()
+
+
+def mutation_catalogue() -> list[dict[str, Any]]:
+    catalogue = []
+    for case in _MUTATION_CASES:
+        expected = case.get("expected_primary_failure_code")
+        invariant = bool(case.get("invariant"))
+        catalogue.append(
+            {
+                "matrix_version": MUTATION_MATRIX_VERSION,
+                "mutation_id": case["name"],
+                "artifact_class": case["artifact_class"],
+                "protected_scientific_property": _mutation_property(case),
+                "fixture_selector": case.get("fixture_selector", f"{case['artifact_class']}:deterministic-first-matching-record"),
+                "mutator_id": f"reference-mutator:{case['name']}",
+                "immediate_digest_recomputed": bool(case.get("digest_laundering", False)),
+                "parent_digest_recomputed": bool(case.get("digest_laundering", False)) or case["artifact_class"] in {"evidence", "semantic", "observation", "family_output", "reachability_trace"},
+                "expected_result_type": "semantic_invariant" if invariant else "detected",
+                "expected_primary_failure_code": expected,
+                "permitted_secondary_failure_codes": list(case.get("permitted_secondary_failure_codes", [])),
+                "expected_changed_files": list(_mutation_expected_files(case)),
+                "validation_metadata": {
+                    "digest_laundering": bool(case.get("digest_laundering", False)),
+                    "gate_scope": list(case.get("gate_scope", _MUTATION_GATE_SCOPE.get(str(case["artifact_class"]), _REQUIRED_VERIFICATION_GATES))),
+                },
+            }
+        )
+    return catalogue
+
+
+def validate_mutation_catalogue() -> list[dict[str, Any]]:
+    findings: list[dict[str, Any]] = []
+    catalogue = mutation_catalogue()
+    mutation_ids = [str(case["mutation_id"]) for case in catalogue]
+    if len(mutation_ids) != len(set(mutation_ids)):
+        findings.append(_finding("duplicate_mutation_id", "mutation catalogue contains duplicate mutation ids"))
+    declared_ids = set(mutation_ids)
+    mutator_ids = {str(case["mutation_id"]) for case in catalogue if case.get("mutator_id")}
+    for missing in sorted(declared_ids - mutator_ids):
+        findings.append(_finding("mutation_mutator_missing", "declared mutation has no executable mutator", mutation=missing))
+    for extra in sorted(mutator_ids - declared_ids):
+        findings.append(_finding("mutation_mutator_orphan", "mutator has no declaration", mutation=extra))
+    for case in catalogue:
+        if case["expected_result_type"] == "detected" and not case.get("expected_primary_failure_code"):
+            findings.append(_finding("mutation_expected_code_missing", "expected detection lacks an expected primary failure code", mutation=case["mutation_id"]))
+        if not case.get("expected_changed_files"):
+            findings.append(_finding("mutation_expected_change_missing", "mutation lacks expected changed file metadata", mutation=case["mutation_id"]))
+    detected = sum(1 for case in catalogue if case["expected_result_type"] == "detected")
+    invariants = sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant")
+    if len(catalogue) != 87 or detected != 85 or invariants != 2:
+        findings.append(
+            _finding(
+                "mutation_matrix_count_mismatch",
+                "mutation matrix count changed without an explicit matrix revision",
+                declared_count=len(catalogue),
+                detected_count=detected,
+                invariant_count=invariants,
+            )
+        )
+    return findings
+
+
+def _structural_payload(path: Path) -> Any:
+    if path.suffix == ".json":
+        return json.loads(path.read_text(encoding="utf-8"))
+    if path.suffix == ".jsonl":
+        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return path.read_text(encoding="utf-8")
+
+
+def _flatten_payload(value: Any, prefix: str) -> dict[str, Any]:
+    if isinstance(value, Mapping):
+        rows: dict[str, Any] = {}
+        for key in sorted(value):
+            rows.update(_flatten_payload(value[key], f"{prefix}.{key}" if prefix else str(key)))
+        return rows
+    if isinstance(value, list):
+        rows = {}
+        for index, item in enumerate(value):
+            rows.update(_flatten_payload(item, f"{prefix}[{index}]"))
+        if not value:
+            rows[prefix] = []
+        return rows
+    return {prefix: value}
+
+
+def _mutation_structural_snapshot(output_dir: Path, *, only_files: Sequence[str] | None = None) -> dict[str, Any]:
+    snapshot: dict[str, Any] = {}
+    selected = None if only_files is None else {str(item).replace("\\", "/") for item in only_files}
+    for path in sorted(output_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = str(path.relative_to(output_dir)).replace("\\", "/")
+        if selected is not None and relative not in selected:
+            continue
+        try:
+            snapshot[relative] = _structural_payload(path)
+        except UnicodeDecodeError:
+            snapshot[relative] = {"binary_digest": _file_digest(path)}
+    return snapshot
+
+
+def _changed_snapshot_files(before: Mapping[str, Mapping[str, Any]], after: Mapping[str, Mapping[str, Any]]) -> list[str]:
+    changed = []
+    for file_name in sorted(set(before) | set(after)):
+        before_digest = before.get(file_name, {}).get("digest")
+        after_digest = after.get(file_name, {}).get("digest")
+        if before_digest != after_digest:
+            changed.append(file_name)
+    return changed
+
+
+def _changed_fields(before: Mapping[str, Any], after: Mapping[str, Any]) -> list[str]:
+    changed: set[str] = set()
+    for file_name in sorted(set(before) | set(after)):
+        if file_name not in before or file_name not in after:
+            changed.add(file_name)
+            continue
+        if before[file_name] == after[file_name]:
+            continue
+        before_flat = _flatten_payload(before[file_name], file_name)
+        after_flat = _flatten_payload(after[file_name], file_name)
+        for field in sorted(set(before_flat) | set(after_flat)):
+            if before_flat.get(field) != after_flat.get(field):
+                changed.add(field)
+    return sorted(changed)
+
+
+def _mutation_isolation_report(before: Mapping[str, Any], after: Mapping[str, Any], case: Mapping[str, Any]) -> dict[str, Any]:
+    changed = _changed_fields(before, after)
+    if case.get("expected_changed_files") is not None:
+        expected_files = tuple(str(item) for item in case["expected_changed_files"])
+    else:
+        expected_files = tuple(str(item) for item in _mutation_expected_files(case))
+    unexpected = [
+        field
+        for field in changed
+        if not any(field == expected or field.startswith(f"{expected}.") or field.startswith(f"{expected}[") for expected in expected_files)
+    ]
+    before_flat: dict[str, Any] = {}
+    after_flat: dict[str, Any] = {}
+    for file_name, payload in before.items():
+        before_flat.update(_flatten_payload(payload, file_name))
+    for file_name, payload in after.items():
+        after_flat.update(_flatten_payload(payload, file_name))
+    effect_payload = []
+    for field in changed:
+        if field in before or field in after:
+            effect_payload.append({"field": field, "before": before.get(field), "after": after.get(field)})
+        else:
+            effect_payload.append({"field": field, "before": before_flat.get(field), "after": after_flat.get(field)})
+    return {
+        "changed_fields": changed,
+        "expected_changed_files": list(expected_files),
+        "unexpected_changed_fields": unexpected,
+        "changed_field_count": len(changed),
+        "isolation_passed": bool(changed) and not unexpected,
+        "mutation_effect_digest": _sha256({"changed_fields": changed, "effect_payload": effect_payload}),
+    }
+
 
 def _rewrite_jsonl(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
     _write_jsonl(path, [dict(row) for row in rows])
@@ -3323,15 +3702,16 @@ def _launder_split_manifest(output_dir: Path, split: str) -> None:
     _write_json(manifest_path, manifest)
 
 
-def _mutate_first_provider_row(output_dir: Path, mutator: Any, *, predicate: Any | None = None) -> None:
-    path = output_dir / "selection" / "provider-evidence.jsonl"
-    rows = _read_jsonl(path)
-    for row in rows:
-        if predicate is None or predicate(row):
-            mutator(row)
-            _rewrite_jsonl(path, rows)
-            _launder_split_manifest(output_dir, "selection")
-            return
+def _mutate_first_provider_row(output_dir: Path, mutator: Any, *, predicate: Any | None = None, splits: Sequence[str] = ("development", "calibration", "selection")) -> None:
+    for split in splits:
+        path = output_dir / split / "provider-evidence.jsonl"
+        rows = _read_jsonl(path)
+        for row in rows:
+            if predicate is None or predicate(row):
+                mutator(row)
+                _rewrite_jsonl(path, rows)
+                _launder_split_manifest(output_dir, split)
+                return
     raise VPMValidationError("mutation fixture lacks a matching provider row")
 
 
@@ -3412,10 +3792,11 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
             elif case_name == "semantic_alter_outcome_digest":
                 payload["semantic_outcome_digest"] = "sha256:" + "1" * 64
                 row["semantic_outcome_digest"] = payload["semantic_outcome_digest"]
-            elif case_name in {"semantic_lexically_reorder_tied_rows", "semantic_reorder_rows_preserving_action_equivalence"}:
+            elif case_name == "semantic_lexically_reorder_tied_rows":
                 payload["top_row_ids"] = list(reversed(payload["top_row_ids"]))
-                payload["top_row_actions"] = list(reversed(payload["top_row_actions"]))
                 row["top_row_ids"] = list(reversed(row["top_row_ids"]))
+            elif case_name == "semantic_reorder_rows_preserving_action_equivalence":
+                payload["top_row_actions"] = list(reversed(payload["top_row_actions"]))
         if case_name == "semantic_resolved_row_for_action_unanimous_tie":
             _mutate_first_provider_row(output_dir, semantic_mutate, predicate=lambda row: row.get("semantic_status") == "action_unanimous_tie")
         elif case_name in {"semantic_resolved_action_for_conflicting_tie", "semantic_convert_conflicting_tie_to_unique_row", "semantic_change_rejection_reason"}:
@@ -3435,6 +3816,8 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
             payload["row_action"]["foreign:row"] = "LEFT"
         elif case_name == "policy_alter_artifact_identity":
             payload["policy_artifact_id"] = "sha256:foreign-policy"
+        elif case_name == "policy_mapping_recomputed_superficial_metadata":
+            payload["row_action_digest"] = _sha256({"laundered": payload["row_action"], "mutation": case_name})
         else:
             first = payload["row_ids"][0]
             payload["row_action"][first] = "FIRE" if payload["row_action"][first] != "FIRE" else "LEFT"
@@ -3454,9 +3837,11 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
         elif case_name == "observation_reuse_under_two_episode_ids":
             path = output_dir / "selection" / "frame-metadata.jsonl"
             rows = _read_jsonl(path)
-            first_digest = next(row["observation_pixel_digest"] for row in rows if row.get("observation_pixel_digest") and row.get("expected_disposition") != "information_theoretic_control")
+            first_row = next(row for row in rows if row.get("observation_pixel_digest") and row.get("expected_disposition") != "information_theoretic_control")
+            first_digest = first_row["observation_pixel_digest"]
+            first_episode = first_row["episode_id"]
             for row in rows:
-                if row.get("observation_pixel_digest") and row.get("expected_disposition") != "information_theoretic_control" and row["observation_pixel_digest"] != first_digest:
+                if row.get("observation_pixel_digest") and row.get("expected_disposition") != "information_theoretic_control" and row["episode_id"] != first_episode:
                     row["observation_pixel_digest"] = first_digest
                     break
             _rewrite_jsonl(path, rows)
@@ -3464,7 +3849,12 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
         elif case_name == "observation_substitute_frame_for_declared_gap":
             _mutate_first_frame_row(output_dir, lambda row: (row.__setitem__("event_type", "frame"), row.__setitem__("gap_declaration", None), row.__setitem__("observation_pixel_digest", "sha256:" + "2" * 64)), predicate=lambda row: row.get("event_type") == "gap_unknown")
         else:
-            _mutate_first_frame_row(output_dir, lambda row: row.__setitem__("observation_pixel_digest", "sha256:" + "3" * 64), predicate=lambda row: row.get("observation_pixel_digest") is not None)
+            replacement = {
+                "observation_flip_byte_digest": "sha256:" + "3" * 64,
+                "observation_change_pixels_and_recompute_digest": "sha256:" + "b" * 64,
+                "observation_change_digest_without_pixels": "sha256:" + "c" * 64,
+            }[case_name]
+            _mutate_first_frame_row(output_dir, lambda row: row.__setitem__("observation_pixel_digest", replacement), predicate=lambda row: row.get("observation_pixel_digest") is not None)
         return
 
     if case_name.startswith("seed_"):
@@ -3489,8 +3879,9 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
         elif case_name == "seed_alter_split_identity":
             plan["split"] = "development"
         elif case_name == "seed_move_episode_between_splits":
-            payload["splits"]["development"]["episodes"].append(plan)
-            payload["splits"]["selection"]["episodes"] = payload["splits"]["selection"]["episodes"][1:]
+            moved = payload["splits"]["development"]["episodes"][0]
+            moved["split"] = "selection"
+            moved["episode_id"] = "selection:moved-from-development"
         elif case_name == "seed_duplicate_episode_id":
             payload["splits"]["selection"]["episodes"][1]["episode_id"] = plan["episode_id"]
         elif case_name == "seed_alter_source_row":
@@ -3538,10 +3929,13 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
             elif case_name == "family_clipping_quantization_noop":
                 trace["changed_pixel_count"] = 0
             elif case_name in {"family_reordered_metadata_original_payload_order", "family_identity_permutation_labelled_reordered"}:
-                metadata["original_frame_index"] = int(row.get("sequence_number", 0))
+                metadata["original_frame_index"] = int(row.get("sequence_number", 0)) if case_name == "family_reordered_metadata_original_payload_order" else -1
             elif case_name in {"family_stale_label_without_repeated_bytes", "family_stale_repeat_naturally_identical"}:
                 repeat = metadata.setdefault("stale_repeat", {})
-                repeat["replacement_digest"] = repeat.get("original_destination_digest", row.get("observation_pixel_digest"))
+                if case_name == "family_stale_label_without_repeated_bytes":
+                    repeat["replacement_digest"] = repeat.get("original_destination_digest", row.get("observation_pixel_digest"))
+                else:
+                    repeat["original_destination_digest"] = repeat.get("replacement_digest", row.get("observation_pixel_digest"))
             elif case_name == "family_impossible_transition_reachable_pair":
                 transition = metadata.setdefault("impossible_transition", {})
                 edge = transition.get("consulted_edge", {})
@@ -3572,26 +3966,36 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
     if case_name.startswith("reachability_"):
         if case_name in {"reachability_add_impossible_edge", "reachability_change_tile_identity", "reachability_change_unrelated_edge"}:
             payload = _read_json(output_dir / "reachability-tile-reference.json")
-            payload["tile_digest"] = "sha256:" + "8" * 64
+            if case_name == "reachability_add_impossible_edge":
+                payload["tile_digest"] = "sha256:" + "8" * 64
+                payload["mutation_kind"] = "added-impossible-edge"
+            elif case_name == "reachability_change_unrelated_edge":
+                payload["tile_digest"] = "sha256:" + "7" * 64
+                payload["mutation_kind"] = "changed-unrelated-edge"
+            else:
+                payload["tile_digest"] = "sha256:" + "6" * 64
             _write_json(output_dir / "reachability-tile-reference.json", payload)
             return
         def reach_mutate(row: dict[str, Any]) -> None:
             trace = row["reachability_composition_trace"]
             if case_name == "reachability_remove_applicable_edge":
-                trace["consulted_edges"] = []
+                trace["consulted_edges"][0]["reachable_row_ids"] = []
             elif case_name == "reachability_redirect_applicable_edge":
-                if trace.get("reachable_candidate_pairs"):
-                    trace["reachable_candidate_pairs"][0]["destination_row_id"] = row["all_112_row_ids"][-1]
+                trace["reachable_candidate_pairs"][0]["destination_row_id"] = row["all_112_row_ids"][-1]
             elif case_name == "reachability_alter_destination_action":
                 row["semantic_top_set_outcome"]["top_row_actions"][0]["action_id"] = "FIRE" if row["semantic_top_set_outcome"]["top_row_actions"][0]["action_id"] != "FIRE" else "LEFT"
+                trace["mutation_kind"] = "altered_destination_action"
             elif case_name in {"reachability_alter_consulted_edge_list", "reachability_omit_consulted_edge"}:
-                trace["consulted_edges"] = []
+                if case_name == "reachability_alter_consulted_edge_list":
+                    trace["consulted_edges"][0]["action_id"] = "FIRE" if trace["consulted_edges"][0]["action_id"] != "FIRE" else "LEFT"
+                else:
+                    trace["consulted_edges"] = []
             elif case_name == "reachability_add_unconsulted_edge_to_trace":
                 trace["consulted_edges"].append({"source_row_id": "foreign", "action_id": "LEFT", "reachable_row_ids": []})
             elif case_name == "reachability_alter_reachable_pair_set":
                 trace["reachable_candidate_pairs"].append({"source_row_id": "foreign", "action_id": "LEFT", "destination_row_id": "foreign"})
             elif case_name == "reachability_alter_retained_candidate_rows":
-                trace["retained_rows"] = list(reversed(trace.get("retained_rows", [])))
+                trace["retained_rows"] = list(reversed(trace.get("retained_rows", []))) + ["foreign:retained"]
             elif case_name == "reachability_alter_removed_candidate_rows":
                 trace["removed_rows"] = list(reversed(trace.get("removed_rows", []))) + ["foreign"]
             elif case_name == "reachability_replace_rejection_with_lexical_winner":
@@ -3601,7 +4005,21 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
                 trace["executed_action"] = "FIRE" if trace.get("executed_action") != "FIRE" else "LEFT"
             elif case_name == "reachability_use_foreign_trace_digest":
                 trace["trace_digest"] = "sha256:" + "9" * 64
-        _mutate_first_provider_row(output_dir, reach_mutate, predicate=lambda row: row.get("reachability_composition_trace") is not None)
+            if case_name != "reachability_use_foreign_trace_digest":
+                trace["trace_digest"] = _trace_digest(trace)
+        if case_name in {"reachability_remove_applicable_edge", "reachability_alter_consulted_edge_list", "reachability_omit_consulted_edge", "reachability_add_unconsulted_edge_to_trace"}:
+            predicate = lambda row: bool(row.get("reachability_composition_trace", {}).get("consulted_edges"))
+        elif case_name in {"reachability_redirect_applicable_edge", "reachability_alter_reachable_pair_set"}:
+            predicate = lambda row: bool(row.get("reachability_composition_trace", {}).get("reachable_candidate_pairs"))
+        elif case_name == "reachability_alter_removed_candidate_rows":
+            predicate = lambda row: bool(row.get("reachability_composition_trace", {}).get("removed_rows"))
+        elif case_name == "reachability_replace_rejection_with_lexical_winner":
+            predicate = lambda row: row.get("reachability_composition_trace", {}).get("status") == "rejected"
+        elif case_name == "reachability_change_executed_action":
+            predicate = lambda row: row.get("reachability_composition_trace", {}).get("executed_action") is not None
+        else:
+            predicate = lambda row: row.get("reachability_composition_trace") is not None
+        _mutate_first_provider_row(output_dir, reach_mutate, predicate=predicate)
         return
 
     if case_name.startswith("access_"):
@@ -3628,10 +4046,23 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
         elif case_name == "access_record_architecture_selection_execution":
             _write_json(output_dir / "selected-architecture.json", {"executed": True})
         else:
-            report = verify_reference_instrument(output_dir, Path(__file__).resolve().parents[1])
+            report = {
+                "version": REFERENCE_VERIFICATION_VERSION,
+                "verified": True,
+                "gates": [_gate(name, []) for name in _REQUIRED_VERIFICATION_GATES],
+                "primary_failure_code": None,
+                "primary_failure_gate": None,
+            }
+            closure = {"version": CLOSURE_REPORT_VERSION, "supported_status": "reference_instrument_correctness_unresolved", "verification": report}
+            if case_name == "access_change_failed_gate_status_to_passed":
+                closure["verification"]["gates"][0]["status"] = "passed"
+                closure["verification"]["gates"][0]["findings"] = [_finding("status_claim_not_supported", "synthetic failed gate relabelled as passed")]
+                closure["verification"]["gates"][0]["finding_count"] = 1
             if case_name == "access_remove_required_gate_from_closure_report":
-                report["gates"] = report["gates"][1:]
-            closure = {"version": CLOSURE_REPORT_VERSION, "supported_status": "reference_instrument_correct", "verification": report}
+                closure["verification"]["gates"] = closure["verification"]["gates"][1:]
+            if case_name == "access_change_repository_status_to_correct":
+                closure["supported_status"] = "reference_instrument_correct"
+            closure["closure_report_digest"] = _sha256({key: value for key, value in closure.items() if key != "closure_report_digest"})
             _write_json(output_dir / "reference-closure-report.json", closure)
         return
     raise VPMValidationError(f"unsupported mutation case: {case_name}")
@@ -3641,91 +4072,248 @@ def run_reference_mutation_audit(output_dir: Path, repo_root: Path, *, mutation_
     import shutil
     import tempfile
 
-    selected_cases = tuple(case for case in _MUTATION_CASES if mutation_names is None or case["name"] in set(mutation_names))
+    requested = None if mutation_names is None else set(str(name) for name in mutation_names)
+    catalogue = mutation_catalogue()
+    selected_cases = tuple(case for case in catalogue if requested is None or case["mutation_id"] in requested)
+    catalogue_findings = validate_mutation_catalogue()
+    if requested is not None:
+        missing = sorted(requested - {str(case["mutation_id"]) for case in selected_cases})
+        catalogue_findings.extend(_finding("mutation_not_declared", "requested mutation is not declared", mutation=name) for name in missing)
     base = verify_reference_instrument(output_dir, repo_root)
     results: list[dict[str, Any]] = []
-    if not base["verified"]:
+    if not base["verified"] or catalogue_findings:
         payload = {
             "version": MUTATION_AUDIT_VERSION,
+            "matrix_version": MUTATION_MATRIX_VERSION,
             "base_verified": False,
             "base_primary_failure_code": base.get("primary_failure_code"),
+            "catalogue_findings": catalogue_findings,
             "mutations": [],
-            "expected_mutation_count": len(selected_cases),
+            "declared_mutation_count": len(catalogue),
+            "executable_mutation_count": len(selected_cases),
+            "expected_detection_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
+            "expected_mutation_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
             "detected_mutation_count": 0,
-            "undetected_mutation_count": len([case for case in selected_cases if not case.get("invariant")]),
+            "missed_mutation_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
+            "undetected_mutation_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
             "unexpected_failure_code_count": len(selected_cases),
+            "invariant_count": len([case for case in selected_cases if case["expected_result_type"] == "semantic_invariant"]),
+            "invariant_pass_count": 0,
+            "invariant_failure_count": len([case for case in selected_cases if case["expected_result_type"] == "semantic_invariant"]),
             "digest_laundering_tests": [],
+            "digest_laundering_class_closure": {},
+            "mutation_isolation_passed": False,
+            "duplicate_effect_findings": [],
             "status": "unavailable",
         }
         payload["mutation_audit_digest"] = _sha256(payload)
         return payload
+    base_directory = _directory_snapshot(output_dir)
     with tempfile.TemporaryDirectory(prefix="reference-mutation-audit-") as tmp:
         tmp_root = Path(tmp)
         for case in selected_cases:
-            case_dir = tmp_root / case["name"]
+            case_dir = tmp_root / str(case["mutation_id"])
             shutil.copytree(output_dir, case_dir)
             apply_error = None
             try:
-                _apply_reference_mutation(case_dir, str(case["name"]))
+                _apply_reference_mutation(case_dir, str(case["mutation_id"]))
+                after_directory = _directory_snapshot(case_dir)
+                changed_files = _changed_snapshot_files(base_directory, after_directory)
+                before = _mutation_structural_snapshot(output_dir, only_files=changed_files)
+                after = _mutation_structural_snapshot(case_dir, only_files=changed_files)
+                isolation = _mutation_isolation_report(before, after, case)
                 report = verify_reference_instrument(
                     case_dir,
                     repo_root,
-                    enabled_gates=_MUTATION_GATE_SCOPE.get(str(case["artifact_class"]), _REQUIRED_VERIFICATION_GATES),
+                    enabled_gates=case["validation_metadata"]["gate_scope"],
+                    stop_after_first_failure=True,
                 )
                 primary = report.get("primary_failure_code")
+                primary_gate = report.get("primary_failure_gate")
                 detected = primary is not None
             except Exception as exc:  # pragma: no cover - returned in the audit report for deterministic debugging.
                 primary = "mutation_application_error"
+                primary_gate = "mutation_application"
                 detected = True
-                apply_error = str(exc)
+                apply_error = type(exc).__name__
+                isolation = {
+                    "changed_fields": [],
+                    "expected_changed_files": list(case.get("expected_changed_files", [])),
+                    "unexpected_changed_fields": [],
+                    "changed_field_count": 0,
+                    "isolation_passed": False,
+                    "mutation_effect_digest": "sha256:application-error",
+                }
+                report = {"gates": []}
             expected = case.get("expected_primary_failure_code")
-            invariant = bool(case.get("invariant"))
-            expected_detected = expected is not None
+            expected_detected = case["expected_result_type"] == "detected"
+            secondary_codes = [row for row in _report_failure_codes(report) if row["code"] != primary or row["gate"] != primary_gate]
+            property_changed = isolation["changed_field_count"] > 0
             results.append(
                 {
-                    "mutation": case["name"],
+                    "mutation": case["mutation_id"],
                     "artifact_class": case["artifact_class"],
+                    "protected_scientific_property": case["protected_scientific_property"],
+                    "fixture_selector": case["fixture_selector"],
+                    "mutator_id": case["mutator_id"],
+                    "expected_result_type": case["expected_result_type"],
                     "expected_primary_failure_code": expected,
                     "actual_primary_failure_code": primary,
+                    "actual_primary_gate": primary_gate,
+                    "secondary_failure_codes": secondary_codes,
                     "detected": detected,
                     "expected_detected": expected_detected,
-                    "invariant": invariant,
-                    "digest_laundering": bool(case.get("digest_laundering", False)),
+                    "invariant": case["expected_result_type"] == "semantic_invariant",
+                    "semantic_invariant_passed": case["expected_result_type"] == "semantic_invariant" and primary is None,
+                    "digest_laundering": bool(case["validation_metadata"]["digest_laundering"]),
+                    "immediate_digest_recomputed": bool(case["immediate_digest_recomputed"]),
+                    "parent_digest_recomputed": bool(case["parent_digest_recomputed"]),
+                    "mutation_isolation": isolation,
+                    "property_changed": property_changed,
                     "expected_code_matched": (primary == expected) if expected_detected else (primary is None),
                     "application_error": apply_error,
                 }
             )
     expected_cases = [row for row in results if row["expected_detected"]]
     detected = [row for row in expected_cases if row["detected"]]
-    undetected = [row for row in expected_cases if not row["detected"]]
+    missed = [row for row in expected_cases if not row["detected"]]
     unexpected = [row for row in results if not row["expected_code_matched"]]
+    invariants = [row for row in results if row["expected_result_type"] == "semantic_invariant"]
+    invariant_passes = [row for row in invariants if row["semantic_invariant_passed"]]
+    isolation_failures = [row for row in results if not row["mutation_isolation"]["isolation_passed"]]
+    property_change_failures = [row for row in expected_cases if not row["property_changed"]]
+    effect_owners: dict[str, str] = {}
+    duplicate_effect_findings = []
+    for row in results:
+        effect_digest = row["mutation_isolation"]["mutation_effect_digest"]
+        previous = effect_owners.get(effect_digest)
+        if previous is not None:
+            duplicate_effect_findings.append(_finding("duplicate_mutation_effect", "two mutation ids produced the same structural effect", first_mutation=previous, second_mutation=row["mutation"]))
+        effect_owners[effect_digest] = row["mutation"]
+    laundering_closure: dict[str, dict[str, Any]] = {}
+    for row in results:
+        if not row["digest_laundering"]:
+            continue
+        item = laundering_closure.setdefault(
+            row["artifact_class"],
+            {"declared": 0, "executed": 0, "detected": 0, "expected_code_matches": 0, "laundering_depth_reached": "none"},
+        )
+        item["declared"] += 1
+        item["executed"] += 1
+        item["detected"] += int(bool(row["detected"]))
+        item["expected_code_matches"] += int(bool(row["expected_code_matched"]))
+        if row["immediate_digest_recomputed"] and row["parent_digest_recomputed"]:
+            item["laundering_depth_reached"] = "immediate_and_parent"
+        elif row["immediate_digest_recomputed"]:
+            item["laundering_depth_reached"] = "immediate"
     payload = {
         "version": MUTATION_AUDIT_VERSION,
+        "matrix_version": MUTATION_MATRIX_VERSION,
         "base_verified": True,
+        "catalogue_findings": catalogue_findings,
         "mutations": results,
+        "declared_mutation_count": len(catalogue),
+        "executable_mutation_count": len(selected_cases),
+        "expected_detection_count": len(expected_cases),
         "expected_mutation_count": len(expected_cases),
         "detected_mutation_count": len(detected),
-        "undetected_mutation_count": len(undetected),
+        "missed_mutation_count": len(missed),
+        "undetected_mutation_count": len(missed),
         "unexpected_failure_code_count": len(unexpected),
+        "invariant_count": len(invariants),
+        "invariant_pass_count": len(invariant_passes),
+        "invariant_failure_count": len(invariants) - len(invariant_passes),
         "digest_laundering_tests": [row["mutation"] for row in results if row["digest_laundering"]],
-        "status": "passed" if not undetected and not unexpected else "failed",
+        "digest_laundering_class_closure": laundering_closure,
+        "mutation_isolation_passed": not isolation_failures,
+        "mutation_isolation_failure_count": len(isolation_failures),
+        "property_change_failure_count": len(property_change_failures),
+        "duplicate_effect_findings": duplicate_effect_findings,
+        "repeated_run_determinism": "not_measured_in_single_run",
+        "status": (
+            "passed"
+            if not missed
+            and not unexpected
+            and len(invariant_passes) == len(invariants)
+            and not isolation_failures
+            and not property_change_failures
+            and not duplicate_effect_findings
+            else "failed"
+        ),
     }
     payload["mutation_audit_digest"] = _sha256(payload)
     return payload
 
 
+def run_repeated_reference_mutation_audit(output_dir: Path, repo_root: Path, *, mutation_names: Sequence[str] | None = None) -> dict[str, Any]:
+    first = run_reference_mutation_audit(output_dir, repo_root, mutation_names=mutation_names)
+    second = run_reference_mutation_audit(output_dir, repo_root, mutation_names=mutation_names)
+    deterministic = first == second and first.get("mutation_audit_digest") == second.get("mutation_audit_digest")
+    payload = {
+        "version": "zeromodel-video-action-set-reference-mutation-audit-repeat/v1",
+        "matrix_version": MUTATION_MATRIX_VERSION,
+        "deterministic": deterministic,
+        "first_audit_digest": first.get("mutation_audit_digest"),
+        "second_audit_digest": second.get("mutation_audit_digest"),
+        "audit": first,
+    }
+    payload["repeat_digest"] = _sha256(payload)
+    return payload
+
+
 def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include_mutation_audit: bool = True) -> dict[str, Any]:
     verification = verify_reference_instrument(output_dir, repo_root)
-    mutation_audit = run_reference_mutation_audit(output_dir, repo_root) if include_mutation_audit else {
+    repeated_mutation_audit = run_repeated_reference_mutation_audit(output_dir, repo_root) if include_mutation_audit else {
+        "version": "zeromodel-video-action-set-reference-mutation-audit-repeat/v1",
+        "matrix_version": MUTATION_MATRIX_VERSION,
+        "deterministic": False,
+        "first_audit_digest": None,
+        "second_audit_digest": None,
+        "audit": {
+            "version": MUTATION_AUDIT_VERSION,
+            "matrix_version": MUTATION_MATRIX_VERSION,
+            "status": "unavailable",
+            "declared_mutation_count": len(_MUTATION_CASES),
+            "executable_mutation_count": len(_MUTATION_CASES),
+            "expected_detection_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
+            "expected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
+            "detected_mutation_count": 0,
+            "missed_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
+            "undetected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
+            "unexpected_failure_code_count": 0,
+            "invariant_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
+            "invariant_pass_count": 0,
+            "invariant_failure_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
+            "mutations": [],
+            "digest_laundering_tests": [],
+            "digest_laundering_class_closure": {},
+            "mutation_isolation_passed": False,
+            "mutation_audit_digest": None,
+        },
+    }
+    mutation_audit = repeated_mutation_audit["audit"]
+    if not include_mutation_audit:
+        mutation_audit = {
         "version": MUTATION_AUDIT_VERSION,
+        "matrix_version": MUTATION_MATRIX_VERSION,
         "status": "unavailable",
+        "declared_mutation_count": len(_MUTATION_CASES),
+        "executable_mutation_count": len(_MUTATION_CASES),
+        "expected_detection_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
         "expected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
         "detected_mutation_count": 0,
+        "missed_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
         "undetected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
         "unexpected_failure_code_count": 0,
+        "invariant_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
+        "invariant_pass_count": 0,
+        "invariant_failure_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
         "mutations": [],
         "digest_laundering_tests": [],
-    }
+        "digest_laundering_class_closure": {},
+        "mutation_isolation_passed": False,
+        "mutation_audit_digest": None,
+        }
     read_only = verify_reference_read_only(output_dir, repo_root)
     final_counts = verification["final_access_measurements"]
     required_zero = (
@@ -3740,6 +4328,17 @@ def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include
     supported = (
         verification["verified"]
         and mutation_audit.get("status") == "passed"
+        and mutation_audit.get("declared_mutation_count") == 87
+        and mutation_audit.get("executable_mutation_count") == 87
+        and mutation_audit.get("expected_detection_count") == 85
+        and mutation_audit.get("detected_mutation_count") == 85
+        and mutation_audit.get("missed_mutation_count") == 0
+        and mutation_audit.get("unexpected_failure_code_count") == 0
+        and mutation_audit.get("invariant_count") == 2
+        and mutation_audit.get("invariant_pass_count") == 2
+        and len(mutation_audit.get("digest_laundering_class_closure", {})) >= 7
+        and mutation_audit.get("mutation_isolation_passed") is True
+        and repeated_mutation_audit.get("deterministic") is True
         and read_only["status"] == "passed"
         and required_zero
         and not verification["unavailable_checks"]
@@ -3758,11 +4357,20 @@ def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include
         "provider_identities": verification["authoritative_roots"]["provider_versions"],
         "verification": verification,
         "mutation_audit": mutation_audit,
+        "repeated_mutation_audit": repeated_mutation_audit,
         "read_only_verification": read_only,
+        "declared_mutation_count": mutation_audit.get("declared_mutation_count", 0),
+        "executable_mutation_count": mutation_audit.get("executable_mutation_count", 0),
+        "expected_detection_count": mutation_audit.get("expected_detection_count", 0),
         "expected_mutation_count": mutation_audit.get("expected_mutation_count", 0),
         "detected_mutation_count": mutation_audit.get("detected_mutation_count", 0),
+        "missed_mutation_count": mutation_audit.get("missed_mutation_count", 0),
         "undetected_mutation_count": mutation_audit.get("undetected_mutation_count", 0),
         "unexpected_failure_code_count": mutation_audit.get("unexpected_failure_code_count", 0),
+        "invariant_count": mutation_audit.get("invariant_count", 0),
+        "invariant_pass_count": mutation_audit.get("invariant_pass_count", 0),
+        "digest_laundering_class_closure": mutation_audit.get("digest_laundering_class_closure", {}),
+        "mutation_audit_report_digest": mutation_audit.get("mutation_audit_digest"),
         "final_materialization_access_counts": final_counts,
         "supported_status": "reference_instrument_correct" if supported else "reference_instrument_correctness_unresolved",
         "unsupported_statuses": [
@@ -3814,6 +4422,7 @@ __all__ = [
     "REFERENCE_VERIFICATION_VERSION",
     "MUTATION_AUDIT_VERSION",
     "CLOSURE_REPORT_VERSION",
+    "MUTATION_MATRIX_VERSION",
     "PHASE_ACCESS_VERSION",
     "SOURCE_SCOPE",
     "audit_canonical_providers",
@@ -3823,7 +4432,10 @@ __all__ = [
     "canonical_prototypes",
     "freeze_benchmark",
     "load_identity",
+    "mutation_catalogue",
     "run_reference_mutation_audit",
+    "run_repeated_reference_mutation_audit",
+    "validate_mutation_catalogue",
     "verify_reference_instrument",
     "verify_reference_read_only",
     "verify_instrument",

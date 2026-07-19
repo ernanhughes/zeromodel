@@ -183,6 +183,13 @@ def test_selected_adversarial_mutations_have_expected_primary_codes(
 
 
 def test_mutation_audit_schema_declares_required_matrix() -> None:
+    assert benchmark.MUTATION_MATRIX_VERSION == "zeromodel-video-action-set-reference-mutation-matrix/v2"
+    catalogue_findings = benchmark.validate_mutation_catalogue()
+    assert catalogue_findings == []
+    catalogue = benchmark.mutation_catalogue()
+    assert len(catalogue) == 87
+    assert sum(1 for case in catalogue if case["expected_result_type"] == "detected") == 85
+    assert sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant") == 2
     cases = {case["name"]: case for case in benchmark._MUTATION_CASES}
     for required in (
         "evidence_quantized_score_changed",
@@ -196,3 +203,35 @@ def test_mutation_audit_schema_declares_required_matrix() -> None:
         assert required in cases
     laundering_classes = {case["artifact_class"] for case in cases.values() if case.get("digest_laundering")}
     assert {"evidence", "semantic", "episode_plan", "observation", "family_output", "reachability_trace", "access_status"} <= laundering_classes
+
+
+@pytest.mark.slow
+def test_complete_adversarial_mutation_audit_executes_all_cases(reference_fixture: Path) -> None:
+    repeated = benchmark.run_repeated_reference_mutation_audit(reference_fixture, REPO_ROOT)
+    audit = repeated["audit"]
+    assert repeated["deterministic"] is True
+    assert repeated["first_audit_digest"] == repeated["second_audit_digest"]
+    assert audit["status"] == "passed"
+    assert audit["matrix_version"] == benchmark.MUTATION_MATRIX_VERSION
+    assert audit["declared_mutation_count"] == 87
+    assert audit["executable_mutation_count"] == 87
+    assert audit["expected_detection_count"] == 85
+    assert audit["detected_mutation_count"] == 85
+    assert audit["missed_mutation_count"] == 0
+    assert audit["unexpected_failure_code_count"] == 0
+    assert audit["invariant_count"] == 2
+    assert audit["invariant_pass_count"] == 2
+    assert audit["invariant_failure_count"] == 0
+    assert audit["mutation_isolation_passed"] is True
+    assert audit["property_change_failure_count"] == 0
+    assert audit["duplicate_effect_findings"] == []
+    assert set(audit["digest_laundering_class_closure"]) == {
+        "evidence",
+        "semantic",
+        "episode_plan",
+        "observation",
+        "family_output",
+        "reachability_trace",
+        "access_status",
+    }
+    assert all(item["declared"] == item["executed"] == item["detected"] == item["expected_code_matches"] for item in audit["digest_laundering_class_closure"].values())

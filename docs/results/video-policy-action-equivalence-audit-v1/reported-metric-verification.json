@@ -1,0 +1,38 @@
+[
+  {
+    "difference": 0.0,
+    "match_status": "exact_match",
+    "metric_name": "top1_benign_row_accuracy",
+    "provider_id": "system-b-v2",
+    "reported_value": 0.75,
+    "repository_derived_value": 0.75,
+    "source_artifact": "docs/results/visual-address-system-b-v2/final-summary.json"
+  },
+  {
+    "difference": 0.0,
+    "match_status": "exact_match",
+    "metric_name": "top1_benign_action_accuracy",
+    "provider_id": "system-b-v2",
+    "reported_value": 0.96875,
+    "repository_derived_value": 0.96875,
+    "source_artifact": "docs/results/visual-address-system-b-v2/final-summary.json"
+  },
+  {
+    "difference": 0.0,
+    "match_status": "exact_match",
+    "metric_name": "top1_benign_row_accuracy",
+    "provider_id": "r1-local-correlation",
+    "reported_value": 0.875,
+    "repository_derived_value": 0.875,
+    "source_artifact": "docs/results/visual-local-baseline-showdown-v1/final-summary.json"
+  },
+  {
+    "difference": 0.0,
+    "match_status": "exact_match",
+    "metric_name": "top1_benign_action_accuracy",
+    "provider_id": "r1-local-correlation",
+    "reported_value": 0.984375,
+    "repository_derived_value": 0.984375,
+    "source_artifact": "docs/results/visual-local-baseline-showdown-v1/final-summary.json"
+  }
+]

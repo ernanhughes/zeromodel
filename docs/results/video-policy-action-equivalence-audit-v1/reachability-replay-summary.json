@@ -1,0 +1,13 @@
+{
+  "clips_replayed": 0,
+  "frames_replayed": 0,
+  "non_injection_violations": 0,
+  "reasons": [
+    "no provider preserves both executed actions and frame-level visual candidate rows",
+    "stage3-v1 sequence summaries do not preserve replayable visual beliefs"
+  ],
+  "replay_eligible_providers": [],
+  "stage3_v1_classification": "sequence_metadata_without_visual_beliefs",
+  "stale_state_violations": 0,
+  "status": "reachability_replay_unavailable"
+}

@@ -1,0 +1,6 @@
+aggregate_metric_evidence,closure_version,complete_score_vector_evidence,frame_level_visual_belief_evidence,ordered_ranking_evidence,per_observation_top1_evidence,provider_id,reachability_replay_classification,reachability_replay_closure,reachability_replay_reasons,reproducible_score_evidence,sequence_metadata_evidence
+True,zeromodel-video-retrospective-evidence-closure/v1,False,False,False,True,system-b-v2,reachability_replay_unavailable,False,"[""missing_frame_level_visual_beliefs""]",False,False
+True,zeromodel-video-retrospective-evidence-closure/v1,False,False,False,True,r1-local-correlation,reachability_replay_unavailable,False,"[""missing_frame_level_visual_beliefs""]",False,False
+True,zeromodel-video-retrospective-evidence-closure/v1,False,False,False,False,stage3-v1,sequence_metadata_without_visual_beliefs,False,"[""sequence summaries and paired frame outcomes do not preserve visual candidate rows or executed actions""]",False,True
+True,zeromodel-video-retrospective-evidence-closure/v1,False,False,False,True,stage3-v2,reachability_replay_unavailable,False,"[""missing_frame_level_visual_beliefs""]",False,False
+True,zeromodel-video-retrospective-evidence-closure/v1,False,False,False,True,stage3-v3-b3,reachability_replay_unavailable,False,"[""missing_frame_level_visual_beliefs""]",False,False

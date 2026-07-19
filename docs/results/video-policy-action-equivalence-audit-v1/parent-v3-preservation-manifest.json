@@ -1,0 +1,22 @@
+{
+  "docs/results/video-discriminative-local-evidence-v3/README.md": "sha256:46197dba73354927c93611761236e84220c2787823106c6360fb8091e64809dc",
+  "docs/results/video-discriminative-local-evidence-v3/architecture-self-retrieval-status.json": "sha256:985b541a7f291daebdcf61a16b355aab203f83d994009a47da8af06169dd2384",
+  "docs/results/video-discriminative-local-evidence-v3/benchmark-manifest.json": "sha256:0579f8aabf8fa477ac2c259eec223995f7678a7904ba595566893442b736ead9",
+  "docs/results/video-discriminative-local-evidence-v3/candidate-mask-manifest.json": "sha256:ca7fc216134c9d29c62c4518a70c9e4bc2f6c670294b90e43de071ce02ebfa3e",
+  "docs/results/video-discriminative-local-evidence-v3/canonical-self-retrieval-summary.json": "sha256:b9d199eefbb6874581b0edf3c081c7e2919cf2fb251f9e7a717e202b668bc5ca",
+  "docs/results/video-discriminative-local-evidence-v3/canonical-self-retrieval.csv": "sha256:67fd72439cf14dbc6cc58d365427fd9cdc2f96a447720d67d183530956b7a245",
+  "docs/results/video-discriminative-local-evidence-v3/development-manifest.json": "sha256:fd0c353dc1349d7d8f18eebd45a2c953d5934cb39e946d882e342c59065a1494",
+  "docs/results/video-discriminative-local-evidence-v3/evaluation-sample.json": "sha256:a50e5aa5b18162530dbc34135d429598626fb40ee8113e8e59be9d5d36a45891",
+  "docs/results/video-discriminative-local-evidence-v3/evidence-accounting-summary.json": "sha256:077356fdc0358a4966a6c8e0da1cdc42622fd1cea26571fd9bd32da1dec9b690",
+  "docs/results/video-discriminative-local-evidence-v3/generator-identity.json": "sha256:4bad6de3380a41399fd1688ba402a067ad10cc1c0517ac197355baa1501656d4",
+  "docs/results/video-discriminative-local-evidence-v3/instrument-verification.json": "sha256:e8f23e44ae5d7fe0fc8c1b9df010ee479b7b9a515f31d03d87adef0baf9eb71e",
+  "docs/results/video-discriminative-local-evidence-v3/pairwise-mask-manifest.json": "sha256:e6eb6ce3f5854b3e83f5d6293b3fab7050922c02b079a54906eb1898299b0e72",
+  "docs/results/video-discriminative-local-evidence-v3/pairwise-mask-summary.json": "sha256:7e331b6df767bdd446c09a819693f4f8f31ec15578e624cbe3ccfd6f6dc82ab4",
+  "docs/results/video-discriminative-local-evidence-v3/pairwise-symmetry-results.json": "sha256:ac2b9667bee556c2b95a159d73fd3c966d01332ad12791211d368aaccf796d11",
+  "docs/results/video-discriminative-local-evidence-v3/prototype-manifest.json": "sha256:b2e1fd51214232faaf00e584c0244f0bc824dd2ceac56a3ef16e6ca1b75b401c",
+  "docs/results/video-discriminative-local-evidence-v3/provider-equivalence-results.json": "sha256:40e23b49d05afec54024ff038ed9c29ea001ab53658d6702e10ece3356520129",
+  "docs/results/video-discriminative-local-evidence-v3/region-manifest.json": "sha256:4c12ac25c5c0dadbf38e4ecd29953f1e0ecd2bcaae65b8264aa01e166b31966d",
+  "docs/results/video-discriminative-local-evidence-v3/reproduction.md": "sha256:93232bb96594e56bfa2a841e7d241711995ef3121faa8f26ae87048637c68a67",
+  "docs/results/video-discriminative-local-evidence-v3/split-manifest.json": "sha256:6fa265517aae9fb1e2fc34c1f43c61b9428163e6df5bacd3bb3ef2e75e608408",
+  "docs/results/video-discriminative-local-evidence-v3/tie-safety-results.json": "sha256:639cb9b5b3ba603253bf78f81f0a51390fae1eb4ca653f796c58b1b78fdb0b68"
+}

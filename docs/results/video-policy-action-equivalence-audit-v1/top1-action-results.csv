@@ -1,0 +1,6 @@
+action_top1_accuracy,diagnostic_label,invalid_boundary,mode,observation_count,policy_artifact_id,provider_id,raw_action_gap,reason,row_top1_accuracy,same_action_wrong_row_count,status
+0.96875,,,per_observation_top1_rescore,1862,eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e,system-b-v2,0.21875,,0.75,413,supported
+0.984375,,,per_observation_top1_rescore,1862,eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e,r1-local-correlation,0.109375,,0.875,260,supported
+,,,not_supported,,eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e,stage3-v1,,aggregate sequence evidence only,,,not_supported
+0.25,canonical_or_exact_sanity_diagnostic,True,canonical_diagnostic_rescore,36,eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e,stage3-v2,0.16666666666666666,,0.08333333333333333,6,supported
+1.0,canonical_instrument_diagnostic,False,canonical_diagnostic_rescore,448,eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e,stage3-v3-b3,0.5267857142857143,,0.4732142857142857,236,supported

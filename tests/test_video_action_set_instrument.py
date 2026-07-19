@@ -89,9 +89,8 @@ def test_instrument_audits_and_verification(tmp_path: Path) -> None:
             "selection": fake_records_selection,
         }[split],
     )
-    monkeypatch.setattr(benchmark, "_score_record", lambda record, prototypes, policy_artifact_id: fake_provider_rows)
+    monkeypatch.setattr(benchmark, "_score_record", lambda record, prototypes, policy_artifact_id, **_kwargs: fake_provider_rows)
     monkeypatch.setattr(benchmark, "canonical_prototypes", lambda: {})
-    monkeypatch.setattr(benchmark, "compile_policy_artifact", lambda *args, **kwargs: type("Policy", (), {"artifact_id": "policy"})())
     benchmark.build_split("development", tmp_path, REPO_ROOT)
     benchmark.build_split("calibration", tmp_path, REPO_ROOT)
     benchmark.build_split("selection", tmp_path, REPO_ROOT)

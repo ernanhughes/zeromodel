@@ -62,6 +62,16 @@ def _fake_provider_output() -> list[dict[str, object]]:
     ]
 
 
+def _contains_forbidden_materialized_payload(value: object) -> bool:
+    if isinstance(value, dict):
+        if any(key in {"pixels", "ImageObservation", "score_vector", "candidate_set"} for key in value):
+            return True
+        return any(_contains_forbidden_materialized_payload(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_contains_forbidden_materialized_payload(item) for item in value)
+    return False
+
+
 def test_materialized_split_counts_and_final_freeze(tmp_path: Path) -> None:
     benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
     development = benchmark._materialize_records("development", REPO_ROOT)
@@ -111,9 +121,8 @@ def test_build_split_writes_overlap_and_observation_manifests(tmp_path: Path) ->
             "selection": fake_records_selection,
         }[split],
     )
-    monkeypatch.setattr(benchmark, "_score_record", lambda record, prototypes, policy_artifact_id: fake_output)
+    monkeypatch.setattr(benchmark, "_score_record", lambda record, prototypes, policy_artifact_id, **_kwargs: fake_output)
     monkeypatch.setattr(benchmark, "canonical_prototypes", lambda: {})
-    monkeypatch.setattr(benchmark, "compile_policy_artifact", lambda *args, **kwargs: type("Policy", (), {"artifact_id": "policy"})())
     benchmark.build_split("development", tmp_path, REPO_ROOT)
     benchmark.build_split("calibration", tmp_path, REPO_ROOT)
     benchmark.build_split("selection", tmp_path, REPO_ROOT)
@@ -194,8 +203,7 @@ def test_measured_phase_access_and_final_plan_remain_zero_access(tmp_path: Path)
     assert sealed["materialization_prohibited"] is True
     assert len(sealed["sealed_episode_ids"]["valid"]) == 112
     assert len(sealed["episodes"]) == 252
-    assert "pixels" not in json.dumps(sealed)
-    assert "ImageObservation" not in json.dumps(sealed)
+    assert not _contains_forbidden_materialized_payload(sealed)
 
 
 def test_final_plan_creation_does_not_render_score_or_access_final_observations(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

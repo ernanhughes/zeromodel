@@ -1,0 +1,35 @@
+{
+  "profile_frame_count": 2,
+  "profiles": [
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "optimized",
+      "mean_seconds_per_candidate": 4.842410817218479e-06,
+      "mean_seconds_per_frame": 0.0005423500115284696,
+      "provider_id": "P1",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.0010847000230569392
+    },
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "optimized",
+      "mean_seconds_per_candidate": 2.6611607089372617e-06,
+      "mean_seconds_per_frame": 0.0002980499994009733,
+      "provider_id": "P2",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.0005960999988019466
+    },
+    {
+      "candidate_comparison_count": 224,
+      "frame_count": 2,
+      "implementation": "optimized",
+      "mean_seconds_per_candidate": 0.00025625089295187663,
+      "mean_seconds_per_frame": 0.028700100010610186,
+      "provider_id": "P3",
+      "provider_scoring_call_count": 2,
+      "total_seconds": 0.05740020002122037
+    }
+  ]
+}

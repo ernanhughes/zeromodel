@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import hashlib
 import json
+import time
 from pathlib import Path
 import random
 from typing import Any, Mapping
@@ -19,6 +20,8 @@ from .video_prospective_providers import (
     PROSPECTIVE_P1_VERSION,
     PROSPECTIVE_P2_VERSION,
     PROSPECTIVE_P3_VERSION,
+    score_all_rows_optimized,
+    score_all_rows_reference,
     score_b3_joint_fit,
     score_normalized_pixel,
     score_registered_local_correlation,
@@ -87,6 +90,14 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _provider_version(provider_id: str) -> str:
+    return {
+        "P1": PROSPECTIVE_P1_VERSION,
+        "P2": PROSPECTIVE_P2_VERSION,
+        "P3": PROSPECTIVE_P3_VERSION,
+    }[provider_id]
 
 
 @dataclass(frozen=True)
@@ -420,6 +431,199 @@ def _materialize_records(split: str, repo_root: Path) -> list[dict[str, Any]]:
             records.extend(_control_episode(row_id, episode_seed=50_000 + index))
         return records
     raise VPMValidationError("unsupported split")
+
+
+def _profiling_records(repo_root: Path, frame_count: int) -> list[dict[str, Any]]:
+    selection = _materialize_records("selection", repo_root)
+    candidates = []
+    valid_records = [record for record in selection if record["expected_disposition"] == "valid"]
+    invalid_records = [record for record in selection if record["expected_disposition"] == "distinguishable_invalid_input"]
+    control_records = [record for record in selection if record["expected_disposition"] == "information_theoretic_control"]
+    candidates.extend(valid_records[:4])
+    candidates.extend(valid_records[4:6])
+    candidates.extend(invalid_records[:2])
+    candidates.extend(control_records[:2])
+    return candidates[: max(1, frame_count)]
+
+
+def _score_vector_to_payload(vector: Any) -> dict[str, Any]:
+    return {
+        "provider_id": vector.provider_id,
+        "provider_version": vector.provider_version,
+        "row_ids": list(vector.row_ids),
+        "raw_scores": list(vector.raw_scores),
+        "quantized_scores": list(vector.quantized_scores),
+        "ranking": list(vector.evidence.ranking.ranked_row_ids),
+        "tie_groups": [group.to_dict() for group in vector.evidence.ranking.tie_groups],
+        "score_vector_digest": vector.evidence.score_vector_digest,
+        "ranking_digest": vector.evidence.ranking.to_dict()["ranking_digest"],
+    }
+
+
+def _profile_provider(
+    *,
+    provider_id: str,
+    records: list[dict[str, Any]],
+    prototypes: Mapping[str, tuple[str, str, str, ImageObservation]],
+    policy_artifact_id: str,
+    implementation: str,
+) -> dict[str, Any]:
+    scorer = score_all_rows_reference if implementation == "reference" else score_all_rows_optimized
+    durations = []
+    for record in records:
+        observation = ImageObservation(np.ascontiguousarray(record["pixels"], dtype=np.uint8), source_id=record["frame_id"])
+        start = time.perf_counter()
+        scorer(
+            provider_id=provider_id,
+            observation=observation,
+            prototypes=prototypes,
+            policy_artifact_id=policy_artifact_id,
+            source_scope=SOURCE_SCOPE,
+        )
+        durations.append(time.perf_counter() - start)
+    total = float(sum(durations))
+    mean_frame = total / float(len(durations) or 1)
+    return {
+        "provider_id": provider_id,
+        "implementation": implementation,
+        "frame_count": len(durations),
+        "total_seconds": total,
+        "mean_seconds_per_frame": mean_frame,
+        "mean_seconds_per_candidate": mean_frame / 112.0,
+        "provider_scoring_call_count": len(durations),
+        "candidate_comparison_count": len(durations) * 112,
+    }
+
+
+def profile_runtime(
+    output_dir: Path,
+    repo_root: Path,
+    *,
+    provider: str = "all",
+    frame_count: int = 8,
+) -> dict[str, Any]:
+    prototypes = canonical_prototypes()
+    policy_artifact_id = compile_policy_artifact().artifact_id
+    records = _profiling_records(repo_root, frame_count)
+    provider_ids = ("P1", "P2", "P3") if provider == "all" else (provider,)
+    reference = []
+    optimized = []
+    for provider_id in provider_ids:
+        reference.append(_profile_provider(provider_id=provider_id, records=records, prototypes=prototypes, policy_artifact_id=policy_artifact_id, implementation="reference"))
+        optimized.append(_profile_provider(provider_id=provider_id, records=records, prototypes=prototypes, policy_artifact_id=policy_artifact_id, implementation="optimized"))
+    reference_map = {item["provider_id"]: item for item in reference}
+    optimized_map = {item["provider_id"]: item for item in optimized}
+    comparison = {
+        provider_id: {
+            "reference_mean_seconds_per_frame": reference_map[provider_id]["mean_seconds_per_frame"],
+            "optimized_mean_seconds_per_frame": optimized_map[provider_id]["mean_seconds_per_frame"],
+            "speedup": (
+                reference_map[provider_id]["mean_seconds_per_frame"] / optimized_map[provider_id]["mean_seconds_per_frame"]
+                if optimized_map[provider_id]["mean_seconds_per_frame"] > 0.0
+                else None
+            ),
+        }
+        for provider_id in provider_ids
+    }
+    projected_observations = {"development": 112, "calibration": 448, "selection": 1008}
+    projected_runtime = {
+        split: sum(optimized_map[provider_id]["mean_seconds_per_frame"] * frame_count for provider_id, frame_count in ((provider_id, count) for provider_id in provider_ids))
+        for split, count in projected_observations.items()
+    }
+    payload = {
+        "profile_frame_count": len(records),
+        "provider_scope": provider,
+        "reference": reference,
+        "optimized": optimized,
+        "comparison": comparison,
+        "projected_runtime_seconds": projected_runtime,
+    }
+    _write_json(output_dir / "runtime-profile-reference.json", {"profiles": reference, "profile_frame_count": len(records)})
+    _write_json(output_dir / "runtime-profile-optimized.json", {"profiles": optimized, "profile_frame_count": len(records)})
+    _write_json(output_dir / "runtime-comparison.json", payload)
+    (output_dir / "runtime-profile-reference.md").write_text(
+        "\n".join(
+            ["# Runtime Profile Reference", ""]
+            + [f"- {item['provider_id']}: {item['mean_seconds_per_frame']:.6f}s/frame over {item['frame_count']} frames" for item in reference]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "runtime-profile-optimized.md").write_text(
+        "\n".join(
+            ["# Runtime Profile Optimized", ""]
+            + [f"- {item['provider_id']}: {item['mean_seconds_per_frame']:.6f}s/frame over {item['frame_count']} frames" for item in optimized]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return payload
+
+
+def verify_provider_runtime_equivalence(output_dir: Path, repo_root: Path) -> dict[str, Any]:
+    prototypes = canonical_prototypes()
+    policy_artifact_id = compile_policy_artifact().artifact_id
+    records = list(prototypes.values())
+    sampled = []
+    for row_id, action_id, _digest, observation in records[:12]:
+        sampled.append({"frame_id": f"canonical:{row_id}", "observation": observation, "expected_row": row_id, "expected_action": action_id})
+    mismatches = []
+    summary: dict[str, Any] = {}
+    csv_rows = []
+    for provider_id in ("P1", "P2", "P3"):
+        quantized_mismatch_count = 0
+        ranking_mismatch_count = 0
+        tie_group_mismatch_count = 0
+        digest_mismatch_count = 0
+        for record in sampled:
+            reference = score_all_rows_reference(
+                provider_id=provider_id,
+                observation=record["observation"],
+                prototypes=prototypes,
+                policy_artifact_id=policy_artifact_id,
+                source_scope=SOURCE_SCOPE,
+            )
+            optimized = score_all_rows_optimized(
+                provider_id=provider_id,
+                observation=record["observation"],
+                prototypes=prototypes,
+                policy_artifact_id=policy_artifact_id,
+                source_scope=SOURCE_SCOPE,
+            )
+            quantized_equal = reference.quantized_scores == optimized.quantized_scores
+            ranking_equal = reference.evidence.ranking.ranked_row_ids == optimized.evidence.ranking.ranked_row_ids
+            ties_equal = tuple(group.to_dict() for group in reference.evidence.ranking.tie_groups) == tuple(group.to_dict() for group in optimized.evidence.ranking.tie_groups)
+            digest_equal = reference.evidence.score_vector_digest == optimized.evidence.score_vector_digest and reference.evidence.ranking.to_dict()["ranking_digest"] == optimized.evidence.ranking.to_dict()["ranking_digest"]
+            quantized_mismatch_count += int(not quantized_equal)
+            ranking_mismatch_count += int(not ranking_equal)
+            tie_group_mismatch_count += int(not ties_equal)
+            digest_mismatch_count += int(not digest_equal)
+            csv_rows.append(
+                {
+                    "provider_id": provider_id,
+                    "observation_id": record["frame_id"],
+                    "quantized_equal": quantized_equal,
+                    "ranking_equal": ranking_equal,
+                    "tie_groups_equal": ties_equal,
+                    "digests_equal": digest_equal,
+                }
+            )
+        summary[provider_id] = {
+            "quantized_mismatch_count": quantized_mismatch_count,
+            "ranking_mismatch_count": ranking_mismatch_count,
+            "tie_group_mismatch_count": tie_group_mismatch_count,
+            "digest_mismatch_count": digest_mismatch_count,
+        }
+        if any(summary[provider_id].values()):
+            mismatches.append(provider_id)
+    payload = {
+        "providers_verified": not mismatches,
+        "mismatching_providers": mismatches,
+        "summary": summary,
+    }
+    _write_json(output_dir / "provider-runtime-equivalence.json", payload)
+    _write_csv(output_dir / "provider-runtime-equivalence.csv", csv_rows)
+    return payload
 
 
 def _score_record(record: dict[str, Any], prototypes: Mapping[str, tuple[str, str, str, ImageObservation]], policy_artifact_id: str) -> list[dict[str, Any]]:

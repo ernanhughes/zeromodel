@@ -14,6 +14,8 @@ from zeromodel.video_action_set_benchmark import (  # noqa: E402
     audit_evidence_completeness,
     build_split,
     freeze_benchmark,
+    profile_runtime,
+    verify_provider_runtime_equivalence,
     verify_instrument,
 )
 
@@ -30,6 +32,10 @@ def main() -> None:
     parser.add_argument("--build-selection", action="store_true")
     parser.add_argument("--audit-evidence-completeness", action="store_true")
     parser.add_argument("--audit-canonical-providers", action="store_true")
+    parser.add_argument("--profile-runtime", action="store_true")
+    parser.add_argument("--verify-provider-runtime-equivalence", action="store_true")
+    parser.add_argument("--profile-provider", choices=("P1", "P2", "P3", "all"), default="all")
+    parser.add_argument("--profile-frame-count", type=int, default=8)
     parser.add_argument("--verify-prospective-instrument", action="store_true")
     args = parser.parse_args()
     selected = sum(
@@ -41,6 +47,8 @@ def main() -> None:
             args.build_selection,
             args.audit_evidence_completeness,
             args.audit_canonical_providers,
+            args.profile_runtime,
+            args.verify_provider_runtime_equivalence,
             args.verify_prospective_instrument,
         )
     )
@@ -61,6 +69,15 @@ def main() -> None:
         payload = audit_evidence_completeness(args.output_dir)
     elif args.audit_canonical_providers:
         payload = audit_canonical_providers(args.output_dir)
+    elif args.profile_runtime:
+        payload = profile_runtime(
+            args.output_dir,
+            REPO_ROOT,
+            provider=args.profile_provider,
+            frame_count=args.profile_frame_count,
+        )
+    elif args.verify_provider_runtime_equivalence:
+        payload = verify_provider_runtime_equivalence(args.output_dir, REPO_ROOT)
     else:
         payload = verify_instrument(args.output_dir, REPO_ROOT)
     print(json.dumps(payload, indent=2, sort_keys=True))

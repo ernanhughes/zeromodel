@@ -63,5 +63,25 @@
         "final access verified through zero counters"
       ]
     }
+<<<<<<< ours
+=======
+  ],
+  "inspected_absent_artifacts": [
+    {
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/provider-equivalence-results.json",
+      "status": "not_committed_at_quarantine_sha",
+      "producer_status": "producer_contains_assigned_status_fields"
+    },
+    {
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/tie-safety-results.json",
+      "status": "not_committed_at_quarantine_sha",
+      "producer_status": "producer_contains_assigned_status_fields"
+    },
+    {
+      "path": "docs/results/video-action-set-reachability-benchmark-v1/instrument-verification.json",
+      "status": "not_committed_at_quarantine_sha",
+      "producer_status": "producer_contains_assigned_status_fields"
+    }
+>>>>>>> theirs
   ]
 }

@@ -4,6 +4,7 @@ Document version: `zeromodel-video-action-set-reachability-withdrawn-claims/v1`
 
 ## Identity
 
+<<<<<<< ours
 - current main SHA: `db9c990`
 - historical prospective-stack SHA: `cf6acc72fc23638f1eee4b4317681a8b620a3188`
 - integration PR number: `#46`
@@ -11,6 +12,22 @@ Document version: `zeromodel-video-action-set-reachability-withdrawn-claims/v1`
 - benchmark version: `zeromodel-video-action-set-reachability-benchmark/v1`
 - evidence version: `zeromodel-video-complete-row-evidence/v1`
 - runtime-amendment version: `zeromodel-video-prospective-phase-access/v1`
+=======
+- quarantine base main SHA:
+  `db9c99041e3627aab0e1f0819245a17bd5702c55`
+- historical prospective-stack SHA: `cf6acc72fc23638f1eee4b4317681a8b620a3188`
+- integration PR number: `#46`
+- integration merge SHA:
+  `db9c99041e3627aab0e1f0819245a17bd5702c55`
+- benchmark version: `zeromodel-video-action-set-reachability-benchmark/v1`
+- evidence version: `zeromodel-video-complete-row-evidence/v1`
+- runtime amendment path:
+  `docs/research/video-action-set-reachability-runtime-amendment-v1.md`
+- runtime amendment blob SHA:
+  `1055beecdf324cd7fbeafde152c714712913ac15`
+- phase-access schema:
+  `zeromodel-video-prospective-phase-access/v1`
+>>>>>>> theirs
 
 ## Exact Withdrawn Claims
 

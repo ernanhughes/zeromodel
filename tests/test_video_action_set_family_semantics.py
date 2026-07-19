@@ -369,3 +369,59 @@ def test_control_actual_provider_source_id_leak_is_rejected() -> None:
     leaked[0]["metadata"]["provider_observation_digest"] = benchmark._provider_observation_digest(descriptor)
 
     assert benchmark.validate_control_episode_records(leaked) == "control_provider_visible_leak"
+
+
+def test_operation_chain_replays_every_materialized_family() -> None:
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    by_family = {}
+    for record in records:
+        by_family.setdefault(record["family"], record)
+    for family in (
+        "exact",
+        "bounded_translation",
+        "conflicting_action_splice",
+        "critical_evidence_corruption",
+        "information_control",
+    ):
+        record = by_family[family]
+        replay = benchmark.replay_observation_operation_chain(record["metadata"]["observation_operation_chain"])
+        assert replay["final_emitted_digest"] == record["observation_pixel_digest"]
+        assert benchmark.validate_observation_operation_chain(record) == "ok"
+    temporal_records = [record for record in records if record["episode_family"] == "temporal_negative"]
+    stale = next(record for record in temporal_records if record["frame_disposition"] == "stale_repeated_frame_payload")
+    impossible = next(record for record in temporal_records if record["frame_disposition"] == "unreachable_destination_frame_payload")
+    gap = next(record for record in temporal_records if record["frame_disposition"] == "declared_gap_or_unknown_action")
+
+    assert "stale_repeat_replace" in [op["operation"] for op in stale["metadata"]["observation_operation_chain"]["operations"]]
+    assert "impossible_transition_replace" in [op["operation"] for op in impossible["metadata"]["observation_operation_chain"]["operations"]]
+    assert "emit_typed_gap_event" in [op["operation"] for op in gap["metadata"]["observation_operation_chain"]["operations"]]
+    assert benchmark.validate_observation_operation_chain(stale) == "ok"
+    assert benchmark.validate_observation_operation_chain(impossible) == "ok"
+    assert benchmark.validate_observation_operation_chain(gap) == "ok"
+
+
+def test_laundered_stale_repeat_operation_removal_is_rejected() -> None:
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    stale = next(record for record in records if record["frame_disposition"] == "stale_repeated_frame_payload")
+    mutated = dict(stale, metadata=dict(stale["metadata"]))
+    chain = dict(mutated["metadata"]["observation_operation_chain"])
+    original_digest = stale["metadata"]["stale_repeat"]["original_destination_digest"]
+    operations = [dict(op) for op in chain["operations"][:2]]
+    operations.append(
+        benchmark._operation_record(
+            index=2,
+            operation="emit_observation",
+            operation_version=benchmark.OBSERVATION_OPERATION_CHAIN_VERSION,
+            input_digests=[original_digest],
+            parameters={"event_type": "frame"},
+            output_digest=original_digest,
+        )
+    )
+    chain["operations"] = operations
+    chain["final_emitted_digest"] = original_digest
+    chain["operation_chain_digest"] = benchmark._sha256({key: value for key, value in chain.items() if key != "operation_chain_digest"})
+    mutated["metadata"]["observation_operation_chain"] = chain
+
+    assert mutated["observation_pixel_digest"] == stale["metadata"]["stale_repeat"]["replacement_digest"]
+    assert original_digest != mutated["observation_pixel_digest"]
+    assert benchmark.validate_observation_operation_chain(mutated) == "final_observation_provenance_mismatch"

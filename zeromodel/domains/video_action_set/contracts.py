@@ -13,6 +13,7 @@ REACHABILITY_TILE_DIGEST = (
 )
 REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
+TRANSFORMATION_FAMILY_VERSION = "zeromodel-video-action-set-transformation-family/v1"
 
 __all__ = [
     "BENCHMARK_VERSION",
@@ -24,4 +25,5 @@ __all__ = [
     "REACHABILITY_TILE_DIGEST",
     "REACHABILITY_TILE_VERSION",
     "SEED_DERIVATION_VERSION",
+    "TRANSFORMATION_FAMILY_VERSION",
 ]

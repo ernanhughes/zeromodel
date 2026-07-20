@@ -11,6 +11,7 @@ from ...artifact import VPMValidationError
 from ...matrix_blob import MatrixBlob
 from .canonical_json import canonical_json_bytes
 from .contracts import FRAME_SHAPE
+from .pixel_digest import array_digest, pixel_digest_from_bytes
 
 _record_loader: Callable[[Mapping[str, object]], "MaterializedObservationDTO"] | None
 _record_loader = None
@@ -58,7 +59,7 @@ def validate_observation_matrix_blob(
         raise VPMValidationError(
             "observation matrix blob does not match declared pixels"
         )
-    if _pixel_digest_from_bytes(blob.data) != observation.observation_pixel_digest:
+    if pixel_digest_from_bytes(blob.data) != observation.observation_pixel_digest:
         raise VPMValidationError(
             "observation matrix blob does not match declared pixels"
         )
@@ -86,10 +87,11 @@ def blob_from_record(
     pixels = record.get("pixels")
     if pixels is None:
         return None
-    if pixel_digest is None or _pixel_digest_from_array(pixels) != pixel_digest:
+    normalized_pixels = np.ascontiguousarray(pixels, dtype=np.uint8)
+    if pixel_digest is None or array_digest(normalized_pixels) != pixel_digest:
         raise VPMValidationError("observation pixel digest mismatch")
     return MatrixBlob.from_array(
-        np.ascontiguousarray(pixels, dtype=np.uint8),
+        normalized_pixels,
         dtype="uint8",
         metadata={
             "kind": "video_action_set_frame_pixels",
@@ -103,16 +105,6 @@ def register_materialized_observation_loader(
 ) -> None:
     global _record_loader
     _record_loader = loader
-
-
-def _pixel_digest_from_bytes(data: bytes) -> str:
-    return "sha256:" + hashlib.sha256(data).hexdigest()
-
-
-def _pixel_digest_from_array(pixels: object) -> str:
-    return _pixel_digest_from_bytes(
-        np.ascontiguousarray(pixels, dtype=np.uint8).tobytes(order="C")
-    )
 
 
 def _provider_raw_digest(blob: MatrixBlob) -> str:

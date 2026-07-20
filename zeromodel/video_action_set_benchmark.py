@@ -1,18 +1,25 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import json
+import random
 import time
 from pathlib import Path
-import random
 from typing import Any, Mapping, Sequence
 
 import numpy as np
 
 from .arcade_policy import ACTIONS, CELL_PIXELS, COOLDOWN_BLOCKED_VALUE, COOLDOWN_READY_VALUE, TANK_VALUE, TARGET_VALUE, ShooterConfig, arcade_transition_spec, compile_policy_artifact, next_rows, parse_state_row_id, render_state_frame, state_row_id
 from .artifact import VPMValidationError
+from .domains.video_action_set.contracts import (
+    BENCHMARK_VERSION,
+    GENERATOR_VERSION,
+    REACHABILITY_TILE_DIGEST,
+    REACHABILITY_TILE_VERSION,
+)
+from .domains.video_action_set.dto import BenchmarkIdentityDTO
 from .policy_lookup import VPMPolicyLookup
+from .runtime import build_runtime
 from .video_complete_row_evidence import (
     QUANTIZATION_SCALE,
     RowScore,
@@ -37,8 +44,6 @@ from .video_prospective_providers import (
 from .visual_address import IMAGE_OBSERVATION_VERSION, ImageObservation
 
 
-BENCHMARK_VERSION = "zeromodel-video-action-set-reachability-benchmark/v1"
-GENERATOR_VERSION = "zeromodel-video-action-set-reachability-generator/v1"
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
 EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
 SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
@@ -53,8 +58,6 @@ MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1
 CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
 MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
-REACHABILITY_TILE_DIGEST = "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df"
-REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
 CANONICAL_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-canonical-observation-universe/v1"
 VALID_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-valid-observation-universe/v2"
@@ -428,51 +431,11 @@ def _apply_transformation(frame: np.ndarray, params: Mapping[str, Any]) -> tuple
     }
 
 
-@dataclass(frozen=True)
-class BenchmarkIdentity:
-    contract_commit: str
-    seed_material: str
-    seed_digest: str
-    policy_artifact_id: str
-    parent_audit_sha: str
-    parent_v3_sha: str
-
-    def __post_init__(self) -> None:
-        expected = "sha256:" + hashlib.sha256(self.seed_material.encode("utf-8")).hexdigest()
-        if self.seed_digest != expected:
-            raise VPMValidationError("benchmark seed digest is inconsistent with frozen seed material")
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "benchmark_version": BENCHMARK_VERSION,
-            "generator_version": GENERATOR_VERSION,
-            "contract_commit": self.contract_commit,
-            "seed_material": self.seed_material,
-            "seed_digest": self.seed_digest,
-            "policy_artifact_id": self.policy_artifact_id,
-            "parent_audit_sha": self.parent_audit_sha,
-            "parent_v3_sha": self.parent_v3_sha,
-            "reachability_tile_version": REACHABILITY_TILE_VERSION,
-            "reachability_tile_digest": REACHABILITY_TILE_DIGEST,
-        }
+BenchmarkIdentity = BenchmarkIdentityDTO
 
 
 def load_identity(repo_root: Path) -> BenchmarkIdentity:
-    lines = (repo_root / "docs" / "research" / "video-action-set-reachability-benchmark-identity-v1.md").read_text(encoding="utf-8").splitlines()
-    values = {}
-    for line in lines:
-        if ":" not in line:
-            continue
-        left, right = line.split(":", 1)
-        values[left.strip("- ").strip()] = right.strip().strip("`")
-    return BenchmarkIdentity(
-        contract_commit=values["contract commit SHA"],
-        seed_material=values["seed material"],
-        seed_digest=values["seed digest"],
-        policy_artifact_id=values["policy artifact ID"],
-        parent_audit_sha=values["parent audit SHA"],
-        parent_v3_sha=values["parent v3 SHA"],
-    )
+    return build_runtime().video_action_set.load_identity(repo_root)
 
 
 def _seed_int_from_digest(digest: str) -> int:
@@ -5975,8 +5938,11 @@ def _run_adversarial_mutation_checks(output_dir: Path) -> list[str]:
 
 
 __all__ = [
+    "BenchmarkIdentity",
     "BENCHMARK_VERSION",
     "GENERATOR_VERSION",
+    "REACHABILITY_TILE_DIGEST",
+    "REACHABILITY_TILE_VERSION",
     "REFERENCE_VERIFICATION_VERSION",
     "MUTATION_AUDIT_VERSION",
     "CLOSURE_REPORT_VERSION",

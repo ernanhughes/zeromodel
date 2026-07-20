@@ -4,18 +4,7 @@ import pytest
 
 
 INTEGRATION_MARKERS = {"integration", "slow"}
-
-# Complete Stage 3 research-instrument suites. These materialize benchmark
-# plans, full evidence records, family universes, reachability traces, or
-# reference-verification fixtures and therefore do not belong in the bounded
-# development loop.
-INTEGRATION_TEST_FILES = {
-    "test_video_action_set_benchmark.py",
-    "test_video_action_set_instrument.py",
-    "test_video_action_set_family_reachability.py",
-    "test_video_action_set_family_semantics.py",
-    "test_video_action_set_reference_verification.py",
-}
+INTEGRATION_TEST_PREFIXES = ("test_video_action_set_",)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -55,9 +44,10 @@ def pytest_collection_modifyitems(
     )
 
     for item in items:
+        filename = item.path.name
         if (
             "integration" in item.path.parts
-            or item.path.name in INTEGRATION_TEST_FILES
+            or filename.startswith(INTEGRATION_TEST_PREFIXES)
         ):
             item.add_marker(pytest.mark.integration)
 

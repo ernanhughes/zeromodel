@@ -8,26 +8,88 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
-from .arcade_policy import ACTIONS, CELL_PIXELS, COOLDOWN_BLOCKED_VALUE, COOLDOWN_READY_VALUE, TANK_VALUE, TARGET_VALUE, ShooterConfig, arcade_transition_spec, compile_policy_artifact, next_rows, parse_state_row_id, render_state_frame, state_row_id
+from .arcade_policy import (
+    ACTIONS,
+    ShooterConfig,
+    compile_policy_artifact,
+    next_rows,
+    parse_state_row_id,
+    render_state_frame,
+)
 from .artifact import VPMValidationError
 from .domains.video_action_set.canonical_json import canonical_json_bytes, canonical_json_value, canonical_sha256
 from .domains.video_action_set.contracts import (
     ARCADE_RENDERER_CONTRACT_VERSION,
     BENCHMARK_VERSION,
     CANONICAL_OBSERVATION_UNIVERSE_VERSION,
+    CONFLICTING_ACTION_SPLICE_VERSION,
+    CRITICAL_COORDINATE_SET_VERSION,
+    CRITICAL_EVIDENCE_CORRUPTION_VERSION,
+    CRITICAL_REGION_ID,
+    DECLARED_GAP_OR_UNKNOWN_VERSION,
+    EPISODE_FAMILY_REGISTRY_VERSION,
     EPISODE_PLAN_VERSION,
+    FAMILY_CLOSURE_VERSION,
+    FAMILY_INTERVENTION_VERSION,
+    FINAL_VISIBLE_TARGET_ACTION_EVIDENCE_VERSION,
     FRAME_SHAPE,
+    FRAME_INVALID_CLOSURE_VERSION,
     GAP_EVENT_VERSION,
     GENERATOR_VERSION,
+    GROUNDED_CONTROL_HISTORY_VERSION,
+    IMPOSSIBLE_TRANSITION_VERSION,
+    INFORMATION_CONTROL_AMBIGUITY_VERSION,
+    INFORMATION_CONTROL_VERSION,
     OBSERVATION_OPERATION_CHAIN_VERSION,
     PROVIDER_OBSERVATION_BOUNDARY_VERSION,
     REACHABILITY_TILE_DIGEST,
     REACHABILITY_TILE_VERSION,
+    REORDERED_FRAMES_VERSION,
     SEED_DERIVATION_VERSION,
+    SPLICE_MASK_VERSION,
+    STALE_REPEATED_FRAME_VERSION,
+    TARGET_REGION_ID,
     TRANSFORMATION_FAMILY_VERSION,
+    VALID_FAMILY_VERSION,
     VALID_OBSERVATION_UNIVERSE_VERSION,
 )
 from .domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO
+from .domains.video_action_set.episode_families import (
+    denominator_class as _denominator_class,
+    episode_disposition as _episode_disposition,
+    episode_family_registry as _episode_family_registry,
+    expected_frame_disposition,
+    family_contract as _family_contract,
+    family_schedule as _family_schedule,
+    frame_disposition_for_episode as _frame_disposition_for_episode,
+)
+from .domains.video_action_set.family_provenance import (
+    conflicting_splice_operation_chain as _conflicting_splice_operation_chain,
+    critical_corruption_operation_chain as _critical_corruption_operation_chain,
+    impossible_transition_operation_chain as _impossible_transition_operation_chain,
+    information_control_operation_chain as _information_control_operation_chain,
+    stale_repeat_operation_chain as _stale_repeat_operation_chain,
+)
+from .domains.video_action_set.family_validation import (
+    frame_invalid_closure_summary as _frame_invalid_closure_summary,
+    validate_materialized_family_record,
+)
+from .domains.video_action_set.frame_family_kernels import (
+    apply_conflicting_splice as _apply_conflicting_splice,
+    apply_critical_corruption as _apply_critical_corruption,
+    critical_coordinate_manifest as _critical_coordinate_manifest,
+    critical_coordinates as _critical_coordinates,
+    detect_cooldown_state as _detect_cooldown_state,
+    detect_tank_slot as _detect_tank_slot,
+    detect_visible_target_slots as _detect_visible_target_slots,
+    final_visible_target_action_evidence as _final_visible_target_action_evidence,
+    splice_evidence_counts as _splice_evidence_counts,
+    splice_mask_manifest as _splice_mask_manifest,
+    splice_pair_has_final_visible_action_conflict as _splice_pair_has_final_visible_action_conflict,
+    target_signal_coordinates as _target_signal_coordinates,
+    target_signal_mask as _target_signal_mask,
+    target_slot_signal_coordinates as _target_slot_signal_coordinates,
+)
 from .domains.video_action_set.observation_legacy_adapters import (
     operation_chain as _operation_chain,
     operation_record as _operation_record,
@@ -91,10 +153,46 @@ from .video_prospective_providers import (
 )
 from .visual_address import IMAGE_OBSERVATION_VERSION, ImageObservation
 
+_STAGE4B_LEGACY_COMPATIBILITY_ALIASES = (
+    ARCADE_RENDERER_CONTRACT_VERSION,
+    CANONICAL_OBSERVATION_UNIVERSE_VERSION,
+    CONFLICTING_ACTION_SPLICE_VERSION,
+    CRITICAL_COORDINATE_SET_VERSION,
+    CRITICAL_EVIDENCE_CORRUPTION_VERSION,
+    CRITICAL_REGION_ID,
+    DECLARED_GAP_OR_UNKNOWN_VERSION,
+    FINAL_VISIBLE_TARGET_ACTION_EVIDENCE_VERSION,
+    FRAME_SHAPE,
+    FRAME_INVALID_CLOSURE_VERSION,
+    IMPOSSIBLE_TRANSITION_VERSION,
+    INFORMATION_CONTROL_VERSION,
+    OBSERVATION_OPERATION_CHAIN_VERSION,
+    PROVIDER_OBSERVATION_BOUNDARY_VERSION,
+    REORDERED_FRAMES_VERSION,
+    STALE_REPEATED_FRAME_VERSION,
+    TRANSFORMATION_FAMILY_VERSION,
+    VALID_FAMILY_VERSION,
+    VALID_OBSERVATION_UNIVERSE_VERSION,
+    _detect_cooldown_state,
+    _detect_tank_slot,
+    _detect_visible_target_slots,
+    _frame_disposition_for_episode,
+    _operation_chain,
+    _operation_record,
+    _renderer_identity,
+    _splice_evidence_counts,
+    _target_signal_coordinates,
+    _target_signal_mask,
+    _target_slot_signal_coordinates,
+    _canonical_collision_rows,
+    _valid_transformation_parameter_key,
+    _valid_transformation_parameter_universe,
+    _translation_values_for_seed,
+    valid_observation_universe,
+)
+
 
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
-EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v4"
-CRITICAL_COORDINATE_SET_VERSION = "zeromodel-video-action-set-critical-coordinate-set/v1"
 REACHABILITY_COMPOSITION_VERSION = "zeromodel-video-action-set-reachability-composition/v1"
 REACHABILITY_TRACE_VERSION = "zeromodel-video-action-set-reachability-trace/v1"
 PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
@@ -104,16 +202,7 @@ CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
 MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
-FRAME_INVALID_CLOSURE_VERSION = "zeromodel-video-action-set-frame-invalid-closure/v1"
-FAMILY_INTERVENTION_VERSION = "zeromodel-video-action-set-family-intervention/v3"
-CONFLICTING_ACTION_SPLICE_VERSION = "zeromodel-video-action-set-family-conflicting-action-splice/v3"
-SPLICE_MASK_VERSION = "zeromodel-video-action-set-splice-mask/v2"
-INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-control/v3"
-INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v2"
-GROUNDED_CONTROL_HISTORY_VERSION = "zeromodel-video-action-set-grounded-control-history/v1"
 AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
-CRITICAL_REGION_ID = "cooldown_indicator"
-TARGET_REGION_ID = "target_band"
 
 
 def _json_ready(value: Any) -> Any:
@@ -182,149 +271,8 @@ def _provider_version(provider_id: str) -> str:
     }[provider_id]
 
 
-def _coordinate_set_digest(coordinates: Sequence[Sequence[int]]) -> str:
-    return _sha256({"coordinates": [[int(y), int(x)] for y, x in coordinates]})
-
-
 def _load_reachability_tile(repo_root: Path) -> dict[str, Any]:
     return _read_json(repo_root / "docs" / "results" / "video-policy-reachability-tile-v1" / "reachability-tile.json")
-
-
-def _episode_family_registry() -> dict[str, Any]:
-    entries = [
-        {
-            "family_id": "valid",
-            "family_version": "zeromodel-video-action-set-family-valid/v1",
-            "classification": "valid",
-            "source_row_required": True,
-            "source_action_required": True,
-            "pixel_intervention": "bounded valid transformation only",
-            "sequence_intervention": "none",
-            "expected_semantic_effect": "row/action should remain admissible under complete evidence",
-            "distinguishability_status": "distinguishable_valid",
-            "denominator_treatment": "valid denominator",
-            "regeneration_requirements": ["source row", "sealed seed lineage", "transformation parameters", "pixel digest"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "conflicting_action_splice",
-            "family_version": CONFLICTING_ACTION_SPLICE_VERSION,
-            "classification": "invalid",
-            "source_row_required": True,
-            "source_action_required": True,
-            "pixel_intervention": "primary target evidence plus additive secondary target evidence with valid-state collision closure",
-            "sequence_intervention": "none",
-            "expected_semantic_effect": "constructed multi-target visual evidence that cannot decode to a canonical valid state",
-            "distinguishability_status": "distinguishable_invalid_input",
-            "denominator_treatment": "distinguishable-invalid denominator",
-            "regeneration_requirements": ["primary source", "secondary source", "target-evidence composition mask", "source contribution counts", "canonical byte-universe noncollision", "output digest"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "critical_evidence_corruption",
-            "family_version": "zeromodel-video-action-set-family-critical-evidence-corruption/v1",
-            "classification": "invalid",
-            "source_row_required": True,
-            "source_action_required": True,
-            "pixel_intervention": "frozen critical coordinate replacement",
-            "sequence_intervention": "none",
-            "expected_semantic_effect": "critical evidence is no longer faithful to the source row",
-            "distinguishability_status": "distinguishable_invalid_input",
-            "denominator_treatment": "distinguishable-invalid denominator",
-            "regeneration_requirements": ["critical coordinate set", "original values", "replacement values", "output digest"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "reordered_frames",
-            "family_version": "zeromodel-video-action-set-family-reordered-frames/v1",
-            "classification": "temporal-negative",
-            "source_row_required": True,
-            "source_action_required": True,
-            "pixel_intervention": "none",
-            "sequence_intervention": "non-identity permutation of frame payload order",
-            "expected_semantic_effect": "sequence order evidence is invalid",
-            "distinguishability_status": "distinguishable_temporal_invalid",
-            "denominator_treatment": "temporal-negative denominator",
-            "regeneration_requirements": ["original order", "mutated order", "sequence digest"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "stale_repeated_frame",
-            "family_version": "zeromodel-video-action-set-family-stale-repeated-frame/v1",
-            "classification": "temporal-negative",
-            "source_row_required": True,
-            "source_action_required": True,
-            "pixel_intervention": "later frame payload replaced by earlier payload",
-            "sequence_intervention": "explicit stale repeat horizon",
-            "expected_semantic_effect": "current frame evidence is stale",
-            "distinguishability_status": "distinguishable_temporal_invalid",
-            "denominator_treatment": "temporal-negative denominator",
-            "regeneration_requirements": ["source frame index", "destination frame index", "original destination digest", "replacement digest"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "impossible_transition",
-            "family_version": "zeromodel-video-action-set-family-impossible-transition/v1",
-            "classification": "temporal-negative",
-            "source_row_required": True,
-            "source_action_required": True,
-            "pixel_intervention": "destination frame set to a nonreachable policy row",
-            "sequence_intervention": "violates frozen reachability relation",
-            "expected_semantic_effect": "no admissible source-to-destination transition",
-            "distinguishability_status": "distinguishable_temporal_invalid",
-            "denominator_treatment": "temporal-negative denominator",
-            "regeneration_requirements": ["transition relation identity", "pairwise reachability audit", "endpoint frame digests"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "declared_gap_or_unknown_action",
-            "family_version": "zeromodel-video-action-set-family-declared-gap-or-unknown/v1",
-            "classification": "temporal-negative",
-            "source_row_required": True,
-            "source_action_required": False,
-            "pixel_intervention": "typed gap event with no ordinary pixels",
-            "sequence_intervention": "explicit gap/unknown event",
-            "expected_semantic_effect": "reader sees a deterministic non-frame event",
-            "distinguishability_status": "typed_temporal_event",
-            "denominator_treatment": "temporal-negative denominator",
-            "regeneration_requirements": ["event identity", "position", "duration", "sequence digest"],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-        {
-            "family_id": "information_control",
-            "family_version": INFORMATION_CONTROL_VERSION,
-            "classification": "information-theoretic-control",
-            "source_row_required": True,
-            "source_action_required": False,
-            "pixel_intervention": "byte-identical control observations with multiple hidden source-history labels",
-            "sequence_intervention": "control-only grouping",
-            "expected_semantic_effect": "hidden distinction unavailable to providers",
-            "distinguishability_status": "information_theoretic_control",
-            "denominator_treatment": "excluded from distinguishable-invalid denominators",
-            "regeneration_requirements": [
-                "control group",
-                "byte identity digest",
-                "hidden history labels",
-                "hidden-label cardinality",
-                "provider-visible field closure",
-            ],
-            "implementation_status": "implemented_bounded_scaffold",
-        },
-    ]
-    return {
-        "version": EPISODE_FAMILY_REGISTRY_VERSION,
-        "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
-        "families": entries,
-        "registry_digest": _sha256({"version": EPISODE_FAMILY_REGISTRY_VERSION, "families": entries}),
-    }
-
-
-def _family_contract(family_label: str, mutation_kind: str | None) -> dict[str, Any]:
-    family_id = "valid" if family_label == "valid" else str(mutation_kind or family_label)
-    for entry in _episode_family_registry()["families"]:
-        if entry["family_id"] == family_id:
-            return dict(entry)
-    raise VPMValidationError("unknown episode family")
 
 
 BenchmarkIdentity = BenchmarkIdentityDTO
@@ -361,196 +309,6 @@ def _derived_seed(
     }
     digest = _sha256(payload)
     return payload | {"seed_digest": digest, "seed_int64": _seed_int_from_digest(digest)}
-
-
-def _target_signal_coordinates(width: int = FRAME_SHAPE[1]) -> tuple[tuple[int, int], ...]:
-    return tuple((y, x) for y in range(2, 5) for x in range(int(width)))
-
-
-def _target_signal_mask(pixels: np.ndarray) -> np.ndarray:
-    array = np.ascontiguousarray(pixels, dtype=np.uint8)
-    if tuple(array.shape) != FRAME_SHAPE:
-        raise VPMValidationError("target evidence mask requires a canonical frame shape")
-    mask = np.zeros(array.shape, dtype=bool)
-    mask[2:5, :] = array[2:5, :] != 0
-    return mask
-
-
-def _splice_evidence_counts(primary_pixels: np.ndarray, secondary_pixels: np.ndarray) -> dict[str, int]:
-    primary = np.ascontiguousarray(primary_pixels, dtype=np.uint8)
-    secondary = np.ascontiguousarray(secondary_pixels, dtype=np.uint8)
-    if primary.shape != secondary.shape:
-        raise VPMValidationError("splice sources must have the same shape")
-    primary_target = _target_signal_mask(primary)
-    secondary_target = _target_signal_mask(secondary)
-    secondary_additive = secondary_target & ~primary_target
-    return {
-        "primary_target_pixel_count": int(np.count_nonzero(primary_target)),
-        "secondary_target_pixel_count": int(np.count_nonzero(secondary_target)),
-        "secondary_additive_target_pixel_count": int(np.count_nonzero(secondary_additive)),
-        "target_overlap_pixel_count": int(np.count_nonzero(primary_target & secondary_target)),
-    }
-
-
-def _target_slot_signal_coordinates(slot: int, *, width: int = 7) -> tuple[tuple[int, int], ...]:
-    centre = int(slot) * CELL_PIXELS + CELL_PIXELS // 2
-    return tuple([(2, centre - 1), (2, centre), (2, centre + 1), (3, centre - 1), (3, centre), (3, centre + 1), (4, centre)])
-
-
-
-def _detect_visible_target_slots(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> list[int]:
-    array = np.ascontiguousarray(pixels, dtype=np.uint8)
-    slots = []
-    for slot in range(config.width):
-        coords = _target_slot_signal_coordinates(slot, width=config.width)
-        values = [int(array[y, x]) for y, x in coords]
-        if all(value == TARGET_VALUE for value in values):
-            slots.append(slot)
-    return slots
-
-
-
-def _detect_tank_slot(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> int | None:
-    array = np.ascontiguousarray(pixels, dtype=np.uint8)
-    for slot in range(config.width):
-        centre = int(slot) * CELL_PIXELS + CELL_PIXELS // 2
-        coords = tuple([(11, centre), (12, centre - 1), (12, centre), (12, centre + 1), (13, centre - 2), (13, centre - 1), (13, centre), (13, centre + 1), (13, centre + 2)])
-        if all(int(array[y, x]) == TANK_VALUE for y, x in coords):
-            return slot
-    return None
-
-
-
-def _detect_cooldown_state(pixels: np.ndarray) -> int | None:
-    block = np.ascontiguousarray(pixels, dtype=np.uint8)[7:9, -3:-1]
-    values = {int(item) for item in block.reshape(-1)}
-    if values == {COOLDOWN_READY_VALUE}:
-        return 0
-    if values == {COOLDOWN_BLOCKED_VALUE}:
-        return 1
-    return None
-
-
-
-def _final_visible_target_action_evidence(pixels: np.ndarray, row_actions: Mapping[str, str], *, config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    target_slots = _detect_visible_target_slots(pixels, config=config)
-    tank_slot = _detect_tank_slot(pixels, config=config)
-    cooldown = _detect_cooldown_state(pixels)
-    action_map: dict[str, str] = {}
-    if tank_slot is not None and cooldown is not None:
-        for target in target_slots:
-            row_id = state_row_id(tank_slot, target, cooldown)
-            action_map[str(target)] = str(row_actions[row_id])
-    visible_actions = sorted(set(action_map.values()))
-    payload = {
-        "version": "zeromodel-video-action-set-final-visible-target-action-evidence/v1",
-        "final_visible_target_slots": [int(item) for item in target_slots],
-        "final_tank_slot": tank_slot,
-        "final_cooldown": cooldown,
-        "visible_target_action_map": action_map,
-        "visible_action_set": visible_actions,
-        "conflicting_action_evidence_present": len(visible_actions) >= 2,
-    }
-    payload["visible_action_evidence_digest"] = _sha256(payload)
-    return payload
-
-
-
-def _splice_pair_has_final_visible_action_conflict(primary_row_id: str, secondary_row_id: str, row_actions: Mapping[str, str]) -> bool:
-    tank, primary_target, cooldown = parse_state_row_id(str(primary_row_id))
-    _secondary_tank, secondary_target, _secondary_cooldown = parse_state_row_id(str(secondary_row_id))
-    if primary_target is None or secondary_target is None or primary_target == secondary_target:
-        return False
-    implied = {
-        row_actions[state_row_id(tank, int(primary_target), cooldown)],
-        row_actions[state_row_id(tank, int(secondary_target), cooldown)],
-    }
-    return len(implied) >= 2
-
-
-
-def _family_schedule() -> tuple[str, ...]:
-    return (
-        "exact",
-        "bounded_photometric",
-        "bounded_translation",
-        "bounded_translation_photometric",
-        "bounded_translation_occlusion",
-        "compound_bounded",
-    )
-
-
-
-def _episode_disposition(family_label: str, mutation_kind: str | None = None) -> str:
-    if family_label == "valid":
-        return "valid"
-    if family_label == "frame_invalid":
-        return "distinguishable_invalid_input"
-    if family_label == "temporal_negative":
-        return "distinguishable_temporal_invalid"
-    if family_label == "information_control":
-        return "information_theoretic_control"
-    return str(mutation_kind or family_label)
-
-
-
-def _denominator_class(family_label: str, mutation_kind: str | None = None) -> str:
-    if family_label == "valid":
-        return "valid_denominator"
-    if family_label == "frame_invalid":
-        return "distinguishable_invalid_denominator"
-    if family_label == "temporal_negative":
-        return "temporal_negative_denominator"
-    if family_label == "information_control":
-        return "excluded_information_control"
-    return str(mutation_kind or family_label)
-
-
-
-def _frame_disposition_for_episode(family_label: str, mutation_kind: str | None = None) -> str:
-    if family_label == "valid":
-        return "valid"
-    if family_label == "frame_invalid":
-        return "distinguishable_invalid_input"
-    if family_label == "information_control":
-        return "information_theoretic_control"
-    if family_label == "temporal_negative":
-        return "valid_frame_payload"
-    return str(mutation_kind or family_label)
-
-
-
-def expected_frame_disposition(
-    episode_family: str,
-    mutation_kind: str | None,
-    frame_index: int,
-    intervention_plan: Mapping[str, Any] | None = None,
-) -> str:
-    family = str(episode_family)
-    kind = None if mutation_kind is None else str(mutation_kind)
-    index = int(frame_index)
-    intervention = dict(intervention_plan or {})
-    if family == "valid":
-        return "valid"
-    if family == "frame_invalid":
-        return "distinguishable_invalid_input"
-    if family == "information_control":
-        return "information_theoretic_control"
-    if family != "temporal_negative":
-        return str(kind or family)
-    if kind == "reordered_frames":
-        return "temporally_reordered_frame_payload"
-    if kind == "stale_repeated_frame":
-        repeat = intervention.get("stale_repeat", {})
-        return "stale_repeated_frame_payload" if index == int(repeat.get("destination_frame_index", -1)) else "valid_frame_payload"
-    if kind == "impossible_transition":
-        transition = intervention.get("impossible_transition", {})
-        return "unreachable_destination_frame_payload" if index == int(transition.get("destination_frame_index", -1)) else "valid_frame_payload"
-    if kind == "declared_gap_or_unknown_action":
-        gap = intervention.get("gap_event", {})
-        return "declared_gap_or_unknown_action" if index == int(gap.get("position", -1)) else "valid_frame_payload"
-    return "valid_frame_payload"
-
 
 
 def _transition_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
@@ -897,48 +655,6 @@ def _frame_count_for_plan(split: str, family_label: str) -> int:
     if split == "development":
         return 1
     return 4
-
-
-def _critical_coordinates() -> tuple[tuple[int, int], ...]:
-    return tuple((y, x) for y in range(7, 9) for x in range(25, 27))
-
-
-def _critical_coordinate_manifest(coordinates: Sequence[Sequence[int]] | None = None) -> dict[str, Any]:
-    source_coordinates = _critical_coordinates() if coordinates is None else coordinates
-    coords = tuple((int(y), int(x)) for y, x in source_coordinates)
-    if not coords:
-        raise VPMValidationError("critical coordinate set cannot be empty")
-    critical = set(_critical_coordinates())
-    if any(coord not in critical for coord in coords):
-        raise VPMValidationError("selected coordinate is not critical under the frozen definition")
-    if len(set(coords)) != len(coords):
-        raise VPMValidationError("critical coordinate set cannot contain duplicates")
-    return {
-        "version": CRITICAL_COORDINATE_SET_VERSION,
-        "criticality_source": "tiny_arcade_shooter_rendering",
-        "criticality_region_id": CRITICAL_REGION_ID,
-        "coordinates": [[y, x] for y, x in coords],
-        "coordinate_set_digest": _coordinate_set_digest(coords),
-    }
-
-
-def _splice_mask_manifest(mask_rows: Sequence[int] = (2, 3, 4), *, width: int = 28) -> dict[str, Any]:
-    rows = tuple(int(row) for row in mask_rows)
-    if rows != (2, 3, 4):
-        raise VPMValidationError("conflicting splice mask is frozen to the rendered target signal rows")
-    if int(width) != FRAME_SHAPE[1]:
-        raise VPMValidationError("conflicting splice mask width must match the canonical frame shape")
-    coordinates = _target_signal_coordinates(int(width))
-    return {
-        "version": SPLICE_MASK_VERSION,
-        "mask_kind": "simultaneous_target_evidence",
-        "target_region_id": TARGET_REGION_ID,
-        "composition_rule": "copy primary observation, then add secondary target pixels where the primary has no target signal",
-        "rows": list(rows),
-        "coordinates": [[y, x] for y, x in coordinates],
-        "coordinate_count": len(coordinates),
-        "mask_digest": _coordinate_set_digest(coordinates),
-    }
 
 
 def _state_row_values(row_id: str) -> tuple[int, int | None, int]:
@@ -1496,273 +1212,6 @@ def _apply_frame_plan(frame: np.ndarray, frame_plan: Mapping[str, Any]) -> tuple
     if str(params["parameter_digest"]) != str(frame_plan["transformation_parameter_digest"]):
         raise VPMValidationError("frame transformation parameter digest mismatch")
     return _apply_transformation(frame, params)
-
-
-def _apply_conflicting_splice(
-    *,
-    primary_pixels: np.ndarray,
-    secondary_pixels: np.ndarray,
-    primary_row_id: str,
-    secondary_row_id: str,
-    primary_action_id: str,
-    secondary_action_id: str,
-    mask_manifest: Mapping[str, Any],
-) -> tuple[np.ndarray, dict[str, Any]]:
-    if primary_action_id == secondary_action_id:
-        raise VPMValidationError("conflicting splice requires different governed actions")
-    primary = np.ascontiguousarray(primary_pixels, dtype=np.uint8)
-    secondary = np.ascontiguousarray(secondary_pixels, dtype=np.uint8)
-    if primary.shape != secondary.shape:
-        raise VPMValidationError("splice sources must have the same shape")
-    if tuple(primary.shape) != FRAME_SHAPE:
-        raise VPMValidationError("conflicting splice requires the canonical frame shape")
-    if mask_manifest.get("version") != SPLICE_MASK_VERSION:
-        raise VPMValidationError("unsupported conflicting splice mask version")
-    if mask_manifest.get("mask_kind") != "simultaneous_target_evidence":
-        raise VPMValidationError("conflicting splice requires the simultaneous target-evidence mask")
-    coordinates = tuple((int(y), int(x)) for y, x in mask_manifest["coordinates"])
-    if coordinates != _target_signal_coordinates(primary.shape[1]):
-        raise VPMValidationError("conflicting splice target coordinates do not match the frozen renderer geometry")
-    for y, x in coordinates:
-        if y < 0 or y >= primary.shape[0] or x < 0 or x >= primary.shape[1]:
-            raise VPMValidationError("splice coordinate out of bounds")
-    primary_target = _target_signal_mask(primary)
-    secondary_target = _target_signal_mask(secondary)
-    secondary_overlay = secondary_target & ~primary_target
-    primary_target_count = int(np.count_nonzero(primary_target))
-    secondary_target_count = int(np.count_nonzero(secondary_target))
-    secondary_effective = int(np.count_nonzero(secondary_overlay))
-    if primary_target_count == 0 or secondary_target_count == 0:
-        raise VPMValidationError("splice requires visible target evidence from both sources")
-    if secondary_effective == 0:
-        raise VPMValidationError("splice requires distinct secondary target evidence")
-    output = np.array(primary, copy=True)
-    output[secondary_overlay] = secondary[secondary_overlay]
-    primary_effective = int(np.count_nonzero((primary != 0) & (output == primary)))
-    changed_pixel_count = int(np.count_nonzero(output != primary))
-    if changed_pixel_count == 0 or primary_effective == 0:
-        raise VPMValidationError("splice requires nonzero effective contribution from both sources")
-    if np.array_equal(output, primary) or np.array_equal(output, secondary):
-        raise VPMValidationError("splice output must not equal either source observation")
-    policy = compile_policy_artifact()
-    lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
-    row_actions = {str(row_id): lookup.choose(str(row_id)) for row_id in policy.source.row_ids}
-    visible_action_evidence = _final_visible_target_action_evidence(output, row_actions)
-    if not visible_action_evidence["conflicting_action_evidence_present"]:
-        raise VPMValidationError("conflicting splice final visible target evidence does not imply conflicting actions")
-    canonical_collisions = _canonical_collision_rows(output)
-    if canonical_collisions:
-        raise VPMValidationError("conflicting splice output collides with a canonical valid observation")
-    critical_mask = np.zeros(primary.shape, dtype=bool)
-    for y, x in _critical_coordinates():
-        critical_mask[y, x] = True
-    manifest = {
-        "primary_source_row_id": primary_row_id,
-        "primary_source_action_id": primary_action_id,
-        "secondary_source_row_id": secondary_row_id,
-        "secondary_source_action_id": secondary_action_id,
-        "primary_source_digest": _array_digest(primary),
-        "secondary_source_digest": _array_digest(secondary),
-        "splice_mask_identity": mask_manifest["mask_digest"],
-        "splice_mask_version": mask_manifest["version"],
-        "target_region_id": TARGET_REGION_ID,
-        "composition_rule": mask_manifest["composition_rule"],
-        "primary_contributing_pixel_count": primary_effective,
-        "secondary_contributing_pixel_count": secondary_effective,
-        "changed_pixel_count": changed_pixel_count,
-        "action_relevant_region_contribution_counts": {
-            "primary_target_pixel_count": primary_target_count,
-            "secondary_target_pixel_count": secondary_target_count,
-            "secondary_additive_target_pixel_count": secondary_effective,
-            "target_overlap_pixel_count": int(np.count_nonzero(primary_target & secondary_target)),
-        },
-        "critical_region_contribution_counts": {
-            "primary_pixel_count": int(np.count_nonzero(critical_mask & (output == primary))),
-            "secondary_pixel_count": 0,
-        },
-        "canonical_universe_version": CANONICAL_OBSERVATION_UNIVERSE_VERSION,
-        "final_visible_target_slots": visible_action_evidence["final_visible_target_slots"],
-        "final_tank_slot": visible_action_evidence["final_tank_slot"],
-        "final_cooldown": visible_action_evidence["final_cooldown"],
-        "visible_target_action_map": visible_action_evidence["visible_target_action_map"],
-        "visible_action_set": visible_action_evidence["visible_action_set"],
-        "visible_action_evidence_digest": visible_action_evidence["visible_action_evidence_digest"],
-        "canonical_collision_count": 0,
-        "canonical_collision_rows": [],
-        "output_observation_digest": _array_digest(output),
-        "expected_invalid_family_label": "conflicting_action_splice",
-    }
-    manifest["splice_trace_digest"] = _sha256(manifest)
-    return output, manifest
-
-
-def _apply_critical_corruption(source_pixels: np.ndarray, coordinate_manifest: Mapping[str, Any]) -> tuple[np.ndarray, dict[str, Any]]:
-    source = np.ascontiguousarray(source_pixels, dtype=np.uint8)
-    coords = tuple((int(y), int(x)) for y, x in coordinate_manifest["coordinates"])
-    _critical_coordinate_manifest(coords)
-    output = np.array(source, copy=True)
-    changes = []
-    for y, x in coords:
-        if y < 0 or y >= output.shape[0] or x < 0 or x >= output.shape[1]:
-            raise VPMValidationError("critical coordinate outside image bounds")
-        original = int(output[y, x])
-        replacement = 255 if original != 255 else 0
-        if replacement == original:
-            raise VPMValidationError("critical corruption replacement must change the value")
-        output[y, x] = replacement
-        if int(output[y, x]) == original:
-            raise VPMValidationError("critical corruption no-op after assignment")
-        changes.append({"y": y, "x": x, "original": original, "replacement": int(output[y, x])})
-    if not changes:
-        raise VPMValidationError("critical corruption requires at least one changed pixel")
-    if np.array_equal(source, output):
-        raise VPMValidationError("critical corruption must change the observation digest")
-    manifest = {
-        "criticality_artifact_identity": CRITICAL_COORDINATE_SET_VERSION,
-        "critical_region_id": CRITICAL_REGION_ID,
-        "critical_coordinate_set_identity": coordinate_manifest["coordinate_set_digest"],
-        "changes": changes,
-        "changed_pixel_count": len(changes),
-        "source_observation_digest": _array_digest(source),
-        "output_observation_digest": _array_digest(output),
-    }
-    manifest["critical_corruption_digest"] = _sha256(manifest)
-    return output, manifest
-
-
-def _conflicting_splice_operation_chain(
-    *,
-    primary_row_id: str,
-    secondary_row_id: str,
-    primary_action_id: str,
-    secondary_action_id: str,
-    primary_transformation_parameters: Mapping[str, Any],
-    mask_manifest: Mapping[str, Any],
-) -> dict[str, Any]:
-    primary_base = _render_row_frame(primary_row_id)
-    primary_transformed, primary_trace = _apply_transformation(primary_base, primary_transformation_parameters)
-    secondary = _render_row_frame(secondary_row_id)
-    output, splice_trace = _apply_conflicting_splice(
-        primary_pixels=primary_transformed,
-        secondary_pixels=secondary,
-        primary_row_id=primary_row_id,
-        secondary_row_id=secondary_row_id,
-        primary_action_id=primary_action_id,
-        secondary_action_id=secondary_action_id,
-        mask_manifest=mask_manifest,
-    )
-    primary_base_digest = primary_trace["source_observation_digest"]
-    primary_transformed_digest = primary_trace["transformed_observation_digest"]
-    secondary_digest = _array_digest(secondary)
-    output_digest = _array_digest(output)
-    operations = [
-        _operation_record(index=0, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": primary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=primary_base_digest),
-        _operation_record(index=1, operation="apply_bounded_transformation", operation_version=TRANSFORMATION_FAMILY_VERSION, input_digests=[primary_base_digest], parameters={"transformation_parameters": dict(primary_transformation_parameters)}, output_digest=primary_transformed_digest),
-        _operation_record(index=2, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": secondary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=secondary_digest),
-        _operation_record(
-            index=3,
-            operation="compose_simultaneous_target_evidence",
-            operation_version=CONFLICTING_ACTION_SPLICE_VERSION,
-            input_digests=[primary_transformed_digest, secondary_digest],
-            parameters={
-                "primary_row_id": primary_row_id,
-                "secondary_row_id": secondary_row_id,
-                "primary_action_id": primary_action_id,
-                "secondary_action_id": secondary_action_id,
-                "mask_manifest": dict(mask_manifest),
-                "splice_trace_digest": splice_trace["splice_trace_digest"],
-            },
-            output_digest=output_digest,
-        ),
-        _operation_record(index=4, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[output_digest], parameters={"event_type": "frame"}, output_digest=output_digest),
-    ]
-    return _operation_chain(operations, output_digest)
-
-
-
-def _critical_corruption_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any], coordinate_manifest: Mapping[str, Any]) -> dict[str, Any]:
-    source = _render_row_frame(row_id)
-    transformed, transform_trace = _apply_transformation(source, transformation_parameters)
-    corrupted, corruption_trace = _apply_critical_corruption(transformed, coordinate_manifest)
-    source_digest = transform_trace["source_observation_digest"]
-    transformed_digest = transform_trace["transformed_observation_digest"]
-    output_digest = _array_digest(corrupted)
-    operations = [
-        _operation_record(index=0, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=source_digest),
-        _operation_record(index=1, operation="apply_bounded_transformation", operation_version=TRANSFORMATION_FAMILY_VERSION, input_digests=[source_digest], parameters={"transformation_parameters": dict(transformation_parameters)}, output_digest=transformed_digest),
-        _operation_record(index=2, operation="apply_critical_coordinate_corruption", operation_version="zeromodel-video-action-set-family-critical-evidence-corruption/v1", input_digests=[transformed_digest], parameters={"critical_coordinates": dict(coordinate_manifest), "critical_corruption_digest": corruption_trace["critical_corruption_digest"]}, output_digest=output_digest),
-        _operation_record(index=3, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[output_digest], parameters={"event_type": "frame"}, output_digest=output_digest),
-    ]
-    return _operation_chain(operations, output_digest)
-
-
-
-def _stale_repeat_operation_chain(destination_before: Mapping[str, Any], replacement_source: Mapping[str, Any], repeat: Mapping[str, Any]) -> dict[str, Any]:
-    dest_params = destination_before.get("metadata", {}).get("transformation_parameters", {})
-    src_params = replacement_source.get("metadata", {}).get("transformation_parameters", {})
-    dest_row = str(destination_before.get("expected_row"))
-    src_row = str(replacement_source.get("expected_row"))
-    dest_chain = _valid_frame_operation_chain(dest_row, dest_params)
-    src_chain = _valid_frame_operation_chain(src_row, src_params)
-    original_digest = str(destination_before["observation_pixel_digest"])
-    replacement_digest = str(replacement_source["observation_pixel_digest"])
-    operations = list(dest_chain["operations"][:-1])
-    offset = len(operations)
-    for op in src_chain["operations"][:-1]:
-        copied = dict(op)
-        copied["index"] = int(op["index"]) + offset
-        copied["operation_digest"] = _sha256({key: value for key, value in copied.items() if key != "operation_digest"})
-        operations.append(copied)
-    operations.append(
-        _operation_record(
-            index=len(operations),
-            operation="stale_repeat_replace",
-            operation_version="zeromodel-video-action-set-family-stale-repeated-frame/v1",
-            input_digests=[original_digest, replacement_digest],
-            parameters=dict(repeat),
-            output_digest=replacement_digest,
-        )
-    )
-    operations.append(_operation_record(index=len(operations), operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[replacement_digest], parameters={"event_type": "frame"}, output_digest=replacement_digest))
-    return _operation_chain(operations, replacement_digest)
-
-
-
-def _impossible_transition_operation_chain(destination_before: Mapping[str, Any], transition_plan: Mapping[str, Any]) -> dict[str, Any]:
-    dest_params = destination_before.get("metadata", {}).get("transformation_parameters", {})
-    ordinary_row = str(destination_before.get("expected_row"))
-    ordinary_chain = _valid_frame_operation_chain(ordinary_row, dest_params)
-    ordinary_digest = str(destination_before["observation_pixel_digest"])
-    unreachable_row = str(transition_plan["destination_row_id"])
-    unreachable_pixels = _render_row_frame(unreachable_row)
-    unreachable_digest = _array_digest(unreachable_pixels)
-    operations = list(ordinary_chain["operations"][:-1])
-    operations.append(_operation_record(index=len(operations), operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": unreachable_row, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=unreachable_digest))
-    operations.append(
-        _operation_record(
-            index=len(operations),
-            operation="impossible_transition_replace",
-            operation_version="zeromodel-video-action-set-family-impossible-transition/v1",
-            input_digests=[ordinary_digest, unreachable_digest],
-            parameters=dict(transition_plan),
-            output_digest=unreachable_digest,
-        )
-    )
-    operations.append(_operation_record(index=len(operations), operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[unreachable_digest], parameters={"event_type": "frame"}, output_digest=unreachable_digest))
-    return _operation_chain(operations, unreachable_digest)
-
-
-
-def _information_control_operation_chain(current_row_id: str) -> dict[str, Any]:
-    current = _render_row_frame(current_row_id)
-    current_digest = _array_digest(current)
-    operations = [
-        _operation_record(index=0, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": str(current_row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=current_digest),
-        _operation_record(index=1, operation="emit_provider_identical_control_observation", operation_version=INFORMATION_CONTROL_VERSION, input_digests=[current_digest], parameters={"current_row_id": str(current_row_id), "provider_observation_boundary_version": PROVIDER_OBSERVATION_BOUNDARY_VERSION}, output_digest=current_digest),
-        _operation_record(index=2, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[current_digest], parameters={"event_type": "frame"}, output_digest=current_digest),
-    ]
-    return _operation_chain(operations, current_digest)
-
 
 
 def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
@@ -2414,71 +1863,6 @@ def _record_regeneration_view(record: Mapping[str, Any]) -> dict[str, Any]:
 
 
 
-def _frame_invalid_closure_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    canonical = canonical_observation_universe()
-    canonical_index = _canonical_observation_digest_index()
-    by_family: dict[str, dict[str, Any]] = {}
-    for record in records:
-        if record.get("expected_disposition") != "distinguishable_invalid_input":
-            continue
-        family = str(record.get("family"))
-        row = by_family.setdefault(
-            family,
-            {
-                "family_id": family,
-                "frame_count": 0,
-                "canonical_collision_count": 0,
-                "valid_decode_count": 0,
-                "no_op_count": 0,
-                "malformed_count": 0,
-                "collision_examples": [],
-            },
-        )
-        row["frame_count"] += 1
-        pixels = record.get("pixels")
-        if pixels is None:
-            row["malformed_count"] += 1
-            continue
-        digest = str(record.get("observation_pixel_digest") or _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)))
-        collisions = canonical_index.get(digest, [])
-        if collisions:
-            row["canonical_collision_count"] += 1
-            row["valid_decode_count"] += 1
-            if len(row["collision_examples"]) < 3:
-                row["collision_examples"].append(
-                    {
-                        "frame_id": record.get("frame_id"),
-                        "observation_pixel_digest": digest,
-                        "canonical_rows": collisions,
-                    }
-                )
-        trace = record.get("metadata", {}).get("family_intervention_trace", {})
-        if trace.get("changed_pixel_count") == 0:
-            row["no_op_count"] += 1
-        status = validate_materialized_family_record(record)
-        if status != "ok":
-            row["malformed_count"] += 1
-    totals = {
-        "frame_count": sum(row["frame_count"] for row in by_family.values()),
-        "canonical_collision_count": sum(row["canonical_collision_count"] for row in by_family.values()),
-        "valid_decode_count": sum(row["valid_decode_count"] for row in by_family.values()),
-        "no_op_count": sum(row["no_op_count"] for row in by_family.values()),
-        "malformed_count": sum(row["malformed_count"] for row in by_family.values()),
-    }
-    passed = totals["frame_count"] > 0 and totals["canonical_collision_count"] == 0 and totals["valid_decode_count"] == 0 and totals["no_op_count"] == 0 and totals["malformed_count"] == 0
-    payload = {
-        "version": FRAME_INVALID_CLOSURE_VERSION,
-        "canonical_universe_version": canonical["version"],
-        "canonical_universe_digest": canonical["universe_digest"],
-        "valid_observation_universe_version": VALID_OBSERVATION_UNIVERSE_VERSION,
-        "families": list(by_family.values()),
-        "totals": totals,
-        "status": "passed" if passed else "failed",
-    }
-    payload["closure_digest"] = _sha256(payload)
-    return payload
-
-
 def _family_closure_report(
     *,
     split: str,
@@ -2561,7 +1945,7 @@ def _family_closure_report(
             else "unresolved"
         )
     return {
-        "version": "zeromodel-video-action-set-family-closure/v1",
+        "version": FAMILY_CLOSURE_VERSION,
         "split": split,
         "registry_version": EPISODE_FAMILY_REGISTRY_VERSION,
         "families": list(rows.values()),
@@ -2573,27 +1957,6 @@ def _family_closure_report(
         "repository_status": "reference_instrument_correctness_unresolved",
         "materialization_status": "prospective_materialization_prohibited",
     }
-
-
-def validate_materialized_family_record(record: Mapping[str, Any]) -> str:
-    pixels = record.get("pixels")
-    if pixels is not None and record.get("observation_pixel_digest") != _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)):
-        return "stale_observation_digest"
-    metadata = record.get("metadata", {})
-    trace = metadata.get("family_intervention_trace")
-    if trace:
-        output_digest = trace.get("output_observation_digest")
-        if output_digest is not None and output_digest != record.get("observation_pixel_digest"):
-            return "family_output_digest_mismatch"
-        if trace.get("changed_pixel_count") == 0:
-            return "family_no_op"
-    if record.get("expected_disposition") == "distinguishable_invalid_input" and pixels is not None:
-        digest = str(record.get("observation_pixel_digest") or _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)))
-        if _canonical_observation_digest_index().get(digest):
-            return "invalid_family_valid_state_collision"
-    if record.get("event_type") == "gap_unknown" and pixels is not None:
-        return "gap_event_has_pixels"
-    return "ok"
 
 
 def validate_control_episode_records(records: Sequence[Mapping[str, Any]]) -> str:

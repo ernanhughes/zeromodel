@@ -57,33 +57,8 @@ log_cli = true
 log_cli_level = "INFO"
 testpaths = ["tests"]
 pythonpath = ["."]
-
-[tool.ruff]
-target-version = "py310"
-line-length = 100
-extend-exclude = [
-    "build",
-    "dist",
-    "docs/results",
+addopts = "--strict-markers"
+markers = [
+    "integration: end-to-end, exhaustive, materialization, or long-running tests excluded from normal development",
+    "slow: deprecated compatibility alias for integration",
 ]
-
-[tool.ruff.lint]
-select = [
-    "E",
-    "F",
-    "I",
-    "UP",
-    "B",
-    "SIM",
-    "C4",
-    "RUF",
-]
-
-[tool.mypy]
-python_version = "3.10"
-warn_unused_ignores = true
-warn_redundant_casts = true
-check_untyped_defs = true
-no_implicit_optional = true
-show_error_codes = true
-pretty = true

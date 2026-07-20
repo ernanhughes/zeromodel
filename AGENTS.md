@@ -50,27 +50,48 @@ When reviewing or extending this repo, check these first:
 ## Fast Commands
 
 ```powershell
-python scripts/check_quality.py
-pytest -q
+python scripts/run_fast_tests.py
 pytest tests/test_artifact_kernel.py -q
 pytest tests/test_views.py tests/test_spatial.py tests/test_manifold.py -q
 python -m build
 ```
 
-## Code Quality Policy
+## Test Execution Policy
 
-Codex and other agents must follow these rules:
+ZeroModel has two test tiers.
 
-1. Run `python scripts/check_quality.py` for quality validation.
-2. Do not auto-format the entire repository.
-3. Do not increase a legacy exception ceiling.
-4. New modules must satisfy the hard limits.
-5. Do not combine structural refactors with behavioral changes.
-6. Do not run integration tests without explicit human authorization.
-7. During refactors, preserve public imports and deterministic outputs.
-8. Run the bounded fast suite only once after implementation.
-9. Do not repeatedly rerun unchanged commands.
-10. Report any integration command that a human may run later, but do not execute it.
+### Fast tests
+
+The default repository validation command is:
+
+```powershell
+python scripts/run_fast_tests.py
+```
+
+The complete fast suite has a hard 60-second budget.
+
+During implementation:
+
+1. Run only directly affected fast tests.
+2. Run the complete fast suite once after implementation.
+3. Do not repeatedly rerun an unchanged command.
+4. Do not add exhaustive, end-to-end, materialization, or complete mutation work to the fast tier.
+
+### Integration tests
+
+Integration tests require explicit human authorization.
+
+Do not run any of these unless the user explicitly requests it:
+
+```powershell
+pytest --run-integration
+pytest --run-slow
+pytest -m integration
+```
+
+Integration tests include complete benchmark materialization, exhaustive observation universes, complete mutation audits, installed-wheel tests, historical regeneration, and long-running cross-product validation.
+
+When integration coverage is relevant, report the exact suggested command but do not execute it.
 
 ## Working Style
 

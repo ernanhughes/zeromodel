@@ -2,27 +2,66 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from pathlib import Path
+import time
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-TIMEOUT_SECONDS = 60
-FAST_TEST_TARGETS = [
-    "tests/test_artifact_kernel.py",
-    "tests/test_views.py",
-    "tests/test_spatial.py",
-    "tests/test_manifold.py",
-]
+FAST_SUITE_BUDGET_SECONDS = 60
+FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
 
 
 def main() -> int:
-    command = [sys.executable, "-m", "pytest", "-q", *FAST_TEST_TARGETS]
+    forbidden = [
+        argument
+        for argument in sys.argv[1:]
+        if argument in FORBIDDEN_INTEGRATION_FLAGS
+    ]
+    if forbidden:
+        print(
+            "The fast-test runner does not permit integration opt-in flags: "
+            + ", ".join(forbidden),
+            file=sys.stderr,
+        )
+        print(
+            "Run integration tests explicitly with pytest instead.",
+            file=sys.stderr,
+        )
+        return 2
+
+    command = [
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "--maxfail=1",
+        *sys.argv[1:],
+    ]
+    started = time.monotonic()
+
     try:
-        result = subprocess.run(command, cwd=REPO_ROOT, check=False, timeout=TIMEOUT_SECONDS)
+        completed = subprocess.run(
+            command,
+            check=False,
+            timeout=FAST_SUITE_BUDGET_SECONDS,
+        )
     except subprocess.TimeoutExpired:
-        print(f"Fast test suite exceeded {TIMEOUT_SECONDS} seconds", file=sys.stderr)
+        elapsed = time.monotonic() - started
+        print(
+            f"\nFAST TEST BUDGET EXCEEDED: {elapsed:.1f}s > "
+            f"{FAST_SUITE_BUDGET_SECONDS}s",
+            file=sys.stderr,
+        )
+        print(
+            "Move expensive tests to the integration tier or reduce their fixture scope.",
+            file=sys.stderr,
+        )
         return 124
-    return result.returncode
+
+    elapsed = time.monotonic() - started
+    print(
+        f"\nFast-suite runtime: {elapsed:.2f}s "
+        f"(budget: {FAST_SUITE_BUDGET_SECONDS}s)"
+    )
+    return completed.returncode
 
 
 if __name__ == "__main__":

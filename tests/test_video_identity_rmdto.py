@@ -156,6 +156,7 @@ def test_legacy_load_identity_matches_runtime_result() -> None:
     assert benchmark.load_identity(REPO_ROOT) == runtime_identity
 
 
+@pytest.mark.integration
 def test_core_import_does_not_import_sqlalchemy() -> None:
     result = subprocess.run(
         [

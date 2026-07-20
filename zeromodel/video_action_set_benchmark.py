@@ -20,6 +20,7 @@ from .artifact import VPMValidationError
 from .domains.video_action_set.canonical_json import canonical_json_bytes, canonical_json_value, canonical_sha256
 from .domains.video_action_set.contracts import (
     ARCADE_RENDERER_CONTRACT_VERSION,
+    AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
     BENCHMARK_VERSION,
     CANONICAL_OBSERVATION_UNIVERSE_VERSION,
     CONFLICTING_ACTION_SPLICE_VERSION,
@@ -53,7 +54,29 @@ from .domains.video_action_set.contracts import (
     VALID_FAMILY_VERSION,
     VALID_OBSERVATION_UNIVERSE_VERSION,
 )
+from .domains.video_action_set.control_histories import (
+    control_source_rows as _control_source_rows,
+    grounded_control_histories_for_current_row as _grounded_control_histories_for_current_row,
+    grounded_control_history as _grounded_control_history,
+    normalized_control_causal_tuple as _normalized_control_causal_tuple,
+    reconstructed_control_causal_tuple_digest as _reconstructed_control_causal_tuple_digest,
+    select_grounded_control_histories as _select_grounded_control_histories,
+    transition_identity as _transition_identity,
+    transition_input_digest as _transition_input_digest,
+    transition_result_digest as _transition_result_digest,
+)
 from .domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO
+from .domains.video_action_set.episode_planning import (
+    derived_seed as _derived_seed,
+    episode_ids_by_family as _episode_ids_by_family,
+    episode_plans_for_split as _episode_plans_for_split,
+    final_observation_provenance as _final_observation_provenance,
+    frame_count_for_plan as _frame_count_for_plan,
+    frame_plans as _frame_plans,
+    make_episode_plan as _make_episode_plan,
+    validate_episode_plan as _validate_episode_plan,
+    validate_episode_plan_collection as _validate_episode_plan_collection,
+)
 from .domains.video_action_set.episode_families import (
     denominator_class as _denominator_class,
     episode_disposition as _episode_disposition,
@@ -62,6 +85,14 @@ from .domains.video_action_set.episode_families import (
     family_contract as _family_contract,
     family_schedule as _family_schedule,
     frame_disposition_for_episode as _frame_disposition_for_episode,
+)
+from .domains.video_action_set.family_intervention_planning import (
+    conflicting_splice_source_rows as _conflicting_splice_source_rows,
+    family_intervention_plan as _family_intervention_plan,
+    impossible_destination_row as _impossible_destination_row,
+    secondary_row_for_splice as _secondary_row_for_splice,
+    seed_int_from_digest as _seed_int_from_digest,
+    state_row_values as _state_row_values,
 )
 from .domains.video_action_set.family_provenance import (
     conflicting_splice_operation_chain as _conflicting_splice_operation_chain,
@@ -202,7 +233,6 @@ CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
 MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
-AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
 
 
 def _json_ready(value: Any) -> Any:
@@ -282,299 +312,8 @@ def load_identity(repo_root: Path) -> BenchmarkIdentity:
     return build_runtime().video_action_set.load_identity(repo_root)
 
 
-def _seed_int_from_digest(digest: str) -> int:
-    if not digest.startswith("sha256:"):
-        raise VPMValidationError("seed identity must be a sha256 digest")
-    return int(digest.removeprefix("sha256:")[:16], 16)
-
-
-def _derived_seed(
-    identity: BenchmarkIdentity,
-    *,
-    split: str,
-    ordinal: int,
-    namespace: str,
-    parent_identities: tuple[tuple[str, str], ...],
-) -> dict[str, Any]:
-    parents = tuple((str(name), str(value)) for name, value in parent_identities)
-    if len({name for name, _value in parents}) != len(parents):
-        raise VPMValidationError("derived seed parent names must be unique")
-    payload = {
-        "version": SEED_DERIVATION_VERSION,
-        "root_seed_digest": identity.seed_digest,
-        "split": split,
-        "episode_ordinal": int(ordinal),
-        "namespace": namespace,
-        "parent_identities": [{"name": name, "identity": value} for name, value in parents],
-    }
-    digest = _sha256(payload)
-    return payload | {"seed_digest": digest, "seed_int64": _seed_int_from_digest(digest)}
-
-
-def _transition_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    payload = {
-        "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
-        "function": "zeromodel.arcade_policy.transitions.next_rows",
-        "action_universe": list(ACTIONS),
-        "config": _transition_config_payload(config),
-    }
-    return payload | {"transition_identity_digest": _sha256(payload)}
-
-
-
-def _transition_input_digest(predecessor_row_id: str, action: str, *, config: ShooterConfig = ShooterConfig()) -> str:
-    tank, target, cooldown = parse_state_row_id(str(predecessor_row_id))
-    return _sha256(
-        {
-            "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
-            "predecessor_row_id": str(predecessor_row_id),
-            "parsed_state": {"tank_x": tank, "target_x": target, "cooldown": cooldown},
-            "actual_executed_action": str(action),
-            "config_digest": _sha256(_transition_config_payload(config)),
-        }
-    )
-
-
-
-def _transition_result_digest(
-    predecessor_row_id: str,
-    action: str,
-    transition_choice_index: int,
-    resulting_row_id: str,
-    *,
-    config: ShooterConfig = ShooterConfig(),
-) -> str:
-    tank, target, cooldown = parse_state_row_id(str(predecessor_row_id))
-    destinations = list(next_rows(tank, target, cooldown, str(action), width=config.width))
-    return _sha256(
-        {
-            "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
-            "predecessor_row_id": str(predecessor_row_id),
-            "actual_executed_action": str(action),
-            "reachable_row_ids": destinations,
-            "transition_choice_index": int(transition_choice_index),
-            "resulting_row_id": str(resulting_row_id),
-            "config_digest": _sha256(_transition_config_payload(config)),
-        }
-    )
-
-
-
-def _normalized_control_causal_tuple(
-    *,
-    predecessor_row_id: str,
-    actual_executed_action: str,
-    transition_choice_index: int,
-    resulting_row_id: str,
-    config: ShooterConfig = ShooterConfig(),
-) -> dict[str, Any]:
-    transition_identity = _transition_identity(config)
-    return {
-        "version": GROUNDED_CONTROL_HISTORY_VERSION,
-        "predecessor_row_id": str(predecessor_row_id),
-        "actual_executed_action": str(actual_executed_action),
-        "transition_choice_index": int(transition_choice_index),
-        "resulting_row_id": str(resulting_row_id),
-        "transition_identity": transition_identity,
-        "transition_input_digest": _transition_input_digest(str(predecessor_row_id), str(actual_executed_action), config=config),
-        "transition_result_digest": _transition_result_digest(
-            str(predecessor_row_id),
-            str(actual_executed_action),
-            int(transition_choice_index),
-            str(resulting_row_id),
-            config=config,
-        ),
-    }
-
-
-
-def _grounded_control_history(
-    *,
-    control_group_id: str,
-    hidden_history_index: int,
-    predecessor_row_id: str,
-    actual_executed_action: str,
-    transition_choice_index: int,
-    resulting_row_id: str,
-    config: ShooterConfig = ShooterConfig(),
-) -> dict[str, Any]:
-    causal_tuple = _normalized_control_causal_tuple(
-        predecessor_row_id=predecessor_row_id,
-        actual_executed_action=actual_executed_action,
-        transition_choice_index=transition_choice_index,
-        resulting_row_id=resulting_row_id,
-        config=config,
-    )
-    tuple_digest = _sha256(causal_tuple)
-    payload = {
-        "version": GROUNDED_CONTROL_HISTORY_VERSION,
-        "control_group_id": str(control_group_id),
-        "hidden_history_index": int(hidden_history_index),
-        "history_id": tuple_digest,
-        "hidden_history_id": tuple_digest,
-        "predecessor_row_id": str(predecessor_row_id),
-        "actual_executed_action": str(actual_executed_action),
-        "transition_choice_index": int(transition_choice_index),
-        "resulting_row_id": str(resulting_row_id),
-        "transition_identity": causal_tuple["transition_identity"],
-        "transition_input_digest": causal_tuple["transition_input_digest"],
-        "transition_result_digest": causal_tuple["transition_result_digest"],
-        "normalized_causal_tuple_digest": tuple_digest,
-    }
-    payload["history_digest"] = _sha256(payload)
-    payload["hidden_source_label_digest"] = payload["history_digest"]
-    return payload
-
-
-
-def _reconstructed_control_causal_tuple_digest(history: Mapping[str, Any], *, config: ShooterConfig = ShooterConfig()) -> str:
-    if history.get("version") != GROUNDED_CONTROL_HISTORY_VERSION:
-        raise VPMValidationError("unsupported grounded control history version")
-    action = str(history.get("actual_executed_action"))
-    if action not in ACTIONS:
-        raise VPMValidationError("control history action is not declared")
-    predecessor = str(history.get("predecessor_row_id"))
-    resulting = str(history.get("resulting_row_id"))
-    choice_index = int(history.get("transition_choice_index", -1))
-    tank, target, cooldown = parse_state_row_id(predecessor)
-    destinations = list(next_rows(tank, target, cooldown, action, width=config.width))
-    if choice_index < 0 or choice_index >= len(destinations):
-        raise VPMValidationError("control history transition choice is invalid")
-    if str(destinations[choice_index]) != resulting:
-        raise VPMValidationError("control history result does not match the declared choice")
-    causal_tuple = _normalized_control_causal_tuple(
-        predecessor_row_id=predecessor,
-        actual_executed_action=action,
-        transition_choice_index=choice_index,
-        resulting_row_id=resulting,
-        config=config,
-    )
-    tuple_digest = _sha256(causal_tuple)
-    if history.get("transition_identity") != causal_tuple["transition_identity"]:
-        raise VPMValidationError("control history transition identity mismatch")
-    if history.get("transition_input_digest") != causal_tuple["transition_input_digest"]:
-        raise VPMValidationError("control history input digest mismatch")
-    if history.get("transition_result_digest") != causal_tuple["transition_result_digest"]:
-        raise VPMValidationError("control history result digest mismatch")
-    if history.get("normalized_causal_tuple_digest") != tuple_digest:
-        raise VPMValidationError("control history causal tuple digest mismatch")
-    return tuple_digest
-
-
-
-def _grounded_control_histories_for_current_row(
-    current_row_id: str,
-    row_ids: Sequence[str],
-    *,
-    config: ShooterConfig = ShooterConfig(),
-) -> list[dict[str, Any]]:
-    histories: list[dict[str, Any]] = []
-    for predecessor in row_ids:
-        tank, target, cooldown = parse_state_row_id(str(predecessor))
-        for action in ACTIONS:
-            destinations = list(next_rows(tank, target, cooldown, action, width=config.width))
-            for index, destination in enumerate(destinations):
-                if str(destination) != str(current_row_id):
-                    continue
-                histories.append(
-                    {
-                        "predecessor_row_id": str(predecessor),
-                        "actual_executed_action": str(action),
-                        "transition_choice_index": int(index),
-                        "resulting_row_id": str(current_row_id),
-                        "normalized_causal_tuple_digest": _sha256(
-                            _normalized_control_causal_tuple(
-                                predecessor_row_id=str(predecessor),
-                                actual_executed_action=str(action),
-                                transition_choice_index=int(index),
-                                resulting_row_id=str(current_row_id),
-                                config=config,
-                            )
-                        ),
-                    }
-                )
-    return sorted(
-        histories,
-        key=lambda item: (
-            str(item["actual_executed_action"]),
-            str(item["predecessor_row_id"]),
-            int(item["transition_choice_index"]),
-        ),
-    )
-
-
-
-def _select_grounded_control_histories(
-    current_row_id: str,
-    row_ids: Sequence[str],
-    *,
-    control_group_id: str,
-    frame_count: int,
-    config: ShooterConfig = ShooterConfig(),
-) -> list[dict[str, Any]]:
-    candidates = _grounded_control_histories_for_current_row(current_row_id, row_ids, config=config)
-    if len({item["normalized_causal_tuple_digest"] for item in candidates}) < 2:
-        raise VPMValidationError("information control current row lacks grounded causal ambiguity")
-    preferred: list[dict[str, Any]] = []
-    used_predecessors: set[str] = set()
-    used_actions: set[str] = set()
-    for candidate in candidates:
-        predecessor = str(candidate["predecessor_row_id"])
-        action = str(candidate["actual_executed_action"])
-        if predecessor in used_predecessors or action in used_actions:
-            continue
-        preferred.append(candidate)
-        used_predecessors.add(predecessor)
-        used_actions.add(action)
-        if len(preferred) == int(frame_count):
-            break
-    for candidate in candidates:
-        if len(preferred) == int(frame_count):
-            break
-        if candidate in preferred:
-            continue
-        predecessor = str(candidate["predecessor_row_id"])
-        if predecessor in used_predecessors:
-            continue
-        preferred.append(candidate)
-        used_predecessors.add(predecessor)
-    for candidate in candidates:
-        if len(preferred) == int(frame_count):
-            break
-        if candidate not in preferred:
-            preferred.append(candidate)
-    if len(preferred) < min(2, int(frame_count)):
-        raise VPMValidationError("information control needs at least two grounded causal histories")
-    return [
-        _grounded_control_history(
-            control_group_id=control_group_id,
-            hidden_history_index=index,
-            predecessor_row_id=str(item["predecessor_row_id"]),
-            actual_executed_action=str(item["actual_executed_action"]),
-            transition_choice_index=int(item["transition_choice_index"]),
-            resulting_row_id=str(current_row_id),
-            config=config,
-        )
-        for index, item in enumerate(preferred)
-    ]
-
-
-
-def _control_source_rows(row_ids: Sequence[str], *, count: int, frame_count: int, config: ShooterConfig = ShooterConfig()) -> list[str]:
-    selected = []
-    for row_id in row_ids:
-        histories = _grounded_control_histories_for_current_row(str(row_id), row_ids, config=config)
-        if len({item["normalized_causal_tuple_digest"] for item in histories}) >= int(frame_count):
-            selected.append(str(row_id))
-        if len(selected) == int(count):
-            return selected
-    raise VPMValidationError("unable to select enough grounded information-control rows")
-
-
-
 def _provider_observation_digest(descriptor: Mapping[str, Any]) -> str:
     return _sha256({"version": PROVIDER_OBSERVATION_BOUNDARY_VERSION, "descriptor": descriptor})
-
 
 
 def _control_provider_source_id(record: Mapping[str, Any]) -> str:
@@ -583,7 +322,6 @@ def _control_provider_source_id(record: Mapping[str, Any]) -> str:
     if not group_id:
         raise VPMValidationError("information control record lacks a control group id")
     return str(metadata.get("provider_observation_source_id") or f"control:{group_id}")
-
 
 
 def provider_observation_for_record(record: Mapping[str, Any]) -> ImageObservation:
@@ -600,7 +338,6 @@ def provider_observation_for_record(record: Mapping[str, Any]) -> ImageObservati
         timestamp = metadata.get("provider_observation_timestamp") if "provider_observation_timestamp" in metadata else None
         visible_metadata = metadata.get("provider_observation_metadata", {}) if "provider_observation_metadata" in metadata else {}
     return ImageObservation(pixels, timestamp=None if timestamp is None else str(timestamp), source_id=source_id, metadata=visible_metadata)
-
 
 
 def provider_observation_descriptor_for_record(record: Mapping[str, Any]) -> dict[str, Any]:
@@ -636,572 +373,6 @@ def provider_observation_descriptor_for_record(record: Mapping[str, Any]) -> dic
     }
 
 
-
-def _final_observation_provenance(split: str) -> dict[str, Any]:
-    if split == "final":
-        return {
-            "materialization_status": "prospective_materialization_prohibited",
-            "observation_payload_included": False,
-            "provenance": "sealed_plan_only",
-        }
-    return {
-        "materialization_status": "materialized",
-        "observation_payload_included": True,
-        "provenance": "in_memory_generation",
-    }
-
-
-def _frame_count_for_plan(split: str, family_label: str) -> int:
-    if split == "development":
-        return 1
-    return 4
-
-
-def _state_row_values(row_id: str) -> tuple[int, int | None, int]:
-    return parse_state_row_id(str(row_id))
-
-
-def _secondary_row_for_splice(row_ids: list[str], row_actions: Mapping[str, str], source_row_id: str) -> str:
-    source_action = row_actions[source_row_id]
-    _source_tank, source_target, _source_cooldown = _state_row_values(source_row_id)
-    if source_target is None:
-        raise VPMValidationError("conflicting splice source row must contain visible target evidence")
-    for row_id in row_ids:
-        if row_id == source_row_id:
-            continue
-        if row_actions[row_id] == source_action:
-            continue
-        _tank, target, _cooldown = _state_row_values(row_id)
-        if target is None or target == source_target:
-            continue
-        if not _splice_pair_has_final_visible_action_conflict(source_row_id, row_id, row_actions):
-            continue
-        return row_id
-    raise VPMValidationError("frame splice requires a secondary row with conflicting action and distinct visible target evidence")
-
-
-def _conflicting_splice_source_rows(row_ids: list[str], row_actions: Mapping[str, str], count: int) -> list[str]:
-    selected: list[str] = []
-    for row_id in row_ids:
-        _tank, target, _cooldown = _state_row_values(row_id)
-        if target is None:
-            continue
-        try:
-            _secondary_row_for_splice(row_ids, row_actions, row_id)
-        except VPMValidationError:
-            continue
-        selected.append(row_id)
-        if len(selected) == int(count):
-            return selected
-    raise VPMValidationError("unable to select enough conflicting splice source rows with visible target evidence")
-
-
-def _impossible_destination_row(row_ids: list[str], row_actions: Mapping[str, str], source_row_id: str) -> str:
-    action = row_actions[source_row_id]
-    tank, target, cooldown = _state_row_values(source_row_id)
-    reachable = set(next_rows(tank, target, cooldown, action, width=ShooterConfig().width))
-    for row_id in reversed(row_ids):
-        if row_id not in reachable and row_id != source_row_id:
-            return row_id
-    raise VPMValidationError("unable to select impossible transition destination")
-
-
-def _family_intervention_plan(
-    *,
-    identity: BenchmarkIdentity,
-    split: str,
-    ordinal: int,
-    family_label: str,
-    mutation_kind: str | None,
-    source_row_id: str,
-    secondary_row_id: str | None,
-    row_ids: Sequence[str],
-    row_actions: Mapping[str, str],
-) -> dict[str, Any]:
-    family_id = "valid" if family_label == "valid" else str(mutation_kind or family_label)
-    seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="family_intervention",
-        parent_identities=(
-            ("family_id", family_id),
-            ("source_row_id", source_row_id),
-            ("secondary_row_id", secondary_row_id or "none"),
-        ),
-    )
-    original_order = list(range(_frame_count_for_plan(split, family_label)))
-    payload: dict[str, Any] = {
-        "version": FAMILY_INTERVENTION_VERSION,
-        "family_id": family_id,
-        "intervention_seed_identity": seed["seed_digest"],
-        "original_order": original_order,
-        "materialized_order": list(original_order),
-        "event_type": "frame_sequence",
-    }
-    if family_id == "conflicting_action_splice":
-        payload |= {
-            "primary_source_row_id": source_row_id,
-            "primary_source_action_id": row_actions[source_row_id],
-            "secondary_source_row_id": secondary_row_id,
-            "secondary_source_action_id": None if secondary_row_id is None else row_actions[secondary_row_id],
-            "splice_mask": _splice_mask_manifest(),
-        }
-    elif family_id == "critical_evidence_corruption":
-        payload |= {"critical_coordinates": _critical_coordinate_manifest()}
-    elif family_id == "reordered_frames":
-        mutated = [1, 0, 2, 3]
-        if mutated == original_order:
-            raise VPMValidationError("reordered family requires non-identity order")
-        payload |= {"materialized_order": mutated, "sequence_rule": "non_identity_permutation"}
-    elif family_id == "stale_repeated_frame":
-        payload |= {"stale_repeat": {"source_frame_index": 0, "destination_frame_index": 1, "maximum_stale_horizon": 1}}
-    elif family_id == "impossible_transition":
-        destination = _impossible_destination_row(list(row_ids), row_actions, source_row_id)
-        payload |= {
-            "transition_relation_identity": REACHABILITY_TILE_DIGEST,
-            "impossible_transition": {
-                "source_frame_index": 0,
-                "destination_frame_index": 1,
-                "source_row_id": source_row_id,
-                "source_action_id": row_actions[source_row_id],
-                "destination_row_id": destination,
-                "destination_action_id": row_actions[destination],
-            },
-        }
-    elif family_id == "declared_gap_or_unknown_action":
-        gap_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="gap_event_identity",
-            parent_identities=(("family_intervention", seed["seed_digest"]), ("gap_position", "2")),
-        )
-        payload |= {
-            "event_type": "typed_gap_sequence",
-            "gap_event": {
-                "version": GAP_EVENT_VERSION,
-                "position": 2,
-                "duration_frames": 1,
-                "reason": "declared_gap_or_unknown_action",
-                "event_id": gap_seed["seed_digest"],
-            },
-        }
-    elif family_id == "information_control":
-        control_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="information_control_identity",
-            parent_identities=(("family_intervention", seed["seed_digest"]), ("current_row_id", source_row_id)),
-        )
-        hidden_histories = _select_grounded_control_histories(
-            source_row_id,
-            row_ids,
-            control_group_id=control_seed["seed_digest"],
-            frame_count=len(original_order),
-        )
-        hidden_label_digests = [history["hidden_source_label_digest"] for history in hidden_histories]
-        payload |= {
-            "control_group": {
-                "version": INFORMATION_CONTROL_AMBIGUITY_VERSION,
-                "control_group_id": control_seed["seed_digest"],
-                "current_row_id": source_row_id,
-                "byte_identity_required": True,
-                "minimum_grounded_causal_history_cardinality": 2,
-                "grounded_causal_history_count": len({history["normalized_causal_tuple_digest"] for history in hidden_histories}),
-                "hidden_source_history_count": len(hidden_histories),
-                "hidden_source_histories": hidden_histories,
-                "hidden_source_label_digests": hidden_label_digests,
-                "hidden_source_label_digest": _sha256(
-                    {
-                        "control_group_id": control_seed["seed_digest"],
-                        "hidden_source_label_digests": hidden_label_digests,
-                    }
-                ),
-                "provider_observation_boundary_version": PROVIDER_OBSERVATION_BOUNDARY_VERSION,
-                "provider_visible_fields": ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"],
-                "provider_hidden_fields": [
-                    "frame_id",
-                    "source_row_id",
-                    "source_action_id",
-                    "grounded_causal_history",
-                    "hidden_source_history_id",
-                    "hidden_source_label_digest",
-                ],
-            }
-        }
-    payload["sequence_digest"] = _sha256({"order": payload["materialized_order"], "event_type": payload["event_type"], "family_id": family_id})
-    payload["intervention_digest"] = _sha256(payload)
-    return payload
-
-
-def _frame_plans(
-    identity: BenchmarkIdentity,
-    *,
-    split: str,
-    ordinal: int,
-    family_label: str,
-    mutation_kind: str | None,
-    frame_count: int,
-    concrete_episode_seed_digest: str,
-) -> list[dict[str, Any]]:
-    schedule = _family_schedule()
-    schedule_digest = _sha256({"family_schedule": list(schedule)})
-    frames = []
-    for frame_index in range(frame_count):
-        frame_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="frame_identity",
-            parent_identities=(
-                ("concrete_episode_seed", concrete_episode_seed_digest),
-                ("frame_index", str(frame_index)),
-            ),
-        )
-        transform_family_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="transformation_family",
-            parent_identities=(
-                ("frame_identity", frame_seed["seed_digest"]),
-                ("family_schedule_digest", schedule_digest),
-                ("episode_family", family_label),
-            ),
-        )
-        if family_label == "frame_invalid":
-            transformation_family = "exact"
-        else:
-            transformation_family = schedule[transform_family_seed["seed_int64"] % len(schedule)]
-        transform_parameter_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="transformation_parameters",
-            parent_identities=(
-                ("transformation_family_seed", transform_family_seed["seed_digest"]),
-                ("transformation_family", transformation_family),
-                ("frame_index", str(frame_index)),
-            ),
-        )
-        transition_choice_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="transition_choice",
-            parent_identities=(
-                ("frame_identity", frame_seed["seed_digest"]),
-                ("frame_index", str(frame_index)),
-            ),
-        )
-        temporal_mutation_seed = _derived_seed(
-            identity,
-            split=split,
-            ordinal=ordinal,
-            namespace="temporal_mutation_choice",
-            parent_identities=(
-                ("frame_identity", frame_seed["seed_digest"]),
-                ("temporal_mutation", mutation_kind or "none"),
-            ),
-        )
-        parameters = _transformation_parameters(transformation_family, transform_parameter_seed["seed_int64"])
-        frames.append(
-            {
-                "frame_index": frame_index,
-                "frame_seed_identity": frame_seed["seed_digest"],
-                "transformation_family_seed_identity": transform_family_seed["seed_digest"],
-                "transformation_family": transformation_family,
-                "transformation_seed_identity": transform_parameter_seed["seed_digest"],
-                "transformation_seed": transform_parameter_seed["seed_int64"],
-                "transformation_parameter_digest": parameters["parameter_digest"],
-                "transformation_parameters": parameters,
-                "transition_choice_seed_identity": transition_choice_seed["seed_digest"],
-                "transition_choice_seed": transition_choice_seed["seed_int64"],
-                "temporal_mutation_seed_identity": temporal_mutation_seed["seed_digest"],
-                "temporal_mutation_kind": mutation_kind if family_label == "temporal_negative" else None,
-            }
-        )
-    return frames
-
-
-def _make_episode_plan(
-    identity: BenchmarkIdentity,
-    *,
-    split: str,
-    ordinal: int,
-    family_label: str,
-    family_ordinal: int,
-    source_row_id: str,
-    row_actions: Mapping[str, str],
-    mutation_kind: str | None = None,
-    secondary_row_id: str | None = None,
-) -> dict[str, Any]:
-    if source_row_id not in row_actions:
-        raise VPMValidationError("episode source row is absent from the policy universe")
-    if secondary_row_id is not None and secondary_row_id not in row_actions:
-        raise VPMValidationError("episode secondary row is absent from the policy universe")
-    if mutation_kind != "conflicting_action_splice" and secondary_row_id is not None:
-        raise VPMValidationError("secondary row is only admissible for conflicting-action splices")
-    if mutation_kind == "conflicting_action_splice":
-        if secondary_row_id is None:
-            raise VPMValidationError("conflicting-action splice requires a secondary row")
-        if row_actions[secondary_row_id] == row_actions[source_row_id]:
-            raise VPMValidationError("conflicting-action splice secondary row must govern a different action")
-
-    split_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="split_identity",
-        parent_identities=(("benchmark_version", BENCHMARK_VERSION), ("generator_version", GENERATOR_VERSION)),
-    )
-    ordinal_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="episode_ordinal",
-        parent_identities=(("split_identity", split_seed["seed_digest"]), ("family_ordinal", str(family_ordinal))),
-    )
-    family_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="episode_family",
-        parent_identities=(
-            ("episode_ordinal", ordinal_seed["seed_digest"]),
-            ("family_label", family_label),
-            ("mutation_kind", mutation_kind or "none"),
-        ),
-    )
-    source_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="source_row_choice",
-        parent_identities=(("episode_family", family_seed["seed_digest"]), ("source_row_id", source_row_id)),
-    )
-    secondary_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="secondary_splice_row_choice",
-        parent_identities=(
-            ("source_row_choice", source_seed["seed_digest"]),
-            ("secondary_row_id", secondary_row_id or "none"),
-        ),
-    )
-    transformation_family_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="transformation_family",
-        parent_identities=(
-            ("secondary_splice_row_choice", secondary_seed["seed_digest"]),
-            ("family_schedule_digest", _sha256({"family_schedule": list(_family_schedule())})),
-        ),
-    )
-    transformation_parameter_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="transformation_parameters",
-        parent_identities=(("transformation_family", transformation_family_seed["seed_digest"]), ("frame_count", str(_frame_count_for_plan(split, family_label)))),
-    )
-    temporal_mutation_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="temporal_mutation_choice",
-        parent_identities=(("transformation_parameters", transformation_parameter_seed["seed_digest"]), ("temporal_mutation", mutation_kind or "none")),
-    )
-    episode_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="concrete_episode_seed",
-        parent_identities=(
-            ("split_identity", split_seed["seed_digest"]),
-            ("episode_ordinal", ordinal_seed["seed_digest"]),
-            ("episode_family", family_seed["seed_digest"]),
-            ("source_row_choice", source_seed["seed_digest"]),
-            ("secondary_splice_row_choice", secondary_seed["seed_digest"]),
-            ("transformation_family", transformation_family_seed["seed_digest"]),
-            ("transformation_parameters", transformation_parameter_seed["seed_digest"]),
-            ("temporal_mutation_choice", temporal_mutation_seed["seed_digest"]),
-        ),
-    )
-    frame_count = _frame_count_for_plan(split, family_label)
-    frame_plans = _frame_plans(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        family_label=family_label,
-        mutation_kind=mutation_kind,
-        frame_count=frame_count,
-        concrete_episode_seed_digest=episode_seed["seed_digest"],
-    )
-    family_contract = _family_contract(family_label, mutation_kind)
-    family_intervention = _family_intervention_plan(
-        identity=identity,
-        split=split,
-        ordinal=ordinal,
-        family_label=family_label,
-        mutation_kind=mutation_kind,
-        source_row_id=source_row_id,
-        secondary_row_id=secondary_row_id,
-        row_ids=tuple(row_actions.keys()),
-        row_actions=row_actions,
-    )
-    episode_disposition = _episode_disposition(family_label, mutation_kind)
-    denominator_class = _denominator_class(family_label, mutation_kind)
-    final_observation_provenance = _final_observation_provenance(split)
-    episode_id_seed = _derived_seed(
-        identity,
-        split=split,
-        ordinal=ordinal,
-        namespace="concrete_episode_id",
-        parent_identities=(
-            ("concrete_episode_seed", episode_seed["seed_digest"]),
-            ("family_contract", family_contract["family_version"]),
-            ("family_intervention", family_intervention["intervention_digest"]),
-            ("episode_disposition", episode_disposition),
-            ("denominator_class", denominator_class),
-            ("source_row_id", source_row_id),
-            ("secondary_row_id", secondary_row_id or "none"),
-        ),
-    )
-    episode_id = f"{split}:{family_label}:{episode_id_seed['seed_digest'].removeprefix('sha256:')[:16]}"
-    plan = {
-        "version": EPISODE_PLAN_VERSION,
-        "seed_derivation_version": SEED_DERIVATION_VERSION,
-        "episode_id": episode_id,
-        "split": split,
-        "ordinal": int(ordinal),
-        "family_label": family_label,
-        "family_ordinal": int(family_ordinal),
-        "episode_family": family_label,
-        "episode_disposition": episode_disposition,
-        "denominator_class": denominator_class,
-        "final_observation_provenance": final_observation_provenance,
-        "mutation_kind": mutation_kind,
-        "source_row_id": source_row_id,
-        "secondary_row_id": secondary_row_id,
-        "family_contract": family_contract,
-        "family_intervention": family_intervention,
-        "derived_seed_identity": episode_seed["seed_digest"],
-        "episode_seed": episode_seed["seed_int64"],
-        "frame_count": frame_count,
-        "seed_lineage": {
-            "split_identity": split_seed,
-            "episode_ordinal": ordinal_seed,
-            "episode_family": family_seed,
-            "source_row_choice": source_seed,
-            "secondary_splice_row_choice": secondary_seed,
-            "transformation_family": transformation_family_seed,
-            "transformation_parameters": transformation_parameter_seed,
-            "temporal_mutation_choice": temporal_mutation_seed,
-            "concrete_episode_seed": episode_seed,
-            "concrete_episode_id": episode_id_seed,
-        },
-        "frame_plans": frame_plans,
-    }
-    dto = EpisodePlanDTO.from_dict(plan | {"plan_digest": _sha256(plan)})
-    return dto.to_dict()
-
-
-def _episode_plans_for_split(identity: BenchmarkIdentity, split: str, row_ids: list[str], row_actions: Mapping[str, str]) -> list[dict[str, Any]]:
-    plans: list[dict[str, Any]] = []
-
-    def add(family_label: str, family_ordinal: int, row_id: str, *, mutation_kind: str | None = None) -> None:
-        secondary = None
-        if mutation_kind == "conflicting_action_splice":
-            secondary = _secondary_row_for_splice(row_ids, row_actions, row_id)
-        plans.append(
-            _make_episode_plan(
-                identity,
-                split=split,
-                ordinal=len(plans),
-                family_label=family_label,
-                family_ordinal=family_ordinal,
-                source_row_id=row_id,
-                row_actions=row_actions,
-                mutation_kind=mutation_kind,
-                secondary_row_id=secondary,
-            )
-        )
-
-    if split == "development":
-        for index, row_id in enumerate(row_ids):
-            add("valid", index, row_id)
-        return plans
-    if split == "calibration":
-        for index, row_id in enumerate(row_ids):
-            add("valid", index, row_id)
-        return plans
-    if split in {"selection", "final"}:
-        for index, row_id in enumerate(row_ids):
-            add("valid", index, row_id)
-        splice_rows = _conflicting_splice_source_rows(row_ids, row_actions, 28)
-        for index, row_id in enumerate(splice_rows):
-            add("frame_invalid", index, row_id, mutation_kind="conflicting_action_splice")
-        for index, row_id in enumerate(row_ids[28:56]):
-            add("frame_invalid", 28 + index, row_id, mutation_kind="critical_evidence_corruption")
-        temporal_rows = row_ids[:56]
-        kinds = ("reordered_frames", "stale_repeated_frame", "impossible_transition", "declared_gap_or_unknown_action")
-        for group_index, kind in enumerate(kinds):
-            for index, row_id in enumerate(temporal_rows[group_index * 14 : (group_index + 1) * 14]):
-                add("temporal_negative", group_index * 14 + index, row_id, mutation_kind=kind)
-        control_rows = _control_source_rows(row_ids, count=28, frame_count=_frame_count_for_plan(split, "information_control"))
-        for index, row_id in enumerate(control_rows):
-            add("information_control", index, row_id)
-        return plans
-    raise VPMValidationError("unsupported split")
-
-
-def _episode_ids_by_family(plans: list[dict[str, Any]]) -> dict[str, list[str]]:
-    grouped = {"valid": [], "frame_invalid": [], "temporal_negative": [], "information_control": []}
-    for plan in plans:
-        grouped[str(plan["family_label"])].append(str(plan["episode_id"]))
-    return grouped
-
-
-def _validate_episode_plan(identity: BenchmarkIdentity, plan: Mapping[str, Any], row_actions: Mapping[str, str]) -> None:
-    try:
-        EpisodePlanDTO.from_dict(plan)
-    except VPMValidationError as exc:
-        raise VPMValidationError("episode plan is inconsistent with declared seed lineage or identity") from exc
-    expected = _make_episode_plan(
-        identity,
-        split=str(plan["split"]),
-        ordinal=int(plan["ordinal"]),
-        family_label=str(plan["family_label"]),
-        family_ordinal=int(plan["family_ordinal"]),
-        source_row_id=str(plan["source_row_id"]),
-        row_actions=row_actions,
-        mutation_kind=plan.get("mutation_kind"),
-        secondary_row_id=plan.get("secondary_row_id"),
-    )
-    if dict(plan) != expected:
-        raise VPMValidationError("episode plan is inconsistent with declared seed lineage or identity")
-
-
-def _validate_episode_plan_collection(identity: BenchmarkIdentity, plans_by_split: Mapping[str, list[dict[str, Any]]], row_actions: Mapping[str, str]) -> None:
-    seen: dict[str, str] = {}
-    for split, plans in plans_by_split.items():
-        for plan in plans:
-            episode_id = str(plan["episode_id"])
-            if plan["split"] != split:
-                raise VPMValidationError("episode plan split does not match containing split")
-            if episode_id in seen:
-                if seen[episode_id] != split:
-                    raise VPMValidationError("episode identity reassigned to another split")
-                raise VPMValidationError("duplicate concrete episode identity")
-            seen[episode_id] = split
-            _validate_episode_plan(identity, plan, row_actions)
-
-
 def _apply_family(frame: np.ndarray, family: str, *, seed: int) -> np.ndarray:
     result, _metadata = _apply_transformation(frame, _transformation_parameters(family, seed))
     return result
@@ -1226,7 +397,6 @@ def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
     metadata["provider_observation_digest"] = _provider_observation_digest(descriptor)
 
 
-
 def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, Any]:
     return _replay_observation_operation_chain_core(
         chain,
@@ -1235,14 +405,12 @@ def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, An
     )
 
 
-
 def validate_observation_operation_chain(record: Mapping[str, Any]) -> str:
     return _validate_observation_operation_chain_core(
         record,
         conflicting_splice_executor=_apply_conflicting_splice,
         critical_corruption_executor=_apply_critical_corruption,
     )
-
 
 
 def _frame_descriptor(
@@ -1859,8 +1027,6 @@ def _record_regeneration_view(record: Mapping[str, Any]) -> dict[str, Any]:
         "sequence_digest": record.get("metadata", {}).get("sequence_digest"),
         "episode_plan_digest": record.get("metadata", {}).get("episode_plan_digest"),
     }
-
-
 
 
 def _family_closure_report(

@@ -9,7 +9,7 @@ maximum_ast_nesting = 8
 
 [legacy_exceptions."zeromodel/video_action_set_benchmark.py"]
 reason = "Stage 3 scientific instrument pending behavior-preserving decomposition"
-maximum_lines = 4819
+maximum_lines = 3985
 owner = "video-action-set-refactor"
 
 [legacy_exceptions."examples/arcade_visual_video_discriminative_evidence_benchmark.py"]

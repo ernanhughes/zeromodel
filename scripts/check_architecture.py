@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import ast
-import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+from architecture_rules import print_violations
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = REPO_ROOT / "zeromodel"
@@ -763,6 +764,8 @@ def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
 
 
 def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
+    from architecture_rules.video_action_set import stage6_forbidden_edge_violations
+
     violations: list[Violation] = []
     for edge in edges:
         violations.extend(legacy_forbidden_edge_violations(edge))
@@ -771,22 +774,12 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
         violations.extend(family_science_forbidden_edge_violations(edge))
         violations.extend(episode_planning_forbidden_edge_violations(edge))
         violations.extend(rmdto_forbidden_edge_violations(edge))
+        violations.extend(stage6_forbidden_edge_violations(edge, edge_violation))
     return violations
 
 
-def print_violations(violations: list[Violation]) -> None:
-    for violation in sorted(
-        violations, key=lambda item: (item.rule, item.importer, item.imported)
-    ):
-        print(f"Architecture violation: {violation.rule}", file=sys.stderr)
-        print(f"  importer: {violation.importer}", file=sys.stderr)
-        print(f"  imported: {violation.imported}", file=sys.stderr)
-        print(f"  detail: {violation.detail}", file=sys.stderr)
-
-
 def main() -> int:
-    modules = discover_modules()
-    graph, edges = build_import_graph(modules)
+    graph, edges = build_import_graph(discover_modules())
     violations = [*cycle_violations(graph), *forbidden_edge_violations(edges)]
     if violations:
         print_violations(violations)

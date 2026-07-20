@@ -8,8 +8,8 @@ maximum_function_parameters = 10
 maximum_ast_nesting = 8
 
 [legacy_exceptions."zeromodel/video_action_set_benchmark.py"]
-reason = "Stage 3 scientific instrument pending behavior-preserving decomposition"
-maximum_lines = 3985
+reason = "Stage 6 scientific instrument pending behavior-preserving decomposition"
+maximum_lines = 3274
 owner = "video-action-set-refactor"
 
 [legacy_exceptions."examples/arcade_visual_video_discriminative_evidence_benchmark.py"]
@@ -125,6 +125,11 @@ owner = "training-runtime-refactor"
 [legacy_exceptions."tests/test_video_action_set_reference_verification.py"]
 reason = "Historical reference verification test pending behavior-preserving decomposition"
 maximum_lines = 249
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."zeromodel/domains/video_action_set/materialization_kernels.py"]
+reason = "Historical frame_descriptor keyword-only compatibility signature exceeds new-function parameter limit"
+maximum_lines = 100
 owner = "video-action-set-refactor"
 
 [legacy_exceptions."zeromodel/lua.py"]

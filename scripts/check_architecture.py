@@ -13,14 +13,38 @@ DOMAIN_VIDEO_ACTION_SET_PREFIX = "zeromodel.domains.video_action_set"
 DB_ORM_PREFIX = "zeromodel.db.orm"
 DB_STORES_PREFIX = "zeromodel.db.stores"
 ARCADE_OBSERVATION_MODULE = "zeromodel.domains.video_action_set.arcade_observation"
+CANONICAL_JSON_MODULE = "zeromodel.domains.video_action_set.canonical_json"
+CONTRACTS_MODULE = "zeromodel.domains.video_action_set.contracts"
+OBSERVATION_LEGACY_ADAPTERS_MODULE = (
+    "zeromodel.domains.video_action_set.observation_legacy_adapters"
+)
+OBSERVATION_PROVENANCE_DTO_MODULE = (
+    "zeromodel.domains.video_action_set.observation_provenance_dto"
+)
+OBSERVATION_PROVENANCE_MODULE = (
+    "zeromodel.domains.video_action_set.observation_provenance"
+)
+OBSERVATION_REPLAY_MODULE = "zeromodel.domains.video_action_set.observation_replay"
 OBSERVATION_UNIVERSE_MODULE = "zeromodel.domains.video_action_set.observation_universe"
 PIXEL_DIGEST_MODULE = "zeromodel.domains.video_action_set.pixel_digest"
 TRANSFORMATIONS_MODULE = "zeromodel.domains.video_action_set.transformations"
 VIDEO_OBSERVATION_KERNEL_MODULES = {
     ARCADE_OBSERVATION_MODULE,
+    OBSERVATION_PROVENANCE_MODULE,
+    OBSERVATION_REPLAY_MODULE,
     OBSERVATION_UNIVERSE_MODULE,
     PIXEL_DIGEST_MODULE,
     TRANSFORMATIONS_MODULE,
+}
+LOWER_OBSERVATION_MODULES = {
+    CANONICAL_JSON_MODULE,
+    CONTRACTS_MODULE,
+    PIXEL_DIGEST_MODULE,
+    TRANSFORMATIONS_MODULE,
+    ARCADE_OBSERVATION_MODULE,
+    OBSERVATION_UNIVERSE_MODULE,
+    OBSERVATION_PROVENANCE_DTO_MODULE,
+    OBSERVATION_LEGACY_ADAPTERS_MODULE,
 }
 VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
     "zeromodel.domains.video_action_set.episode_plan_service",
@@ -32,15 +56,17 @@ VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
 }
 VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     ARCADE_OBSERVATION_MODULE,
-    "zeromodel.domains.video_action_set.canonical_json",
-    "zeromodel.domains.video_action_set.contracts",
+    CANONICAL_JSON_MODULE,
+    CONTRACTS_MODULE,
     "zeromodel.domains.video_action_set.dto",
     "zeromodel.domains.video_action_set.episode_plan_service",
     "zeromodel.domains.video_action_set.observation_common",
     "zeromodel.domains.video_action_set.observation_dto",
-    "zeromodel.domains.video_action_set.observation_legacy_adapters",
+    OBSERVATION_LEGACY_ADAPTERS_MODULE,
     "zeromodel.domains.video_action_set.observation_materialization",
-    "zeromodel.domains.video_action_set.observation_provenance_dto",
+    OBSERVATION_PROVENANCE_DTO_MODULE,
+    OBSERVATION_PROVENANCE_MODULE,
+    OBSERVATION_REPLAY_MODULE,
     "zeromodel.domains.video_action_set.observation_service",
     OBSERVATION_UNIVERSE_MODULE,
     PIXEL_DIGEST_MODULE,
@@ -430,6 +456,74 @@ def transformation_kernel_forbidden_edge_violations(
     return violations
 
 
+def observation_provenance_replay_forbidden_edge_violations(
+    edge: ImportEdge,
+) -> list[Violation]:
+    violations: list[Violation] = []
+    if (
+        edge.importer == OBSERVATION_PROVENANCE_MODULE
+        and edge.imported == OBSERVATION_REPLAY_MODULE
+    ):
+        violations.append(
+            edge_violation(
+                "observation_provenance must not import observation_replay",
+                edge,
+            )
+        )
+    if (
+        edge.importer == OBSERVATION_REPLAY_MODULE
+        and edge.imported == OBSERVATION_PROVENANCE_MODULE
+    ):
+        violations.append(
+            edge_violation(
+                "observation_replay must not import observation_provenance",
+                edge,
+            )
+        )
+    if (
+        edge.importer
+        in {
+            OBSERVATION_PROVENANCE_MODULE,
+            OBSERVATION_REPLAY_MODULE,
+        }
+        and edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
+    ):
+        violations.append(
+            edge_violation(
+                "observation provenance/replay modules must not import legacy benchmark",
+                edge,
+            )
+        )
+    if edge.importer in {
+        OBSERVATION_PROVENANCE_MODULE,
+        OBSERVATION_REPLAY_MODULE,
+    } and (
+        is_module_under(edge.imported, DB_ORM_PREFIX)
+        or is_module_under(edge.imported, DB_STORES_PREFIX)
+        or is_module_under(edge.imported, "zeromodel.db.session")
+        or is_module_under(edge.imported, "zeromodel.stores")
+        or edge.imported == "zeromodel.runtime"
+        or is_sqlalchemy_import(edge.imported)
+    ):
+        violations.append(
+            edge_violation(
+                "observation provenance/replay modules must not import persistence or runtime layers",
+                edge,
+            )
+        )
+    if edge.importer in LOWER_OBSERVATION_MODULES and edge.imported in {
+        OBSERVATION_PROVENANCE_MODULE,
+        OBSERVATION_REPLAY_MODULE,
+    }:
+        violations.append(
+            edge_violation(
+                "lower observation modules must not import observation provenance/replay",
+                edge,
+            )
+        )
+    return violations
+
+
 def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
     violations: list[Violation] = []
     if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
@@ -513,6 +607,7 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
     for edge in edges:
         violations.extend(legacy_forbidden_edge_violations(edge))
         violations.extend(transformation_kernel_forbidden_edge_violations(edge))
+        violations.extend(observation_provenance_replay_forbidden_edge_violations(edge))
         violations.extend(rmdto_forbidden_edge_violations(edge))
     return violations
 

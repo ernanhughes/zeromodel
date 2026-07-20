@@ -11,13 +11,16 @@ import numpy as np
 
 from .arcade_policy import ACTIONS, CELL_PIXELS, COOLDOWN_BLOCKED_VALUE, COOLDOWN_READY_VALUE, TANK_VALUE, TARGET_VALUE, ShooterConfig, arcade_transition_spec, compile_policy_artifact, next_rows, parse_state_row_id, render_state_frame, state_row_id
 from .artifact import VPMValidationError
+from .domains.video_action_set.canonical_json import canonical_json_bytes, canonical_json_value, canonical_sha256
 from .domains.video_action_set.contracts import (
     BENCHMARK_VERSION,
+    EPISODE_PLAN_VERSION,
     GENERATOR_VERSION,
     REACHABILITY_TILE_DIGEST,
     REACHABILITY_TILE_VERSION,
+    SEED_DERIVATION_VERSION,
 )
-from .domains.video_action_set.dto import BenchmarkIdentityDTO
+from .domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO
 from .policy_lookup import VPMPolicyLookup
 from .runtime import build_runtime
 from .video_complete_row_evidence import (
@@ -45,8 +48,6 @@ from .visual_address import IMAGE_OBSERVATION_VERSION, ImageObservation
 
 
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
-EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
-SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
 EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v4"
 TRANSFORMATION_FAMILY_VERSION = "zeromodel-video-action-set-transformation-family/v1"
 CRITICAL_COORDINATE_SET_VERSION = "zeromodel-video-action-set-critical-coordinate-set/v1"
@@ -77,25 +78,15 @@ TARGET_REGION_ID = "target_band"
 
 
 def _json_ready(value: Any) -> Any:
-    if isinstance(value, Mapping):
-        return {str(key): _json_ready(item) for key, item in value.items()}
-    if isinstance(value, (list, tuple)):
-        return [_json_ready(item) for item in value]
-    return value
+    return canonical_json_value(value)
 
 
 def _json_bytes(value: Any) -> bytes:
-    return json.dumps(
-        _json_ready(value),
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=False,
-        allow_nan=False,
-    ).encode("utf-8")
+    return canonical_json_bytes(value)
 
 
 def _sha256(value: Any) -> str:
-    return "sha256:" + hashlib.sha256(_json_bytes(value)).hexdigest()
+    return canonical_sha256(value)
 
 
 def _write_json(path: Path, payload: Any) -> None:
@@ -1704,7 +1695,8 @@ def _make_episode_plan(
         },
         "frame_plans": frame_plans,
     }
-    return plan | {"plan_digest": _sha256(plan)}
+    dto = EpisodePlanDTO.from_dict(plan | {"plan_digest": _sha256(plan)})
+    return dto.to_dict()
 
 
 def _episode_plans_for_split(identity: BenchmarkIdentity, split: str, row_ids: list[str], row_actions: Mapping[str, str]) -> list[dict[str, Any]]:
@@ -1764,6 +1756,10 @@ def _episode_ids_by_family(plans: list[dict[str, Any]]) -> dict[str, list[str]]:
 
 
 def _validate_episode_plan(identity: BenchmarkIdentity, plan: Mapping[str, Any], row_actions: Mapping[str, str]) -> None:
+    try:
+        EpisodePlanDTO.from_dict(plan)
+    except VPMValidationError as exc:
+        raise VPMValidationError("episode plan is inconsistent with declared seed lineage or identity") from exc
     expected = _make_episode_plan(
         identity,
         split=str(plan["split"]),
@@ -2743,7 +2739,8 @@ def _control_episode(
 
 
 def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
-    identity = load_identity(repo_root)
+    runtime = build_runtime()
+    identity = runtime.video_action_set.load_identity(repo_root)
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
     row_ids = [str(row_id) for row_id in policy.source.row_ids]
@@ -2757,6 +2754,14 @@ def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
         {"development": development_plans, "calibration": calibration_plans, "selection": selection_plans, "final": final_plans},
         row_actions,
     )
+    development_episode_dtos = runtime.video_action_set.save_episode_plans(tuple(EpisodePlanDTO.from_dict(plan) for plan in development_plans))
+    calibration_episode_dtos = runtime.video_action_set.save_episode_plans(tuple(EpisodePlanDTO.from_dict(plan) for plan in calibration_plans))
+    selection_episode_dtos = runtime.video_action_set.save_episode_plans(tuple(EpisodePlanDTO.from_dict(plan) for plan in selection_plans))
+    final_episode_dtos = runtime.video_action_set.save_episode_plans(tuple(EpisodePlanDTO.from_dict(plan) for plan in final_plans))
+    development_plans = [dto.to_dict() for dto in development_episode_dtos]
+    calibration_plans = [dto.to_dict() for dto in calibration_episode_dtos]
+    selection_plans = [dto.to_dict() for dto in selection_episode_dtos]
+    final_plans = [dto.to_dict() for dto in final_episode_dtos]
     split_manifest = {
         "development_episode_count": 112,
         "calibration_episode_count": 112,
@@ -2779,24 +2784,8 @@ def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
             {"provider_id": "P3", "provider_version": PROSPECTIVE_P3_VERSION},
         ]
     }
-    final_plan = {
-        "version": EPISODE_PLAN_VERSION,
-        "seed_derivation_version": SEED_DERIVATION_VERSION,
-        "split": "final",
-        "plan_only": True,
-        "materialization_prohibited": True,
-        "episode_counts": {
-            "valid": 112,
-            "frame_invalid": 56,
-            "temporal_negative": 56,
-            "information_control": 28,
-        },
-        "frame_count": 1008,
-        "sealed_episode_ids": _episode_ids_by_family(final_plans),
-        "episodes": final_plans,
-        "seed_commitment": identity.seed_digest,
-    }
-    final_plan = final_plan | {"sealed_plan_digest": _sha256(final_plan)}
+    sealed_final = runtime.video_action_set.seal_final_split(episodes=final_episode_dtos, seed_commitment=identity.seed_digest)
+    final_plan = sealed_final.to_dict()
     _write_json(output_dir / "benchmark-contract-identity.json", identity.to_dict())
     _write_json(output_dir / "generator-identity.json", {"generator_version": GENERATOR_VERSION, "seed_digest": identity.seed_digest, "seed_material": identity.seed_material})
     _write_json(output_dir / "benchmark-manifest.json", {"benchmark_version": BENCHMARK_VERSION, "policy_artifact_id": policy.artifact_id, "row_count": len(row_ids)})
@@ -5940,9 +5929,11 @@ def _run_adversarial_mutation_checks(output_dir: Path) -> list[str]:
 __all__ = [
     "BenchmarkIdentity",
     "BENCHMARK_VERSION",
+    "EPISODE_PLAN_VERSION",
     "GENERATOR_VERSION",
     "REACHABILITY_TILE_DIGEST",
     "REACHABILITY_TILE_VERSION",
+    "SEED_DERIVATION_VERSION",
     "REFERENCE_VERIFICATION_VERSION",
     "MUTATION_AUDIT_VERSION",
     "CLOSURE_REPORT_VERSION",

@@ -24,6 +24,8 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 def create_schema(engine: Engine) -> None:
     _ = _video_action_set_orm.BenchmarkIdentityORM
+    _ = _video_action_set_orm.EpisodePlanORM
+    _ = _video_action_set_orm.SealedSplitPlanORM
     Base.metadata.create_all(engine)
 
 

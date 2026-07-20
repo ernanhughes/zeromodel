@@ -12,6 +12,8 @@ VIDEO_ACTION_SET_BENCHMARK_MODULE = "zeromodel.video_action_set_benchmark"
 DOMAIN_VIDEO_ACTION_SET_PREFIX = "zeromodel.domains.video_action_set"
 DB_ORM_PREFIX = "zeromodel.db.orm"
 DB_STORES_PREFIX = "zeromodel.db.stores"
+PIXEL_DIGEST_MODULE = "zeromodel.domains.video_action_set.pixel_digest"
+TRANSFORMATIONS_MODULE = "zeromodel.domains.video_action_set.transformations"
 VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
     "zeromodel.domains.video_action_set.episode_plan_service",
     "zeromodel.domains.video_action_set.identity_service",
@@ -31,7 +33,9 @@ VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     "zeromodel.domains.video_action_set.observation_materialization",
     "zeromodel.domains.video_action_set.observation_provenance_dto",
     "zeromodel.domains.video_action_set.observation_service",
+    PIXEL_DIGEST_MODULE,
     "zeromodel.domains.video_action_set.provider_observation_dto",
+    TRANSFORMATIONS_MODULE,
 }
 VIDEO_ACTION_SET_POLICY_MODULES = {
     f"{VIDEO_ACTION_SET_PREFIX}.contracts",
@@ -349,6 +353,43 @@ def legacy_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
     return violations
 
 
+def transformation_kernel_forbidden_edge_violations(
+    edge: ImportEdge,
+) -> list[Violation]:
+    violations: list[Violation] = []
+    if edge.importer == PIXEL_DIGEST_MODULE and edge.imported == TRANSFORMATIONS_MODULE:
+        violations.append(
+            edge_violation(
+                "pixel_digest must not import transformations",
+                edge,
+            )
+        )
+    if edge.importer in {PIXEL_DIGEST_MODULE, TRANSFORMATIONS_MODULE} and (
+        is_module_under(edge.imported, DB_ORM_PREFIX)
+        or is_module_under(edge.imported, DB_STORES_PREFIX)
+        or is_module_under(edge.imported, "zeromodel.db.session")
+        or is_module_under(edge.imported, "zeromodel.stores")
+        or edge.imported == "zeromodel.runtime"
+        or is_sqlalchemy_import(edge.imported)
+    ):
+        violations.append(
+            edge_violation(
+                "video transformation kernel modules must not import persistence or runtime layers",
+                edge,
+            )
+        )
+    if edge.importer == TRANSFORMATIONS_MODULE and (
+        edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
+    ):
+        violations.append(
+            edge_violation(
+                "transformations must not import legacy benchmark facade",
+                edge,
+            )
+        )
+    return violations
+
+
 def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
     violations: list[Violation] = []
     if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
@@ -431,6 +472,7 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
     violations: list[Violation] = []
     for edge in edges:
         violations.extend(legacy_forbidden_edge_violations(edge))
+        violations.extend(transformation_kernel_forbidden_edge_violations(edge))
         violations.extend(rmdto_forbidden_edge_violations(edge))
     return violations
 

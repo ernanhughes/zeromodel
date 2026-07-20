@@ -35,13 +35,15 @@ from ..orm.video_action_set import (
     EpisodePlanORM,
     MatrixBlobORM,
     ObservationORM,
+    ObservationOperationInputORM,
     ObservationOperationORM,
     SealedSplitPlanORM,
 )
 from .video_action_set_observation import (
     chain_for_frame,
-    matrix_blob_for_observation,
+    materialized_observations_from_rows,
     observation_select,
+    observations_from_rows,
     operation_observation_select,
     optional_observation_predicates,
     preflight_observation_sequence,
@@ -50,6 +52,7 @@ from .video_action_set_observation import (
     to_observation_dto,
     to_observation_orm,
     to_operation_chain_orm,
+    to_operation_input_orms,
     to_operation_orms,
 )
 
@@ -126,9 +129,7 @@ class _ObservationSqlStoreMixin:
                 row = session.get(ObservationORM, frame_id)
                 if row is None:
                     return None
-                observation = to_observation_dto(session, row)
-                blob = matrix_blob_for_observation(session, observation)
-                return MaterializedObservationDTO(observation, blob)
+                return materialized_observations_from_rows(session, (row,))[0]
         except Exception:
             session.rollback()
             raise
@@ -159,7 +160,38 @@ class _ObservationSqlStoreMixin:
                     has_pixels=has_pixels,
                 )
                 rows = session.scalars(statement).all()
-                return tuple(to_observation_dto(session, row) for row in rows)
+                return observations_from_rows(session, rows)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def list_materialized_observations(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[MaterializedObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                statement = observation_select(
+                    benchmark_seed_digest=benchmark_seed_digest,
+                    split=split,
+                    episode_id=episode_id,
+                    family=family,
+                    event_type=event_type,
+                    denominator_class=denominator_class,
+                    has_pixels=has_pixels,
+                )
+                rows = session.scalars(statement).all()
+                return materialized_observations_from_rows(session, rows)
         except Exception:
             session.rollback()
             raise
@@ -197,7 +229,7 @@ class _ObservationSqlStoreMixin:
                     .where(ObservationOperationORM.operation == operation)
                     .where(*optional_observation_predicates(split=split, family=family))
                 ).all()
-                return tuple(to_observation_dto(session, row) for row in rows)
+                return observations_from_rows(session, rows)
         except Exception:
             session.rollback()
             raise
@@ -216,7 +248,7 @@ class _ObservationSqlStoreMixin:
                         ObservationOperationORM.output_digest == output_digest
                     )
                 ).all()
-                return tuple(to_observation_dto(session, row) for row in rows)
+                return observations_from_rows(session, rows)
         except Exception:
             session.rollback()
             raise
@@ -231,13 +263,21 @@ class _ObservationSqlStoreMixin:
         try:
             with session.begin():
                 rows = session.scalars(
-                    operation_observation_select().where(
-                        ObservationOperationORM.input_digests_json.contains(
-                            f'"{input_digest}"'
+                    operation_observation_select()
+                    .join(
+                        ObservationOperationInputORM,
+                        (
+                            ObservationOperationInputORM.frame_id
+                            == ObservationOperationORM.frame_id
                         )
+                        & (
+                            ObservationOperationInputORM.operation_index
+                            == ObservationOperationORM.operation_index
+                        ),
                     )
+                    .where(ObservationOperationInputORM.input_digest == input_digest)
                 ).all()
-                return tuple(to_observation_dto(session, row) for row in rows)
+                return observations_from_rows(session, rows)
         except Exception:
             session.rollback()
             raise
@@ -250,15 +290,24 @@ class _ObservationSqlStoreMixin:
         observations: Sequence[MaterializedObservationDTO],
     ) -> tuple[ObservationDTO, ...]:
         existing = self._preflight_observations(session, observations)
+        inserted_frame_ids: set[str] = set()
+        operation_inputs: list[ObservationOperationInputORM] = []
         for item in observations:
             observation = item.observation
-            if observation.frame_id in existing:
+            if (
+                observation.frame_id in existing
+                or observation.frame_id in inserted_frame_ids
+            ):
                 continue
             if item.matrix_blob is not None:
                 self._save_matrix_blob_in_session(session, item.matrix_blob)
             session.add(to_observation_orm(observation))
             session.add(to_operation_chain_orm(observation))
             session.add_all(to_operation_orms(observation))
+            operation_inputs.extend(to_operation_input_orms(observation))
+            inserted_frame_ids.add(observation.frame_id)
+        session.flush()
+        session.add_all(operation_inputs)
         return tuple(
             existing.get(item.observation.frame_id, item.observation)
             for item in observations
@@ -607,7 +656,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             or row.source_row_id != dto.source_row_id
             or row.secondary_row_id != dto.secondary_row_id
             or row.derived_seed_identity != dto.derived_seed_identity
-            or row.episode_seed != dto.episode_seed
+            or _episode_seed_from_hex(row.episode_seed_hex) != dto.episode_seed
             or row.frame_count != dto.frame_count
         ):
             raise VPMValidationError("episode plan digest mismatch")
@@ -631,7 +680,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             source_row_id=plan.source_row_id,
             secondary_row_id=plan.secondary_row_id,
             derived_seed_identity=plan.derived_seed_identity,
-            episode_seed=plan.episode_seed,
+            episode_seed_hex=_episode_seed_hex(plan.episode_seed),
             frame_count=plan.frame_count,
             payload_json=canonical_json_text(plan.to_dict()),
         )
@@ -710,6 +759,18 @@ def _json_mapping(text: str, message: str) -> Mapping[str, object]:
     if not isinstance(value, Mapping):
         raise VPMValidationError(message)
     return cast(Mapping[str, object], value)
+
+
+def _episode_seed_hex(seed: int) -> str:
+    if seed < 0 or seed >= 2**64:
+        raise VPMValidationError("episode plan root seed lineage mismatch")
+    return f"{seed:016x}"
+
+
+def _episode_seed_from_hex(value: str) -> int:
+    if len(value) != 16 or any(item not in "0123456789abcdef" for item in value):
+        raise VPMValidationError("episode plan digest mismatch")
+    return int(value, 16)
 
 
 __all__ = ["SqlAlchemyVideoActionSetStore"]

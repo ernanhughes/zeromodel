@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from typing import cast
 
 from sqlalchemy import select
@@ -12,6 +13,7 @@ from ...domains.video_action_set.canonical_json import canonical_json_text
 from ...domains.video_action_set.contracts import BENCHMARK_VERSION, GENERATOR_VERSION
 from ...domains.video_action_set.dto import CanonicalJsonDTO
 from ...domains.video_action_set.observation_dto import (
+    MaterializedObservationDTO,
     ObservationDTO,
     ObservationOperationChainDTO,
     ObservationOperationDTO,
@@ -20,9 +22,11 @@ from ...domains.video_action_set.observation_dto import (
 from ...domains.video_action_set.store import raise_observation_sequence_conflict
 from ...matrix_blob import MatrixBlob
 from ..orm.video_action_set import (
+    EpisodePlanORM,
     MatrixBlobORM,
     ObservationORM,
     ObservationOperationChainORM,
+    ObservationOperationInputORM,
     ObservationOperationORM,
 )
 
@@ -42,6 +46,8 @@ def to_matrix_blob_orm(blob: MatrixBlob) -> MatrixBlobORM:
 
 
 def to_matrix_blob(row: MatrixBlobORM) -> MatrixBlob:
+    if row.byte_length != len(row.data):
+        raise VPMValidationError("matrix blob byte length mismatch")
     return MatrixBlob(
         dtype=row.dtype,
         shape=_json_value(row.shape_json, "matrix blob shape mismatch"),
@@ -84,7 +90,15 @@ def to_observation_orm(observation: ObservationDTO) -> ObservationORM:
     )
 
 
-def to_observation_dto(session: Session, row: ObservationORM) -> ObservationDTO:
+def to_observation_dto(
+    session: Session,
+    row: ObservationORM,
+    *,
+    chain: ObservationOperationChainDTO | None = None,
+    plan: EpisodePlanORM | None = None,
+) -> ObservationDTO:
+    chain = chain if chain is not None else chain_for_frame(session, row.frame_id)
+    validate_observation_row(session, row, chain, plan=plan)
     return ObservationDTO(
         benchmark_version=BENCHMARK_VERSION,
         generator_version=GENERATOR_VERSION,
@@ -113,9 +127,32 @@ def to_observation_dto(session: Session, row: ObservationORM) -> ObservationDTO:
             row.provider_descriptor_json
         ),
         provider_observation_digest=row.provider_observation_digest,
-        operation_chain=chain_for_frame(session, row.frame_id),
+        operation_chain=chain,
         metadata=CanonicalJsonDTO(row.metadata_json),
     )
+
+
+def validate_observation_row(
+    session: Session,
+    row: ObservationORM,
+    chain: ObservationOperationChainDTO,
+    *,
+    plan: EpisodePlanORM | None = None,
+) -> None:
+    if row.operation_chain_digest != chain.operation_chain_digest:
+        raise VPMValidationError("observation operation chain mismatch")
+    plan = plan if plan is not None else session.get(EpisodePlanORM, row.episode_id)
+    if plan is None:
+        raise VPMValidationError("observation references unknown episode plan")
+    if (
+        row.episode_plan_digest != plan.plan_digest
+        or row.benchmark_seed_digest != plan.benchmark_seed_digest
+        or row.split != plan.split
+        or row.episode_family != plan.family_label
+        or row.episode_disposition != plan.episode_disposition
+        or row.denominator_class != plan.denominator_class
+    ):
+        raise VPMValidationError("observation episode plan mismatch")
 
 
 def to_operation_chain_orm(
@@ -140,7 +177,6 @@ def to_operation_orms(
             operation_index=operation.index,
             operation=operation.operation,
             operation_version=operation.operation_version,
-            input_digests_json=canonical_json_text(list(operation.input_digests)),
             parameters_json=operation.parameters.canonical_text,
             parameter_digest=operation.parameter_digest,
             output_digest=operation.output_digest,
@@ -150,21 +186,27 @@ def to_operation_orms(
     )
 
 
+def to_operation_input_orms(
+    observation: ObservationDTO,
+) -> tuple[ObservationOperationInputORM, ...]:
+    return tuple(
+        ObservationOperationInputORM(
+            frame_id=observation.frame_id,
+            operation_index=operation.index,
+            input_index=input_index,
+            input_digest=input_digest,
+        )
+        for operation in observation.operation_chain.operations
+        for input_index, input_digest in enumerate(operation.input_digests)
+    )
+
+
 def to_operation_chain_dto(
     session: Session,
     row: ObservationOperationChainORM,
 ) -> ObservationOperationChainDTO:
     operations = operation_rows_for_frame(session, row.frame_id)
-    if row.operation_count != len(operations):
-        raise VPMValidationError("observation operation chain mismatch")
-    return ObservationOperationChainDTO.from_dict(
-        {
-            "version": row.version,
-            "operations": [operation.to_dict() for operation in operations],
-            "final_emitted_digest": row.final_emitted_digest,
-            "operation_chain_digest": row.operation_chain_digest,
-        }
-    )
+    return _operation_chain_from_rows(row, operations)
 
 
 def chain_for_frame(
@@ -186,7 +228,133 @@ def operation_rows_for_frame(
         .where(ObservationOperationORM.frame_id == frame_id)
         .order_by(ObservationOperationORM.operation_index)
     ).all()
-    return tuple(_to_operation_dto(row) for row in rows)
+    inputs_by_operation = _input_digests_by_operation(
+        session.scalars(
+            select(ObservationOperationInputORM)
+            .where(ObservationOperationInputORM.frame_id == frame_id)
+            .order_by(
+                ObservationOperationInputORM.operation_index,
+                ObservationOperationInputORM.input_index,
+            )
+        ).all()
+    )
+    return tuple(
+        _to_operation_dto(
+            row,
+            inputs_by_operation.get((row.frame_id, row.operation_index), ()),
+        )
+        for row in rows
+    )
+
+
+def observations_from_rows(
+    session: Session,
+    rows: Sequence[ObservationORM],
+) -> tuple[ObservationDTO, ...]:
+    if not rows:
+        return ()
+    frame_ids = [row.frame_id for row in rows]
+    episode_ids = {row.episode_id for row in rows}
+    chains = chains_for_frames(session, frame_ids)
+    plans = {
+        row.episode_id: row
+        for row in session.scalars(
+            select(EpisodePlanORM).where(EpisodePlanORM.episode_id.in_(episode_ids))
+        ).all()
+    }
+    return tuple(
+        to_observation_dto(
+            session,
+            row,
+            chain=chains[row.frame_id],
+            plan=plans.get(row.episode_id),
+        )
+        for row in rows
+    )
+
+
+def materialized_observations_from_rows(
+    session: Session,
+    rows: Sequence[ObservationORM],
+) -> tuple[MaterializedObservationDTO, ...]:
+    observations = observations_from_rows(session, rows)
+    blob_ids = {
+        observation.matrix_blob_id
+        for observation in observations
+        if observation.matrix_blob_id is not None
+    }
+    if not blob_ids:
+        return tuple(
+            MaterializedObservationDTO(observation, None)
+            for observation in observations
+        )
+    blobs = {
+        row.blob_id: to_matrix_blob(row)
+        for row in session.scalars(
+            select(MatrixBlobORM).where(MatrixBlobORM.blob_id.in_(blob_ids))
+        ).all()
+    }
+    return tuple(
+        MaterializedObservationDTO(
+            observation,
+            None
+            if observation.matrix_blob_id is None
+            else blobs.get(observation.matrix_blob_id),
+        )
+        for observation in observations
+    )
+
+
+def chains_for_frames(
+    session: Session,
+    frame_ids: Sequence[str],
+) -> dict[str, ObservationOperationChainDTO]:
+    if not frame_ids:
+        return {}
+    chain_rows = {
+        row.frame_id: row
+        for row in session.scalars(
+            select(ObservationOperationChainORM).where(
+                ObservationOperationChainORM.frame_id.in_(frame_ids)
+            )
+        ).all()
+    }
+    operation_rows = session.scalars(
+        select(ObservationOperationORM)
+        .where(ObservationOperationORM.frame_id.in_(frame_ids))
+        .order_by(
+            ObservationOperationORM.frame_id,
+            ObservationOperationORM.operation_index,
+        )
+    ).all()
+    input_rows = session.scalars(
+        select(ObservationOperationInputORM)
+        .where(ObservationOperationInputORM.frame_id.in_(frame_ids))
+        .order_by(
+            ObservationOperationInputORM.frame_id,
+            ObservationOperationInputORM.operation_index,
+            ObservationOperationInputORM.input_index,
+        )
+    ).all()
+    inputs_by_operation = _input_digests_by_operation(input_rows)
+    operations_by_frame: dict[str, list[ObservationOperationDTO]] = defaultdict(list)
+    for row in operation_rows:
+        operations_by_frame[row.frame_id].append(
+            _to_operation_dto(
+                row,
+                inputs_by_operation.get((row.frame_id, row.operation_index), ()),
+            )
+        )
+    chains: dict[str, ObservationOperationChainDTO] = {}
+    for frame_id in frame_ids:
+        chain_row = chain_rows.get(frame_id)
+        if chain_row is None:
+            raise VPMValidationError("observation operation chain mismatch")
+        chains[frame_id] = _operation_chain_from_rows(
+            chain_row,
+            tuple(operations_by_frame.get(frame_id, ())),
+        )
+    return chains
 
 
 def matrix_blob_for_observation(
@@ -298,16 +466,32 @@ def preflight_observation_sequence(
     seen_sequences[key] = observation.frame_id
 
 
-def _to_operation_dto(row: ObservationOperationORM) -> ObservationOperationDTO:
+def _operation_chain_from_rows(
+    row: ObservationOperationChainORM,
+    operations: tuple[ObservationOperationDTO, ...],
+) -> ObservationOperationChainDTO:
+    if row.operation_count != len(operations):
+        raise VPMValidationError("observation operation chain mismatch")
+    return ObservationOperationChainDTO.from_dict(
+        {
+            "version": row.version,
+            "operations": [operation.to_dict() for operation in operations],
+            "final_emitted_digest": row.final_emitted_digest,
+            "operation_chain_digest": row.operation_chain_digest,
+        }
+    )
+
+
+def _to_operation_dto(
+    row: ObservationOperationORM,
+    input_digests: Sequence[str | None],
+) -> ObservationOperationDTO:
     return ObservationOperationDTO.from_dict(
         {
             "index": row.operation_index,
             "operation": row.operation,
             "operation_version": row.operation_version,
-            "input_digests": _json_value(
-                row.input_digests_json,
-                "observation operation digest is not sha256",
-            ),
+            "input_digests": list(input_digests),
             "parameters": _json_value(
                 row.parameters_json,
                 "observation operation payload keys mismatch",
@@ -317,6 +501,25 @@ def _to_operation_dto(row: ObservationOperationORM) -> ObservationOperationDTO:
             "operation_digest": row.operation_digest,
         }
     )
+
+
+def _input_digests_by_operation(
+    rows: Sequence[ObservationOperationInputORM],
+) -> dict[tuple[str, int], tuple[str | None, ...]]:
+    indexed: dict[tuple[str, int], list[tuple[int, str | None]]] = defaultdict(list)
+    for row in rows:
+        indexed[(row.frame_id, row.operation_index)].append(
+            (row.input_index, row.input_digest)
+        )
+    grouped: dict[tuple[str, int], tuple[str | None, ...]] = {}
+    for key, values in indexed.items():
+        sorted_values = sorted(values)
+        if [index for index, _input_digest in sorted_values] != list(
+            range(len(sorted_values))
+        ):
+            raise VPMValidationError("observation operation payload keys mismatch")
+        grouped[key] = tuple(input_digest for _index, input_digest in sorted_values)
+    return grouped
 
 
 def _json_mapping(text: str, message: str) -> Mapping[str, object]:
@@ -361,8 +564,11 @@ def _provider_descriptor_from_json(
 
 __all__ = [
     "chain_for_frame",
+    "chains_for_frames",
+    "materialized_observations_from_rows",
     "matrix_blob_for_observation",
     "observation_select",
+    "observations_from_rows",
     "operation_observation_select",
     "optional_observation_predicates",
     "preflight_observation_sequence",
@@ -372,5 +578,7 @@ __all__ = [
     "to_observation_orm",
     "to_operation_chain_dto",
     "to_operation_chain_orm",
+    "to_operation_input_orms",
     "to_operation_orms",
+    "validate_observation_row",
 ]

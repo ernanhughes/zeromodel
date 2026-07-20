@@ -108,6 +108,18 @@ class VideoActionSetStore(Protocol):
         frame_id: str,
     ) -> MaterializedObservationDTO | None: ...
 
+    def list_materialized_observations(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[MaterializedObservationDTO, ...]: ...
+
     def list_observations(
         self,
         *,

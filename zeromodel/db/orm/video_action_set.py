@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from sqlalchemy import (
-    BigInteger,
     Boolean,
     CheckConstraint,
     Float,
     ForeignKey,
+    ForeignKeyConstraint,
     LargeBinary,
     String,
     Text,
@@ -62,7 +62,7 @@ class EpisodePlanORM(Base):
     source_row_id: Mapped[str] = mapped_column(String, nullable=False)
     secondary_row_id: Mapped[str | None] = mapped_column(String, nullable=True)
     derived_seed_identity: Mapped[str] = mapped_column(String, nullable=False)
-    episode_seed: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    episode_seed_hex: Mapped[str] = mapped_column(String(16), nullable=False)
     frame_count: Mapped[int] = mapped_column(nullable=False)
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -116,8 +116,21 @@ class ObservationORM(Base):
             name="uq_video_action_set_observation_episode_sequence",
         ),
         CheckConstraint(
+            "sequence_number >= 0",
+            name="ck_video_action_set_observation_sequence_nonnegative",
+        ),
+        CheckConstraint(
+            "action_known = (actual_executed_action IS NOT NULL)",
+            name="ck_video_action_set_observation_action_known",
+        ),
+        CheckConstraint(
             "(matrix_blob_id IS NULL) = (observation_pixel_digest IS NULL)",
             name="ck_video_action_set_observation_blob_digest_nullity",
+        ),
+        CheckConstraint(
+            "(provider_descriptor_json IS NULL) = "
+            "(provider_observation_digest IS NULL)",
+            name="ck_video_action_set_observation_provider_nullity",
         ),
     )
 
@@ -181,6 +194,12 @@ class ObservationORM(Base):
 
 class ObservationOperationChainORM(Base):
     __tablename__ = "video_action_set_observation_operation_chain"
+    __table_args__ = (
+        CheckConstraint(
+            "operation_count >= 1",
+            name="ck_video_action_set_operation_chain_count",
+        ),
+    )
 
     frame_id: Mapped[str] = mapped_column(
         String,
@@ -199,6 +218,12 @@ class ObservationOperationChainORM(Base):
 
 class ObservationOperationORM(Base):
     __tablename__ = "video_action_set_observation_operation"
+    __table_args__ = (
+        CheckConstraint(
+            "operation_index >= 0",
+            name="ck_video_action_set_operation_index",
+        ),
+    )
 
     frame_id: Mapped[str] = mapped_column(
         String,
@@ -208,11 +233,36 @@ class ObservationOperationORM(Base):
     operation_index: Mapped[int] = mapped_column(primary_key=True)
     operation: Mapped[str] = mapped_column(String, index=True, nullable=False)
     operation_version: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    input_digests_json: Mapped[str] = mapped_column(Text, nullable=False)
     parameters_json: Mapped[str] = mapped_column(Text, nullable=False)
     parameter_digest: Mapped[str] = mapped_column(String, nullable=False)
     output_digest: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
     operation_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+
+
+class ObservationOperationInputORM(Base):
+    __tablename__ = "video_action_set_observation_operation_input"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["frame_id", "operation_index"],
+            [
+                "video_action_set_observation_operation.frame_id",
+                "video_action_set_observation_operation.operation_index",
+            ],
+        ),
+        CheckConstraint(
+            "operation_index >= 0",
+            name="ck_video_action_set_operation_input_operation_index",
+        ),
+        CheckConstraint(
+            "input_index >= 0",
+            name="ck_video_action_set_operation_input_index",
+        ),
+    )
+
+    frame_id: Mapped[str] = mapped_column(String, primary_key=True)
+    operation_index: Mapped[int] = mapped_column(primary_key=True)
+    input_index: Mapped[int] = mapped_column(primary_key=True)
+    input_digest: Mapped[str | None] = mapped_column(String, index=True, nullable=True)
 
 
 __all__ = [
@@ -221,6 +271,7 @@ __all__ = [
     "MatrixBlobORM",
     "ObservationORM",
     "ObservationOperationChainORM",
+    "ObservationOperationInputORM",
     "ObservationOperationORM",
     "SealedSplitPlanORM",
 ]

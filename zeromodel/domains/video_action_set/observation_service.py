@@ -49,6 +49,27 @@ class ObservationService:
     ) -> MaterializedObservationDTO | None:
         return self.store.get_materialized_observation(frame_id)
 
+    def list_materialized(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[MaterializedObservationDTO, ...]:
+        return self.store.list_materialized_observations(
+            benchmark_seed_digest=benchmark_seed_digest,
+            split=split,
+            episode_id=episode_id,
+            family=family,
+            event_type=event_type,
+            denominator_class=denominator_class,
+            has_pixels=has_pixels,
+        )
+
     def get_record(
         self,
         frame_id: str,
@@ -96,6 +117,19 @@ class ObservationService:
         has_pixels: bool | None = None,
         include_pixels: bool = False,
     ) -> tuple[dict[str, object], ...]:
+        if include_pixels:
+            return tuple(
+                item.to_record(include_pixels=True)
+                for item in self.list_materialized(
+                    benchmark_seed_digest=benchmark_seed_digest,
+                    split=split,
+                    episode_id=episode_id,
+                    family=family,
+                    event_type=event_type,
+                    denominator_class=denominator_class,
+                    has_pixels=has_pixels,
+                )
+            )
         observations = self.list_observations(
             benchmark_seed_digest=benchmark_seed_digest,
             split=split,
@@ -108,7 +142,7 @@ class ObservationService:
         return tuple(
             self._record_for_observation(
                 observation,
-                include_pixels=include_pixels,
+                include_pixels=False,
             )
             for observation in observations
         )

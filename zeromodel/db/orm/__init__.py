@@ -7,6 +7,7 @@ from .video_action_set import (
     MatrixBlobORM,
     ObservationORM,
     ObservationOperationChainORM,
+    ObservationOperationInputORM,
     ObservationOperationORM,
     SealedSplitPlanORM,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "MatrixBlobORM",
     "ObservationORM",
     "ObservationOperationChainORM",
+    "ObservationOperationInputORM",
     "ObservationOperationORM",
     "SealedSplitPlanORM",
 ]

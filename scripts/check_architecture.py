@@ -25,8 +25,13 @@ VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     "zeromodel.domains.video_action_set.contracts",
     "zeromodel.domains.video_action_set.dto",
     "zeromodel.domains.video_action_set.episode_plan_service",
+    "zeromodel.domains.video_action_set.observation_common",
     "zeromodel.domains.video_action_set.observation_dto",
+    "zeromodel.domains.video_action_set.observation_legacy_adapters",
+    "zeromodel.domains.video_action_set.observation_materialization",
+    "zeromodel.domains.video_action_set.observation_provenance_dto",
     "zeromodel.domains.video_action_set.observation_service",
+    "zeromodel.domains.video_action_set.provider_observation_dto",
 }
 VIDEO_ACTION_SET_POLICY_MODULES = {
     f"{VIDEO_ACTION_SET_PREFIX}.contracts",

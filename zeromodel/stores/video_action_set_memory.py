@@ -135,8 +135,12 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
     ) -> tuple[ObservationDTO, ...]:
         observation_tuple = tuple(observations)
         existing = self._preflight_observations(observation_tuple)
+        inserted_frame_ids: set[str] = set()
         for item in observation_tuple:
-            if item.observation.frame_id in existing:
+            if (
+                item.observation.frame_id in existing
+                or item.observation.frame_id in inserted_frame_ids
+            ):
                 continue
             if item.matrix_blob is not None:
                 self._matrix_blobs.setdefault(
@@ -147,6 +151,7 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             self._observation_sequence_index[_sequence_key(item.observation)] = (
                 item.observation.frame_id
             )
+            inserted_frame_ids.add(item.observation.frame_id)
         return tuple(
             existing.get(item.observation.frame_id, item.observation)
             for item in observation_tuple
@@ -168,6 +173,35 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             else self._matrix_blobs.get(observation.matrix_blob_id)
         )
         return MaterializedObservationDTO(observation, blob)
+
+    def list_materialized_observations(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[MaterializedObservationDTO, ...]:
+        return tuple(
+            MaterializedObservationDTO(
+                observation,
+                None
+                if observation.matrix_blob_id is None
+                else self._matrix_blobs.get(observation.matrix_blob_id),
+            )
+            for observation in self.list_observations(
+                benchmark_seed_digest=benchmark_seed_digest,
+                split=split,
+                episode_id=episode_id,
+                family=family,
+                event_type=event_type,
+                denominator_class=denominator_class,
+                has_pixels=has_pixels,
+            )
+        )
 
     def list_observations(
         self,

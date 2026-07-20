@@ -111,6 +111,27 @@ class VideoActionSetFacade:
     ) -> MaterializedObservationDTO | None:
         return self.engine.get_materialized_observation(frame_id)
 
+    def list_materialized_observations(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[MaterializedObservationDTO, ...]:
+        return self.engine.list_materialized_observations(
+            benchmark_seed_digest=benchmark_seed_digest,
+            split=split,
+            episode_id=episode_id,
+            family=family,
+            event_type=event_type,
+            denominator_class=denominator_class,
+            has_pixels=has_pixels,
+        )
+
     def get_observation_record(
         self,
         frame_id: str,

@@ -53,6 +53,7 @@ def _operation(
     *,
     index: int = 0,
     operation: str = "emit_observation",
+    operation_version: str = OBSERVATION_OPERATION_CHAIN_VERSION,
     input_digests: tuple[str | None, ...],
     output_digest: str | None,
     parameters: dict[str, Any] | None = None,
@@ -61,7 +62,7 @@ def _operation(
     payload = {
         "index": index,
         "operation": operation,
-        "operation_version": OBSERVATION_OPERATION_CHAIN_VERSION,
+        "operation_version": operation_version,
         "input_digests": list(input_digests),
         "parameters": parameters,
         "parameter_digest": canonical_sha256(parameters),
@@ -118,7 +119,7 @@ def sample_record(
     pixel_digest = None if pixels is None else _pixel_digest(pixels)
     metadata = {
         "episode_seed": plan.episode_seed,
-        "seed_digest": identity.seed_digest,
+        "seed_digest": plan.benchmark_seed_digest,
         "derived_seed_identity": plan.derived_seed_identity,
         "episode_plan_digest": plan.plan_digest,
         "frame_seed_identity": plan.frame_plans[0].to_value()["frame_seed_identity"],

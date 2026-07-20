@@ -189,6 +189,11 @@ OUTPUT_GOLDENS = {
         "digest": "sha256:772f6f803b902cef207fe455f849aad1c69f6880e9fce0f4c265664133176dd7",
         "changed": 20,
     },
+    "bounded_translation_photometric": {
+        "bytes": "050505050505060708090a0b0c0d0e0f10111213",
+        "digest": "sha256:ce88113f7db54c5dda0e5127290938d36ba9ef951e8046d18e7d50bdbb9b64c0",
+        "changed": 5,
+    },
     "bounded_translation_occlusion": {
         "bytes": "0000000000000140404005064040400a0b0c0d0e",
         "digest": "sha256:33b6b91a06ffd9ae0a6874f3ef6f825899c9d9b48c2126220fc2c62e7e9713b7",
@@ -338,6 +343,7 @@ def test_transformation_validation_rejects_occlusion_and_digest(
         "exact",
         "bounded_translation",
         "bounded_photometric",
+        "bounded_translation_photometric",
         "bounded_translation_occlusion",
         "compound_bounded",
     ],
@@ -424,4 +430,26 @@ def test_materialized_observation_uses_historical_pixel_digest() -> None:
     assert (
         item.to_record(include_pixels=False)["observation_pixel_digest"]
         == record["observation_pixel_digest"]
+    )
+
+
+@pytest.mark.parametrize("record_pixels_kind", ["list", "int16"])
+def test_materialized_observation_normalizes_record_pixels_to_uint8(
+    record_pixels_kind: str,
+) -> None:
+    pixels = _pixels()
+    record = sample_record(pixels=pixels)
+    if record_pixels_kind == "list":
+        record["pixels"] = pixels.tolist()
+    else:
+        record["pixels"] = pixels.astype(np.int16)
+
+    item = MaterializedObservationDTO.from_record(record)
+
+    assert item.matrix_blob is not None
+    restored = item.matrix_blob.to_array()
+    assert restored.dtype == np.uint8
+    np.testing.assert_array_equal(restored, pixels)
+    assert (
+        item.observation.observation_pixel_digest == record["observation_pixel_digest"]
     )

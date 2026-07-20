@@ -1,3 +1,9 @@
+"""Historical SHA-256 identity over contiguous array bytes.
+
+This helper preserves the supplied array dtype. Callers whose contracts declare
+uint8 pixels must normalize to uint8 before invoking it.
+"""
+
 from __future__ import annotations
 
 import hashlib

@@ -87,10 +87,11 @@ def blob_from_record(
     pixels = record.get("pixels")
     if pixels is None:
         return None
-    if pixel_digest is None or array_digest(pixels) != pixel_digest:
+    normalized_pixels = np.ascontiguousarray(pixels, dtype=np.uint8)
+    if pixel_digest is None or array_digest(normalized_pixels) != pixel_digest:
         raise VPMValidationError("observation pixel digest mismatch")
     return MatrixBlob.from_array(
-        np.ascontiguousarray(pixels, dtype=np.uint8),
+        normalized_pixels,
         dtype="uint8",
         metadata={
             "kind": "video_action_set_frame_pixels",

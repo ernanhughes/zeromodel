@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+from copy import deepcopy
+from typing import Any
+
 import pytest
+
+import zeromodel.video_action_set_benchmark as benchmark
 
 
 INTEGRATION_MARKERS = {"integration", "slow"}
@@ -25,6 +31,56 @@ INTEGRATION_TEST_FILES = {
     "test_visual_registered_calibration_v2.py",
     "test_visual_result_records.py",
 }
+_STAGE6_MATERIALIZATION_TEST_MODULES = {
+    "test_video_episode_materialization",
+    "test_video_materialization_kernels",
+    "test_video_materialization_reachability",
+    "test_video_materialization_validation",
+    "test_video_provider_observation_boundary",
+}
+_STAGE6_PLAN_CACHE: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+
+
+def _stage6_plan_cache_key(
+    identity: Any,
+    split: str,
+    row_ids: Sequence[str],
+    row_actions: Mapping[str, str],
+) -> tuple[Any, ...]:
+    return (
+        identity.seed_digest,
+        split,
+        tuple(row_ids),
+        tuple((row_id, row_actions[row_id]) for row_id in row_ids),
+    )
+
+
+@pytest.fixture(scope="module", autouse=True)
+def cache_stage6_materialization_plans(request: pytest.FixtureRequest):
+    """Reuse deterministic plans only in the Stage 6 materialization tests."""
+    module_name = request.module.__name__.rsplit(".", 1)[-1]
+    if module_name not in _STAGE6_MATERIALIZATION_TEST_MODULES:
+        yield
+        return
+
+    original = benchmark._episode_plans_for_split
+
+    def cached_episode_plans(
+        identity: Any,
+        split: str,
+        row_ids: Sequence[str],
+        row_actions: Mapping[str, str],
+    ) -> list[dict[str, Any]]:
+        key = _stage6_plan_cache_key(identity, split, row_ids, row_actions)
+        if key not in _STAGE6_PLAN_CACHE:
+            _STAGE6_PLAN_CACHE[key] = original(identity, split, row_ids, row_actions)
+        return deepcopy(_STAGE6_PLAN_CACHE[key])
+
+    benchmark._episode_plans_for_split = cached_episode_plans
+    try:
+        yield
+    finally:
+        benchmark._episode_plans_for_split = original
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

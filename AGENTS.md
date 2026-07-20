@@ -104,6 +104,13 @@ When integration coverage is relevant, report the exact suggested command but do
 - Do not add database creation at import time.
 - Do not combine structural extraction with scientific behavior changes.
 - Do not add new legacy quality exceptions for extracted modules.
+- New durable aggregates require DTO, Store protocol, in-memory Store, SQL Store, and focused tests.
+- Nested values become separate ORM tables only when they require independent query, lifecycle, integrity, or deduplication.
+- Canonical JSON payloads must be validated through DTO reconstruction when read from persistence.
+- Stores must not repair or normalize conflicting scientific records.
+- Batch Store writes must be atomic.
+- A behavior-preserving extraction must reduce the corresponding monolith quality ceiling.
+- Integration-tier persistence tests may be authored but must not be executed without explicit human authorization.
 
 ## Working Style
 

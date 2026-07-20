@@ -4,6 +4,7 @@ import pytest
 
 
 INTEGRATION_MARKERS = {"integration", "slow"}
+INTEGRATION_TEST_FILES = {"test_video_episode_plan_sql_store.py"}
 INTEGRATION_TEST_PREFIXES = ("test_video_action_set_",)
 INTEGRATION_TEST_FILES = {
     "test_arcade_visual_local_baseline_showdown.py",
@@ -57,14 +58,14 @@ def pytest_collection_modifyitems(
     items: list[pytest.Item],
 ) -> None:
     run_integration = bool(
-        config.getoption("--run-integration")
-        or config.getoption("--run-slow")
+        config.getoption("--run-integration") or config.getoption("--run-slow")
     )
 
     for item in items:
         filename = item.path.name
         if (
             "integration" in item.path.parts
+            or filename in INTEGRATION_TEST_FILES
             or filename.startswith(INTEGRATION_TEST_PREFIXES)
             or filename in INTEGRATION_TEST_FILES
         ):

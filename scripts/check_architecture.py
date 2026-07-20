@@ -8,14 +8,22 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = REPO_ROOT / "zeromodel"
 VIDEO_ACTION_SET_PREFIX = "zeromodel.video_action_set"
+VIDEO_ACTION_SET_BENCHMARK_MODULE = "zeromodel.video_action_set_benchmark"
 DOMAIN_VIDEO_ACTION_SET_PREFIX = "zeromodel.domains.video_action_set"
 DB_ORM_PREFIX = "zeromodel.db.orm"
 DB_STORES_PREFIX = "zeromodel.db.stores"
 VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
+    "zeromodel.domains.video_action_set.episode_plan_service",
     "zeromodel.domains.video_action_set.identity_service",
     "zeromodel.domains.video_action_set.engine",
     "zeromodel.domains.video_action_set.facade",
     "zeromodel.runtime",
+}
+VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
+    "zeromodel.domains.video_action_set.canonical_json",
+    "zeromodel.domains.video_action_set.contracts",
+    "zeromodel.domains.video_action_set.dto",
+    "zeromodel.domains.video_action_set.episode_plan_service",
 }
 VIDEO_ACTION_SET_POLICY_MODULES = {
     f"{VIDEO_ACTION_SET_PREFIX}.contracts",
@@ -347,6 +355,25 @@ def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
                 edge,
             )
         )
+    if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
+        edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
+    ):
+        violations.append(
+            edge_violation(
+                "video_action_set domain modules must not import legacy benchmark",
+                edge,
+            )
+        )
+    if edge.importer in VIDEO_ACTION_SET_PURE_DOMAIN_MODULES and (
+        is_module_under(edge.imported, "zeromodel.stores")
+        or edge.imported == "zeromodel.runtime"
+    ):
+        violations.append(
+            edge_violation(
+                "video_action_set DTO, contracts, and Services must not import runtime layers",
+                edge,
+            )
+        )
     if edge.importer == "zeromodel.runtime" and (
         is_module_under(edge.imported, "zeromodel.db")
         or is_sqlalchemy_import(edge.imported)
@@ -359,19 +386,21 @@ def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
         )
     if is_module_under(edge.importer, DB_ORM_PREFIX) and (
         edge.imported in VIDEO_ACTION_SET_ORCHESTRATION_MODULES
+        or edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
     ):
         violations.append(
             edge_violation(
-                "ORM modules must not import Services, Engines, Facades, or Runtime",
+                "ORM modules must not import Services, Engines, Facades, Runtime, or legacy benchmark",
                 edge,
             )
         )
     if is_module_under(edge.importer, DB_STORES_PREFIX) and (
         edge.imported in VIDEO_ACTION_SET_ORCHESTRATION_MODULES
+        or edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
     ):
         violations.append(
             edge_violation(
-                "database Store implementations must not import orchestration layers",
+                "database Store implementations must not import orchestration or legacy benchmark layers",
                 edge,
             )
         )

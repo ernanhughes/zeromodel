@@ -32,11 +32,21 @@ EPISODE_FAMILIES_MODULE = "zeromodel.domains.video_action_set.episode_families"
 FRAME_FAMILY_KERNELS_MODULE = "zeromodel.domains.video_action_set.frame_family_kernels"
 FAMILY_PROVENANCE_MODULE = "zeromodel.domains.video_action_set.family_provenance"
 FAMILY_VALIDATION_MODULE = "zeromodel.domains.video_action_set.family_validation"
+CONTROL_HISTORIES_MODULE = "zeromodel.domains.video_action_set.control_histories"
+FAMILY_INTERVENTION_PLANNING_MODULE = (
+    "zeromodel.domains.video_action_set.family_intervention_planning"
+)
+EPISODE_PLANNING_MODULE = "zeromodel.domains.video_action_set.episode_planning"
 FAMILY_SCIENCE_MODULES = {
     EPISODE_FAMILIES_MODULE,
     FRAME_FAMILY_KERNELS_MODULE,
     FAMILY_PROVENANCE_MODULE,
     FAMILY_VALIDATION_MODULE,
+}
+EPISODE_PLANNING_MODULES = {
+    CONTROL_HISTORIES_MODULE,
+    FAMILY_INTERVENTION_PLANNING_MODULE,
+    EPISODE_PLANNING_MODULE,
 }
 VIDEO_OBSERVATION_KERNEL_MODULES = {
     ARCADE_OBSERVATION_MODULE,
@@ -67,8 +77,11 @@ VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
 VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     ARCADE_OBSERVATION_MODULE,
     CANONICAL_JSON_MODULE,
+    CONTROL_HISTORIES_MODULE,
     CONTRACTS_MODULE,
     EPISODE_FAMILIES_MODULE,
+    EPISODE_PLANNING_MODULE,
+    FAMILY_INTERVENTION_PLANNING_MODULE,
     FAMILY_PROVENANCE_MODULE,
     FAMILY_VALIDATION_MODULE,
     FRAME_FAMILY_KERNELS_MODULE,
@@ -555,6 +568,13 @@ def family_science_forbidden_edge_violations(edge: ImportEdge) -> list[Violation
                 edge,
             )
         )
+    if (
+        edge.importer in FAMILY_SCIENCE_MODULES
+        and edge.imported in EPISODE_PLANNING_MODULES
+    ):
+        violations.append(
+            edge_violation("family science must not import planning", edge)
+        )
     if edge.importer == EPISODE_FAMILIES_MODULE and edge.imported in {
         ARCADE_OBSERVATION_MODULE,
         FAMILY_PROVENANCE_MODULE,
@@ -628,38 +648,74 @@ def family_science_forbidden_edge_violations(edge: ImportEdge) -> list[Violation
     return violations
 
 
+def episode_planning_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
+    violations: list[Violation] = []
+    importer = edge.importer
+    imported = edge.imported
+
+    def reject(rule: str) -> None:
+        violations.append(edge_violation(rule, edge))
+
+    if (
+        importer in VIDEO_OBSERVATION_KERNEL_MODULES
+        and imported in EPISODE_PLANNING_MODULES
+    ):
+        reject("video observation kernels must not import episode planning modules")
+    if importer in EPISODE_PLANNING_MODULES and (
+        imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
+        or is_module_under(imported, DB_ORM_PREFIX)
+        or is_module_under(imported, DB_STORES_PREFIX)
+        or is_module_under(imported, "zeromodel.db.session")
+        or is_module_under(imported, "zeromodel.stores")
+        or imported == "zeromodel.runtime"
+        or is_sqlalchemy_import(imported)
+    ):
+        reject("planning must not import benchmark/persistence/runtime")
+    if importer in EPISODE_PLANNING_MODULES and imported in {
+        ARCADE_OBSERVATION_MODULE,
+        FAMILY_PROVENANCE_MODULE,
+        FAMILY_VALIDATION_MODULE,
+        OBSERVATION_PROVENANCE_MODULE,
+        OBSERVATION_REPLAY_MODULE,
+        PIXEL_DIGEST_MODULE,
+    }:
+        reject("planning must not import rendering/replay/provenance/pixels")
+    if importer == CONTROL_HISTORIES_MODULE and imported in {
+        FAMILY_INTERVENTION_PLANNING_MODULE,
+        EPISODE_PLANNING_MODULE,
+    }:
+        reject("control_histories must not import higher episode planning modules")
+    if (
+        importer == FAMILY_INTERVENTION_PLANNING_MODULE
+        and imported == EPISODE_PLANNING_MODULE
+    ):
+        reject("family_intervention_planning must not import episode_planning")
+    return violations
+
+
 def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
     violations: list[Violation] = []
+
+    def reject(rule: str) -> None:
+        violations.append(edge_violation(rule, edge))
+
     if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
         is_module_under(edge.imported, DB_ORM_PREFIX)
         or is_module_under(edge.imported, DB_STORES_PREFIX)
         or is_module_under(edge.imported, "zeromodel.db.session")
         or is_sqlalchemy_import(edge.imported)
     ):
-        violations.append(
-            edge_violation(
-                "video_action_set domain modules must not import persistence layers",
-                edge,
-            )
-        )
+        reject("video_action_set domain modules must not import persistence layers")
     if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
         edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
     ):
-        violations.append(
-            edge_violation(
-                "video_action_set domain modules must not import legacy benchmark",
-                edge,
-            )
-        )
+        reject("video_action_set domain modules must not import legacy benchmark")
     if edge.importer in VIDEO_ACTION_SET_PURE_DOMAIN_MODULES and (
         is_module_under(edge.imported, "zeromodel.stores")
         or edge.imported == "zeromodel.runtime"
     ):
-        violations.append(
-            edge_violation(
-                "video_action_set DTO, contracts, and Services must not import runtime layers",
-                edge,
-            )
+        reject(
+            "video_action_set DTO, contracts, and Services must not import runtime layers"
         )
     if edge.importer == "zeromodel.runtime" and (
         is_module_under(edge.imported, "zeromodel.db")
@@ -713,6 +769,7 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
         violations.extend(transformation_kernel_forbidden_edge_violations(edge))
         violations.extend(observation_provenance_replay_forbidden_edge_violations(edge))
         violations.extend(family_science_forbidden_edge_violations(edge))
+        violations.extend(episode_planning_forbidden_edge_violations(edge))
         violations.extend(rmdto_forbidden_edge_violations(edge))
     return violations
 

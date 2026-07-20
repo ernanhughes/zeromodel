@@ -2,6 +2,7 @@
 
 ARCADE_RENDERER_CONTRACT_VERSION = "zeromodel-arcade-shooter-render-state-frame/v1"
 ARCADE_RENDERER_IDENTITY_VERSION = "zeromodel-arcade-shooter-renderer-identity/v1"
+AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
 BENCHMARK_VERSION = "zeromodel-video-action-set-reachability-benchmark/v1"
 CANONICAL_OBSERVATION_UNIVERSE_VERSION = (
     "zeromodel-video-action-set-canonical-observation-universe/v1"
@@ -69,6 +70,7 @@ VALID_TRANSFORMATION_PARAMETER_UNIVERSE_VERSION = (
 __all__ = [
     "ARCADE_RENDERER_CONTRACT_VERSION",
     "ARCADE_RENDERER_IDENTITY_VERSION",
+    "AUTHORITATIVE_TRANSITION_FUNCTION_VERSION",
     "BENCHMARK_VERSION",
     "CANONICAL_OBSERVATION_UNIVERSE_VERSION",
     "CONFLICTING_ACTION_SPLICE_VERSION",

@@ -1,6 +1,11 @@
 """Identity-owned video action-set contracts."""
 
+ARCADE_RENDERER_CONTRACT_VERSION = "zeromodel-arcade-shooter-render-state-frame/v1"
+ARCADE_RENDERER_IDENTITY_VERSION = "zeromodel-arcade-shooter-renderer-identity/v1"
 BENCHMARK_VERSION = "zeromodel-video-action-set-reachability-benchmark/v1"
+CANONICAL_OBSERVATION_UNIVERSE_VERSION = (
+    "zeromodel-video-action-set-canonical-observation-universe/v1"
+)
 EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
 FRAME_SHAPE = (16, 28)
 GENERATOR_VERSION = "zeromodel-video-action-set-reachability-generator/v1"
@@ -14,9 +19,18 @@ REACHABILITY_TILE_DIGEST = (
 REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
 TRANSFORMATION_FAMILY_VERSION = "zeromodel-video-action-set-transformation-family/v1"
+VALID_OBSERVATION_UNIVERSE_VERSION = (
+    "zeromodel-video-action-set-valid-observation-universe/v2"
+)
+VALID_TRANSFORMATION_PARAMETER_UNIVERSE_VERSION = (
+    "zeromodel-video-action-set-valid-transformation-parameter-universe/v1"
+)
 
 __all__ = [
+    "ARCADE_RENDERER_CONTRACT_VERSION",
+    "ARCADE_RENDERER_IDENTITY_VERSION",
     "BENCHMARK_VERSION",
+    "CANONICAL_OBSERVATION_UNIVERSE_VERSION",
     "EPISODE_PLAN_VERSION",
     "FRAME_SHAPE",
     "GENERATOR_VERSION",
@@ -26,4 +40,6 @@ __all__ = [
     "REACHABILITY_TILE_VERSION",
     "SEED_DERIVATION_VERSION",
     "TRANSFORMATION_FAMILY_VERSION",
+    "VALID_OBSERVATION_UNIVERSE_VERSION",
+    "VALID_TRANSFORMATION_PARAMETER_UNIVERSE_VERSION",
 ]

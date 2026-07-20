@@ -12,8 +12,16 @@ VIDEO_ACTION_SET_BENCHMARK_MODULE = "zeromodel.video_action_set_benchmark"
 DOMAIN_VIDEO_ACTION_SET_PREFIX = "zeromodel.domains.video_action_set"
 DB_ORM_PREFIX = "zeromodel.db.orm"
 DB_STORES_PREFIX = "zeromodel.db.stores"
+ARCADE_OBSERVATION_MODULE = "zeromodel.domains.video_action_set.arcade_observation"
+OBSERVATION_UNIVERSE_MODULE = "zeromodel.domains.video_action_set.observation_universe"
 PIXEL_DIGEST_MODULE = "zeromodel.domains.video_action_set.pixel_digest"
 TRANSFORMATIONS_MODULE = "zeromodel.domains.video_action_set.transformations"
+VIDEO_OBSERVATION_KERNEL_MODULES = {
+    ARCADE_OBSERVATION_MODULE,
+    OBSERVATION_UNIVERSE_MODULE,
+    PIXEL_DIGEST_MODULE,
+    TRANSFORMATIONS_MODULE,
+}
 VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
     "zeromodel.domains.video_action_set.episode_plan_service",
     "zeromodel.domains.video_action_set.identity_service",
@@ -23,6 +31,7 @@ VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
     "zeromodel.runtime",
 }
 VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
+    ARCADE_OBSERVATION_MODULE,
     "zeromodel.domains.video_action_set.canonical_json",
     "zeromodel.domains.video_action_set.contracts",
     "zeromodel.domains.video_action_set.dto",
@@ -33,6 +42,7 @@ VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     "zeromodel.domains.video_action_set.observation_materialization",
     "zeromodel.domains.video_action_set.observation_provenance_dto",
     "zeromodel.domains.video_action_set.observation_service",
+    OBSERVATION_UNIVERSE_MODULE,
     PIXEL_DIGEST_MODULE,
     "zeromodel.domains.video_action_set.provider_observation_dto",
     TRANSFORMATIONS_MODULE,
@@ -364,7 +374,37 @@ def transformation_kernel_forbidden_edge_violations(
                 edge,
             )
         )
-    if edge.importer in {PIXEL_DIGEST_MODULE, TRANSFORMATIONS_MODULE} and (
+    if edge.importer == PIXEL_DIGEST_MODULE and edge.imported in {
+        ARCADE_OBSERVATION_MODULE,
+        OBSERVATION_UNIVERSE_MODULE,
+    }:
+        violations.append(
+            edge_violation(
+                "pixel_digest must not import arcade_observation or observation_universe",
+                edge,
+            )
+        )
+    if edge.importer == TRANSFORMATIONS_MODULE and edge.imported in {
+        ARCADE_OBSERVATION_MODULE,
+        OBSERVATION_UNIVERSE_MODULE,
+    }:
+        violations.append(
+            edge_violation(
+                "transformations must not import arcade_observation or observation_universe",
+                edge,
+            )
+        )
+    if (
+        edge.importer == ARCADE_OBSERVATION_MODULE
+        and edge.imported == OBSERVATION_UNIVERSE_MODULE
+    ):
+        violations.append(
+            edge_violation(
+                "arcade_observation must not import observation_universe",
+                edge,
+            )
+        )
+    if edge.importer in VIDEO_OBSERVATION_KERNEL_MODULES and (
         is_module_under(edge.imported, DB_ORM_PREFIX)
         or is_module_under(edge.imported, DB_STORES_PREFIX)
         or is_module_under(edge.imported, "zeromodel.db.session")
@@ -374,16 +414,16 @@ def transformation_kernel_forbidden_edge_violations(
     ):
         violations.append(
             edge_violation(
-                "video transformation kernel modules must not import persistence or runtime layers",
+                "video observation kernel modules must not import persistence or runtime layers",
                 edge,
             )
         )
-    if edge.importer == TRANSFORMATIONS_MODULE and (
-        edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
+    if edge.importer in VIDEO_OBSERVATION_KERNEL_MODULES and edge.imported == (
+        VIDEO_ACTION_SET_BENCHMARK_MODULE
     ):
         violations.append(
             edge_violation(
-                "transformations must not import legacy benchmark facade",
+                "video observation kernel modules must not import legacy benchmark facade",
                 edge,
             )
         )

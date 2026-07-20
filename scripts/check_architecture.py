@@ -28,6 +28,16 @@ OBSERVATION_REPLAY_MODULE = "zeromodel.domains.video_action_set.observation_repl
 OBSERVATION_UNIVERSE_MODULE = "zeromodel.domains.video_action_set.observation_universe"
 PIXEL_DIGEST_MODULE = "zeromodel.domains.video_action_set.pixel_digest"
 TRANSFORMATIONS_MODULE = "zeromodel.domains.video_action_set.transformations"
+EPISODE_FAMILIES_MODULE = "zeromodel.domains.video_action_set.episode_families"
+FRAME_FAMILY_KERNELS_MODULE = "zeromodel.domains.video_action_set.frame_family_kernels"
+FAMILY_PROVENANCE_MODULE = "zeromodel.domains.video_action_set.family_provenance"
+FAMILY_VALIDATION_MODULE = "zeromodel.domains.video_action_set.family_validation"
+FAMILY_SCIENCE_MODULES = {
+    EPISODE_FAMILIES_MODULE,
+    FRAME_FAMILY_KERNELS_MODULE,
+    FAMILY_PROVENANCE_MODULE,
+    FAMILY_VALIDATION_MODULE,
+}
 VIDEO_OBSERVATION_KERNEL_MODULES = {
     ARCADE_OBSERVATION_MODULE,
     OBSERVATION_PROVENANCE_MODULE,
@@ -58,6 +68,10 @@ VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     ARCADE_OBSERVATION_MODULE,
     CANONICAL_JSON_MODULE,
     CONTRACTS_MODULE,
+    EPISODE_FAMILIES_MODULE,
+    FAMILY_PROVENANCE_MODULE,
+    FAMILY_VALIDATION_MODULE,
+    FRAME_FAMILY_KERNELS_MODULE,
     "zeromodel.domains.video_action_set.dto",
     "zeromodel.domains.video_action_set.episode_plan_service",
     "zeromodel.domains.video_action_set.observation_common",
@@ -524,6 +538,96 @@ def observation_provenance_replay_forbidden_edge_violations(
     return violations
 
 
+def family_science_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
+    violations: list[Violation] = []
+    if edge.importer in FAMILY_SCIENCE_MODULES and (
+        edge.imported == VIDEO_ACTION_SET_BENCHMARK_MODULE
+        or is_module_under(edge.imported, DB_ORM_PREFIX)
+        or is_module_under(edge.imported, DB_STORES_PREFIX)
+        or is_module_under(edge.imported, "zeromodel.db.session")
+        or is_module_under(edge.imported, "zeromodel.stores")
+        or edge.imported == "zeromodel.runtime"
+        or is_sqlalchemy_import(edge.imported)
+    ):
+        violations.append(
+            edge_violation(
+                "family science modules must not import legacy benchmark, persistence, or runtime",
+                edge,
+            )
+        )
+    if edge.importer == EPISODE_FAMILIES_MODULE and edge.imported in {
+        ARCADE_OBSERVATION_MODULE,
+        FAMILY_PROVENANCE_MODULE,
+        FAMILY_VALIDATION_MODULE,
+        FRAME_FAMILY_KERNELS_MODULE,
+        OBSERVATION_PROVENANCE_MODULE,
+        OBSERVATION_REPLAY_MODULE,
+        OBSERVATION_UNIVERSE_MODULE,
+        TRANSFORMATIONS_MODULE,
+    }:
+        violations.append(
+            edge_violation(
+                "episode_families must not import higher family or observation kernels",
+                edge,
+            )
+        )
+    if edge.importer == FRAME_FAMILY_KERNELS_MODULE and edge.imported in {
+        FAMILY_PROVENANCE_MODULE,
+        FAMILY_VALIDATION_MODULE,
+        OBSERVATION_PROVENANCE_MODULE,
+        OBSERVATION_REPLAY_MODULE,
+        "zeromodel.domains.video_action_set.dto",
+        "zeromodel.domains.video_action_set.episode_plan_service",
+    }:
+        violations.append(
+            edge_violation(
+                "frame_family_kernels must not import provenance, replay, validation, or planning",
+                edge,
+            )
+        )
+    if edge.importer == FAMILY_PROVENANCE_MODULE and edge.imported in {
+        FAMILY_VALIDATION_MODULE,
+        OBSERVATION_REPLAY_MODULE,
+    }:
+        violations.append(
+            edge_violation(
+                "family_provenance must not import replay or validation",
+                edge,
+            )
+        )
+    if edge.importer == FAMILY_VALIDATION_MODULE and edge.imported in {
+        FAMILY_PROVENANCE_MODULE,
+        FRAME_FAMILY_KERNELS_MODULE,
+    }:
+        violations.append(
+            edge_violation(
+                "family_validation must not import family provenance or frame kernels",
+                edge,
+            )
+        )
+    if (
+        edge.importer == OBSERVATION_REPLAY_MODULE
+        and edge.imported in FAMILY_SCIENCE_MODULES
+    ):
+        violations.append(
+            edge_violation(
+                "observation_replay must not import family implementation modules",
+                edge,
+            )
+        )
+    if (
+        edge.importer in LOWER_OBSERVATION_MODULES
+        and edge.imported in FAMILY_SCIENCE_MODULES
+    ):
+        violations.append(
+            edge_violation(
+                "lower observation modules must not import family implementation modules",
+                edge,
+            )
+        )
+    return violations
+
+
 def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
     violations: list[Violation] = []
     if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
@@ -608,6 +712,7 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
         violations.extend(legacy_forbidden_edge_violations(edge))
         violations.extend(transformation_kernel_forbidden_edge_violations(edge))
         violations.extend(observation_provenance_replay_forbidden_edge_violations(edge))
+        violations.extend(family_science_forbidden_edge_violations(edge))
         violations.extend(rmdto_forbidden_edge_violations(edge))
     return violations
 

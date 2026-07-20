@@ -8,6 +8,15 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = REPO_ROOT / "zeromodel"
 VIDEO_ACTION_SET_PREFIX = "zeromodel.video_action_set"
+DOMAIN_VIDEO_ACTION_SET_PREFIX = "zeromodel.domains.video_action_set"
+DB_ORM_PREFIX = "zeromodel.db.orm"
+DB_STORES_PREFIX = "zeromodel.db.stores"
+VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
+    "zeromodel.domains.video_action_set.identity_service",
+    "zeromodel.domains.video_action_set.engine",
+    "zeromodel.domains.video_action_set.facade",
+    "zeromodel.runtime",
+}
 VIDEO_ACTION_SET_POLICY_MODULES = {
     f"{VIDEO_ACTION_SET_PREFIX}.contracts",
     f"{VIDEO_ACTION_SET_PREFIX}.mutation_audit",
@@ -91,7 +100,13 @@ def import_from_candidates(
         base = node.module or ""
     if not base:
         return []
-    if base == "zeromodel" or base.startswith("zeromodel.") or base.startswith("tests"):
+    if (
+        base == "zeromodel"
+        or base.startswith("zeromodel.")
+        or base.startswith("tests")
+        or base == "sqlalchemy"
+        or base.startswith("sqlalchemy.")
+    ):
         return (
             [base]
             if any(alias.name == "*" for alias in node.names)
@@ -109,7 +124,12 @@ def collect_import_edges(
         if isinstance(node, ast.Import):
             for alias in node.names:
                 imported = best_known_module(alias.name, known_modules)
-                if imported is not None or alias.name.startswith("tests"):
+                if (
+                    imported is not None
+                    or alias.name.startswith("tests")
+                    or alias.name == "sqlalchemy"
+                    or alias.name.startswith("sqlalchemy.")
+                ):
                     edges.append(
                         ImportEdge(
                             importer=module_name,
@@ -120,7 +140,12 @@ def collect_import_edges(
         elif isinstance(node, ast.ImportFrom):
             for candidate in import_from_candidates(node, module_name, path):
                 imported = best_known_module(candidate, known_modules)
-                if imported is not None or candidate.startswith("tests"):
+                if (
+                    imported is not None
+                    or candidate.startswith("tests")
+                    or candidate == "sqlalchemy"
+                    or candidate.startswith("sqlalchemy.")
+                ):
                     edges.append(
                         ImportEdge(
                             importer=module_name,
@@ -251,57 +276,113 @@ def is_video_action_set_runtime_module(module: str) -> bool:
     )
 
 
+def is_module_under(module: str, prefix: str) -> bool:
+    return module == prefix or module.startswith(f"{prefix}.")
+
+
+def is_sqlalchemy_import(module: str) -> bool:
+    return module == "sqlalchemy" or module.startswith("sqlalchemy.")
+
+
+def edge_violation(rule: str, edge: ImportEdge) -> Violation:
+    return Violation(
+        rule=rule,
+        importer=edge.importer,
+        imported=edge.imported,
+        detail=f"forbidden edge at line {edge.line}",
+    )
+
+
+def legacy_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
+    violations: list[Violation] = []
+    if edge.imported == "tests" or edge.imported.startswith("tests."):
+        violations.append(edge_violation("zeromodel/ must not import tests.*", edge))
+    if edge.importer == "zeromodel.artifact" and (
+        edge.imported.startswith("zeromodel.video_")
+        or edge.imported == VIDEO_ACTION_SET_PREFIX
+        or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.")
+    ):
+        violations.append(
+            edge_violation(
+                "zeromodel.artifact must not import video research modules",
+                edge,
+            )
+        )
+    if edge.importer == f"{VIDEO_ACTION_SET_PREFIX}.contracts" and (
+        edge.imported == VIDEO_ACTION_SET_PREFIX
+        or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.")
+    ):
+        violations.append(
+            edge_violation(
+                "video_action_set/contracts.py must not import implementation modules",
+                edge,
+            )
+        )
+    if is_video_action_set_runtime_module(edge.importer) and (
+        edge.imported == f"{VIDEO_ACTION_SET_PREFIX}.verification"
+        or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.verification.")
+        or edge.imported == f"{VIDEO_ACTION_SET_PREFIX}.mutation_audit"
+        or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.mutation_audit.")
+    ):
+        violations.append(
+            edge_violation(
+                "runtime modules must not depend on verification or mutation_audit",
+                edge,
+            )
+        )
+    return violations
+
+
+def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
+    violations: list[Violation] = []
+    if is_module_under(edge.importer, DOMAIN_VIDEO_ACTION_SET_PREFIX) and (
+        is_module_under(edge.imported, DB_ORM_PREFIX)
+        or is_module_under(edge.imported, DB_STORES_PREFIX)
+        or is_module_under(edge.imported, "zeromodel.db.session")
+        or is_sqlalchemy_import(edge.imported)
+    ):
+        violations.append(
+            edge_violation(
+                "video_action_set domain modules must not import persistence layers",
+                edge,
+            )
+        )
+    if edge.importer == "zeromodel.runtime" and (
+        is_module_under(edge.imported, "zeromodel.db")
+        or is_sqlalchemy_import(edge.imported)
+    ):
+        violations.append(
+            edge_violation(
+                "zeromodel.runtime must not import database or SQLAlchemy modules",
+                edge,
+            )
+        )
+    if is_module_under(edge.importer, DB_ORM_PREFIX) and (
+        edge.imported in VIDEO_ACTION_SET_ORCHESTRATION_MODULES
+    ):
+        violations.append(
+            edge_violation(
+                "ORM modules must not import Services, Engines, Facades, or Runtime",
+                edge,
+            )
+        )
+    if is_module_under(edge.importer, DB_STORES_PREFIX) and (
+        edge.imported in VIDEO_ACTION_SET_ORCHESTRATION_MODULES
+    ):
+        violations.append(
+            edge_violation(
+                "database Store implementations must not import orchestration layers",
+                edge,
+            )
+        )
+    return violations
+
+
 def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
     violations: list[Violation] = []
     for edge in edges:
-        if edge.imported == "tests" or edge.imported.startswith("tests."):
-            violations.append(
-                Violation(
-                    rule="zeromodel/ must not import tests.*",
-                    importer=edge.importer,
-                    imported=edge.imported,
-                    detail=f"forbidden edge at line {edge.line}",
-                )
-            )
-        if edge.importer == "zeromodel.artifact" and (
-            edge.imported.startswith("zeromodel.video_")
-            or edge.imported == VIDEO_ACTION_SET_PREFIX
-            or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.")
-        ):
-            violations.append(
-                Violation(
-                    rule="zeromodel.artifact must not import video research modules",
-                    importer=edge.importer,
-                    imported=edge.imported,
-                    detail=f"forbidden edge at line {edge.line}",
-                )
-            )
-        if edge.importer == f"{VIDEO_ACTION_SET_PREFIX}.contracts" and (
-            edge.imported == VIDEO_ACTION_SET_PREFIX
-            or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.")
-        ):
-            violations.append(
-                Violation(
-                    rule="video_action_set/contracts.py must not import implementation modules",
-                    importer=edge.importer,
-                    imported=edge.imported,
-                    detail=f"forbidden edge at line {edge.line}",
-                )
-            )
-        if is_video_action_set_runtime_module(edge.importer) and (
-            edge.imported == f"{VIDEO_ACTION_SET_PREFIX}.verification"
-            or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.verification.")
-            or edge.imported == f"{VIDEO_ACTION_SET_PREFIX}.mutation_audit"
-            or edge.imported.startswith(f"{VIDEO_ACTION_SET_PREFIX}.mutation_audit.")
-        ):
-            violations.append(
-                Violation(
-                    rule="runtime modules must not depend on verification or mutation_audit",
-                    importer=edge.importer,
-                    imported=edge.imported,
-                    detail=f"forbidden edge at line {edge.line}",
-                )
-            )
+        violations.extend(legacy_forbidden_edge_violations(edge))
+        violations.extend(rmdto_forbidden_edge_violations(edge))
     return violations
 
 

@@ -121,6 +121,7 @@ from .policy_properties import (
     decode_key_value_row_id,
 )
 from .render import png_bytes, svg_text, to_uint8, write_png, write_svg
+from .runtime import ZeroModelRuntime, build_runtime
 from .spatial import (
     SpatialOptimizationResult,
     SpatialOptimizer,
@@ -455,6 +456,7 @@ __all__ = [
     "VisualPolicyDecision",
     "VisualPolicyReader",
     "VisualSignReader",
+    "ZeroModelRuntime",
     "InMemoryVideoFrameSource",
     "DiscriminativeCandidateSet",
     "DiscriminativeEvidenceDecision",
@@ -488,6 +490,7 @@ __all__ = [
     "build_discriminative_candidate_set",
     "build_discriminative_masks",
     "build_raw_discriminative_candidates",
+    "build_runtime",
     "build_joint_candidate_masks",
     "build_joint_candidate_set",
     "build_joint_row_candidates",

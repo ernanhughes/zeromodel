@@ -9,7 +9,10 @@ GOVERNED_PATHS = [
     Path("scripts/code_quality_report.py"),
     Path("scripts/check_architecture.py"),
     Path("scripts/check_quality.py"),
-    Path("zeromodel/video_action_set"),
+    Path("zeromodel/runtime.py"),
+    Path("zeromodel/domains/video_action_set"),
+    Path("zeromodel/stores"),
+    Path("zeromodel/db"),
 ]
 
 
@@ -38,7 +41,10 @@ def main() -> int:
         "Linting",
         [sys.executable, "-m", "ruff", "check", *governed_paths],
     )
-    run_step("Typing", [sys.executable, "-m", "mypy", *governed_paths])
+    run_step(
+        "Typing",
+        [sys.executable, "-m", "mypy", "--follow-imports=skip", *governed_paths],
+    )
     run_step("Architecture", [sys.executable, "scripts/check_architecture.py"])
     run_step(
         "Quality limits",

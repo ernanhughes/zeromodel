@@ -35,8 +35,12 @@ dev = [
     "twine>=5",
     "ruff>=0.12",
     "mypy>=1.16",
+    "sqlalchemy>=2.0,<3",
 ]
 release = ["build>=1.2", "twine>=5"]
+persistence = [
+    "sqlalchemy>=2.0,<3",
+]
 vision = [
     "torch>=2.2",
     "torchvision>=0.17",

@@ -93,6 +93,18 @@ Integration tests include complete benchmark materialization, exhaustive observa
 
 When integration coverage is relevant, report the exact suggested command but do not execute it.
 
+## Video Action-Set RMDTO Policy
+
+- Domain Services never import ORM or SQLAlchemy.
+- Store protocols use DTOs only.
+- Store implementations own ORM-to-DTO and DTO-to-ORM mapping.
+- ORM objects never leave Store implementations.
+- Core Runtime uses the in-memory Store by default.
+- Database Runtime construction is explicit.
+- Do not add database creation at import time.
+- Do not combine structural extraction with scientific behavior changes.
+- Do not add new legacy quality exceptions for extracted modules.
+
 ## Working Style
 
 - Prefer additive changes over renaming existing public APIs.

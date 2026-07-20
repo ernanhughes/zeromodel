@@ -1,0 +1,500 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+import zeromodel.video_action_set_benchmark as benchmark
+from zeromodel.artifact import VPMValidationError
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _identity_rows_actions() -> tuple[benchmark.BenchmarkIdentity, list[str], dict[str, str]]:
+    identity = benchmark.load_identity(REPO_ROOT)
+    policy = benchmark.compile_policy_artifact()
+    lookup = benchmark.VPMPolicyLookup(policy, action_metric_ids=benchmark.ACTIONS)
+    row_ids = [str(row_id) for row_id in policy.source.row_ids]
+    return identity, row_ids, {row_id: lookup.choose(row_id) for row_id in row_ids}
+
+
+def _legacy_secondary_row_for_splice(row_ids: list[str], row_actions: dict[str, str], source_row_id: str) -> str:
+    source_action = row_actions[source_row_id]
+    source_tank, source_target, source_cooldown = benchmark.parse_state_row_id(source_row_id)
+    for row_id in row_ids:
+        if row_id == source_row_id:
+            continue
+        if row_actions[row_id] == source_action:
+            continue
+        tank, target, cooldown = benchmark.parse_state_row_id(row_id)
+        if target == source_target:
+            continue
+        if (tank, cooldown) == (source_tank, source_cooldown):
+            continue
+        return row_id
+    raise AssertionError("legacy fixture must find a secondary row")
+
+
+def _legacy_row_band_splice(primary_row_id: str, secondary_row_id: str) -> np.ndarray:
+    output = np.array(benchmark._render_row_frame(primary_row_id), copy=True)
+    secondary = benchmark._render_row_frame(secondary_row_id)
+    for y in range(6):
+        output[y, :] = secondary[y, :]
+    return output
+
+
+def _first_splice_plan() -> dict[str, object]:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    return next(
+        plan
+        for plan in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if plan["mutation_kind"] == "conflicting_action_splice"
+    )
+
+
+def test_legacy_row_band_conflicting_splice_collided_with_canonical_universe() -> None:
+    _identity, row_ids, row_actions = _identity_rows_actions()
+    canonical_index = benchmark.canonical_observation_universe()["digest_to_rows"]
+    collisions = []
+    for source_row_id in row_ids[:28]:
+        secondary_row_id = _legacy_secondary_row_for_splice(row_ids, row_actions, source_row_id)
+        output = _legacy_row_band_splice(source_row_id, secondary_row_id)
+        digest = benchmark._array_digest(output)
+        if digest in canonical_index:
+            collisions.append((source_row_id, secondary_row_id, canonical_index[digest]))
+    assert len(collisions) == 28
+
+
+def test_repaired_conflicting_splice_selection_frames_do_not_decode_as_canonical_valid() -> None:
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    canonical_digests = set(benchmark.canonical_observation_universe()["digest_to_rows"])
+    splice_records = [record for record in records if record["family"] == "conflicting_action_splice"]
+
+    assert len(splice_records) == 112
+    assert all(record["observation_pixel_digest"] not in canonical_digests for record in splice_records)
+    assert {benchmark.validate_materialized_family_record(record) for record in splice_records} == {"ok"}
+    for record in splice_records:
+        trace = record["metadata"]["family_intervention_trace"]
+        counts = trace["action_relevant_region_contribution_counts"]
+        assert trace["primary_contributing_pixel_count"] > 0
+        assert trace["secondary_contributing_pixel_count"] > 0
+        assert trace["changed_pixel_count"] > 0
+        assert counts["primary_target_pixel_count"] > 0
+        assert counts["secondary_additive_target_pixel_count"] > 0
+        assert trace["canonical_collision_count"] == 0
+
+
+def test_frame_invalid_validator_rejects_legacy_valid_state_collision() -> None:
+    _identity, row_ids, row_actions = _identity_rows_actions()
+    source_row_id = row_ids[0]
+    secondary_row_id = _legacy_secondary_row_for_splice(row_ids, row_actions, source_row_id)
+    output = _legacy_row_band_splice(source_row_id, secondary_row_id)
+    record = {
+        "frame_id": "legacy:collision:frame-00",
+        "family": "conflicting_action_splice",
+        "expected_disposition": "distinguishable_invalid_input",
+        "observation_pixel_digest": benchmark._array_digest(output),
+        "pixels": output,
+        "metadata": {},
+    }
+
+    assert benchmark.validate_materialized_family_record(record) == "invalid_family_valid_state_collision"
+    closure = benchmark._frame_invalid_closure_summary([record])
+    assert closure["status"] == "failed"
+    assert closure["totals"]["canonical_collision_count"] == 1
+    assert closure["totals"]["valid_decode_count"] == 1
+
+
+def test_conflicting_splice_rejects_same_action_and_missing_or_overlapping_target_evidence() -> None:
+    _identity, row_ids, row_actions = _identity_rows_actions()
+    plan = _first_splice_plan()
+    source_row_id = str(plan["source_row_id"])
+    mask = plan["family_intervention"]["splice_mask"]
+    same_action_row = next(row_id for row_id in row_ids if row_id != source_row_id and row_actions[row_id] == row_actions[source_row_id])
+    no_target_row = "tank=0|target=none|cooldown=0"
+    visible_conflict_row = next(
+        row_id
+        for row_id in row_ids
+        if benchmark.parse_state_row_id(row_id)[1] is not None and row_actions[row_id] != row_actions[no_target_row]
+    )
+    same_target_conflict_row = next(
+        row_id
+        for row_id in row_ids
+        if row_id != "tank=0|target=0|cooldown=0"
+        and benchmark.parse_state_row_id(row_id)[1] == 0
+        and row_actions[row_id] != row_actions["tank=0|target=0|cooldown=0"]
+    )
+
+    with pytest.raises(VPMValidationError, match="different governed actions"):
+        benchmark._apply_conflicting_splice(
+            primary_pixels=benchmark._render_row_frame(source_row_id),
+            secondary_pixels=benchmark._render_row_frame(same_action_row),
+            primary_row_id=source_row_id,
+            secondary_row_id=same_action_row,
+            primary_action_id=row_actions[source_row_id],
+            secondary_action_id=row_actions[same_action_row],
+            mask_manifest=mask,
+        )
+    with pytest.raises(VPMValidationError, match="visible target evidence"):
+        benchmark._apply_conflicting_splice(
+            primary_pixels=benchmark._render_row_frame(no_target_row),
+            secondary_pixels=benchmark._render_row_frame(visible_conflict_row),
+            primary_row_id=no_target_row,
+            secondary_row_id=visible_conflict_row,
+            primary_action_id=row_actions[no_target_row],
+            secondary_action_id=row_actions[visible_conflict_row],
+            mask_manifest=mask,
+        )
+    with pytest.raises(VPMValidationError, match="distinct secondary target evidence"):
+        benchmark._apply_conflicting_splice(
+            primary_pixels=benchmark._render_row_frame("tank=0|target=0|cooldown=0"),
+            secondary_pixels=benchmark._render_row_frame(same_target_conflict_row),
+            primary_row_id="tank=0|target=0|cooldown=0",
+            secondary_row_id=same_target_conflict_row,
+            primary_action_id=row_actions["tank=0|target=0|cooldown=0"],
+            secondary_action_id=row_actions[same_target_conflict_row],
+            mask_manifest=mask,
+        )
+
+
+def test_changing_either_splice_source_changes_trace_identity() -> None:
+    _identity, row_ids, row_actions = _identity_rows_actions()
+    plan = _first_splice_plan()
+    mask = plan["family_intervention"]["splice_mask"]
+    primary = str(plan["source_row_id"])
+    secondary = str(plan["secondary_row_id"])
+    primary_target = benchmark.parse_state_row_id(primary)[1]
+    secondary_target = benchmark.parse_state_row_id(secondary)[1]
+
+    first_output, first_trace = benchmark._apply_conflicting_splice(
+        primary_pixels=benchmark._render_row_frame(primary),
+        secondary_pixels=benchmark._render_row_frame(secondary),
+        primary_row_id=primary,
+        secondary_row_id=secondary,
+        primary_action_id=row_actions[primary],
+        secondary_action_id=row_actions[secondary],
+        mask_manifest=mask,
+    )
+    changed_secondary = next(
+        row_id
+        for row_id in row_ids
+        if row_id not in {primary, secondary}
+        and benchmark.parse_state_row_id(row_id)[1] not in {None, primary_target, secondary_target}
+        and row_actions[row_id] != row_actions[primary]
+    )
+    second_output, second_trace = benchmark._apply_conflicting_splice(
+        primary_pixels=benchmark._render_row_frame(primary),
+        secondary_pixels=benchmark._render_row_frame(changed_secondary),
+        primary_row_id=primary,
+        secondary_row_id=changed_secondary,
+        primary_action_id=row_actions[primary],
+        secondary_action_id=row_actions[changed_secondary],
+        mask_manifest=mask,
+    )
+    changed_primary = next(
+        row_id
+        for row_id in row_ids
+        if row_id not in {primary, secondary}
+        and benchmark.parse_state_row_id(row_id)[1] not in {None, secondary_target}
+        and row_actions[row_id] != row_actions[secondary]
+    )
+    third_output, third_trace = benchmark._apply_conflicting_splice(
+        primary_pixels=benchmark._render_row_frame(changed_primary),
+        secondary_pixels=benchmark._render_row_frame(secondary),
+        primary_row_id=changed_primary,
+        secondary_row_id=secondary,
+        primary_action_id=row_actions[changed_primary],
+        secondary_action_id=row_actions[secondary],
+        mask_manifest=mask,
+    )
+
+    assert benchmark._array_digest(first_output) != benchmark._array_digest(second_output)
+    assert benchmark._array_digest(first_output) != benchmark._array_digest(third_output)
+    assert first_trace["splice_trace_digest"] != second_trace["splice_trace_digest"]
+    assert first_trace["splice_trace_digest"] != third_trace["splice_trace_digest"]
+
+
+def test_information_controls_have_hidden_history_ambiguity_and_no_visible_leak() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+
+    assert benchmark.validate_control_episode_records(records) == "ok"
+    assert {record["observation_pixel_digest"] for record in records} == {records[0]["observation_pixel_digest"]}
+    assert {record["metadata"]["hidden_source_history_id"] for record in records} == {
+        history["hidden_history_id"] for history in plan["family_intervention"]["control_group"]["hidden_source_histories"]
+    }
+    assert len({record["metadata"]["hidden_source_label_digest"] for record in records}) == len(records)
+    assert all(record["metadata"]["provider_visible_fields"] == ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"] for record in records)
+    assert len({record["metadata"]["provider_observation_digest"] for record in records}) == 1
+    assert len({benchmark._provider_observation_digest(benchmark.provider_observation_for_record(record).to_descriptor()) for record in records}) == 1
+    assert {record["episode_disposition"] for record in records} == {"information_theoretic_control"}
+    assert {record["frame_disposition"] for record in records} == {"information_theoretic_control"}
+    assert {record["denominator_class"] for record in records} == {"excluded_information_control"}
+
+
+def test_information_control_validator_rejects_hidden_label_collapse_and_visible_leak() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+
+    collapsed = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    for record in collapsed[1:]:
+        record["metadata"]["hidden_source_history_id"] = collapsed[0]["metadata"]["hidden_source_history_id"]
+        record["metadata"]["hidden_source_label_digest"] = collapsed[0]["metadata"]["hidden_source_label_digest"]
+    assert benchmark.validate_control_episode_records(collapsed) == "control_hidden_history_not_ambiguous"
+
+    leaked = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    leaked[0]["metadata"]["provider_visible_fields"] = ["pixels", "source_row_id"]
+    assert benchmark.validate_control_episode_records(leaked) == "control_provider_visible_leak"
+
+
+def test_episode_dispositions_and_final_observation_provenance_are_explicit() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    tile = benchmark._load_reachability_tile(REPO_ROOT)
+    plans = benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+    temporal_plan = next(item for item in plans if item["mutation_kind"] == "stale_repeated_frame")
+    temporal_records = benchmark._materialize_plan(temporal_plan, identity, tile)
+
+    assert temporal_plan["episode_disposition"] == "distinguishable_temporal_invalid"
+    assert temporal_plan["denominator_class"] == "temporal_negative_denominator"
+    assert {record["episode_family"] for record in temporal_records} == {"temporal_negative"}
+    assert {record["episode_disposition"] for record in temporal_records} == {"distinguishable_temporal_invalid"}
+    assert "stale_repeated_frame_payload" in {record["frame_disposition"] for record in temporal_records}
+
+    final_plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "final", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    assert final_plan["final_observation_provenance"] == {
+        "materialization_status": "prospective_materialization_prohibited",
+        "observation_payload_included": False,
+        "provenance": "sealed_plan_only",
+    }
+
+
+def test_information_controls_use_real_convergent_causal_histories() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    control_group = plan["family_intervention"]["control_group"]
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+
+    histories = [record["metadata"]["grounded_causal_history"] for record in records]
+    reconstructed = {benchmark._reconstructed_control_causal_tuple_digest(history) for history in histories}
+    assert len(reconstructed) >= 2
+    assert {history["resulting_row_id"] for history in histories} == {control_group["current_row_id"]}
+    assert {record["metadata"]["control_current_row_id"] for record in records} == {control_group["current_row_id"]}
+    assert len({record["observation_pixel_digest"] for record in records}) == 1
+    assert all(history["actual_executed_action"] in benchmark.ACTIONS for history in histories)
+    assert len({history["predecessor_row_id"] for history in histories}) >= 2
+
+
+def test_information_control_same_causal_tuple_with_distinct_ids_is_rejected() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+    collapsed = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    first_history = dict(collapsed[0]["metadata"]["grounded_causal_history"])
+    for index, record in enumerate(collapsed):
+        history = dict(first_history)
+        synthetic_id = "sha256:" + f"{index + 1:064x}"[-64:]
+        history["history_id"] = synthetic_id
+        history["hidden_history_id"] = synthetic_id
+        history["hidden_source_label_digest"] = "sha256:" + f"{index + 100:064x}"[-64:]
+        record["metadata"]["grounded_causal_history"] = history
+        record["metadata"]["hidden_source_history"] = history
+        record["metadata"]["hidden_source_history_id"] = synthetic_id
+        record["metadata"]["hidden_source_label_digest"] = history["hidden_source_label_digest"]
+    assert benchmark.validate_control_episode_records(collapsed) == "control_ambiguity_absent"
+
+
+def test_control_provider_observation_descriptor_is_identical_across_group() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+    descriptors = [benchmark.provider_observation_for_record(record).to_descriptor() for record in records]
+    probe_visible = [
+        {
+            "source_id": descriptor["source_id"],
+            "timestamp": descriptor["timestamp"],
+            "metadata": descriptor["metadata"],
+            "version": descriptor["version"],
+            "shape": descriptor["shape"],
+            "raw_digest": descriptor["raw_digest"],
+            "pixel_digest": benchmark._array_digest(record["pixels"]),
+        }
+        for record, descriptor in zip(records, descriptors)
+    ]
+
+    assert len({benchmark._provider_observation_digest(descriptor) for descriptor in descriptors}) == 1
+    assert len({benchmark._sha256(item) for item in probe_visible}) == 1
+    assert descriptors[0]["source_id"].startswith("control:")
+
+
+def test_control_actual_provider_source_id_leak_is_rejected() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    plan = next(
+        item
+        for item in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
+        if item["family_label"] == "information_control"
+    )
+    records = benchmark._materialize_plan(plan, identity, benchmark._load_reachability_tile(REPO_ROOT))
+    leaked = [dict(record, metadata=dict(record["metadata"])) for record in records]
+    leaked[0]["metadata"]["provider_observation_source_id"] = leaked[0]["frame_id"]
+    descriptor = benchmark.provider_observation_for_record(leaked[0]).to_descriptor()
+    leaked[0]["metadata"]["provider_observation_descriptor"] = descriptor
+    leaked[0]["metadata"]["provider_observation_digest"] = benchmark._provider_observation_digest(descriptor)
+
+    assert benchmark.validate_control_episode_records(leaked) == "control_provider_visible_leak"
+
+
+def test_operation_chain_replays_every_materialized_family() -> None:
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    by_family = {}
+    for record in records:
+        by_family.setdefault(record["family"], record)
+    for family in (
+        "exact",
+        "bounded_translation",
+        "conflicting_action_splice",
+        "critical_evidence_corruption",
+        "information_control",
+    ):
+        record = by_family[family]
+        replay = benchmark.replay_observation_operation_chain(record["metadata"]["observation_operation_chain"])
+        assert replay["final_emitted_digest"] == record["observation_pixel_digest"]
+        assert benchmark.validate_observation_operation_chain(record) == "ok"
+    temporal_records = [record for record in records if record["episode_family"] == "temporal_negative"]
+    stale = next(record for record in temporal_records if record["frame_disposition"] == "stale_repeated_frame_payload")
+    impossible = next(record for record in temporal_records if record["frame_disposition"] == "unreachable_destination_frame_payload")
+    gap = next(record for record in temporal_records if record["frame_disposition"] == "declared_gap_or_unknown_action")
+
+    assert "stale_repeat_replace" in [op["operation"] for op in stale["metadata"]["observation_operation_chain"]["operations"]]
+    assert "impossible_transition_replace" in [op["operation"] for op in impossible["metadata"]["observation_operation_chain"]["operations"]]
+    assert "emit_typed_gap_event" in [op["operation"] for op in gap["metadata"]["observation_operation_chain"]["operations"]]
+    assert benchmark.validate_observation_operation_chain(stale) == "ok"
+    assert benchmark.validate_observation_operation_chain(impossible) == "ok"
+    assert benchmark.validate_observation_operation_chain(gap) == "ok"
+
+
+def test_laundered_stale_repeat_operation_removal_is_rejected() -> None:
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    stale = next(record for record in records if record["frame_disposition"] == "stale_repeated_frame_payload")
+    mutated = dict(stale, metadata=dict(stale["metadata"]))
+    chain = dict(mutated["metadata"]["observation_operation_chain"])
+    original_digest = stale["metadata"]["stale_repeat"]["original_destination_digest"]
+    operations = [dict(op) for op in chain["operations"][:2]]
+    operations.append(
+        benchmark._operation_record(
+            index=2,
+            operation="emit_observation",
+            operation_version=benchmark.OBSERVATION_OPERATION_CHAIN_VERSION,
+            input_digests=[original_digest],
+            parameters={"event_type": "frame"},
+            output_digest=original_digest,
+        )
+    )
+    chain["operations"] = operations
+    chain["final_emitted_digest"] = original_digest
+    chain["operation_chain_digest"] = benchmark._sha256({key: value for key, value in chain.items() if key != "operation_chain_digest"})
+    mutated["metadata"]["observation_operation_chain"] = chain
+
+    assert mutated["observation_pixel_digest"] == stale["metadata"]["stale_repeat"]["replacement_digest"]
+    assert original_digest != mutated["observation_pixel_digest"]
+    assert benchmark.validate_observation_operation_chain(mutated) == "final_observation_provenance_mismatch"
+
+
+def test_conflicting_splice_final_visible_targets_imply_distinct_actions() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    splice_records = [record for record in records if record["family"] == "conflicting_action_splice"]
+    assert splice_records
+    for record in splice_records:
+        replay = benchmark.replay_observation_operation_chain(record["metadata"]["observation_operation_chain"])
+        evidence = benchmark._final_visible_target_action_evidence(replay["pixels"], row_actions)
+        trace = record["metadata"]["family_intervention_trace"]
+        assert evidence["conflicting_action_evidence_present"] is True
+        assert len(evidence["visible_action_set"]) >= 2
+        assert trace["visible_action_evidence_digest"] == evidence["visible_action_evidence_digest"]
+
+
+def test_action_unanimous_two_target_splice_is_rejected() -> None:
+    _identity, row_ids, row_actions = _identity_rows_actions()
+    primary = "tank=0|target=1|cooldown=0"
+    secondary = "tank=2|target=2|cooldown=0"
+    assert row_actions[primary] != row_actions[secondary]
+    assert benchmark._splice_pair_has_final_visible_action_conflict(primary, secondary, row_actions) is False
+
+    with pytest.raises(VPMValidationError, match="final visible target evidence"):
+        benchmark._apply_conflicting_splice(
+            primary_pixels=benchmark._render_row_frame(primary),
+            secondary_pixels=benchmark._render_row_frame(secondary),
+            primary_row_id=primary,
+            secondary_row_id=secondary,
+            primary_action_id=row_actions[primary],
+            secondary_action_id=row_actions[secondary],
+            mask_manifest=benchmark._splice_mask_manifest(),
+        )
+
+
+def test_exact_frame_disposition_reconstruction_for_temporal_families() -> None:
+    identity, row_ids, row_actions = _identity_rows_actions()
+    tile = benchmark._load_reachability_tile(REPO_ROOT)
+    plans = [plan for plan in benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions) if plan["family_label"] == "temporal_negative"]
+    by_kind = {plan["mutation_kind"]: plan for plan in plans}
+    expected_specific = {
+        "reordered_frames": "temporally_reordered_frame_payload",
+        "stale_repeated_frame": "stale_repeated_frame_payload",
+        "impossible_transition": "unreachable_destination_frame_payload",
+        "declared_gap_or_unknown_action": "declared_gap_or_unknown_action",
+    }
+    for kind, plan in by_kind.items():
+        records = benchmark._materialize_plan(plan, identity, tile)
+        intervention = plan["family_intervention"]
+        reconstructed = [
+            benchmark.expected_frame_disposition("temporal_negative", kind, int(record["sequence_number"]), intervention)
+            for record in records
+        ]
+        assert [record["frame_disposition"] for record in records] == reconstructed
+        assert expected_specific[kind] in reconstructed
+
+
+@pytest.mark.slow
+def test_bounded_transformed_valid_universe_closes_frame_invalid_outputs() -> None:
+    universe = benchmark.valid_observation_universe()
+    transformed = benchmark._valid_transformed_observation_digest_index()
+    canonical = set(benchmark.canonical_observation_universe()["digest_to_rows"])
+    transformed_only = set(transformed["digest_index"]) - canonical
+    records = benchmark._materialize_records("selection", REPO_ROOT)
+    invalid = [record for record in records if record["expected_disposition"] == "distinguishable_invalid_input"]
+
+    assert universe["parameter_universe_count"] == 8640
+    assert universe["transformed_valid_output_count"] == 112 * 8640
+    assert universe["transformed_valid_digest_count"] == len(transformed["digest_index"])
+    assert universe["policy_artifact_id"] == benchmark.compile_policy_artifact().artifact_id
+    assert universe["renderer_identity"]["renderer_identity_digest"].startswith("sha256:")
+    assert all(record["observation_pixel_digest"] not in canonical for record in invalid)
+    assert all(record["observation_pixel_digest"] not in transformed_only for record in invalid)

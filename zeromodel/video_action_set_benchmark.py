@@ -10,7 +10,7 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
-from .arcade_policy import ACTIONS, ShooterConfig, arcade_transition_spec, compile_policy_artifact, next_rows, parse_state_row_id, render_state_frame
+from .arcade_policy import ACTIONS, CELL_PIXELS, COOLDOWN_BLOCKED_VALUE, COOLDOWN_READY_VALUE, TANK_VALUE, TARGET_VALUE, ShooterConfig, arcade_transition_spec, compile_policy_artifact, next_rows, parse_state_row_id, render_state_frame, state_row_id
 from .artifact import VPMValidationError
 from .policy_lookup import VPMPolicyLookup
 from .video_complete_row_evidence import (
@@ -34,7 +34,7 @@ from .video_prospective_providers import (
     score_normalized_pixel,
     score_registered_local_correlation,
 )
-from .visual_address import ImageObservation
+from .visual_address import IMAGE_OBSERVATION_VERSION, ImageObservation
 
 
 BENCHMARK_VERSION = "zeromodel-video-action-set-reachability-benchmark/v1"
@@ -42,7 +42,7 @@ GENERATOR_VERSION = "zeromodel-video-action-set-reachability-generator/v1"
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
 EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
 SEED_DERIVATION_VERSION = "zeromodel-video-action-set-seed-derivation/v1"
-EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v1"
+EPISODE_FAMILY_REGISTRY_VERSION = "zeromodel-video-action-set-episode-family-registry/v4"
 TRANSFORMATION_FAMILY_VERSION = "zeromodel-video-action-set-transformation-family/v1"
 CRITICAL_COORDINATE_SET_VERSION = "zeromodel-video-action-set-critical-coordinate-set/v1"
 REACHABILITY_COMPOSITION_VERSION = "zeromodel-video-action-set-reachability-composition/v1"
@@ -51,13 +51,26 @@ PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
 REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
 MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1"
 CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
-MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v2"
+MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 REACHABILITY_TILE_DIGEST = "sha256:fef2bc5fd795bb92d3bd564bccdc2d32e1b23319aba55dffed5e0391e795a5df"
 REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
+CANONICAL_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-canonical-observation-universe/v1"
+VALID_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-valid-observation-universe/v2"
+FRAME_INVALID_CLOSURE_VERSION = "zeromodel-video-action-set-frame-invalid-closure/v1"
+FAMILY_INTERVENTION_VERSION = "zeromodel-video-action-set-family-intervention/v3"
+CONFLICTING_ACTION_SPLICE_VERSION = "zeromodel-video-action-set-family-conflicting-action-splice/v3"
+SPLICE_MASK_VERSION = "zeromodel-video-action-set-splice-mask/v2"
+INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-control/v3"
+INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v2"
+GROUNDED_CONTROL_HISTORY_VERSION = "zeromodel-video-action-set-grounded-control-history/v1"
+AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
+PROVIDER_OBSERVATION_BOUNDARY_VERSION = "zeromodel-video-action-set-provider-observation-boundary/v1"
+OBSERVATION_OPERATION_CHAIN_VERSION = "zeromodel-video-observation-operation-chain/v1"
 FRAME_SHAPE = (16, 28)
 CRITICAL_REGION_ID = "cooldown_indicator"
+TARGET_REGION_ID = "target_band"
 
 
 def _json_ready(value: Any) -> Any:
@@ -176,16 +189,16 @@ def _episode_family_registry() -> dict[str, Any]:
         },
         {
             "family_id": "conflicting_action_splice",
-            "family_version": "zeromodel-video-action-set-family-conflicting-action-splice/v1",
+            "family_version": CONFLICTING_ACTION_SPLICE_VERSION,
             "classification": "invalid",
             "source_row_required": True,
             "source_action_required": True,
-            "pixel_intervention": "primary/secondary source splice with nonzero effective contributions",
+            "pixel_intervention": "primary target evidence plus additive secondary target evidence with valid-state collision closure",
             "sequence_intervention": "none",
-            "expected_semantic_effect": "constructed conflicting visual evidence",
+            "expected_semantic_effect": "constructed multi-target visual evidence that cannot decode to a canonical valid state",
             "distinguishability_status": "distinguishable_invalid_input",
             "denominator_treatment": "distinguishable-invalid denominator",
-            "regeneration_requirements": ["primary source", "secondary source", "splice mask", "contribution counts", "output digest"],
+            "regeneration_requirements": ["primary source", "secondary source", "target-evidence composition mask", "source contribution counts", "canonical byte-universe noncollision", "output digest"],
             "implementation_status": "implemented_bounded_scaffold",
         },
         {
@@ -260,16 +273,22 @@ def _episode_family_registry() -> dict[str, Any]:
         },
         {
             "family_id": "information_control",
-            "family_version": "zeromodel-video-action-set-family-information-control/v1",
+            "family_version": INFORMATION_CONTROL_VERSION,
             "classification": "information-theoretic-control",
             "source_row_required": True,
             "source_action_required": False,
-            "pixel_intervention": "byte-identical control observations with hidden source-history labels",
+            "pixel_intervention": "byte-identical control observations with multiple hidden source-history labels",
             "sequence_intervention": "control-only grouping",
             "expected_semantic_effect": "hidden distinction unavailable to providers",
             "distinguishability_status": "information_theoretic_control",
             "denominator_treatment": "excluded from distinguishable-invalid denominators",
-            "regeneration_requirements": ["control group", "byte identity digest", "hidden-label digest"],
+            "regeneration_requirements": [
+                "control group",
+                "byte identity digest",
+                "hidden history labels",
+                "hidden-label cardinality",
+                "provider-visible field closure",
+            ],
             "implementation_status": "implemented_bounded_scaffold",
         },
     ]
@@ -497,6 +516,304 @@ def canonical_prototypes(config: ShooterConfig = ShooterConfig()) -> dict[str, t
     return prototypes
 
 
+def canonical_observation_universe(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    digest_to_rows: dict[str, list[dict[str, str]]] = {}
+    prototypes = canonical_prototypes() if config == ShooterConfig() else canonical_prototypes(config)
+    for prototype_id, (row_id, action_id, observation_raw_digest, observation) in prototypes.items():
+        pixel_digest = _array_digest(observation.pixels)
+        entry = {
+            "prototype_id": prototype_id,
+            "row_id": row_id,
+            "action_id": action_id,
+            "image_observation_raw_digest": observation_raw_digest,
+            "observation_pixel_digest": pixel_digest,
+        }
+        rows.append(entry)
+        digest_to_rows.setdefault(pixel_digest, []).append({"row_id": row_id, "action_id": action_id})
+    duplicate_groups = [
+        {"observation_pixel_digest": digest, "rows": grouped}
+        for digest, grouped in sorted(digest_to_rows.items())
+        if len(grouped) > 1
+    ]
+    payload = {
+        "version": CANONICAL_OBSERVATION_UNIVERSE_VERSION,
+        "digest_semantics": "raw rendered uint8 bytes, excluding ImageObservation namespace",
+        "frame_shape": list(FRAME_SHAPE),
+        "row_count": len(rows),
+        "rows": rows,
+        "digest_to_rows": digest_to_rows,
+        "duplicate_digest_group_count": len(duplicate_groups),
+        "duplicate_digest_groups": duplicate_groups,
+    }
+    payload["universe_digest"] = _sha256(payload)
+    return payload
+
+
+def _renderer_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    payload = {
+        "version": "zeromodel-arcade-shooter-renderer-identity/v1",
+        "function": "zeromodel.arcade_policy.render_state_frame",
+        "frame_shape": list(FRAME_SHAPE),
+        "cell_pixels": int(CELL_PIXELS),
+        "target_value": int(TARGET_VALUE),
+        "tank_value": int(TANK_VALUE),
+        "cooldown_ready_value": int(COOLDOWN_READY_VALUE),
+        "cooldown_blocked_value": int(COOLDOWN_BLOCKED_VALUE),
+        "config": _transition_config_payload(config),
+    }
+    return payload | {"renderer_identity_digest": _sha256(payload)}
+
+
+
+def _valid_transformation_parameter_key(params: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "dx": int(params["dx"]),
+        "dy": int(params["dy"]),
+        "scale_percent": int(params["scale_percent"]),
+        "offset": int(params["offset"]),
+        "occlusion": None if params.get("occlusion") is None else dict(params["occlusion"]),
+    }
+
+
+
+def _valid_transformation_parameter_universe() -> dict[str, Any]:
+    if hasattr(_valid_transformation_parameter_universe, "_cache"):
+        return _valid_transformation_parameter_universe._cache  # type: ignore[attr-defined]
+    by_key: dict[str, dict[str, Any]] = {}
+    for dx in range(-1, 2):
+        for dy in range(-1, 2):
+            for scale in range(90, 106):
+                for offset in range(0, 6):
+                    params = {
+                        "version": TRANSFORMATION_FAMILY_VERSION,
+                        "family": "bounded_translation_photometric",
+                        "seed": 0,
+                        "dx": dx,
+                        "dy": dy,
+                        "scale_percent": scale,
+                        "offset": offset,
+                        "occlusion": None,
+                    }
+                    params["parameter_digest"] = _sha256({key: value for key, value in params.items() if key != "parameter_digest"})
+                    by_key[_sha256(_valid_transformation_parameter_key(params))] = params
+                    for top in range(0, 3):
+                        for left in range(0, 3):
+                            occluded = dict(params)
+                            occluded["family"] = "compound_bounded"
+                            occluded["occlusion"] = {"top": top, "left": left, "height": 2, "width": 3, "value": 64}
+                            occluded["parameter_digest"] = _sha256({key: value for key, value in occluded.items() if key != "parameter_digest"})
+                            by_key[_sha256(_valid_transformation_parameter_key(occluded))] = occluded
+    parameters = [by_key[key] for key in sorted(by_key)]
+    payload = {
+        "version": "zeromodel-video-action-set-valid-transformation-parameter-universe/v1",
+        "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
+        "parameter_count": len(parameters),
+        "parameters": parameters,
+    }
+    payload["parameter_universe_digest"] = _sha256(payload)
+    _valid_transformation_parameter_universe._cache = payload  # type: ignore[attr-defined]
+    return payload
+
+
+
+def _valid_transformed_observation_digest_index(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    cache_key = _sha256({"config": _transition_config_payload(config), "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION})
+    if not hasattr(_valid_transformed_observation_digest_index, "_cache"):
+        _valid_transformed_observation_digest_index._cache = {}  # type: ignore[attr-defined]
+    cache: dict[str, dict[str, Any]] = _valid_transformed_observation_digest_index._cache  # type: ignore[attr-defined]
+    if cache_key in cache:
+        return cache[cache_key]
+    canonical = canonical_observation_universe(config)
+    parameter_universe = _valid_transformation_parameter_universe()
+    digest_to_first: dict[str, dict[str, Any]] = {}
+    duplicate_count = 0
+    duplicate_examples = []
+    for canonical_row in canonical["rows"]:
+        row_id = str(canonical_row["row_id"])
+        source_pixels = _render_row_frame(row_id, config=config)
+        for params in parameter_universe["parameters"]:
+            output, _trace = _apply_transformation(source_pixels, params)
+            digest = _array_digest(output)
+            provenance = {
+                "row_id": row_id,
+                "parameter_digest": params["parameter_digest"],
+                "parameter_key_digest": _sha256(_valid_transformation_parameter_key(params)),
+            }
+            previous = digest_to_first.get(digest)
+            if previous is None:
+                digest_to_first[digest] = provenance
+            else:
+                duplicate_count += 1
+                if len(duplicate_examples) < 20:
+                    duplicate_examples.append({"observation_pixel_digest": digest, "first": previous, "duplicate": provenance})
+    digest_set = sorted(digest_to_first)
+    payload = {
+        "digest_index": set(digest_set),
+        "summary": {
+            "version": VALID_OBSERVATION_UNIVERSE_VERSION,
+            "policy_artifact_id": compile_policy_artifact(config).artifact_id,
+            "row_action_universe_digest": _sha256(
+                {
+                    "row_action": [
+                        {"row_id": row["row_id"], "action_id": row["action_id"]}
+                        for row in canonical["rows"]
+                    ]
+                }
+            ),
+            "renderer_contract_version": "zeromodel-arcade-shooter-render-state-frame/v1",
+            "renderer_identity": _renderer_identity(config),
+            "shooter_config": _transition_config_payload(config),
+            "shooter_config_digest": _sha256(_transition_config_payload(config)),
+            "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
+            "parameter_universe_digest": parameter_universe["parameter_universe_digest"],
+            "parameter_universe_count": parameter_universe["parameter_count"],
+            "canonical_universe_digest": canonical["universe_digest"],
+            "exact_canonical_digest_count": len(canonical["digest_to_rows"]),
+            "transformed_valid_digest_count": len(digest_set),
+            "transformed_valid_output_count": len(canonical["rows"]) * int(parameter_universe["parameter_count"]),
+            "duplicate_transformed_digest_count": duplicate_count,
+            "duplicate_transformed_digest_examples": duplicate_examples,
+            "transformed_valid_digest_set_digest": _sha256(digest_set),
+        },
+    }
+    payload["summary"]["universe_digest"] = _sha256(payload["summary"])
+    cache[cache_key] = payload
+    return payload
+
+
+
+def valid_observation_universe(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    canonical = canonical_observation_universe(config)
+    transformed = _valid_transformed_observation_digest_index(config)
+    payload = {
+        **transformed["summary"],
+        "canonical_universe_version": canonical["version"],
+        "valid_categories": ["canonical_exact", "bounded_transformation_family"],
+        "exact_canonical_digest_to_rows": canonical["digest_to_rows"],
+        "bounded_transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
+    }
+    payload["universe_digest"] = _sha256({key: value for key, value in payload.items() if key != "universe_digest"})
+    return payload
+
+
+def _canonical_observation_digest_index(config: ShooterConfig = ShooterConfig()) -> dict[str, list[dict[str, str]]]:
+    return {
+        str(digest): [dict(item) for item in rows]
+        for digest, rows in canonical_observation_universe(config)["digest_to_rows"].items()
+    }
+
+
+def _canonical_collision_rows(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> list[dict[str, str]]:
+    return _canonical_observation_digest_index(config).get(_array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)), [])
+
+
+def _target_signal_coordinates(width: int = FRAME_SHAPE[1]) -> tuple[tuple[int, int], ...]:
+    return tuple((y, x) for y in range(2, 5) for x in range(int(width)))
+
+
+def _target_signal_mask(pixels: np.ndarray) -> np.ndarray:
+    array = np.ascontiguousarray(pixels, dtype=np.uint8)
+    if tuple(array.shape) != FRAME_SHAPE:
+        raise VPMValidationError("target evidence mask requires a canonical frame shape")
+    mask = np.zeros(array.shape, dtype=bool)
+    mask[2:5, :] = array[2:5, :] != 0
+    return mask
+
+
+def _splice_evidence_counts(primary_pixels: np.ndarray, secondary_pixels: np.ndarray) -> dict[str, int]:
+    primary = np.ascontiguousarray(primary_pixels, dtype=np.uint8)
+    secondary = np.ascontiguousarray(secondary_pixels, dtype=np.uint8)
+    if primary.shape != secondary.shape:
+        raise VPMValidationError("splice sources must have the same shape")
+    primary_target = _target_signal_mask(primary)
+    secondary_target = _target_signal_mask(secondary)
+    secondary_additive = secondary_target & ~primary_target
+    return {
+        "primary_target_pixel_count": int(np.count_nonzero(primary_target)),
+        "secondary_target_pixel_count": int(np.count_nonzero(secondary_target)),
+        "secondary_additive_target_pixel_count": int(np.count_nonzero(secondary_additive)),
+        "target_overlap_pixel_count": int(np.count_nonzero(primary_target & secondary_target)),
+    }
+
+
+def _target_slot_signal_coordinates(slot: int, *, width: int = 7) -> tuple[tuple[int, int], ...]:
+    centre = int(slot) * CELL_PIXELS + CELL_PIXELS // 2
+    return tuple([(2, centre - 1), (2, centre), (2, centre + 1), (3, centre - 1), (3, centre), (3, centre + 1), (4, centre)])
+
+
+
+def _detect_visible_target_slots(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> list[int]:
+    array = np.ascontiguousarray(pixels, dtype=np.uint8)
+    slots = []
+    for slot in range(config.width):
+        coords = _target_slot_signal_coordinates(slot, width=config.width)
+        values = [int(array[y, x]) for y, x in coords]
+        if all(value == TARGET_VALUE for value in values):
+            slots.append(slot)
+    return slots
+
+
+
+def _detect_tank_slot(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> int | None:
+    array = np.ascontiguousarray(pixels, dtype=np.uint8)
+    for slot in range(config.width):
+        centre = int(slot) * CELL_PIXELS + CELL_PIXELS // 2
+        coords = tuple([(11, centre), (12, centre - 1), (12, centre), (12, centre + 1), (13, centre - 2), (13, centre - 1), (13, centre), (13, centre + 1), (13, centre + 2)])
+        if all(int(array[y, x]) == TANK_VALUE for y, x in coords):
+            return slot
+    return None
+
+
+
+def _detect_cooldown_state(pixels: np.ndarray) -> int | None:
+    block = np.ascontiguousarray(pixels, dtype=np.uint8)[7:9, -3:-1]
+    values = {int(item) for item in block.reshape(-1)}
+    if values == {COOLDOWN_READY_VALUE}:
+        return 0
+    if values == {COOLDOWN_BLOCKED_VALUE}:
+        return 1
+    return None
+
+
+
+def _final_visible_target_action_evidence(pixels: np.ndarray, row_actions: Mapping[str, str], *, config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    target_slots = _detect_visible_target_slots(pixels, config=config)
+    tank_slot = _detect_tank_slot(pixels, config=config)
+    cooldown = _detect_cooldown_state(pixels)
+    action_map: dict[str, str] = {}
+    if tank_slot is not None and cooldown is not None:
+        for target in target_slots:
+            row_id = state_row_id(tank_slot, target, cooldown)
+            action_map[str(target)] = str(row_actions[row_id])
+    visible_actions = sorted(set(action_map.values()))
+    payload = {
+        "version": "zeromodel-video-action-set-final-visible-target-action-evidence/v1",
+        "final_visible_target_slots": [int(item) for item in target_slots],
+        "final_tank_slot": tank_slot,
+        "final_cooldown": cooldown,
+        "visible_target_action_map": action_map,
+        "visible_action_set": visible_actions,
+        "conflicting_action_evidence_present": len(visible_actions) >= 2,
+    }
+    payload["visible_action_evidence_digest"] = _sha256(payload)
+    return payload
+
+
+
+def _splice_pair_has_final_visible_action_conflict(primary_row_id: str, secondary_row_id: str, row_actions: Mapping[str, str]) -> bool:
+    tank, primary_target, cooldown = parse_state_row_id(str(primary_row_id))
+    _secondary_tank, secondary_target, _secondary_cooldown = parse_state_row_id(str(secondary_row_id))
+    if primary_target is None or secondary_target is None or primary_target == secondary_target:
+        return False
+    implied = {
+        row_actions[state_row_id(tank, int(primary_target), cooldown)],
+        row_actions[state_row_id(tank, int(secondary_target), cooldown)],
+    }
+    return len(implied) >= 2
+
+
+
 def _family_schedule() -> tuple[str, ...]:
     return (
         "exact",
@@ -506,6 +823,424 @@ def _family_schedule() -> tuple[str, ...]:
         "bounded_translation_occlusion",
         "compound_bounded",
     )
+
+
+
+def _episode_disposition(family_label: str, mutation_kind: str | None = None) -> str:
+    if family_label == "valid":
+        return "valid"
+    if family_label == "frame_invalid":
+        return "distinguishable_invalid_input"
+    if family_label == "temporal_negative":
+        return "distinguishable_temporal_invalid"
+    if family_label == "information_control":
+        return "information_theoretic_control"
+    return str(mutation_kind or family_label)
+
+
+
+def _denominator_class(family_label: str, mutation_kind: str | None = None) -> str:
+    if family_label == "valid":
+        return "valid_denominator"
+    if family_label == "frame_invalid":
+        return "distinguishable_invalid_denominator"
+    if family_label == "temporal_negative":
+        return "temporal_negative_denominator"
+    if family_label == "information_control":
+        return "excluded_information_control"
+    return str(mutation_kind or family_label)
+
+
+
+def _frame_disposition_for_episode(family_label: str, mutation_kind: str | None = None) -> str:
+    if family_label == "valid":
+        return "valid"
+    if family_label == "frame_invalid":
+        return "distinguishable_invalid_input"
+    if family_label == "information_control":
+        return "information_theoretic_control"
+    if family_label == "temporal_negative":
+        return "valid_frame_payload"
+    return str(mutation_kind or family_label)
+
+
+
+def expected_frame_disposition(
+    episode_family: str,
+    mutation_kind: str | None,
+    frame_index: int,
+    intervention_plan: Mapping[str, Any] | None = None,
+) -> str:
+    family = str(episode_family)
+    kind = None if mutation_kind is None else str(mutation_kind)
+    index = int(frame_index)
+    intervention = dict(intervention_plan or {})
+    if family == "valid":
+        return "valid"
+    if family == "frame_invalid":
+        return "distinguishable_invalid_input"
+    if family == "information_control":
+        return "information_theoretic_control"
+    if family != "temporal_negative":
+        return str(kind or family)
+    if kind == "reordered_frames":
+        return "temporally_reordered_frame_payload"
+    if kind == "stale_repeated_frame":
+        repeat = intervention.get("stale_repeat", {})
+        return "stale_repeated_frame_payload" if index == int(repeat.get("destination_frame_index", -1)) else "valid_frame_payload"
+    if kind == "impossible_transition":
+        transition = intervention.get("impossible_transition", {})
+        return "unreachable_destination_frame_payload" if index == int(transition.get("destination_frame_index", -1)) else "valid_frame_payload"
+    if kind == "declared_gap_or_unknown_action":
+        gap = intervention.get("gap_event", {})
+        return "declared_gap_or_unknown_action" if index == int(gap.get("position", -1)) else "valid_frame_payload"
+    return "valid_frame_payload"
+
+
+
+def _transition_config_payload(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    return {"width": int(config.width), "wave": [int(item) for item in config.wave], "max_steps": int(config.max_steps)}
+
+
+
+def _transition_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
+    payload = {
+        "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
+        "function": "zeromodel.arcade_policy.transitions.next_rows",
+        "action_universe": list(ACTIONS),
+        "config": _transition_config_payload(config),
+    }
+    return payload | {"transition_identity_digest": _sha256(payload)}
+
+
+
+def _transition_input_digest(predecessor_row_id: str, action: str, *, config: ShooterConfig = ShooterConfig()) -> str:
+    tank, target, cooldown = parse_state_row_id(str(predecessor_row_id))
+    return _sha256(
+        {
+            "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
+            "predecessor_row_id": str(predecessor_row_id),
+            "parsed_state": {"tank_x": tank, "target_x": target, "cooldown": cooldown},
+            "actual_executed_action": str(action),
+            "config_digest": _sha256(_transition_config_payload(config)),
+        }
+    )
+
+
+
+def _transition_result_digest(
+    predecessor_row_id: str,
+    action: str,
+    transition_choice_index: int,
+    resulting_row_id: str,
+    *,
+    config: ShooterConfig = ShooterConfig(),
+) -> str:
+    tank, target, cooldown = parse_state_row_id(str(predecessor_row_id))
+    destinations = list(next_rows(tank, target, cooldown, str(action), width=config.width))
+    return _sha256(
+        {
+            "version": AUTHORITATIVE_TRANSITION_FUNCTION_VERSION,
+            "predecessor_row_id": str(predecessor_row_id),
+            "actual_executed_action": str(action),
+            "reachable_row_ids": destinations,
+            "transition_choice_index": int(transition_choice_index),
+            "resulting_row_id": str(resulting_row_id),
+            "config_digest": _sha256(_transition_config_payload(config)),
+        }
+    )
+
+
+
+def _normalized_control_causal_tuple(
+    *,
+    predecessor_row_id: str,
+    actual_executed_action: str,
+    transition_choice_index: int,
+    resulting_row_id: str,
+    config: ShooterConfig = ShooterConfig(),
+) -> dict[str, Any]:
+    transition_identity = _transition_identity(config)
+    return {
+        "version": GROUNDED_CONTROL_HISTORY_VERSION,
+        "predecessor_row_id": str(predecessor_row_id),
+        "actual_executed_action": str(actual_executed_action),
+        "transition_choice_index": int(transition_choice_index),
+        "resulting_row_id": str(resulting_row_id),
+        "transition_identity": transition_identity,
+        "transition_input_digest": _transition_input_digest(str(predecessor_row_id), str(actual_executed_action), config=config),
+        "transition_result_digest": _transition_result_digest(
+            str(predecessor_row_id),
+            str(actual_executed_action),
+            int(transition_choice_index),
+            str(resulting_row_id),
+            config=config,
+        ),
+    }
+
+
+
+def _grounded_control_history(
+    *,
+    control_group_id: str,
+    hidden_history_index: int,
+    predecessor_row_id: str,
+    actual_executed_action: str,
+    transition_choice_index: int,
+    resulting_row_id: str,
+    config: ShooterConfig = ShooterConfig(),
+) -> dict[str, Any]:
+    causal_tuple = _normalized_control_causal_tuple(
+        predecessor_row_id=predecessor_row_id,
+        actual_executed_action=actual_executed_action,
+        transition_choice_index=transition_choice_index,
+        resulting_row_id=resulting_row_id,
+        config=config,
+    )
+    tuple_digest = _sha256(causal_tuple)
+    payload = {
+        "version": GROUNDED_CONTROL_HISTORY_VERSION,
+        "control_group_id": str(control_group_id),
+        "hidden_history_index": int(hidden_history_index),
+        "history_id": tuple_digest,
+        "hidden_history_id": tuple_digest,
+        "predecessor_row_id": str(predecessor_row_id),
+        "actual_executed_action": str(actual_executed_action),
+        "transition_choice_index": int(transition_choice_index),
+        "resulting_row_id": str(resulting_row_id),
+        "transition_identity": causal_tuple["transition_identity"],
+        "transition_input_digest": causal_tuple["transition_input_digest"],
+        "transition_result_digest": causal_tuple["transition_result_digest"],
+        "normalized_causal_tuple_digest": tuple_digest,
+    }
+    payload["history_digest"] = _sha256(payload)
+    payload["hidden_source_label_digest"] = payload["history_digest"]
+    return payload
+
+
+
+def _reconstructed_control_causal_tuple_digest(history: Mapping[str, Any], *, config: ShooterConfig = ShooterConfig()) -> str:
+    if history.get("version") != GROUNDED_CONTROL_HISTORY_VERSION:
+        raise VPMValidationError("unsupported grounded control history version")
+    action = str(history.get("actual_executed_action"))
+    if action not in ACTIONS:
+        raise VPMValidationError("control history action is not declared")
+    predecessor = str(history.get("predecessor_row_id"))
+    resulting = str(history.get("resulting_row_id"))
+    choice_index = int(history.get("transition_choice_index", -1))
+    tank, target, cooldown = parse_state_row_id(predecessor)
+    destinations = list(next_rows(tank, target, cooldown, action, width=config.width))
+    if choice_index < 0 or choice_index >= len(destinations):
+        raise VPMValidationError("control history transition choice is invalid")
+    if str(destinations[choice_index]) != resulting:
+        raise VPMValidationError("control history result does not match the declared choice")
+    causal_tuple = _normalized_control_causal_tuple(
+        predecessor_row_id=predecessor,
+        actual_executed_action=action,
+        transition_choice_index=choice_index,
+        resulting_row_id=resulting,
+        config=config,
+    )
+    tuple_digest = _sha256(causal_tuple)
+    if history.get("transition_identity") != causal_tuple["transition_identity"]:
+        raise VPMValidationError("control history transition identity mismatch")
+    if history.get("transition_input_digest") != causal_tuple["transition_input_digest"]:
+        raise VPMValidationError("control history input digest mismatch")
+    if history.get("transition_result_digest") != causal_tuple["transition_result_digest"]:
+        raise VPMValidationError("control history result digest mismatch")
+    if history.get("normalized_causal_tuple_digest") != tuple_digest:
+        raise VPMValidationError("control history causal tuple digest mismatch")
+    return tuple_digest
+
+
+
+def _grounded_control_histories_for_current_row(
+    current_row_id: str,
+    row_ids: Sequence[str],
+    *,
+    config: ShooterConfig = ShooterConfig(),
+) -> list[dict[str, Any]]:
+    histories: list[dict[str, Any]] = []
+    for predecessor in row_ids:
+        tank, target, cooldown = parse_state_row_id(str(predecessor))
+        for action in ACTIONS:
+            destinations = list(next_rows(tank, target, cooldown, action, width=config.width))
+            for index, destination in enumerate(destinations):
+                if str(destination) != str(current_row_id):
+                    continue
+                histories.append(
+                    {
+                        "predecessor_row_id": str(predecessor),
+                        "actual_executed_action": str(action),
+                        "transition_choice_index": int(index),
+                        "resulting_row_id": str(current_row_id),
+                        "normalized_causal_tuple_digest": _sha256(
+                            _normalized_control_causal_tuple(
+                                predecessor_row_id=str(predecessor),
+                                actual_executed_action=str(action),
+                                transition_choice_index=int(index),
+                                resulting_row_id=str(current_row_id),
+                                config=config,
+                            )
+                        ),
+                    }
+                )
+    return sorted(
+        histories,
+        key=lambda item: (
+            str(item["actual_executed_action"]),
+            str(item["predecessor_row_id"]),
+            int(item["transition_choice_index"]),
+        ),
+    )
+
+
+
+def _select_grounded_control_histories(
+    current_row_id: str,
+    row_ids: Sequence[str],
+    *,
+    control_group_id: str,
+    frame_count: int,
+    config: ShooterConfig = ShooterConfig(),
+) -> list[dict[str, Any]]:
+    candidates = _grounded_control_histories_for_current_row(current_row_id, row_ids, config=config)
+    if len({item["normalized_causal_tuple_digest"] for item in candidates}) < 2:
+        raise VPMValidationError("information control current row lacks grounded causal ambiguity")
+    preferred: list[dict[str, Any]] = []
+    used_predecessors: set[str] = set()
+    used_actions: set[str] = set()
+    for candidate in candidates:
+        predecessor = str(candidate["predecessor_row_id"])
+        action = str(candidate["actual_executed_action"])
+        if predecessor in used_predecessors or action in used_actions:
+            continue
+        preferred.append(candidate)
+        used_predecessors.add(predecessor)
+        used_actions.add(action)
+        if len(preferred) == int(frame_count):
+            break
+    for candidate in candidates:
+        if len(preferred) == int(frame_count):
+            break
+        if candidate in preferred:
+            continue
+        predecessor = str(candidate["predecessor_row_id"])
+        if predecessor in used_predecessors:
+            continue
+        preferred.append(candidate)
+        used_predecessors.add(predecessor)
+    for candidate in candidates:
+        if len(preferred) == int(frame_count):
+            break
+        if candidate not in preferred:
+            preferred.append(candidate)
+    if len(preferred) < min(2, int(frame_count)):
+        raise VPMValidationError("information control needs at least two grounded causal histories")
+    return [
+        _grounded_control_history(
+            control_group_id=control_group_id,
+            hidden_history_index=index,
+            predecessor_row_id=str(item["predecessor_row_id"]),
+            actual_executed_action=str(item["actual_executed_action"]),
+            transition_choice_index=int(item["transition_choice_index"]),
+            resulting_row_id=str(current_row_id),
+            config=config,
+        )
+        for index, item in enumerate(preferred)
+    ]
+
+
+
+def _control_source_rows(row_ids: Sequence[str], *, count: int, frame_count: int, config: ShooterConfig = ShooterConfig()) -> list[str]:
+    selected = []
+    for row_id in row_ids:
+        histories = _grounded_control_histories_for_current_row(str(row_id), row_ids, config=config)
+        if len({item["normalized_causal_tuple_digest"] for item in histories}) >= int(frame_count):
+            selected.append(str(row_id))
+        if len(selected) == int(count):
+            return selected
+    raise VPMValidationError("unable to select enough grounded information-control rows")
+
+
+
+def _provider_observation_digest(descriptor: Mapping[str, Any]) -> str:
+    return _sha256({"version": PROVIDER_OBSERVATION_BOUNDARY_VERSION, "descriptor": descriptor})
+
+
+
+def _control_provider_source_id(record: Mapping[str, Any]) -> str:
+    metadata = record.get("metadata", {})
+    group_id = metadata.get("control_group_id") or metadata.get("family_intervention", {}).get("control_group", {}).get("control_group_id")
+    if not group_id:
+        raise VPMValidationError("information control record lacks a control group id")
+    return str(metadata.get("provider_observation_source_id") or f"control:{group_id}")
+
+
+
+def provider_observation_for_record(record: Mapping[str, Any]) -> ImageObservation:
+    if record.get("pixels") is None:
+        raise VPMValidationError("provider observation requires materialized pixels")
+    pixels = np.ascontiguousarray(record["pixels"], dtype=np.uint8)
+    metadata = record.get("metadata", {})
+    if record.get("expected_disposition") == "information_theoretic_control":
+        source_id = _control_provider_source_id(record)
+        timestamp = metadata.get("provider_observation_timestamp")
+        visible_metadata = metadata.get("provider_observation_metadata", {})
+    else:
+        source_id = str(record.get("frame_id"))
+        timestamp = metadata.get("provider_observation_timestamp") if "provider_observation_timestamp" in metadata else None
+        visible_metadata = metadata.get("provider_observation_metadata", {}) if "provider_observation_metadata" in metadata else {}
+    return ImageObservation(pixels, timestamp=None if timestamp is None else str(timestamp), source_id=source_id, metadata=visible_metadata)
+
+
+
+def provider_observation_descriptor_for_record(record: Mapping[str, Any]) -> dict[str, Any]:
+    if record.get("pixels") is not None:
+        return provider_observation_for_record(record).to_descriptor()
+    metadata = record.get("metadata", {})
+    stored = metadata.get("provider_observation_descriptor")
+    if isinstance(stored, Mapping):
+        raw_digest = stored.get("raw_digest")
+        shape = stored.get("shape")
+        version = stored.get("version", IMAGE_OBSERVATION_VERSION)
+    else:
+        raw_digest = metadata.get("provider_observation_raw_digest")
+        shape = metadata.get("provider_observation_shape")
+        version = IMAGE_OBSERVATION_VERSION
+    if raw_digest is None or shape is None:
+        raise VPMValidationError("stored provider observation descriptor lacks raw digest or shape")
+    if record.get("expected_disposition") == "information_theoretic_control":
+        source_id = _control_provider_source_id(record)
+        timestamp = metadata.get("provider_observation_timestamp")
+        visible_metadata = metadata.get("provider_observation_metadata", {})
+    else:
+        source_id = str(record.get("frame_id"))
+        timestamp = metadata.get("provider_observation_timestamp") if "provider_observation_timestamp" in metadata else None
+        visible_metadata = metadata.get("provider_observation_metadata", {}) if "provider_observation_metadata" in metadata else {}
+    return {
+        "version": str(version),
+        "raw_digest": str(raw_digest),
+        "shape": [int(item) for item in shape],
+        "timestamp": None if timestamp is None else str(timestamp),
+        "source_id": source_id,
+        "metadata": _json_ready(visible_metadata),
+    }
+
+
+
+def _final_observation_provenance(split: str) -> dict[str, Any]:
+    if split == "final":
+        return {
+            "materialization_status": "prospective_materialization_prohibited",
+            "observation_payload_included": False,
+            "provenance": "sealed_plan_only",
+        }
+    return {
+        "materialization_status": "materialized",
+        "observation_payload_included": True,
+        "provenance": "in_memory_generation",
+    }
 
 
 def _frame_count_for_plan(split: str, family_label: str) -> int:
@@ -537,16 +1272,18 @@ def _critical_coordinate_manifest(coordinates: Sequence[Sequence[int]] | None = 
     }
 
 
-def _splice_mask_manifest(mask_rows: Sequence[int] = tuple(range(6)), *, width: int = 28) -> dict[str, Any]:
+def _splice_mask_manifest(mask_rows: Sequence[int] = (2, 3, 4), *, width: int = 28) -> dict[str, Any]:
     rows = tuple(int(row) for row in mask_rows)
-    if not rows or len(set(rows)) != len(rows):
-        raise VPMValidationError("splice mask rows must be unique and non-empty")
-    if any(row < 0 or row >= FRAME_SHAPE[0] for row in rows):
-        raise VPMValidationError("splice mask row out of bounds")
-    coordinates = tuple((row, x) for row in rows for x in range(width))
+    if rows != (2, 3, 4):
+        raise VPMValidationError("conflicting splice mask is frozen to the rendered target signal rows")
+    if int(width) != FRAME_SHAPE[1]:
+        raise VPMValidationError("conflicting splice mask width must match the canonical frame shape")
+    coordinates = _target_signal_coordinates(int(width))
     return {
-        "version": "zeromodel-video-action-set-splice-mask/v1",
-        "mask_kind": "row_band",
+        "version": SPLICE_MASK_VERSION,
+        "mask_kind": "simultaneous_target_evidence",
+        "target_region_id": TARGET_REGION_ID,
+        "composition_rule": "copy primary observation, then add secondary target pixels where the primary has no target signal",
         "rows": list(rows),
         "coordinates": [[y, x] for y, x in coordinates],
         "coordinate_count": len(coordinates),
@@ -560,19 +1297,37 @@ def _state_row_values(row_id: str) -> tuple[int, int | None, int]:
 
 def _secondary_row_for_splice(row_ids: list[str], row_actions: Mapping[str, str], source_row_id: str) -> str:
     source_action = row_actions[source_row_id]
-    source_tank, source_target, source_cooldown = _state_row_values(source_row_id)
+    _source_tank, source_target, _source_cooldown = _state_row_values(source_row_id)
+    if source_target is None:
+        raise VPMValidationError("conflicting splice source row must contain visible target evidence")
     for row_id in row_ids:
         if row_id == source_row_id:
             continue
         if row_actions[row_id] == source_action:
             continue
-        tank, target, cooldown = _state_row_values(row_id)
-        if target == source_target:
+        _tank, target, _cooldown = _state_row_values(row_id)
+        if target is None or target == source_target:
             continue
-        if (tank, cooldown) == (source_tank, source_cooldown):
+        if not _splice_pair_has_final_visible_action_conflict(source_row_id, row_id, row_actions):
             continue
         return row_id
-    raise VPMValidationError("frame splice requires a secondary row with a conflicting action and distinct visual source")
+    raise VPMValidationError("frame splice requires a secondary row with conflicting action and distinct visible target evidence")
+
+
+def _conflicting_splice_source_rows(row_ids: list[str], row_actions: Mapping[str, str], count: int) -> list[str]:
+    selected: list[str] = []
+    for row_id in row_ids:
+        _tank, target, _cooldown = _state_row_values(row_id)
+        if target is None:
+            continue
+        try:
+            _secondary_row_for_splice(row_ids, row_actions, row_id)
+        except VPMValidationError:
+            continue
+        selected.append(row_id)
+        if len(selected) == int(count):
+            return selected
+    raise VPMValidationError("unable to select enough conflicting splice source rows with visible target evidence")
 
 
 def _impossible_destination_row(row_ids: list[str], row_actions: Mapping[str, str], source_row_id: str) -> str:
@@ -611,7 +1366,7 @@ def _family_intervention_plan(
     )
     original_order = list(range(_frame_count_for_plan(split, family_label)))
     payload: dict[str, Any] = {
-        "version": "zeromodel-video-action-set-family-intervention/v1",
+        "version": FAMILY_INTERVENTION_VERSION,
         "family_id": family_id,
         "intervention_seed_identity": seed["seed_digest"],
         "original_order": original_order,
@@ -672,14 +1427,42 @@ def _family_intervention_plan(
             split=split,
             ordinal=ordinal,
             namespace="information_control_identity",
-            parent_identities=(("family_intervention", seed["seed_digest"]), ("source_row_id", source_row_id)),
+            parent_identities=(("family_intervention", seed["seed_digest"]), ("current_row_id", source_row_id)),
         )
+        hidden_histories = _select_grounded_control_histories(
+            source_row_id,
+            row_ids,
+            control_group_id=control_seed["seed_digest"],
+            frame_count=len(original_order),
+        )
+        hidden_label_digests = [history["hidden_source_label_digest"] for history in hidden_histories]
         payload |= {
             "control_group": {
+                "version": INFORMATION_CONTROL_AMBIGUITY_VERSION,
                 "control_group_id": control_seed["seed_digest"],
+                "current_row_id": source_row_id,
                 "byte_identity_required": True,
-                "hidden_source_label_digest": _sha256({"source_row_id": source_row_id, "control_seed": control_seed["seed_digest"]}),
-                "provider_visible_fields": ["pixels", "frame_id"],
+                "minimum_grounded_causal_history_cardinality": 2,
+                "grounded_causal_history_count": len({history["normalized_causal_tuple_digest"] for history in hidden_histories}),
+                "hidden_source_history_count": len(hidden_histories),
+                "hidden_source_histories": hidden_histories,
+                "hidden_source_label_digests": hidden_label_digests,
+                "hidden_source_label_digest": _sha256(
+                    {
+                        "control_group_id": control_seed["seed_digest"],
+                        "hidden_source_label_digests": hidden_label_digests,
+                    }
+                ),
+                "provider_observation_boundary_version": PROVIDER_OBSERVATION_BOUNDARY_VERSION,
+                "provider_visible_fields": ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"],
+                "provider_hidden_fields": [
+                    "frame_id",
+                    "source_row_id",
+                    "source_action_id",
+                    "grounded_causal_history",
+                    "hidden_source_history_id",
+                    "hidden_source_label_digest",
+                ],
             }
         }
     payload["sequence_digest"] = _sha256({"order": payload["materialized_order"], "event_type": payload["event_type"], "family_id": family_id})
@@ -905,6 +1688,9 @@ def _make_episode_plan(
         row_ids=tuple(row_actions.keys()),
         row_actions=row_actions,
     )
+    episode_disposition = _episode_disposition(family_label, mutation_kind)
+    denominator_class = _denominator_class(family_label, mutation_kind)
+    final_observation_provenance = _final_observation_provenance(split)
     episode_id_seed = _derived_seed(
         identity,
         split=split,
@@ -914,6 +1700,8 @@ def _make_episode_plan(
             ("concrete_episode_seed", episode_seed["seed_digest"]),
             ("family_contract", family_contract["family_version"]),
             ("family_intervention", family_intervention["intervention_digest"]),
+            ("episode_disposition", episode_disposition),
+            ("denominator_class", denominator_class),
             ("source_row_id", source_row_id),
             ("secondary_row_id", secondary_row_id or "none"),
         ),
@@ -927,6 +1715,10 @@ def _make_episode_plan(
         "ordinal": int(ordinal),
         "family_label": family_label,
         "family_ordinal": int(family_ordinal),
+        "episode_family": family_label,
+        "episode_disposition": episode_disposition,
+        "denominator_class": denominator_class,
+        "final_observation_provenance": final_observation_provenance,
         "mutation_kind": mutation_kind,
         "source_row_id": source_row_id,
         "secondary_row_id": secondary_row_id,
@@ -984,7 +1776,8 @@ def _episode_plans_for_split(identity: BenchmarkIdentity, split: str, row_ids: l
     if split in {"selection", "final"}:
         for index, row_id in enumerate(row_ids):
             add("valid", index, row_id)
-        for index, row_id in enumerate(row_ids[:28]):
+        splice_rows = _conflicting_splice_source_rows(row_ids, row_actions, 28)
+        for index, row_id in enumerate(splice_rows):
             add("frame_invalid", index, row_id, mutation_kind="conflicting_action_splice")
         for index, row_id in enumerate(row_ids[28:56]):
             add("frame_invalid", 28 + index, row_id, mutation_kind="critical_evidence_corruption")
@@ -993,7 +1786,8 @@ def _episode_plans_for_split(identity: BenchmarkIdentity, split: str, row_ids: l
         for group_index, kind in enumerate(kinds):
             for index, row_id in enumerate(temporal_rows[group_index * 14 : (group_index + 1) * 14]):
                 add("temporal_negative", group_index * 14 + index, row_id, mutation_kind=kind)
-        for index, row_id in enumerate(row_ids[:28]):
+        control_rows = _control_source_rows(row_ids, count=28, frame_count=_frame_count_for_plan(split, "information_control"))
+        for index, row_id in enumerate(control_rows):
             add("information_control", index, row_id)
         return plans
     raise VPMValidationError("unsupported split")
@@ -1070,23 +1864,48 @@ def _apply_conflicting_splice(
     secondary = np.ascontiguousarray(secondary_pixels, dtype=np.uint8)
     if primary.shape != secondary.shape:
         raise VPMValidationError("splice sources must have the same shape")
+    if tuple(primary.shape) != FRAME_SHAPE:
+        raise VPMValidationError("conflicting splice requires the canonical frame shape")
+    if mask_manifest.get("version") != SPLICE_MASK_VERSION:
+        raise VPMValidationError("unsupported conflicting splice mask version")
+    if mask_manifest.get("mask_kind") != "simultaneous_target_evidence":
+        raise VPMValidationError("conflicting splice requires the simultaneous target-evidence mask")
     coordinates = tuple((int(y), int(x)) for y, x in mask_manifest["coordinates"])
-    if not coordinates:
-        raise VPMValidationError("splice mask cannot be empty")
-    output = np.array(primary, copy=True)
+    if coordinates != _target_signal_coordinates(primary.shape[1]):
+        raise VPMValidationError("conflicting splice target coordinates do not match the frozen renderer geometry")
     for y, x in coordinates:
-        if y < 0 or y >= output.shape[0] or x < 0 or x >= output.shape[1]:
+        if y < 0 or y >= primary.shape[0] or x < 0 or x >= primary.shape[1]:
             raise VPMValidationError("splice coordinate out of bounds")
-        output[y, x] = secondary[y, x]
-    mask = np.zeros(primary.shape, dtype=bool)
-    for y, x in coordinates:
-        mask[y, x] = True
-    secondary_effective = int(np.count_nonzero(mask & (primary != secondary)))
-    primary_effective = int(np.count_nonzero((~mask) & (primary != secondary)))
-    if secondary_effective == 0 or primary_effective == 0:
+    primary_target = _target_signal_mask(primary)
+    secondary_target = _target_signal_mask(secondary)
+    secondary_overlay = secondary_target & ~primary_target
+    primary_target_count = int(np.count_nonzero(primary_target))
+    secondary_target_count = int(np.count_nonzero(secondary_target))
+    secondary_effective = int(np.count_nonzero(secondary_overlay))
+    if primary_target_count == 0 or secondary_target_count == 0:
+        raise VPMValidationError("splice requires visible target evidence from both sources")
+    if secondary_effective == 0:
+        raise VPMValidationError("splice requires distinct secondary target evidence")
+    output = np.array(primary, copy=True)
+    output[secondary_overlay] = secondary[secondary_overlay]
+    primary_effective = int(np.count_nonzero((primary != 0) & (output == primary)))
+    changed_pixel_count = int(np.count_nonzero(output != primary))
+    if changed_pixel_count == 0 or primary_effective == 0:
         raise VPMValidationError("splice requires nonzero effective contribution from both sources")
     if np.array_equal(output, primary) or np.array_equal(output, secondary):
         raise VPMValidationError("splice output must not equal either source observation")
+    policy = compile_policy_artifact()
+    lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
+    row_actions = {str(row_id): lookup.choose(str(row_id)) for row_id in policy.source.row_ids}
+    visible_action_evidence = _final_visible_target_action_evidence(output, row_actions)
+    if not visible_action_evidence["conflicting_action_evidence_present"]:
+        raise VPMValidationError("conflicting splice final visible target evidence does not imply conflicting actions")
+    canonical_collisions = _canonical_collision_rows(output)
+    if canonical_collisions:
+        raise VPMValidationError("conflicting splice output collides with a canonical valid observation")
+    critical_mask = np.zeros(primary.shape, dtype=bool)
+    for y, x in _critical_coordinates():
+        critical_mask[y, x] = True
     manifest = {
         "primary_source_row_id": primary_row_id,
         "primary_source_action_id": primary_action_id,
@@ -1095,8 +1914,31 @@ def _apply_conflicting_splice(
         "primary_source_digest": _array_digest(primary),
         "secondary_source_digest": _array_digest(secondary),
         "splice_mask_identity": mask_manifest["mask_digest"],
+        "splice_mask_version": mask_manifest["version"],
+        "target_region_id": TARGET_REGION_ID,
+        "composition_rule": mask_manifest["composition_rule"],
         "primary_contributing_pixel_count": primary_effective,
         "secondary_contributing_pixel_count": secondary_effective,
+        "changed_pixel_count": changed_pixel_count,
+        "action_relevant_region_contribution_counts": {
+            "primary_target_pixel_count": primary_target_count,
+            "secondary_target_pixel_count": secondary_target_count,
+            "secondary_additive_target_pixel_count": secondary_effective,
+            "target_overlap_pixel_count": int(np.count_nonzero(primary_target & secondary_target)),
+        },
+        "critical_region_contribution_counts": {
+            "primary_pixel_count": int(np.count_nonzero(critical_mask & (output == primary))),
+            "secondary_pixel_count": 0,
+        },
+        "canonical_universe_version": CANONICAL_OBSERVATION_UNIVERSE_VERSION,
+        "final_visible_target_slots": visible_action_evidence["final_visible_target_slots"],
+        "final_tank_slot": visible_action_evidence["final_tank_slot"],
+        "final_cooldown": visible_action_evidence["final_cooldown"],
+        "visible_target_action_map": visible_action_evidence["visible_target_action_map"],
+        "visible_action_set": visible_action_evidence["visible_action_set"],
+        "visible_action_evidence_digest": visible_action_evidence["visible_action_evidence_digest"],
+        "canonical_collision_count": 0,
+        "canonical_collision_rows": [],
         "output_observation_digest": _array_digest(output),
         "expected_invalid_family_label": "conflicting_action_splice",
     }
@@ -1138,6 +1980,369 @@ def _apply_critical_corruption(source_pixels: np.ndarray, coordinate_manifest: M
     return output, manifest
 
 
+def _operation_record(
+    *,
+    index: int,
+    operation: str,
+    operation_version: str,
+    input_digests: Sequence[str | None],
+    parameters: Mapping[str, Any],
+    output_digest: str | None,
+) -> dict[str, Any]:
+    payload = {
+        "index": int(index),
+        "operation": str(operation),
+        "operation_version": str(operation_version),
+        "input_digests": [None if item is None else str(item) for item in input_digests],
+        "parameters": dict(parameters),
+        "parameter_digest": _sha256(parameters),
+        "output_digest": output_digest,
+    }
+    payload["operation_digest"] = _sha256(payload)
+    return payload
+
+
+
+def _operation_chain(operations: Sequence[Mapping[str, Any]], final_emitted_digest: str | None) -> dict[str, Any]:
+    payload = {
+        "version": OBSERVATION_OPERATION_CHAIN_VERSION,
+        "operations": [dict(item) for item in operations],
+        "final_emitted_digest": final_emitted_digest,
+    }
+    payload["operation_chain_digest"] = _sha256(payload)
+    return payload
+
+
+
+def _valid_frame_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any]) -> dict[str, Any]:
+    source = _render_row_frame(row_id)
+    transformed, trace = _apply_transformation(source, transformation_parameters)
+    source_digest = trace["source_observation_digest"]
+    output_digest = trace["transformed_observation_digest"]
+    operations = [
+        _operation_record(
+            index=0,
+            operation="render_canonical_row",
+            operation_version="zeromodel-arcade-shooter-render-state-frame/v1",
+            input_digests=[],
+            parameters={"row_id": str(row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()},
+            output_digest=source_digest,
+        ),
+        _operation_record(
+            index=1,
+            operation="apply_bounded_transformation",
+            operation_version=TRANSFORMATION_FAMILY_VERSION,
+            input_digests=[source_digest],
+            parameters={"transformation_parameters": dict(transformation_parameters)},
+            output_digest=output_digest,
+        ),
+        _operation_record(
+            index=2,
+            operation="emit_observation",
+            operation_version=OBSERVATION_OPERATION_CHAIN_VERSION,
+            input_digests=[output_digest],
+            parameters={"event_type": "frame"},
+            output_digest=output_digest,
+        ),
+    ]
+    return _operation_chain(operations, output_digest)
+
+
+
+def _conflicting_splice_operation_chain(
+    *,
+    primary_row_id: str,
+    secondary_row_id: str,
+    primary_action_id: str,
+    secondary_action_id: str,
+    primary_transformation_parameters: Mapping[str, Any],
+    mask_manifest: Mapping[str, Any],
+) -> dict[str, Any]:
+    primary_base = _render_row_frame(primary_row_id)
+    primary_transformed, primary_trace = _apply_transformation(primary_base, primary_transformation_parameters)
+    secondary = _render_row_frame(secondary_row_id)
+    output, splice_trace = _apply_conflicting_splice(
+        primary_pixels=primary_transformed,
+        secondary_pixels=secondary,
+        primary_row_id=primary_row_id,
+        secondary_row_id=secondary_row_id,
+        primary_action_id=primary_action_id,
+        secondary_action_id=secondary_action_id,
+        mask_manifest=mask_manifest,
+    )
+    primary_base_digest = primary_trace["source_observation_digest"]
+    primary_transformed_digest = primary_trace["transformed_observation_digest"]
+    secondary_digest = _array_digest(secondary)
+    output_digest = _array_digest(output)
+    operations = [
+        _operation_record(index=0, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": primary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=primary_base_digest),
+        _operation_record(index=1, operation="apply_bounded_transformation", operation_version=TRANSFORMATION_FAMILY_VERSION, input_digests=[primary_base_digest], parameters={"transformation_parameters": dict(primary_transformation_parameters)}, output_digest=primary_transformed_digest),
+        _operation_record(index=2, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": secondary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=secondary_digest),
+        _operation_record(
+            index=3,
+            operation="compose_simultaneous_target_evidence",
+            operation_version=CONFLICTING_ACTION_SPLICE_VERSION,
+            input_digests=[primary_transformed_digest, secondary_digest],
+            parameters={
+                "primary_row_id": primary_row_id,
+                "secondary_row_id": secondary_row_id,
+                "primary_action_id": primary_action_id,
+                "secondary_action_id": secondary_action_id,
+                "mask_manifest": dict(mask_manifest),
+                "splice_trace_digest": splice_trace["splice_trace_digest"],
+            },
+            output_digest=output_digest,
+        ),
+        _operation_record(index=4, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[output_digest], parameters={"event_type": "frame"}, output_digest=output_digest),
+    ]
+    return _operation_chain(operations, output_digest)
+
+
+
+def _critical_corruption_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any], coordinate_manifest: Mapping[str, Any]) -> dict[str, Any]:
+    source = _render_row_frame(row_id)
+    transformed, transform_trace = _apply_transformation(source, transformation_parameters)
+    corrupted, corruption_trace = _apply_critical_corruption(transformed, coordinate_manifest)
+    source_digest = transform_trace["source_observation_digest"]
+    transformed_digest = transform_trace["transformed_observation_digest"]
+    output_digest = _array_digest(corrupted)
+    operations = [
+        _operation_record(index=0, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=source_digest),
+        _operation_record(index=1, operation="apply_bounded_transformation", operation_version=TRANSFORMATION_FAMILY_VERSION, input_digests=[source_digest], parameters={"transformation_parameters": dict(transformation_parameters)}, output_digest=transformed_digest),
+        _operation_record(index=2, operation="apply_critical_coordinate_corruption", operation_version="zeromodel-video-action-set-family-critical-evidence-corruption/v1", input_digests=[transformed_digest], parameters={"critical_coordinates": dict(coordinate_manifest), "critical_corruption_digest": corruption_trace["critical_corruption_digest"]}, output_digest=output_digest),
+        _operation_record(index=3, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[output_digest], parameters={"event_type": "frame"}, output_digest=output_digest),
+    ]
+    return _operation_chain(operations, output_digest)
+
+
+
+def _stale_repeat_operation_chain(destination_before: Mapping[str, Any], replacement_source: Mapping[str, Any], repeat: Mapping[str, Any]) -> dict[str, Any]:
+    dest_params = destination_before.get("metadata", {}).get("transformation_parameters", {})
+    src_params = replacement_source.get("metadata", {}).get("transformation_parameters", {})
+    dest_row = str(destination_before.get("expected_row"))
+    src_row = str(replacement_source.get("expected_row"))
+    dest_chain = _valid_frame_operation_chain(dest_row, dest_params)
+    src_chain = _valid_frame_operation_chain(src_row, src_params)
+    original_digest = str(destination_before["observation_pixel_digest"])
+    replacement_digest = str(replacement_source["observation_pixel_digest"])
+    operations = list(dest_chain["operations"][:-1])
+    offset = len(operations)
+    for op in src_chain["operations"][:-1]:
+        copied = dict(op)
+        copied["index"] = int(op["index"]) + offset
+        copied["operation_digest"] = _sha256({key: value for key, value in copied.items() if key != "operation_digest"})
+        operations.append(copied)
+    operations.append(
+        _operation_record(
+            index=len(operations),
+            operation="stale_repeat_replace",
+            operation_version="zeromodel-video-action-set-family-stale-repeated-frame/v1",
+            input_digests=[original_digest, replacement_digest],
+            parameters=dict(repeat),
+            output_digest=replacement_digest,
+        )
+    )
+    operations.append(_operation_record(index=len(operations), operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[replacement_digest], parameters={"event_type": "frame"}, output_digest=replacement_digest))
+    return _operation_chain(operations, replacement_digest)
+
+
+
+def _impossible_transition_operation_chain(destination_before: Mapping[str, Any], transition_plan: Mapping[str, Any]) -> dict[str, Any]:
+    dest_params = destination_before.get("metadata", {}).get("transformation_parameters", {})
+    ordinary_row = str(destination_before.get("expected_row"))
+    ordinary_chain = _valid_frame_operation_chain(ordinary_row, dest_params)
+    ordinary_digest = str(destination_before["observation_pixel_digest"])
+    unreachable_row = str(transition_plan["destination_row_id"])
+    unreachable_pixels = _render_row_frame(unreachable_row)
+    unreachable_digest = _array_digest(unreachable_pixels)
+    operations = list(ordinary_chain["operations"][:-1])
+    operations.append(_operation_record(index=len(operations), operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": unreachable_row, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=unreachable_digest))
+    operations.append(
+        _operation_record(
+            index=len(operations),
+            operation="impossible_transition_replace",
+            operation_version="zeromodel-video-action-set-family-impossible-transition/v1",
+            input_digests=[ordinary_digest, unreachable_digest],
+            parameters=dict(transition_plan),
+            output_digest=unreachable_digest,
+        )
+    )
+    operations.append(_operation_record(index=len(operations), operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[unreachable_digest], parameters={"event_type": "frame"}, output_digest=unreachable_digest))
+    return _operation_chain(operations, unreachable_digest)
+
+
+
+def _gap_event_operation_chain(gap_event: Mapping[str, Any]) -> dict[str, Any]:
+    operations = [
+        _operation_record(index=0, operation="emit_typed_gap_event", operation_version="zeromodel-video-action-set-gap-event/v1", input_digests=[], parameters=dict(gap_event), output_digest=None),
+        _operation_record(index=1, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[None], parameters={"event_type": "gap_unknown"}, output_digest=None),
+    ]
+    return _operation_chain(operations, None)
+
+
+
+def _information_control_operation_chain(current_row_id: str) -> dict[str, Any]:
+    current = _render_row_frame(current_row_id)
+    current_digest = _array_digest(current)
+    operations = [
+        _operation_record(index=0, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": str(current_row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=current_digest),
+        _operation_record(index=1, operation="emit_provider_identical_control_observation", operation_version=INFORMATION_CONTROL_VERSION, input_digests=[current_digest], parameters={"current_row_id": str(current_row_id), "provider_observation_boundary_version": PROVIDER_OBSERVATION_BOUNDARY_VERSION}, output_digest=current_digest),
+        _operation_record(index=2, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[current_digest], parameters={"event_type": "frame"}, output_digest=current_digest),
+    ]
+    return _operation_chain(operations, current_digest)
+
+
+
+def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
+    metadata = record.setdefault("metadata", {})
+    for key in ("provider_observation_boundary_version", "provider_observation_descriptor", "provider_observation_digest"):
+        metadata.pop(key, None)
+    if record.get("pixels") is None:
+        return
+    descriptor = provider_observation_descriptor_for_record(record)
+    metadata["provider_observation_boundary_version"] = PROVIDER_OBSERVATION_BOUNDARY_VERSION
+    metadata["provider_observation_descriptor"] = descriptor
+    metadata["provider_observation_digest"] = _provider_observation_digest(descriptor)
+
+
+
+def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, Any]:
+    if chain.get("version") != OBSERVATION_OPERATION_CHAIN_VERSION:
+        raise VPMValidationError("unsupported observation operation chain version")
+    operations = list(chain.get("operations", []))
+    if [int(op.get("index", -1)) for op in operations] != list(range(len(operations))):
+        raise VPMValidationError("operation chain indices are not ordered")
+    stored_chain_digest = chain.get("operation_chain_digest")
+    if stored_chain_digest != _sha256({key: value for key, value in chain.items() if key != "operation_chain_digest"}):
+        raise VPMValidationError("operation chain digest mismatch")
+    pixels_by_digest: dict[str, np.ndarray] = {}
+    current_digest: str | None = None
+    current_pixels: np.ndarray | None = None
+    typed_gap = False
+    for op in operations:
+        expected_param_digest = _sha256(op.get("parameters", {}))
+        if op.get("parameter_digest") != expected_param_digest:
+            raise VPMValidationError("operation parameter digest mismatch")
+        if op.get("operation_digest") != _sha256({key: value for key, value in op.items() if key != "operation_digest"}):
+            raise VPMValidationError("operation digest mismatch")
+        input_digests = [None if item is None else str(item) for item in op.get("input_digests", [])]
+        operation = str(op.get("operation"))
+        parameters = op.get("parameters", {})
+        output_digest = op.get("output_digest")
+        if operation == "render_canonical_row":
+            row_id = str(parameters["row_id"])
+            pixels = _render_row_frame(row_id)
+            digest = _array_digest(pixels)
+            if digest != output_digest:
+                raise VPMValidationError("render operation output digest mismatch")
+            pixels_by_digest[digest] = pixels
+            current_digest = digest
+            current_pixels = pixels
+        elif operation == "apply_bounded_transformation":
+            if len(input_digests) != 1 or input_digests[0] not in pixels_by_digest:
+                raise VPMValidationError("transformation input digest missing")
+            pixels, trace = _apply_transformation(pixels_by_digest[str(input_digests[0])], parameters["transformation_parameters"])
+            digest = trace["transformed_observation_digest"]
+            if digest != output_digest:
+                raise VPMValidationError("transformation output digest mismatch")
+            pixels_by_digest[digest] = pixels
+            current_digest = digest
+            current_pixels = pixels
+        elif operation == "compose_simultaneous_target_evidence":
+            if len(input_digests) != 2 or input_digests[0] not in pixels_by_digest or input_digests[1] not in pixels_by_digest:
+                raise VPMValidationError("splice input digest missing")
+            pixels, _trace = _apply_conflicting_splice(
+                primary_pixels=pixels_by_digest[str(input_digests[0])],
+                secondary_pixels=pixels_by_digest[str(input_digests[1])],
+                primary_row_id=str(parameters["primary_row_id"]),
+                secondary_row_id=str(parameters["secondary_row_id"]),
+                primary_action_id=str(parameters["primary_action_id"]),
+                secondary_action_id=str(parameters["secondary_action_id"]),
+                mask_manifest=parameters["mask_manifest"],
+            )
+            digest = _array_digest(pixels)
+            if digest != output_digest:
+                raise VPMValidationError("splice output digest mismatch")
+            pixels_by_digest[digest] = pixels
+            current_digest = digest
+            current_pixels = pixels
+        elif operation == "apply_critical_coordinate_corruption":
+            if len(input_digests) != 1 or input_digests[0] not in pixels_by_digest:
+                raise VPMValidationError("critical corruption input digest missing")
+            pixels, _trace = _apply_critical_corruption(pixels_by_digest[str(input_digests[0])], parameters["critical_coordinates"])
+            digest = _array_digest(pixels)
+            if digest != output_digest:
+                raise VPMValidationError("critical corruption output digest mismatch")
+            pixels_by_digest[digest] = pixels
+            current_digest = digest
+            current_pixels = pixels
+        elif operation == "stale_repeat_replace":
+            if len(input_digests) != 2 or input_digests[1] not in pixels_by_digest:
+                raise VPMValidationError("stale repeat input digest missing")
+            pixels = np.array(pixels_by_digest[str(input_digests[1])], copy=True)
+            digest = _array_digest(pixels)
+            if digest != output_digest:
+                raise VPMValidationError("stale repeat output digest mismatch")
+            pixels_by_digest[digest] = pixels
+            current_digest = digest
+            current_pixels = pixels
+        elif operation == "impossible_transition_replace":
+            if len(input_digests) != 2 or input_digests[1] not in pixels_by_digest:
+                raise VPMValidationError("impossible transition input digest missing")
+            pixels = np.array(pixels_by_digest[str(input_digests[1])], copy=True)
+            digest = _array_digest(pixels)
+            if digest != output_digest:
+                raise VPMValidationError("impossible transition output digest mismatch")
+            pixels_by_digest[digest] = pixels
+            current_digest = digest
+            current_pixels = pixels
+        elif operation == "emit_typed_gap_event":
+            if output_digest is not None:
+                raise VPMValidationError("typed gap operation must not emit pixels")
+            typed_gap = True
+            current_digest = None
+            current_pixels = None
+        elif operation in {"emit_provider_identical_control_observation", "emit_observation"}:
+            if output_digest is None:
+                if input_digests != [None]:
+                    raise VPMValidationError("no-pixel emit input mismatch")
+                current_digest = None
+                current_pixels = None
+            else:
+                if len(input_digests) != 1 or input_digests[0] != output_digest or str(output_digest) not in pixels_by_digest:
+                    raise VPMValidationError("emit operation input/output mismatch")
+                current_digest = str(output_digest)
+                current_pixels = pixels_by_digest[str(output_digest)]
+        else:
+            raise VPMValidationError("unsupported operation chain operation")
+    if chain.get("final_emitted_digest") != current_digest:
+        raise VPMValidationError("operation chain final digest mismatch")
+    return {"pixels": current_pixels, "final_emitted_digest": current_digest, "typed_gap": typed_gap, "operation_count": len(operations)}
+
+
+
+def validate_observation_operation_chain(record: Mapping[str, Any]) -> str:
+    chain = record.get("metadata", {}).get("observation_operation_chain")
+    if not isinstance(chain, Mapping):
+        return "final_observation_provenance_mismatch"
+    try:
+        replay = replay_observation_operation_chain(chain)
+    except (KeyError, TypeError, ValueError, VPMValidationError):
+        return "final_observation_provenance_mismatch"
+    if replay["final_emitted_digest"] != record.get("observation_pixel_digest"):
+        return "final_observation_provenance_mismatch"
+    if record.get("event_type") == "gap_unknown":
+        if replay["final_emitted_digest"] is not None or replay["typed_gap"] is not True:
+            return "final_observation_provenance_mismatch"
+    elif replay["final_emitted_digest"] is None:
+        return "final_observation_provenance_mismatch"
+    pixels = record.get("pixels")
+    if pixels is not None and replay["pixels"] is not None and _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)) != replay["final_emitted_digest"]:
+        return "final_observation_provenance_mismatch"
+    return "ok"
+
+
+
 def _frame_descriptor(
     *,
     split: str,
@@ -1149,12 +2354,16 @@ def _frame_descriptor(
     family: str,
     pixels: np.ndarray | None,
     expected_disposition: str,
+    episode_family: str,
+    episode_disposition: str,
+    frame_disposition: str,
+    denominator_class: str,
     metadata: Mapping[str, Any],
 ) -> dict[str, Any]:
     frame_id = f"{split}:{episode_id}:frame-{frame_index:02d}"
     clip_id = f"{split}:{episode_id}:clip"
     pixel_digest = _pixel_digest(pixels)
-    return {
+    record = {
         "benchmark_version": BENCHMARK_VERSION,
         "generator_version": GENERATOR_VERSION,
         "split": split,
@@ -1165,6 +2374,10 @@ def _frame_descriptor(
         "event_type": metadata.get("event_type", "frame"),
         "family": family,
         "expected_disposition": expected_disposition,
+        "episode_family": episode_family,
+        "episode_disposition": episode_disposition,
+        "frame_disposition": frame_disposition,
+        "denominator_class": denominator_class,
         "expected_row": row_id,
         "expected_action": expected_action,
         "actual_executed_action": actual_action,
@@ -1173,6 +2386,12 @@ def _frame_descriptor(
         "observation_pixel_digest": pixel_digest,
         "metadata": dict(metadata),
     }
+    if pixels is not None:
+        descriptor = provider_observation_descriptor_for_record(record | {"pixels": pixels})
+        record["metadata"]["provider_observation_boundary_version"] = PROVIDER_OBSERVATION_BOUNDARY_VERSION
+        record["metadata"]["provider_observation_descriptor"] = descriptor
+        record["metadata"]["provider_observation_digest"] = _provider_observation_digest(descriptor)
+    return record
 
 
 def _tile_edge(tile: Mapping[str, Any], row_id: str, action_id: str) -> Mapping[str, Any]:
@@ -1250,6 +2469,10 @@ def _valid_episode(
             family=family,
             pixels=pixels,
             expected_disposition="valid",
+            episode_family=str(plan["episode_family"]),
+            episode_disposition=str(plan["episode_disposition"]),
+            frame_disposition=expected_frame_disposition(str(plan["family_label"]), plan.get("mutation_kind"), idx, plan.get("family_intervention")),
+            denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": episode_seed,
                 "seed_digest": identity.seed_digest,
@@ -1266,6 +2489,7 @@ def _valid_episode(
                 "transformed_observation_digest": transformation_trace["transformed_observation_digest"],
                 "transformation_parameter_digest": transformation_trace["transformation_parameter_digest"],
                 "transformation_changed_pixel_count": transformation_trace["changed_pixel_count"],
+                "observation_operation_chain": _valid_frame_operation_chain(current, frame_plan["transformation_parameters"]),
                 "transition_choice_index": choice_index,
                 "next_row": next_row,
                 "reachability_trace": reachability_trace,
@@ -1326,6 +2550,10 @@ def _invalid_episode(
             family=kind,
             pixels=pixels,
             expected_disposition="distinguishable_invalid_input",
+            episode_family=str(plan["episode_family"]),
+            episode_disposition=str(plan["episode_disposition"]),
+            frame_disposition=expected_frame_disposition(str(plan["family_label"]), plan.get("mutation_kind"), idx, plan.get("family_intervention")),
+            denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": episode_seed,
                 "seed_digest": identity.seed_digest,
@@ -1342,6 +2570,18 @@ def _invalid_episode(
                 "family_contract": plan["family_contract"],
                 "family_intervention": intervention,
                 "family_intervention_trace": intervention_trace,
+                "observation_operation_chain": (
+                    _conflicting_splice_operation_chain(
+                        primary_row_id=row_id,
+                        secondary_row_id=str(other_row),
+                        primary_action_id=base_action,
+                        secondary_action_id=lookup.choose(str(other_row)),
+                        primary_transformation_parameters=frame_plan["transformation_parameters"],
+                        mask_manifest=intervention["splice_mask"],
+                    )
+                    if kind == "conflicting_action_splice"
+                    else _critical_corruption_operation_chain(row_id, frame_plan["transformation_parameters"], intervention["critical_coordinates"])
+                ),
                 "source_row_id": row_id,
                 "source_action_id": base_action,
                 "competitor_row_id": None if other_row is None else str(other_row),
@@ -1369,6 +2609,10 @@ def _temporal_negative_episode(
     kind = str(plan["mutation_kind"])
     intervention = plan["family_intervention"]
     for item in valid:
+        item["episode_family"] = "temporal_negative"
+        item["episode_disposition"] = str(plan["episode_disposition"])
+        item["frame_disposition"] = "valid_frame_payload"
+        item["denominator_class"] = str(plan["denominator_class"])
         item["metadata"]["family_contract"] = plan["family_contract"]
         item["metadata"]["family_intervention"] = intervention
         item["metadata"]["sequence_digest"] = intervention["sequence_digest"]
@@ -1381,6 +2625,7 @@ def _temporal_negative_episode(
         frames = [valid[i] for i in order]
         for idx, item in enumerate(frames):
             item["sequence_number"] = idx
+            item["frame_disposition"] = "temporally_reordered_frame_payload"
             item["metadata"]["original_frame_index"] = order[idx]
             item["metadata"]["materialized_order"] = order
             item["metadata"]["sequence_rule"] = intervention["sequence_rule"]
@@ -1393,13 +2638,19 @@ def _temporal_negative_episode(
         replacement_digest = valid[source_index]["observation_pixel_digest"]
         if original_destination_digest == replacement_digest:
             raise VPMValidationError("stale repeat requires an actual payload replacement")
-        valid[destination_index]["pixels"] = np.array(valid[source_index]["pixels"], copy=True)
-        valid[destination_index]["observation_pixel_digest"] = replacement_digest
-        valid[destination_index]["metadata"]["stale_repeat"] = {
+        destination_before = dict(valid[destination_index], metadata=dict(valid[destination_index]["metadata"]))
+        replacement_source = dict(valid[source_index], metadata=dict(valid[source_index]["metadata"]))
+        repeat_metadata = {
             **repeat,
             "original_destination_digest": original_destination_digest,
             "replacement_digest": replacement_digest,
         }
+        valid[destination_index]["pixels"] = np.array(valid[source_index]["pixels"], copy=True)
+        valid[destination_index]["observation_pixel_digest"] = replacement_digest
+        valid[destination_index]["frame_disposition"] = "stale_repeated_frame_payload"
+        valid[destination_index]["metadata"]["stale_repeat"] = repeat_metadata
+        valid[destination_index]["metadata"]["observation_operation_chain"] = _stale_repeat_operation_chain(destination_before, replacement_source, repeat_metadata)
+        _refresh_provider_observation_metadata(valid[destination_index])
         return valid
     if kind == "impossible_transition":
         transition_plan = intervention["impossible_transition"]
@@ -1410,12 +2661,14 @@ def _temporal_negative_episode(
         edge = _tile_edge(reachability_tile, source_row, str(transition_plan["source_action_id"]))
         if destination_row in set(edge["reachable_row_ids"]):
             raise VPMValidationError("impossible transition destination is reachable")
+        destination_before = dict(valid[destination_index], metadata=dict(valid[destination_index]["metadata"]))
         destination_pixels = _render_row_frame(destination_row, config=config)
         valid[destination_index]["pixels"] = destination_pixels
         valid[destination_index]["observation_pixel_digest"] = _pixel_digest(destination_pixels)
+        valid[destination_index]["frame_disposition"] = "unreachable_destination_frame_payload"
         valid[destination_index]["expected_row"] = destination_row
         valid[destination_index]["expected_action"] = transition_plan["destination_action_id"]
-        valid[destination_index]["metadata"]["impossible_transition"] = {
+        transition_metadata = {
             **transition_plan,
             "source_observation_digest": valid[source_index]["observation_pixel_digest"],
             "destination_observation_digest": valid[destination_index]["observation_pixel_digest"],
@@ -1423,13 +2676,17 @@ def _temporal_negative_episode(
             "consulted_edge": {"source_row_id": edge["source_row_id"], "action_id": edge["action_id"], "reachable_row_ids": list(edge["reachable_row_ids"])},
             "pairwise_reachability_status": "impossible",
         }
+        valid[destination_index]["metadata"]["impossible_transition"] = transition_metadata
+        valid[destination_index]["metadata"]["observation_operation_chain"] = _impossible_transition_operation_chain(destination_before, transition_metadata)
         valid[destination_index]["metadata"]["next_row"] = "impossible_transition_marker"
+        _refresh_provider_observation_metadata(valid[destination_index])
         return valid
     if kind == "declared_gap_or_unknown_action":
         gap = intervention["gap_event"]
         position = int(gap["position"])
         valid[position]["pixels"] = None
         valid[position]["event_type"] = "gap_unknown"
+        valid[position]["frame_disposition"] = "declared_gap_or_unknown_action"
         valid[position]["expected_row"] = None
         valid[position]["expected_action"] = None
         valid[position]["actual_executed_action"] = None
@@ -1438,6 +2695,8 @@ def _temporal_negative_episode(
         valid[position]["observation_pixel_digest"] = None
         valid[position]["metadata"]["gap_event"] = gap
         valid[position]["metadata"]["event_identity"] = gap["event_id"]
+        valid[position]["metadata"]["observation_operation_chain"] = _gap_event_operation_chain(gap)
+        _refresh_provider_observation_metadata(valid[position])
         return valid
     raise VPMValidationError("unsupported temporal-negative kind")
 
@@ -1451,16 +2710,20 @@ def _control_episode(
 ) -> list[dict[str, Any]]:
     split = str(plan["split"])
     episode_id = str(plan["episode_id"])
-    source_row = str(plan["source_row_id"])
-    source_pixels = _render_row_frame(source_row, config=config)
+    current_row = str(plan["source_row_id"])
+    current_pixels = _render_row_frame(current_row, config=config)
     policy = compile_policy_artifact(config)
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
-    action = lookup.choose(source_row)
+    current_action = lookup.choose(current_row)
     intervention = plan["family_intervention"]
     control_group = intervention["control_group"]
+    histories = list(control_group["hidden_source_histories"])
+    if len({history["normalized_causal_tuple_digest"] for history in histories}) < 2:
+        raise VPMValidationError("information controls require grounded causal ambiguity")
     frames = []
     for idx, frame_plan in enumerate(plan["frame_plans"]):
-        pixels = np.array(source_pixels, copy=True)
+        pixels = np.array(current_pixels, copy=True)
+        hidden_history = histories[idx % len(histories)]
         descriptor = _frame_descriptor(
             split=split,
             episode_id=episode_id,
@@ -1471,28 +2734,48 @@ def _control_episode(
             family="information_control",
             pixels=pixels,
             expected_disposition="information_theoretic_control",
+            episode_family=str(plan["episode_family"]),
+            episode_disposition=str(plan["episode_disposition"]),
+            frame_disposition=expected_frame_disposition(str(plan["family_label"]), plan.get("mutation_kind"), idx, intervention),
+            denominator_class=str(plan["denominator_class"]),
             metadata={
                 "episode_seed": int(plan["episode_seed"]),
                 "seed_digest": identity.seed_digest,
                 "derived_seed_identity": plan["derived_seed_identity"],
                 "episode_plan_digest": plan["plan_digest"],
                 "frame_seed_identity": frame_plan["frame_seed_identity"],
-                "source_row_id": source_row,
-                "source_action_id": action,
+                "source_row_id": current_row,
+                "source_action_id": current_action,
                 "family_contract": plan["family_contract"],
                 "family_intervention": intervention,
                 "control_group_id": control_group["control_group_id"],
-                "control_observation_digest": _array_digest(source_pixels),
-                "hidden_source_label_digest": control_group["hidden_source_label_digest"],
-                "provider_hidden_fields": ["source_row_id", "source_action_id", "hidden_source_label_digest"],
+                "control_current_row_id": current_row,
+                "control_observation_digest": _array_digest(current_pixels),
+                "observation_operation_chain": _information_control_operation_chain(current_row),
+                "grounded_causal_history": hidden_history,
+                "grounded_causal_history_id": hidden_history["history_id"],
+                "hidden_source_history": hidden_history,
+                "hidden_source_history_id": hidden_history["hidden_history_id"],
+                "hidden_source_history_index": hidden_history["hidden_history_index"],
+                "hidden_source_label_digest": hidden_history["hidden_source_label_digest"],
+                "hidden_source_label_digest_group": control_group["hidden_source_label_digest"],
+                "provider_observation_source_id": f"control:{control_group['control_group_id']}",
+                "provider_observation_timestamp": None,
+                "provider_observation_metadata": {},
+                "provider_visible_fields": control_group["provider_visible_fields"],
+                "provider_hidden_fields": control_group["provider_hidden_fields"],
                 "denominator_eligible": False,
-                "control_reason": "byte_identical_hidden_source_history",
+                "control_reason": "byte_identical_observation_with_multiple_grounded_causal_histories",
             },
         )
+        descriptor["metadata"]["control_visible_digest"] = descriptor["metadata"]["provider_observation_digest"]
         frames.append(descriptor | {"pixels": pixels})
     digests = {item["observation_pixel_digest"] for item in frames}
+    provider_digests = {item["metadata"]["provider_observation_digest"] for item in frames}
     if len(digests) != 1:
         raise VPMValidationError("information controls require byte-identical observations")
+    if len(provider_digests) != 1:
+        raise VPMValidationError("information controls require identical provider-visible observations")
     return frames
 
 
@@ -1668,6 +2951,10 @@ def _record_regeneration_view(record: Mapping[str, Any]) -> dict[str, Any]:
         "event_type": record.get("event_type", "frame"),
         "family": record["family"],
         "expected_disposition": record["expected_disposition"],
+        "episode_family": record.get("episode_family"),
+        "episode_disposition": record.get("episode_disposition"),
+        "frame_disposition": record.get("frame_disposition"),
+        "denominator_class": record.get("denominator_class"),
         "expected_row": record.get("expected_row"),
         "expected_action": record.get("expected_action"),
         "actual_executed_action": record.get("actual_executed_action"),
@@ -1677,6 +2964,73 @@ def _record_regeneration_view(record: Mapping[str, Any]) -> dict[str, Any]:
         "sequence_digest": record.get("metadata", {}).get("sequence_digest"),
         "episode_plan_digest": record.get("metadata", {}).get("episode_plan_digest"),
     }
+
+
+
+
+def _frame_invalid_closure_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    canonical = canonical_observation_universe()
+    canonical_index = _canonical_observation_digest_index()
+    by_family: dict[str, dict[str, Any]] = {}
+    for record in records:
+        if record.get("expected_disposition") != "distinguishable_invalid_input":
+            continue
+        family = str(record.get("family"))
+        row = by_family.setdefault(
+            family,
+            {
+                "family_id": family,
+                "frame_count": 0,
+                "canonical_collision_count": 0,
+                "valid_decode_count": 0,
+                "no_op_count": 0,
+                "malformed_count": 0,
+                "collision_examples": [],
+            },
+        )
+        row["frame_count"] += 1
+        pixels = record.get("pixels")
+        if pixels is None:
+            row["malformed_count"] += 1
+            continue
+        digest = str(record.get("observation_pixel_digest") or _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)))
+        collisions = canonical_index.get(digest, [])
+        if collisions:
+            row["canonical_collision_count"] += 1
+            row["valid_decode_count"] += 1
+            if len(row["collision_examples"]) < 3:
+                row["collision_examples"].append(
+                    {
+                        "frame_id": record.get("frame_id"),
+                        "observation_pixel_digest": digest,
+                        "canonical_rows": collisions,
+                    }
+                )
+        trace = record.get("metadata", {}).get("family_intervention_trace", {})
+        if trace.get("changed_pixel_count") == 0:
+            row["no_op_count"] += 1
+        status = validate_materialized_family_record(record)
+        if status != "ok":
+            row["malformed_count"] += 1
+    totals = {
+        "frame_count": sum(row["frame_count"] for row in by_family.values()),
+        "canonical_collision_count": sum(row["canonical_collision_count"] for row in by_family.values()),
+        "valid_decode_count": sum(row["valid_decode_count"] for row in by_family.values()),
+        "no_op_count": sum(row["no_op_count"] for row in by_family.values()),
+        "malformed_count": sum(row["malformed_count"] for row in by_family.values()),
+    }
+    passed = totals["frame_count"] > 0 and totals["canonical_collision_count"] == 0 and totals["valid_decode_count"] == 0 and totals["no_op_count"] == 0 and totals["malformed_count"] == 0
+    payload = {
+        "version": FRAME_INVALID_CLOSURE_VERSION,
+        "canonical_universe_version": canonical["version"],
+        "canonical_universe_digest": canonical["universe_digest"],
+        "valid_observation_universe_version": VALID_OBSERVATION_UNIVERSE_VERSION,
+        "families": list(by_family.values()),
+        "totals": totals,
+        "status": "passed" if passed else "failed",
+    }
+    payload["closure_digest"] = _sha256(payload)
+    return payload
 
 
 def _family_closure_report(
@@ -1706,6 +3060,8 @@ def _family_closure_report(
             "malformed_count": 0,
             "distinguishable_invalid_count": 0,
             "information_theoretic_control_count": 0,
+            "canonical_collision_count": 0,
+            "valid_decode_count": 0,
             "denominator_eligibility": entry["denominator_treatment"],
             "reachability_applicable_count": 0,
             "reachability_trace_verification_count": 0,
@@ -1736,6 +3092,13 @@ def _family_closure_report(
                 if any(value == 0 for value in changed if value is not None):
                     row["no_op_count"] += 1
                 row["distinguishable_invalid_count"] += 1
+                validation_statuses = [validate_materialized_family_record(item) for item in regenerated]
+                canonical_collisions = sum(status == "invalid_family_valid_state_collision" for status in validation_statuses)
+                if canonical_collisions:
+                    row["canonical_collision_count"] += int(canonical_collisions)
+                    row["valid_decode_count"] += int(canonical_collisions)
+                if any(status != "ok" for status in validation_statuses):
+                    row["malformed_count"] += 1
             if family_id == "information_control":
                 row["information_theoretic_control_count"] += 1
             if family_id in {"valid", "impossible_transition"}:
@@ -1748,7 +3111,7 @@ def _family_closure_report(
             continue
         row["closure_status"] = (
             "closed"
-            if row["planned_episode_count"] == row["regenerated_episode_count"] == row["validation_pass_count"] and row["malformed_count"] == 0 and row["no_op_count"] == 0
+            if row["planned_episode_count"] == row["regenerated_episode_count"] == row["validation_pass_count"] and row["malformed_count"] == 0 and row["no_op_count"] == 0 and row["canonical_collision_count"] == 0 and row["valid_decode_count"] == 0
             else "unresolved"
         )
     return {
@@ -1758,6 +3121,7 @@ def _family_closure_report(
         "families": list(rows.values()),
         "negative_families_verified": False,
         "reachability_verified": False,
+        "frame_invalid_closure": _frame_invalid_closure_summary(records),
         "reference_instrument_correct": False,
         "materialization_ready": False,
         "repository_status": "reference_instrument_correctness_unresolved",
@@ -1777,6 +3141,10 @@ def validate_materialized_family_record(record: Mapping[str, Any]) -> str:
             return "family_output_digest_mismatch"
         if trace.get("changed_pixel_count") == 0:
             return "family_no_op"
+    if record.get("expected_disposition") == "distinguishable_invalid_input" and pixels is not None:
+        digest = str(record.get("observation_pixel_digest") or _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)))
+        if _canonical_observation_digest_index().get(digest):
+            return "invalid_family_valid_state_collision"
     if record.get("event_type") == "gap_unknown" and pixels is not None:
         return "gap_event_has_pixels"
     return "ok"
@@ -1791,6 +3159,70 @@ def validate_control_episode_records(records: Sequence[Mapping[str, Any]]) -> st
         return "control_byte_identity_mismatch"
     if any(record.get("metadata", {}).get("denominator_eligible") for record in control_records):
         return "control_denominator_leak"
+    if any(record.get("episode_disposition") != "information_theoretic_control" for record in control_records):
+        return "control_disposition_mismatch"
+    if any(record.get("frame_disposition") != "information_theoretic_control" for record in control_records):
+        return "control_disposition_mismatch"
+    metadata = [record.get("metadata", {}) for record in control_records]
+    hidden_history_ids = {item.get("hidden_source_history_id") for item in metadata}
+    hidden_label_digests = {item.get("hidden_source_label_digest") for item in metadata}
+    if None in hidden_history_ids or len(hidden_history_ids) < 2:
+        return "control_hidden_history_not_ambiguous"
+    if None in hidden_label_digests or len(hidden_label_digests) < 2:
+        return "control_hidden_label_not_ambiguous"
+    control_group_ids = {item.get("control_group_id") for item in metadata}
+    if None in control_group_ids or len(control_group_ids) != 1:
+        return "control_group_mismatch"
+    current_rows = {item.get("control_current_row_id") or item.get("source_row_id") for item in metadata}
+    if None in current_rows or len(current_rows) != 1:
+        return "control_current_state_mismatch"
+    current_row = str(next(iter(current_rows)))
+    current_digest = _array_digest(_render_row_frame(current_row))
+    if current_digest not in digests:
+        return "control_current_state_mismatch"
+
+    expected_visible_fields = ["pixels", "shape", "raw_digest", "timestamp", "source_id", "metadata", "version"]
+    if any(item.get("provider_visible_fields") != expected_visible_fields for item in metadata):
+        return "control_provider_visible_leak"
+
+    provider_descriptors = []
+    for record in control_records:
+        meta = record.get("metadata", {})
+        try:
+            descriptor = provider_observation_descriptor_for_record(record)
+        except (KeyError, TypeError, VPMValidationError, ValueError):
+            return "control_provider_visible_leak"
+        stored_descriptor = meta.get("provider_observation_descriptor")
+        stored_digest = meta.get("provider_observation_digest")
+        if isinstance(stored_descriptor, Mapping) and dict(stored_descriptor) != descriptor:
+            return "control_provider_visible_leak"
+        if stored_digest is not None and stored_digest != _provider_observation_digest(descriptor):
+            return "control_provider_visible_leak"
+        provider_descriptors.append(descriptor)
+    if len({_provider_observation_digest(descriptor) for descriptor in provider_descriptors}) != 1:
+        return "control_provider_visible_leak"
+
+    reconstructed_tuple_digests = set()
+    resulting_rows = set()
+    for meta in metadata:
+        history = meta.get("grounded_causal_history") or meta.get("hidden_source_history")
+        if not isinstance(history, Mapping):
+            return "control_ambiguity_absent"
+        try:
+            tuple_digest = _reconstructed_control_causal_tuple_digest(history)
+        except VPMValidationError as exc:
+            message = str(exc)
+            if "result" in message or "choice" in message:
+                return "control_history_result_mismatch"
+            return "control_history_transition_invalid"
+        if str(history.get("resulting_row_id")) != current_row:
+            return "control_history_result_mismatch"
+        reconstructed_tuple_digests.add(tuple_digest)
+        resulting_rows.add(str(history.get("resulting_row_id")))
+    if len(resulting_rows) != 1 or next(iter(resulting_rows)) != current_row:
+        return "control_current_state_mismatch"
+    if len(reconstructed_tuple_digests) < 2:
+        return "control_ambiguity_absent"
     return "ok"
 
 
@@ -1832,7 +3264,7 @@ def _profile_provider(
     scorer = score_all_rows_reference if implementation == "reference" else score_all_rows_optimized
     durations = []
     for record in records:
-        observation = ImageObservation(np.ascontiguousarray(record["pixels"], dtype=np.uint8), source_id=record["frame_id"])
+        observation = provider_observation_for_record(record)
         start = time.perf_counter()
         scorer(
             provider_id=provider_id,
@@ -2134,7 +3566,9 @@ def _score_record(
         raise VPMValidationError("materialized record missing pixels")
     if record["pixels"] is None:
         raise VPMValidationError("typed gap events cannot be provider-scored as ordinary frames")
-    observation = ImageObservation(np.ascontiguousarray(record["pixels"], dtype=np.uint8), source_id=record["frame_id"])
+    observation = provider_observation_for_record(record)
+    observation_descriptor = observation.to_descriptor()
+    observation_descriptor_digest = _provider_observation_digest(observation_descriptor)
     p1 = score_normalized_pixel(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id)
     p2 = score_registered_local_correlation(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
     p3 = score_b3_joint_fit(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
@@ -2185,6 +3619,8 @@ def _score_record(
                 "score_vector_digest": result.evidence.score_vector_digest,
                 "ranking_digest": result.evidence.ranking.to_dict()["ranking_digest"],
                 "observation_digest": record["observation_pixel_digest"],
+                "provider_observation_descriptor": observation_descriptor,
+                "provider_observation_digest": observation_descriptor_digest,
                 "episode_seed": record["metadata"]["episode_seed"],
                 "generator_identity": {"generator_version": GENERATOR_VERSION, "seed_digest": record["metadata"]["seed_digest"]},
                 "provider_diagnostics": dict(result.diagnostics),
@@ -2813,6 +4249,8 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any], *, max_fin
                 if max_findings is not None and len(findings) >= max_findings:
                     return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[item]) for item in _ALL_SPLITS)})
                 continue
+            if stored.get("episode_disposition") != expected.get("episode_disposition") or stored.get("denominator_class") != expected.get("denominator_class"):
+                findings.append(_finding("family_disposition_mismatch", "stored episode disposition fields do not match deterministic derivation", episode_id=episode_id))
             if dict(stored) != expected:
                 findings.append(_finding("sealed_episode_identity_mismatch", "stored sealed episode plan does not match deterministic regeneration", episode_id=episode_id))
             if max_findings is not None and len(findings) >= max_findings:
@@ -2835,6 +4273,17 @@ def _seed_and_plan_gate(output_dir: Path, context: Mapping[str, Any], *, max_fin
         "seed_commitment": identity.seed_digest,
     }
     expected_final = expected_final | {"sealed_plan_digest": _sha256(expected_final)}
+    for plan in final_payload.get("episodes", []):
+        if plan.get("final_observation_provenance") != _final_observation_provenance("final"):
+            findings.append(
+                _finding(
+                    "final_observation_provenance_mismatch",
+                    "final split episode claims materialized observation provenance",
+                    episode_id=plan.get("episode_id"),
+                )
+            )
+            if max_findings is not None and len(findings) >= max_findings:
+                return _gate("seed_and_plan", findings, counts={"sealed_episode_count": sum(len(plans_by_split[split]) for split in _ALL_SPLITS)})
     if final_payload != expected_final:
         findings.append(_finding("sealed_episode_identity_mismatch", "final sealed split identity does not match deterministic regeneration"))
         if max_findings is not None and len(findings) >= max_findings:
@@ -2964,6 +4413,17 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
     counts = {"family_records_checked": 0}
     row_actions = context["row_actions"]
     reachability_tile = context["reachability_tile"]
+    canonical_digest_set = set(_canonical_observation_digest_index())
+    transformed_valid_digest_set: set[str] | None = None
+
+    def has_transformed_valid_collision(digest: str | None) -> bool:
+        nonlocal transformed_valid_digest_set
+        if digest is None:
+            return False
+        if transformed_valid_digest_set is None:
+            transformed_valid_digest_set = set(_valid_transformed_observation_digest_index()["digest_index"]) - canonical_digest_set
+        return str(digest) in transformed_valid_digest_set
+
     for split in _NON_FINAL_SPLITS:
         by_episode: dict[str, list[dict[str, Any]]] = {}
         for row in _read_jsonl(output_dir / split / "frame-metadata.jsonl"):
@@ -2972,6 +4432,25 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
             ordered = sorted(rows, key=lambda item: int(item.get("sequence_number", -1)))
             counts["family_records_checked"] += len(ordered)
             family = ordered[0].get("family")
+            for row in ordered:
+                episode_family = row.get("episode_family")
+                if episode_family not in {"valid", "frame_invalid", "temporal_negative", "information_control"}:
+                    findings.append(_finding("family_disposition_mismatch", "frame omits a recognized episode family", split=split, episode_id=episode_id))
+                    continue
+                if row.get("episode_disposition") != _episode_disposition(str(episode_family)):
+                    findings.append(_finding("family_disposition_mismatch", "frame episode disposition does not match its family", split=split, episode_id=episode_id))
+                if row.get("denominator_class") != _denominator_class(str(episode_family)):
+                    findings.append(_finding("family_disposition_mismatch", "frame denominator class does not match its family", split=split, episode_id=episode_id))
+                if not row.get("frame_disposition"):
+                    findings.append(_finding("family_disposition_mismatch", "frame disposition is missing", split=split, episode_id=episode_id))
+                intervention = row.get("metadata", {}).get("family_intervention", {})
+                mutation_kind = intervention.get("family_id") if episode_family != "valid" else None
+                expected_frame = expected_frame_disposition(str(episode_family), None if mutation_kind is None else str(mutation_kind), int(row.get("sequence_number", -1)), intervention)
+                if row.get("frame_disposition") != expected_frame:
+                    findings.append(_finding("frame_disposition_mismatch", "frame disposition does not match independent family derivation", split=split, episode_id=episode_id, frame_id=row.get("frame_id"), expected=expected_frame, actual=row.get("frame_disposition")))
+                provenance_status = validate_observation_operation_chain(row)
+                if provenance_status != "ok":
+                    findings.append(_finding(provenance_status, "stored observation operation chain does not independently replay to the emitted observation", split=split, episode_id=episode_id, frame_id=row.get("frame_id")))
             if any(row.get("event_type") == "gap_unknown" and (row.get("observation_pixel_digest") is not None or row.get("pixels") is not None) for row in ordered):
                 findings.append(_finding("gap_event_has_pixels", "typed gap event carries ordinary observation identity", split=split, episode_id=episode_id))
             if family == "conflicting_action_splice":
@@ -2982,8 +4461,26 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
                         findings.append(_finding("family_contract_violation", "conflicting splice uses two rows governed by the same action", split=split, episode_id=episode_id))
                     if int(trace.get("primary_contributing_pixel_count", 0)) <= 0 or int(trace.get("secondary_contributing_pixel_count", 0)) <= 0:
                         findings.append(_finding("family_contract_violation", "conflicting splice does not include nonzero contributions from both sources", split=split, episode_id=episode_id))
+                    splice_counts = trace.get("action_relevant_region_contribution_counts", {})
+                    if int(splice_counts.get("primary_target_pixel_count", 0)) <= 0 or int(splice_counts.get("secondary_additive_target_pixel_count", 0)) <= 0:
+                        findings.append(_finding("family_contract_violation", "conflicting splice lacks two visible target evidence contributions", split=split, episode_id=episode_id))
+                    if trace.get("splice_mask_version") != SPLICE_MASK_VERSION or trace.get("target_region_id") != TARGET_REGION_ID:
+                        findings.append(_finding("family_contract_violation", "conflicting splice trace does not use the frozen target-evidence mask", split=split, episode_id=episode_id))
                     if trace.get("output_observation_digest") != row.get("observation_pixel_digest"):
                         findings.append(_finding("family_regeneration_mismatch", "conflicting splice output digest does not match stored observation", split=split, episode_id=episode_id))
+                    try:
+                        replay = replay_observation_operation_chain(metadata["observation_operation_chain"])
+                        visible_action_evidence = _final_visible_target_action_evidence(replay["pixels"], row_actions)
+                        if not visible_action_evidence["conflicting_action_evidence_present"]:
+                            findings.append(_finding("conflicting_action_evidence_absent", "final visible splice target evidence does not imply at least two policy actions", split=split, episode_id=episode_id))
+                        if trace.get("visible_action_evidence_digest") != visible_action_evidence["visible_action_evidence_digest"]:
+                            findings.append(_finding("conflicting_action_evidence_absent", "stored visible-action splice evidence does not match independent reconstruction", split=split, episode_id=episode_id))
+                    except (KeyError, TypeError, VPMValidationError, ValueError):
+                        findings.append(_finding("final_observation_provenance_mismatch", "conflicting splice operation chain could not be replayed for visible-action reconstruction", split=split, episode_id=episode_id))
+                    if _canonical_observation_digest_index().get(str(row.get("observation_pixel_digest"))):
+                        findings.append(_finding("invalid_family_valid_state_collision", "conflicting splice output decodes as a canonical valid observation", split=split, episode_id=episode_id))
+                    elif has_transformed_valid_collision(row.get("observation_pixel_digest")):
+                        findings.append(_finding("invalid_family_valid_transformation_collision", "conflicting splice output decodes as a bounded transformed valid observation", split=split, episode_id=episode_id))
             elif family == "critical_evidence_corruption":
                 for row in ordered:
                     metadata = row.get("metadata", {})
@@ -2993,6 +4490,10 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
                         findings.append(_finding("family_contract_violation", "critical corruption has an empty changed-coordinate set", split=split, episode_id=episode_id))
                     if trace.get("changed_pixel_count") == 0:
                         findings.append(_finding("family_no_op", "critical corruption is a no-op", split=split, episode_id=episode_id))
+                    if _canonical_observation_digest_index().get(str(row.get("observation_pixel_digest"))):
+                        findings.append(_finding("invalid_family_valid_state_collision", "critical corruption output decodes as a canonical valid observation", split=split, episode_id=episode_id))
+                    elif has_transformed_valid_collision(row.get("observation_pixel_digest")):
+                        findings.append(_finding("invalid_family_valid_transformation_collision", "critical corruption output decodes as a bounded transformed valid observation", split=split, episode_id=episode_id))
                     for change in changes:
                         coord = (int(change.get("y", -1)), int(change.get("x", -1)))
                         if coord not in set(_critical_coordinates()) or change.get("original") == change.get("replacement"):
@@ -3007,7 +4508,7 @@ def _family_contract_gate(output_dir: Path, context: Mapping[str, Any], *, max_f
             if any(row.get("expected_disposition") == "information_theoretic_control" for row in ordered):
                 code = validate_control_episode_records(ordered)
                 if code != "ok":
-                    findings.append(_finding(code, "information control records violate byte-identity or denominator rules", split=split, episode_id=episode_id))
+                    findings.append(_finding(code, "information control records violate byte-identity, hidden-history, or denominator rules", split=split, episode_id=episode_id))
             if any("stale_repeat" in row.get("metadata", {}) for row in ordered):
                 repeat_rows = [row for row in ordered if "stale_repeat" in row.get("metadata", {})]
                 for row in repeat_rows:
@@ -3345,9 +4846,12 @@ _MUTATION_CASES: tuple[dict[str, Any], ...] = (
     {"name": "seed_alter_planned_family", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
     {"name": "seed_alter_sealed_plan_digest", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
     {"name": "seed_alter_final_sealed_identity", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
+    {"name": "seed_final_observation_provenance_materialized", "expected_primary_failure_code": "final_observation_provenance_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
     {"name": "family_conflicting_splice_same_action_rows", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_splice_zero_source_contribution", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_splice_output_equal_one_source", "expected_primary_failure_code": "family_regeneration_mismatch", "artifact_class": "family_output"},
+    {"name": "family_splice_valid_state_collision", "expected_primary_failure_code": "invalid_family_valid_state_collision", "artifact_class": "family_output"},
+    {"name": "family_splice_target_evidence_count_removed", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_critical_empty_coordinate_set", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_corrupt_noncritical_coordinates", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
     {"name": "family_replacement_value_identical", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
@@ -3360,6 +4864,9 @@ _MUTATION_CASES: tuple[dict[str, Any], ...] = (
     {"name": "family_gap_event_carrying_pixels", "expected_primary_failure_code": "gap_event_has_pixels", "artifact_class": "family_output"},
     {"name": "family_information_control_pixel_difference", "expected_primary_failure_code": "control_byte_identity_mismatch", "artifact_class": "family_output"},
     {"name": "family_control_denominator_leak", "expected_primary_failure_code": "control_denominator_leak", "artifact_class": "family_output"},
+    {"name": "family_control_hidden_history_collapse", "expected_primary_failure_code": "control_hidden_history_not_ambiguous", "artifact_class": "family_output"},
+    {"name": "family_control_visible_source_leak", "expected_primary_failure_code": "control_provider_visible_leak", "artifact_class": "family_output"},
+    {"name": "family_episode_disposition_mismatch", "expected_primary_failure_code": "family_disposition_mismatch", "artifact_class": "family_output"},
     {"name": "reachability_remove_applicable_edge", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
     {"name": "reachability_redirect_applicable_edge", "expected_primary_failure_code": "reachable_pair_mismatch", "artifact_class": "reachability_trace"},
     {"name": "reachability_alter_destination_action", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "reachability_trace"},
@@ -3425,6 +4932,7 @@ _PRIMARY_FAILURE_CODE_PRECEDENCE = {
             "episode_seed_derivation_mismatch",
             "episode_split_reassignment",
             "duplicate_episode_id",
+            "final_observation_provenance_mismatch",
             "sealed_episode_identity_mismatch",
             "expected_record_missing",
             "orphan_observation_record",
@@ -3439,6 +4947,15 @@ _PRIMARY_FAILURE_CODE_PRECEDENCE = {
             "gap_event_has_pixels",
             "control_byte_identity_mismatch",
             "control_denominator_leak",
+            "control_provider_visible_leak",
+            "control_hidden_history_not_ambiguous",
+            "control_hidden_label_not_ambiguous",
+            "control_hidden_history_cardinality_mismatch",
+            "family_disposition_mismatch",
+            "frame_disposition_mismatch",
+            "invalid_family_valid_state_collision",
+            "invalid_family_valid_transformation_collision",
+            "conflicting_action_evidence_absent",
             "consulted_edge_mismatch",
             "reachable_pair_mismatch",
             "reachability_trace_mismatch",
@@ -3505,7 +5022,7 @@ def _mutation_expected_files(case: Mapping[str, Any]) -> tuple[str, ...]:
     if artifact_class in {"observation", "family_output"}:
         return ("selection/frame-metadata.jsonl", "selection-manifest.json")
     if artifact_class == "episode_plan":
-        if name == "seed_alter_final_sealed_identity":
+        if name in {"seed_alter_final_sealed_identity", "seed_final_observation_provenance_materialized"}:
             return ("final-split-sealed-plan.json", "final-split-sealed-digest.json")
         if name in {"seed_alter_root_seed_material", "seed_alter_root_seed_digest"}:
             return ("generator-identity.json",) if name == "seed_alter_root_seed_material" else ("benchmark-contract-identity.json",)
@@ -3572,7 +5089,7 @@ def validate_mutation_catalogue() -> list[dict[str, Any]]:
             findings.append(_finding("mutation_expected_change_missing", "mutation lacks expected changed file metadata", mutation=case["mutation_id"]))
     detected = sum(1 for case in catalogue if case["expected_result_type"] == "detected")
     invariants = sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant")
-    if len(catalogue) != 87 or detected != 85 or invariants != 2:
+    if len(catalogue) != 93 or detected != 91 or invariants != 2:
         findings.append(
             _finding(
                 "mutation_matrix_count_mismatch",
@@ -3904,6 +5421,18 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
             _write_json(final_path, final)
             _write_json(output_dir / "final-split-sealed-digest.json", {"digest": final["sealed_plan_digest"]})
             return
+        elif case_name == "seed_final_observation_provenance_materialized":
+            final_path = output_dir / "final-split-sealed-plan.json"
+            final = _read_json(final_path)
+            final["episodes"][0]["final_observation_provenance"] = {
+                "materialization_status": "materialized",
+                "observation_payload_included": True,
+                "provenance": "mutated_final_payload_claim",
+            }
+            final["sealed_plan_digest"] = _sha256({key: value for key, value in final.items() if key != "sealed_plan_digest"})
+            _write_json(final_path, final)
+            _write_json(output_dir / "final-split-sealed-digest.json", {"digest": final["sealed_plan_digest"]})
+            return
         _write_json(path, payload)
         return
 
@@ -3917,6 +5446,15 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
                 trace["secondary_contributing_pixel_count"] = 0
             elif case_name == "family_splice_output_equal_one_source":
                 trace["output_observation_digest"] = trace.get("primary_source_digest")
+            elif case_name == "family_splice_valid_state_collision":
+                canonical = canonical_observation_universe()["rows"][0]
+                row["observation_pixel_digest"] = canonical["observation_pixel_digest"]
+                metadata["observation_operation_chain"] = _valid_frame_operation_chain(canonical["row_id"], _transformation_parameters("exact", 0))
+                trace["output_observation_digest"] = canonical["observation_pixel_digest"]
+                trace["canonical_collision_count"] = 1
+                trace["canonical_collision_rows"] = [{"row_id": canonical["row_id"], "action_id": canonical["action_id"]}]
+            elif case_name == "family_splice_target_evidence_count_removed":
+                trace.setdefault("action_relevant_region_contribution_counts", {})["secondary_additive_target_pixel_count"] = 0
             elif case_name == "family_critical_empty_coordinate_set":
                 trace["changes"] = []
             elif case_name == "family_corrupt_noncritical_coordinates":
@@ -3947,6 +5485,26 @@ def _apply_reference_mutation(output_dir: Path, case_name: str) -> None:
                 row["observation_pixel_digest"] = "sha256:" + "7" * 64
             elif case_name == "family_control_denominator_leak":
                 metadata["denominator_eligible"] = True
+            elif case_name == "family_control_visible_source_leak":
+                metadata["provider_visible_fields"] = ["pixels", "source_row_id"]
+            elif case_name == "family_episode_disposition_mismatch":
+                row["episode_disposition"] = "valid"
+                row["denominator_class"] = "valid_denominator"
+        if case_name == "family_control_hidden_history_collapse":
+            path = output_dir / "selection" / "frame-metadata.jsonl"
+            rows = _read_jsonl(path)
+            control_episode = next(row["episode_id"] for row in rows if row.get("expected_disposition") == "information_theoretic_control")
+            control_rows = [row for row in rows if row.get("episode_id") == control_episode]
+            first_metadata = control_rows[0].setdefault("metadata", {})
+            hidden_history_id = first_metadata.get("hidden_source_history_id")
+            hidden_label = first_metadata.get("hidden_source_label_digest")
+            for row in control_rows:
+                metadata = row.setdefault("metadata", {})
+                metadata["hidden_source_history_id"] = hidden_history_id
+                metadata["hidden_source_label_digest"] = hidden_label
+            _rewrite_jsonl(path, rows)
+            _launder_split_manifest(output_dir, "selection")
+            return
         if "splice" in case_name:
             _mutate_first_frame_row(output_dir, family_mutate, predicate=lambda row: row.get("family") == "conflicting_action_splice")
         elif "critical" in case_name or "corrupt" in case_name or "replacement" in case_name or "noop" in case_name:
@@ -4328,10 +5886,10 @@ def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include
     supported = (
         verification["verified"]
         and mutation_audit.get("status") == "passed"
-        and mutation_audit.get("declared_mutation_count") == 87
-        and mutation_audit.get("executable_mutation_count") == 87
-        and mutation_audit.get("expected_detection_count") == 85
-        and mutation_audit.get("detected_mutation_count") == 85
+        and mutation_audit.get("declared_mutation_count") == 93
+        and mutation_audit.get("executable_mutation_count") == 93
+        and mutation_audit.get("expected_detection_count") == 91
+        and mutation_audit.get("detected_mutation_count") == 91
         and mutation_audit.get("missed_mutation_count") == 0
         and mutation_audit.get("unexpected_failure_code_count") == 0
         and mutation_audit.get("invariant_count") == 2

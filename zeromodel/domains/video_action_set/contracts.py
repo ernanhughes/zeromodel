@@ -8,6 +8,7 @@ CANONICAL_OBSERVATION_UNIVERSE_VERSION = (
 )
 EPISODE_PLAN_VERSION = "zeromodel-video-action-set-sealed-episode-plan/v1"
 FRAME_SHAPE = (16, 28)
+GAP_EVENT_VERSION = "zeromodel-video-action-set-gap-event/v1"
 GENERATOR_VERSION = "zeromodel-video-action-set-reachability-generator/v1"
 OBSERVATION_OPERATION_CHAIN_VERSION = "zeromodel-video-observation-operation-chain/v1"
 PROVIDER_OBSERVATION_BOUNDARY_VERSION = (
@@ -33,6 +34,7 @@ __all__ = [
     "CANONICAL_OBSERVATION_UNIVERSE_VERSION",
     "EPISODE_PLAN_VERSION",
     "FRAME_SHAPE",
+    "GAP_EVENT_VERSION",
     "GENERATOR_VERSION",
     "OBSERVATION_OPERATION_CHAIN_VERSION",
     "PROVIDER_OBSERVATION_BOUNDARY_VERSION",

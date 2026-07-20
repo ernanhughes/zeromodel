@@ -17,6 +17,7 @@ from .domains.video_action_set.contracts import (
     CANONICAL_OBSERVATION_UNIVERSE_VERSION,
     EPISODE_PLAN_VERSION,
     FRAME_SHAPE,
+    GAP_EVENT_VERSION,
     GENERATOR_VERSION,
     OBSERVATION_OPERATION_CHAIN_VERSION,
     PROVIDER_OBSERVATION_BOUNDARY_VERSION,
@@ -31,8 +32,13 @@ from .domains.video_action_set.observation_legacy_adapters import (
     operation_chain as _operation_chain,
     operation_record as _operation_record,
 )
-from .domains.video_action_set.observation_provenance_dto import (
-    ObservationOperationChainDTO,
+from .domains.video_action_set.observation_provenance import (
+    gap_event_operation_chain as _gap_event_operation_chain,
+    valid_frame_operation_chain as _valid_frame_operation_chain,
+)
+from .domains.video_action_set.observation_replay import (
+    replay_observation_operation_chain as _replay_observation_operation_chain_core,
+    validate_observation_operation_chain as _validate_observation_operation_chain_core,
 )
 from .domains.video_action_set.pixel_digest import (
     array_digest as _array_digest,
@@ -1058,7 +1064,7 @@ def _family_intervention_plan(
         payload |= {
             "event_type": "typed_gap_sequence",
             "gap_event": {
-                "version": "zeromodel-video-action-set-gap-event/v1",
+                "version": GAP_EVENT_VERSION,
                 "position": 2,
                 "duration_frames": 1,
                 "reason": "declared_gap_or_unknown_action",
@@ -1624,41 +1630,6 @@ def _apply_critical_corruption(source_pixels: np.ndarray, coordinate_manifest: M
     return output, manifest
 
 
-def _valid_frame_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any]) -> dict[str, Any]:
-    source = _render_row_frame(row_id)
-    transformed, trace = _apply_transformation(source, transformation_parameters)
-    source_digest = trace["source_observation_digest"]
-    output_digest = trace["transformed_observation_digest"]
-    operations = [
-        _operation_record(
-            index=0,
-            operation="render_canonical_row",
-            operation_version=ARCADE_RENDERER_CONTRACT_VERSION,
-            input_digests=[],
-            parameters={"row_id": str(row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()},
-            output_digest=source_digest,
-        ),
-        _operation_record(
-            index=1,
-            operation="apply_bounded_transformation",
-            operation_version=TRANSFORMATION_FAMILY_VERSION,
-            input_digests=[source_digest],
-            parameters={"transformation_parameters": dict(transformation_parameters)},
-            output_digest=output_digest,
-        ),
-        _operation_record(
-            index=2,
-            operation="emit_observation",
-            operation_version=OBSERVATION_OPERATION_CHAIN_VERSION,
-            input_digests=[output_digest],
-            parameters={"event_type": "frame"},
-            output_digest=output_digest,
-        ),
-    ]
-    return _operation_chain(operations, output_digest)
-
-
-
 def _conflicting_splice_operation_chain(
     *,
     primary_row_id: str,
@@ -1782,15 +1753,6 @@ def _impossible_transition_operation_chain(destination_before: Mapping[str, Any]
 
 
 
-def _gap_event_operation_chain(gap_event: Mapping[str, Any]) -> dict[str, Any]:
-    operations = [
-        _operation_record(index=0, operation="emit_typed_gap_event", operation_version="zeromodel-video-action-set-gap-event/v1", input_digests=[], parameters=dict(gap_event), output_digest=None),
-        _operation_record(index=1, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[None], parameters={"event_type": "gap_unknown"}, output_digest=None),
-    ]
-    return _operation_chain(operations, None)
-
-
-
 def _information_control_operation_chain(current_row_id: str) -> dict[str, Any]:
     current = _render_row_frame(current_row_id)
     current_digest = _array_digest(current)
@@ -1817,140 +1779,20 @@ def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
 
 
 def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, Any]:
-    chain = ObservationOperationChainDTO.from_dict(chain).to_dict()
-    if chain.get("version") != OBSERVATION_OPERATION_CHAIN_VERSION:
-        raise VPMValidationError("unsupported observation operation chain version")
-    operations = list(chain.get("operations", []))
-    if [int(op.get("index", -1)) for op in operations] != list(range(len(operations))):
-        raise VPMValidationError("operation chain indices are not ordered")
-    stored_chain_digest = chain.get("operation_chain_digest")
-    if stored_chain_digest != _sha256({key: value for key, value in chain.items() if key != "operation_chain_digest"}):
-        raise VPMValidationError("operation chain digest mismatch")
-    pixels_by_digest: dict[str, np.ndarray] = {}
-    current_digest: str | None = None
-    current_pixels: np.ndarray | None = None
-    typed_gap = False
-    for op in operations:
-        expected_param_digest = _sha256(op.get("parameters", {}))
-        if op.get("parameter_digest") != expected_param_digest:
-            raise VPMValidationError("operation parameter digest mismatch")
-        if op.get("operation_digest") != _sha256({key: value for key, value in op.items() if key != "operation_digest"}):
-            raise VPMValidationError("operation digest mismatch")
-        input_digests = [None if item is None else str(item) for item in op.get("input_digests", [])]
-        operation = str(op.get("operation"))
-        parameters = op.get("parameters", {})
-        output_digest = op.get("output_digest")
-        if operation == "render_canonical_row":
-            row_id = str(parameters["row_id"])
-            pixels = _render_row_frame(row_id)
-            digest = _array_digest(pixels)
-            if digest != output_digest:
-                raise VPMValidationError("render operation output digest mismatch")
-            pixels_by_digest[digest] = pixels
-            current_digest = digest
-            current_pixels = pixels
-        elif operation == "apply_bounded_transformation":
-            if len(input_digests) != 1 or input_digests[0] not in pixels_by_digest:
-                raise VPMValidationError("transformation input digest missing")
-            pixels, trace = _apply_transformation(pixels_by_digest[str(input_digests[0])], parameters["transformation_parameters"])
-            digest = trace["transformed_observation_digest"]
-            if digest != output_digest:
-                raise VPMValidationError("transformation output digest mismatch")
-            pixels_by_digest[digest] = pixels
-            current_digest = digest
-            current_pixels = pixels
-        elif operation == "compose_simultaneous_target_evidence":
-            if len(input_digests) != 2 or input_digests[0] not in pixels_by_digest or input_digests[1] not in pixels_by_digest:
-                raise VPMValidationError("splice input digest missing")
-            pixels, _trace = _apply_conflicting_splice(
-                primary_pixels=pixels_by_digest[str(input_digests[0])],
-                secondary_pixels=pixels_by_digest[str(input_digests[1])],
-                primary_row_id=str(parameters["primary_row_id"]),
-                secondary_row_id=str(parameters["secondary_row_id"]),
-                primary_action_id=str(parameters["primary_action_id"]),
-                secondary_action_id=str(parameters["secondary_action_id"]),
-                mask_manifest=parameters["mask_manifest"],
-            )
-            digest = _array_digest(pixels)
-            if digest != output_digest:
-                raise VPMValidationError("splice output digest mismatch")
-            pixels_by_digest[digest] = pixels
-            current_digest = digest
-            current_pixels = pixels
-        elif operation == "apply_critical_coordinate_corruption":
-            if len(input_digests) != 1 or input_digests[0] not in pixels_by_digest:
-                raise VPMValidationError("critical corruption input digest missing")
-            pixels, _trace = _apply_critical_corruption(pixels_by_digest[str(input_digests[0])], parameters["critical_coordinates"])
-            digest = _array_digest(pixels)
-            if digest != output_digest:
-                raise VPMValidationError("critical corruption output digest mismatch")
-            pixels_by_digest[digest] = pixels
-            current_digest = digest
-            current_pixels = pixels
-        elif operation == "stale_repeat_replace":
-            if len(input_digests) != 2 or input_digests[1] not in pixels_by_digest:
-                raise VPMValidationError("stale repeat input digest missing")
-            pixels = np.array(pixels_by_digest[str(input_digests[1])], copy=True)
-            digest = _array_digest(pixels)
-            if digest != output_digest:
-                raise VPMValidationError("stale repeat output digest mismatch")
-            pixels_by_digest[digest] = pixels
-            current_digest = digest
-            current_pixels = pixels
-        elif operation == "impossible_transition_replace":
-            if len(input_digests) != 2 or input_digests[1] not in pixels_by_digest:
-                raise VPMValidationError("impossible transition input digest missing")
-            pixels = np.array(pixels_by_digest[str(input_digests[1])], copy=True)
-            digest = _array_digest(pixels)
-            if digest != output_digest:
-                raise VPMValidationError("impossible transition output digest mismatch")
-            pixels_by_digest[digest] = pixels
-            current_digest = digest
-            current_pixels = pixels
-        elif operation == "emit_typed_gap_event":
-            if output_digest is not None:
-                raise VPMValidationError("typed gap operation must not emit pixels")
-            typed_gap = True
-            current_digest = None
-            current_pixels = None
-        elif operation in {"emit_provider_identical_control_observation", "emit_observation"}:
-            if output_digest is None:
-                if input_digests != [None]:
-                    raise VPMValidationError("no-pixel emit input mismatch")
-                current_digest = None
-                current_pixels = None
-            else:
-                if len(input_digests) != 1 or input_digests[0] != output_digest or str(output_digest) not in pixels_by_digest:
-                    raise VPMValidationError("emit operation input/output mismatch")
-                current_digest = str(output_digest)
-                current_pixels = pixels_by_digest[str(output_digest)]
-        else:
-            raise VPMValidationError("unsupported operation chain operation")
-    if chain.get("final_emitted_digest") != current_digest:
-        raise VPMValidationError("operation chain final digest mismatch")
-    return {"pixels": current_pixels, "final_emitted_digest": current_digest, "typed_gap": typed_gap, "operation_count": len(operations)}
+    return _replay_observation_operation_chain_core(
+        chain,
+        conflicting_splice_executor=_apply_conflicting_splice,
+        critical_corruption_executor=_apply_critical_corruption,
+    )
 
 
 
 def validate_observation_operation_chain(record: Mapping[str, Any]) -> str:
-    chain = record.get("metadata", {}).get("observation_operation_chain")
-    if not isinstance(chain, Mapping):
-        return "final_observation_provenance_mismatch"
-    try:
-        replay = replay_observation_operation_chain(chain)
-    except (KeyError, TypeError, ValueError, VPMValidationError):
-        return "final_observation_provenance_mismatch"
-    if replay["final_emitted_digest"] != record.get("observation_pixel_digest"):
-        return "final_observation_provenance_mismatch"
-    if record.get("event_type") == "gap_unknown":
-        if replay["final_emitted_digest"] is not None or replay["typed_gap"] is not True:
-            return "final_observation_provenance_mismatch"
-    elif replay["final_emitted_digest"] is None:
-        return "final_observation_provenance_mismatch"
-    pixels = record.get("pixels")
-    if pixels is not None and replay["pixels"] is not None and _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)) != replay["final_emitted_digest"]:
-        return "final_observation_provenance_mismatch"
-    return "ok"
+    return _validate_observation_operation_chain_core(
+        record,
+        conflicting_splice_executor=_apply_conflicting_splice,
+        critical_corruption_executor=_apply_critical_corruption,
+    )
 
 
 

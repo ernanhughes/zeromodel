@@ -50,11 +50,48 @@ When reviewing or extending this repo, check these first:
 ## Fast Commands
 
 ```powershell
-pytest -q
+python scripts/run_fast_tests.py
 pytest tests/test_artifact_kernel.py -q
 pytest tests/test_views.py tests/test_spatial.py tests/test_manifold.py -q
 python -m build
 ```
+
+## Test Execution Policy
+
+ZeroModel has two test tiers.
+
+### Fast tests
+
+The default repository validation command is:
+
+```powershell
+python scripts/run_fast_tests.py
+```
+
+The complete fast suite has a hard 60-second budget.
+
+During implementation:
+
+1. Run only directly affected fast tests.
+2. Run the complete fast suite once after implementation.
+3. Do not repeatedly rerun an unchanged command.
+4. Do not add exhaustive, end-to-end, materialization, or complete mutation work to the fast tier.
+
+### Integration tests
+
+Integration tests require explicit human authorization.
+
+Do not run any of these unless the user explicitly requests it:
+
+```powershell
+pytest --run-integration
+pytest --run-slow
+pytest -m integration
+```
+
+Integration tests include complete benchmark materialization, exhaustive observation universes, complete mutation audits, installed-wheel tests, historical regeneration, and long-running cross-product validation.
+
+When integration coverage is relevant, report the exact suggested command but do not execute it.
 
 ## Working Style
 

@@ -12,7 +12,9 @@ from .arcade_policy import ACTIONS, CELL_PIXELS, COOLDOWN_BLOCKED_VALUE, COOLDOW
 from .artifact import VPMValidationError
 from .domains.video_action_set.canonical_json import canonical_json_bytes, canonical_json_value, canonical_sha256
 from .domains.video_action_set.contracts import (
+    ARCADE_RENDERER_CONTRACT_VERSION,
     BENCHMARK_VERSION,
+    CANONICAL_OBSERVATION_UNIVERSE_VERSION,
     EPISODE_PLAN_VERSION,
     FRAME_SHAPE,
     GENERATOR_VERSION,
@@ -22,6 +24,7 @@ from .domains.video_action_set.contracts import (
     REACHABILITY_TILE_VERSION,
     SEED_DERIVATION_VERSION,
     TRANSFORMATION_FAMILY_VERSION,
+    VALID_OBSERVATION_UNIVERSE_VERSION,
 )
 from .domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO
 from .domains.video_action_set.observation_legacy_adapters import (
@@ -34,6 +37,21 @@ from .domains.video_action_set.observation_provenance_dto import (
 from .domains.video_action_set.pixel_digest import (
     array_digest as _array_digest,
     pixel_digest as _pixel_digest,
+)
+from .domains.video_action_set.arcade_observation import (
+    render_row_frame as _render_row_frame,
+    renderer_identity as _renderer_identity,
+    shooter_config_payload as _transition_config_payload,
+)
+from .domains.video_action_set.observation_universe import (
+    _canonical_collision_rows,
+    _canonical_observation_digest_index,
+    _valid_transformation_parameter_key,
+    _valid_transformation_parameter_universe,
+    _valid_transformed_observation_digest_index,
+    canonical_observation_universe,
+    canonical_prototypes,
+    valid_observation_universe,
 )
 from .domains.video_action_set.transformations import (
     _apply_transformation,
@@ -80,8 +98,6 @@ CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
 MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
-CANONICAL_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-canonical-observation-universe/v1"
-VALID_OBSERVATION_UNIVERSE_VERSION = "zeromodel-video-action-set-valid-observation-universe/v2"
 FRAME_INVALID_CLOSURE_VERSION = "zeromodel-video-action-set-frame-invalid-closure/v1"
 FAMILY_INTERVENTION_VERSION = "zeromodel-video-action-set-family-intervention/v3"
 CONFLICTING_ACTION_SPLICE_VERSION = "zeromodel-video-action-set-family-conflicting-action-splice/v3"
@@ -341,210 +357,6 @@ def _derived_seed(
     return payload | {"seed_digest": digest, "seed_int64": _seed_int_from_digest(digest)}
 
 
-def canonical_prototypes(config: ShooterConfig = ShooterConfig()) -> dict[str, tuple[str, str, str, ImageObservation]]:
-    policy = compile_policy_artifact(config)
-    lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
-    prototypes = {}
-    for row_id in policy.source.row_ids:
-        tank, target, cooldown = parse_state_row_id(str(row_id))
-        frame = render_state_frame(tank, target, cooldown, width=config.width)
-        observation = ImageObservation(frame, source_id=f"canonical:{row_id}")
-        prototypes[f"prototype:{row_id}"] = (str(row_id), lookup.choose(str(row_id)), observation.raw_digest, observation)
-    return prototypes
-
-
-def canonical_observation_universe(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    rows: list[dict[str, Any]] = []
-    digest_to_rows: dict[str, list[dict[str, str]]] = {}
-    prototypes = canonical_prototypes() if config == ShooterConfig() else canonical_prototypes(config)
-    for prototype_id, (row_id, action_id, observation_raw_digest, observation) in prototypes.items():
-        pixel_digest = _array_digest(observation.pixels)
-        entry = {
-            "prototype_id": prototype_id,
-            "row_id": row_id,
-            "action_id": action_id,
-            "image_observation_raw_digest": observation_raw_digest,
-            "observation_pixel_digest": pixel_digest,
-        }
-        rows.append(entry)
-        digest_to_rows.setdefault(pixel_digest, []).append({"row_id": row_id, "action_id": action_id})
-    duplicate_groups = [
-        {"observation_pixel_digest": digest, "rows": grouped}
-        for digest, grouped in sorted(digest_to_rows.items())
-        if len(grouped) > 1
-    ]
-    payload = {
-        "version": CANONICAL_OBSERVATION_UNIVERSE_VERSION,
-        "digest_semantics": "raw rendered uint8 bytes, excluding ImageObservation namespace",
-        "frame_shape": list(FRAME_SHAPE),
-        "row_count": len(rows),
-        "rows": rows,
-        "digest_to_rows": digest_to_rows,
-        "duplicate_digest_group_count": len(duplicate_groups),
-        "duplicate_digest_groups": duplicate_groups,
-    }
-    payload["universe_digest"] = _sha256(payload)
-    return payload
-
-
-def _renderer_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    payload = {
-        "version": "zeromodel-arcade-shooter-renderer-identity/v1",
-        "function": "zeromodel.arcade_policy.render_state_frame",
-        "frame_shape": list(FRAME_SHAPE),
-        "cell_pixels": int(CELL_PIXELS),
-        "target_value": int(TARGET_VALUE),
-        "tank_value": int(TANK_VALUE),
-        "cooldown_ready_value": int(COOLDOWN_READY_VALUE),
-        "cooldown_blocked_value": int(COOLDOWN_BLOCKED_VALUE),
-        "config": _transition_config_payload(config),
-    }
-    return payload | {"renderer_identity_digest": _sha256(payload)}
-
-
-
-def _valid_transformation_parameter_key(params: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        "dx": int(params["dx"]),
-        "dy": int(params["dy"]),
-        "scale_percent": int(params["scale_percent"]),
-        "offset": int(params["offset"]),
-        "occlusion": None if params.get("occlusion") is None else dict(params["occlusion"]),
-    }
-
-
-
-def _valid_transformation_parameter_universe() -> dict[str, Any]:
-    if hasattr(_valid_transformation_parameter_universe, "_cache"):
-        return _valid_transformation_parameter_universe._cache  # type: ignore[attr-defined]
-    by_key: dict[str, dict[str, Any]] = {}
-    for dx in range(-1, 2):
-        for dy in range(-1, 2):
-            for scale in range(90, 106):
-                for offset in range(0, 6):
-                    params = {
-                        "version": TRANSFORMATION_FAMILY_VERSION,
-                        "family": "bounded_translation_photometric",
-                        "seed": 0,
-                        "dx": dx,
-                        "dy": dy,
-                        "scale_percent": scale,
-                        "offset": offset,
-                        "occlusion": None,
-                    }
-                    params["parameter_digest"] = _sha256({key: value for key, value in params.items() if key != "parameter_digest"})
-                    by_key[_sha256(_valid_transformation_parameter_key(params))] = params
-                    for top in range(0, 3):
-                        for left in range(0, 3):
-                            occluded = dict(params)
-                            occluded["family"] = "compound_bounded"
-                            occluded["occlusion"] = {"top": top, "left": left, "height": 2, "width": 3, "value": 64}
-                            occluded["parameter_digest"] = _sha256({key: value for key, value in occluded.items() if key != "parameter_digest"})
-                            by_key[_sha256(_valid_transformation_parameter_key(occluded))] = occluded
-    parameters = [by_key[key] for key in sorted(by_key)]
-    payload = {
-        "version": "zeromodel-video-action-set-valid-transformation-parameter-universe/v1",
-        "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
-        "parameter_count": len(parameters),
-        "parameters": parameters,
-    }
-    payload["parameter_universe_digest"] = _sha256(payload)
-    _valid_transformation_parameter_universe._cache = payload  # type: ignore[attr-defined]
-    return payload
-
-
-
-def _valid_transformed_observation_digest_index(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    cache_key = _sha256({"config": _transition_config_payload(config), "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION})
-    if not hasattr(_valid_transformed_observation_digest_index, "_cache"):
-        _valid_transformed_observation_digest_index._cache = {}  # type: ignore[attr-defined]
-    cache: dict[str, dict[str, Any]] = _valid_transformed_observation_digest_index._cache  # type: ignore[attr-defined]
-    if cache_key in cache:
-        return cache[cache_key]
-    canonical = canonical_observation_universe(config)
-    parameter_universe = _valid_transformation_parameter_universe()
-    digest_to_first: dict[str, dict[str, Any]] = {}
-    duplicate_count = 0
-    duplicate_examples = []
-    for canonical_row in canonical["rows"]:
-        row_id = str(canonical_row["row_id"])
-        source_pixels = _render_row_frame(row_id, config=config)
-        for params in parameter_universe["parameters"]:
-            output, _trace = _apply_transformation(source_pixels, params)
-            digest = _array_digest(output)
-            provenance = {
-                "row_id": row_id,
-                "parameter_digest": params["parameter_digest"],
-                "parameter_key_digest": _sha256(_valid_transformation_parameter_key(params)),
-            }
-            previous = digest_to_first.get(digest)
-            if previous is None:
-                digest_to_first[digest] = provenance
-            else:
-                duplicate_count += 1
-                if len(duplicate_examples) < 20:
-                    duplicate_examples.append({"observation_pixel_digest": digest, "first": previous, "duplicate": provenance})
-    digest_set = sorted(digest_to_first)
-    payload = {
-        "digest_index": set(digest_set),
-        "summary": {
-            "version": VALID_OBSERVATION_UNIVERSE_VERSION,
-            "policy_artifact_id": compile_policy_artifact(config).artifact_id,
-            "row_action_universe_digest": _sha256(
-                {
-                    "row_action": [
-                        {"row_id": row["row_id"], "action_id": row["action_id"]}
-                        for row in canonical["rows"]
-                    ]
-                }
-            ),
-            "renderer_contract_version": "zeromodel-arcade-shooter-render-state-frame/v1",
-            "renderer_identity": _renderer_identity(config),
-            "shooter_config": _transition_config_payload(config),
-            "shooter_config_digest": _sha256(_transition_config_payload(config)),
-            "transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
-            "parameter_universe_digest": parameter_universe["parameter_universe_digest"],
-            "parameter_universe_count": parameter_universe["parameter_count"],
-            "canonical_universe_digest": canonical["universe_digest"],
-            "exact_canonical_digest_count": len(canonical["digest_to_rows"]),
-            "transformed_valid_digest_count": len(digest_set),
-            "transformed_valid_output_count": len(canonical["rows"]) * int(parameter_universe["parameter_count"]),
-            "duplicate_transformed_digest_count": duplicate_count,
-            "duplicate_transformed_digest_examples": duplicate_examples,
-            "transformed_valid_digest_set_digest": _sha256(digest_set),
-        },
-    }
-    payload["summary"]["universe_digest"] = _sha256(payload["summary"])
-    cache[cache_key] = payload
-    return payload
-
-
-
-def valid_observation_universe(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    canonical = canonical_observation_universe(config)
-    transformed = _valid_transformed_observation_digest_index(config)
-    payload = {
-        **transformed["summary"],
-        "canonical_universe_version": canonical["version"],
-        "valid_categories": ["canonical_exact", "bounded_transformation_family"],
-        "exact_canonical_digest_to_rows": canonical["digest_to_rows"],
-        "bounded_transformation_contract_version": TRANSFORMATION_FAMILY_VERSION,
-    }
-    payload["universe_digest"] = _sha256({key: value for key, value in payload.items() if key != "universe_digest"})
-    return payload
-
-
-def _canonical_observation_digest_index(config: ShooterConfig = ShooterConfig()) -> dict[str, list[dict[str, str]]]:
-    return {
-        str(digest): [dict(item) for item in rows]
-        for digest, rows in canonical_observation_universe(config)["digest_to_rows"].items()
-    }
-
-
-def _canonical_collision_rows(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> list[dict[str, str]]:
-    return _canonical_observation_digest_index(config).get(_array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)), [])
-
-
 def _target_signal_coordinates(width: int = FRAME_SHAPE[1]) -> tuple[tuple[int, int], ...]:
     return tuple((y, x) for y in range(2, 5) for x in range(int(width)))
 
@@ -732,11 +544,6 @@ def expected_frame_disposition(
         gap = intervention.get("gap_event", {})
         return "declared_gap_or_unknown_action" if index == int(gap.get("position", -1)) else "valid_frame_payload"
     return "valid_frame_payload"
-
-
-
-def _transition_config_payload(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
-    return {"width": int(config.width), "wave": [int(item) for item in config.wave], "max_steps": int(config.max_steps)}
 
 
 
@@ -1685,11 +1492,6 @@ def _apply_frame_plan(frame: np.ndarray, frame_plan: Mapping[str, Any]) -> tuple
     return _apply_transformation(frame, params)
 
 
-def _render_row_frame(row_id: str, *, config: ShooterConfig = ShooterConfig()) -> np.ndarray:
-    tank, target, cooldown = parse_state_row_id(str(row_id))
-    return render_state_frame(tank, target, cooldown, width=config.width)
-
-
 def _apply_conflicting_splice(
     *,
     primary_pixels: np.ndarray,
@@ -1831,7 +1633,7 @@ def _valid_frame_operation_chain(row_id: str, transformation_parameters: Mapping
         _operation_record(
             index=0,
             operation="render_canonical_row",
-            operation_version="zeromodel-arcade-shooter-render-state-frame/v1",
+            operation_version=ARCADE_RENDERER_CONTRACT_VERSION,
             input_digests=[],
             parameters={"row_id": str(row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()},
             output_digest=source_digest,
@@ -1883,9 +1685,9 @@ def _conflicting_splice_operation_chain(
     secondary_digest = _array_digest(secondary)
     output_digest = _array_digest(output)
     operations = [
-        _operation_record(index=0, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": primary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=primary_base_digest),
+        _operation_record(index=0, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": primary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=primary_base_digest),
         _operation_record(index=1, operation="apply_bounded_transformation", operation_version=TRANSFORMATION_FAMILY_VERSION, input_digests=[primary_base_digest], parameters={"transformation_parameters": dict(primary_transformation_parameters)}, output_digest=primary_transformed_digest),
-        _operation_record(index=2, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": secondary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=secondary_digest),
+        _operation_record(index=2, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": secondary_row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=secondary_digest),
         _operation_record(
             index=3,
             operation="compose_simultaneous_target_evidence",
@@ -1915,7 +1717,7 @@ def _critical_corruption_operation_chain(row_id: str, transformation_parameters:
     transformed_digest = transform_trace["transformed_observation_digest"]
     output_digest = _array_digest(corrupted)
     operations = [
-        _operation_record(index=0, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=source_digest),
+        _operation_record(index=0, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": row_id, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=source_digest),
         _operation_record(index=1, operation="apply_bounded_transformation", operation_version=TRANSFORMATION_FAMILY_VERSION, input_digests=[source_digest], parameters={"transformation_parameters": dict(transformation_parameters)}, output_digest=transformed_digest),
         _operation_record(index=2, operation="apply_critical_coordinate_corruption", operation_version="zeromodel-video-action-set-family-critical-evidence-corruption/v1", input_digests=[transformed_digest], parameters={"critical_coordinates": dict(coordinate_manifest), "critical_corruption_digest": corruption_trace["critical_corruption_digest"]}, output_digest=output_digest),
         _operation_record(index=3, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[output_digest], parameters={"event_type": "frame"}, output_digest=output_digest),
@@ -1964,7 +1766,7 @@ def _impossible_transition_operation_chain(destination_before: Mapping[str, Any]
     unreachable_pixels = _render_row_frame(unreachable_row)
     unreachable_digest = _array_digest(unreachable_pixels)
     operations = list(ordinary_chain["operations"][:-1])
-    operations.append(_operation_record(index=len(operations), operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": unreachable_row, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=unreachable_digest))
+    operations.append(_operation_record(index=len(operations), operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": unreachable_row, "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=unreachable_digest))
     operations.append(
         _operation_record(
             index=len(operations),
@@ -1993,7 +1795,7 @@ def _information_control_operation_chain(current_row_id: str) -> dict[str, Any]:
     current = _render_row_frame(current_row_id)
     current_digest = _array_digest(current)
     operations = [
-        _operation_record(index=0, operation="render_canonical_row", operation_version="zeromodel-arcade-shooter-render-state-frame/v1", input_digests=[], parameters={"row_id": str(current_row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=current_digest),
+        _operation_record(index=0, operation="render_canonical_row", operation_version=ARCADE_RENDERER_CONTRACT_VERSION, input_digests=[], parameters={"row_id": str(current_row_id), "renderer": "zeromodel.arcade_policy.render_state_frame", "config": _transition_config_payload()}, output_digest=current_digest),
         _operation_record(index=1, operation="emit_provider_identical_control_observation", operation_version=INFORMATION_CONTROL_VERSION, input_digests=[current_digest], parameters={"current_row_id": str(current_row_id), "provider_observation_boundary_version": PROVIDER_OBSERVATION_BOUNDARY_VERSION}, output_digest=current_digest),
         _operation_record(index=2, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[current_digest], parameters={"event_type": "frame"}, output_digest=current_digest),
     ]

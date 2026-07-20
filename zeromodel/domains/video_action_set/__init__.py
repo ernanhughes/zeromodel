@@ -10,6 +10,14 @@ from .dto import (
 )
 from .episode_plan_service import EpisodePlanService
 from .facade import VideoActionSetFacade
+from .observation_dto import (
+    MaterializedObservationDTO,
+    ObservationDTO,
+    ObservationOperationChainDTO,
+    ObservationOperationDTO,
+    ProviderObservationDescriptorDTO,
+)
+from .observation_service import ObservationService
 from .store import VideoActionSetStore
 
 __all__ = [
@@ -19,6 +27,12 @@ __all__ = [
     "EpisodeIdsByFamilyDTO",
     "EpisodePlanDTO",
     "EpisodePlanService",
+    "MaterializedObservationDTO",
+    "ObservationDTO",
+    "ObservationOperationChainDTO",
+    "ObservationOperationDTO",
+    "ObservationService",
+    "ProviderObservationDescriptorDTO",
     "SealedSplitPlanDTO",
     "VideoActionSetFacade",
     "VideoActionSetStore",

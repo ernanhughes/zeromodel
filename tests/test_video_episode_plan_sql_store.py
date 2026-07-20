@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import inspect
 
 from test_video_episode_plan_rmdto import (
@@ -30,12 +31,16 @@ from zeromodel.domains.video_action_set.store import (
 pytestmark = pytest.mark.integration
 
 
-def sql_safe_identity(prefix: str = "sql-episode-plan-rmdto-seed"):
-    for index in range(100):
+def sql_identity(prefix: str = "sql-episode-plan-rmdto-seed"):
+    return sample_identity(prefix)
+
+
+def unsigned_seed_identity(prefix: str = "sql-unsigned-episode-plan-seed"):
+    for index in range(10_000):
         identity = sample_identity(f"{prefix}-{index}")
-        if plan_dto(identity=identity).episode_seed < 2**63:
+        if plan_dto(identity=identity).episode_seed >= 2**63:
             return identity
-    raise AssertionError("could not find SQLite-safe episode seed")
+    raise AssertionError("could not find unsigned 64-bit episode seed")
 
 
 def build_store():
@@ -59,7 +64,7 @@ def test_sql_schema_creation_registers_episode_plan_tables() -> None:
 
 def test_sql_plan_identity_ownership_and_canonical_round_trip() -> None:
     store, session_factory, _engine = build_store()
-    identity = sql_safe_identity()
+    identity = sql_identity()
     plan = plan_dto(identity=identity)
 
     with pytest.raises(VPMValidationError, match=UNKNOWN_BENCHMARK_IDENTITY_MESSAGE):
@@ -72,11 +77,32 @@ def test_sql_plan_identity_ownership_and_canonical_round_trip() -> None:
         row = session.get(EpisodePlanORM, plan.episode_id)
         assert row is not None
         assert row.payload_json == canonical_json_text(plan.to_dict())
+        assert row.episode_seed_hex == f"{plan.episode_seed:016x}"
+
+
+def test_sql_plan_persists_unsigned_episode_seed() -> None:
+    store, session_factory, _engine = build_store()
+    identity = unsigned_seed_identity()
+    plan = plan_dto(identity=identity)
+
+    assert plan.episode_seed >= 2**63
+    store.save_identity(identity)
+    store.save_episode_plan(plan)
+
+    with session_factory() as session:
+        row = session.get(EpisodePlanORM, plan.episode_id)
+        assert row is not None
+        assert row.episode_seed_hex == f"{plan.episode_seed:016x}"
+
+    assert (
+        SqlAlchemyVideoActionSetStore(session_factory).get_episode_plan(plan.episode_id)
+        == plan
+    )
 
 
 def test_sql_plan_retrieval_across_sessions_idempotence_and_conflict() -> None:
     _store, session_factory, _engine = build_store()
-    identity = sql_safe_identity()
+    identity = sql_identity()
     plan = plan_dto(identity=identity)
     save_store = SqlAlchemyVideoActionSetStore(session_factory)
     read_store = SqlAlchemyVideoActionSetStore(session_factory)
@@ -96,8 +122,8 @@ def test_sql_plan_retrieval_across_sessions_idempotence_and_conflict() -> None:
 
 def test_sql_batch_rollback_ordering_and_filters() -> None:
     store, _session_factory, _engine = build_store()
-    identity = sql_safe_identity()
-    other_identity = sql_safe_identity("sql-episode-plan-other-seed")
+    identity = sql_identity()
+    other_identity = sql_identity("sql-episode-plan-other-seed")
     first = plan_dto(identity=identity, split="development", ordinal=0)
     second = plan_dto(
         identity=identity,
@@ -136,7 +162,7 @@ def test_sql_batch_rollback_ordering_and_filters() -> None:
 
 def test_sql_sealed_envelope_reconstructs_from_episode_rows() -> None:
     store, session_factory, _engine = build_store()
-    identity = sql_safe_identity()
+    identity = sql_identity()
     episodes = (
         plan_dto(identity=identity, ordinal=0, family_label="valid", family_ordinal=0),
         plan_dto(
@@ -175,7 +201,7 @@ def test_sql_sealed_envelope_reconstructs_from_episode_rows() -> None:
 
 def test_sql_sealed_digest_validation_rejects_corrupted_envelope() -> None:
     store, session_factory, _engine = build_store()
-    identity = sql_safe_identity()
+    identity = sql_identity()
     plan = plan_dto(identity=identity)
     sealed = SealedSplitPlanDTO.build_final(
         episodes=(plan,),
@@ -194,7 +220,7 @@ def test_sql_sealed_digest_validation_rejects_corrupted_envelope() -> None:
 
 def test_sqlite_runtime_composes_episode_plan_store() -> None:
     runtime = build_sqlite_runtime("sqlite:///:memory:", initialize_schema=True)
-    identity = sql_safe_identity()
+    identity = sql_identity()
     plan = plan_dto(identity=identity)
 
     runtime.video_action_set.save_identity(identity)
@@ -211,3 +237,17 @@ def test_sqlite_runtime_composes_episode_plan_store() -> None:
         )
         == sealed
     )
+
+
+def test_sqlite_foreign_keys_are_enabled_and_reject_orphan_plan() -> None:
+    _store, session_factory, engine = build_store()
+
+    with engine.connect() as connection:
+        assert connection.exec_driver_sql("PRAGMA foreign_keys").scalar_one() == 1
+
+    identity = sql_identity("sql-orphan-plan-seed")
+    plan = plan_dto(identity=identity)
+    orphan = SqlAlchemyVideoActionSetStore._to_episode_plan_orm(plan)
+    with pytest.raises(IntegrityError):
+        with session_factory.begin() as session:
+            session.add(orphan)

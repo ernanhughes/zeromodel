@@ -111,6 +111,14 @@ When integration coverage is relevant, report the exact suggested command but do
 - Batch Store writes must be atomic.
 - A behavior-preserving extraction must reduce the corresponding monolith quality ceiling.
 - Integration-tier persistence tests may be authored but must not be executed without explicit human authorization.
+- Durable benchmark runs prefer SQLite Runtime construction.
+- Durable exports should be projections of Store-returned DTOs.
+- Large binary arrays must use MatrixBlob and content-addressed deduplication.
+- MatrixBlob identity metadata must describe the payload, not the owning frame, episode, split, or sequence.
+- Provenance and operation-chain queries belong in relational Store predicates and joins.
+- Scientific rendering, transformation, mutation, replay, and digest computation stay in Python/NumPy.
+- Final split materialization is prohibited in every Store.
+- Batch observation writes must be atomic.
 
 ## Working Style
 

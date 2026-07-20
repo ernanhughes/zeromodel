@@ -15,12 +15,22 @@ from .domains.video_action_set.canonical_json import canonical_json_bytes, canon
 from .domains.video_action_set.contracts import (
     BENCHMARK_VERSION,
     EPISODE_PLAN_VERSION,
+    FRAME_SHAPE,
     GENERATOR_VERSION,
+    OBSERVATION_OPERATION_CHAIN_VERSION,
+    PROVIDER_OBSERVATION_BOUNDARY_VERSION,
     REACHABILITY_TILE_DIGEST,
     REACHABILITY_TILE_VERSION,
     SEED_DERIVATION_VERSION,
 )
 from .domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO
+from .domains.video_action_set.observation_legacy_adapters import (
+    operation_chain as _operation_chain,
+    operation_record as _operation_record,
+)
+from .domains.video_action_set.observation_provenance_dto import (
+    ObservationOperationChainDTO,
+)
 from .policy_lookup import VPMPolicyLookup
 from .runtime import build_runtime
 from .video_complete_row_evidence import (
@@ -70,9 +80,6 @@ INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-con
 INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v2"
 GROUNDED_CONTROL_HISTORY_VERSION = "zeromodel-video-action-set-grounded-control-history/v1"
 AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
-PROVIDER_OBSERVATION_BOUNDARY_VERSION = "zeromodel-video-action-set-provider-observation-boundary/v1"
-OBSERVATION_OPERATION_CHAIN_VERSION = "zeromodel-video-observation-operation-chain/v1"
-FRAME_SHAPE = (16, 28)
 CRITICAL_REGION_ID = "cooldown_indicator"
 TARGET_REGION_ID = "target_band"
 
@@ -119,6 +126,20 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _build_durable_runtime(output_dir: Path):
+    try:
+        from .db.runtime import build_sqlite_runtime
+    except ImportError as exc:
+        raise VPMValidationError(
+            "SQLite benchmark persistence requires the optional database extra: "
+            'pip install "zeromodel[persistence]"'
+        ) from exc
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    database_url = f"sqlite:///{(output_dir / 'benchmark.sqlite3').as_posix()}"
+    return build_sqlite_runtime(database_url, initialize_schema=True)
 
 
 def _provider_version(provider_id: str) -> str:
@@ -1939,40 +1960,6 @@ def _apply_critical_corruption(source_pixels: np.ndarray, coordinate_manifest: M
     return output, manifest
 
 
-def _operation_record(
-    *,
-    index: int,
-    operation: str,
-    operation_version: str,
-    input_digests: Sequence[str | None],
-    parameters: Mapping[str, Any],
-    output_digest: str | None,
-) -> dict[str, Any]:
-    payload = {
-        "index": int(index),
-        "operation": str(operation),
-        "operation_version": str(operation_version),
-        "input_digests": [None if item is None else str(item) for item in input_digests],
-        "parameters": dict(parameters),
-        "parameter_digest": _sha256(parameters),
-        "output_digest": output_digest,
-    }
-    payload["operation_digest"] = _sha256(payload)
-    return payload
-
-
-
-def _operation_chain(operations: Sequence[Mapping[str, Any]], final_emitted_digest: str | None) -> dict[str, Any]:
-    payload = {
-        "version": OBSERVATION_OPERATION_CHAIN_VERSION,
-        "operations": [dict(item) for item in operations],
-        "final_emitted_digest": final_emitted_digest,
-    }
-    payload["operation_chain_digest"] = _sha256(payload)
-    return payload
-
-
-
 def _valid_frame_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any]) -> dict[str, Any]:
     source = _render_row_frame(row_id)
     transformed, trace = _apply_transformation(source, transformation_parameters)
@@ -2166,6 +2153,7 @@ def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
 
 
 def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, Any]:
+    chain = ObservationOperationChainDTO.from_dict(chain).to_dict()
     if chain.get("version") != OBSERVATION_OPERATION_CHAIN_VERSION:
         raise VPMValidationError("unsupported observation operation chain version")
     operations = list(chain.get("operations", []))
@@ -2739,7 +2727,7 @@ def _control_episode(
 
 
 def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
-    runtime = build_runtime()
+    runtime = _build_durable_runtime(output_dir)
     identity = runtime.video_action_set.load_identity(repo_root)
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
@@ -3583,8 +3571,8 @@ def _score_record(
 
 def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]:
     split_dir = output_dir / split
-    records = _materialize_records(split, repo_root)
-    identity = load_identity(repo_root)
+    runtime = _build_durable_runtime(output_dir)
+    identity = runtime.video_action_set.load_identity(repo_root)
     prototypes = canonical_prototypes()
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
@@ -3592,6 +3580,11 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
     policy_artifact_id = policy.artifact_id
     reachability_tile = _load_reachability_tile(repo_root)
     plans = _episode_plans_for_split(identity, split, [str(row_id) for row_id in policy.source.row_ids], row_actions)
+    saved_plans = runtime.video_action_set.save_episode_plans(tuple(EpisodePlanDTO.from_dict(plan) for plan in plans))
+    plans = [dto.to_dict() for dto in saved_plans]
+    records = _materialize_records(split, repo_root)
+    runtime.video_action_set.save_observation_records(records)
+    records = list(runtime.video_action_set.list_observation_records(benchmark_seed_digest=identity.seed_digest, split=split, include_pixels=True))
     reachability_state: dict[str, Mapping[str, Any] | None] = {"P1": None, "P2": None, "P3": None}
     scored_rows: list[dict[str, Any]] = []
     for record in records:

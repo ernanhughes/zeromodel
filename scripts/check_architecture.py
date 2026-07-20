@@ -82,7 +82,9 @@ def best_known_module(candidate: str, known_modules: set[str]) -> str | None:
     return None
 
 
-def import_from_candidates(node: ast.ImportFrom, module_name: str, path: Path) -> list[str]:
+def import_from_candidates(
+    node: ast.ImportFrom, module_name: str, path: Path
+) -> list[str]:
     if node.level:
         base = resolve_relative_import(module_name, path, node.level, node.module)
     else:
@@ -98,7 +100,9 @@ def import_from_candidates(node: ast.ImportFrom, module_name: str, path: Path) -
     return []
 
 
-def collect_import_edges(module_name: str, path: Path, known_modules: set[str]) -> list[ImportEdge]:
+def collect_import_edges(
+    module_name: str, path: Path, known_modules: set[str]
+) -> list[ImportEdge]:
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=relative_path(path))
     edges: list[ImportEdge] = []
     for node in ast.walk(tree):
@@ -127,7 +131,9 @@ def collect_import_edges(module_name: str, path: Path, known_modules: set[str]) 
     return sorted(edges, key=lambda edge: (edge.imported, edge.line))
 
 
-def build_import_graph(modules: dict[str, Path]) -> tuple[dict[str, set[str]], list[ImportEdge]]:
+def build_import_graph(
+    modules: dict[str, Path],
+) -> tuple[dict[str, set[str]], list[ImportEdge]]:
     known_modules = set(modules)
     all_edges: list[ImportEdge] = []
     graph: dict[str, set[str]] = {module: set() for module in modules}
@@ -137,7 +143,9 @@ def build_import_graph(modules: dict[str, Path]) -> tuple[dict[str, set[str]], l
         for edge in edges:
             if edge.imported in known_modules:
                 graph[module_name].add(edge.imported)
-    return graph, sorted(all_edges, key=lambda edge: (edge.importer, edge.imported, edge.line))
+    return graph, sorted(
+        all_edges, key=lambda edge: (edge.importer, edge.imported, edge.line)
+    )
 
 
 def strongly_connected_components(graph: dict[str, set[str]]) -> list[list[str]]:
@@ -182,7 +190,9 @@ def strongly_connected_components(graph: dict[str, set[str]]) -> list[list[str]]
 def cycle_path(component: list[str], graph: dict[str, set[str]]) -> list[str]:
     component_set = set(component)
 
-    def search(start: str, current: str, path: list[str], visited: set[str]) -> list[str] | None:
+    def search(
+        start: str, current: str, path: list[str], visited: set[str]
+    ) -> list[str] | None:
         for imported in sorted(graph[current] & component_set):
             if imported == start:
                 return [*path, start]
@@ -296,7 +306,9 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
 
 
 def print_violations(violations: list[Violation]) -> None:
-    for violation in sorted(violations, key=lambda item: (item.rule, item.importer, item.imported)):
+    for violation in sorted(
+        violations, key=lambda item: (item.rule, item.importer, item.imported)
+    ):
         print(f"Architecture violation: {violation.rule}", file=sys.stderr)
         print(f"  importer: {violation.importer}", file=sys.stderr)
         print(f"  imported: {violation.imported}", file=sys.stderr)

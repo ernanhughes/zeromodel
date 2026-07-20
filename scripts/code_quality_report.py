@@ -199,13 +199,18 @@ def parse_baseline_file(path: Path) -> QualityConfig:
     quality: dict[str, int | str] = {}
     legacy_sections: dict[str, dict[str, int | str]] = {}
 
-    for line_number, original_line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_number, original_line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), 1
+    ):
         line = strip_inline_comment(original_line).strip()
         if not line:
             continue
         if line.startswith("["):
             current_section = parse_section(line, line_number)
-            if current_section[0] == "legacy_exceptions" and current_section[1] is not None:
+            if (
+                current_section[0] == "legacy_exceptions"
+                and current_section[1] is not None
+            ):
                 legacy_sections.setdefault(current_section[1], {})
             continue
         if current_section is None:
@@ -307,7 +312,9 @@ def package_name_for_module(module_name: str, path: str) -> str:
     return module_name.rsplit(".", 1)[0]
 
 
-def resolve_relative_import(module_name: str, path: str, level: int, imported: str | None) -> str:
+def resolve_relative_import(
+    module_name: str, path: str, level: int, imported: str | None
+) -> str:
     package = package_name_for_module(module_name, path)
     package_parts = package.split(".") if package else []
     if level > len(package_parts):
@@ -328,7 +335,9 @@ def collect_local_imports(tree: ast.AST, path: str) -> list[str]:
                     imports.add(alias.name)
         elif isinstance(node, ast.ImportFrom):
             if node.level:
-                module = resolve_relative_import(module_name, path, node.level, node.module)
+                module = resolve_relative_import(
+                    module_name, path, node.level, node.module
+                )
             else:
                 module = node.module or ""
             if module == "zeromodel":
@@ -345,7 +354,9 @@ def collect_local_imports(tree: ast.AST, path: str) -> list[str]:
 def statement_child_bodies(node: ast.stmt) -> list[list[ast.stmt]]:
     bodies: list[list[ast.stmt]] = []
     for _field_name, value in ast.iter_fields(node):
-        if isinstance(value, list) and all(isinstance(item, ast.stmt) for item in value):
+        if isinstance(value, list) and all(
+            isinstance(item, ast.stmt) for item in value
+        ):
             bodies.append(value)
         elif isinstance(value, ast.stmt):
             bodies.append([value])
@@ -383,10 +394,14 @@ def class_metric(node: ast.ClassDef, parents: tuple[str, ...]) -> ClassMetric:
     )
 
 
-def collect_definitions(tree: ast.Module) -> tuple[list[FunctionMetric], list[ClassMetric]]:
+def collect_definitions(
+    tree: ast.Module,
+) -> tuple[list[FunctionMetric], list[ClassMetric]]:
     functions: list[FunctionMetric] = []
     classes: list[ClassMetric] = []
-    pending: list[tuple[ast.stmt, tuple[str, ...]]] = [(node, ()) for node in reversed(tree.body)]
+    pending: list[tuple[ast.stmt, tuple[str, ...]]] = [
+        (node, ()) for node in reversed(tree.body)
+    ]
 
     while pending:
         node, parents = pending.pop()
@@ -410,7 +425,9 @@ def max_ast_nesting(node: ast.AST, depth: int = 0) -> int:
     pending = [(node, depth)]
     while pending:
         current, current_depth = pending.pop()
-        next_depth = current_depth + 1 if isinstance(current, NESTING_NODES) else current_depth
+        next_depth = (
+            current_depth + 1 if isinstance(current, NESTING_NODES) else current_depth
+        )
         maximum = max(maximum, next_depth)
         pending.extend((child, next_depth) for child in ast.iter_child_nodes(current))
     return maximum
@@ -423,7 +440,9 @@ def inspect_file(path: Path) -> FileMetric:
     functions, classes = collect_definitions(tree)
 
     top_level_functions = [
-        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        node
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     ]
     top_level_classes = [node for node in tree.body if isinstance(node, ast.ClassDef)]
     return FileMetric(
@@ -439,7 +458,9 @@ def inspect_file(path: Path) -> FileMetric:
     )
 
 
-def limit_findings(metric: FileMetric, config: QualityConfig) -> tuple[list[str], list[str]]:
+def limit_findings(
+    metric: FileMetric, config: QualityConfig
+) -> tuple[list[str], list[str]]:
     warnings: list[str] = []
     hard_limits: list[str] = []
 
@@ -558,14 +579,17 @@ def build_report(config: QualityConfig) -> dict[str, object]:
 
     missing_exceptions = sorted(set(config.legacy_exceptions) - seen_paths)
     for exception_path in missing_exceptions:
-        errors.append(f"{exception_path}: legacy exception references a missing Python source file")
+        errors.append(
+            f"{exception_path}: legacy exception references a missing Python source file"
+        )
 
     return {
         "config": config.quality_thresholds(),
         "errors": errors,
         "files": files,
         "legacy_exceptions": [
-            exception.as_dict() for exception in sorted_exceptions(config.legacy_exceptions)
+            exception.as_dict()
+            for exception in sorted_exceptions(config.legacy_exceptions)
         ],
         "summary": {
             "enforcement_error_count": len(errors),
@@ -668,9 +692,15 @@ def format_file_findings(file_records: list[dict[str, object]], key: str) -> lis
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate the ZeroModel code quality report.")
-    parser.add_argument("--json", type=Path, help="Write deterministic JSON report to this path.")
-    parser.add_argument("--markdown", type=Path, help="Write Markdown report to this path.")
+    parser = argparse.ArgumentParser(
+        description="Generate the ZeroModel code quality report."
+    )
+    parser.add_argument(
+        "--json", type=Path, help="Write deterministic JSON report to this path."
+    )
+    parser.add_argument(
+        "--markdown", type=Path, help="Write Markdown report to this path."
+    )
     return parser.parse_args(argv)
 
 

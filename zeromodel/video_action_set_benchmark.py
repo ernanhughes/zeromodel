@@ -15,12 +15,16 @@ from .domains.video_action_set.canonical_json import canonical_json_bytes, canon
 from .domains.video_action_set.contracts import (
     BENCHMARK_VERSION,
     EPISODE_PLAN_VERSION,
+    FRAME_SHAPE,
     GENERATOR_VERSION,
+    OBSERVATION_OPERATION_CHAIN_VERSION,
+    PROVIDER_OBSERVATION_BOUNDARY_VERSION,
     REACHABILITY_TILE_DIGEST,
     REACHABILITY_TILE_VERSION,
     SEED_DERIVATION_VERSION,
 )
 from .domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO
+from .domains.video_action_set.observation_dto import ObservationOperationChainDTO, ObservationOperationDTO
 from .policy_lookup import VPMPolicyLookup
 from .runtime import build_runtime
 from .video_complete_row_evidence import (
@@ -70,9 +74,6 @@ INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-con
 INFORMATION_CONTROL_AMBIGUITY_VERSION = "zeromodel-video-action-set-information-control-ambiguity/v2"
 GROUNDED_CONTROL_HISTORY_VERSION = "zeromodel-video-action-set-grounded-control-history/v1"
 AUTHORITATIVE_TRANSITION_FUNCTION_VERSION = "zeromodel-arcade-shooter-next-rows/v1"
-PROVIDER_OBSERVATION_BOUNDARY_VERSION = "zeromodel-video-action-set-provider-observation-boundary/v1"
-OBSERVATION_OPERATION_CHAIN_VERSION = "zeromodel-video-observation-operation-chain/v1"
-FRAME_SHAPE = (16, 28)
 CRITICAL_REGION_ID = "cooldown_indicator"
 TARGET_REGION_ID = "target_band"
 
@@ -119,6 +120,14 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def _build_durable_runtime(output_dir: Path):
+    from .db.runtime import build_sqlite_runtime
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    database_url = f"sqlite:///{(output_dir / 'benchmark.sqlite3').as_posix()}"
+    return build_sqlite_runtime(database_url, initialize_schema=True)
 
 
 def _provider_version(provider_id: str) -> str:
@@ -519,7 +528,6 @@ def _renderer_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any
     return payload | {"renderer_identity_digest": _sha256(payload)}
 
 
-
 def _valid_transformation_parameter_key(params: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "dx": int(params["dx"]),
@@ -528,7 +536,6 @@ def _valid_transformation_parameter_key(params: Mapping[str, Any]) -> dict[str, 
         "offset": int(params["offset"]),
         "occlusion": None if params.get("occlusion") is None else dict(params["occlusion"]),
     }
-
 
 
 def _valid_transformation_parameter_universe() -> dict[str, Any]:
@@ -568,7 +575,6 @@ def _valid_transformation_parameter_universe() -> dict[str, Any]:
     payload["parameter_universe_digest"] = _sha256(payload)
     _valid_transformation_parameter_universe._cache = payload  # type: ignore[attr-defined]
     return payload
-
 
 
 def _valid_transformed_observation_digest_index(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
@@ -636,7 +642,6 @@ def _valid_transformed_observation_digest_index(config: ShooterConfig = ShooterC
     return payload
 
 
-
 def valid_observation_universe(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
     canonical = canonical_observation_universe(config)
     transformed = _valid_transformed_observation_digest_index(config)
@@ -696,7 +701,6 @@ def _target_slot_signal_coordinates(slot: int, *, width: int = 7) -> tuple[tuple
     return tuple([(2, centre - 1), (2, centre), (2, centre + 1), (3, centre - 1), (3, centre), (3, centre + 1), (4, centre)])
 
 
-
 def _detect_visible_target_slots(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> list[int]:
     array = np.ascontiguousarray(pixels, dtype=np.uint8)
     slots = []
@@ -706,7 +710,6 @@ def _detect_visible_target_slots(pixels: np.ndarray, *, config: ShooterConfig = 
         if all(value == TARGET_VALUE for value in values):
             slots.append(slot)
     return slots
-
 
 
 def _detect_tank_slot(pixels: np.ndarray, *, config: ShooterConfig = ShooterConfig()) -> int | None:
@@ -719,7 +722,6 @@ def _detect_tank_slot(pixels: np.ndarray, *, config: ShooterConfig = ShooterConf
     return None
 
 
-
 def _detect_cooldown_state(pixels: np.ndarray) -> int | None:
     block = np.ascontiguousarray(pixels, dtype=np.uint8)[7:9, -3:-1]
     values = {int(item) for item in block.reshape(-1)}
@@ -728,7 +730,6 @@ def _detect_cooldown_state(pixels: np.ndarray) -> int | None:
     if values == {COOLDOWN_BLOCKED_VALUE}:
         return 1
     return None
-
 
 
 def _final_visible_target_action_evidence(pixels: np.ndarray, row_actions: Mapping[str, str], *, config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
@@ -754,7 +755,6 @@ def _final_visible_target_action_evidence(pixels: np.ndarray, row_actions: Mappi
     return payload
 
 
-
 def _splice_pair_has_final_visible_action_conflict(primary_row_id: str, secondary_row_id: str, row_actions: Mapping[str, str]) -> bool:
     tank, primary_target, cooldown = parse_state_row_id(str(primary_row_id))
     _secondary_tank, secondary_target, _secondary_cooldown = parse_state_row_id(str(secondary_row_id))
@@ -767,7 +767,6 @@ def _splice_pair_has_final_visible_action_conflict(primary_row_id: str, secondar
     return len(implied) >= 2
 
 
-
 def _family_schedule() -> tuple[str, ...]:
     return (
         "exact",
@@ -777,7 +776,6 @@ def _family_schedule() -> tuple[str, ...]:
         "bounded_translation_occlusion",
         "compound_bounded",
     )
-
 
 
 def _episode_disposition(family_label: str, mutation_kind: str | None = None) -> str:
@@ -792,7 +790,6 @@ def _episode_disposition(family_label: str, mutation_kind: str | None = None) ->
     return str(mutation_kind or family_label)
 
 
-
 def _denominator_class(family_label: str, mutation_kind: str | None = None) -> str:
     if family_label == "valid":
         return "valid_denominator"
@@ -805,7 +802,6 @@ def _denominator_class(family_label: str, mutation_kind: str | None = None) -> s
     return str(mutation_kind or family_label)
 
 
-
 def _frame_disposition_for_episode(family_label: str, mutation_kind: str | None = None) -> str:
     if family_label == "valid":
         return "valid"
@@ -816,7 +812,6 @@ def _frame_disposition_for_episode(family_label: str, mutation_kind: str | None 
     if family_label == "temporal_negative":
         return "valid_frame_payload"
     return str(mutation_kind or family_label)
-
 
 
 def expected_frame_disposition(
@@ -851,10 +846,8 @@ def expected_frame_disposition(
     return "valid_frame_payload"
 
 
-
 def _transition_config_payload(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
     return {"width": int(config.width), "wave": [int(item) for item in config.wave], "max_steps": int(config.max_steps)}
-
 
 
 def _transition_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, Any]:
@@ -865,7 +858,6 @@ def _transition_identity(config: ShooterConfig = ShooterConfig()) -> dict[str, A
         "config": _transition_config_payload(config),
     }
     return payload | {"transition_identity_digest": _sha256(payload)}
-
 
 
 def _transition_input_digest(predecessor_row_id: str, action: str, *, config: ShooterConfig = ShooterConfig()) -> str:
@@ -879,7 +871,6 @@ def _transition_input_digest(predecessor_row_id: str, action: str, *, config: Sh
             "config_digest": _sha256(_transition_config_payload(config)),
         }
     )
-
 
 
 def _transition_result_digest(
@@ -903,7 +894,6 @@ def _transition_result_digest(
             "config_digest": _sha256(_transition_config_payload(config)),
         }
     )
-
 
 
 def _normalized_control_causal_tuple(
@@ -931,7 +921,6 @@ def _normalized_control_causal_tuple(
             config=config,
         ),
     }
-
 
 
 def _grounded_control_history(
@@ -972,7 +961,6 @@ def _grounded_control_history(
     return payload
 
 
-
 def _reconstructed_control_causal_tuple_digest(history: Mapping[str, Any], *, config: ShooterConfig = ShooterConfig()) -> str:
     if history.get("version") != GROUNDED_CONTROL_HISTORY_VERSION:
         raise VPMValidationError("unsupported grounded control history version")
@@ -1005,7 +993,6 @@ def _reconstructed_control_causal_tuple_digest(history: Mapping[str, Any], *, co
     if history.get("normalized_causal_tuple_digest") != tuple_digest:
         raise VPMValidationError("control history causal tuple digest mismatch")
     return tuple_digest
-
 
 
 def _grounded_control_histories_for_current_row(
@@ -1047,7 +1034,6 @@ def _grounded_control_histories_for_current_row(
             int(item["transition_choice_index"]),
         ),
     )
-
 
 
 def _select_grounded_control_histories(
@@ -1105,7 +1091,6 @@ def _select_grounded_control_histories(
     ]
 
 
-
 def _control_source_rows(row_ids: Sequence[str], *, count: int, frame_count: int, config: ShooterConfig = ShooterConfig()) -> list[str]:
     selected = []
     for row_id in row_ids:
@@ -1117,10 +1102,8 @@ def _control_source_rows(row_ids: Sequence[str], *, count: int, frame_count: int
     raise VPMValidationError("unable to select enough grounded information-control rows")
 
 
-
 def _provider_observation_digest(descriptor: Mapping[str, Any]) -> str:
     return _sha256({"version": PROVIDER_OBSERVATION_BOUNDARY_VERSION, "descriptor": descriptor})
-
 
 
 def _control_provider_source_id(record: Mapping[str, Any]) -> str:
@@ -1129,7 +1112,6 @@ def _control_provider_source_id(record: Mapping[str, Any]) -> str:
     if not group_id:
         raise VPMValidationError("information control record lacks a control group id")
     return str(metadata.get("provider_observation_source_id") or f"control:{group_id}")
-
 
 
 def provider_observation_for_record(record: Mapping[str, Any]) -> ImageObservation:
@@ -1146,7 +1128,6 @@ def provider_observation_for_record(record: Mapping[str, Any]) -> ImageObservati
         timestamp = metadata.get("provider_observation_timestamp") if "provider_observation_timestamp" in metadata else None
         visible_metadata = metadata.get("provider_observation_metadata", {}) if "provider_observation_metadata" in metadata else {}
     return ImageObservation(pixels, timestamp=None if timestamp is None else str(timestamp), source_id=source_id, metadata=visible_metadata)
-
 
 
 def provider_observation_descriptor_for_record(record: Mapping[str, Any]) -> dict[str, Any]:
@@ -1180,7 +1161,6 @@ def provider_observation_descriptor_for_record(record: Mapping[str, Any]) -> dic
         "source_id": source_id,
         "metadata": _json_ready(visible_metadata),
     }
-
 
 
 def _final_observation_provenance(split: str) -> dict[str, Any]:
@@ -1958,8 +1938,7 @@ def _operation_record(
         "output_digest": output_digest,
     }
     payload["operation_digest"] = _sha256(payload)
-    return payload
-
+    return ObservationOperationDTO.from_dict(payload).to_dict()
 
 
 def _operation_chain(operations: Sequence[Mapping[str, Any]], final_emitted_digest: str | None) -> dict[str, Any]:
@@ -1969,8 +1948,7 @@ def _operation_chain(operations: Sequence[Mapping[str, Any]], final_emitted_dige
         "final_emitted_digest": final_emitted_digest,
     }
     payload["operation_chain_digest"] = _sha256(payload)
-    return payload
-
+    return ObservationOperationChainDTO.from_dict(payload).to_dict()
 
 
 def _valid_frame_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any]) -> dict[str, Any]:
@@ -2005,7 +1983,6 @@ def _valid_frame_operation_chain(row_id: str, transformation_parameters: Mapping
         ),
     ]
     return _operation_chain(operations, output_digest)
-
 
 
 def _conflicting_splice_operation_chain(
@@ -2057,7 +2034,6 @@ def _conflicting_splice_operation_chain(
     return _operation_chain(operations, output_digest)
 
 
-
 def _critical_corruption_operation_chain(row_id: str, transformation_parameters: Mapping[str, Any], coordinate_manifest: Mapping[str, Any]) -> dict[str, Any]:
     source = _render_row_frame(row_id)
     transformed, transform_trace = _apply_transformation(source, transformation_parameters)
@@ -2072,7 +2048,6 @@ def _critical_corruption_operation_chain(row_id: str, transformation_parameters:
         _operation_record(index=3, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[output_digest], parameters={"event_type": "frame"}, output_digest=output_digest),
     ]
     return _operation_chain(operations, output_digest)
-
 
 
 def _stale_repeat_operation_chain(destination_before: Mapping[str, Any], replacement_source: Mapping[str, Any], repeat: Mapping[str, Any]) -> dict[str, Any]:
@@ -2105,7 +2080,6 @@ def _stale_repeat_operation_chain(destination_before: Mapping[str, Any], replace
     return _operation_chain(operations, replacement_digest)
 
 
-
 def _impossible_transition_operation_chain(destination_before: Mapping[str, Any], transition_plan: Mapping[str, Any]) -> dict[str, Any]:
     dest_params = destination_before.get("metadata", {}).get("transformation_parameters", {})
     ordinary_row = str(destination_before.get("expected_row"))
@@ -2130,14 +2104,12 @@ def _impossible_transition_operation_chain(destination_before: Mapping[str, Any]
     return _operation_chain(operations, unreachable_digest)
 
 
-
 def _gap_event_operation_chain(gap_event: Mapping[str, Any]) -> dict[str, Any]:
     operations = [
         _operation_record(index=0, operation="emit_typed_gap_event", operation_version="zeromodel-video-action-set-gap-event/v1", input_digests=[], parameters=dict(gap_event), output_digest=None),
         _operation_record(index=1, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[None], parameters={"event_type": "gap_unknown"}, output_digest=None),
     ]
     return _operation_chain(operations, None)
-
 
 
 def _information_control_operation_chain(current_row_id: str) -> dict[str, Any]:
@@ -2149,7 +2121,6 @@ def _information_control_operation_chain(current_row_id: str) -> dict[str, Any]:
         _operation_record(index=2, operation="emit_observation", operation_version=OBSERVATION_OPERATION_CHAIN_VERSION, input_digests=[current_digest], parameters={"event_type": "frame"}, output_digest=current_digest),
     ]
     return _operation_chain(operations, current_digest)
-
 
 
 def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
@@ -2164,8 +2135,8 @@ def _refresh_provider_observation_metadata(record: dict[str, Any]) -> None:
     metadata["provider_observation_digest"] = _provider_observation_digest(descriptor)
 
 
-
 def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, Any]:
+    chain = ObservationOperationChainDTO.from_dict(chain).to_dict()
     if chain.get("version") != OBSERVATION_OPERATION_CHAIN_VERSION:
         raise VPMValidationError("unsupported observation operation chain version")
     operations = list(chain.get("operations", []))
@@ -2279,7 +2250,6 @@ def replay_observation_operation_chain(chain: Mapping[str, Any]) -> dict[str, An
     return {"pixels": current_pixels, "final_emitted_digest": current_digest, "typed_gap": typed_gap, "operation_count": len(operations)}
 
 
-
 def validate_observation_operation_chain(record: Mapping[str, Any]) -> str:
     chain = record.get("metadata", {}).get("observation_operation_chain")
     if not isinstance(chain, Mapping):
@@ -2299,7 +2269,6 @@ def validate_observation_operation_chain(record: Mapping[str, Any]) -> str:
     if pixels is not None and replay["pixels"] is not None and _array_digest(np.ascontiguousarray(pixels, dtype=np.uint8)) != replay["final_emitted_digest"]:
         return "final_observation_provenance_mismatch"
     return "ok"
-
 
 
 def _frame_descriptor(
@@ -2739,7 +2708,7 @@ def _control_episode(
 
 
 def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
-    runtime = build_runtime()
+    runtime = _build_durable_runtime(output_dir)
     identity = runtime.video_action_set.load_identity(repo_root)
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
@@ -2916,8 +2885,6 @@ def _record_regeneration_view(record: Mapping[str, Any]) -> dict[str, Any]:
         "sequence_digest": record.get("metadata", {}).get("sequence_digest"),
         "episode_plan_digest": record.get("metadata", {}).get("episode_plan_digest"),
     }
-
-
 
 
 def _frame_invalid_closure_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -3583,8 +3550,8 @@ def _score_record(
 
 def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]:
     split_dir = output_dir / split
-    records = _materialize_records(split, repo_root)
-    identity = load_identity(repo_root)
+    runtime = _build_durable_runtime(output_dir)
+    identity = runtime.video_action_set.load_identity(repo_root)
     prototypes = canonical_prototypes()
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
@@ -3592,6 +3559,11 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
     policy_artifact_id = policy.artifact_id
     reachability_tile = _load_reachability_tile(repo_root)
     plans = _episode_plans_for_split(identity, split, [str(row_id) for row_id in policy.source.row_ids], row_actions)
+    saved_plans = runtime.video_action_set.save_episode_plans(tuple(EpisodePlanDTO.from_dict(plan) for plan in plans))
+    plans = [dto.to_dict() for dto in saved_plans]
+    records = _materialize_records(split, repo_root)
+    runtime.video_action_set.save_observation_records(records)
+    records = list(runtime.video_action_set.list_observation_records(benchmark_seed_digest=identity.seed_digest, split=split, include_pixels=True))
     reachability_state: dict[str, Mapping[str, Any] | None] = {"P1": None, "P2": None, "P3": None}
     scored_rows: list[dict[str, Any]] = []
     for record in records:

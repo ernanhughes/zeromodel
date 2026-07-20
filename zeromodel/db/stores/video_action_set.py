@@ -14,21 +14,346 @@ from ...domains.video_action_set.dto import (
     EpisodePlanDTO,
     SealedSplitPlanDTO,
 )
+from ...domains.video_action_set.observation_dto import (
+    MaterializedObservationDTO,
+    ObservationDTO,
+    ObservationOperationChainDTO,
+)
 from ...domains.video_action_set.store import (
     VideoActionSetStore,
+    raise_matrix_blob_conflict,
+    raise_observation_conflict,
     raise_episode_plan_conflict,
     raise_identity_conflict,
     raise_sealed_split_plan_conflict,
     raise_unknown_benchmark_identity,
+    raise_unknown_episode_plan,
 )
+from ...matrix_blob import MatrixBlob
 from ..orm.video_action_set import (
     BenchmarkIdentityORM,
     EpisodePlanORM,
+    MatrixBlobORM,
+    ObservationORM,
+    ObservationOperationORM,
     SealedSplitPlanORM,
+)
+from .video_action_set_observation import (
+    chain_for_frame,
+    matrix_blob_for_observation,
+    observation_select,
+    operation_observation_select,
+    optional_observation_predicates,
+    preflight_observation_sequence,
+    to_matrix_blob,
+    to_matrix_blob_orm,
+    to_observation_dto,
+    to_observation_orm,
+    to_operation_chain_orm,
+    to_operation_orms,
 )
 
 
-class SqlAlchemyVideoActionSetStore(VideoActionSetStore):
+class _ObservationSqlStoreMixin:
+    _session_factory: sessionmaker[Session]
+
+    def save_matrix_blob(self, blob: MatrixBlob) -> MatrixBlob:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                return self._save_matrix_blob_in_session(session, blob)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def get_matrix_blob(self, blob_id: str) -> MatrixBlob | None:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(MatrixBlobORM, blob_id)
+                return None if row is None else to_matrix_blob(row)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def save_observation(
+        self,
+        observation: ObservationDTO,
+        *,
+        matrix_blob: MatrixBlob | None,
+    ) -> ObservationDTO:
+        return self.save_observations(
+            (MaterializedObservationDTO(observation, matrix_blob),)
+        )[0]
+
+    def save_observations(
+        self,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> tuple[ObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                return self._save_observations_in_session(session, tuple(observations))
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def get_observation(self, frame_id: str) -> ObservationDTO | None:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(ObservationORM, frame_id)
+                return None if row is None else to_observation_dto(session, row)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def get_materialized_observation(
+        self,
+        frame_id: str,
+    ) -> MaterializedObservationDTO | None:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(ObservationORM, frame_id)
+                if row is None:
+                    return None
+                observation = to_observation_dto(session, row)
+                blob = matrix_blob_for_observation(session, observation)
+                return MaterializedObservationDTO(observation, blob)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def list_observations(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[ObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                statement = observation_select(
+                    benchmark_seed_digest=benchmark_seed_digest,
+                    split=split,
+                    episode_id=episode_id,
+                    family=family,
+                    event_type=event_type,
+                    denominator_class=denominator_class,
+                    has_pixels=has_pixels,
+                )
+                rows = session.scalars(statement).all()
+                return tuple(to_observation_dto(session, row) for row in rows)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def get_operation_chain(
+        self,
+        frame_id: str,
+    ) -> ObservationOperationChainDTO | None:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                if session.get(ObservationORM, frame_id) is None:
+                    return None
+                return chain_for_frame(session, frame_id)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def list_observations_by_operation(
+        self,
+        *,
+        operation: str,
+        split: str | None = None,
+        family: str | None = None,
+    ) -> tuple[ObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                rows = session.scalars(
+                    operation_observation_select()
+                    .where(ObservationOperationORM.operation == operation)
+                    .where(*optional_observation_predicates(split=split, family=family))
+                ).all()
+                return tuple(to_observation_dto(session, row) for row in rows)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def list_observations_by_output_digest(
+        self,
+        output_digest: str,
+    ) -> tuple[ObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                rows = session.scalars(
+                    operation_observation_select().where(
+                        ObservationOperationORM.output_digest == output_digest
+                    )
+                ).all()
+                return tuple(to_observation_dto(session, row) for row in rows)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def list_observation_consumers_of_digest(
+        self,
+        input_digest: str,
+    ) -> tuple[ObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                rows = session.scalars(
+                    operation_observation_select().where(
+                        ObservationOperationORM.input_digests_json.contains(
+                            f'"{input_digest}"'
+                        )
+                    )
+                ).all()
+                return tuple(to_observation_dto(session, row) for row in rows)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def _save_observations_in_session(
+        self,
+        session: Session,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> tuple[ObservationDTO, ...]:
+        existing = self._preflight_observations(session, observations)
+        for item in observations:
+            observation = item.observation
+            if observation.frame_id in existing:
+                continue
+            if item.matrix_blob is not None:
+                self._save_matrix_blob_in_session(session, item.matrix_blob)
+            session.add(to_observation_orm(observation))
+            session.add(to_operation_chain_orm(observation))
+            session.add_all(to_operation_orms(observation))
+        return tuple(
+            existing.get(item.observation.frame_id, item.observation)
+            for item in observations
+        )
+
+    def _preflight_observations(
+        self,
+        session: Session,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> dict[str, ObservationDTO]:
+        existing_observations: dict[str, ObservationDTO] = {}
+        seen_observations: dict[str, ObservationDTO] = {}
+        seen_sequences: dict[tuple[str, int], str] = {}
+        seen_blobs: dict[str, MatrixBlob] = {}
+        for item in observations:
+            self._preflight_observation_ownership(session, item.observation)
+            self._preflight_observation_identity(
+                session,
+                item.observation,
+                existing_observations,
+                seen_observations,
+                seen_sequences,
+            )
+            self._preflight_blob(session, item.matrix_blob, seen_blobs)
+        return existing_observations
+
+    def _preflight_observation_ownership(
+        self,
+        session: Session,
+        observation: ObservationDTO,
+    ) -> None:
+        if session.get(BenchmarkIdentityORM, observation.benchmark_seed_digest) is None:
+            raise_unknown_benchmark_identity()
+        episode = session.get(EpisodePlanORM, observation.episode_id)
+        if episode is None:
+            raise_unknown_episode_plan()
+        if (
+            episode.plan_digest != observation.episode_plan_digest
+            or episode.benchmark_seed_digest != observation.benchmark_seed_digest
+            or episode.split != observation.split
+        ):
+            raise_unknown_episode_plan()
+
+    def _preflight_observation_identity(
+        self,
+        session: Session,
+        observation: ObservationDTO,
+        existing_observations: dict[str, ObservationDTO],
+        seen_observations: dict[str, ObservationDTO],
+        seen_sequences: dict[tuple[str, int], str],
+    ) -> None:
+        existing = session.get(ObservationORM, observation.frame_id)
+        if existing is not None:
+            existing_dto = to_observation_dto(session, existing)
+            if existing_dto != observation:
+                raise_observation_conflict()
+            existing_observations[observation.frame_id] = existing_dto
+        seen = seen_observations.get(observation.frame_id)
+        if seen is not None and seen != observation:
+            raise_observation_conflict()
+        seen_observations[observation.frame_id] = observation
+        preflight_observation_sequence(session, observation, seen_sequences)
+
+    def _preflight_blob(
+        self,
+        session: Session,
+        blob: MatrixBlob | None,
+        seen_blobs: dict[str, MatrixBlob],
+    ) -> None:
+        if blob is None:
+            return
+        existing = session.get(MatrixBlobORM, blob.blob_id)
+        if existing is not None and to_matrix_blob(existing) != blob:
+            raise_matrix_blob_conflict()
+        seen = seen_blobs.get(blob.blob_id)
+        if seen is not None and seen != blob:
+            raise_matrix_blob_conflict()
+        seen_blobs[blob.blob_id] = blob
+
+    @staticmethod
+    def _save_matrix_blob_in_session(
+        session: Session,
+        blob: MatrixBlob,
+    ) -> MatrixBlob:
+        existing = session.get(MatrixBlobORM, blob.blob_id)
+        if existing is not None:
+            existing_blob = to_matrix_blob(existing)
+            if existing_blob != blob:
+                raise_matrix_blob_conflict()
+            return existing_blob
+        session.add(to_matrix_blob_orm(blob))
+        return blob
+
+
+class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetStore):
     def __init__(self, session_factory: sessionmaker[Session]) -> None:
         self._session_factory = session_factory
 

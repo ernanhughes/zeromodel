@@ -15,6 +15,7 @@ DB_STORES_PREFIX = "zeromodel.db.stores"
 VIDEO_ACTION_SET_ORCHESTRATION_MODULES = {
     "zeromodel.domains.video_action_set.episode_plan_service",
     "zeromodel.domains.video_action_set.identity_service",
+    "zeromodel.domains.video_action_set.observation_service",
     "zeromodel.domains.video_action_set.engine",
     "zeromodel.domains.video_action_set.facade",
     "zeromodel.runtime",
@@ -24,6 +25,8 @@ VIDEO_ACTION_SET_PURE_DOMAIN_MODULES = {
     "zeromodel.domains.video_action_set.contracts",
     "zeromodel.domains.video_action_set.dto",
     "zeromodel.domains.video_action_set.episode_plan_service",
+    "zeromodel.domains.video_action_set.observation_dto",
+    "zeromodel.domains.video_action_set.observation_service",
 }
 VIDEO_ACTION_SET_POLICY_MODULES = {
     f"{VIDEO_ACTION_SET_PREFIX}.contracts",
@@ -381,6 +384,18 @@ def rmdto_forbidden_edge_violations(edge: ImportEdge) -> list[Violation]:
         violations.append(
             edge_violation(
                 "zeromodel.runtime must not import database or SQLAlchemy modules",
+                edge,
+            )
+        )
+    if edge.importer == "zeromodel.matrix_blob" and (
+        is_module_under(edge.imported, DOMAIN_VIDEO_ACTION_SET_PREFIX)
+        or is_module_under(edge.imported, "zeromodel.db")
+        or is_module_under(edge.imported, "zeromodel.stores")
+        or edge.imported == "zeromodel.runtime"
+    ):
+        violations.append(
+            edge_violation(
+                "zeromodel.matrix_blob must remain independent of video_action_set, stores, database, and runtime",
                 edge,
             )
         )

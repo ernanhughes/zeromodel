@@ -6,6 +6,7 @@ from .domains.video_action_set.engine import VideoActionSetEngine
 from .domains.video_action_set.episode_plan_service import EpisodePlanService
 from .domains.video_action_set.facade import VideoActionSetFacade
 from .domains.video_action_set.identity_service import IdentityService
+from .domains.video_action_set.observation_service import ObservationService
 from .domains.video_action_set.store import VideoActionSetStore
 from .stores.video_action_set_memory import InMemoryVideoActionSetStore
 
@@ -22,9 +23,11 @@ def build_runtime(
     store = video_action_set_store or InMemoryVideoActionSetStore()
     identity_service = IdentityService(store=store)
     episode_plan_service = EpisodePlanService(store=store)
+    observation_service = ObservationService(store=store)
     engine = VideoActionSetEngine(
         identity_service=identity_service,
         episode_plan_service=episode_plan_service,
+        observation_service=observation_service,
     )
     facade = VideoActionSetFacade(engine=engine)
     return ZeroModelRuntime(video_action_set=facade)

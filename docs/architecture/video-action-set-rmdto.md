@@ -2,7 +2,8 @@
 
 This document describes the RMDTO boundary for the video action-set domain. The
 first slice introduced the benchmark identity aggregate; the second slice adds
-episode plans and the sealed final split-plan envelope.
+episode plans and the sealed final split-plan envelope; the third slice adds the
+database-first observation, MatrixBlob, and provenance ledger.
 
 The dependency path is:
 
@@ -109,12 +110,68 @@ scorable, or materialized.
 Persistence records the deterministic plan contract; it does not become the
 authority that invents or repairs scientific plans.
 
+## Observation Ledger Aggregate
+
+The durable observation ownership chain is:
+
+```text
+BenchmarkIdentity
+    -> EpisodePlan
+    -> Observation
+    -> ObservationOperationChain
+    -> ObservationOperation
+```
+
+`MatrixBlob` stores canonical binary frame payloads separately from observation
+metadata. Identical pixel arrays deduplicate by `MatrixBlob.blob_id`; frame
+ownership fields such as split, episode ID, frame ID, sequence number, family,
+and expected action are observation fields and must not be included in
+MatrixBlob identity-bearing metadata. Benchmark frame blobs use payload metadata
+only, including the frame-pixel kind and historical pixel digest.
+
+`MatrixBlob` predates the RMDTO package but already satisfies the immutable DTO
+contract. It is the only Store-boundary exception to the `*DTO` naming pattern,
+and Stores may accept or return it directly.
+
+The observation ledger preserves three distinct identities:
+
+- `observation_pixel_digest`: historical raw contiguous pixel-byte digest.
+- provider raw digest: `ImageObservation` domain-separated digest including shape.
+- `matrix_blob_id`: MatrixBlob identity over version, dtype, shape, metadata,
+  quantization, and canonical bytes.
+
+Operation chains are stored as ordered relational provenance rows. Operation
+parameters remain canonical JSON, while operation names, versions, input
+digests, output digests, parameter digests, operation digests, and chain digests
+are queryable. SQL Stores apply split, episode, family, event type,
+denominator-class, pixel-presence, operation, input-digest, and output-digest
+filters in SQL predicates and joins, not by loading the table and filtering in
+Python.
+
+Batch observation writes are atomic. Stores validate existing benchmark identity
+and episode-plan ownership, MatrixBlob identity, observation identity, sequence
+uniqueness, pixel digest, provider descriptor digest, and operation-chain digest
+before committing. Stores do not repair conflicting scientific records.
+
+Durable benchmark paths use SQLite as the preferred substrate and write public
+JSON and JSONL artifacts as projections of Store-returned DTOs. Compatibility
+exports keep the legacy observation record keys and do not add MatrixBlob IDs.
+Final split materialization remains prohibited: the final split is plan-only,
+and Stores must not persist final observations or final MatrixBlob rows.
+
+Python and NumPy remain authoritative for rendering, pixel transformations,
+splicing, corruption, temporal mutation, operation replay, digest computation,
+and scientific validation. SQLite is authoritative for durable identity,
+relationships, ordering, deduplication, transactionality, provenance traversal,
+and audit retrieval.
+
+Use the database to organize, relate, constrain, and retrieve scientific
+evidence. Do not use it to invent, normalize, or repair scientific evidence.
+
 ## Future aggregates
 
 Future slices can add DTOs, Stores, and persistence mappings for:
 
-- observations and MatrixBlob references;
-- operation chains;
 - verification reports;
 - mutation audits.
 

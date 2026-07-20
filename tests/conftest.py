@@ -4,12 +4,13 @@ import pytest
 
 
 INTEGRATION_MARKERS = {"integration", "slow"}
-INTEGRATION_TEST_FILES = {"test_video_episode_plan_sql_store.py"}
 INTEGRATION_TEST_PREFIXES = ("test_video_action_set_",)
 INTEGRATION_TEST_FILES = {
     "test_arcade_visual_local_baseline_showdown.py",
     "test_arcade_visual_registered_calibration_v2.py",
     "test_installed_wheel_video_instrument.py",
+    "test_video_episode_plan_sql_store.py",
+    "test_video_observation_sql_store.py",
     "test_video_discriminative_evidence.py",
     "test_video_discriminative_measurement_audit.py",
     "test_video_discriminative_representation_audit.py",
@@ -67,7 +68,6 @@ def pytest_collection_modifyitems(
             "integration" in item.path.parts
             or filename in INTEGRATION_TEST_FILES
             or filename.startswith(INTEGRATION_TEST_PREFIXES)
-            or filename in INTEGRATION_TEST_FILES
         ):
             item.add_marker(pytest.mark.integration)
 

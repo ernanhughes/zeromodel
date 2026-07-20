@@ -4,7 +4,13 @@ from collections.abc import Sequence
 from typing import NoReturn, Protocol
 
 from ...artifact import VPMValidationError
+from ...matrix_blob import MatrixBlob
 from .dto import BenchmarkIdentityDTO, EpisodePlanDTO, SealedSplitPlanDTO
+from .observation_dto import (
+    MaterializedObservationDTO,
+    ObservationDTO,
+    ObservationOperationChainDTO,
+)
 
 
 BENCHMARK_IDENTITY_CONFLICT_MESSAGE = "benchmark identity conflict for seed digest"
@@ -15,6 +21,14 @@ SEALED_SPLIT_PLAN_CONFLICT_MESSAGE = (
 UNKNOWN_BENCHMARK_IDENTITY_MESSAGE = (
     "episode plan references unknown benchmark identity"
 )
+MATRIX_BLOB_CONFLICT_MESSAGE = "matrix blob conflict for blob id"
+OBSERVATION_CONFLICT_MESSAGE = "observation conflict for frame id"
+OBSERVATION_SEQUENCE_CONFLICT_MESSAGE = "observation conflict for episode sequence"
+OBSERVATION_BLOB_MISMATCH_MESSAGE = (
+    "observation matrix blob does not match declared pixels"
+)
+OPERATION_CHAIN_CONFLICT_MESSAGE = "observation operation chain conflict for frame id"
+UNKNOWN_EPISODE_PLAN_MESSAGE = "observation references unknown episode plan"
 
 
 class VideoActionSetStore(Protocol):
@@ -62,6 +76,73 @@ class VideoActionSetStore(Protocol):
         split: str,
     ) -> SealedSplitPlanDTO | None: ...
 
+    def save_matrix_blob(
+        self,
+        blob: MatrixBlob,
+    ) -> MatrixBlob: ...
+
+    def get_matrix_blob(
+        self,
+        blob_id: str,
+    ) -> MatrixBlob | None: ...
+
+    def save_observation(
+        self,
+        observation: ObservationDTO,
+        *,
+        matrix_blob: MatrixBlob | None,
+    ) -> ObservationDTO: ...
+
+    def save_observations(
+        self,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> tuple[ObservationDTO, ...]: ...
+
+    def get_observation(
+        self,
+        frame_id: str,
+    ) -> ObservationDTO | None: ...
+
+    def get_materialized_observation(
+        self,
+        frame_id: str,
+    ) -> MaterializedObservationDTO | None: ...
+
+    def list_observations(
+        self,
+        *,
+        benchmark_seed_digest: str | None = None,
+        split: str | None = None,
+        episode_id: str | None = None,
+        family: str | None = None,
+        event_type: str | None = None,
+        denominator_class: str | None = None,
+        has_pixels: bool | None = None,
+    ) -> tuple[ObservationDTO, ...]: ...
+
+    def get_operation_chain(
+        self,
+        frame_id: str,
+    ) -> ObservationOperationChainDTO | None: ...
+
+    def list_observations_by_operation(
+        self,
+        *,
+        operation: str,
+        split: str | None = None,
+        family: str | None = None,
+    ) -> tuple[ObservationDTO, ...]: ...
+
+    def list_observations_by_output_digest(
+        self,
+        output_digest: str,
+    ) -> tuple[ObservationDTO, ...]: ...
+
+    def list_observation_consumers_of_digest(
+        self,
+        input_digest: str,
+    ) -> tuple[ObservationDTO, ...]: ...
+
 
 def raise_identity_conflict() -> NoReturn:
     raise VPMValidationError(BENCHMARK_IDENTITY_CONFLICT_MESSAGE)
@@ -79,14 +160,50 @@ def raise_unknown_benchmark_identity() -> NoReturn:
     raise VPMValidationError(UNKNOWN_BENCHMARK_IDENTITY_MESSAGE)
 
 
+def raise_matrix_blob_conflict() -> NoReturn:
+    raise VPMValidationError(MATRIX_BLOB_CONFLICT_MESSAGE)
+
+
+def raise_observation_conflict() -> NoReturn:
+    raise VPMValidationError(OBSERVATION_CONFLICT_MESSAGE)
+
+
+def raise_observation_sequence_conflict() -> NoReturn:
+    raise VPMValidationError(OBSERVATION_SEQUENCE_CONFLICT_MESSAGE)
+
+
+def raise_observation_blob_mismatch() -> NoReturn:
+    raise VPMValidationError(OBSERVATION_BLOB_MISMATCH_MESSAGE)
+
+
+def raise_operation_chain_conflict() -> NoReturn:
+    raise VPMValidationError(OPERATION_CHAIN_CONFLICT_MESSAGE)
+
+
+def raise_unknown_episode_plan() -> NoReturn:
+    raise VPMValidationError(UNKNOWN_EPISODE_PLAN_MESSAGE)
+
+
 __all__ = [
     "BENCHMARK_IDENTITY_CONFLICT_MESSAGE",
     "EPISODE_PLAN_CONFLICT_MESSAGE",
+    "MATRIX_BLOB_CONFLICT_MESSAGE",
+    "OBSERVATION_BLOB_MISMATCH_MESSAGE",
+    "OBSERVATION_CONFLICT_MESSAGE",
+    "OPERATION_CHAIN_CONFLICT_MESSAGE",
+    "OBSERVATION_SEQUENCE_CONFLICT_MESSAGE",
     "SEALED_SPLIT_PLAN_CONFLICT_MESSAGE",
     "UNKNOWN_BENCHMARK_IDENTITY_MESSAGE",
+    "UNKNOWN_EPISODE_PLAN_MESSAGE",
     "VideoActionSetStore",
     "raise_episode_plan_conflict",
     "raise_identity_conflict",
+    "raise_matrix_blob_conflict",
+    "raise_observation_blob_mismatch",
+    "raise_observation_conflict",
+    "raise_observation_sequence_conflict",
+    "raise_operation_chain_conflict",
     "raise_sealed_split_plan_conflict",
     "raise_unknown_benchmark_identity",
+    "raise_unknown_episode_plan",
 ]

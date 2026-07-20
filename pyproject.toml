@@ -51,3 +51,8 @@ log_cli = true
 log_cli_level = "INFO"
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "--strict-markers"
+markers = [
+    "integration: end-to-end, exhaustive, materialization, or long-running tests excluded from normal development",
+    "slow: deprecated compatibility alias for integration",
+]

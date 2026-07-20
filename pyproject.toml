@@ -29,7 +29,13 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7", "build>=1.2", "twine>=5"]
+dev = [
+    "pytest>=7",
+    "build>=1.2",
+    "twine>=5",
+    "ruff>=0.12",
+    "mypy>=1.16",
+]
 release = ["build>=1.2", "twine>=5"]
 vision = [
     "torch>=2.2",

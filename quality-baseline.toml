@@ -1,0 +1,138 @@
+[quality]
+new_module_max_lines = 800
+module_warning_lines = 500
+new_function_max_lines = 100
+function_warning_lines = 50
+new_class_max_lines = 400
+maximum_function_parameters = 10
+maximum_ast_nesting = 8
+
+[legacy_exceptions."zeromodel/video_action_set_benchmark.py"]
+reason = "Stage 3 scientific instrument pending behavior-preserving decomposition"
+maximum_lines = 6100
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."examples/arcade_visual_video_discriminative_evidence_benchmark.py"]
+reason = "Historical research benchmark pending behavior-preserving decomposition"
+maximum_lines = 3898
+owner = "visual-research-refactor"
+
+[legacy_exceptions."zeromodel/video_discriminative_evidence.py"]
+reason = "Historical video evidence module pending behavior-preserving extraction"
+maximum_lines = 1994
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."zeromodel/video_discriminative_joint_evidence.py"]
+reason = "Historical joint evidence module pending behavior-preserving extraction"
+maximum_lines = 1259
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."zeromodel/visual_local_baselines.py"]
+reason = "Historical visual baseline module pending behavior-preserving extraction"
+maximum_lines = 1195
+owner = "visual-runtime-refactor"
+
+[legacy_exceptions."zeromodel/visual_retrieval.py"]
+reason = "Historical visual retrieval module pending behavior-preserving extraction"
+maximum_lines = 1143
+owner = "visual-runtime-refactor"
+
+[legacy_exceptions."examples/arcade_visual_action_equivalence_audit.py"]
+reason = "Historical research audit script pending behavior-preserving decomposition"
+maximum_lines = 1066
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."examples/arcade_visual_video_local_correlation_benchmark.py"]
+reason = "Historical video benchmark script pending behavior-preserving decomposition"
+maximum_lines = 1039
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."zeromodel/visual.py"]
+reason = "Historical visual facade module pending behavior-preserving extraction"
+maximum_lines = 936
+owner = "visual-runtime-refactor"
+
+[legacy_exceptions."zeromodel/video_local_correlation.py"]
+reason = "Historical video correlation module pending behavior-preserving extraction"
+maximum_lines = 855
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."examples/arcade_visual_address_benchmark.py"]
+reason = "Historical visual benchmark script pending behavior-preserving decomposition"
+maximum_lines = 691
+owner = "visual-research-refactor"
+
+[legacy_exceptions."examples/arcade_visual_local_baseline_showdown.py"]
+reason = "Historical visual benchmark script pending behavior-preserving decomposition"
+maximum_lines = 656
+owner = "visual-research-refactor"
+
+[legacy_exceptions."examples/arcade_visual_local_evidence_benchmark.py"]
+reason = "Historical visual benchmark script pending behavior-preserving decomposition"
+maximum_lines = 633
+owner = "visual-research-refactor"
+
+[legacy_exceptions."zeromodel/video_complete_row_evidence.py"]
+reason = "Historical video evidence module pending behavior-preserving extraction"
+maximum_lines = 578
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."examples/arcade_visual_system_b_adjudication.py"]
+reason = "Historical visual adjudication script pending behavior-preserving decomposition"
+maximum_lines = 567
+owner = "visual-research-refactor"
+
+[legacy_exceptions."zeromodel/video_prospective_providers.py"]
+reason = "Historical video provider module pending behavior-preserving extraction"
+maximum_lines = 527
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."examples/arcade_visual_local_baseline_postanalysis.py"]
+reason = "Historical visual postanalysis script pending behavior-preserving decomposition"
+maximum_lines = 519
+owner = "visual-research-refactor"
+
+[legacy_exceptions."zeromodel/visual_dataset.py"]
+reason = "Historical visual dataset module pending behavior-preserving extraction"
+maximum_lines = 480
+owner = "visual-runtime-refactor"
+
+[legacy_exceptions."zeromodel/visual_experiment.py"]
+reason = "Historical visual experiment module pending behavior-preserving extraction"
+maximum_lines = 455
+owner = "visual-runtime-refactor"
+
+[legacy_exceptions."zeromodel/video_policy.py"]
+reason = "Historical video policy module pending behavior-preserving extraction"
+maximum_lines = 406
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."zeromodel/policy_lookup.py"]
+reason = "Historical policy lookup module pending behavior-preserving extraction"
+maximum_lines = 399
+owner = "policy-runtime-refactor"
+
+[legacy_exceptions."examples/arcade_visual_registered_calibration_v2.py"]
+reason = "Historical visual calibration script pending behavior-preserving decomposition"
+maximum_lines = 395
+owner = "visual-research-refactor"
+
+[legacy_exceptions."zeromodel/training.py"]
+reason = "Historical training assessment module pending behavior-preserving extraction"
+maximum_lines = 331
+owner = "training-runtime-refactor"
+
+[legacy_exceptions."tests/test_video_action_set_reference_verification.py"]
+reason = "Historical reference verification test pending behavior-preserving decomposition"
+maximum_lines = 249
+owner = "video-action-set-refactor"
+
+[legacy_exceptions."zeromodel/lua.py"]
+reason = "Historical Lua exporter module pending behavior-preserving extraction"
+maximum_lines = 170
+owner = "edge-runtime-refactor"
+
+[legacy_exceptions.".github/scripts/run_visual_address_smoke.py"]
+reason = "Historical CI smoke helper pending behavior-preserving decomposition"
+maximum_lines = 199
+owner = "visual-research-refactor"

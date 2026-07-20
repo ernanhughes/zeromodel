@@ -6,9 +6,27 @@ import time
 
 
 FAST_SUITE_BUDGET_SECONDS = 60
+FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
 
 
 def main() -> int:
+    forbidden = [
+        argument
+        for argument in sys.argv[1:]
+        if argument in FORBIDDEN_INTEGRATION_FLAGS
+    ]
+    if forbidden:
+        print(
+            "The fast-test runner does not permit integration opt-in flags: "
+            + ", ".join(forbidden),
+            file=sys.stderr,
+        )
+        print(
+            "Run integration tests explicitly with pytest instead.",
+            file=sys.stderr,
+        )
+        return 2
+
     command = [
         sys.executable,
         "-m",

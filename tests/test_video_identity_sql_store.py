@@ -21,6 +21,8 @@ from zeromodel.domains.video_action_set.store import (
 )
 
 
+pytestmark = pytest.mark.integration
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SEED_MATERIAL = (
     "zeromodel-action-set-reachability-v1|aed523b04c258d7e28cd9466413b49fc817b4e35"

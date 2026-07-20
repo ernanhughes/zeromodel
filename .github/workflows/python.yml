@@ -7,7 +7,10 @@ on:
       - "tests/**"
       - "examples/**"
       - "docs/examples/**"
+      - "docs/architecture/**"
+      - "scripts/**"
       - "pyproject.toml"
+      - "quality-baseline.toml"
       - "README.md"
       - "CHANGELOG.md"
       - "docs/release.md"
@@ -21,7 +24,10 @@ on:
       - "tests/**"
       - "examples/**"
       - "docs/examples/**"
+      - "docs/architecture/**"
+      - "scripts/**"
       - "pyproject.toml"
+      - "quality-baseline.toml"
       - "README.md"
       - "CHANGELOG.md"
       - "docs/release.md"
@@ -33,6 +39,28 @@ permissions:
   contents: read
 
 jobs:
+  quality:
+    name: repository quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install quality tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[dev]
+
+      - name: Run repository quality gate
+        run: python scripts/check_quality.py
+
   package-tests:
     name: package tests / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

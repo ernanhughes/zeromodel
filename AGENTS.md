@@ -50,11 +50,27 @@ When reviewing or extending this repo, check these first:
 ## Fast Commands
 
 ```powershell
+python scripts/check_quality.py
 pytest -q
 pytest tests/test_artifact_kernel.py -q
 pytest tests/test_views.py tests/test_spatial.py tests/test_manifold.py -q
 python -m build
 ```
+
+## Code Quality Policy
+
+Codex and other agents must follow these rules:
+
+1. Run `python scripts/check_quality.py` for quality validation.
+2. Do not auto-format the entire repository.
+3. Do not increase a legacy exception ceiling.
+4. New modules must satisfy the hard limits.
+5. Do not combine structural refactors with behavioral changes.
+6. Do not run integration tests without explicit human authorization.
+7. During refactors, preserve public imports and deterministic outputs.
+8. Run the bounded fast suite only once after implementation.
+9. Do not repeatedly rerun unchanged commands.
+10. Report any integration command that a human may run later, but do not execute it.
 
 ## Working Style
 

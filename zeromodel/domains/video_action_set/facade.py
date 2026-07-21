@@ -10,6 +10,7 @@ from .engine import VideoActionSetEngine
 from .final_access_dto import (
     FinalAccessEventDTO,
     FinalAccessRecordDTO,
+    FinalEvaluationProtocolDTO,
     FinalExecutionAuthorizationDTO,
     FinalExecutionRequestDTO,
 )
@@ -227,8 +228,9 @@ class VideoActionSetFacade:
     def create_final_authorization(
         self,
         authorization: FinalExecutionAuthorizationDTO,
+        protocol: FinalEvaluationProtocolDTO,
     ) -> FinalAccessRecordDTO:
-        return self.engine.create_final_authorization(authorization)
+        return self.engine.create_final_authorization(authorization, protocol)
 
     def load_final_access_record(
         self,

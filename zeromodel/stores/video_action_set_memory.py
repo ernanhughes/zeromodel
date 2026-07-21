@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from threading import RLock
 
 from ..domains.video_action_set.dto import (
     BenchmarkIdentityDTO,
@@ -11,10 +12,10 @@ from ..domains.video_action_set.final_access_dto import (
     FINAL_ACCESS_TERMINAL_STATES,
     FinalAccessEventDTO,
     FinalAccessRecordDTO,
+    FinalEvaluationProtocolDTO,
     FinalExecutionAuthorizationDTO,
     FinalExecutionFailureDTO,
-    FinalExecutionReceiptDTO,
-    validate_final_access_transition,
+    validate_final_access_event,
 )
 from ..domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
@@ -47,9 +48,11 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         self._observations: dict[str, ObservationDTO] = {}
         self._observation_sequence_index: dict[tuple[str, int], str] = {}
         self._final_authorizations: dict[str, FinalExecutionAuthorizationDTO] = {}
+        self._final_protocols: dict[str, FinalEvaluationProtocolDTO] = {}
         self._final_access_records: dict[str, FinalAccessRecordDTO] = {}
         self._final_events: dict[str, list[FinalAccessEventDTO]] = {}
         self._final_seed_sealed_index: dict[tuple[str, str], str] = {}
+        self._final_lock = RLock()
 
     def save_identity(self, identity: BenchmarkIdentityDTO) -> BenchmarkIdentityDTO:
         existing = self._identities.get(identity.seed_digest)
@@ -325,48 +328,66 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
     def create_final_authorization(
         self,
         authorization: FinalExecutionAuthorizationDTO,
+        protocol: FinalEvaluationProtocolDTO,
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
     ) -> FinalAccessRecordDTO:
-        if authorization.authorization_status != "authorized":
-            raise_final_access_authorization()
-        if authorization.authorization_id != record.authorization_id:
-            raise_final_access_authorization()
-        if authorization.authorization_digest != record.authorization_digest:
-            raise_final_access_authorization()
-        seed_key = (record.benchmark_seed_digest, record.sealed_plan_digest)
-        if authorization.authorization_id in self._final_authorizations:
-            raise_final_access_conflict()
-        if record.access_id in self._final_access_records:
-            raise_final_access_conflict()
-        if seed_key in self._final_seed_sealed_index:
-            raise_final_access_conflict()
-        if event.ordinal != 0 or event.previous_event_digest is not None:
-            raise_final_access_state()
-        self._validate_record_event(record, event, expected_previous=None)
-        self._final_authorizations[authorization.authorization_id] = authorization
-        self._final_access_records[record.access_id] = record
-        self._final_events[record.access_id] = [event]
-        self._final_seed_sealed_index[seed_key] = record.access_id
-        return record
+        with self._final_lock:
+            if authorization.authorization_status != "authorized":
+                raise_final_access_authorization()
+            if not protocol.approved or protocol.protocol_digest != authorization.protocol_digest:
+                raise_final_access_authorization()
+            if authorization.authorization_id != record.authorization_id:
+                raise_final_access_authorization()
+            if authorization.authorization_digest != record.authorization_digest:
+                raise_final_access_authorization()
+            seed_key = (record.benchmark_seed_digest, record.sealed_plan_digest)
+            if authorization.authorization_id in self._final_authorizations:
+                raise_final_access_conflict()
+            if record.access_id in self._final_access_records:
+                raise_final_access_conflict()
+            if seed_key in self._final_seed_sealed_index:
+                raise_final_access_conflict()
+            if event.ordinal != 0 or event.previous_event_digest is not None:
+                raise_final_access_state()
+            self._validate_record_event(record, event, expected_previous=None)
+            self._final_protocols[protocol.protocol_digest] = protocol
+            self._final_authorizations[authorization.authorization_id] = authorization
+            self._final_access_records[record.access_id] = record
+            self._final_events[record.access_id] = [event]
+            self._final_seed_sealed_index[seed_key] = record.access_id
+            return record
+
+    def assert_finalization_authority(self) -> None:
+        return None
+
+    def load_final_evaluation_protocol(
+        self,
+        protocol_digest: str,
+    ) -> FinalEvaluationProtocolDTO | None:
+        with self._final_lock:
+            return self._final_protocols.get(protocol_digest)
 
     def load_final_authorization(
         self,
         authorization_id: str,
     ) -> FinalExecutionAuthorizationDTO | None:
-        return self._final_authorizations.get(authorization_id)
+        with self._final_lock:
+            return self._final_authorizations.get(authorization_id)
 
     def load_final_access_record(
         self,
         access_id: str,
     ) -> FinalAccessRecordDTO | None:
-        return self._final_access_records.get(access_id)
+        with self._final_lock:
+            return self._final_access_records.get(access_id)
 
     def list_final_access_events(
         self,
         access_id: str,
     ) -> tuple[FinalAccessEventDTO, ...]:
-        return tuple(self._final_events.get(access_id, ()))
+        with self._final_lock:
+            return tuple(self._final_events.get(access_id, ()))
 
     def reserve_final_access(
         self,
@@ -382,13 +403,19 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
     ) -> FinalAccessRecordDTO:
         return self._transition_final_access(record, event)
 
+    def append_final_access_event(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
     def complete_final_access(
         self,
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
-        receipt: FinalExecutionReceiptDTO,
     ) -> FinalAccessRecordDTO:
-        if receipt.access_id != record.access_id or receipt.state != "completed":
+        if record.state != "completed":
             raise_final_access_state()
         return self._transition_final_access(record, event)
 
@@ -417,14 +444,15 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
     ) -> FinalAccessRecordDTO:
-        existing = self._final_access_records.get(record.access_id)
-        if existing is None:
-            raise_final_access_authorization()
-        self._validate_final_identity(existing, record)
-        self._validate_record_event(record, event, expected_previous=existing)
-        self._final_access_records[record.access_id] = record
-        self._final_events[record.access_id].append(event)
-        return record
+        with self._final_lock:
+            existing = self._final_access_records.get(record.access_id)
+            if existing is None:
+                raise_final_access_authorization()
+            self._validate_final_identity(existing, record)
+            self._validate_record_event(record, event, expected_previous=existing)
+            self._final_access_records[record.access_id] = record
+            self._final_events[record.access_id].append(event)
+            return record
 
     def _validate_record_event(
         self,
@@ -446,11 +474,22 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             or record.last_event_digest != event.event_digest
         ):
             raise_final_access_state()
-        validate_final_access_transition(previous_state, record.state)
+        payload = event.event_payload.to_value()
+        kind = payload.get("kind") if isinstance(payload, dict) else None
+        validate_final_access_event(previous_state, record.state, kind)
         existing_events = self._final_events.get(record.access_id, [])
-        if event.ordinal != len(existing_events):
+        expected_ordinal = -1 if expected_previous is None else expected_previous.current_event_ordinal
+        if (
+            event.ordinal != len(existing_events)
+            or event.ordinal != expected_ordinal + 1
+            or record.current_event_ordinal != event.ordinal
+        ):
             raise_final_access_state()
-        if expected_previous is not None and previous_state in FINAL_ACCESS_TERMINAL_STATES:
+        if (
+            expected_previous is not None
+            and previous_state in FINAL_ACCESS_TERMINAL_STATES
+            and record.state != previous_state
+        ):
             raise_final_access_state()
 
     @staticmethod

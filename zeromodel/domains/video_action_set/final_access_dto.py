@@ -16,6 +16,8 @@ FINAL_EXECUTION_AUTHORIZATION_VERSION = (
 FINAL_EXECUTION_REQUEST_VERSION = "zeromodel-video-final-execution-request/v1"
 FINAL_ACCESS_RECORD_VERSION = "zeromodel-video-final-access-record/v1"
 FINAL_ACCESS_EVENT_VERSION = "zeromodel-video-final-access-event/v1"
+FINAL_EVIDENCE_BUNDLE_VERSION = "zeromodel-video-final-evidence-bundle/v1"
+FINAL_EVALUATION_RESULT_VERSION = "zeromodel-video-final-evaluation-result/v1"
 FINAL_EXECUTION_RECEIPT_VERSION = "zeromodel-video-final-execution-receipt/v1"
 FINAL_EXECUTION_FAILURE_VERSION = "zeromodel-video-final-execution-failure/v1"
 
@@ -35,6 +37,7 @@ FINAL_ACCESS_TRANSITIONS = {
 }
 
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+FINAL_IDENTIFIER_RE = re.compile(r"^[A-Za-z0-9._:-]+$")
 
 PROTOCOL_KEYS = (
     "version",
@@ -97,6 +100,7 @@ RECORD_KEYS = (
     "updated_utc",
     "process_identity",
     "record_payload",
+    "current_event_ordinal",
     "last_event_digest",
     "record_digest",
 )
@@ -124,9 +128,59 @@ RECEIPT_KEYS = (
     "protocol_digest",
     "authorization_digest",
     "evidence_digest",
+    "evaluation_digest",
+    "artifact_manifest_digest",
     "event_chain_digest",
-    "measurements",
+    "decision",
+    "execution_commit",
+    "provider_order",
+    "provider_versions",
+    "expected_counts",
+    "actual_counts",
+    "historical_authority_digest",
     "receipt_digest",
+)
+EVIDENCE_BUNDLE_KEYS = (
+    "version",
+    "access_id",
+    "authorization_digest",
+    "protocol_digest",
+    "benchmark_seed_digest",
+    "sealed_plan_digest",
+    "execution_commit",
+    "provider_order",
+    "provider_versions",
+    "expected_counts",
+    "actual_counts",
+    "rows",
+    "evidence_digest",
+)
+EVALUATION_RESULT_KEYS = (
+    "version",
+    "protocol_digest",
+    "evidence_digest",
+    "decision",
+    "descriptive_measurements",
+    "family_measurements",
+    "rejections",
+    "indeterminate_reasons",
+    "actual_counts",
+    "evaluation_digest",
+)
+FINAL_EVIDENCE_ROW_KEYS = (
+    "family_id",
+    "episode_id",
+    "frame_ordinal",
+    "frame_id",
+    "provider_id",
+    "split",
+    "metrics",
+)
+FINAL_COUNT_KEYS = (
+    "evidence_row_count",
+    "episode_count",
+    "frame_count",
+    "provider_count",
 )
 FAILURE_KEYS = (
     "version",
@@ -190,6 +244,7 @@ class FinalEvaluationProtocolDTO:
     def __post_init__(self) -> None:
         if self.version != FINAL_EVALUATION_PROTOCOL_VERSION:
             raise VPMValidationError("final protocol version mismatch")
+        validate_final_identifier(self.protocol_id, "final protocol id mismatch")
         if self.protocol_status not in {"draft", "review", "approved", "retired"}:
             raise VPMValidationError("final protocol status mismatch")
         if self.protocol_status == "approved" and (
@@ -306,6 +361,10 @@ class FinalExecutionAuthorizationDTO:
     def __post_init__(self) -> None:
         if self.version != FINAL_EXECUTION_AUTHORIZATION_VERSION:
             raise VPMValidationError("final authorization version mismatch")
+        validate_final_identifier(
+            self.authorization_id,
+            "final authorization id mismatch",
+        )
         if self.authorization_status not in {"draft", "authorized", "retired"}:
             raise VPMValidationError("final authorization status mismatch")
         for value, message in (
@@ -526,6 +585,7 @@ class FinalAccessRecordDTO:
     updated_utc: str
     process_identity: str
     record_payload: FinalJsonDTO
+    current_event_ordinal: int
     last_event_digest: str | None
     record_digest: str
 
@@ -534,6 +594,13 @@ class FinalAccessRecordDTO:
             raise VPMValidationError("final access record version mismatch")
         if self.state not in FINAL_ACCESS_STATES:
             raise VPMValidationError("final access state mismatch")
+        validate_final_identifier(self.access_id, "final access id mismatch")
+        validate_final_identifier(
+            self.authorization_id,
+            "final access authorization mismatch",
+        )
+        if self.current_event_ordinal < -1:
+            raise VPMValidationError("final access event ordinal mismatch")
         for value, message in (
             (self.benchmark_seed_digest, "final access seed mismatch"),
             (self.sealed_plan_digest, "final access sealed plan mismatch"),
@@ -572,6 +639,7 @@ class FinalAccessRecordDTO:
             "updated_utc": utc,
             "process_identity": process_identity,
             "record_payload": {} if record_payload is None else dict(record_payload),
+            "current_event_ordinal": -1,
             "last_event_digest": None,
         }
         return cls.from_dict(
@@ -608,6 +676,11 @@ class FinalAccessRecordDTO:
                 payload, "process_identity", "final access process mismatch"
             ),
             record_payload=FinalJsonDTO.from_value(payload["record_payload"]),
+            current_event_ordinal=_int(
+                payload,
+                "current_event_ordinal",
+                "final access event ordinal mismatch",
+            ),
             last_event_digest=_optional_str(
                 payload, "last_event_digest", "final access event digest mismatch"
             ),
@@ -630,6 +703,7 @@ class FinalAccessRecordDTO:
             "updated_utc": self.updated_utc,
             "process_identity": self.process_identity,
             "record_payload": self.record_payload.to_value(),
+            "current_event_ordinal": self.current_event_ordinal,
             "last_event_digest": self.last_event_digest,
             "record_digest": self.record_digest,
         }
@@ -640,6 +714,7 @@ class FinalAccessRecordDTO:
         state: str,
         utc: str,
         process_identity: str,
+        current_event_ordinal: int,
         last_event_digest: str,
         record_payload: Mapping[str, object] | None = None,
     ) -> FinalAccessRecordDTO:
@@ -649,6 +724,7 @@ class FinalAccessRecordDTO:
                 "state": state,
                 "updated_utc": utc,
                 "process_identity": process_identity,
+                "current_event_ordinal": current_event_ordinal,
                 "last_event_digest": last_event_digest,
             }
         )
@@ -677,9 +753,16 @@ class FinalAccessEventDTO:
     def __post_init__(self) -> None:
         if self.version != FINAL_ACCESS_EVENT_VERSION:
             raise VPMValidationError("final access event version mismatch")
+        validate_final_identifier(self.access_id, "final access id mismatch")
+        validate_final_identifier(
+            self.authorization_id,
+            "final access authorization mismatch",
+        )
         if self.ordinal < 0:
             raise VPMValidationError("final access event ordinal mismatch")
-        validate_final_access_transition(self.previous_state, self.new_state)
+        payload = self.event_payload.to_value()
+        kind = payload.get("kind") if isinstance(payload, Mapping) else None
+        validate_final_access_event(self.previous_state, self.new_state, kind)
         if self.previous_event_digest is not None:
             _require_digest(
                 self.previous_event_digest, "final access previous event mismatch"
@@ -767,6 +850,265 @@ class FinalAccessEventDTO:
 
 
 @dataclass(frozen=True, slots=True)
+class FinalEvidenceBundleDTO:
+    version: str
+    access_id: str
+    authorization_digest: str
+    protocol_digest: str
+    benchmark_seed_digest: str
+    sealed_plan_digest: str
+    execution_commit: str
+    provider_order: tuple[str, ...]
+    provider_versions: FinalJsonDTO
+    expected_counts: FinalJsonDTO
+    actual_counts: FinalJsonDTO
+    rows: FinalJsonDTO
+    evidence_digest: str
+
+    def __post_init__(self) -> None:
+        if self.version != FINAL_EVIDENCE_BUNDLE_VERSION:
+            raise VPMValidationError("final evidence version mismatch")
+        validate_final_identifier(self.access_id, "final access id mismatch")
+        for value, message in (
+            (self.authorization_digest, "final evidence authorization mismatch"),
+            (self.protocol_digest, "final evidence protocol mismatch"),
+            (self.benchmark_seed_digest, "final evidence seed mismatch"),
+            (self.sealed_plan_digest, "final evidence sealed plan mismatch"),
+            (self.evidence_digest, "final evidence digest mismatch"),
+        ):
+            _require_digest(value, message)
+        _validate_provider_contract(self.provider_order, self.provider_versions)
+        expected = _count_mapping(
+            self.expected_counts.to_value(),
+            "final evidence expected counts mismatch",
+        )
+        actual = _count_mapping(
+            self.actual_counts.to_value(),
+            "final evidence actual counts mismatch",
+        )
+        rows = _evidence_rows(
+            self.rows.to_value(),
+            "final evidence rows mismatch",
+        )
+        if rows != _canonical_evidence_rows(rows):
+            raise VPMValidationError("final evidence ordering mismatch")
+        if actual != _actual_counts(rows):
+            raise VPMValidationError("final evidence actual counts mismatch")
+        providers = {str(row["provider_id"]) for row in rows}
+        if providers != set(self.provider_order):
+            raise VPMValidationError("final evidence provider order mismatch")
+        if any(actual[key] > expected[key] for key in FINAL_COUNT_KEYS):
+            raise VPMValidationError("final evidence exceeds authorized counts")
+        _require_digest_match(
+            self.to_dict(),
+            "evidence_digest",
+            "final evidence digest mismatch",
+        )
+
+    @classmethod
+    def create(cls, payload: Mapping[str, object]) -> FinalEvidenceBundleDTO:
+        expected_keys = tuple(
+            key
+            for key in EVIDENCE_BUNDLE_KEYS
+            if key not in {"actual_counts", "evidence_digest"}
+        )
+        _require_exact_keys(payload, expected_keys, "final evidence keys mismatch")
+        rows = _evidence_rows(payload["rows"], "final evidence rows mismatch")
+        canonical_rows = _canonical_evidence_rows(rows)
+        complete = dict(payload) | {
+            "rows": canonical_rows,
+            "actual_counts": _actual_counts(canonical_rows),
+        }
+        complete["evidence_digest"] = _digest_without_key(
+            complete,
+            "evidence_digest",
+        )
+        return cls.from_dict(complete)
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, object]) -> FinalEvidenceBundleDTO:
+        _require_exact_keys(payload, EVIDENCE_BUNDLE_KEYS, "final evidence keys mismatch")
+        return cls(
+            version=_str(payload, "version", "final evidence version mismatch"),
+            access_id=_str(payload, "access_id", "final access id mismatch"),
+            authorization_digest=_str(
+                payload,
+                "authorization_digest",
+                "final evidence authorization mismatch",
+            ),
+            protocol_digest=_str(
+                payload,
+                "protocol_digest",
+                "final evidence protocol mismatch",
+            ),
+            benchmark_seed_digest=_str(
+                payload,
+                "benchmark_seed_digest",
+                "final evidence seed mismatch",
+            ),
+            sealed_plan_digest=_str(
+                payload,
+                "sealed_plan_digest",
+                "final evidence sealed plan mismatch",
+            ),
+            execution_commit=_str(
+                payload,
+                "execution_commit",
+                "final evidence execution commit mismatch",
+            ),
+            provider_order=_string_tuple(
+                payload["provider_order"],
+                "final evidence provider order mismatch",
+            ),
+            provider_versions=FinalJsonDTO.from_value(payload["provider_versions"]),
+            expected_counts=FinalJsonDTO.from_value(payload["expected_counts"]),
+            actual_counts=FinalJsonDTO.from_value(payload["actual_counts"]),
+            rows=FinalJsonDTO.from_value(payload["rows"]),
+            evidence_digest=_str(
+                payload,
+                "evidence_digest",
+                "final evidence digest mismatch",
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "version": self.version,
+            "access_id": self.access_id,
+            "authorization_digest": self.authorization_digest,
+            "protocol_digest": self.protocol_digest,
+            "benchmark_seed_digest": self.benchmark_seed_digest,
+            "sealed_plan_digest": self.sealed_plan_digest,
+            "execution_commit": self.execution_commit,
+            "provider_order": list(self.provider_order),
+            "provider_versions": self.provider_versions.to_value(),
+            "expected_counts": self.expected_counts.to_value(),
+            "actual_counts": self.actual_counts.to_value(),
+            "rows": self.rows.to_value(),
+            "evidence_digest": self.evidence_digest,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class FinalEvaluationResultDTO:
+    version: str
+    protocol_digest: str
+    evidence_digest: str
+    decision: str
+    descriptive_measurements: FinalJsonDTO
+    family_measurements: FinalJsonDTO
+    rejections: FinalJsonDTO
+    indeterminate_reasons: FinalJsonDTO
+    actual_counts: FinalJsonDTO
+    evaluation_digest: str
+
+    def __post_init__(self) -> None:
+        if self.version != FINAL_EVALUATION_RESULT_VERSION:
+            raise VPMValidationError("final evaluation result version mismatch")
+        if self.decision not in {"passed", "failed", "indeterminate"}:
+            raise VPMValidationError("final evaluation decision mismatch")
+        for value, message in (
+            (self.protocol_digest, "final evaluation protocol mismatch"),
+            (self.evidence_digest, "final evaluation evidence mismatch"),
+            (self.evaluation_digest, "final evaluation digest mismatch"),
+        ):
+            _require_digest(value, message)
+        _count_mapping(
+            self.actual_counts.to_value(),
+            "final evaluation actual counts mismatch",
+        )
+        if not isinstance(self.rejections.to_value(), list):
+            raise VPMValidationError("final evaluation rejections mismatch")
+        reasons = self.indeterminate_reasons.to_value()
+        if not isinstance(reasons, list):
+            raise VPMValidationError("final evaluation reasons mismatch")
+        if self.decision == "indeterminate" and not reasons:
+            raise VPMValidationError("final evaluation reasons mismatch")
+        _require_digest_match(
+            self.to_dict(),
+            "evaluation_digest",
+            "final evaluation digest mismatch",
+        )
+
+    @classmethod
+    def create(cls, payload: Mapping[str, object]) -> FinalEvaluationResultDTO:
+        _require_exact_keys(
+            payload,
+            EVALUATION_RESULT_KEYS[:-1],
+            "final evaluation result keys mismatch",
+        )
+        return cls.from_dict(
+            dict(payload)
+            | {
+                "evaluation_digest": _digest_without_key(
+                    payload,
+                    "evaluation_digest",
+                )
+            }
+        )
+
+    @classmethod
+    def from_dict(cls, payload: Mapping[str, object]) -> FinalEvaluationResultDTO:
+        _require_exact_keys(
+            payload,
+            EVALUATION_RESULT_KEYS,
+            "final evaluation result keys mismatch",
+        )
+        return cls(
+            version=_str(
+                payload,
+                "version",
+                "final evaluation result version mismatch",
+            ),
+            protocol_digest=_str(
+                payload,
+                "protocol_digest",
+                "final evaluation protocol mismatch",
+            ),
+            evidence_digest=_str(
+                payload,
+                "evidence_digest",
+                "final evaluation evidence mismatch",
+            ),
+            decision=_str(
+                payload,
+                "decision",
+                "final evaluation decision mismatch",
+            ),
+            descriptive_measurements=FinalJsonDTO.from_value(
+                payload["descriptive_measurements"]
+            ),
+            family_measurements=FinalJsonDTO.from_value(
+                payload["family_measurements"]
+            ),
+            rejections=FinalJsonDTO.from_value(payload["rejections"]),
+            indeterminate_reasons=FinalJsonDTO.from_value(
+                payload["indeterminate_reasons"]
+            ),
+            actual_counts=FinalJsonDTO.from_value(payload["actual_counts"]),
+            evaluation_digest=_str(
+                payload,
+                "evaluation_digest",
+                "final evaluation digest mismatch",
+            ),
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "version": self.version,
+            "protocol_digest": self.protocol_digest,
+            "evidence_digest": self.evidence_digest,
+            "decision": self.decision,
+            "descriptive_measurements": self.descriptive_measurements.to_value(),
+            "family_measurements": self.family_measurements.to_value(),
+            "rejections": self.rejections.to_value(),
+            "indeterminate_reasons": self.indeterminate_reasons.to_value(),
+            "actual_counts": self.actual_counts.to_value(),
+            "evaluation_digest": self.evaluation_digest,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class FinalExecutionReceiptDTO:
     version: str
     access_id: str
@@ -778,23 +1120,48 @@ class FinalExecutionReceiptDTO:
     protocol_digest: str
     authorization_digest: str
     evidence_digest: str
+    evaluation_digest: str
+    artifact_manifest_digest: str
     event_chain_digest: str
-    measurements: FinalJsonDTO
+    decision: str
+    execution_commit: str
+    provider_order: tuple[str, ...]
+    provider_versions: FinalJsonDTO
+    expected_counts: FinalJsonDTO
+    actual_counts: FinalJsonDTO
+    historical_authority_digest: str
     receipt_digest: str
 
     def __post_init__(self) -> None:
         if self.version != FINAL_EXECUTION_RECEIPT_VERSION or self.state != "completed":
             raise VPMValidationError("final receipt state mismatch")
+        if self.decision not in {"passed", "failed", "indeterminate"}:
+            raise VPMValidationError("final receipt decision mismatch")
         for value, message in (
             (self.benchmark_seed_digest, "final receipt seed mismatch"),
             (self.sealed_plan_digest, "final receipt sealed plan mismatch"),
             (self.protocol_digest, "final receipt protocol mismatch"),
             (self.authorization_digest, "final receipt authorization mismatch"),
             (self.evidence_digest, "final receipt evidence mismatch"),
+            (self.evaluation_digest, "final receipt evaluation mismatch"),
+            (self.artifact_manifest_digest, "final receipt manifest mismatch"),
             (self.event_chain_digest, "final receipt event chain mismatch"),
+            (
+                self.historical_authority_digest,
+                "final receipt historical authority mismatch",
+            ),
             (self.receipt_digest, "final receipt digest mismatch"),
         ):
             _require_digest(value, message)
+        _validate_provider_contract(self.provider_order, self.provider_versions)
+        _count_mapping(
+            self.expected_counts.to_value(),
+            "final receipt expected counts mismatch",
+        )
+        _count_mapping(
+            self.actual_counts.to_value(),
+            "final receipt actual counts mismatch",
+        )
         _require_digest_match(
             self.to_dict(), "receipt_digest", "final receipt digest mismatch"
         )
@@ -836,10 +1203,37 @@ class FinalExecutionReceiptDTO:
             evidence_digest=_str(
                 payload, "evidence_digest", "final receipt evidence mismatch"
             ),
+            evaluation_digest=_str(
+                payload,
+                "evaluation_digest",
+                "final receipt evaluation mismatch",
+            ),
+            artifact_manifest_digest=_str(
+                payload,
+                "artifact_manifest_digest",
+                "final receipt manifest mismatch",
+            ),
             event_chain_digest=_str(
                 payload, "event_chain_digest", "final receipt event chain mismatch"
             ),
-            measurements=FinalJsonDTO.from_value(payload["measurements"]),
+            decision=_str(payload, "decision", "final receipt decision mismatch"),
+            execution_commit=_str(
+                payload,
+                "execution_commit",
+                "final receipt execution commit mismatch",
+            ),
+            provider_order=_string_tuple(
+                payload["provider_order"],
+                "final receipt provider order mismatch",
+            ),
+            provider_versions=FinalJsonDTO.from_value(payload["provider_versions"]),
+            expected_counts=FinalJsonDTO.from_value(payload["expected_counts"]),
+            actual_counts=FinalJsonDTO.from_value(payload["actual_counts"]),
+            historical_authority_digest=_str(
+                payload,
+                "historical_authority_digest",
+                "final receipt historical authority mismatch",
+            ),
             receipt_digest=_str(
                 payload, "receipt_digest", "final receipt digest mismatch"
             ),
@@ -857,8 +1251,16 @@ class FinalExecutionReceiptDTO:
             "protocol_digest": self.protocol_digest,
             "authorization_digest": self.authorization_digest,
             "evidence_digest": self.evidence_digest,
+            "evaluation_digest": self.evaluation_digest,
+            "artifact_manifest_digest": self.artifact_manifest_digest,
             "event_chain_digest": self.event_chain_digest,
-            "measurements": self.measurements.to_value(),
+            "decision": self.decision,
+            "execution_commit": self.execution_commit,
+            "provider_order": list(self.provider_order),
+            "provider_versions": self.provider_versions.to_value(),
+            "expected_counts": self.expected_counts.to_value(),
+            "actual_counts": self.actual_counts.to_value(),
+            "historical_authority_digest": self.historical_authority_digest,
             "receipt_digest": self.receipt_digest,
         }
 
@@ -984,6 +1386,46 @@ def validate_final_access_transition(
         raise VPMValidationError("final access state transition mismatch")
 
 
+def validate_final_access_event(
+    previous_state: str | None,
+    new_state: str,
+    kind: object,
+) -> None:
+    if previous_state == new_state:
+        allowed = (
+            previous_state == "running"
+            and isinstance(kind, str)
+            and kind in {
+                "final_materialization_started",
+                "final_materialization_completed",
+                "provider_scoring_started",
+                "provider_scoring_completed",
+                "reachability_started",
+                "reachability_completed",
+                "evaluation_started",
+                "evaluation_completed",
+                "staged_artifact_generation_started",
+                "staged_artifact_generation_completed",
+                "artifact_validation_started",
+                "artifact_validation_completed",
+                "promotion_started",
+                "promotion_completed",
+            }
+        ) or (
+            previous_state == "completed"
+            and isinstance(kind, str)
+            and kind
+            in {
+                "receipt_publication_started",
+                "receipt_publication_completed",
+            }
+        )
+        if not allowed:
+            raise VPMValidationError("final access event kind mismatch")
+        return
+    validate_final_access_transition(previous_state, new_state)
+
+
 def event_chain_digest(events: tuple[FinalAccessEventDTO, ...]) -> str:
     return canonical_sha256([event.to_dict() for event in events])
 
@@ -1065,19 +1507,120 @@ def _require_digest_match(
         raise VPMValidationError(message)
 
 
+def validate_final_identifier(value: str, message: str) -> None:
+    if not value or FINAL_IDENTIFIER_RE.fullmatch(value) is None:
+        raise VPMValidationError(message)
+
+
+def _string_tuple(value: object, message: str) -> tuple[str, ...]:
+    if not isinstance(value, list) or not value:
+        raise VPMValidationError(message)
+    result = tuple(value)
+    if any(not isinstance(item, str) or not item for item in result):
+        raise VPMValidationError(message)
+    if len(set(result)) != len(result):
+        raise VPMValidationError(message)
+    return cast(tuple[str, ...], result)
+
+
+def _validate_provider_contract(
+    provider_order: tuple[str, ...],
+    provider_versions: FinalJsonDTO,
+) -> None:
+    if not provider_order or len(set(provider_order)) != len(provider_order):
+        raise VPMValidationError("final evidence provider order mismatch")
+    for provider_id in provider_order:
+        validate_final_identifier(
+            provider_id,
+            "final evidence provider order mismatch",
+        )
+    versions = provider_versions.to_value()
+    if not isinstance(versions, Mapping) or set(versions) != set(provider_order):
+        raise VPMValidationError("final evidence provider versions mismatch")
+    if any(not isinstance(value, str) or not value for value in versions.values()):
+        raise VPMValidationError("final evidence provider versions mismatch")
+
+
+def _count_mapping(value: object, message: str) -> dict[str, int]:
+    if not isinstance(value, Mapping) or set(value) != set(FINAL_COUNT_KEYS):
+        raise VPMValidationError(message)
+    result: dict[str, int] = {}
+    for key in FINAL_COUNT_KEYS:
+        item = value[key]
+        if not isinstance(item, int) or isinstance(item, bool) or item < 0:
+            raise VPMValidationError(message)
+        result[key] = item
+    return result
+
+
+def _evidence_rows(value: object, message: str) -> list[dict[str, object]]:
+    if not isinstance(value, list):
+        raise VPMValidationError(message)
+    result: list[dict[str, object]] = []
+    for item in value:
+        if not isinstance(item, Mapping) or set(item) != set(FINAL_EVIDENCE_ROW_KEYS):
+            raise VPMValidationError(message)
+        row = dict(item)
+        for key in ("family_id", "episode_id", "frame_id", "provider_id"):
+            field = row[key]
+            if not isinstance(field, str):
+                raise VPMValidationError(message)
+            validate_final_identifier(field, message)
+        ordinal = row["frame_ordinal"]
+        if not isinstance(ordinal, int) or isinstance(ordinal, bool) or ordinal < 0:
+            raise VPMValidationError(message)
+        if row["split"] != "final":
+            raise VPMValidationError("final evaluation evidence split mismatch")
+        metrics = row["metrics"]
+        if not isinstance(metrics, Mapping) or not metrics:
+            raise VPMValidationError(message)
+        if any(not isinstance(key, str) or not key for key in metrics):
+            raise VPMValidationError(message)
+        result.append(row)
+    return result
+
+
+def _canonical_evidence_rows(
+    rows: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    return sorted(
+        rows,
+        key=lambda row: (
+            cast(str, row["family_id"]),
+            cast(str, row["episode_id"]),
+            cast(int, row["frame_ordinal"]),
+            cast(str, row["frame_id"]),
+            cast(str, row["provider_id"]),
+        ),
+    )
+
+
+def _actual_counts(rows: list[dict[str, object]]) -> dict[str, int]:
+    return {
+        "evidence_row_count": len(rows),
+        "episode_count": len({cast(str, row["episode_id"]) for row in rows}),
+        "frame_count": len({cast(str, row["frame_id"]) for row in rows}),
+        "provider_count": len({cast(str, row["provider_id"]) for row in rows}),
+    }
+
+
 __all__ = [
     "FINAL_ACCESS_EVENT_VERSION",
     "FINAL_ACCESS_RECORD_VERSION",
     "FINAL_ACCESS_STATES",
     "FINAL_ACCESS_TERMINAL_STATES",
+    "FINAL_EVIDENCE_BUNDLE_VERSION",
     "FINAL_EVALUATION_PROTOCOL_VERSION",
+    "FINAL_EVALUATION_RESULT_VERSION",
     "FINAL_EXECUTION_AUTHORIZATION_VERSION",
     "FINAL_EXECUTION_FAILURE_VERSION",
     "FINAL_EXECUTION_RECEIPT_VERSION",
     "FINAL_EXECUTION_REQUEST_VERSION",
     "FinalAccessEventDTO",
     "FinalAccessRecordDTO",
+    "FinalEvidenceBundleDTO",
     "FinalEvaluationProtocolDTO",
+    "FinalEvaluationResultDTO",
     "FinalExecutionAuthorizationDTO",
     "FinalExecutionFailureDTO",
     "FinalExecutionReceiptDTO",
@@ -1087,4 +1630,6 @@ __all__ = [
     "event_chain_digest",
     "json_text",
     "validate_final_access_transition",
+    "validate_final_access_event",
+    "validate_final_identifier",
 ]

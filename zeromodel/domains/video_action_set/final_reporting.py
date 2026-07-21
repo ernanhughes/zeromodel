@@ -3,7 +3,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...artifact import VPMValidationError
-from .final_access_dto import FinalExecutionReceiptDTO
+from .canonical_json import canonical_sha256
+from .final_access_dto import FinalEvaluationResultDTO, FinalExecutionReceiptDTO
+from .final_claims import validate_receipt_evaluation_binding
 
 
 FINAL_REPORT_VERSION = "zeromodel-video-final-report/v1"
@@ -12,17 +14,31 @@ FINAL_REPORT_VERSION = "zeromodel-video-final-report/v1"
 def generate_final_report(
     *,
     receipt: FinalExecutionReceiptDTO,
-    evaluation_result: Mapping[str, object],
+    evaluation_result: FinalEvaluationResultDTO,
     claim_registry: Mapping[str, object],
 ) -> str:
     if receipt.state != "completed":
         raise VPMValidationError("final report requires a completed receipt")
-    decision = evaluation_result.get("decision")
-    if decision not in {"passed", "failed", "indeterminate"}:
+    if not isinstance(evaluation_result, FinalEvaluationResultDTO):
         raise VPMValidationError("final evaluation result mismatch")
+    validate_receipt_evaluation_binding(receipt, evaluation_result)
+    decision = evaluation_result.decision
     claim_digest = claim_registry.get("claim_registry_digest")
     if not isinstance(claim_digest, str):
         raise VPMValidationError("final claim registry mismatch")
+    claim_payload = {
+        key: value
+        for key, value in claim_registry.items()
+        if key != "claim_registry_digest"
+    }
+    if (
+        canonical_sha256(claim_payload) != claim_digest
+        or claim_registry.get("receipt_digest") != receipt.receipt_digest
+        or claim_registry.get("evaluation_digest")
+        != evaluation_result.evaluation_digest
+        or claim_registry.get("decision") != decision
+    ):
+        raise VPMValidationError("final claim registry binding mismatch")
     lines = [
         f"# Video Action-Set Final Report ({FINAL_REPORT_VERSION})",
         "",

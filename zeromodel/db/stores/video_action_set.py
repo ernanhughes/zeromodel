@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import cast
 
-from sqlalchemy import select
+from sqlalchemy import Engine, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from ...artifact import VPMValidationError
@@ -18,10 +18,10 @@ from ...domains.video_action_set.final_access_dto import (
     FINAL_ACCESS_TERMINAL_STATES,
     FinalAccessEventDTO,
     FinalAccessRecordDTO,
+    FinalEvaluationProtocolDTO,
     FinalExecutionAuthorizationDTO,
     FinalExecutionFailureDTO,
-    FinalExecutionReceiptDTO,
-    validate_final_access_transition,
+    validate_final_access_event,
 )
 from ...domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
@@ -48,6 +48,7 @@ from ..orm.video_action_set import (
     FinalAccessAuthorizationORM,
     FinalAccessEventORM,
     FinalAccessRecordORM,
+    FinalEvaluationProtocolORM,
     MatrixBlobORM,
     ObservationORM,
     ObservationOperationInputORM,
@@ -475,8 +476,14 @@ class _ObservationSqlStoreMixin:
 
 
 class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetStore):
-    def __init__(self, session_factory: sessionmaker[Session]) -> None:
+    def __init__(
+        self,
+        session_factory: sessionmaker[Session],
+        *,
+        finalization_engine: Engine | None = None,
+    ) -> None:
         self._session_factory = session_factory
+        self._finalization_engine = finalization_engine
 
     def save_identity(self, identity: BenchmarkIdentityDTO) -> BenchmarkIdentityDTO:
         session = self._session_factory()
@@ -614,13 +621,20 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
     def create_final_authorization(
         self,
         authorization: FinalExecutionAuthorizationDTO,
+        protocol: FinalEvaluationProtocolDTO,
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
     ) -> FinalAccessRecordDTO:
+        self.assert_finalization_authority()
         session = self._session_factory()
         try:
             with session.begin():
                 if authorization.authorization_status != "authorized":
+                    raise_final_access_authorization()
+                if (
+                    not protocol.approved
+                    or protocol.protocol_digest != authorization.protocol_digest
+                ):
                     raise_final_access_authorization()
                 if authorization.authorization_id != record.authorization_id:
                     raise_final_access_authorization()
@@ -651,6 +665,15 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
                     event,
                     expected_previous=None,
                 )
+                existing_protocol = session.get(
+                    FinalEvaluationProtocolORM,
+                    protocol.protocol_digest,
+                )
+                if existing_protocol is None:
+                    session.add(self._to_final_protocol_orm(protocol))
+                    session.flush()
+                elif self._to_final_protocol_dto(existing_protocol) != protocol:
+                    raise_final_access_conflict()
                 session.add(self._to_final_authorization_orm(authorization))
                 session.add(self._to_final_record_orm(record))
                 session.flush()
@@ -662,10 +685,36 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
         finally:
             session.close()
 
+    def assert_finalization_authority(self) -> None:
+        if self._finalization_engine is None:
+            raise VPMValidationError(
+                "final access requires a dedicated finalization database"
+            )
+        from ..session import verify_finalization_authority
+
+        verify_finalization_authority(self._finalization_engine)
+
+    def load_final_evaluation_protocol(
+        self,
+        protocol_digest: str,
+    ) -> FinalEvaluationProtocolDTO | None:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(FinalEvaluationProtocolORM, protocol_digest)
+                return None if row is None else self._to_final_protocol_dto(row)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
     def load_final_authorization(
         self,
         authorization_id: str,
     ) -> FinalExecutionAuthorizationDTO | None:
+        self.assert_finalization_authority()
         session = self._session_factory()
         try:
             with session.begin():
@@ -681,6 +730,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
         self,
         access_id: str,
     ) -> FinalAccessRecordDTO | None:
+        self.assert_finalization_authority()
         session = self._session_factory()
         try:
             with session.begin():
@@ -696,6 +746,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
         self,
         access_id: str,
     ) -> tuple[FinalAccessEventDTO, ...]:
+        self.assert_finalization_authority()
         session = self._session_factory()
         try:
             with session.begin():
@@ -720,13 +771,19 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
     ) -> FinalAccessRecordDTO:
         return self._transition_final_access(record, event)
 
+    def append_final_access_event(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
     def complete_final_access(
         self,
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
-        receipt: FinalExecutionReceiptDTO,
     ) -> FinalAccessRecordDTO:
-        if receipt.access_id != record.access_id or receipt.state != "completed":
+        if record.state != "completed":
             raise_final_access_state()
         return self._transition_final_access(record, event)
 
@@ -966,6 +1023,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
     ) -> FinalAccessRecordDTO:
+        self.assert_finalization_authority()
         session = self._session_factory()
         try:
             with session.begin():
@@ -980,7 +1038,29 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
                     event,
                     expected_previous=existing,
                 )
-                self._update_final_record_row(row, record)
+                result = session.execute(
+                    update(FinalAccessRecordORM)
+                    .where(
+                        FinalAccessRecordORM.access_id == record.access_id,
+                        FinalAccessRecordORM.state == existing.state,
+                        FinalAccessRecordORM.current_event_ordinal
+                        == existing.current_event_ordinal,
+                        FinalAccessRecordORM.last_event_digest
+                        == existing.last_event_digest,
+                        FinalAccessRecordORM.record_digest == existing.record_digest,
+                    )
+                    .values(
+                        state=record.state,
+                        updated_utc=record.updated_utc,
+                        process_identity=record.process_identity,
+                        current_event_ordinal=record.current_event_ordinal,
+                        last_event_digest=record.last_event_digest,
+                        record_digest=record.record_digest,
+                        payload_json=canonical_json_text(record.to_dict()),
+                    )
+                )
+                if result.rowcount != 1:
+                    raise_final_access_state()
                 session.add(self._to_final_event_orm(event))
                 return record
         except Exception:
@@ -1010,11 +1090,24 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             or record.last_event_digest != event.event_digest
         ):
             raise_final_access_state()
-        validate_final_access_transition(previous_state, record.state)
+        payload = event.event_payload.to_value()
+        kind = payload.get("kind") if isinstance(payload, Mapping) else None
+        validate_final_access_event(previous_state, record.state, kind)
         events = self._final_events_for_session(session, record.access_id)
-        if event.ordinal != len(events):
+        expected_ordinal = (
+            -1 if expected_previous is None else expected_previous.current_event_ordinal
+        )
+        if (
+            event.ordinal != len(events)
+            or event.ordinal != expected_ordinal + 1
+            or record.current_event_ordinal != event.ordinal
+        ):
             raise_final_access_state()
-        if expected_previous is not None and previous_state in FINAL_ACCESS_TERMINAL_STATES:
+        if (
+            expected_previous is not None
+            and previous_state in FINAL_ACCESS_TERMINAL_STATES
+            and record.state != previous_state
+        ):
             raise_final_access_state()
 
     @staticmethod
@@ -1032,6 +1125,36 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             or existing.created_utc != record.created_utc
         ):
             raise_final_access_conflict()
+
+    @staticmethod
+    def _to_final_protocol_orm(
+        protocol: FinalEvaluationProtocolDTO,
+    ) -> FinalEvaluationProtocolORM:
+        return FinalEvaluationProtocolORM(
+            protocol_digest=protocol.protocol_digest,
+            protocol_id=protocol.protocol_id,
+            protocol_status=protocol.protocol_status,
+            benchmark_seed_digest=protocol.benchmark_seed_digest,
+            sealed_plan_digest=protocol.sealed_plan_digest,
+            payload_json=canonical_json_text(protocol.to_dict()),
+        )
+
+    @staticmethod
+    def _to_final_protocol_dto(
+        row: FinalEvaluationProtocolORM,
+    ) -> FinalEvaluationProtocolDTO:
+        dto = FinalEvaluationProtocolDTO.from_dict(
+            _json_mapping(row.payload_json, "final protocol digest mismatch")
+        )
+        if (
+            row.protocol_digest != dto.protocol_digest
+            or row.protocol_id != dto.protocol_id
+            or row.protocol_status != dto.protocol_status
+            or row.benchmark_seed_digest != dto.benchmark_seed_digest
+            or row.sealed_plan_digest != dto.sealed_plan_digest
+        ):
+            raise VPMValidationError("final protocol digest mismatch")
+        return dto
 
     @staticmethod
     def _to_final_authorization_orm(
@@ -1083,6 +1206,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             created_utc=record.created_utc,
             updated_utc=record.updated_utc,
             process_identity=record.process_identity,
+            current_event_ordinal=record.current_event_ordinal,
             last_event_digest=record.last_event_digest,
             record_digest=record.record_digest,
             payload_json=canonical_json_text(record.to_dict()),
@@ -1104,6 +1228,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             or row.created_utc != dto.created_utc
             or row.updated_utc != dto.updated_utc
             or row.process_identity != dto.process_identity
+            or row.current_event_ordinal != dto.current_event_ordinal
             or row.last_event_digest != dto.last_event_digest
             or row.record_digest != dto.record_digest
         ):
@@ -1118,6 +1243,7 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
         row.state = record.state
         row.updated_utc = record.updated_utc
         row.process_identity = record.process_identity
+        row.current_event_ordinal = record.current_event_ordinal
         row.last_event_digest = record.last_event_digest
         row.record_digest = record.record_digest
         row.payload_json = canonical_json_text(record.to_dict())

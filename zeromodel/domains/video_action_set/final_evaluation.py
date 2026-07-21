@@ -1,141 +1,253 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import Any
+from decimal import Decimal, InvalidOperation
+import re
+from typing import cast
 
 from ...artifact import VPMValidationError
-from .canonical_json import canonical_sha256
-from .final_access_dto import FinalEvaluationProtocolDTO
+from .final_access_dto import (
+    FINAL_EVALUATION_RESULT_VERSION,
+    FinalEvaluationProtocolDTO,
+    FinalEvaluationResultDTO,
+    FinalEvidenceBundleDTO,
+)
 
 
-FINAL_EVALUATION_RESULT_VERSION = "zeromodel-video-final-evaluation-result/v1"
 FORBIDDEN_DECISION_PHASES = frozenset(
     {"development", "calibration", "selection", "tuning", "candidate_selection"}
 )
+DECISION_RULE_KEYS = frozenset(
+    {"kind", "aggregate", "metric_id", "operator", "threshold"}
+)
+REQUIRED_EVIDENCE_KEYS = frozenset({"provider_id", "expected_row_count"})
+DECIMAL_RE = re.compile(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
 
 
 def evaluate_final_protocol(
     protocol: FinalEvaluationProtocolDTO,
-    evidence_rows: Sequence[Mapping[str, object]],
-    *,
-    benchmark_seed_digest: str,
-    sealed_plan_digest: str,
-) -> dict[str, Any]:
-    """Evaluate final evidence against an already-approved deterministic protocol."""
+    evidence: FinalEvidenceBundleDTO,
+) -> FinalEvaluationResultDTO:
+    """Evaluate canonical final evidence with exact decimal threshold semantics.
+
+    Rows are already sorted by the evidence DTO's stable identity. Numeric inputs
+    are integers or decimal strings; binary floats are rejected. ``gte`` and
+    ``lte`` include threshold equality.
+    """
 
     if not protocol.approved:
         raise VPMValidationError("final evaluation protocol is not approved")
-    if protocol.benchmark_seed_digest != benchmark_seed_digest:
+    if protocol.protocol_digest != evidence.protocol_digest:
+        raise VPMValidationError("final evaluation protocol mismatch")
+    if protocol.benchmark_seed_digest != evidence.benchmark_seed_digest:
         raise VPMValidationError("final evaluation benchmark identity mismatch")
-    if protocol.sealed_plan_digest != sealed_plan_digest:
+    if protocol.sealed_plan_digest != evidence.sealed_plan_digest:
         raise VPMValidationError("final evaluation sealed plan mismatch")
-    decision_rule = _mapping(
+
+    decision_rule = _exact_mapping(
         protocol.decision_rule.to_value(),
+        DECISION_RULE_KEYS,
         "final decision rule mismatch",
     )
-    required = _mapping(
+    required = _exact_mapping(
         protocol.required_evidence.to_value(),
+        REQUIRED_EVIDENCE_KEYS,
         "final required evidence mismatch",
     )
     _reject_tuning_or_selection(decision_rule)
     _reject_tuning_or_selection(required)
-    _validate_evidence_rows(evidence_rows)
-    provider_id = _optional_str(required.get("provider_id"))
-    metric_id = _required_str(decision_rule.get("metric_id"), "final metric mismatch")
-    expected_count = _optional_nonnegative_int(required.get("expected_row_count"))
-    rows = tuple(
-        row
-        for row in evidence_rows
-        if provider_id is None or row.get("provider_id") == provider_id
+    if decision_rule["kind"] != "fixed_metric_threshold":
+        raise VPMValidationError("final decision rule kind mismatch")
+    aggregate_kind = _required_str(
+        decision_rule["aggregate"],
+        "final decision aggregate mismatch",
     )
-    if expected_count is not None and len(rows) != expected_count:
+    if aggregate_kind not in {"mean", "minimum", "maximum"}:
+        raise VPMValidationError("final decision aggregate mismatch")
+    operator = _required_str(
+        decision_rule["operator"],
+        "final decision operator mismatch",
+    )
+    if operator not in {"gte", "lte"}:
+        raise VPMValidationError("final decision operator mismatch")
+    metric_id = _required_str(
+        decision_rule["metric_id"],
+        "final metric mismatch",
+    )
+    threshold = _decimal(decision_rule["threshold"], "final threshold mismatch")
+    provider_id = _required_str(
+        required["provider_id"],
+        "final required evidence mismatch",
+    )
+    expected_count = _nonnegative_int(
+        required["expected_row_count"],
+        "final required evidence mismatch",
+    )
+
+    rows_value = evidence.rows.to_value()
+    if not isinstance(rows_value, list):
+        raise VPMValidationError("final evidence rows mismatch")
+    rows = tuple(
+        cast(Mapping[str, object], row)
+        for row in rows_value
+        if isinstance(row, Mapping) and row.get("provider_id") == provider_id
+    )
+    actual_counts = evidence.actual_counts.to_value()
+    if len(rows) != expected_count:
         return _result(
-            protocol,
-            "indeterminate",
-            {
-                "reason": "incomplete_final_evidence",
+            protocol=protocol,
+            evidence=evidence,
+            decision="indeterminate",
+            descriptive_measurements={
+                "provider_id": provider_id,
+                "metric_id": metric_id,
                 "expected_row_count": expected_count,
                 "actual_row_count": len(rows),
             },
+            family_measurements=[],
+            rejections=[],
+            indeterminate_reasons=["incomplete_final_evidence"],
+            actual_counts=cast(Mapping[str, object], actual_counts),
         )
-    values = tuple(_metric_value(row, metric_id) for row in rows)
+
+    values_by_family: dict[str, list[Decimal]] = defaultdict(list)
+    values: list[Decimal] = []
+    for row in rows:
+        family_id = _required_str(row.get("family_id"), "final family id mismatch")
+        value = _metric_value(row, metric_id)
+        values.append(value)
+        values_by_family[family_id].append(value)
     if not values:
         return _result(
-            protocol,
-            "indeterminate",
-            {"reason": "missing_final_metric", "metric_id": metric_id},
+            protocol=protocol,
+            evidence=evidence,
+            decision="indeterminate",
+            descriptive_measurements={
+                "provider_id": provider_id,
+                "metric_id": metric_id,
+                "expected_row_count": expected_count,
+                "actual_row_count": 0,
+            },
+            family_measurements=[],
+            rejections=[],
+            indeterminate_reasons=["missing_final_metric"],
+            actual_counts=cast(Mapping[str, object], actual_counts),
         )
-    aggregate = _aggregate(values, decision_rule)
-    threshold = _number(decision_rule.get("threshold"), "final threshold mismatch")
-    operator = _required_str(
-        decision_rule.get("operator"),
-        "final decision operator mismatch",
-    )
-    if operator == "gte":
-        passed = aggregate >= threshold
-    elif operator == "lte":
-        passed = aggregate <= threshold
-    else:
-        raise VPMValidationError("final decision operator mismatch")
-    return _result(
-        protocol,
-        "passed" if passed else "failed",
+
+    aggregate = _aggregate(values, aggregate_kind)
+    passed = aggregate >= threshold if operator == "gte" else aggregate <= threshold
+    family_measurements = [
         {
+            "family_id": family_id,
+            "row_count": len(family_values),
+            "aggregate": _decimal_text(_aggregate(family_values, aggregate_kind)),
+        }
+        for family_id, family_values in sorted(values_by_family.items())
+    ]
+    return _result(
+        protocol=protocol,
+        evidence=evidence,
+        decision="passed" if passed else "failed",
+        descriptive_measurements={
             "provider_id": provider_id,
             "metric_id": metric_id,
             "row_count": len(rows),
-            "aggregate": aggregate,
+            "aggregate_kind": aggregate_kind,
+            "aggregate": _decimal_text(aggregate),
             "operator": operator,
-            "threshold": threshold,
+            "threshold": _decimal_text(threshold),
+            "threshold_equality": "inclusive",
         },
+        family_measurements=family_measurements,
+        rejections=[] if passed else ["fixed_threshold_not_met"],
+        indeterminate_reasons=[],
+        actual_counts=cast(Mapping[str, object], actual_counts),
     )
 
 
 def _result(
+    *,
     protocol: FinalEvaluationProtocolDTO,
+    evidence: FinalEvidenceBundleDTO,
     decision: str,
-    measurements: Mapping[str, object],
-) -> dict[str, Any]:
-    payload = {
-        "version": FINAL_EVALUATION_RESULT_VERSION,
-        "protocol_digest": protocol.protocol_digest,
-        "decision": decision,
-        "measurements": dict(measurements),
-    }
-    return payload | {"evaluation_digest": canonical_sha256(payload)}
-
-
-def _aggregate(values: Sequence[float], decision_rule: Mapping[str, object]) -> float:
-    aggregate = _required_str(
-        decision_rule.get("aggregate"),
-        "final decision aggregate mismatch",
+    descriptive_measurements: Mapping[str, object],
+    family_measurements: Sequence[Mapping[str, object]],
+    rejections: Sequence[str],
+    indeterminate_reasons: Sequence[str],
+    actual_counts: Mapping[str, object],
+) -> FinalEvaluationResultDTO:
+    return FinalEvaluationResultDTO.create(
+        {
+            "version": FINAL_EVALUATION_RESULT_VERSION,
+            "protocol_digest": protocol.protocol_digest,
+            "evidence_digest": evidence.evidence_digest,
+            "decision": decision,
+            "descriptive_measurements": dict(descriptive_measurements),
+            "family_measurements": [dict(item) for item in family_measurements],
+            "rejections": list(rejections),
+            "indeterminate_reasons": list(indeterminate_reasons),
+            "actual_counts": dict(actual_counts),
+        }
     )
-    if aggregate == "mean":
-        return sum(values) / len(values)
-    if aggregate == "minimum":
+
+
+def _aggregate(values: Sequence[Decimal], kind: str) -> Decimal:
+    if kind == "mean":
+        return sum(values, Decimal(0)) / Decimal(len(values))
+    if kind == "minimum":
         return min(values)
-    if aggregate == "maximum":
+    if kind == "maximum":
         return max(values)
     raise VPMValidationError("final decision aggregate mismatch")
 
 
-def _metric_value(row: Mapping[str, object], metric_id: str) -> float:
+def _metric_value(row: Mapping[str, object], metric_id: str) -> Decimal:
     metrics = row.get("metrics")
-    if isinstance(metrics, Mapping) and metric_id in metrics:
-        return _number(metrics[metric_id], "final metric mismatch")
-    if metric_id in row:
-        return _number(row[metric_id], "final metric mismatch")
-    raise VPMValidationError("final metric mismatch")
+    if not isinstance(metrics, Mapping) or metric_id not in metrics:
+        raise VPMValidationError("final metric mismatch")
+    return _decimal(metrics[metric_id], "final metric mismatch")
 
 
-def _validate_evidence_rows(rows: Sequence[Mapping[str, object]]) -> None:
-    for row in rows:
-        split = row.get("split")
-        if split != "final":
-            raise VPMValidationError("final evaluation evidence split mismatch")
-        phase = row.get("phase")
-        if isinstance(phase, str) and phase in FORBIDDEN_DECISION_PHASES:
-            raise VPMValidationError("final evaluation refuses tuning or selection")
+def _decimal(value: object, message: str) -> Decimal:
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise VPMValidationError(message)
+    text = str(value)
+    if DECIMAL_RE.fullmatch(text) is None:
+        raise VPMValidationError(message)
+    try:
+        return Decimal(text)
+    except InvalidOperation as exc:
+        raise VPMValidationError(message) from exc
+
+
+def _decimal_text(value: Decimal) -> str:
+    if value == 0:
+        return "0"
+    text = format(value.normalize(), "f")
+    return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+def _exact_mapping(
+    value: object,
+    keys: frozenset[str],
+    message: str,
+) -> Mapping[str, object]:
+    if not isinstance(value, Mapping) or set(value) != keys:
+        raise VPMValidationError(message)
+    return value
+
+
+def _required_str(value: object, message: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise VPMValidationError(message)
+    return value
+
+
+def _nonnegative_int(value: object, message: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise VPMValidationError(message)
+    return value
 
 
 def _reject_tuning_or_selection(value: object) -> None:
@@ -148,50 +260,11 @@ def _reject_tuning_or_selection(value: object) -> None:
                 "candidate_selection",
                 "operating_point_selection",
             }:
-                raise VPMValidationError(
-                    "final evaluation refuses tuning or selection"
-                )
+                raise VPMValidationError("final evaluation refuses tuning or selection")
             _reject_tuning_or_selection(item)
     elif isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         for item in value:
             _reject_tuning_or_selection(item)
-
-
-def _mapping(value: object, message: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise VPMValidationError(message)
-    return value
-
-
-def _required_str(value: object, message: str) -> str:
-    if not isinstance(value, str):
-        raise VPMValidationError(message)
-    return value
-
-
-def _optional_str(value: object) -> str | None:
-    if value is None:
-        return None
-    if not isinstance(value, str):
-        raise VPMValidationError("final required evidence mismatch")
-    return value
-
-
-def _optional_nonnegative_int(value: object) -> int | None:
-    if value is None:
-        return None
-    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-        raise VPMValidationError("final required evidence mismatch")
-    return value
-
-
-def _number(value: object, message: str) -> float:
-    if not isinstance(value, (int, float)) or isinstance(value, bool):
-        raise VPMValidationError(message)
-    result = float(value)
-    if result != result or result in {float("inf"), float("-inf")}:
-        raise VPMValidationError(message)
-    return result
 
 
 __all__ = [

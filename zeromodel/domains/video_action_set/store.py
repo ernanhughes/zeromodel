@@ -9,9 +9,9 @@ from .dto import BenchmarkIdentityDTO, EpisodePlanDTO, SealedSplitPlanDTO
 from .final_access_dto import (
     FinalAccessEventDTO,
     FinalAccessRecordDTO,
+    FinalEvaluationProtocolDTO,
     FinalExecutionAuthorizationDTO,
     FinalExecutionFailureDTO,
-    FinalExecutionReceiptDTO,
 )
 from .observation_dto import (
     MaterializedObservationDTO,
@@ -174,9 +174,17 @@ class VideoActionSetStore(Protocol):
     def create_final_authorization(
         self,
         authorization: FinalExecutionAuthorizationDTO,
+        protocol: FinalEvaluationProtocolDTO,
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
     ) -> FinalAccessRecordDTO: ...
+
+    def assert_finalization_authority(self) -> None: ...
+
+    def load_final_evaluation_protocol(
+        self,
+        protocol_digest: str,
+    ) -> FinalEvaluationProtocolDTO | None: ...
 
     def load_final_authorization(
         self,
@@ -205,11 +213,16 @@ class VideoActionSetStore(Protocol):
         event: FinalAccessEventDTO,
     ) -> FinalAccessRecordDTO: ...
 
+    def append_final_access_event(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO: ...
+
     def complete_final_access(
         self,
         record: FinalAccessRecordDTO,
         event: FinalAccessEventDTO,
-        receipt: FinalExecutionReceiptDTO,
     ) -> FinalAccessRecordDTO: ...
 
     def fail_final_access(

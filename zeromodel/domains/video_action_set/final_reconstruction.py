@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
 import hashlib
 from pathlib import Path
@@ -29,13 +30,13 @@ def reconstruct_final_access_ledger(
     if record is None:
         raise VPMValidationError("final access record is missing")
     events = store.list_final_access_events(access_id)
-    _validate_event_chain(record, events)
+    chain_digest = validate_final_access_event_chain(record, events)
     payload = {
         "version": FINAL_RECONSTRUCTION_VERSION,
         "record": record.to_dict(),
         "events": [event.to_dict() for event in events],
         "counters": final_access_counters_from_events(events),
-        "event_chain_digest": event_chain_digest(events),
+        "event_chain_digest": chain_digest,
     }
     return payload | {"reconstruction_digest": canonical_sha256(payload)}
 
@@ -43,43 +44,18 @@ def reconstruct_final_access_ledger(
 def final_access_counters_from_events(
     events: Sequence[FinalAccessEventDTO],
 ) -> dict[str, int]:
-    counters = {
-        "authorization_created_count": 0,
-        "reservation_count": 0,
-        "running_count": 0,
-        "completion_count": 0,
-        "failure_count": 0,
-        "interruption_count": 0,
-        "final_materialization_event_count": 0,
-        "final_provider_score_event_count": 0,
-        "final_reachability_event_count": 0,
-        "final_evaluation_event_count": 0,
-    }
+    """Return only counters supported by durable events actually present."""
+
+    counts: Counter[str] = Counter()
     for event in events:
-        if event.new_state == "authorized":
-            counters["authorization_created_count"] += 1
-        elif event.new_state == "reserved":
-            counters["reservation_count"] += 1
-        elif event.new_state == "running":
-            counters["running_count"] += 1
-        elif event.new_state == "completed":
-            counters["completion_count"] += 1
-        elif event.new_state == "failed":
-            counters["failure_count"] += 1
-        elif event.new_state == "interrupted":
-            counters["interruption_count"] += 1
+        counts[f"state_{event.new_state}_event_count"] += 1
         payload = event.event_payload.to_value()
         if isinstance(payload, Mapping):
             kind = payload.get("kind")
-            if kind == "final_materialization":
-                counters["final_materialization_event_count"] += 1
-            elif kind == "final_provider_score":
-                counters["final_provider_score_event_count"] += 1
-            elif kind == "final_reachability":
-                counters["final_reachability_event_count"] += 1
-            elif kind == "final_evaluation":
-                counters["final_evaluation_event_count"] += 1
-    return counters
+            if isinstance(kind, str):
+                counts[f"{kind}_count"] += 1
+    counts["durable_event_count"] = len(events)
+    return dict(sorted(counts.items()))
 
 
 def build_post_final_immutability_manifest(
@@ -88,7 +64,7 @@ def build_post_final_immutability_manifest(
     events: Sequence[FinalAccessEventDTO],
     artifact_digests: Mapping[str, str],
 ) -> dict[str, Any]:
-    _validate_event_chain(access_record, tuple(events))
+    chain_digest = validate_final_access_event_chain(access_record, tuple(events))
     payload = {
         "version": POST_FINAL_IMMUTABILITY_MANIFEST_VERSION,
         "access_id": access_record.access_id,
@@ -96,7 +72,7 @@ def build_post_final_immutability_manifest(
         "state": access_record.state,
         "sealed_plan_digest": access_record.sealed_plan_digest,
         "authorization_digest": access_record.authorization_digest,
-        "event_chain_digest": event_chain_digest(tuple(events)),
+        "event_chain_digest": chain_digest,
         "artifact_digests": dict(sorted(artifact_digests.items())),
     }
     return payload | {"manifest_digest": canonical_sha256(payload)}
@@ -109,27 +85,47 @@ def digest_files(paths: Sequence[Path]) -> dict[str, str]:
     }
 
 
-def _validate_event_chain(
+def validate_final_access_event_chain(
     record: FinalAccessRecordDTO,
     events: Sequence[FinalAccessEventDTO],
-) -> None:
+) -> str:
     if not events:
         raise VPMValidationError("final access event chain is empty")
+    canonical_events: list[FinalAccessEventDTO] = []
     previous_digest: str | None = None
     previous_state: str | None = None
     for ordinal, event in enumerate(events):
-        if event.access_id != record.access_id:
+        canonical = FinalAccessEventDTO.from_dict(event.to_dict())
+        if (
+            canonical.access_id != record.access_id
+            or canonical.authorization_id != record.authorization_id
+            or canonical.ordinal != ordinal
+            or canonical.previous_event_digest != previous_digest
+            or canonical.previous_state != previous_state
+        ):
             raise VPMValidationError("final access event chain mismatch")
-        if event.ordinal != ordinal:
-            raise VPMValidationError("final access event chain mismatch")
-        if event.previous_event_digest != previous_digest:
-            raise VPMValidationError("final access event chain mismatch")
-        if event.previous_state != previous_state:
-            raise VPMValidationError("final access event chain mismatch")
-        previous_digest = event.event_digest
-        previous_state = event.new_state
-    if record.state != previous_state or record.last_event_digest != previous_digest:
+        if ordinal == 0:
+            payload = canonical.event_payload.to_value()
+            if (
+                canonical.previous_state is not None
+                or canonical.previous_event_digest is not None
+                or canonical.new_state != "authorized"
+                or not isinstance(payload, Mapping)
+                or payload.get("kind") != "authorization_created"
+                or payload.get("authorization_digest")
+                != record.authorization_digest
+            ):
+                raise VPMValidationError("final access event chain genesis mismatch")
+        canonical_events.append(canonical)
+        previous_digest = canonical.event_digest
+        previous_state = canonical.new_state
+    if (
+        record.state != previous_state
+        or record.last_event_digest != previous_digest
+        or record.current_event_ordinal != len(canonical_events) - 1
+    ):
         raise VPMValidationError("final access event chain mismatch")
+    return event_chain_digest(tuple(canonical_events))
 
 
 __all__ = [
@@ -139,4 +135,5 @@ __all__ = [
     "digest_files",
     "final_access_counters_from_events",
     "reconstruct_final_access_ledger",
+    "validate_final_access_event_chain",
 ]

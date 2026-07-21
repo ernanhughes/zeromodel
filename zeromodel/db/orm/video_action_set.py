@@ -107,6 +107,26 @@ class MatrixBlobORM(Base):
     byte_length: Mapped[int] = mapped_column(nullable=False)
 
 
+class FinalizationSchemaORM(Base):
+    __tablename__ = "video_action_set_finalization_schema"
+
+    authority_id: Mapped[str] = mapped_column(String, primary_key=True)
+    schema_version: Mapped[str] = mapped_column(String, nullable=False)
+    authority_kind: Mapped[str] = mapped_column(String, nullable=False)
+    created_utc: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class FinalEvaluationProtocolORM(Base):
+    __tablename__ = "video_action_set_final_evaluation_protocol"
+
+    protocol_digest: Mapped[str] = mapped_column(String, primary_key=True)
+    protocol_id: Mapped[str] = mapped_column(String, nullable=False)
+    protocol_status: Mapped[str] = mapped_column(String, nullable=False)
+    benchmark_seed_digest: Mapped[str] = mapped_column(String, nullable=False)
+    sealed_plan_digest: Mapped[str] = mapped_column(String, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class FinalAccessAuthorizationORM(Base):
     __tablename__ = "video_action_set_final_access_authorization"
     __table_args__ = (
@@ -119,7 +139,12 @@ class FinalAccessAuthorizationORM(Base):
     authorization_id: Mapped[str] = mapped_column(String, primary_key=True)
     authorization_status: Mapped[str] = mapped_column(String, nullable=False)
     authorization_digest: Mapped[str] = mapped_column(String, nullable=False)
-    protocol_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    protocol_digest: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_evaluation_protocol.protocol_digest"),
+        index=True,
+        nullable=False,
+    )
     benchmark_seed_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
     sealed_plan_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
     created_utc: Mapped[str] = mapped_column(String, nullable=False)
@@ -158,11 +183,17 @@ class FinalAccessRecordORM(Base):
     state: Mapped[str] = mapped_column(String, index=True, nullable=False)
     benchmark_seed_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
     sealed_plan_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    protocol_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    protocol_digest: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_evaluation_protocol.protocol_digest"),
+        index=True,
+        nullable=False,
+    )
     authorization_digest: Mapped[str] = mapped_column(String, nullable=False)
     created_utc: Mapped[str] = mapped_column(String, nullable=False)
     updated_utc: Mapped[str] = mapped_column(String, nullable=False)
     process_identity: Mapped[str] = mapped_column(String, nullable=False)
+    current_event_ordinal: Mapped[int] = mapped_column(nullable=False)
     last_event_digest: Mapped[str | None] = mapped_column(String, nullable=True)
     record_digest: Mapped[str] = mapped_column(String, nullable=False)
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import sys
 
-from .db.runtime import build_sqlite_runtime
+from .db.runtime import build_finalization_sqlite_runtime
 from .domains.video_action_set.final_access_dto import (
     FINAL_EXECUTION_REQUEST_VERSION,
     FinalExecutionRequestDTO,
@@ -64,7 +64,13 @@ def main(argv: list[str] | None = None) -> None:
         if confirmation != authorization.operator_confirmation_text:
             raise SystemExit("final execution confirmation mismatch")
     database_url = args.database_path.resolve().as_uri().replace("file:///", "sqlite:///")
-    runtime = build_sqlite_runtime(database_url, initialize_schema=True)
+    initialize_authority = (
+        not args.database_path.exists() or args.database_path.stat().st_size == 0
+    )
+    runtime = build_finalization_sqlite_runtime(
+        database_url,
+        initialize_authority=initialize_authority,
+    )
     payload = runtime.video_action_set.execute_final_once(request)
     print(json.dumps(payload, indent=2, sort_keys=True))
 

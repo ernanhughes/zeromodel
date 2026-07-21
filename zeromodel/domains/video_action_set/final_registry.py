@@ -10,11 +10,11 @@ from .final_access_dto import (
 
 
 class ExternalFinalAccessRegistry(Protocol):
-    """Optional future hook for cross-machine final-access coordination.
+    """Unintegrated extension point for cross-machine reservation authority.
 
-    The repository implements local exactly-once semantics through the durable
-    store. A deployment that needs global coordination can provide this protocol
-    at the boundary without changing scientific execution code.
+    The current orchestration never calls this protocol. Adopting it requires an
+    explicit reservation-flow change and review; implementing the interface alone
+    does not extend local SQLite exactly-once semantics across machines.
     """
 
     def assert_authorization_available(

@@ -41,3 +41,14 @@ def test_pytest_markers_keep_slow_distinct_from_integration() -> None:
         "if (is_integration and not run_integration) or (is_slow and not run_slow):"
         in conftest
     )
+
+
+def test_integration_workflow_supplies_both_opt_in_flags_for_combined_marker() -> None:
+    workflow = (
+        REPO_ROOT / ".github" / "workflows" / "integration.yml"
+    ).read_text(encoding="utf-8")
+    command = workflow.split("python -m pytest -q", 1)[1].split("--durations=50", 1)[0]
+
+    assert '--run-integration' in command
+    assert '--run-slow' in command
+    assert '-m "integration or slow"' in command

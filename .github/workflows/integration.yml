@@ -31,5 +31,6 @@ jobs:
         run: >
           python -m pytest -q
           --run-integration
+          --run-slow
           -m "integration or slow"
           --durations=50

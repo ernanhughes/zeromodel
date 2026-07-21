@@ -6,9 +6,8 @@ from typing import Any, Callable, Mapping, Sequence
 
 from ...artifact import VPMValidationError
 from ...video_prospective_providers import (
-    PROSPECTIVE_P1_VERSION,
-    PROSPECTIVE_P2_VERSION,
-    PROSPECTIVE_P3_VERSION,
+    PROSPECTIVE_PROVIDER_IDS,
+    PROSPECTIVE_PROVIDER_VERSIONS,
     score_b3_joint_fit,
     score_normalized_pixel,
     score_registered_local_correlation,
@@ -27,7 +26,7 @@ from .reachability_composition import (
 
 
 SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
-PROVIDER_SCORE_CALLS_PER_SCOREABLE_FRAME = 3
+PROVIDER_SCORE_CALLS_PER_SCOREABLE_FRAME = len(PROSPECTIVE_PROVIDER_IDS)
 
 
 @dataclass(frozen=True)
@@ -46,11 +45,7 @@ SplitBuildProgressObserver = Callable[[SplitBuildProgress], None]
 
 
 def provider_version(provider_id: str) -> str:
-    return {
-        "P1": PROSPECTIVE_P1_VERSION,
-        "P2": PROSPECTIVE_P2_VERSION,
-        "P3": PROSPECTIVE_P3_VERSION,
-    }[provider_id]
+    return PROSPECTIVE_PROVIDER_VERSIONS[provider_id]
 
 
 def score_vector_to_payload(vector: Any) -> dict[str, Any]:
@@ -73,24 +68,37 @@ def _score_all_providers(
     prototypes: Mapping[str, tuple[str, str, str, ImageObservation]],
     policy_artifact_id: str,
 ) -> tuple[Any, Any, Any]:
-    p1 = score_normalized_pixel(
-        observation=observation,
-        prototypes=prototypes,
-        policy_artifact_id=policy_artifact_id,
-    )
-    p2 = score_registered_local_correlation(
-        observation=observation,
-        prototypes=prototypes,
-        policy_artifact_id=policy_artifact_id,
-        source_scope=SOURCE_SCOPE,
-    )
-    p3 = score_b3_joint_fit(
-        observation=observation,
-        prototypes=prototypes,
-        policy_artifact_id=policy_artifact_id,
-        source_scope=SOURCE_SCOPE,
-    )
-    return p1, p2, p3
+    results = []
+    for provider_id in PROSPECTIVE_PROVIDER_IDS:
+        if provider_id == "P1":
+            results.append(
+                score_normalized_pixel(
+                    observation=observation,
+                    prototypes=prototypes,
+                    policy_artifact_id=policy_artifact_id,
+                )
+            )
+        elif provider_id == "P2":
+            results.append(
+                score_registered_local_correlation(
+                    observation=observation,
+                    prototypes=prototypes,
+                    policy_artifact_id=policy_artifact_id,
+                    source_scope=SOURCE_SCOPE,
+                )
+            )
+        elif provider_id == "P3":
+            results.append(
+                score_b3_joint_fit(
+                    observation=observation,
+                    prototypes=prototypes,
+                    policy_artifact_id=policy_artifact_id,
+                    source_scope=SOURCE_SCOPE,
+                )
+            )
+        else:
+            raise VPMValidationError(f"unsupported provider_id: {provider_id}")
+    return tuple(results)
 
 
 def _reachability_trace_for_result(
@@ -233,9 +241,7 @@ def measure_record_collection(
     progress_observer: SplitBuildProgressObserver | None = None,
 ) -> list[dict[str, Any]]:
     reachability_state: dict[str, Mapping[str, Any] | None] = {
-        "P1": None,
-        "P2": None,
-        "P3": None,
+        provider_id: None for provider_id in PROSPECTIVE_PROVIDER_IDS
     }
     scored_rows: list[dict[str, Any]] = []
     split_name = (
@@ -275,6 +281,10 @@ def measure_record_collection(
             )
         )
 
+    if total_frame_count == 0:
+        emit_progress()
+        return scored_rows
+
     for record in records:
         if record.get("event_type") == "gap_unknown" or record.get("pixels") is None:
             for provider_id in reachability_state:
@@ -302,6 +312,8 @@ def measure_record_collection(
 
 __all__ = [
     "SOURCE_SCOPE",
+    "PROSPECTIVE_PROVIDER_IDS",
+    "PROVIDER_SCORE_CALLS_PER_SCOREABLE_FRAME",
     "SplitBuildProgress",
     "SplitBuildProgressObserver",
     "measure_record_collection",

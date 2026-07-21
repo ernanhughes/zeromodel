@@ -134,6 +134,13 @@ update a script under `scripts/` and leave execution to the operator.
 - Scientific rendering, transformation, mutation, replay, and digest computation stay in Python/NumPy.
 - Final split materialization is prohibited in every Store.
 - Batch observation writes must be atomic.
+- Progress observer exceptions intentionally propagate during split builds.
+  Before such a failure, SQLite episode plans plus observations, matrix blobs,
+  and observation operation chains may already be durable; split JSONL,
+  split-manifest, and family-closure artifacts are not completion markers until
+  all required files for the split exist. Same-directory retry is allowed only
+  for unchanged code and inputs before current-split filesystem completion
+  artifacts exist; otherwise require a fresh output directory.
 
 ## Working Style
 

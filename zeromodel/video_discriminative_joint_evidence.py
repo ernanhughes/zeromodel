@@ -37,7 +37,7 @@ VIDEO_JOINT_CALIBRATION_VERSION = "zeromodel-video-joint-calibration/v1"
 _ARCHITECTURES = {"A3", "B3", "C3", "D3"}
 _BASE_CANDIDATE_CACHE_CAPACITY = 8
 _BaseCandidateCacheKey = Tuple[str, str, str, str, str]
-_BaseCandidateCacheValue = Tuple[Dict[str, Any], ...]
+_BaseCandidateCacheValue = Tuple[Mapping[str, Any], ...]
 
 
 class _BoundedBaseCandidateCache:
@@ -798,6 +798,27 @@ def _candidate_pair_key(row_a: str, row_b: str) -> Tuple[str, str]:
     return (row_a, row_b) if row_a < row_b else (row_b, row_a)
 
 
+def _prototype_cache_digest(
+    prototypes: Mapping[str, Tuple[str, str, str, ImageObservation]],
+) -> str:
+    return _digest(
+        [
+            {
+                "row_id": row_id,
+                "action_id": action_id,
+                "prototype_observation_id": prototype_observation_id,
+                "prototype_raw_digest": prototype_raw_digest,
+            }
+            for row_id, (
+                prototype_observation_id,
+                action_id,
+                prototype_raw_digest,
+                _prototype_observation,
+            ) in sorted(prototypes.items())
+        ]
+    )
+
+
 def _build_candidate_base(
     *,
     observation: ImageObservation,
@@ -1076,7 +1097,7 @@ def build_joint_row_candidates(
         raise VPMValidationError("unsupported joint architecture_id")
     cache_key = (
         observation.raw_digest,
-        _digest({row_id: value[2] for row_id, value in sorted(prototypes.items())}),
+        _prototype_cache_digest(prototypes),
         _digest({row_id: mask.payload_digest for row_id, mask in sorted(candidate_masks.items())}),
         _digest({f"{row_a}|{row_b}": mask.payload_digest for (row_a, row_b), mask in sorted(pairwise_masks.items())}),
         _digest([region.digest for region in regions]),
@@ -1090,7 +1111,7 @@ def build_joint_row_candidates(
             pairwise_masks=pairwise_masks,
             regions=regions,
         )
-        bases = _BASE_CANDIDATE_CACHE.put(cache_key, bases)
+        bases = _BASE_CANDIDATE_CACHE.put(cache_key, _freeze(bases))
     return tuple(_materialize_candidate(base, architecture_id) for base in bases)
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import MappingProxyType
 from typing import Any
 
 import numpy as np
@@ -14,6 +15,7 @@ from zeromodel import (
     build_pairwise_discriminative_masks,
 )
 from zeromodel.video_complete_row_evidence import build_semantic_top_set_outcome
+from zeromodel.video_complete_row_evidence import build_complete_row_evidence
 from zeromodel.video_prospective_providers import (
     PROSPECTIVE_P3_VERSION,
     clear_prospective_provider_caches,
@@ -26,6 +28,7 @@ from zeromodel.visual_registration import RegistrationConfig
 POLICY_ARTIFACT_ID = "sha256:policy"
 SOURCE_SCOPE = "cache-kernel"
 ACTIONS = ("LEFT", "RIGHT", "STAY", "FIRE")
+ARCHITECTURES = ("A3", "B3", "C3", "D3")
 
 
 @pytest.fixture(autouse=True)
@@ -113,7 +116,12 @@ def _masks(
     return candidate_masks, pairwise_masks
 
 
-def _candidate_snapshot(observation_index: int, *, row_count: int = 3) -> bytes:
+def _candidate_snapshot(
+    observation_index: int,
+    *,
+    row_count: int = 3,
+    architecture_id: str = "B3",
+) -> bytes:
     prototypes, development, regions = _joint_inputs(row_count)
     candidate_masks, pairwise_masks = _masks(prototypes, development)
     observation = _tiny_observation(
@@ -125,7 +133,7 @@ def _candidate_snapshot(observation_index: int, *, row_count: int = 3) -> bytes:
         candidate_masks=candidate_masks,
         pairwise_masks=pairwise_masks,
         regions=regions,
-        architecture_id="B3",
+        architecture_id=architecture_id,
     )
     ranked = joint.rank_joint_row_candidates(candidates)
     return joint._json_bytes([candidate.to_dict() for candidate in ranked])
@@ -164,6 +172,80 @@ def _score_vector_snapshot(vector: Any, row_actions: dict[str, str]) -> dict[str
             "quantized": vector.evidence.quantized_score_vector_digest,
             "raw": vector.evidence.raw_score_diagnostic_digest,
             "ranking": vector.evidence.ranking.ranking_digest,
+        },
+    }
+
+
+def _base_snapshot(base: Any) -> dict[str, Any]:
+    return {
+        key: (
+            [item.to_dict() for item in value]
+            if key in {"region_evidence", "pairwise_evidence"}
+            else value
+        )
+        for key, value in base.items()
+    }
+
+
+def _architecture_snapshot(
+    *,
+    architecture_id: str,
+    prototypes: dict[str, tuple[str, str, str, ImageObservation]],
+    candidate_masks: Any,
+    pairwise_masks: Any,
+    regions: tuple[JointEvidenceRegionSpec, ...],
+    observation: ImageObservation,
+    row_actions: dict[str, str],
+) -> dict[str, Any]:
+    candidates = joint.rank_joint_row_candidates(
+        joint.build_joint_row_candidates(
+            observation=observation,
+            prototypes=prototypes,
+            candidate_masks=candidate_masks,
+            pairwise_masks=pairwise_masks,
+            regions=regions,
+            architecture_id=architecture_id,
+        )
+    )
+    evidence = build_complete_row_evidence(
+        row_scores=[
+            (candidate.row_id, float(candidate.candidate_strength))
+            for candidate in candidates
+        ],
+        policy_artifact_id=POLICY_ARTIFACT_ID,
+        provider_id="P3",
+        provider_version=PROSPECTIVE_P3_VERSION,
+        policy_row_ids=tuple(sorted(prototypes)),
+    )
+    semantic = build_semantic_top_set_outcome(
+        evidence=evidence,
+        row_action=row_actions,
+    )
+    return {
+        "candidate_strength": {
+            candidate.row_id: float(candidate.candidate_strength)
+            for candidate in candidates
+        },
+        "complete_candidate_serialization": [
+            candidate.to_dict() for candidate in candidates
+        ],
+        "raw_score_vector": [item.raw_score for item in evidence.row_scores],
+        "quantized_score_vector": [
+            item.quantized_score for item in evidence.row_scores
+        ],
+        "ranking": list(evidence.ranking.ranked_row_ids),
+        "tie_groups": [group.to_dict() for group in evidence.ranking.tie_groups],
+        "winner": {
+            "row": semantic.resolved_row_id,
+            "action": semantic.resolved_action_id,
+        },
+        "semantic_outcome": semantic.to_dict(),
+        "evidence_digests": {
+            "score_vector": evidence.score_vector_digest,
+            "quantized": evidence.quantized_score_vector_digest,
+            "raw": evidence.raw_score_diagnostic_digest,
+            "ranking": evidence.ranking.ranking_digest,
+            "semantic": semantic.semantic_outcome_digest,
         },
     }
 
@@ -259,6 +341,75 @@ def test_base_candidate_cache_identity_includes_region_specs() -> None:
     assert info["misses"] == 2
 
 
+def test_base_candidate_cache_identity_includes_prototype_metadata() -> None:
+    prototypes, development, regions = _joint_inputs()
+    candidate_masks, pairwise_masks = _masks(prototypes, development)
+    observation = _tiny_observation(0, source_id="observation-0")
+
+    first = joint.build_joint_row_candidates(
+        observation=observation,
+        prototypes=prototypes,
+        candidate_masks=candidate_masks,
+        pairwise_masks=pairwise_masks,
+        regions=regions,
+        architecture_id="B3",
+    )
+    renamed_prototypes = {
+        row_id: (f"renamed-{prototype_observation_id}", action_id, digest, prototype)
+        for row_id, (
+            prototype_observation_id,
+            action_id,
+            digest,
+            prototype,
+        ) in prototypes.items()
+    }
+    second = joint.build_joint_row_candidates(
+        observation=observation,
+        prototypes=renamed_prototypes,
+        candidate_masks=candidate_masks,
+        pairwise_masks=pairwise_masks,
+        regions=regions,
+        architecture_id="B3",
+    )
+
+    info = joint._base_candidate_cache_info()
+    assert info["size"] == 2
+    assert info["misses"] == 2
+    assert {candidate.prototype_observation_id for candidate in first} == set(
+        prototypes
+    )
+    assert {
+        candidate.prototype_observation_id for candidate in second
+    } == {f"renamed-{row_id}" for row_id in prototypes}
+
+
+def test_base_candidate_cache_values_are_immutable_and_materialization_is_pure() -> None:
+    prototypes, development, regions = _joint_inputs()
+    candidate_masks, pairwise_masks = _masks(prototypes, development)
+    observation = _tiny_observation(0, source_id="observation-0")
+    candidates = joint.build_joint_row_candidates(
+        observation=observation,
+        prototypes=prototypes,
+        candidate_masks=candidate_masks,
+        pairwise_masks=pairwise_masks,
+        regions=regions,
+        architecture_id="B3",
+    )
+    key = joint._base_candidate_cache_info()["keys"][0]
+    cached = joint._BASE_CANDIDATE_CACHE.get(key)
+
+    assert cached is not None
+    assert isinstance(cached[0], MappingProxyType)
+    with pytest.raises(TypeError):
+        cached[0]["row_id"] = "mutated"
+
+    before = tuple(_base_snapshot(base) for base in cached)
+    materialized = joint._materialize_candidate(cached[0], "B3")
+
+    assert tuple(_base_snapshot(base) for base in cached) == before
+    assert materialized.to_dict() == candidates[0].to_dict()
+
+
 def test_rescoring_after_eviction_is_byte_identical() -> None:
     first = _candidate_snapshot(0)
     first_key = joint._base_candidate_cache_info()["keys"][0]
@@ -312,3 +463,54 @@ def test_cached_uncached_and_reference_optimized_provider_vectors_are_identical(
     assert joint._base_candidate_cache_info()["hits"] >= 2
     assert optimized.provider_id == "P3"
     assert optimized.provider_version == PROSPECTIVE_P3_VERSION
+
+
+@pytest.mark.parametrize("architecture_id", ARCHITECTURES)
+def test_architecture_candidate_and_score_parity_across_cache_states(
+    architecture_id: str,
+) -> None:
+    prototypes, development, regions = _joint_inputs(112)
+    candidate_masks, pairwise_masks = _masks(prototypes, development)
+    observation = _tiny_observation(37, source_id="architecture-parity-observation")
+    row_actions = {
+        row_id: action_id for row_id, action_id, _digest, _obs in prototypes.values()
+    }
+
+    uncached = _architecture_snapshot(
+        architecture_id=architecture_id,
+        prototypes=prototypes,
+        candidate_masks=candidate_masks,
+        pairwise_masks=pairwise_masks,
+        regions=regions,
+        observation=observation,
+        row_actions=row_actions,
+    )
+    cached = _architecture_snapshot(
+        architecture_id=architecture_id,
+        prototypes=prototypes,
+        candidate_masks=candidate_masks,
+        pairwise_masks=pairwise_masks,
+        regions=regions,
+        observation=observation,
+        row_actions=row_actions,
+    )
+    original_key = joint._base_candidate_cache_info()["keys"][-1]
+    assert cached == uncached
+    assert joint._base_candidate_cache_info()["hits"] >= 1
+
+    capacity = joint._base_candidate_cache_info()["capacity"]
+    for index in range(capacity + 1):
+        _candidate_snapshot(index, row_count=3, architecture_id="B3")
+
+    assert original_key not in joint._base_candidate_cache_info()["keys"]
+    rescored = _architecture_snapshot(
+        architecture_id=architecture_id,
+        prototypes=prototypes,
+        candidate_masks=candidate_masks,
+        pairwise_masks=pairwise_masks,
+        regions=regions,
+        observation=observation,
+        row_actions=row_actions,
+    )
+
+    assert rescored == uncached

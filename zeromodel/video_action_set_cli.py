@@ -80,7 +80,14 @@ def build_argument_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = build_argument_parser().parse_args()
-    progress_observer = _stderr_progress_observer() if args.progress else None
+    split_build_selected = sum(
+        int(flag)
+        for flag in (
+            args.build_development,
+            args.build_calibration,
+            args.build_selection,
+        )
+    )
     selected = sum(
         int(flag)
         for flag in (
@@ -95,6 +102,12 @@ def main() -> None:
             args.verify_prospective_instrument,
         )
     )
+    if args.progress and (selected != 1 or split_build_selected != 1):
+        raise SystemExit(
+            "--progress is only valid with exactly one split-build command "
+            "(--build-development, --build-calibration, or --build-selection)"
+        )
+    progress_observer = _stderr_progress_observer() if args.progress else None
     if selected != 1:
         raise SystemExit("exactly one command is required")
     if args.freeze_benchmark:

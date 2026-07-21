@@ -10,6 +10,7 @@ from ...video_complete_row_evidence import (
     semantic_top_set_outcome_from_dict,
 )
 from ...video_prospective_providers import (
+    PROSPECTIVE_PROVIDER_IDS,
     score_b3_joint_fit,
     score_normalized_pixel,
     score_registered_local_correlation,
@@ -250,7 +251,7 @@ def audit_canonical_provider_results(
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     rows: list[dict[str, Any]] = []
     summary: dict[str, Any] = {}
-    for provider_id in ("P1", "P2", "P3"):
+    for provider_id in PROSPECTIVE_PROVIDER_IDS:
         provider_rows = _score_canonical_provider(
             provider_id=provider_id,
             prototypes=prototypes,

@@ -899,6 +899,18 @@ class FinalEvidenceBundleDTO:
         )
         if rows != _canonical_evidence_rows(rows):
             raise VPMValidationError("final evidence ordering mismatch")
+        identities = {
+            (
+                row["family_id"],
+                row["episode_id"],
+                row["frame_ordinal"],
+                row["frame_id"],
+                row["provider_id"],
+            )
+            for row in rows
+        }
+        if len(identities) != len(rows):
+            raise VPMValidationError("duplicate final evidence identity")
         if actual != _actual_counts(rows):
             raise VPMValidationError("final evidence actual counts mismatch")
         providers = {str(row["provider_id"]) for row in rows}

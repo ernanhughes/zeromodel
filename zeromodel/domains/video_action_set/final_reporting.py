@@ -17,6 +17,8 @@ def generate_final_report(
     evaluation_result: FinalEvaluationResultDTO,
     claim_registry: Mapping[str, object],
 ) -> str:
+    if not isinstance(receipt, FinalExecutionReceiptDTO):
+        raise VPMValidationError("final execution receipt mismatch")
     if receipt.state != "completed":
         raise VPMValidationError("final report requires a completed receipt")
     if not isinstance(evaluation_result, FinalEvaluationResultDTO):

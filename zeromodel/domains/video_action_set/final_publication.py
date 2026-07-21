@@ -177,6 +177,7 @@ def stage_final_artifacts(
     executor_artifacts: Mapping[str, bytes],
     evidence: FinalEvidenceBundleDTO,
     evaluation: FinalEvaluationResultDTO,
+    before_validation: Callable[[], None] | None = None,
 ) -> tuple[Path, FinalArtifactManifestDTO]:
     output = _absolute_path(output_dir)
     _assert_no_symlink_components(output)
@@ -219,6 +220,8 @@ def stage_final_artifacts(
         (staging / FINAL_ARTIFACT_MANIFEST_NAME).write_bytes(
             canonical_json_bytes(manifest.to_dict())
         )
+        if before_validation is not None:
+            before_validation()
         validate_staged_artifacts(staging, manifest)
         return staging, manifest
     except Exception:
@@ -296,7 +299,12 @@ def publish_receipt_last(
     output_dir: Path,
     authorization_id: str,
     receipt: FinalExecutionReceiptDTO,
+    before_write: Callable[[], None] | None = None,
+    after_write: Callable[[], None] | None = None,
     before_publish: Callable[[], None] | None = None,
+    before_rename: Callable[[], None] | None = None,
+    during_rename: Callable[[], None] | None = None,
+    after_publish: Callable[[], None] | None = None,
 ) -> Path:
     output = _absolute_path(output_dir)
     _assert_no_symlink_components(output)
@@ -308,13 +316,23 @@ def publish_receipt_last(
     if temporary.exists() or temporary.is_symlink():
         raise VPMValidationError("final receipt staging file already exists")
     try:
+        if before_write is not None:
+            before_write()
         temporary.write_bytes(canonical_json_bytes(receipt.to_dict()))
+        if after_write is not None:
+            after_write()
         loaded = FinalExecutionReceiptDTO.from_dict(_json_mapping(temporary))
         if loaded != receipt:
             raise VPMValidationError("final receipt staging validation mismatch")
         if before_publish is not None:
             before_publish()
+        if before_rename is not None:
+            before_rename()
+        if during_rename is not None:
+            during_rename()
         os.replace(temporary, destination)
+        if after_publish is not None:
+            after_publish()
     except Exception:
         if temporary.is_file() and not temporary.is_symlink():
             temporary.unlink()

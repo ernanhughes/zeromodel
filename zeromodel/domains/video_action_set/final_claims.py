@@ -17,6 +17,8 @@ def build_final_claim_registry(
     evaluation_result: FinalEvaluationResultDTO,
     claim_rules: Mapping[str, object],
 ) -> dict[str, Any]:
+    if not isinstance(receipt, FinalExecutionReceiptDTO):
+        raise VPMValidationError("final execution receipt mismatch")
     if not isinstance(evaluation_result, FinalEvaluationResultDTO):
         raise VPMValidationError("final evaluation result mismatch")
     validate_receipt_evaluation_binding(receipt, evaluation_result)

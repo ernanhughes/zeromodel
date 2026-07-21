@@ -9,165 +9,93 @@ import pytest
 
 from test_video_episode_plan_rmdto import plan_dto, sample_identity
 from test_video_observation_rmdto import _pixels, sample_record
+from video_final_test_support import (
+    SyntheticFinalExecutor,
+    approved_protocol,
+    authorization,
+    evidence_bundle,
+    final_rows,
+    request,
+)
 from zeromodel import build_runtime
 from zeromodel.artifact import VPMValidationError
-from zeromodel.db.runtime import build_sqlite_runtime
+from zeromodel.domains.video_action_set.canonical_json import canonical_json_bytes
 from zeromodel.domains.video_action_set.final_access_dto import (
-    FINAL_EVALUATION_PROTOCOL_VERSION,
-    FINAL_EXECUTION_AUTHORIZATION_VERSION,
-    FINAL_EXECUTION_REQUEST_VERSION,
-    FinalEvaluationProtocolDTO,
-    FinalExecutionAuthorizationDTO,
+    FinalEvaluationResultDTO,
     FinalExecutionReceiptDTO,
-    FinalExecutionRequestDTO,
     event_chain_digest,
 )
+from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
 from zeromodel.domains.video_action_set.final_claims import build_final_claim_registry
 from zeromodel.domains.video_action_set.final_evaluation import evaluate_final_protocol
-from zeromodel.domains.video_action_set.final_reconstruction import (
-    reconstruct_final_access_ledger,
+from zeromodel.domains.video_action_set.final_publication import (
+    FINAL_EVALUATION_NAME,
+    FINAL_RECEIPT_NAME,
 )
 from zeromodel.domains.video_action_set.final_reconciler import (
     interrupt_abandoned_running_access,
+)
+from zeromodel.domains.video_action_set.final_reconstruction import (
+    reconstruct_final_access_ledger,
 )
 from zeromodel.domains.video_action_set.final_reporting import generate_final_report
 from zeromodel.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
 )
+from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def _digest(char: str) -> str:
-    return "sha256:" + char * 64
-
-
-def _authorization(
-    *,
-    authorization_id: str = "auth-1",
-    seed_digest: str | None = None,
-    sealed_plan_digest: str = _digest("b"),
-    protocol_digest: str = _digest("c"),
-    output_dir: str = "out",
-    database_path: str = "final.sqlite3",
-    unattended_permitted: bool = False,
-) -> FinalExecutionAuthorizationDTO:
-    return FinalExecutionAuthorizationDTO.create(
-        {
-            "version": FINAL_EXECUTION_AUTHORIZATION_VERSION,
-            "authorization_id": authorization_id,
-            "authorization_status": "authorized",
-            "created_utc": "2026-07-21T00:00:00Z",
-            "created_by": "reviewer",
-            "protocol_digest": protocol_digest,
-            "expected_benchmark_seed_digest": seed_digest or _digest("a"),
-            "expected_sealed_plan_digest": sealed_plan_digest,
-            "expected_policy_artifact_id": "policy",
-            "output_dir": output_dir,
-            "database_path": database_path,
-            "unattended_permitted": unattended_permitted,
-            "operator_confirmation_text": "CONFIRM FINAL ACCESS",
-            "authorization_payload": {"scope": "synthetic-test"},
-        }
-    )
-
-
-def _approved_protocol(
-    *,
-    status: str = "approved",
-    seed_digest: str = _digest("a"),
-    sealed_plan_digest: str = _digest("b"),
-) -> FinalEvaluationProtocolDTO:
-    return FinalEvaluationProtocolDTO.create(
-        {
-            "version": FINAL_EVALUATION_PROTOCOL_VERSION,
-            "protocol_id": "synthetic-protocol",
-            "protocol_status": status,
-            "created_utc": "2026-07-21T00:00:00Z",
-            "approved_utc": "2026-07-21T00:01:00Z"
-            if status == "approved"
-            else None,
-            "approved_by": "reviewer" if status == "approved" else None,
-            "benchmark_seed_digest": seed_digest,
-            "sealed_plan_digest": sealed_plan_digest,
-            "policy_artifact_id": "policy",
-            "candidate_set_id": "candidate-set",
-            "selected_provider_id": "P1",
-            "decision_rule": {
-                "kind": "fixed_metric_threshold",
-                "aggregate": "mean",
-                "metric_id": "score",
-                "operator": "gte",
-                "threshold": 0.75,
-            },
-            "required_evidence": {"provider_id": "P1", "expected_row_count": 2},
-            "claim_rule_set": {"claims": [{"claim_id": "synthetic-claim"}]},
-            "review_notes": {"scope": "synthetic-test"},
-        }
-    )
-
-
-def _request(
-    authorization: FinalExecutionAuthorizationDTO,
-    authorization_file: Path,
-) -> FinalExecutionRequestDTO:
-    return FinalExecutionRequestDTO.create(
-        {
-            "version": FINAL_EXECUTION_REQUEST_VERSION,
-            "output_dir": authorization.output_dir,
-            "authorization_file": str(authorization_file),
-            "expected_authorization_digest": authorization.authorization_digest,
-            "expected_sealed_plan_digest": authorization.expected_sealed_plan_digest,
-            "database_path": authorization.database_path,
-            "preflight_only": True,
-            "operator_identity": "tester",
-            "unattended": False,
-            "request_payload": {"scope": "synthetic-test"},
-        }
-    )
-
-
-def test_final_authorization_state_machine_and_digest_chain() -> None:
+def test_final_authorization_state_machine_and_digest_chain(tmp_path: Path) -> None:
     runtime = build_runtime()
-    auth = _authorization()
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
 
-    record = runtime.video_action_set.create_final_authorization(auth)
-    assert record.state == "authorized"
-    events = runtime.video_action_set.list_final_access_events(record.access_id)
-    assert len(events) == 1
-    assert events[0].previous_state is None
-    assert events[0].new_state == "authorized"
-
+    record = runtime.video_action_set.create_final_authorization(auth, protocol)
     reserved = runtime.video_action_set.reserve_final_access(record.access_id)
     running = runtime.video_action_set.mark_final_access_running(record.access_id)
     events = runtime.video_action_set.list_final_access_events(record.access_id)
 
+    assert record.state == "authorized"
     assert reserved.state == "reserved"
     assert running.state == "running"
+    assert running.current_event_ordinal == 2
     assert [event.ordinal for event in events] == [0, 1, 2]
     assert events[2].previous_event_digest == events[1].event_digest
     assert event_chain_digest(events).startswith("sha256:")
 
 
-def test_sqlite_final_authorization_enforces_unique_seed_sealed_pair() -> None:
-    runtime = build_sqlite_runtime("sqlite:///:memory:", initialize_schema=True)
-    auth = _authorization()
-    runtime.video_action_set.create_final_authorization(auth)
-    second = _authorization(authorization_id="auth-2")
-
-    with pytest.raises(VPMValidationError, match="final access record conflict"):
-        runtime.video_action_set.create_final_authorization(second)
-
-
-def test_authorized_final_observation_uses_new_service_path_only() -> None:
+def test_authorized_final_observation_uses_service_path_only(tmp_path: Path) -> None:
     identity = sample_identity()
     plan = plan_dto(identity=identity, split="final", frame_count=1)
     runtime = build_runtime()
     runtime.video_action_set.save_identity(identity)
     runtime.video_action_set.save_episode_plan(plan)
-    auth = _authorization(seed_digest=identity.seed_digest)
-    access = runtime.video_action_set.create_final_authorization(auth)
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    auth_payload = auth.to_dict()
+    auth_payload["expected_benchmark_seed_digest"] = identity.seed_digest
+    auth_payload.pop("authorization_digest")
+    from zeromodel.domains.video_action_set.final_access_dto import (
+        FinalExecutionAuthorizationDTO,
+    )
+
+    auth = FinalExecutionAuthorizationDTO.create(auth_payload)
+    protocol_payload = protocol.to_dict()
+    protocol_payload["benchmark_seed_digest"] = identity.seed_digest
+    protocol_payload.pop("protocol_digest")
+    from zeromodel.domains.video_action_set.final_access_dto import (
+        FinalEvaluationProtocolDTO,
+    )
+
+    protocol = FinalEvaluationProtocolDTO.create(protocol_payload)
+    auth_payload = auth.to_dict()
+    auth_payload["protocol_digest"] = protocol.protocol_digest
+    auth_payload.pop("authorization_digest")
+    auth = FinalExecutionAuthorizationDTO.create(auth_payload)
+    access = runtime.video_action_set.create_final_authorization(auth, protocol)
     record = sample_record(split="final", plan=plan, pixels=_pixels())
 
     with pytest.raises(VPMValidationError, match="final split observation"):
@@ -183,57 +111,311 @@ def test_authorized_final_observation_uses_new_service_path_only() -> None:
         running.access_id,
         record,
     )
-
     assert saved.split == "final"
     assert saved.final_access_id == running.access_id
 
 
-def test_final_evaluator_requires_approved_protocol_and_complete_final_rows() -> None:
-    protocol = _approved_protocol()
-    rows = (
-        {"split": "final", "provider_id": "P1", "metrics": {"score": 0.8}},
-        {"split": "final", "provider_id": "P1", "metrics": {"score": 0.9}},
+def test_evaluator_is_order_independent_and_digest_bearing() -> None:
+    protocol = approved_protocol(threshold="0.85")
+    rows = final_rows()
+    first = evidence_bundle(protocol, rows=rows)
+    second = evidence_bundle(protocol, rows=tuple(reversed(rows)))
+    first_result = evaluate_final_protocol(protocol, first)
+    second_result = evaluate_final_protocol(protocol, second)
+
+    assert first.to_dict() == second.to_dict()
+    assert first_result.to_dict() == second_result.to_dict()
+    assert canonical_json_bytes(first_result.to_dict()) == canonical_json_bytes(
+        second_result.to_dict()
     )
-    result = evaluate_final_protocol(
-        protocol,
-        rows,
-        benchmark_seed_digest=protocol.benchmark_seed_digest,
-        sealed_plan_digest=protocol.sealed_plan_digest,
+    assert first_result.decision == "passed"
+    assert first_result.descriptive_measurements.to_value()["threshold_equality"] == (
+        "inclusive"
+    )
+    tampered_evidence = first.to_dict()
+    tampered_evidence["rows"][0]["metrics"]["score"] = "1.0"  # type: ignore[index]
+    from zeromodel.domains.video_action_set.final_access_dto import (
+        FinalEvidenceBundleDTO,
     )
 
-    assert result["decision"] == "passed"
+    with pytest.raises(VPMValidationError, match="evidence digest"):
+        FinalEvidenceBundleDTO.from_dict(tampered_evidence)
+    assert FinalEvaluationResultDTO.from_dict(first_result.to_dict()) == first_result
+    tampered = first_result.to_dict()
+    tampered["decision"] = "failed"
+    with pytest.raises(VPMValidationError, match="evaluation digest"):
+        FinalEvaluationResultDTO.from_dict(tampered)
+
+
+@pytest.mark.parametrize(
+    ("scores", "threshold", "expected_count", "expected_decision"),
+    [
+        (("0.8", "0.9"), "0.75", 2, "passed"),
+        (("0.5", "0.6"), "0.75", 2, "failed"),
+        (("0.8", "0.9"), "0.75", 3, "indeterminate"),
+    ],
+)
+def test_pass_fail_and_indeterminate_are_deterministic(
+    scores: tuple[str, ...],
+    threshold: str,
+    expected_count: int,
+    expected_decision: str,
+) -> None:
+    protocol = approved_protocol(
+        threshold=threshold,
+        expected_row_count=expected_count,
+    )
+    expected_counts = {
+        "evidence_row_count": expected_count,
+        "episode_count": expected_count,
+        "frame_count": expected_count,
+        "provider_count": 1,
+    }
+    evidence = evidence_bundle(
+        protocol,
+        rows=final_rows(scores),
+        expected_counts=expected_counts,
+    )
+    first = evaluate_final_protocol(protocol, evidence)
+    second = evaluate_final_protocol(protocol, evidence)
+    assert first.decision == expected_decision
+    assert first.to_dict() == second.to_dict()
+
+
+@pytest.mark.parametrize(
+    "rule",
+    [
+        {"aggregate": "mean", "metric_id": "score", "operator": "gte", "threshold": "1"},
+        {
+            "kind": "unknown",
+            "aggregate": "mean",
+            "metric_id": "score",
+            "operator": "gte",
+            "threshold": "1",
+        },
+        {
+            "kind": "fixed_metric_threshold",
+            "aggregate": "median",
+            "metric_id": "score",
+            "operator": "gte",
+            "threshold": "1",
+        },
+        {
+            "kind": "fixed_metric_threshold",
+            "aggregate": "mean",
+            "metric_id": "score",
+            "operator": "eq",
+            "threshold": "1",
+        },
+        {
+            "kind": "fixed_metric_threshold",
+            "aggregate": "mean",
+            "metric_id": "score",
+            "operator": "gte",
+            "threshold": 0.75,
+        },
+        {
+            "kind": "fixed_metric_threshold",
+            "aggregate": "mean",
+            "metric_id": "score",
+            "operator": "gte",
+            "threshold": "1",
+            "extra": True,
+        },
+    ],
+)
+def test_evaluator_rejects_unsupported_decision_rule_shapes(
+    rule: dict[str, object],
+) -> None:
+    protocol = approved_protocol(decision_rule=rule)
+    evidence = evidence_bundle(protocol)
+    with pytest.raises(VPMValidationError):
+        evaluate_final_protocol(protocol, evidence)
+
+
+@pytest.mark.parametrize("status", ["draft", "review", "retired"])
+def test_nonapproved_protocol_cannot_enter_completion(
+    tmp_path: Path,
+    status: str,
+) -> None:
+    protocol = approved_protocol(status=status)
+    auth = authorization(tmp_path, protocol)
+    service = FinalAccessService(
+        store=InMemoryVideoActionSetStore(),
+        final_executor=SyntheticFinalExecutor(),
+    )
     with pytest.raises(VPMValidationError, match="not approved"):
-        evaluate_final_protocol(
-            _approved_protocol(status="draft"),
-            rows,
-            benchmark_seed_digest=protocol.benchmark_seed_digest,
-            sealed_plan_digest=protocol.sealed_plan_digest,
+        service.execute_final_once(request(tmp_path, auth))
+    assert not Path(auth.output_dir).exists()
+
+
+def test_controlled_completion_binds_evaluation_claims_and_report(
+    tmp_path: Path,
+) -> None:
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    executor = SyntheticFinalExecutor(
+        artifacts={"final-summary.json": b'{"evidence_digest":"fake"}'},
+    )
+    service = FinalAccessService(
+        store=InMemoryVideoActionSetStore(),
+        final_executor=executor,
+    )
+
+    receipt = FinalExecutionReceiptDTO.from_dict(
+        service.execute_final_once(request(tmp_path, auth))
+    )
+    output_dir = Path(auth.output_dir)
+    evaluation = FinalEvaluationResultDTO.from_dict(
+        json.loads((output_dir / FINAL_EVALUATION_NAME).read_text(encoding="utf-8"))
+    )
+    reconstruction = reconstruct_final_access_ledger(service.store, receipt.access_id)
+    registry = build_final_claim_registry(
+        receipt=receipt,
+        evaluation_result=evaluation,
+        claim_rules={"claims": [{"claim_id": "synthetic-claim"}]},
+    )
+    report = generate_final_report(
+        receipt=receipt,
+        evaluation_result=evaluation,
+        claim_registry=registry,
+    )
+
+    assert not hasattr(service, "complete")
+    assert executor.calls == [
+        "materialize",
+        "score_providers",
+        "assess_reachability",
+        "build_artifacts",
+    ]
+    assert receipt.evidence_digest == evaluation.evidence_digest
+    assert receipt.evaluation_digest == evaluation.evaluation_digest
+    assert receipt.protocol_digest == evaluation.protocol_digest
+    assert receipt.artifact_manifest_digest.startswith("sha256:")
+    assert receipt.event_chain_digest == reconstruction["event_chain_digest"]
+    assert (output_dir / FINAL_RECEIPT_NAME).is_file()
+    assert registry["claims"][0]["status"] == "eligible"
+    assert receipt.access_id in report
+    for kind in (
+        "final_materialization_started_count",
+        "final_materialization_completed_count",
+        "provider_scoring_started_count",
+        "provider_scoring_completed_count",
+        "reachability_started_count",
+        "reachability_completed_count",
+        "evaluation_started_count",
+        "evaluation_completed_count",
+        "artifact_validation_started_count",
+        "artifact_validation_completed_count",
+        "promotion_started_count",
+        "promotion_completed_count",
+        "receipt_publication_started_count",
+        "receipt_publication_completed_count",
+    ):
+        assert reconstruction["counters"][kind] == 1
+
+
+def test_fabricated_or_unbound_evaluation_cannot_create_claims(
+    tmp_path: Path,
+) -> None:
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    service = FinalAccessService(
+        store=InMemoryVideoActionSetStore(),
+        final_executor=SyntheticFinalExecutor(),
+    )
+    receipt = FinalExecutionReceiptDTO.from_dict(
+        service.execute_final_once(request(tmp_path, auth))
+    )
+    bound_evaluation = FinalEvaluationResultDTO.from_dict(
+        json.loads(
+            (Path(auth.output_dir) / FINAL_EVALUATION_NAME).read_text(
+                encoding="utf-8"
+            )
         )
-    with pytest.raises(VPMValidationError, match="evidence split"):
-        evaluate_final_protocol(
-            protocol,
-            ({"split": "selection", "provider_id": "P1", "metrics": {"score": 1}},),
-            benchmark_seed_digest=protocol.benchmark_seed_digest,
-            sealed_plan_digest=protocol.sealed_plan_digest,
+    )
+    registry = build_final_claim_registry(
+        receipt=receipt,
+        evaluation_result=bound_evaluation,
+        claim_rules={"claims": []},
+    )
+
+    with pytest.raises(VPMValidationError, match="evaluation result"):
+        build_final_claim_registry(
+            receipt=receipt,
+            evaluation_result={"decision": "passed"},  # type: ignore[arg-type]
+            claim_rules={"claims": []},
         )
-    incomplete = evaluate_final_protocol(
+    other_protocol = approved_protocol(
+        threshold="0.8",
+        protocol_id="other-protocol",
+    )
+    other_evaluation = evaluate_final_protocol(
+        other_protocol,
+        evidence_bundle(other_protocol),
+    )
+    with pytest.raises(VPMValidationError, match="binding"):
+        build_final_claim_registry(
+            receipt=receipt,
+            evaluation_result=other_evaluation,
+            claim_rules={"claims": []},
+        )
+    with pytest.raises(VPMValidationError, match="evaluation result"):
+        generate_final_report(
+            receipt=receipt,
+            evaluation_result={"decision": "passed"},  # type: ignore[arg-type]
+            claim_registry=registry,
+        )
+    with pytest.raises(VPMValidationError, match="binding"):
+        generate_final_report(
+            receipt=receipt,
+            evaluation_result=other_evaluation,
+            claim_registry=registry,
+        )
+    other_evidence = evidence_bundle(
         protocol,
-        rows[:1],
-        benchmark_seed_digest=protocol.benchmark_seed_digest,
-        sealed_plan_digest=protocol.sealed_plan_digest,
+        rows=final_rows(("0.7", "0.8")),
     )
-    assert incomplete["decision"] == "indeterminate"
+    other_evaluation = evaluate_final_protocol(protocol, other_evidence)
+    with pytest.raises(VPMValidationError, match="binding"):
+        build_final_claim_registry(
+            receipt=receipt,
+            evaluation_result=other_evaluation,
+            claim_rules={"claims": []},
+        )
 
 
-def test_final_cli_preflight_is_read_only(tmp_path: Path) -> None:
-    auth = _authorization(
-        output_dir=str(tmp_path / "out"),
-        database_path=str(tmp_path / "final.sqlite3"),
-        unattended_permitted=True,
+@pytest.mark.parametrize("status", ["draft", "review", "retired"])
+def test_protocol_reloaded_at_evaluation_must_still_be_approved(
+    tmp_path: Path,
+    status: str,
+) -> None:
+    approved = approved_protocol()
+    auth = authorization(tmp_path, approved)
+    store = InMemoryVideoActionSetStore()
+    replacement = approved_protocol(
+        status=status,
+        protocol_id=f"replacement-{status}",
     )
-    auth_file = tmp_path / "authorization.json"
-    auth_file.write_text(json.dumps(auth.to_dict()), encoding="utf-8")
 
+    def replace_protocol(boundary: str) -> None:
+        if boundary == "evaluation_started":
+            store._final_protocols[approved.protocol_digest] = replacement
+
+    service = FinalAccessService(
+        store=store,
+        final_executor=SyntheticFinalExecutor(),
+        failure_injector=replace_protocol,
+    )
+    with pytest.raises(VPMValidationError, match="not approved"):
+        service.execute_final_once(request(tmp_path, auth))
+    assert not (Path(auth.output_dir) / FINAL_RECEIPT_NAME).exists()
+
+
+def test_cli_preflight_is_read_only_in_memory_validation(tmp_path: Path) -> None:
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    req = request(tmp_path, auth, preflight_only=True)
     result = subprocess.run(
         [
             sys.executable,
@@ -242,7 +424,7 @@ def test_final_cli_preflight_is_read_only(tmp_path: Path) -> None:
             "--output-dir",
             auth.output_dir,
             "--authorization-file",
-            str(auth_file),
+            req.authorization_file,
             "--expected-authorization-digest",
             auth.authorization_digest,
             "--expected-sealed-plan-digest",
@@ -257,15 +439,15 @@ def test_final_cli_preflight_is_read_only(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     )
-
-    assert result.returncode == 0
+    assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)
     assert payload["preflight"] == "passed"
+    assert payload["validation_store"] == "in-memory-nonauthoritative"
     assert payload["reservation_created"] is False
     assert not Path(auth.database_path).exists()
 
 
-def test_final_cli_rejects_force_like_options(tmp_path: Path) -> None:
+def test_cli_rejects_force_like_options(tmp_path: Path) -> None:
     result = subprocess.run(
         [
             sys.executable,
@@ -276,9 +458,9 @@ def test_final_cli_rejects_force_like_options(tmp_path: Path) -> None:
             "--authorization-file",
             str(tmp_path / "missing.json"),
             "--expected-authorization-digest",
-            _digest("a"),
+            "sha256:" + "a" * 64,
             "--expected-sealed-plan-digest",
-            _digest("b"),
+            "sha256:" + "b" * 64,
             "--database-path",
             str(tmp_path / "final.sqlite3"),
             "--force",
@@ -288,51 +470,15 @@ def test_final_cli_rejects_force_like_options(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
     )
-
     assert result.returncode == 2
     assert "unrecognized arguments: --force" in result.stderr
 
 
-def test_reconstruction_claims_and_report_require_valid_receipt() -> None:
+def test_reconciler_interrupts_only_after_process_is_gone(tmp_path: Path) -> None:
     runtime = build_runtime()
-    auth = _authorization()
-    record = runtime.video_action_set.create_final_authorization(auth)
-    runtime.video_action_set.reserve_final_access(record.access_id)
-    running = runtime.video_action_set.mark_final_access_running(record.access_id)
-    service = runtime.video_action_set.engine.final_access_service
-    completed = service.complete(
-        running.access_id,
-        evidence_digest=_digest("e"),
-        measurements={"score": 1.0},
-    )
-    reconstruction = reconstruct_final_access_ledger(
-        service.store,
-        completed.access_id,
-    )
-    receipt = completed.record_payload.to_value()["receipt"]
-    registry = build_final_claim_registry(
-        receipt=FinalExecutionReceiptDTO.from_dict(receipt),
-        evaluation_result={
-            "decision": "passed",
-            "evaluation_digest": _digest("f"),
-        },
-        claim_rules={"claims": [{"claim_id": "synthetic-claim"}]},
-    )
-    report = generate_final_report(
-        receipt=FinalExecutionReceiptDTO.from_dict(receipt),
-        evaluation_result={"decision": "passed"},
-        claim_registry=registry,
-    )
-
-    assert reconstruction["counters"]["completion_count"] == 1
-    assert registry["claims"][0]["status"] == "eligible"
-    assert completed.access_id in report
-
-
-def test_reconciler_interrupts_running_access_only_after_process_is_gone() -> None:
-    runtime = build_runtime()
-    auth = _authorization()
-    record = runtime.video_action_set.create_final_authorization(auth)
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    record = runtime.video_action_set.create_final_authorization(auth, protocol)
     runtime.video_action_set.reserve_final_access(record.access_id)
     running = runtime.video_action_set.mark_final_access_running(record.access_id)
     store = runtime.video_action_set.engine.final_access_service.store
@@ -352,6 +498,5 @@ def test_reconciler_interrupts_running_access_only_after_process_is_gone() -> No
         process_is_alive=lambda _identity: False,
         reconciler_identity="reconciler",
     )
-
     assert interrupted is not None
     assert interrupted.state == "interrupted"

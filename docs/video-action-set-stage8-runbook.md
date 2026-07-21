@@ -234,6 +234,29 @@ Therefore Stage 8 must stop before final unless a separate reviewed authorizatio
 - Mutation case failure or nondeterminism: do not continue to closure. Mutation temporary directories are isolated and automatically cleaned.
 - Closure unresolved: do not access final. Correct code or inputs through a reviewed change, then restart from a fresh freeze.
 
+## Finalization Boundary
+
+Stage 8 closure does not approve final access. Final access requires a separate
+approved final evaluation protocol, an authorization file, an explicit durable
+SQLite database path, and the final CLI:
+
+```powershell
+python -m zeromodel.video_action_set_final_cli `
+  --output-dir <stage8-output> `
+  --authorization-file <authorization.json> `
+  --expected-authorization-digest <sha256:...> `
+  --expected-sealed-plan-digest <sha256:...> `
+  --database-path <final-ledger.sqlite3> `
+  --preflight-only
+```
+
+Preflight is read-only: it must not create a reservation, write final evidence,
+or access the final split. Non-preflight execution is irreversible after
+reservation and is operator-controlled only. There are no force, overwrite,
+retry, resume, alternate-plan, provider, threshold, or operating-point switches.
+Codex agents may maintain this tooling but must not approve protocols, create
+live authorizations, execute final access, or choose scientific decision values.
+
 ## Stage 8 Completion Report
 
 ```text

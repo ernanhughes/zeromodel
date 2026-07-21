@@ -1,0 +1,33 @@
+{
+  "approved_by": null,
+  "approved_utc": null,
+  "benchmark_seed_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "candidate_set_id": "PLACEHOLDER-CANDIDATE-SET-ID",
+  "claim_rule_set": {
+    "claim_status": "unapproved_template",
+    "promotion_requires": "completed final receipt plus approved protocol"
+  },
+  "created_utc": "YYYY-MM-DDTHH:MM:SSZ",
+  "decision_rule": {
+    "aggregate": "mean",
+    "kind": "fixed_metric_threshold",
+    "metric_id": "PLACEHOLDER-METRIC-ID",
+    "operator": "gte",
+    "threshold": "PLACEHOLDER-NUMERIC-THRESHOLD"
+  },
+  "policy_artifact_id": "PLACEHOLDER-POLICY-ARTIFACT-ID",
+  "protocol_digest": "sha256:b51efd12260b0338adabf31d9509d63ab0c3ccc83e4c3e89694d670b7580a401",
+  "protocol_id": "UNAPPROVED-TEMPLATE-DO-NOT-EXECUTE",
+  "protocol_status": "draft",
+  "required_evidence": {
+    "complete_final_evidence_required": true,
+    "expected_row_count": "PLACEHOLDER-FINAL-ROW-COUNT",
+    "provider_id": "PLACEHOLDER-PROVIDER-ID"
+  },
+  "review_notes": {
+    "template_notice": "This repository does not contain an approved final evaluation protocol."
+  },
+  "sealed_plan_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "selected_provider_id": "PLACEHOLDER-PROVIDER-ID",
+  "version": "zeromodel-video-final-evaluation-protocol/v1"
+}

@@ -132,7 +132,9 @@ update a script under `scripts/` and leave execution to the operator.
 - MatrixBlob identity metadata must describe the payload, not the owning frame, episode, split, or sequence.
 - Provenance and operation-chain queries belong in relational Store predicates and joins.
 - Scientific rendering, transformation, mutation, replay, and digest computation stay in Python/NumPy.
-- Final split materialization is prohibited in every Store.
+- Legacy final split materialization remains prohibited in every Store. The only
+  permitted final observation write path is the explicit final-access service
+  path with a durable access record in `running` state.
 - Batch observation writes must be atomic.
 - Progress observer exceptions intentionally propagate during split builds.
   Before such a failure, SQLite episode plans plus observations, matrix blobs,
@@ -147,3 +149,16 @@ update a script under `scripts/` and leave execution to the operator.
 - Prefer additive changes over renaming existing public APIs.
 - Add focused tests beside the affected module.
 - If behavior is intentionally constrained by the artifact contract, document that constraint instead of adding misleading options.
+
+## Final Action-Set Agent Boundary
+
+- Agents may edit final-access DTOs, stores, CLI preflight, scripts, templates,
+  and synthetic tests.
+- Agents must not approve a final protocol, create a live final authorization,
+  run final execution, materialize the final split, or choose scientific
+  thresholds/providers/operating points.
+- Preflight is read-only and must not reserve an authorization or access final
+  observations.
+- Reservation is irreversible. Retry, resume, overwrite, force, alternate-plan,
+  provider, threshold, and operating-point switches are not supported for final
+  execution.

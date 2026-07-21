@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any, Protocol
 
+from .video_instrument_shell import STAGE7C_MODULES
+
 
 class ImportEdgeLike(Protocol):
     importer: str
@@ -67,6 +69,8 @@ _EXECUTION_MODULES = {
     f"{DOMAIN_PREFIX}.family_intervention_planning",
     f"{DOMAIN_PREFIX}.episode_planning",
 }
+
+
 def _is_under(module: str, prefix: str) -> bool:
     return module == prefix or module.startswith(f"{prefix}.")
 
@@ -90,7 +94,7 @@ def stage7b_forbidden_edge_violations(
 
     if (
         imported in STAGE7B_MODULES
-        and importer not in STAGE7B_MODULES | {BENCHMARK_MODULE}
+        and importer not in STAGE7B_MODULES | STAGE7C_MODULES | {BENCHMARK_MODULE}
         and _is_under(importer, "zeromodel")
     ):
         reject("Stage 6 and lower scientific modules must not import Stage 7B")

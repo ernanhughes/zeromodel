@@ -8,13 +8,28 @@ from zeromodel.artifact import VPMValidationError
 from zeromodel.domains.video_action_set import mutation_matrix
 
 
-def _finding(mutation: str, effect: str) -> dict[str, object]:
+def _finding(
+    case: dict[str, object],
+    effect: str,
+    *,
+    primary: str | None = None,
+) -> dict[str, object]:
+    expected_detected = case["expected_result_type"] == "detected"
+    actual_primary = (
+        case["expected_primary_failure_code"]
+        if primary is None and expected_detected
+        else primary
+    )
     return {
-        "mutation": mutation,
-        "expected_detected": True,
-        "detected": True,
-        "expected_code_matched": True,
-        "actual_primary_failure_code": "raw_diagnostic_digest_mismatch",
+        "mutation": case["mutation_id"],
+        "expected_detected": expected_detected,
+        "detected": actual_primary is not None,
+        "expected_code_matched": (
+            actual_primary == case["expected_primary_failure_code"]
+            if expected_detected
+            else actual_primary is None
+        ),
+        "actual_primary_failure_code": actual_primary,
         "secondary_failure_codes": [],
         "mutation_isolation": {
             "changed_field_count": 1,
@@ -71,12 +86,13 @@ def test_mutation_catalogue_schema_and_counts_are_frozen() -> None:
 
 def test_mutation_matrix_uses_registry_order_without_reexecution() -> None:
     catalogue = mutation_matrix.mutation_catalogue()
-    first = str(catalogue[0]["mutation_id"])
-    second = str(catalogue[1]["mutation_id"])
+    first_case, second_case = catalogue[:2]
+    first = str(first_case["mutation_id"])
+    second = str(second_case["mutation_id"])
     audit = _audit(
         [
-            _finding(second, "sha256:second"),
-            _finding(first, "sha256:first"),
+            _finding(second_case, "sha256:second"),
+            _finding(first_case, "sha256:first"),
         ]
     )
 
@@ -85,22 +101,24 @@ def test_mutation_matrix_uses_registry_order_without_reexecution() -> None:
     assert payload["mutation_ids"] == [first, second]
     assert [row["mutation"] for row in payload["mutations"]] == [first, second]
     assert payload["matrix_digest"] == (
-        "sha256:c51879af559080769104fce8f73d9ac987afaaaf763b2ed2259064f5dee48a57"
+        "sha256:88861c3d42cc8ab7e5b51dc0ef565294faa3d1c4f1c42307f0856ae421b94e47"
     )
 
 
 def test_mutation_matrix_rejects_duplicate_unknown_and_missing_results() -> None:
     catalogue = mutation_matrix.mutation_catalogue()
-    first = str(catalogue[0]["mutation_id"])
+    first_case = catalogue[0]
 
     duplicate = _audit(
         [
-            _finding(first, "sha256:first"),
-            _finding(first, "sha256:second"),
+            _finding(first_case, "sha256:first"),
+            _finding(first_case, "sha256:second"),
         ]
     )
-    unknown = _audit([_finding("unknown-mutation", "sha256:unknown")])
-    missing = _audit([_finding(first, "sha256:first")], executable_count=2)
+    unknown_row = _finding(first_case, "sha256:unknown")
+    unknown_row["mutation"] = "unknown-mutation"
+    unknown = _audit([unknown_row])
+    missing = _audit([_finding(first_case, "sha256:first")], executable_count=2)
 
     with pytest.raises(VPMValidationError, match="duplicate result ids"):
         mutation_matrix.build_mutation_matrix(duplicate)
@@ -111,10 +129,11 @@ def test_mutation_matrix_rejects_duplicate_unknown_and_missing_results() -> None
 
 
 def test_mutation_matrix_rejects_malformed_result_and_ambiguous_id() -> None:
-    mutation_id = str(mutation_matrix.mutation_catalogue()[0]["mutation_id"])
-    malformed = _finding(mutation_id, "sha256:malformed")
+    case = mutation_matrix.mutation_catalogue()[0]
+    mutation_id = str(case["mutation_id"])
+    malformed = _finding(case, "sha256:malformed")
     del malformed["mutation_isolation"]
-    ambiguous = _finding(mutation_id, "sha256:ambiguous")
+    ambiguous = _finding(case, "sha256:ambiguous")
     ambiguous["mutation_id"] = mutation_id
 
     with pytest.raises(VPMValidationError, match="missing required fields"):
@@ -139,10 +158,12 @@ def test_mutation_matrix_rejects_unavailable_baselines(
 
 def test_mutation_matrix_preserves_wrong_and_multiple_detectors() -> None:
     catalogue = mutation_matrix.mutation_catalogue()
-    first = _finding(str(catalogue[0]["mutation_id"]), "sha256:first")
-    second = _finding(str(catalogue[1]["mutation_id"]), "sha256:second")
-    first["expected_code_matched"] = False
-    first["actual_primary_failure_code"] = "ranking_reconstruction_mismatch"
+    first = _finding(
+        catalogue[0],
+        "sha256:first",
+        primary="ranking_reconstruction_mismatch",
+    )
+    second = _finding(catalogue[1], "sha256:second")
     second["secondary_failure_codes"] = [
         {"gate": "structural_identity", "code": "ranking_reconstruction_mismatch"},
         {"gate": "semantic_outcome", "code": "semantic_status_mismatch"},
@@ -157,17 +178,81 @@ def test_mutation_matrix_preserves_wrong_and_multiple_detectors() -> None:
     assert by_id[first["mutation"]]["actual_primary_failure_code"] == (
         "ranking_reconstruction_mismatch"
     )
-    assert by_id[second["mutation"]]["secondary_failure_codes"] == second[
-        "secondary_failure_codes"
-    ]
+    assert (
+        by_id[second["mutation"]]["secondary_failure_codes"]
+        == second["secondary_failure_codes"]
+    )
 
     with pytest.raises(VPMValidationError, match="passed.*failing result"):
         mutation_matrix.build_mutation_matrix(_audit([first]))
 
 
+@pytest.mark.parametrize(
+    "contradiction",
+    [
+        "detected_false_with_primary",
+        "detected_true_without_primary",
+        "forged_expected_code_match",
+        "wrong_expected_detected",
+        "isolation_without_change",
+        "non_string_primary",
+        "semantic_invariant_contradiction",
+    ],
+)
+def test_mutation_matrix_rejects_internally_contradictory_results(
+    contradiction: str,
+) -> None:
+    catalogue = mutation_matrix.mutation_catalogue()
+    case = catalogue[0]
+    row = _finding(case, "sha256:contradiction")
+    if contradiction == "detected_false_with_primary":
+        row["detected"] = False
+    elif contradiction == "detected_true_without_primary":
+        row["actual_primary_failure_code"] = None
+    elif contradiction == "forged_expected_code_match":
+        row = _finding(
+            case,
+            "sha256:contradiction",
+            primary="ranking_reconstruction_mismatch",
+        )
+        row["expected_code_matched"] = True
+    elif contradiction == "wrong_expected_detected":
+        row["expected_detected"] = False
+    elif contradiction == "isolation_without_change":
+        row["mutation_isolation"]["changed_field_count"] = 0  # type: ignore[index]
+    elif contradiction == "non_string_primary":
+        row["actual_primary_failure_code"] = 7
+    else:
+        case = next(
+            item
+            for item in catalogue
+            if item["expected_result_type"] == "semantic_invariant"
+        )
+        row = _finding(case, "sha256:semantic-invariant")
+        row["expected_code_matched"] = False
+
+    with pytest.raises(VPMValidationError):
+        mutation_matrix.build_mutation_matrix(_audit([row], status="failed"))
+
+
+def test_failed_audit_accepts_accurately_represented_wrong_detector() -> None:
+    case = mutation_matrix.mutation_catalogue()[0]
+    row = _finding(
+        case,
+        "sha256:wrong-detector",
+        primary="ranking_reconstruction_mismatch",
+    )
+
+    payload = mutation_matrix.build_mutation_matrix(_audit([row], status="failed"))
+
+    assert payload["mutations"] == [row]
+    assert payload["mutations"][0]["detected"] is True
+    assert payload["mutations"][0]["expected_code_matched"] is False
+
+
 def test_mutation_matrix_does_not_modify_audit_input() -> None:
-    mutation_id = str(mutation_matrix.mutation_catalogue()[0]["mutation_id"])
-    audit = _audit([_finding(mutation_id, "sha256:stable")])
+    case = mutation_matrix.mutation_catalogue()[0]
+    audit = _audit([_finding(case, "sha256:stable")])
     before = deepcopy(audit)
 
     mutation_matrix.build_mutation_matrix(audit)

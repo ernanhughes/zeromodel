@@ -163,6 +163,39 @@ def _mutation_result_id(row: Mapping[str, Any]) -> str:
     return str(row[id_fields[0]])
 
 
+def _validate_result_consistency(
+    row: Mapping[str, Any], catalogue_case: Mapping[str, Any]
+) -> None:
+    primary = row["actual_primary_failure_code"]
+    if primary is not None and not isinstance(primary, str):
+        raise VPMValidationError(
+            "mutation result primary failure code must be a string or null"
+        )
+    authoritative_expected = catalogue_case["expected_result_type"] == "detected"
+    if row["expected_detected"] is not authoritative_expected:
+        raise VPMValidationError(
+            "mutation result expected detection contradicts the catalogue"
+        )
+    if row["detected"] is not (primary is not None):
+        raise VPMValidationError(
+            "mutation result detected flag contradicts its primary failure code"
+        )
+    expected_code_matched = (
+        primary == catalogue_case["expected_primary_failure_code"]
+        if authoritative_expected
+        else primary is None
+    )
+    if row["expected_code_matched"] is not expected_code_matched:
+        raise VPMValidationError(
+            "mutation result expected-code flag contradicts authoritative data"
+        )
+    isolation = row["mutation_isolation"]
+    if isolation["isolation_passed"] and isolation["changed_field_count"] == 0:
+        raise VPMValidationError(
+            "mutation result cannot pass isolation without a structural change"
+        )
+
+
 def _validate_matrix_audit(audit: Mapping[str, Any]) -> list[dict[str, Any]]:
     if audit.get("status") == "unavailable" or audit.get("base_verified") is False:
         raise VPMValidationError(
@@ -172,7 +205,9 @@ def _validate_matrix_audit(audit: Mapping[str, Any]) -> list[dict[str, Any]]:
         raise VPMValidationError("mutation audit status must be passed or failed")
     if audit.get("base_verified") is not True:
         raise VPMValidationError("mutation audit must declare a verified baseline")
-    catalogue_ids = [str(case["mutation_id"]) for case in mutation_catalogue()]
+    catalogue = mutation_catalogue()
+    catalogue_by_id = {str(case["mutation_id"]): case for case in catalogue}
+    catalogue_ids = list(catalogue_by_id)
     declared_count = audit.get("declared_mutation_count")
     executable_count = audit.get("executable_mutation_count")
     if declared_count != len(catalogue_ids):
@@ -252,6 +287,7 @@ def _validate_matrix_audit(audit: Mapping[str, Any]) -> list[dict[str, Any]]:
             raise VPMValidationError(
                 "mutation result effect digest must be a non-empty string"
             )
+        _validate_result_consistency(row, catalogue_by_id[_mutation_result_id(row)])
     if audit["status"] == "passed" and any(
         not row["expected_code_matched"]
         or not row["mutation_isolation"]["isolation_passed"]

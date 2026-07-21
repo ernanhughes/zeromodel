@@ -40,6 +40,7 @@ from zeromodel.domains.video_action_set.materialization_validation import (
 )
 from zeromodel.domains.video_action_set.observation_universe import canonical_prototypes
 from zeromodel.domains.video_action_set.provider_measurement import (
+    SplitBuildProgressObserver,
     measure_record_collection,
 )
 from zeromodel.domains.video_action_set.runtime_profiling import (
@@ -432,7 +433,13 @@ def profile_runtime(
     return payload
 
 
-def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]:
+def build_split(
+    split: str,
+    output_dir: Path,
+    repo_root: Path,
+    *,
+    progress_observer: SplitBuildProgressObserver | None = None,
+) -> dict[str, Any]:
     runtime = _build_durable_runtime(output_dir)
     identity = runtime.video_action_set.load_identity(repo_root)
     prototypes = canonical_prototypes()
@@ -463,6 +470,8 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
         policy_artifact_id,
         reachability_tile=reachability_tile,
         row_actions=row_actions,
+        split=split,
+        progress_observer=progress_observer,
     )
     _write_jsonl(
         split_artifact_path(output_dir, split, "frame-metadata.jsonl"),

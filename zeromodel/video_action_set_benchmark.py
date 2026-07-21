@@ -215,6 +215,7 @@ from zeromodel.domains.video_action_set.pixel_digest import (
 )
 from zeromodel.domains.video_action_set.provider_measurement import (
     SOURCE_SCOPE as SOURCE_SCOPE,
+    SplitBuildProgressObserver as SplitBuildProgressObserver,
     measure_record_collection as measure_record_collection,
     provider_version as _provider_version,
     score_record as _score_record,
@@ -306,7 +307,13 @@ def _profiling_records(repo_root: Path, frame_count: int) -> list[dict[str, Any]
         _build_orchestration._materialize_records = original
 
 
-def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]:
+def build_split(
+    split: str,
+    output_dir: Path,
+    repo_root: Path,
+    *,
+    progress_observer: SplitBuildProgressObserver | None = None,
+) -> dict[str, Any]:
     patch_names = (
         "_materialize_records",
         "canonical_prototypes",
@@ -316,7 +323,12 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
     try:
         for name in patch_names:
             setattr(_build_orchestration, name, globals()[name])
-        return _build_orchestration.build_split(split, output_dir, repo_root)
+        return _build_orchestration.build_split(
+            split,
+            output_dir,
+            repo_root,
+            progress_observer=progress_observer,
+        )
     finally:
         for name, value in originals.items():
             setattr(_build_orchestration, name, value)

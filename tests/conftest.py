@@ -9,7 +9,6 @@ import pytest
 import zeromodel.video_action_set_benchmark as benchmark
 
 
-INTEGRATION_MARKERS = {"integration", "slow"}
 INTEGRATION_TEST_PREFIXES = ("test_video_action_set_",)
 INTEGRATION_TEST_FILES = {
     "test_arcade_visual_local_baseline_showdown.py",
@@ -89,24 +88,24 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--run-integration",
         action="store_true",
         default=False,
-        help="Run tests marked as integration or slow.",
+        help="Run tests marked as integration.",
     )
     group.addoption(
         "--run-slow",
         action="store_true",
         default=False,
-        help="Deprecated compatibility alias for --run-integration.",
+        help="Run tests marked as slow.",
     )
 
 
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
-        "integration: end-to-end, exhaustive, materialization, or long-running test excluded from normal development",
+        "integration: end-to-end, persistence, materialization, or cross-component tests excluded from normal development",
     )
     config.addinivalue_line(
         "markers",
-        "slow: deprecated compatibility alias for integration",
+        "slow: tests normally too expensive for the fast suite, including exhaustive sweeps, profiling, full builds, and mutation audits",
     )
 
 
@@ -114,9 +113,8 @@ def pytest_collection_modifyitems(
     config: pytest.Config,
     items: list[pytest.Item],
 ) -> None:
-    run_integration = bool(
-        config.getoption("--run-integration") or config.getoption("--run-slow")
-    )
+    run_integration = bool(config.getoption("--run-integration"))
+    run_slow = bool(config.getoption("--run-slow"))
 
     for item in items:
         filename = item.path.name
@@ -127,14 +125,16 @@ def pytest_collection_modifyitems(
         ):
             item.add_marker(pytest.mark.integration)
 
-    if run_integration:
+    if run_integration and run_slow:
         return
 
     selected: list[pytest.Item] = []
     deselected: list[pytest.Item] = []
 
     for item in items:
-        if any(marker in item.keywords for marker in INTEGRATION_MARKERS):
+        is_integration = "integration" in item.keywords
+        is_slow = "slow" in item.keywords
+        if (is_integration and not run_integration) or (is_slow and not run_slow):
             deselected.append(item)
         else:
             selected.append(item)

@@ -35,7 +35,7 @@ From a clean checkout:
 ```bash
 python -m pip install --upgrade pip
 python -m pip install -e .[dev]
-pytest -q
+python scripts/run_fast_tests.py
 python -m build
 python -m twine check dist/*
 python examples/arcade_shooter_policy.py

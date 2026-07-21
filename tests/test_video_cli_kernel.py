@@ -37,7 +37,9 @@ def test_cli_dispatches_each_historical_flag(
     monkeypatch.setattr(
         cli,
         "build_split",
-        lambda split, *_args: calls.append(f"build:{split}") or {"command": split},
+        lambda split, *_args, **_kwargs: (
+            calls.append(f"build:{split}") or {"command": split}
+        ),
     )
     monkeypatch.setattr(
         cli,
@@ -140,4 +142,4 @@ def test_stage8_runbook_freezes_once_then_uses_direct_build_calls() -> None:
     assert "--build-calibration" not in controlled
     assert "--build-selection" not in controlled
     for split in ("development", "calibration", "selection"):
-        assert f'build_split(\"{split}\", out, repo)' in controlled
+        assert f'build_split("{split}", out, repo)' in controlled

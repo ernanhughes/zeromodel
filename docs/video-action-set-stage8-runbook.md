@@ -22,15 +22,41 @@ $env:ZEROMODEL_OUT = $Out
 
 ## Command Inventory
 
-These pytest commands require fresh, explicit human authorization. They are listed for
-operator planning only and are not authorized by this runbook:
+### Test Execution Tiers
+
+Fast unit tests are the default developer check:
 
 ```powershell
-python -m pytest -q --run-integration
-python -m pytest -q --run-slow
+python scripts/run_fast_tests.py
+```
+
+Integration tests require fresh, explicit human authorization:
+
+```powershell
+python -m pytest -q --run-integration -m integration
+```
+
+Slow tests require fresh, explicit human authorization:
+
+```powershell
+python -m pytest -q --run-slow -m slow
+```
+
+Tests marked with both tiers require both opt-in flags.
+
+Scientific/manual checks require fresh, explicit human authorization and should
+be scripted by coding agents rather than executed opportunistically:
+
+```powershell
 python -m pytest -q --run-integration tests/test_video_action_set_reference_verification.py -m "not slow"
 python -m pytest -q --run-integration tests/test_installed_wheel_video_instrument.py
 ```
+
+Coding agents must not execute integration tests, slow tests, scientific builds,
+benchmarks, or mutation audits unless the user explicitly authorizes that exact
+execution. Agents should implement the code and provide operator commands for
+long-running validation. For multi-step long validation, agents should create or
+update a script under `scripts/` and leave execution to the operator.
 
 ### Controlled Stage 8 Sequence
 

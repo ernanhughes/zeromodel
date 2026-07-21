@@ -40,6 +40,7 @@ from zeromodel.domains.video_action_set.materialization_validation import (
 )
 from zeromodel.domains.video_action_set.observation_universe import canonical_prototypes
 from zeromodel.domains.video_action_set.provider_measurement import (
+    SplitBuildProgressObserver,
     measure_record_collection,
 )
 from zeromodel.domains.video_action_set.runtime_profiling import (
@@ -55,9 +56,8 @@ from zeromodel.video_complete_row_evidence import (
     VIDEO_SCORE_QUANTIZER_VERSION,
 )
 from zeromodel.video_prospective_providers import (
-    PROSPECTIVE_P1_VERSION,
-    PROSPECTIVE_P2_VERSION,
-    PROSPECTIVE_P3_VERSION,
+    PROSPECTIVE_PROVIDER_IDS,
+    PROSPECTIVE_PROVIDER_VERSIONS,
 )
 from zeromodel.domains.video_action_set.artifact_io import (
     _read_json,
@@ -323,9 +323,11 @@ def freeze_benchmark(output_dir: Path, repo_root: Path) -> dict[str, Any]:
     }
     provider_manifest = {
         "providers": [
-            {"provider_id": "P1", "provider_version": PROSPECTIVE_P1_VERSION},
-            {"provider_id": "P2", "provider_version": PROSPECTIVE_P2_VERSION},
-            {"provider_id": "P3", "provider_version": PROSPECTIVE_P3_VERSION},
+            {
+                "provider_id": provider_id,
+                "provider_version": PROSPECTIVE_PROVIDER_VERSIONS[provider_id],
+            }
+            for provider_id in PROSPECTIVE_PROVIDER_IDS
         ]
     }
     sealed_final = runtime.video_action_set.seal_final_split(
@@ -383,7 +385,7 @@ def profile_runtime(
     prototypes = canonical_prototypes()
     policy_artifact_id = compile_policy_artifact().artifact_id
     records = _profiling_records(repo_root, frame_count)
-    provider_ids = ("P1", "P2", "P3") if provider == "all" else (provider,)
+    provider_ids = PROSPECTIVE_PROVIDER_IDS if provider == "all" else (provider,)
     reference = []
     optimized = []
     for provider_id in provider_ids:
@@ -432,7 +434,13 @@ def profile_runtime(
     return payload
 
 
-def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]:
+def build_split(
+    split: str,
+    output_dir: Path,
+    repo_root: Path,
+    *,
+    progress_observer: SplitBuildProgressObserver | None = None,
+) -> dict[str, Any]:
     runtime = _build_durable_runtime(output_dir)
     identity = runtime.video_action_set.load_identity(repo_root)
     prototypes = canonical_prototypes()
@@ -463,6 +471,8 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
         policy_artifact_id,
         reachability_tile=reachability_tile,
         row_actions=row_actions,
+        split=split,
+        progress_observer=progress_observer,
     )
     _write_jsonl(
         split_artifact_path(output_dir, split, "frame-metadata.jsonl"),

@@ -22,15 +22,41 @@ $env:ZEROMODEL_OUT = $Out
 
 ## Command Inventory
 
-These pytest commands require fresh, explicit human authorization. They are listed for
-operator planning only and are not authorized by this runbook:
+### Test Execution Tiers
+
+Fast unit tests are the default developer check:
 
 ```powershell
-python -m pytest -q --run-integration
-python -m pytest -q --run-slow
+python scripts/run_fast_tests.py
+```
+
+Integration tests require fresh, explicit human authorization:
+
+```powershell
+python -m pytest -q --run-integration -m integration
+```
+
+Slow tests require fresh, explicit human authorization:
+
+```powershell
+python -m pytest -q --run-slow -m slow
+```
+
+Tests marked with both tiers require both opt-in flags.
+
+Scientific/manual checks require fresh, explicit human authorization and should
+be scripted by coding agents rather than executed opportunistically:
+
+```powershell
 python -m pytest -q --run-integration tests/test_video_action_set_reference_verification.py -m "not slow"
 python -m pytest -q --run-integration tests/test_installed_wheel_video_instrument.py
 ```
+
+Coding agents must not execute integration tests, slow tests, scientific builds,
+benchmarks, or mutation audits unless the user explicitly authorizes that exact
+execution. Agents should implement the code and provide operator commands for
+long-running validation. For multi-step long validation, agents should create or
+update a script under `scripts/` and leave execution to the operator.
 
 ### Controlled Stage 8 Sequence
 
@@ -176,6 +202,31 @@ Therefore Stage 8 must stop before final unless a separate reviewed authorizatio
 
 ## Recovery Rules
 
+- Progress observer failure during `build_split()`: the observer is called from
+  provider measurement after a frame or typed gap is processed, and observer
+  exceptions intentionally propagate. At that point the split may already have
+  identical SQLite episode plans for the split and SQLite observations,
+  matrix blobs, and observation operation chains for materialized records.
+  Provider scoring may also have produced provider descriptors and evidence
+  rows in memory for the current process, but `frame-metadata.jsonl`,
+  `provider-evidence.jsonl`, `<split>-manifest.json`,
+  `<split>-family-closure-report.json`, the selection
+  `family-closure-report.json`, `observation-identity-manifest.json`,
+  `split-overlap-audit.json`, and refreshed `phase-access-audits.json` are
+  written only after measurement returns.
+- Same-directory retry after progress observer failure is supported only for
+  the same split, unchanged code and inputs, and only when none of that split's
+  filesystem completion artifacts exist. The durable stores return existing
+  identical episode plans, observations, matrix blobs, and operation chains and
+  raise on conflicts. If any current split JSONL, split manifest, or family
+  closure artifact exists, use a fresh output directory.
+- No partially completed split may be treated as valid. Progress output is an
+  operator liveness signal, not a scientific completion marker. A split is
+  complete only when both split JSONL files, `<split>-manifest.json`, and
+  `<split>-family-closure-report.json` exist for that split; selection also
+  publishes `family-closure-report.json`. Stage 8 completion still requires the
+  later verification, audit, mutation, and closure gates listed in the execution
+  order.
 - Freeze failure: discard the output directory and restart freeze.
 - Split build failure: discard the whole output directory, refreeze, and rebuild preceding splits in order.
 - Profiling failure: profiling outputs may be discarded and rerun; scientific artifacts must remain unchanged.

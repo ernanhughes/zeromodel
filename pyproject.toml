@@ -63,6 +63,6 @@ testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "--strict-markers"
 markers = [
-    "integration: end-to-end, exhaustive, materialization, or long-running tests excluded from normal development",
-    "slow: deprecated compatibility alias for integration",
+    "integration: end-to-end, persistence, materialization, or cross-component tests excluded from normal development",
+    "slow: tests normally too expensive for the fast suite, including exhaustive sweeps, profiling, full builds, and mutation audits",
 ]

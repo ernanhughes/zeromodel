@@ -74,6 +74,7 @@ from zeromodel.domains.video_action_set.transformations import (
     _validate_transformation_parameters,
 )
 from zeromodel.domains.video_action_set.dto import BenchmarkIdentityDTO
+from zeromodel.video_prospective_providers import PROSPECTIVE_PROVIDER_IDS
 
 BenchmarkIdentity = BenchmarkIdentityDTO
 _NON_FINAL_SPLITS = ("development", "calibration", "selection")
@@ -473,7 +474,9 @@ def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, 
         frames = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
         evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
         by_frame_provider = {(row.get("frame_id"), row.get("provider_id")): row for row in evidence_rows}
-        reachability_state: dict[str, Mapping[str, Any] | None] = {"P1": None, "P2": None, "P3": None}
+        reachability_state: dict[str, Mapping[str, Any] | None] = {
+            provider_id: None for provider_id in PROSPECTIVE_PROVIDER_IDS
+        }
         expected_frames = _cached_materialized_metadata(repo_root, split)
         # Use stored order only after sorting by the deterministic frame identity. This keeps JSONL row order non-semantic.
         if len(expected_frames) != len(frames):
@@ -483,7 +486,7 @@ def _reachability_gate(output_dir: Path, repo_root: Path, context: Mapping[str, 
                 for provider_id in reachability_state:
                     reachability_state[provider_id] = _gap_reachability_state(frame)
                 continue
-            for provider_id in ("P1", "P2", "P3"):
+            for provider_id in PROSPECTIVE_PROVIDER_IDS:
                 row = by_frame_provider.get((frame.get("frame_id"), provider_id))
                 if row is None:
                     findings.append(_finding("reachability_trace_mismatch", "provider score row missing for scored frame", split=split, frame_id=frame.get("frame_id"), provider_id=provider_id))

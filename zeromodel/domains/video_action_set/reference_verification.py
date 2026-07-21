@@ -15,6 +15,7 @@ from ...video_prospective_providers import (
     PROSPECTIVE_P1_VERSION,
     PROSPECTIVE_P2_VERSION,
     PROSPECTIVE_P3_VERSION,
+    PROSPECTIVE_PROVIDER_IDS,
 )
 from .canonical_json import canonical_json_value, canonical_sha256
 from .contracts import EPISODE_PLAN_VERSION
@@ -511,10 +512,9 @@ def compare_provider_results(
 def build_provider_equivalence_payload(
     comparisons: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
-    provider_order = ("P1", "P2", "P3")
     summary: dict[str, Any] = {}
     mismatches: list[str] = []
-    for provider_id in provider_order:
+    for provider_id in PROSPECTIVE_PROVIDER_IDS:
         rows = [row for row in comparisons if row.get("provider_id") == provider_id]
         provider_summary = {
             "quantized_mismatch_count": sum(

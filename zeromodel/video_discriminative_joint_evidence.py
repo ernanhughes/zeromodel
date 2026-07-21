@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from collections import OrderedDict
 from dataclasses import dataclass, field
 import hashlib
 import json
+from threading import RLock
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Mapping, Optional, Protocol, Sequence, Tuple
+from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -33,7 +35,70 @@ VIDEO_JOINT_PAIRWISE_MASK_SPEC_VERSION = "zeromodel-video-pairwise-mask-spec/v1"
 VIDEO_JOINT_PAIRWISE_MASK_PAYLOAD_VERSION = "zeromodel-video-pairwise-mask-payload/v1"
 VIDEO_JOINT_CALIBRATION_VERSION = "zeromodel-video-joint-calibration/v1"
 _ARCHITECTURES = {"A3", "B3", "C3", "D3"}
-_BASE_CANDIDATE_CACHE: Dict[Tuple[str, str, str, str], Tuple[Dict[str, Any], ...]] = {}
+_BASE_CANDIDATE_CACHE_CAPACITY = 8
+_BaseCandidateCacheKey = Tuple[str, str, str, str, str]
+_BaseCandidateCacheValue = Tuple[Mapping[str, Any], ...]
+
+
+class _BoundedBaseCandidateCache:
+    """Deterministic LRU for the small window of repeated P3 observation scoring."""
+
+    def __init__(self, capacity: int) -> None:
+        if capacity < 1:
+            raise VPMValidationError("base candidate cache capacity must be positive")
+        self._capacity = int(capacity)
+        self._data: OrderedDict[_BaseCandidateCacheKey, _BaseCandidateCacheValue] = OrderedDict()
+        self._hits = 0
+        self._misses = 0
+        self._lock = RLock()
+
+    def get(self, key: _BaseCandidateCacheKey) -> _BaseCandidateCacheValue | None:
+        with self._lock:
+            cached = self._data.pop(key, None)
+            if cached is None:
+                self._misses += 1
+                return None
+            self._hits += 1
+            self._data[key] = cached
+            return cached
+
+    def put(self, key: _BaseCandidateCacheKey, value: _BaseCandidateCacheValue) -> _BaseCandidateCacheValue:
+        with self._lock:
+            self._data.pop(key, None)
+            self._data[key] = value
+            while len(self._data) > self._capacity:
+                self._data.popitem(last=False)
+            return value
+
+    def clear(self) -> None:
+        with self._lock:
+            self._data.clear()
+            self._hits = 0
+            self._misses = 0
+
+    def info(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "capacity": self._capacity,
+                "size": len(self._data),
+                "hits": self._hits,
+                "misses": self._misses,
+                "keys": list(self._data.keys()),
+            }
+
+
+# Eight entries preserve direct A3/B3/C3/D3 architecture sweeps and
+# reference/optimized rescoring of the current observation without retaining a
+# long split's mostly unique frame observations indefinitely.
+_BASE_CANDIDATE_CACHE = _BoundedBaseCandidateCache(_BASE_CANDIDATE_CACHE_CAPACITY)
+
+
+def _reset_base_candidate_cache() -> None:
+    _BASE_CANDIDATE_CACHE.clear()
+
+
+def _base_candidate_cache_info() -> Dict[str, Any]:
+    return _BASE_CANDIDATE_CACHE.info()
 
 
 def _freeze(value: Any) -> Any:
@@ -733,6 +798,27 @@ def _candidate_pair_key(row_a: str, row_b: str) -> Tuple[str, str]:
     return (row_a, row_b) if row_a < row_b else (row_b, row_a)
 
 
+def _prototype_cache_digest(
+    prototypes: Mapping[str, Tuple[str, str, str, ImageObservation]],
+) -> str:
+    return _digest(
+        [
+            {
+                "row_id": row_id,
+                "action_id": action_id,
+                "prototype_observation_id": prototype_observation_id,
+                "prototype_raw_digest": prototype_raw_digest,
+            }
+            for row_id, (
+                prototype_observation_id,
+                action_id,
+                prototype_raw_digest,
+                _prototype_observation,
+            ) in sorted(prototypes.items())
+        ]
+    )
+
+
 def _build_candidate_base(
     *,
     observation: ImageObservation,
@@ -1011,9 +1097,10 @@ def build_joint_row_candidates(
         raise VPMValidationError("unsupported joint architecture_id")
     cache_key = (
         observation.raw_digest,
-        _digest({row_id: value[2] for row_id, value in sorted(prototypes.items())}),
+        _prototype_cache_digest(prototypes),
         _digest({row_id: mask.payload_digest for row_id, mask in sorted(candidate_masks.items())}),
         _digest({f"{row_a}|{row_b}": mask.payload_digest for (row_a, row_b), mask in sorted(pairwise_masks.items())}),
+        _digest([region.digest for region in regions]),
     )
     bases = _BASE_CANDIDATE_CACHE.get(cache_key)
     if bases is None:
@@ -1024,7 +1111,7 @@ def build_joint_row_candidates(
             pairwise_masks=pairwise_masks,
             regions=regions,
         )
-        _BASE_CANDIDATE_CACHE[cache_key] = bases
+        bases = _BASE_CANDIDATE_CACHE.put(cache_key, _freeze(bases))
     return tuple(_materialize_candidate(base, architecture_id) for base in bases)
 
 

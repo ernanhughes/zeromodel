@@ -7,7 +7,6 @@ from typing import Any, Generic, Mapping, Sequence, TypeVar
 
 import numpy as np
 
-from .arcade_policy import ACTIONS
 from .artifact import VPMValidationError
 from .content_identity import PrototypeUniverseIdentity, UnresolvedArtifactIdentity, prototype_universe_identity, sha256_digest
 from .video_complete_row_evidence import CompleteRowEvidence, SemanticTopSetOutcome, build_complete_row_evidence, build_semantic_top_set_outcome
@@ -35,6 +34,12 @@ from .visual_registration import RegistrationConfig
 PROSPECTIVE_P1_VERSION = "zeromodel-video-prospective-normalized-pixel/v1"
 PROSPECTIVE_P2_VERSION = "zeromodel-video-prospective-local-correlation/v1"
 PROSPECTIVE_P3_VERSION = "zeromodel-video-prospective-b3-joint-fit/v1"
+PROSPECTIVE_PROVIDER_IDS = ("P1", "P2", "P3")
+PROSPECTIVE_PROVIDER_VERSIONS = {
+    "P1": PROSPECTIVE_P1_VERSION,
+    "P2": PROSPECTIVE_P2_VERSION,
+    "P3": PROSPECTIVE_P3_VERSION,
+}
 _DEFAULT_CACHE_CAPACITY = 8
 
 
@@ -515,6 +520,8 @@ __all__ = [
     "PROSPECTIVE_P1_VERSION",
     "PROSPECTIVE_P2_VERSION",
     "PROSPECTIVE_P3_VERSION",
+    "PROSPECTIVE_PROVIDER_IDS",
+    "PROSPECTIVE_PROVIDER_VERSIONS",
     "ProviderScoreVector",
     "ProspectiveProviderResult",
     "clear_prospective_provider_caches",

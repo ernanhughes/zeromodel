@@ -57,11 +57,19 @@ def test_build_split_adapter_preserves_benchmark_monkeypatch_seams(
     materialize = object()
     prototypes = object()
     measure = object()
+    observer = object()
     monkeypatch.setattr(benchmark, "_materialize_records", materialize)
     monkeypatch.setattr(benchmark, "canonical_prototypes", prototypes)
     monkeypatch.setattr(benchmark, "measure_record_collection", measure)
 
-    def fake_build(split: str, output_dir: Path, repo_root: Path):
+    def fake_build(
+        split: str,
+        output_dir: Path,
+        repo_root: Path,
+        *,
+        progress_observer=None,
+    ):
+        assert progress_observer is observer
         assert build_orchestration._materialize_records is materialize
         assert build_orchestration.canonical_prototypes is prototypes
         assert build_orchestration.measure_record_collection is measure
@@ -69,7 +77,13 @@ def test_build_split_adapter_preserves_benchmark_monkeypatch_seams(
 
     monkeypatch.setattr(build_orchestration, "build_split", fake_build)
     assert (
-        benchmark.build_split("selection", tmp_path, REPO_ROOT)["split"] == "selection"
+        benchmark.build_split(
+            "selection",
+            tmp_path,
+            REPO_ROOT,
+            progress_observer=observer,
+        )["split"]
+        == "selection"
     )
 
 

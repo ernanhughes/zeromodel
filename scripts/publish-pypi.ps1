@@ -81,8 +81,8 @@ Remove-Item -Recurse -Force dist, build -ErrorAction SilentlyContinue
 Get-ChildItem -Directory -Filter "*.egg-info" | Remove-Item -Recurse -Force
 
 if (-not $SkipTests) {
-    Step "Running tests"
-    & $Python -m pytest -q
+    Step "Running fast tests"
+    & $Python scripts/run_fast_tests.py
 }
 
 if (-not $SkipDemo) {

@@ -37,7 +37,9 @@ def test_cli_dispatches_each_historical_flag(
     monkeypatch.setattr(
         cli,
         "build_split",
-        lambda split, *_args: calls.append(f"build:{split}") or {"command": split},
+        lambda split, *_args, **_kwargs: (
+            calls.append(f"build:{split}") or {"command": split}
+        ),
     )
     monkeypatch.setattr(
         cli,
@@ -83,6 +85,64 @@ def test_cli_rejects_no_command_and_unknown_options(monkeypatch, capsys) -> None
         cli.main()
     assert unknown.value.code == 2
     assert "unrecognized arguments: --unknown-command" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    "flag",
+    ["--build-development", "--build-calibration", "--build-selection"],
+)
+def test_cli_accepts_progress_for_split_builds_only(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    flag: str,
+) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr(
+        cli,
+        "freeze_benchmark",
+        lambda *_args: calls.append("freeze") or {"command": "freeze"},
+    )
+
+    def fake_build_split(split: str, *_args, progress_observer=None) -> dict[str, str]:
+        assert progress_observer is not None
+        calls.append(f"build:{split}")
+        return {"command": split}
+
+    monkeypatch.setattr(cli, "build_split", fake_build_split)
+    monkeypatch.setattr(sys, "argv", ["instrument", flag, "--progress"])
+
+    cli.main()
+
+    assert calls == ["freeze", f"build:{flag.removeprefix('--build-')}"]
+    assert json.loads(capsys.readouterr().out)["command"]
+
+
+@pytest.mark.parametrize(
+    "flag",
+    [
+        "--freeze-benchmark",
+        "--profile-runtime",
+        "--audit-evidence-completeness",
+        "--audit-canonical-providers",
+    ],
+)
+def test_cli_rejects_progress_for_non_build_operations(
+    monkeypatch: pytest.MonkeyPatch,
+    flag: str,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["instrument", flag, "--progress"])
+
+    with pytest.raises(SystemExit, match="--progress is only valid"):
+        cli.main()
+
+
+def test_cli_rejects_progress_without_explicit_operation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["instrument", "--progress"])
+
+    with pytest.raises(SystemExit, match="--progress is only valid"):
+        cli.main()
 
 
 def test_benchmark_module_execution_remains_historically_inert(tmp_path: Path) -> None:
@@ -140,4 +200,4 @@ def test_stage8_runbook_freezes_once_then_uses_direct_build_calls() -> None:
     assert "--build-calibration" not in controlled
     assert "--build-selection" not in controlled
     for split in ("development", "calibration", "selection"):
-        assert f'build_split(\"{split}\", out, repo)' in controlled
+        assert f'build_split("{split}", out, repo)' in controlled

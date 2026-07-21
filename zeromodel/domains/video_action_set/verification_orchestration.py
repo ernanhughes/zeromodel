@@ -57,9 +57,8 @@ from zeromodel.video_complete_row_evidence import (
     VIDEO_SCORE_QUANTIZER_VERSION,
 )
 from zeromodel.video_prospective_providers import (
-    PROSPECTIVE_P1_VERSION,
-    PROSPECTIVE_P2_VERSION,
-    PROSPECTIVE_P3_VERSION,
+    PROSPECTIVE_PROVIDER_IDS,
+    PROSPECTIVE_PROVIDER_VERSIONS,
     score_all_rows_optimized,
     score_all_rows_reference,
 )
@@ -110,7 +109,7 @@ def verify_provider_runtime_equivalence(
         for row_id, action_id, _digest, observation in list(prototypes.values())[:12]
     ]
     comparisons = []
-    for provider_id in ("P1", "P2", "P3"):
+    for provider_id in PROSPECTIVE_PROVIDER_IDS:
         for record in sampled:
             reference = score_all_rows_reference(
                 provider_id=provider_id,
@@ -358,9 +357,11 @@ def _structural_identity_gate(
         findings.append(_finding("family_contract_violation", "transformation-family contract differs from the frozen contract"))
     expected_provider_manifest = {
         "providers": [
-            {"provider_id": "P1", "provider_version": PROSPECTIVE_P1_VERSION},
-            {"provider_id": "P2", "provider_version": PROSPECTIVE_P2_VERSION},
-            {"provider_id": "P3", "provider_version": PROSPECTIVE_P3_VERSION},
+            {
+                "provider_id": provider_id,
+                "provider_version": PROSPECTIVE_PROVIDER_VERSIONS[provider_id],
+            }
+            for provider_id in PROSPECTIVE_PROVIDER_IDS
         ]
     }
     if _read_json(output_dir / "provider-manifest.json") != expected_provider_manifest:

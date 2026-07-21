@@ -26,7 +26,7 @@ For development:
 
 ```bash
 python -m pip install -e .[dev]
-pytest
+python scripts/run_fast_tests.py
 python -m build
 python -m twine check dist/*
 ```

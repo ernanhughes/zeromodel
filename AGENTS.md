@@ -58,7 +58,7 @@ python -m build
 
 ## Test Execution Policy
 
-ZeroModel has two test tiers.
+ZeroModel has four execution tiers.
 
 ### Fast tests
 
@@ -77,21 +77,36 @@ During implementation:
 3. Do not repeatedly rerun an unchanged command.
 4. Do not add exhaustive, end-to-end, materialization, or complete mutation work to the fast tier.
 
-### Integration tests
+### Integration and slow tests
 
-Integration tests require explicit human authorization.
+Integration tests and slow tests require explicit human authorization for the
+exact command being run.
 
 Do not run any of these unless the user explicitly requests it:
 
 ```powershell
-pytest --run-integration
-pytest --run-slow
-pytest -m integration
+python -m pytest -q --run-integration -m integration
+python -m pytest -q --run-slow -m slow
 ```
+
+Tests marked with both tiers require both opt-in flags.
 
 Integration tests include complete benchmark materialization, exhaustive observation universes, complete mutation audits, installed-wheel tests, historical regeneration, and long-running cross-product validation.
 
 When integration coverage is relevant, report the exact suggested command but do not execute it.
+
+### Scientific/manual checks
+
+Scientific and manual checks include development, calibration, selection, or
+final split builds, runtime profiling, provider-equivalence audits, canonical
+provider audits, evidence-completeness checks over preserved outputs, reference
+closure, and mutation audits.
+
+Coding agents must not execute integration tests, slow tests, scientific builds,
+benchmarks, or mutation audits unless the user explicitly authorizes that exact
+execution. Agents should implement the code and provide operator commands or
+scripts for long-running validation. For multi-step long validation, create or
+update a script under `scripts/` and leave execution to the operator.
 
 ## Video Action-Set RMDTO Policy
 
@@ -119,6 +134,13 @@ When integration coverage is relevant, report the exact suggested command but do
 - Scientific rendering, transformation, mutation, replay, and digest computation stay in Python/NumPy.
 - Final split materialization is prohibited in every Store.
 - Batch observation writes must be atomic.
+- Progress observer exceptions intentionally propagate during split builds.
+  Before such a failure, SQLite episode plans plus observations, matrix blobs,
+  and observation operation chains may already be durable; split JSONL,
+  split-manifest, and family-closure artifacts are not completion markers until
+  all required files for the split exist. Same-directory retry is allowed only
+  for unchanged code and inputs before current-split filesystem completion
+  artifacts exist; otherwise require a fresh output directory.
 
 ## Working Style
 

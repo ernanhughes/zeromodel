@@ -11,9 +11,7 @@ FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
 
 def main() -> int:
     forbidden = [
-        argument
-        for argument in sys.argv[1:]
-        if argument in FORBIDDEN_INTEGRATION_FLAGS
+        argument for argument in sys.argv[1:] if argument in FORBIDDEN_INTEGRATION_FLAGS
     ]
     if forbidden:
         print(
@@ -22,7 +20,7 @@ def main() -> int:
             file=sys.stderr,
         )
         print(
-            "Run integration tests explicitly with pytest instead.",
+            "Run integration or slow tests explicitly with pytest instead.",
             file=sys.stderr,
         )
         return 2
@@ -58,8 +56,7 @@ def main() -> int:
 
     elapsed = time.monotonic() - started
     print(
-        f"\nFast-suite runtime: {elapsed:.2f}s "
-        f"(budget: {FAST_SUITE_BUDGET_SECONDS}s)"
+        f"\nFast-suite runtime: {elapsed:.2f}s (budget: {FAST_SUITE_BUDGET_SECONDS}s)"
     )
     return completed.returncode
 

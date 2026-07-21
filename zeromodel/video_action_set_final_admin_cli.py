@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from .db.runtime import build_finalization_sqlite_runtime
+from .db.session import sqlite_database_url
 from .domains.video_action_set.final_access_dto import validate_final_identifier
 from .domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
@@ -26,14 +27,7 @@ def build_argument_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     args = build_argument_parser().parse_args(argv)
     validate_final_identifier(args.access_id, "final access id mismatch")
-    database_url = (
-        args.database_path.resolve()
-        .as_uri()
-        .replace(
-            "file:///",
-            "sqlite:///",
-        )
-    )
+    database_url = sqlite_database_url(args.database_path)
     runtime = build_finalization_sqlite_runtime(database_url)
     payload = reconstruct_final_access_ledger(
         runtime.video_action_set.engine.final_access_service.store,

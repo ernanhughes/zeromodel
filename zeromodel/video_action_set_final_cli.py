@@ -8,6 +8,7 @@ from pathlib import Path
 import sys
 
 from .db.runtime import build_finalization_sqlite_runtime
+from .db.session import sqlite_database_url
 from .domains.video_action_set.final_access_dto import (
     FINAL_EXECUTION_REQUEST_VERSION,
     FinalExecutionRequestDTO,
@@ -63,7 +64,7 @@ def main(argv: list[str] | None = None) -> None:
         confirmation = input("Type the confirmation text exactly: ")
         if confirmation != authorization.operator_confirmation_text:
             raise SystemExit("final execution confirmation mismatch")
-    database_url = args.database_path.resolve().as_uri().replace("file:///", "sqlite:///")
+    database_url = sqlite_database_url(args.database_path)
     initialize_authority = (
         not args.database_path.exists() or args.database_path.stat().st_size == 0
     )

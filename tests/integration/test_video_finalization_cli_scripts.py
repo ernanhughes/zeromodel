@@ -16,6 +16,7 @@ from video_final_test_support import (
     request,
 )
 from zeromodel.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.db.session import sqlite_database_url
 from zeromodel.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
 )
@@ -39,8 +40,7 @@ def _tree_digests(root: Path) -> dict[str, str]:
 
 
 def _database_url(path: Path) -> str:
-    return path.resolve().as_uri().replace("file:///", "sqlite:///")
-
+    return sqlite_database_url(path)
 
 def _completed(tmp_path: Path) -> tuple[object, FinalExecutionReceiptDTO]:
     protocol = approved_protocol()

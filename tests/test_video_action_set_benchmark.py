@@ -9,7 +9,10 @@ import pytest
 
 import zeromodel.video_action_set_benchmark as benchmark
 from zeromodel.artifact import VPMValidationError
-from zeromodel.video_complete_row_evidence import build_complete_row_evidence, build_semantic_top_set_outcome
+from zeromodel.video_complete_row_evidence import (
+    build_complete_row_evidence,
+    build_semantic_top_set_outcome,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -64,9 +67,14 @@ def _fake_provider_output() -> list[dict[str, object]]:
 
 def _contains_forbidden_materialized_payload(value: object) -> bool:
     if isinstance(value, dict):
-        if any(key in {"pixels", "ImageObservation", "score_vector", "candidate_set"} for key in value):
+        if any(
+            key in {"pixels", "ImageObservation", "score_vector", "candidate_set"}
+            for key in value
+        ):
             return True
-        return any(_contains_forbidden_materialized_payload(item) for item in value.values())
+        return any(
+            _contains_forbidden_materialized_payload(item) for item in value.values()
+        )
     if isinstance(value, list):
         return any(_contains_forbidden_materialized_payload(item) for item in value)
     return False
@@ -80,10 +88,14 @@ def test_materialized_split_counts_and_final_freeze(tmp_path: Path) -> None:
     assert len(development) == 112
     assert len(calibration) == 448
     assert len(selection) == 1008
-    split_manifest = json.loads((tmp_path / "split-manifest.json").read_text(encoding="utf-8"))
+    split_manifest = json.loads(
+        (tmp_path / "split-manifest.json").read_text(encoding="utf-8")
+    )
     assert split_manifest["calibration_episode_count"] == 112
     assert split_manifest["selection_valid_episode_count"] == 112
-    phase_access = json.loads((tmp_path / "phase-access-audits.json").read_text(encoding="utf-8"))
+    phase_access = json.loads(
+        (tmp_path / "phase-access-audits.json").read_text(encoding="utf-8")
+    )
     assert phase_access["final_materialization_count"] == 0
     assert phase_access["final_score_access_count"] == 0
 
@@ -106,12 +118,26 @@ def test_build_split_writes_overlap_and_observation_manifests(tmp_path: Path) ->
             "actual_executed_action": "left",
             "action_known": True,
             "gap_declaration": None,
-            "metadata": {"episode_seed": 1, "seed_digest": "sha256:test", "reachability_trace": {"reachable_row_ids": ["row-000"]}},
+            "metadata": {
+                "episode_seed": 1,
+                "seed_digest": "sha256:test",
+                "reachability_trace": {"reachable_row_ids": ["row-000"]},
+            },
             "pixels": [[0]],
         }
     ]
-    fake_records_calibration = [{**record, "split": "calibration", "frame_id": "calibration:episode-001:frame-00"} for record in fake_records]
-    fake_records_selection = [{**record, "split": "selection", "frame_id": "selection:episode-001:frame-00"} for record in fake_records]
+    fake_records_calibration = [
+        {
+            **record,
+            "split": "calibration",
+            "frame_id": "calibration:episode-001:frame-00",
+        }
+        for record in fake_records
+    ]
+    fake_records_selection = [
+        {**record, "split": "selection", "frame_id": "selection:episode-001:frame-00"}
+        for record in fake_records
+    ]
     monkeypatch.setattr(
         benchmark,
         "_materialize_records",
@@ -121,17 +147,25 @@ def test_build_split_writes_overlap_and_observation_manifests(tmp_path: Path) ->
             "selection": fake_records_selection,
         }[split],
     )
-    monkeypatch.setattr(benchmark, "_score_record", lambda record, prototypes, policy_artifact_id, **_kwargs: fake_output)
+    monkeypatch.setattr(
+        benchmark,
+        "measure_record_collection",
+        lambda records, prototypes, policy_artifact_id, **_kwargs: fake_output,
+    )
     monkeypatch.setattr(benchmark, "canonical_prototypes", lambda: {})
     benchmark.build_split("development", tmp_path, REPO_ROOT)
     benchmark.build_split("calibration", tmp_path, REPO_ROOT)
     benchmark.build_split("selection", tmp_path, REPO_ROOT)
     monkeypatch.undo()
-    overlap = json.loads((tmp_path / "split-overlap-audit.json").read_text(encoding="utf-8"))
+    overlap = json.loads(
+        (tmp_path / "split-overlap-audit.json").read_text(encoding="utf-8")
+    )
     assert overlap["development_calibration_overlap"] == 0
     assert overlap["development_selection_overlap"] == 0
     assert overlap["calibration_selection_overlap"] == 0
-    observation_manifest = json.loads((tmp_path / "observation-identity-manifest.json").read_text(encoding="utf-8"))
+    observation_manifest = json.loads(
+        (tmp_path / "observation-identity-manifest.json").read_text(encoding="utf-8")
+    )
     assert observation_manifest["development_observation_count"] == 1
     assert observation_manifest["calibration_observation_count"] == 1
     assert observation_manifest["selection_observation_count"] == 1
@@ -142,8 +176,13 @@ def test_seed_material_determines_episode_identity_and_trace(tmp_path: Path) -> 
     first = benchmark._materialize_records("development", REPO_ROOT)
     second = benchmark._materialize_records("development", REPO_ROOT)
     assert [row["episode_id"] for row in first] == [row["episode_id"] for row in second]
-    assert [row["observation_pixel_digest"] for row in first] == [row["observation_pixel_digest"] for row in second]
-    assert first[0]["metadata"]["reachability_trace"]["executed_action"] == first[0]["expected_action"]
+    assert [row["observation_pixel_digest"] for row in first] == [
+        row["observation_pixel_digest"] for row in second
+    ]
+    assert (
+        first[0]["metadata"]["reachability_trace"]["executed_action"]
+        == first[0]["expected_action"]
+    )
     assert first[0]["metadata"]["derived_seed_identity"].startswith("sha256:")
     assert first[0]["metadata"]["episode_plan_digest"].startswith("sha256:")
 
@@ -155,20 +194,31 @@ def test_changing_root_seed_material_changes_sealed_episode_identities() -> None
     changed = benchmark.BenchmarkIdentity(
         contract_commit=identity.contract_commit,
         seed_material=changed_material,
-        seed_digest="sha256:" + hashlib.sha256(changed_material.encode("utf-8")).hexdigest(),
+        seed_digest="sha256:"
+        + hashlib.sha256(changed_material.encode("utf-8")).hexdigest(),
         policy_artifact_id=identity.policy_artifact_id,
         parent_audit_sha=identity.parent_audit_sha,
         parent_v3_sha=identity.parent_v3_sha,
     )
-    original = benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)
-    changed_plans = benchmark._episode_plans_for_split(changed, "selection", row_ids, row_actions)
-    assert [plan["episode_id"] for plan in original] != [plan["episode_id"] for plan in changed_plans]
+    original = benchmark._episode_plans_for_split(
+        identity, "selection", row_ids, row_actions
+    )
+    changed_plans = benchmark._episode_plans_for_split(
+        changed, "selection", row_ids, row_actions
+    )
+    assert [plan["episode_id"] for plan in original] != [
+        plan["episode_id"] for plan in changed_plans
+    ]
 
 
 def test_changing_derived_seed_without_declared_parent_is_rejected() -> None:
     row_ids, row_actions = _row_actions()
     identity = benchmark.load_identity(REPO_ROOT)
-    plan = copy.deepcopy(benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)[0])
+    plan = copy.deepcopy(
+        benchmark._episode_plans_for_split(identity, "selection", row_ids, row_actions)[
+            0
+        ]
+    )
     plan["seed_lineage"]["concrete_episode_seed"]["seed_digest"] = "sha256:" + "0" * 64
     with pytest.raises(VPMValidationError):
         benchmark._validate_episode_plan(identity, plan, row_actions)
@@ -177,25 +227,45 @@ def test_changing_derived_seed_without_declared_parent_is_rejected() -> None:
 def test_duplicate_episode_ids_are_rejected() -> None:
     row_ids, row_actions = _row_actions()
     identity = benchmark.load_identity(REPO_ROOT)
-    plan = benchmark._episode_plans_for_split(identity, "development", row_ids, row_actions)[0]
+    plan = benchmark._episode_plans_for_split(
+        identity, "development", row_ids, row_actions
+    )[0]
     with pytest.raises(VPMValidationError):
-        benchmark._validate_episode_plan_collection(identity, {"development": [plan, plan]}, row_actions)
+        benchmark._validate_episode_plan_collection(
+            identity, {"development": [plan, plan]}, row_actions
+        )
 
 
 def test_moving_episode_id_between_splits_is_rejected() -> None:
     row_ids, row_actions = _row_actions()
     identity = benchmark.load_identity(REPO_ROOT)
-    development = benchmark._episode_plans_for_split(identity, "development", row_ids, row_actions)[0]
-    calibration = copy.deepcopy(benchmark._episode_plans_for_split(identity, "calibration", row_ids, row_actions)[0])
+    development = benchmark._episode_plans_for_split(
+        identity, "development", row_ids, row_actions
+    )[0]
+    calibration = copy.deepcopy(
+        benchmark._episode_plans_for_split(
+            identity, "calibration", row_ids, row_actions
+        )[0]
+    )
     calibration["episode_id"] = development["episode_id"]
     with pytest.raises(VPMValidationError):
-        benchmark._validate_episode_plan_collection(identity, {"development": [development], "calibration": [calibration]}, row_actions)
+        benchmark._validate_episode_plan_collection(
+            identity,
+            {"development": [development], "calibration": [calibration]},
+            row_actions,
+        )
 
 
-def test_measured_phase_access_and_final_plan_remain_zero_access(tmp_path: Path) -> None:
+def test_measured_phase_access_and_final_plan_remain_zero_access(
+    tmp_path: Path,
+) -> None:
     benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
-    phase_access = json.loads((tmp_path / "phase-access-audits.json").read_text(encoding="utf-8"))
-    sealed = json.loads((tmp_path / "final-split-sealed-plan.json").read_text(encoding="utf-8"))
+    phase_access = json.loads(
+        (tmp_path / "phase-access-audits.json").read_text(encoding="utf-8")
+    )
+    sealed = json.loads(
+        (tmp_path / "final-split-sealed-plan.json").read_text(encoding="utf-8")
+    )
     assert phase_access["forbidden_final_access_counter"] == 0
     assert phase_access["final_materialization_count"] == 0
     assert phase_access["final_score_access_count"] == 0
@@ -206,14 +276,20 @@ def test_measured_phase_access_and_final_plan_remain_zero_access(tmp_path: Path)
     assert not _contains_forbidden_materialized_payload(sealed)
 
 
-def test_final_plan_creation_does_not_render_score_or_access_final_observations(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_final_plan_creation_does_not_render_score_or_access_final_observations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     def fail(*_args: object, **_kwargs: object) -> None:
-        raise AssertionError("final plan creation must not materialize observations or scores")
+        raise AssertionError(
+            "final plan creation must not materialize observations or scores"
+        )
 
     monkeypatch.setattr(benchmark, "render_state_frame", fail)
     monkeypatch.setattr(benchmark, "score_normalized_pixel", fail)
     monkeypatch.setattr(benchmark, "score_registered_local_correlation", fail)
     monkeypatch.setattr(benchmark, "score_b3_joint_fit", fail)
     benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
-    phase_access = json.loads((tmp_path / "phase-access-audits.json").read_text(encoding="utf-8"))
+    phase_access = json.loads(
+        (tmp_path / "phase-access-audits.json").read_text(encoding="utf-8")
+    )
     assert phase_access["forbidden_final_access_counter"] == 0

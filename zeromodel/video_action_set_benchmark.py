@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -168,6 +167,28 @@ from .domains.video_action_set.provider_observation_boundary import (
     provider_observation_for_record,
     refresh_provider_observation_metadata as _refresh_provider_observation_metadata,
 )
+from .domains.video_action_set.provider_measurement import (
+    SOURCE_SCOPE,
+    measure_record_collection,
+    provider_version as _provider_version,
+    score_record as _score_record,
+    score_vector_to_payload as _score_vector_to_payload,
+)
+from .domains.video_action_set.reachability_composition import (
+    REACHABILITY_COMPOSITION_VERSION,
+    REACHABILITY_TRACE_VERSION,
+    compose_reachability_trace,
+    gap_reachability_state as _gap_reachability_state,
+    state_from_trace as _state_from_trace,
+    top_row_action_map as _top_row_action_map,
+    trace_digest as _trace_digest,
+    validate_reachability_trace,
+)
+from .domains.video_action_set.runtime_profiling import (
+    profile_provider as _profile_provider,
+    runtime_profile_payload,
+    select_profiling_records,
+)
 from .domains.video_action_set.arcade_observation import (
     render_row_frame as _render_row_frame,
     renderer_identity as _renderer_identity,
@@ -255,14 +276,11 @@ _STAGE4B_LEGACY_COMPATIBILITY_ALIASES = (
 
 
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
-REACHABILITY_COMPOSITION_VERSION = "zeromodel-video-action-set-reachability-composition/v1"
-REACHABILITY_TRACE_VERSION = "zeromodel-video-action-set-reachability-trace/v1"
 PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
 REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
 MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1"
 CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
 MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
-SOURCE_SCOPE = "zeromodel-video-action-set-reachability-benchmark-v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
 
 
@@ -322,14 +340,6 @@ def _build_durable_runtime(output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
     database_url = f"sqlite:///{(output_dir / 'benchmark.sqlite3').as_posix()}"
     return build_sqlite_runtime(database_url, initialize_schema=True)
-
-
-def _provider_version(provider_id: str) -> str:
-    return {
-        "P1": PROSPECTIVE_P1_VERSION,
-        "P2": PROSPECTIVE_P2_VERSION,
-        "P3": PROSPECTIVE_P3_VERSION,
-    }[provider_id]
 
 
 def _load_reachability_tile(repo_root: Path) -> dict[str, Any]:
@@ -492,64 +502,7 @@ def _materialize_records(split: str, repo_root: Path) -> list[dict[str, Any]]:
 
 def _profiling_records(repo_root: Path, frame_count: int) -> list[dict[str, Any]]:
     selection = _materialize_records("selection", repo_root)
-    candidates = []
-    valid_records = [record for record in selection if record["expected_disposition"] == "valid"]
-    invalid_records = [record for record in selection if record["expected_disposition"] == "distinguishable_invalid_input"]
-    control_records = [record for record in selection if record["expected_disposition"] == "information_theoretic_control"]
-    candidates.extend(valid_records[:4])
-    candidates.extend(valid_records[4:6])
-    candidates.extend(invalid_records[:2])
-    candidates.extend(control_records[:2])
-    return candidates[: max(1, frame_count)]
-
-
-def _score_vector_to_payload(vector: Any) -> dict[str, Any]:
-    return {
-        "provider_id": vector.provider_id,
-        "provider_version": vector.provider_version,
-        "row_ids": list(vector.row_ids),
-        "raw_scores": list(vector.raw_scores),
-        "quantized_scores": list(vector.quantized_scores),
-        "ranking": list(vector.evidence.ranking.ranked_row_ids),
-        "tie_groups": [group.to_dict() for group in vector.evidence.ranking.tie_groups],
-        "score_vector_digest": vector.evidence.score_vector_digest,
-        "ranking_digest": vector.evidence.ranking.to_dict()["ranking_digest"],
-    }
-
-
-def _profile_provider(
-    *,
-    provider_id: str,
-    records: list[dict[str, Any]],
-    prototypes: Mapping[str, tuple[str, str, str, ImageObservation]],
-    policy_artifact_id: str,
-    implementation: str,
-) -> dict[str, Any]:
-    scorer = score_all_rows_reference if implementation == "reference" else score_all_rows_optimized
-    durations = []
-    for record in records:
-        observation = provider_observation_for_record(record)
-        start = time.perf_counter()
-        scorer(
-            provider_id=provider_id,
-            observation=observation,
-            prototypes=prototypes,
-            policy_artifact_id=policy_artifact_id,
-            source_scope=SOURCE_SCOPE,
-        )
-        durations.append(time.perf_counter() - start)
-    total = float(sum(durations))
-    mean_frame = total / float(len(durations) or 1)
-    return {
-        "provider_id": provider_id,
-        "implementation": implementation,
-        "frame_count": len(durations),
-        "total_seconds": total,
-        "mean_seconds_per_frame": mean_frame,
-        "mean_seconds_per_candidate": mean_frame / 112.0,
-        "provider_scoring_call_count": len(durations),
-        "candidate_comparison_count": len(durations) * 112,
-    }
+    return select_profiling_records(selection, frame_count)
 
 
 def profile_runtime(
@@ -568,33 +521,13 @@ def profile_runtime(
     for provider_id in provider_ids:
         reference.append(_profile_provider(provider_id=provider_id, records=records, prototypes=prototypes, policy_artifact_id=policy_artifact_id, implementation="reference"))
         optimized.append(_profile_provider(provider_id=provider_id, records=records, prototypes=prototypes, policy_artifact_id=policy_artifact_id, implementation="optimized"))
-    reference_map = {item["provider_id"]: item for item in reference}
-    optimized_map = {item["provider_id"]: item for item in optimized}
-    comparison = {
-        provider_id: {
-            "reference_mean_seconds_per_frame": reference_map[provider_id]["mean_seconds_per_frame"],
-            "optimized_mean_seconds_per_frame": optimized_map[provider_id]["mean_seconds_per_frame"],
-            "speedup": (
-                reference_map[provider_id]["mean_seconds_per_frame"] / optimized_map[provider_id]["mean_seconds_per_frame"]
-                if optimized_map[provider_id]["mean_seconds_per_frame"] > 0.0
-                else None
-            ),
-        }
-        for provider_id in provider_ids
-    }
-    projected_observations = {"development": 112, "calibration": 448, "selection": 1008}
-    projected_runtime = {
-        split: sum(optimized_map[provider_id]["mean_seconds_per_frame"] * frame_count for provider_id, frame_count in ((provider_id, count) for provider_id in provider_ids))
-        for split, count in projected_observations.items()
-    }
-    payload = {
-        "profile_frame_count": len(records),
-        "provider_scope": provider,
-        "reference": reference,
-        "optimized": optimized,
-        "comparison": comparison,
-        "projected_runtime_seconds": projected_runtime,
-    }
+    payload = runtime_profile_payload(
+        provider_scope=provider,
+        provider_ids=provider_ids,
+        profile_frame_count=len(records),
+        reference=reference,
+        optimized=optimized,
+    )
     _write_json(output_dir / "runtime-profile-reference.json", {"profiles": reference, "profile_frame_count": len(records)})
     _write_json(output_dir / "runtime-profile-optimized.json", {"profiles": optimized, "profile_frame_count": len(records)})
     _write_json(output_dir / "runtime-comparison.json", payload)
@@ -683,216 +616,6 @@ def verify_provider_runtime_equivalence(output_dir: Path, repo_root: Path) -> di
     return payload
 
 
-def _trace_digest(payload: Mapping[str, Any]) -> str:
-    return _sha256({key: value for key, value in payload.items() if key != "trace_digest"})
-
-
-def _top_row_action_map(outcome: Mapping[str, Any]) -> dict[str, str]:
-    return {str(item["row_id"]): str(item["action_id"]) for item in outcome.get("top_row_actions", [])}
-
-
-def compose_reachability_trace(
-    *,
-    frame_id: str,
-    semantic_outcome: Mapping[str, Any],
-    previous_state: Mapping[str, Any] | None,
-    reachability_tile: Mapping[str, Any],
-    row_actions: Mapping[str, str],
-) -> dict[str, Any]:
-    _validate_reachability_tile_identity(reachability_tile)
-    top_rows = tuple(str(row_id) for row_id in semantic_outcome.get("top_row_ids", ()))
-    top_row_actions = _top_row_action_map(semantic_outcome)
-    if set(top_rows) != set(top_row_actions):
-        raise VPMValidationError("semantic top rows and row/action mapping disagree")
-    if any(row_actions[row_id] != top_row_actions[row_id] for row_id in top_rows):
-        raise VPMValidationError("semantic outcome row/action mapping is inconsistent with policy")
-    consulted_edges = []
-    reachable_pairs = []
-    removed_rows = []
-    retained_rows: tuple[str, ...]
-    rejection_reason = None
-
-    prior_rows = tuple(str(row_id) for row_id in (previous_state or {}).get("candidate_rows", ()))
-    prior_status = None if previous_state is None else str(previous_state.get("status", "unresolved"))
-    if previous_state is not None and prior_status == "unresolved":
-        retained_rows = ()
-        removed_rows = list(top_rows)
-        rejection_reason = "prior_state_unresolved"
-    elif previous_state is None:
-        retained_rows = tuple(sorted(top_rows))
-    else:
-        retained = set()
-        for prior_row in prior_rows:
-            prior_action = row_actions[prior_row]
-            edge = _tile_edge(reachability_tile, prior_row, prior_action)
-            edge_payload = {
-                "source_row_id": edge["source_row_id"],
-                "action_id": edge["action_id"],
-                "reachable_row_ids": list(edge["reachable_row_ids"]),
-            }
-            consulted_edges.append(edge_payload)
-            reachable = set(edge["reachable_row_ids"])
-            for current_row in top_rows:
-                if current_row in reachable:
-                    retained.add(current_row)
-                    reachable_pairs.append({"source_row_id": prior_row, "action_id": prior_action, "destination_row_id": current_row})
-        retained_rows = tuple(sorted(retained))
-        removed_rows = sorted(set(top_rows) - set(retained_rows))
-        if not retained_rows:
-            rejection_reason = "no_reachable_candidate"
-
-    retained_actions = tuple(sorted({row_actions[row_id] for row_id in retained_rows}))
-    if rejection_reason is None and semantic_outcome.get("status") == "conflicting_action_tie" and len(retained_actions) > 1:
-        rejection_reason = "conflicting_reachable_actions"
-    resolved_action = retained_actions[0] if rejection_reason is None and len(retained_actions) == 1 else None
-    resolved_row = retained_rows[0] if rejection_reason is None and len(retained_rows) == 1 else None
-    status = "rejected" if rejection_reason else ("resolved" if resolved_action is not None else "unresolved")
-    trace = {
-        "version": REACHABILITY_TRACE_VERSION,
-        "composition_version": REACHABILITY_COMPOSITION_VERSION,
-        "frame_id": frame_id,
-        "semantic_outcome_digest": semantic_outcome["semantic_outcome_digest"],
-        "input_candidate_rows": list(top_rows),
-        "input_candidate_actions": sorted({top_row_actions[row_id] for row_id in top_rows}),
-        "prior_reachable_rows": list(prior_rows),
-        "prior_state_status": prior_status,
-        "reachability_tile_identity": reachability_tile["tile_digest"],
-        "consulted_edges": consulted_edges,
-        "reachable_candidate_pairs": reachable_pairs,
-        "removed_rows": removed_rows,
-        "removed_actions": sorted({row_actions[row_id] for row_id in removed_rows}),
-        "retained_rows": list(retained_rows),
-        "retained_actions": list(retained_actions),
-        "resulting_candidate_set": list(retained_rows),
-        "resolved_row_id": resolved_row,
-        "resolved_action_id": resolved_action,
-        "rejection_reason": rejection_reason,
-        "executed_action": resolved_action,
-        "status": status,
-    }
-    trace["trace_digest"] = _trace_digest(trace)
-    return trace
-
-
-def validate_reachability_trace(
-    trace: Mapping[str, Any],
-    *,
-    semantic_outcome: Mapping[str, Any],
-    previous_state: Mapping[str, Any] | None,
-    reachability_tile: Mapping[str, Any],
-    row_actions: Mapping[str, str],
-) -> str:
-    try:
-        expected = compose_reachability_trace(
-            frame_id=str(trace["frame_id"]),
-            semantic_outcome=semantic_outcome,
-            previous_state=previous_state,
-            reachability_tile=reachability_tile,
-            row_actions=row_actions,
-        )
-    except VPMValidationError as exc:
-        if "reachability tile digest" in str(exc):
-            return "foreign_reachability_tile"
-        return "reachability_trace_recompute_failed"
-    if str(trace.get("reachability_tile_identity")) != str(reachability_tile["tile_digest"]):
-        return "foreign_reachability_tile"
-    if str(trace.get("trace_digest")) != _trace_digest(trace):
-        return "foreign_reachability_trace_digest"
-    if list(trace.get("consulted_edges", [])) != expected["consulted_edges"]:
-        return "consulted_edge_mismatch"
-    if list(trace.get("reachable_candidate_pairs", [])) != expected["reachable_candidate_pairs"]:
-        return "reachable_pair_mismatch"
-    if dict(trace) != expected:
-        return "reachability_trace_mismatch"
-    return "ok"
-
-
-def _state_from_trace(trace: Mapping[str, Any]) -> dict[str, Any]:
-    if trace["status"] == "rejected":
-        return {"status": "unresolved", "candidate_rows": tuple(), "reason": trace["rejection_reason"]}
-    return {"status": "resolved", "candidate_rows": tuple(str(row_id) for row_id in trace["retained_rows"])}
-
-
-def _gap_reachability_state(record: Mapping[str, Any]) -> dict[str, Any]:
-    return {"status": "unresolved", "candidate_rows": tuple(), "reason": record.get("gap_declaration") or "typed_gap_event"}
-
-
-def _score_record(
-    record: dict[str, Any],
-    prototypes: Mapping[str, tuple[str, str, str, ImageObservation]],
-    policy_artifact_id: str,
-    *,
-    reachability_tile: Mapping[str, Any] | None = None,
-    reachability_state: dict[str, Mapping[str, Any] | None] | None = None,
-    row_actions: Mapping[str, str] | None = None,
-) -> list[dict[str, Any]]:
-    if "pixels" not in record:
-        raise VPMValidationError("materialized record missing pixels")
-    if record["pixels"] is None:
-        raise VPMValidationError("typed gap events cannot be provider-scored as ordinary frames")
-    observation = provider_observation_for_record(record)
-    observation_descriptor = observation.to_descriptor()
-    observation_descriptor_digest = _provider_observation_digest(observation_descriptor)
-    p1 = score_normalized_pixel(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id)
-    p2 = score_registered_local_correlation(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
-    p3 = score_b3_joint_fit(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
-    outputs = []
-    for result in (p1, p2, p3):
-        outcome = result.semantic_top_set_outcome
-        operational_trace = None
-        if reachability_tile is not None and reachability_state is not None and row_actions is not None:
-            previous = reachability_state.get(result.provider_id)
-            operational_trace = compose_reachability_trace(
-                frame_id=record["frame_id"],
-                semantic_outcome=outcome.to_dict(),
-                previous_state=previous,
-                reachability_tile=reachability_tile,
-                row_actions=row_actions,
-            )
-            reachability_state[result.provider_id] = _state_from_trace(operational_trace)
-        winner_quantized_score = outcome.top_quantized_score if outcome.resolved_row_id is not None else None
-        outputs.append(
-            {
-                **{key: value for key, value in record.items() if key != "pixels"},
-                "provider_id": result.provider_id,
-                "provider_version": result.provider_version,
-                "policy_artifact_id": policy_artifact_id,
-                "reachability_tile_digest": REACHABILITY_TILE_DIGEST,
-                "all_112_row_ids": [item["row_id"] for item in result.evidence.to_dict()["row_scores"]],
-                "all_112_raw_scores": [item["raw_score"] for item in result.evidence.to_dict()["row_scores"]],
-                "all_112_quantized_scores": [item["quantized_score"] for item in result.evidence.to_dict()["row_scores"]],
-                "complete_ordered_ranking": list(result.evidence.ranking.ranked_row_ids),
-                "tie_groups": [group.to_dict() for group in result.evidence.ranking.tie_groups],
-                "semantic_top_set_outcome": outcome.to_dict(),
-                "semantic_status": outcome.status,
-                "resolved_row": outcome.resolved_row_id,
-                "resolved_action": outcome.resolved_action_id,
-                "top_quantized_score": outcome.top_quantized_score,
-                "top_row_ids": list(outcome.top_row_ids),
-                "top_action_ids": list(outcome.top_action_ids),
-                "semantic_outcome_digest": outcome.semantic_outcome_digest,
-                "reachability_composition_trace": operational_trace,
-                "winner_row": result.winner_row_id,
-                "winner_action": result.winner_action_id,
-                "winner_quantized_score": winner_quantized_score,
-                "runner_up_row": result.evidence.ranking.ranked_row_ids[1],
-                "runner_up_quantized_score": result.evidence.row_scores[[item.row_id for item in result.evidence.row_scores].index(result.evidence.ranking.ranked_row_ids[1])].quantized_score,
-                "policy_row_universe_digest": result.evidence.policy_row_universe_digest,
-                "quantized_score_vector_digest": result.evidence.quantized_score_vector_digest,
-                "raw_score_diagnostic_digest": result.evidence.raw_score_diagnostic_digest,
-                "score_vector_digest": result.evidence.score_vector_digest,
-                "ranking_digest": result.evidence.ranking.to_dict()["ranking_digest"],
-                "observation_digest": record["observation_pixel_digest"],
-                "provider_observation_descriptor": observation_descriptor,
-                "provider_observation_digest": observation_descriptor_digest,
-                "episode_seed": record["metadata"]["episode_seed"],
-                "generator_identity": {"generator_version": GENERATOR_VERSION, "seed_digest": record["metadata"]["seed_digest"]},
-                "provider_diagnostics": dict(result.diagnostics),
-            }
-        )
-    return outputs
-
-
 def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]:
     split_dir = output_dir / split
     runtime = _build_durable_runtime(output_dir)
@@ -909,23 +632,13 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
     records = _materialize_records(split, repo_root)
     runtime.video_action_set.save_observation_records(records)
     records = list(runtime.video_action_set.list_observation_records(benchmark_seed_digest=identity.seed_digest, split=split, include_pixels=True))
-    reachability_state: dict[str, Mapping[str, Any] | None] = {"P1": None, "P2": None, "P3": None}
-    scored_rows: list[dict[str, Any]] = []
-    for record in records:
-        if record.get("event_type") == "gap_unknown" or record.get("pixels") is None:
-            for provider_id in reachability_state:
-                reachability_state[provider_id] = _gap_reachability_state(record)
-            continue
-        scored_rows.extend(
-            _score_record(
-                record,
-                prototypes,
-                policy_artifact_id,
-                reachability_tile=reachability_tile,
-                reachability_state=reachability_state,
-                row_actions=row_actions,
-            )
-        )
+    scored_rows = measure_record_collection(
+        records,
+        prototypes,
+        policy_artifact_id,
+        reachability_tile=reachability_tile,
+        row_actions=row_actions,
+    )
     _write_jsonl(split_dir / "frame-metadata.jsonl", [{key: value for key, value in record.items() if key != "pixels"} for record in records])
     _write_jsonl(split_dir / "provider-evidence.jsonl", scored_rows)
     manifest = {

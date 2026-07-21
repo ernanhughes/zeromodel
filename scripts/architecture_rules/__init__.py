@@ -5,6 +5,9 @@ from collections.abc import Sequence
 from typing import Any
 
 
+TRACKED_EXTERNAL_MODULES = frozenset({"json", "pathlib", "sqlite3", "sqlalchemy"})
+
+
 def print_violations(violations: Sequence[Any]) -> None:
     for violation in sorted(
         violations, key=lambda item: (item.rule, item.importer, item.imported)

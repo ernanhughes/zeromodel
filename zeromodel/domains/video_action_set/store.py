@@ -6,6 +6,13 @@ from typing import NoReturn, Protocol
 from ...artifact import VPMValidationError
 from ...matrix_blob import MatrixBlob
 from .dto import BenchmarkIdentityDTO, EpisodePlanDTO, SealedSplitPlanDTO
+from .final_access_dto import (
+    FinalAccessEventDTO,
+    FinalAccessRecordDTO,
+    FinalEvaluationProtocolDTO,
+    FinalExecutionAuthorizationDTO,
+    FinalExecutionFailureDTO,
+)
 from .observation_dto import (
     MaterializedObservationDTO,
     ObservationDTO,
@@ -29,6 +36,9 @@ OBSERVATION_BLOB_MISMATCH_MESSAGE = (
 )
 OPERATION_CHAIN_CONFLICT_MESSAGE = "observation operation chain conflict for frame id"
 UNKNOWN_EPISODE_PLAN_MESSAGE = "observation references unknown episode plan"
+FINAL_ACCESS_CONFLICT_MESSAGE = "final access record conflict"
+FINAL_ACCESS_STATE_MESSAGE = "final access state transition mismatch"
+FINAL_ACCESS_AUTHORIZATION_MESSAGE = "final execution authorization mismatch"
 
 
 class VideoActionSetStore(Protocol):
@@ -98,6 +108,12 @@ class VideoActionSetStore(Protocol):
         observations: Sequence[MaterializedObservationDTO],
     ) -> tuple[ObservationDTO, ...]: ...
 
+    def save_authorized_final_observations(
+        self,
+        access: FinalAccessRecordDTO,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> tuple[ObservationDTO, ...]: ...
+
     def get_observation(
         self,
         frame_id: str,
@@ -155,6 +171,74 @@ class VideoActionSetStore(Protocol):
         input_digest: str,
     ) -> tuple[ObservationDTO, ...]: ...
 
+    def create_final_authorization(
+        self,
+        authorization: FinalExecutionAuthorizationDTO,
+        protocol: FinalEvaluationProtocolDTO,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO: ...
+
+    def assert_finalization_authority(self) -> None: ...
+
+    def load_final_evaluation_protocol(
+        self,
+        protocol_digest: str,
+    ) -> FinalEvaluationProtocolDTO | None: ...
+
+    def load_final_authorization(
+        self,
+        authorization_id: str,
+    ) -> FinalExecutionAuthorizationDTO | None: ...
+
+    def load_final_access_record(
+        self,
+        access_id: str,
+    ) -> FinalAccessRecordDTO | None: ...
+
+    def list_final_access_events(
+        self,
+        access_id: str,
+    ) -> tuple[FinalAccessEventDTO, ...]: ...
+
+    def reserve_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO: ...
+
+    def mark_final_access_running(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO: ...
+
+    def append_final_access_event(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO: ...
+
+    def complete_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO: ...
+
+    def fail_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        failure: FinalExecutionFailureDTO,
+    ) -> FinalAccessRecordDTO: ...
+
+    def interrupt_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        failure: FinalExecutionFailureDTO,
+    ) -> FinalAccessRecordDTO: ...
+
 
 def raise_identity_conflict() -> NoReturn:
     raise VPMValidationError(BENCHMARK_IDENTITY_CONFLICT_MESSAGE)
@@ -196,9 +280,24 @@ def raise_unknown_episode_plan() -> NoReturn:
     raise VPMValidationError(UNKNOWN_EPISODE_PLAN_MESSAGE)
 
 
+def raise_final_access_conflict() -> NoReturn:
+    raise VPMValidationError(FINAL_ACCESS_CONFLICT_MESSAGE)
+
+
+def raise_final_access_state() -> NoReturn:
+    raise VPMValidationError(FINAL_ACCESS_STATE_MESSAGE)
+
+
+def raise_final_access_authorization() -> NoReturn:
+    raise VPMValidationError(FINAL_ACCESS_AUTHORIZATION_MESSAGE)
+
+
 __all__ = [
     "BENCHMARK_IDENTITY_CONFLICT_MESSAGE",
     "EPISODE_PLAN_CONFLICT_MESSAGE",
+    "FINAL_ACCESS_AUTHORIZATION_MESSAGE",
+    "FINAL_ACCESS_CONFLICT_MESSAGE",
+    "FINAL_ACCESS_STATE_MESSAGE",
     "MATRIX_BLOB_CONFLICT_MESSAGE",
     "OBSERVATION_BLOB_MISMATCH_MESSAGE",
     "OBSERVATION_CONFLICT_MESSAGE",
@@ -209,6 +308,9 @@ __all__ = [
     "UNKNOWN_EPISODE_PLAN_MESSAGE",
     "VideoActionSetStore",
     "raise_episode_plan_conflict",
+    "raise_final_access_authorization",
+    "raise_final_access_conflict",
+    "raise_final_access_state",
     "raise_identity_conflict",
     "raise_matrix_blob_conflict",
     "raise_observation_blob_mismatch",

@@ -84,6 +84,7 @@ class ObservationDTO:
     provider_observation_digest: str | None
     operation_chain: ObservationOperationChainDTO
     metadata: CanonicalJsonDTO
+    final_access_id: str | None = None
 
     def __post_init__(self) -> None:
         self._validate_ids()
@@ -98,11 +99,15 @@ class ObservationDTO:
         self._validate_materialization_contract()
         self._validate_provider_descriptor()
         json_mapping(self.metadata, "observation metadata mismatch")
+        if self.final_access_id is not None and self.split != "final":
+            raise VPMValidationError("final access id is only valid for final")
 
     @classmethod
     def from_record(
         cls,
         record: Mapping[str, object],
+        *,
+        final_access_id: str | None = None,
     ) -> MaterializedObservationDTO:
         _record_keys(record)
         metadata = dict(mapping(record["metadata"], "observation metadata mismatch"))
@@ -188,8 +193,13 @@ class ObservationDTO:
             provider_observation_digest=provider_digest,
             operation_chain=chain,
             metadata=CanonicalJsonDTO.from_value(metadata),
+            final_access_id=final_access_id,
         )
-        return MaterializedObservationDTO(observation=dto, matrix_blob=blob)
+        return MaterializedObservationDTO(
+            observation=dto,
+            matrix_blob=blob,
+            final_access_id=final_access_id,
+        )
 
     def to_record(
         self,
@@ -268,7 +278,7 @@ class ObservationDTO:
         )
 
     def _validate_materialization_contract(self) -> None:
-        if self.split == "final" and (
+        if self.split == "final" and self.final_access_id is None and (
             self.matrix_blob_id is not None or self.observation_pixel_digest is not None
         ):
             raise VPMValidationError(

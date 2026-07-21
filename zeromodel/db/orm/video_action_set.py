@@ -107,6 +107,134 @@ class MatrixBlobORM(Base):
     byte_length: Mapped[int] = mapped_column(nullable=False)
 
 
+class FinalizationSchemaORM(Base):
+    __tablename__ = "video_action_set_finalization_schema"
+
+    authority_id: Mapped[str] = mapped_column(String, primary_key=True)
+    schema_version: Mapped[str] = mapped_column(String, nullable=False)
+    authority_kind: Mapped[str] = mapped_column(String, nullable=False)
+    created_utc: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class FinalEvaluationProtocolORM(Base):
+    __tablename__ = "video_action_set_final_evaluation_protocol"
+
+    protocol_digest: Mapped[str] = mapped_column(String, primary_key=True)
+    protocol_id: Mapped[str] = mapped_column(String, nullable=False)
+    protocol_status: Mapped[str] = mapped_column(String, nullable=False)
+    benchmark_seed_digest: Mapped[str] = mapped_column(String, nullable=False)
+    sealed_plan_digest: Mapped[str] = mapped_column(String, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class FinalAccessAuthorizationORM(Base):
+    __tablename__ = "video_action_set_final_access_authorization"
+    __table_args__ = (
+        UniqueConstraint(
+            "authorization_digest",
+            name="uq_video_action_set_final_authorization_digest",
+        ),
+    )
+
+    authorization_id: Mapped[str] = mapped_column(String, primary_key=True)
+    authorization_status: Mapped[str] = mapped_column(String, nullable=False)
+    authorization_digest: Mapped[str] = mapped_column(String, nullable=False)
+    protocol_digest: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_evaluation_protocol.protocol_digest"),
+        index=True,
+        nullable=False,
+    )
+    benchmark_seed_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    sealed_plan_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    created_utc: Mapped[str] = mapped_column(String, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class FinalAccessRecordORM(Base):
+    __tablename__ = "video_action_set_final_access_record"
+    __table_args__ = (
+        UniqueConstraint(
+            "authorization_id",
+            name="uq_video_action_set_final_record_authorization",
+        ),
+        UniqueConstraint(
+            "benchmark_seed_digest",
+            "sealed_plan_digest",
+            name="uq_video_action_set_final_record_seed_sealed",
+        ),
+        UniqueConstraint(
+            "record_digest",
+            name="uq_video_action_set_final_record_digest",
+        ),
+        CheckConstraint(
+            "state in ('authorized', 'reserved', 'running', 'completed', "
+            "'failed', 'interrupted')",
+            name="ck_video_action_set_final_record_state",
+        ),
+    )
+
+    access_id: Mapped[str] = mapped_column(String, primary_key=True)
+    authorization_id: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_access_authorization.authorization_id"),
+        nullable=False,
+    )
+    state: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    benchmark_seed_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    sealed_plan_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    protocol_digest: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_evaluation_protocol.protocol_digest"),
+        index=True,
+        nullable=False,
+    )
+    authorization_digest: Mapped[str] = mapped_column(String, nullable=False)
+    created_utc: Mapped[str] = mapped_column(String, nullable=False)
+    updated_utc: Mapped[str] = mapped_column(String, nullable=False)
+    process_identity: Mapped[str] = mapped_column(String, nullable=False)
+    current_event_ordinal: Mapped[int] = mapped_column(nullable=False)
+    last_event_digest: Mapped[str | None] = mapped_column(String, nullable=True)
+    record_digest: Mapped[str] = mapped_column(String, nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
+class FinalAccessEventORM(Base):
+    __tablename__ = "video_action_set_final_access_event"
+    __table_args__ = (
+        UniqueConstraint(
+            "access_id",
+            "ordinal",
+            name="uq_video_action_set_final_event_access_ordinal",
+        ),
+        CheckConstraint(
+            "ordinal >= 0",
+            name="ck_video_action_set_final_event_ordinal",
+        ),
+        CheckConstraint(
+            "new_state in ('authorized', 'reserved', 'running', 'completed', "
+            "'failed', 'interrupted')",
+            name="ck_video_action_set_final_event_new_state",
+        ),
+    )
+
+    event_digest: Mapped[str] = mapped_column(String, primary_key=True)
+    access_id: Mapped[str] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_access_record.access_id"),
+        index=True,
+        nullable=False,
+    )
+    authorization_id: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    ordinal: Mapped[int] = mapped_column(nullable=False)
+    previous_state: Mapped[str | None] = mapped_column(String, nullable=True)
+    new_state: Mapped[str] = mapped_column(String, nullable=False)
+    utc: Mapped[str] = mapped_column(String, nullable=False)
+    process_identity: Mapped[str] = mapped_column(String, nullable=False)
+    previous_event_digest: Mapped[str | None] = mapped_column(String, nullable=True)
+    payload_json: Mapped[str] = mapped_column(Text, nullable=False)
+
+
 class ObservationORM(Base):
     __tablename__ = "video_action_set_observation"
     __table_args__ = (
@@ -175,6 +303,12 @@ class ObservationORM(Base):
     matrix_blob_id: Mapped[str | None] = mapped_column(
         String,
         ForeignKey("matrix_blob.blob_id"),
+        index=True,
+        nullable=True,
+    )
+    final_access_id: Mapped[str | None] = mapped_column(
+        String,
+        ForeignKey("video_action_set_final_access_record.access_id"),
         index=True,
         nullable=True,
     )
@@ -268,6 +402,9 @@ class ObservationOperationInputORM(Base):
 __all__ = [
     "BenchmarkIdentityORM",
     "EpisodePlanORM",
+    "FinalAccessAuthorizationORM",
+    "FinalAccessEventORM",
+    "FinalAccessRecordORM",
     "MatrixBlobORM",
     "ObservationORM",
     "ObservationOperationChainORM",

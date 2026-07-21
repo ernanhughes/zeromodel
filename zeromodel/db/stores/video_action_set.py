@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import cast
 
-from sqlalchemy import select
+from sqlalchemy import Engine, select, update
 from sqlalchemy.orm import Session, sessionmaker
 
 from ...artifact import VPMValidationError
@@ -14,6 +14,15 @@ from ...domains.video_action_set.dto import (
     EpisodePlanDTO,
     SealedSplitPlanDTO,
 )
+from ...domains.video_action_set.final_access_dto import (
+    FINAL_ACCESS_TERMINAL_STATES,
+    FinalAccessEventDTO,
+    FinalAccessRecordDTO,
+    FinalEvaluationProtocolDTO,
+    FinalExecutionAuthorizationDTO,
+    FinalExecutionFailureDTO,
+    validate_final_access_event,
+)
 from ...domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
     ObservationDTO,
@@ -21,6 +30,9 @@ from ...domains.video_action_set.observation_dto import (
 )
 from ...domains.video_action_set.store import (
     VideoActionSetStore,
+    raise_final_access_authorization,
+    raise_final_access_conflict,
+    raise_final_access_state,
     raise_matrix_blob_conflict,
     raise_observation_conflict,
     raise_episode_plan_conflict,
@@ -33,6 +45,10 @@ from ...matrix_blob import MatrixBlob
 from ..orm.video_action_set import (
     BenchmarkIdentityORM,
     EpisodePlanORM,
+    FinalAccessAuthorizationORM,
+    FinalAccessEventORM,
+    FinalAccessRecordORM,
+    FinalEvaluationProtocolORM,
     MatrixBlobORM,
     ObservationORM,
     ObservationOperationInputORM,
@@ -100,7 +116,30 @@ class _ObservationSqlStoreMixin:
         session = self._session_factory()
         try:
             with session.begin():
-                return self._save_observations_in_session(session, tuple(observations))
+                return self._save_observations_in_session(
+                    session,
+                    tuple(observations),
+                    final_access=None,
+                )
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def save_authorized_final_observations(
+        self,
+        access: FinalAccessRecordDTO,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> tuple[ObservationDTO, ...]:
+        session = self._session_factory()
+        try:
+            with session.begin():
+                return self._save_observations_in_session(
+                    session,
+                    tuple(observations),
+                    final_access=access,
+                )
         except Exception:
             session.rollback()
             raise
@@ -288,8 +327,14 @@ class _ObservationSqlStoreMixin:
         self,
         session: Session,
         observations: Sequence[MaterializedObservationDTO],
+        *,
+        final_access: FinalAccessRecordDTO | None,
     ) -> tuple[ObservationDTO, ...]:
-        existing = self._preflight_observations(session, observations)
+        existing = self._preflight_observations(
+            session,
+            observations,
+            final_access=final_access,
+        )
         inserted_frame_ids: set[str] = set()
         operation_inputs: list[ObservationOperationInputORM] = []
         for item in observations:
@@ -317,12 +362,19 @@ class _ObservationSqlStoreMixin:
         self,
         session: Session,
         observations: Sequence[MaterializedObservationDTO],
+        *,
+        final_access: FinalAccessRecordDTO | None,
     ) -> dict[str, ObservationDTO]:
         existing_observations: dict[str, ObservationDTO] = {}
         seen_observations: dict[str, ObservationDTO] = {}
         seen_sequences: dict[tuple[str, int], str] = {}
         seen_blobs: dict[str, MatrixBlob] = {}
         for item in observations:
+            self._preflight_final_observation_access(
+                session,
+                item.observation,
+                final_access,
+            )
             self._preflight_observation_ownership(session, item.observation)
             self._preflight_observation_identity(
                 session,
@@ -333,6 +385,27 @@ class _ObservationSqlStoreMixin:
             )
             self._preflight_blob(session, item.matrix_blob, seen_blobs)
         return existing_observations
+
+    @staticmethod
+    def _preflight_final_observation_access(
+        session: Session,
+        observation: ObservationDTO,
+        final_access: FinalAccessRecordDTO | None,
+    ) -> None:
+        if observation.split != "final":
+            if observation.final_access_id is not None:
+                raise_final_access_authorization()
+            return
+        if final_access is None or observation.final_access_id != final_access.access_id:
+            raise_final_access_authorization()
+        row = session.get(FinalAccessRecordORM, final_access.access_id)
+        if row is None:
+            raise_final_access_authorization()
+        if row.state != "running":
+            raise_final_access_state()
+        stored = SqlAlchemyVideoActionSetStore._to_final_record_dto(row)
+        if stored != final_access:
+            raise_final_access_state()
 
     def _preflight_observation_ownership(
         self,
@@ -403,8 +476,14 @@ class _ObservationSqlStoreMixin:
 
 
 class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetStore):
-    def __init__(self, session_factory: sessionmaker[Session]) -> None:
+    def __init__(
+        self,
+        session_factory: sessionmaker[Session],
+        *,
+        finalization_engine: Engine | None = None,
+    ) -> None:
         self._session_factory = session_factory
+        self._finalization_engine = finalization_engine
 
     def save_identity(self, identity: BenchmarkIdentityDTO) -> BenchmarkIdentityDTO:
         session = self._session_factory()
@@ -538,6 +617,195 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             raise
         finally:
             session.close()
+
+    def create_final_authorization(
+        self,
+        authorization: FinalExecutionAuthorizationDTO,
+        protocol: FinalEvaluationProtocolDTO,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                if authorization.authorization_status != "authorized":
+                    raise_final_access_authorization()
+                if (
+                    not protocol.approved
+                    or protocol.protocol_digest != authorization.protocol_digest
+                ):
+                    raise_final_access_authorization()
+                if authorization.authorization_id != record.authorization_id:
+                    raise_final_access_authorization()
+                if authorization.authorization_digest != record.authorization_digest:
+                    raise_final_access_authorization()
+                if session.get(
+                    FinalAccessAuthorizationORM,
+                    authorization.authorization_id,
+                ) is not None:
+                    raise_final_access_conflict()
+                if session.get(FinalAccessRecordORM, record.access_id) is not None:
+                    raise_final_access_conflict()
+                existing_for_seed = session.scalars(
+                    select(FinalAccessRecordORM).where(
+                        FinalAccessRecordORM.benchmark_seed_digest
+                        == record.benchmark_seed_digest,
+                        FinalAccessRecordORM.sealed_plan_digest
+                        == record.sealed_plan_digest,
+                    )
+                ).first()
+                if existing_for_seed is not None:
+                    raise_final_access_conflict()
+                if event.ordinal != 0 or event.previous_event_digest is not None:
+                    raise_final_access_state()
+                self._validate_final_record_event(
+                    session,
+                    record,
+                    event,
+                    expected_previous=None,
+                )
+                existing_protocol = session.get(
+                    FinalEvaluationProtocolORM,
+                    protocol.protocol_digest,
+                )
+                if existing_protocol is None:
+                    session.add(self._to_final_protocol_orm(protocol))
+                    session.flush()
+                elif self._to_final_protocol_dto(existing_protocol) != protocol:
+                    raise_final_access_conflict()
+                session.add(self._to_final_authorization_orm(authorization))
+                session.add(self._to_final_record_orm(record))
+                session.flush()
+                session.add(self._to_final_event_orm(event))
+                return record
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def assert_finalization_authority(self) -> None:
+        if self._finalization_engine is None:
+            raise VPMValidationError(
+                "final access requires a dedicated finalization database"
+            )
+        from ..session import verify_finalization_authority
+
+        verify_finalization_authority(self._finalization_engine)
+
+    def load_final_evaluation_protocol(
+        self,
+        protocol_digest: str,
+    ) -> FinalEvaluationProtocolDTO | None:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(FinalEvaluationProtocolORM, protocol_digest)
+                return None if row is None else self._to_final_protocol_dto(row)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def load_final_authorization(
+        self,
+        authorization_id: str,
+    ) -> FinalExecutionAuthorizationDTO | None:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(FinalAccessAuthorizationORM, authorization_id)
+                return None if row is None else self._to_final_authorization_dto(row)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def load_final_access_record(
+        self,
+        access_id: str,
+    ) -> FinalAccessRecordDTO | None:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(FinalAccessRecordORM, access_id)
+                return None if row is None else self._to_final_record_dto(row)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def list_final_access_events(
+        self,
+        access_id: str,
+    ) -> tuple[FinalAccessEventDTO, ...]:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                return self._final_events_for_session(session, access_id)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def reserve_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
+    def mark_final_access_running(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
+    def append_final_access_event(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
+    def complete_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        if record.state != "completed":
+            raise_final_access_state()
+        return self._transition_final_access(record, event)
+
+    def fail_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        failure: FinalExecutionFailureDTO,
+    ) -> FinalAccessRecordDTO:
+        if failure.access_id != record.access_id or failure.state != "failed":
+            raise_final_access_state()
+        return self._transition_final_access(record, event)
+
+    def interrupt_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        failure: FinalExecutionFailureDTO,
+    ) -> FinalAccessRecordDTO:
+        if failure.access_id != record.access_id or failure.state != "interrupted":
+            raise_final_access_state()
+        return self._transition_final_access(record, event)
 
     @staticmethod
     def _to_dto(identity: BenchmarkIdentityORM) -> BenchmarkIdentityDTO:
@@ -749,6 +1017,282 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             ),
             sealed_plan_digest=plan.sealed_plan_digest,
         )
+
+    def _transition_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        self.assert_finalization_authority()
+        session = self._session_factory()
+        try:
+            with session.begin():
+                row = session.get(FinalAccessRecordORM, record.access_id)
+                if row is None:
+                    raise_final_access_authorization()
+                existing = self._to_final_record_dto(row)
+                self._validate_final_identity(existing, record)
+                self._validate_final_record_event(
+                    session,
+                    record,
+                    event,
+                    expected_previous=existing,
+                )
+                result = session.execute(
+                    update(FinalAccessRecordORM)
+                    .where(
+                        FinalAccessRecordORM.access_id == record.access_id,
+                        FinalAccessRecordORM.state == existing.state,
+                        FinalAccessRecordORM.current_event_ordinal
+                        == existing.current_event_ordinal,
+                        FinalAccessRecordORM.last_event_digest
+                        == existing.last_event_digest,
+                        FinalAccessRecordORM.record_digest == existing.record_digest,
+                    )
+                    .values(
+                        state=record.state,
+                        updated_utc=record.updated_utc,
+                        process_identity=record.process_identity,
+                        current_event_ordinal=record.current_event_ordinal,
+                        last_event_digest=record.last_event_digest,
+                        record_digest=record.record_digest,
+                        payload_json=canonical_json_text(record.to_dict()),
+                    )
+                )
+                if result.rowcount != 1:
+                    raise_final_access_state()
+                session.add(self._to_final_event_orm(event))
+                return record
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    def _validate_final_record_event(
+        self,
+        session: Session,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        *,
+        expected_previous: FinalAccessRecordDTO | None,
+    ) -> None:
+        previous_state = None if expected_previous is None else expected_previous.state
+        previous_event_digest = (
+            None if expected_previous is None else expected_previous.last_event_digest
+        )
+        if (
+            event.access_id != record.access_id
+            or event.authorization_id != record.authorization_id
+            or event.previous_state != previous_state
+            or event.new_state != record.state
+            or event.previous_event_digest != previous_event_digest
+            or record.last_event_digest != event.event_digest
+        ):
+            raise_final_access_state()
+        payload = event.event_payload.to_value()
+        kind = payload.get("kind") if isinstance(payload, Mapping) else None
+        validate_final_access_event(previous_state, record.state, kind)
+        events = self._final_events_for_session(session, record.access_id)
+        expected_ordinal = (
+            -1 if expected_previous is None else expected_previous.current_event_ordinal
+        )
+        if (
+            event.ordinal != len(events)
+            or event.ordinal != expected_ordinal + 1
+            or record.current_event_ordinal != event.ordinal
+        ):
+            raise_final_access_state()
+        if (
+            expected_previous is not None
+            and previous_state in FINAL_ACCESS_TERMINAL_STATES
+            and record.state != previous_state
+        ):
+            raise_final_access_state()
+
+    @staticmethod
+    def _validate_final_identity(
+        existing: FinalAccessRecordDTO,
+        record: FinalAccessRecordDTO,
+    ) -> None:
+        if (
+            existing.access_id != record.access_id
+            or existing.authorization_id != record.authorization_id
+            or existing.benchmark_seed_digest != record.benchmark_seed_digest
+            or existing.sealed_plan_digest != record.sealed_plan_digest
+            or existing.protocol_digest != record.protocol_digest
+            or existing.authorization_digest != record.authorization_digest
+            or existing.created_utc != record.created_utc
+        ):
+            raise_final_access_conflict()
+
+    @staticmethod
+    def _to_final_protocol_orm(
+        protocol: FinalEvaluationProtocolDTO,
+    ) -> FinalEvaluationProtocolORM:
+        return FinalEvaluationProtocolORM(
+            protocol_digest=protocol.protocol_digest,
+            protocol_id=protocol.protocol_id,
+            protocol_status=protocol.protocol_status,
+            benchmark_seed_digest=protocol.benchmark_seed_digest,
+            sealed_plan_digest=protocol.sealed_plan_digest,
+            payload_json=canonical_json_text(protocol.to_dict()),
+        )
+
+    @staticmethod
+    def _to_final_protocol_dto(
+        row: FinalEvaluationProtocolORM,
+    ) -> FinalEvaluationProtocolDTO:
+        dto = FinalEvaluationProtocolDTO.from_dict(
+            _json_mapping(row.payload_json, "final protocol digest mismatch")
+        )
+        if (
+            row.protocol_digest != dto.protocol_digest
+            or row.protocol_id != dto.protocol_id
+            or row.protocol_status != dto.protocol_status
+            or row.benchmark_seed_digest != dto.benchmark_seed_digest
+            or row.sealed_plan_digest != dto.sealed_plan_digest
+        ):
+            raise VPMValidationError("final protocol digest mismatch")
+        return dto
+
+    @staticmethod
+    def _to_final_authorization_orm(
+        authorization: FinalExecutionAuthorizationDTO,
+    ) -> FinalAccessAuthorizationORM:
+        return FinalAccessAuthorizationORM(
+            authorization_id=authorization.authorization_id,
+            authorization_status=authorization.authorization_status,
+            authorization_digest=authorization.authorization_digest,
+            protocol_digest=authorization.protocol_digest,
+            benchmark_seed_digest=authorization.expected_benchmark_seed_digest,
+            sealed_plan_digest=authorization.expected_sealed_plan_digest,
+            created_utc=authorization.created_utc,
+            payload_json=canonical_json_text(authorization.to_dict()),
+        )
+
+    @staticmethod
+    def _to_final_authorization_dto(
+        row: FinalAccessAuthorizationORM,
+    ) -> FinalExecutionAuthorizationDTO:
+        dto = FinalExecutionAuthorizationDTO.from_dict(
+            _json_mapping(
+                row.payload_json,
+                "final authorization digest mismatch",
+            )
+        )
+        if (
+            row.authorization_id != dto.authorization_id
+            or row.authorization_status != dto.authorization_status
+            or row.authorization_digest != dto.authorization_digest
+            or row.protocol_digest != dto.protocol_digest
+            or row.benchmark_seed_digest != dto.expected_benchmark_seed_digest
+            or row.sealed_plan_digest != dto.expected_sealed_plan_digest
+            or row.created_utc != dto.created_utc
+        ):
+            raise VPMValidationError("final authorization digest mismatch")
+        return dto
+
+    @staticmethod
+    def _to_final_record_orm(record: FinalAccessRecordDTO) -> FinalAccessRecordORM:
+        return FinalAccessRecordORM(
+            access_id=record.access_id,
+            authorization_id=record.authorization_id,
+            state=record.state,
+            benchmark_seed_digest=record.benchmark_seed_digest,
+            sealed_plan_digest=record.sealed_plan_digest,
+            protocol_digest=record.protocol_digest,
+            authorization_digest=record.authorization_digest,
+            created_utc=record.created_utc,
+            updated_utc=record.updated_utc,
+            process_identity=record.process_identity,
+            current_event_ordinal=record.current_event_ordinal,
+            last_event_digest=record.last_event_digest,
+            record_digest=record.record_digest,
+            payload_json=canonical_json_text(record.to_dict()),
+        )
+
+    @staticmethod
+    def _to_final_record_dto(row: FinalAccessRecordORM) -> FinalAccessRecordDTO:
+        dto = FinalAccessRecordDTO.from_dict(
+            _json_mapping(row.payload_json, "final access record digest mismatch")
+        )
+        if (
+            row.access_id != dto.access_id
+            or row.authorization_id != dto.authorization_id
+            or row.state != dto.state
+            or row.benchmark_seed_digest != dto.benchmark_seed_digest
+            or row.sealed_plan_digest != dto.sealed_plan_digest
+            or row.protocol_digest != dto.protocol_digest
+            or row.authorization_digest != dto.authorization_digest
+            or row.created_utc != dto.created_utc
+            or row.updated_utc != dto.updated_utc
+            or row.process_identity != dto.process_identity
+            or row.current_event_ordinal != dto.current_event_ordinal
+            or row.last_event_digest != dto.last_event_digest
+            or row.record_digest != dto.record_digest
+        ):
+            raise VPMValidationError("final access record digest mismatch")
+        return dto
+
+    @staticmethod
+    def _update_final_record_row(
+        row: FinalAccessRecordORM,
+        record: FinalAccessRecordDTO,
+    ) -> None:
+        row.state = record.state
+        row.updated_utc = record.updated_utc
+        row.process_identity = record.process_identity
+        row.current_event_ordinal = record.current_event_ordinal
+        row.last_event_digest = record.last_event_digest
+        row.record_digest = record.record_digest
+        row.payload_json = canonical_json_text(record.to_dict())
+
+    @staticmethod
+    def _to_final_event_orm(event: FinalAccessEventDTO) -> FinalAccessEventORM:
+        return FinalAccessEventORM(
+            event_digest=event.event_digest,
+            access_id=event.access_id,
+            authorization_id=event.authorization_id,
+            ordinal=event.ordinal,
+            previous_state=event.previous_state,
+            new_state=event.new_state,
+            utc=event.utc,
+            process_identity=event.process_identity,
+            previous_event_digest=event.previous_event_digest,
+            payload_json=canonical_json_text(event.to_dict()),
+        )
+
+    @staticmethod
+    def _to_final_event_dto(row: FinalAccessEventORM) -> FinalAccessEventDTO:
+        dto = FinalAccessEventDTO.from_dict(
+            _json_mapping(row.payload_json, "final access event digest mismatch")
+        )
+        if (
+            row.event_digest != dto.event_digest
+            or row.access_id != dto.access_id
+            or row.authorization_id != dto.authorization_id
+            or row.ordinal != dto.ordinal
+            or row.previous_state != dto.previous_state
+            or row.new_state != dto.new_state
+            or row.utc != dto.utc
+            or row.process_identity != dto.process_identity
+            or row.previous_event_digest != dto.previous_event_digest
+        ):
+            raise VPMValidationError("final access event digest mismatch")
+        return dto
+
+    def _final_events_for_session(
+        self,
+        session: Session,
+        access_id: str,
+    ) -> tuple[FinalAccessEventDTO, ...]:
+        rows = session.scalars(
+            select(FinalAccessEventORM)
+            .where(FinalAccessEventORM.access_id == access_id)
+            .order_by(FinalAccessEventORM.ordinal)
+        ).all()
+        return tuple(self._to_final_event_dto(row) for row in rows)
 
 
 def _json_mapping(text: str, message: str) -> Mapping[str, object]:

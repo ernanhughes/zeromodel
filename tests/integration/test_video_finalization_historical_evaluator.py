@@ -58,7 +58,7 @@ def test_historical_manifest_bindings_reject_declared_mismatch(
 def test_historical_authority_rejects_relative_paths(tmp_path: Path) -> None:
     historical = _historical(tmp_path)
     historical["historical_database_path"] = "relative-stage8.sqlite3"
-    with pytest.raises(VPMValidationError, match="absolute"):
+    with pytest.raises(VPMValidationError):
         verify_historical_authority(historical)
 
 

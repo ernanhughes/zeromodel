@@ -7,6 +7,15 @@ from ..domains.video_action_set.dto import (
     EpisodePlanDTO,
     SealedSplitPlanDTO,
 )
+from ..domains.video_action_set.final_access_dto import (
+    FINAL_ACCESS_TERMINAL_STATES,
+    FinalAccessEventDTO,
+    FinalAccessRecordDTO,
+    FinalExecutionAuthorizationDTO,
+    FinalExecutionFailureDTO,
+    FinalExecutionReceiptDTO,
+    validate_final_access_transition,
+)
 from ..domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
     ObservationDTO,
@@ -15,6 +24,9 @@ from ..domains.video_action_set.observation_dto import (
 from ..domains.video_action_set.store import (
     VideoActionSetStore,
     raise_episode_plan_conflict,
+    raise_final_access_authorization,
+    raise_final_access_conflict,
+    raise_final_access_state,
     raise_identity_conflict,
     raise_matrix_blob_conflict,
     raise_observation_conflict,
@@ -34,6 +46,10 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         self._matrix_blobs: dict[str, MatrixBlob] = {}
         self._observations: dict[str, ObservationDTO] = {}
         self._observation_sequence_index: dict[tuple[str, int], str] = {}
+        self._final_authorizations: dict[str, FinalExecutionAuthorizationDTO] = {}
+        self._final_access_records: dict[str, FinalAccessRecordDTO] = {}
+        self._final_events: dict[str, list[FinalAccessEventDTO]] = {}
+        self._final_seed_sealed_index: dict[tuple[str, str], str] = {}
 
     def save_identity(self, identity: BenchmarkIdentityDTO) -> BenchmarkIdentityDTO:
         existing = self._identities.get(identity.seed_digest)
@@ -133,8 +149,26 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         self,
         observations: Sequence[MaterializedObservationDTO],
     ) -> tuple[ObservationDTO, ...]:
+        return self._save_observations(tuple(observations), final_access=None)
+
+    def save_authorized_final_observations(
+        self,
+        access: FinalAccessRecordDTO,
+        observations: Sequence[MaterializedObservationDTO],
+    ) -> tuple[ObservationDTO, ...]:
+        return self._save_observations(tuple(observations), final_access=access)
+
+    def _save_observations(
+        self,
+        observations: Sequence[MaterializedObservationDTO],
+        *,
+        final_access: FinalAccessRecordDTO | None,
+    ) -> tuple[ObservationDTO, ...]:
         observation_tuple = tuple(observations)
-        existing = self._preflight_observations(observation_tuple)
+        existing = self._preflight_observations(
+            observation_tuple,
+            final_access=final_access,
+        )
         inserted_frame_ids: set[str] = set()
         for item in observation_tuple:
             if (
@@ -172,7 +206,11 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             if observation.matrix_blob_id is None
             else self._matrix_blobs.get(observation.matrix_blob_id)
         )
-        return MaterializedObservationDTO(observation, blob)
+        return MaterializedObservationDTO(
+            observation,
+            blob,
+            final_access_id=observation.final_access_id,
+        )
 
     def list_materialized_observations(
         self,
@@ -191,6 +229,7 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
                 None
                 if observation.matrix_blob_id is None
                 else self._matrix_blobs.get(observation.matrix_blob_id),
+                final_access_id=observation.final_access_id,
             )
             for observation in self.list_observations(
                 benchmark_seed_digest=benchmark_seed_digest,
@@ -283,6 +322,153 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             )
         )
 
+    def create_final_authorization(
+        self,
+        authorization: FinalExecutionAuthorizationDTO,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        if authorization.authorization_status != "authorized":
+            raise_final_access_authorization()
+        if authorization.authorization_id != record.authorization_id:
+            raise_final_access_authorization()
+        if authorization.authorization_digest != record.authorization_digest:
+            raise_final_access_authorization()
+        seed_key = (record.benchmark_seed_digest, record.sealed_plan_digest)
+        if authorization.authorization_id in self._final_authorizations:
+            raise_final_access_conflict()
+        if record.access_id in self._final_access_records:
+            raise_final_access_conflict()
+        if seed_key in self._final_seed_sealed_index:
+            raise_final_access_conflict()
+        if event.ordinal != 0 or event.previous_event_digest is not None:
+            raise_final_access_state()
+        self._validate_record_event(record, event, expected_previous=None)
+        self._final_authorizations[authorization.authorization_id] = authorization
+        self._final_access_records[record.access_id] = record
+        self._final_events[record.access_id] = [event]
+        self._final_seed_sealed_index[seed_key] = record.access_id
+        return record
+
+    def load_final_authorization(
+        self,
+        authorization_id: str,
+    ) -> FinalExecutionAuthorizationDTO | None:
+        return self._final_authorizations.get(authorization_id)
+
+    def load_final_access_record(
+        self,
+        access_id: str,
+    ) -> FinalAccessRecordDTO | None:
+        return self._final_access_records.get(access_id)
+
+    def list_final_access_events(
+        self,
+        access_id: str,
+    ) -> tuple[FinalAccessEventDTO, ...]:
+        return tuple(self._final_events.get(access_id, ()))
+
+    def reserve_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
+    def mark_final_access_running(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        return self._transition_final_access(record, event)
+
+    def complete_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        receipt: FinalExecutionReceiptDTO,
+    ) -> FinalAccessRecordDTO:
+        if receipt.access_id != record.access_id or receipt.state != "completed":
+            raise_final_access_state()
+        return self._transition_final_access(record, event)
+
+    def fail_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        failure: FinalExecutionFailureDTO,
+    ) -> FinalAccessRecordDTO:
+        if failure.access_id != record.access_id or failure.state != "failed":
+            raise_final_access_state()
+        return self._transition_final_access(record, event)
+
+    def interrupt_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        failure: FinalExecutionFailureDTO,
+    ) -> FinalAccessRecordDTO:
+        if failure.access_id != record.access_id or failure.state != "interrupted":
+            raise_final_access_state()
+        return self._transition_final_access(record, event)
+
+    def _transition_final_access(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+    ) -> FinalAccessRecordDTO:
+        existing = self._final_access_records.get(record.access_id)
+        if existing is None:
+            raise_final_access_authorization()
+        self._validate_final_identity(existing, record)
+        self._validate_record_event(record, event, expected_previous=existing)
+        self._final_access_records[record.access_id] = record
+        self._final_events[record.access_id].append(event)
+        return record
+
+    def _validate_record_event(
+        self,
+        record: FinalAccessRecordDTO,
+        event: FinalAccessEventDTO,
+        *,
+        expected_previous: FinalAccessRecordDTO | None,
+    ) -> None:
+        previous_state = None if expected_previous is None else expected_previous.state
+        previous_event_digest = (
+            None if expected_previous is None else expected_previous.last_event_digest
+        )
+        if (
+            event.access_id != record.access_id
+            or event.authorization_id != record.authorization_id
+            or event.previous_state != previous_state
+            or event.new_state != record.state
+            or event.previous_event_digest != previous_event_digest
+            or record.last_event_digest != event.event_digest
+        ):
+            raise_final_access_state()
+        validate_final_access_transition(previous_state, record.state)
+        existing_events = self._final_events.get(record.access_id, [])
+        if event.ordinal != len(existing_events):
+            raise_final_access_state()
+        if expected_previous is not None and previous_state in FINAL_ACCESS_TERMINAL_STATES:
+            raise_final_access_state()
+
+    @staticmethod
+    def _validate_final_identity(
+        existing: FinalAccessRecordDTO,
+        record: FinalAccessRecordDTO,
+    ) -> None:
+        if (
+            existing.access_id != record.access_id
+            or existing.authorization_id != record.authorization_id
+            or existing.benchmark_seed_digest != record.benchmark_seed_digest
+            or existing.sealed_plan_digest != record.sealed_plan_digest
+            or existing.protocol_digest != record.protocol_digest
+            or existing.authorization_digest != record.authorization_digest
+            or existing.created_utc != record.created_utc
+        ):
+            raise_final_access_conflict()
+
     def _preflight_episode_plans(self, plans: Sequence[EpisodePlanDTO]) -> None:
         seen_ids: dict[str, EpisodePlanDTO] = {}
         seen_ordinals: dict[tuple[str, str, int], EpisodePlanDTO] = {}
@@ -322,6 +508,8 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
     def _preflight_observations(
         self,
         observations: Sequence[MaterializedObservationDTO],
+        *,
+        final_access: FinalAccessRecordDTO | None,
     ) -> dict[str, ObservationDTO]:
         existing_observations: dict[str, ObservationDTO] = {}
         seen_observations: dict[str, ObservationDTO] = {}
@@ -329,6 +517,7 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         seen_blobs: dict[str, MatrixBlob] = {}
         for item in observations:
             observation = item.observation
+            self._preflight_final_observation_access(observation, final_access)
             self._preflight_observation_ownership(observation)
             self._preflight_observation_identity(
                 observation,
@@ -338,6 +527,21 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             )
             self._preflight_blob(item.matrix_blob, seen_blobs)
         return existing_observations
+
+    def _preflight_final_observation_access(
+        self,
+        observation: ObservationDTO,
+        final_access: FinalAccessRecordDTO | None,
+    ) -> None:
+        if observation.split != "final":
+            if observation.final_access_id is not None:
+                raise_final_access_authorization()
+            return
+        if final_access is None or observation.final_access_id != final_access.access_id:
+            raise_final_access_authorization()
+        stored = self._final_access_records.get(final_access.access_id)
+        if stored != final_access or final_access.state != "running":
+            raise_final_access_state()
 
     def _preflight_observation_ownership(
         self,

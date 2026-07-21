@@ -13,7 +13,7 @@ from .canonical_json import canonical_json_bytes
 from .contracts import FRAME_SHAPE
 from .pixel_digest import array_digest, pixel_digest_from_bytes
 
-_record_loader: Callable[[Mapping[str, object]], "MaterializedObservationDTO"] | None
+_record_loader: Callable[..., "MaterializedObservationDTO"] | None
 _record_loader = None
 
 
@@ -21,12 +21,18 @@ _record_loader = None
 class MaterializedObservationDTO:
     observation: Any
     matrix_blob: MatrixBlob | None
+    final_access_id: str | None = None
 
     def __post_init__(self) -> None:
-        if self.observation.split == "final":
+        if self.observation.split == "final" and self.final_access_id is None:
             raise VPMValidationError(
                 "final split observation materialization is prohibited"
             )
+        if self.final_access_id is not None:
+            if self.observation.split != "final":
+                raise VPMValidationError("final access id is only valid for final")
+            if self.observation.final_access_id != self.final_access_id:
+                raise VPMValidationError("final access id mismatch")
         if self.matrix_blob is None:
             if self.observation.matrix_blob_id is not None:
                 raise VPMValidationError("observation matrix blob mismatch")
@@ -43,6 +49,17 @@ class MaterializedObservationDTO:
         if _record_loader is None:
             raise VPMValidationError("observation record loader is not registered")
         return _record_loader(record)
+
+    @classmethod
+    def from_authorized_final_record(
+        cls,
+        record: Mapping[str, object],
+        *,
+        final_access_id: str,
+    ) -> MaterializedObservationDTO:
+        if _record_loader is None:
+            raise VPMValidationError("observation record loader is not registered")
+        return _record_loader(record, final_access_id=final_access_id)
 
     def to_record(self, *, include_pixels: bool = True) -> dict[str, object]:
         return self.observation.to_record(
@@ -101,7 +118,7 @@ def blob_from_record(
 
 
 def register_materialized_observation_loader(
-    loader: Callable[[Mapping[str, object]], MaterializedObservationDTO],
+    loader: Callable[..., MaterializedObservationDTO],
 ) -> None:
     global _record_loader
     _record_loader = loader

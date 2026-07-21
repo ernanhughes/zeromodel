@@ -39,6 +39,9 @@ def create_session_factory(engine: Engine) -> sessionmaker[Session]:
 def create_schema(engine: Engine) -> None:
     _ = _video_action_set_orm.BenchmarkIdentityORM
     _ = _video_action_set_orm.EpisodePlanORM
+    _ = _video_action_set_orm.FinalAccessAuthorizationORM
+    _ = _video_action_set_orm.FinalAccessEventORM
+    _ = _video_action_set_orm.FinalAccessRecordORM
     _ = _video_action_set_orm.MatrixBlobORM
     _ = _video_action_set_orm.ObservationORM
     _ = _video_action_set_orm.ObservationOperationChainORM

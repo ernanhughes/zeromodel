@@ -83,6 +83,7 @@ def to_observation_orm(observation: ObservationDTO) -> ObservationORM:
         gap_declaration_json=_canonical_or_none(observation.gap_declaration),
         observation_pixel_digest=observation.observation_pixel_digest,
         matrix_blob_id=observation.matrix_blob_id,
+        final_access_id=observation.final_access_id,
         provider_descriptor_json=_provider_descriptor_json(observation),
         provider_observation_digest=observation.provider_observation_digest,
         metadata_json=observation.metadata.canonical_text,
@@ -129,6 +130,7 @@ def to_observation_dto(
         provider_observation_digest=row.provider_observation_digest,
         operation_chain=chain,
         metadata=CanonicalJsonDTO(row.metadata_json),
+        final_access_id=row.final_access_id,
     )
 
 
@@ -285,7 +287,11 @@ def materialized_observations_from_rows(
     }
     if not blob_ids:
         return tuple(
-            MaterializedObservationDTO(observation, None)
+            MaterializedObservationDTO(
+                observation,
+                None,
+                final_access_id=observation.final_access_id,
+            )
             for observation in observations
         )
     blobs = {
@@ -300,6 +306,7 @@ def materialized_observations_from_rows(
             None
             if observation.matrix_blob_id is None
             else blobs.get(observation.matrix_blob_id),
+            final_access_id=observation.final_access_id,
         )
         for observation in observations
     )

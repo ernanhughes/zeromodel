@@ -5,7 +5,19 @@ from collections.abc import Sequence
 from typing import Any
 
 
-TRACKED_EXTERNAL_MODULES = frozenset({"json", "pathlib", "sqlite3", "sqlalchemy"})
+TRACKED_EXTERNAL_MODULES = frozenset(
+    {
+        "csv",
+        "json",
+        "os",
+        "pathlib",
+        "shutil",
+        "sqlite3",
+        "sqlalchemy",
+        "subprocess",
+        "tempfile",
+    }
+)
 
 
 def print_violations(violations: Sequence[Any]) -> None:

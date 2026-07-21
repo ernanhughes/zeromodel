@@ -8,8 +8,8 @@ maximum_function_parameters = 10
 maximum_ast_nesting = 8
 
 [legacy_exceptions."zeromodel/video_action_set_benchmark.py"]
-reason = "Stage 7A benchmark orchestration with verification and audit paths pending behavior-preserving decomposition"
-maximum_lines = 2987
+reason = "Stage 7B filesystem, report, mutation-application, and CLI orchestration pending behavior-preserving decomposition"
+maximum_lines = 2057
 owner = "video-action-set-refactor"
 
 [legacy_exceptions."examples/arcade_visual_video_discriminative_evidence_benchmark.py"]

@@ -189,6 +189,60 @@ from .domains.video_action_set.runtime_profiling import (
     runtime_profile_payload,
     select_profiling_records,
 )
+from .domains.video_action_set.evidence_audit import (
+    PHASE_ACCESS_VERSION,
+    access_prohibition_gate as _build_access_prohibition_gate,
+    audit_canonical_provider_results as _audit_canonical_provider_results,
+    audit_evidence_rows as _audit_evidence_rows,
+    build_observation_identity_manifest as _build_observation_identity_manifest,
+    build_split_overlap_audit as _build_split_overlap_audit,
+    measured_phase_access_counts as _build_measured_phase_access_counts,
+)
+from .domains.video_action_set.mutation_audit import (
+    MUTATION_AUDIT_VERSION,
+    _MUTATION_CASES,
+    _changed_fields,
+    _changed_snapshot_files,
+    _flatten_payload,
+    _mutation_case_by_name,
+    _mutation_expected_files,
+    _mutation_isolation_report,
+    _mutation_property,
+    build_mutation_audit_payload as _build_mutation_audit_payload,
+    build_repeated_mutation_audit_payload as _build_repeated_mutation_audit_payload,
+    evaluate_mutation_case as _evaluate_mutation_case,
+)
+from .domains.video_action_set.mutation_matrix import (
+    MUTATION_MATRIX_VERSION,
+    mutation_catalogue,
+    validate_mutation_catalogue,
+)
+from .domains.video_action_set.reference_verification import (
+    REFERENCE_VERIFICATION_VERSION,
+    SEMANTIC_OUTCOME_VERSION,
+    _REQUIRED_VERIFICATION_GATES,
+    _expected_semantic_for_row,
+    _finding,
+    _first_failure_code,
+    _gate,
+    _policy_row_action_digest,
+    _primary_failure,
+    _raw_score_diagnostic_from_row,
+    _report_failure_codes,
+    _semantic_cache_key,
+    _stored_quantized_evidence,
+    build_provider_equivalence_payload as _build_provider_equivalence_payload,
+    build_read_only_verification_payload as _build_read_only_verification_payload,
+    build_reference_context as _build_reference_context,
+    build_reference_verification_payload as _build_reference_verification_payload,
+    compare_provider_results as _compare_provider_results,
+)
+from .domains.video_action_set.verification import (
+    CLOSURE_REPORT_VERSION,
+    build_unavailable_repeated_mutation_audit as _build_unavailable_repeated_mutation_audit,
+    build_verification_closure as _build_verification_closure,
+    verification_summary as _verification_summary,
+)
 from .domains.video_action_set.arcade_observation import (
     render_row_frame as _render_row_frame,
     renderer_identity as _renderer_identity,
@@ -276,12 +330,6 @@ _STAGE4B_LEGACY_COMPATIBILITY_ALIASES = (
 
 
 EPISODE_SCHEMA_VERSION = "zeromodel-video-policy-episode/v1"
-PHASE_ACCESS_VERSION = "zeromodel-video-prospective-phase-access/v1"
-REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
-MUTATION_AUDIT_VERSION = "zeromodel-video-action-set-reference-mutation-audit/v1"
-CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"
-MUTATION_MATRIX_VERSION = "zeromodel-video-action-set-reference-mutation-matrix/v3"
-SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION
 
 
 def _json_ready(value: Any) -> Any:
@@ -553,18 +601,17 @@ def profile_runtime(
 def verify_provider_runtime_equivalence(output_dir: Path, repo_root: Path) -> dict[str, Any]:
     prototypes = canonical_prototypes()
     policy_artifact_id = compile_policy_artifact().artifact_id
-    records = list(prototypes.values())
-    sampled = []
-    for row_id, action_id, _digest, observation in records[:12]:
-        sampled.append({"frame_id": f"canonical:{row_id}", "observation": observation, "expected_row": row_id, "expected_action": action_id})
-    mismatches = []
-    summary: dict[str, Any] = {}
-    csv_rows = []
+    sampled = [
+        {
+            "frame_id": f"canonical:{row_id}",
+            "observation": observation,
+            "expected_row": row_id,
+            "expected_action": action_id,
+        }
+        for row_id, action_id, _digest, observation in list(prototypes.values())[:12]
+    ]
+    comparisons = []
     for provider_id in ("P1", "P2", "P3"):
-        quantized_mismatch_count = 0
-        ranking_mismatch_count = 0
-        tie_group_mismatch_count = 0
-        digest_mismatch_count = 0
         for record in sampled:
             reference = score_all_rows_reference(
                 provider_id=provider_id,
@@ -580,39 +627,17 @@ def verify_provider_runtime_equivalence(output_dir: Path, repo_root: Path) -> di
                 policy_artifact_id=policy_artifact_id,
                 source_scope=SOURCE_SCOPE,
             )
-            quantized_equal = reference.quantized_scores == optimized.quantized_scores
-            ranking_equal = reference.evidence.ranking.ranked_row_ids == optimized.evidence.ranking.ranked_row_ids
-            ties_equal = tuple(group.to_dict() for group in reference.evidence.ranking.tie_groups) == tuple(group.to_dict() for group in optimized.evidence.ranking.tie_groups)
-            digest_equal = reference.evidence.score_vector_digest == optimized.evidence.score_vector_digest and reference.evidence.ranking.to_dict()["ranking_digest"] == optimized.evidence.ranking.to_dict()["ranking_digest"]
-            quantized_mismatch_count += int(not quantized_equal)
-            ranking_mismatch_count += int(not ranking_equal)
-            tie_group_mismatch_count += int(not ties_equal)
-            digest_mismatch_count += int(not digest_equal)
-            csv_rows.append(
-                {
-                    "provider_id": provider_id,
-                    "observation_id": record["frame_id"],
-                    "quantized_equal": quantized_equal,
-                    "ranking_equal": ranking_equal,
-                    "tie_groups_equal": ties_equal,
-                    "digests_equal": digest_equal,
-                }
+            comparisons.append(
+                _compare_provider_results(
+                    provider_id=provider_id,
+                    observation_id=record["frame_id"],
+                    reference=reference,
+                    optimized=optimized,
+                )
             )
-        summary[provider_id] = {
-            "quantized_mismatch_count": quantized_mismatch_count,
-            "ranking_mismatch_count": ranking_mismatch_count,
-            "tie_group_mismatch_count": tie_group_mismatch_count,
-            "digest_mismatch_count": digest_mismatch_count,
-        }
-        if any(summary[provider_id].values()):
-            mismatches.append(provider_id)
-    payload = {
-        "providers_verified": not mismatches,
-        "mismatching_providers": mismatches,
-        "summary": summary,
-    }
+    payload = _build_provider_equivalence_payload(comparisons)
     _write_json(output_dir / "provider-runtime-equivalence.json", payload)
-    _write_csv(output_dir / "provider-runtime-equivalence.csv", csv_rows)
+    _write_csv(output_dir / "provider-runtime-equivalence.csv", comparisons)
     return payload
 
 
@@ -660,224 +685,75 @@ def build_split(split: str, output_dir: Path, repo_root: Path) -> dict[str, Any]
 
 
 def _measured_phase_access_counts(output_dir: Path) -> dict[str, Any]:
-    final_plan = _read_json(output_dir / "final-split-sealed-plan.json") if (output_dir / "final-split-sealed-plan.json").exists() else {}
-    final_ids = {episode_id for values in final_plan.get("sealed_episode_ids", {}).values() for episode_id in values}
-    final_materialization_count = 0
-    final_score_access_count = 0
-    final_reachability_execution_count = 0
-    for split in ("development", "calibration", "selection", "final"):
-        frame_rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
-        evidence_rows = _read_jsonl(output_dir / split / "provider-evidence.jsonl")
-        final_materialization_count += sum(1 for row in frame_rows if row.get("episode_id") in final_ids or row.get("split") == "final")
-        final_score_access_count += sum(1 for row in evidence_rows if row.get("episode_id") in final_ids or row.get("split") == "final")
-        final_reachability_execution_count += sum(
-            1
-            for row in evidence_rows
-            if (row.get("episode_id") in final_ids or row.get("split") == "final") and row.get("reachability_composition_trace") is not None
-        )
-    calibration_execution_count = sum(
-        int((output_dir / name).exists())
-        for name in (
-            "selected-calibration.json",
-            "calibration-grid.json",
-            "calibration-results.json",
-            "conformal-calibration.json",
-        )
-    )
-    architecture_selection_execution_count = sum(
-        int((output_dir / name).exists())
-        for name in (
-            "selected-architecture.json",
-            "architecture-grid.json",
-            "architecture-selection.json",
-            "selected-method.json",
-        )
-    )
-    candidate_tuning_execution_count = sum(
-        int((output_dir / name).exists())
-        for name in (
-            "candidate-tuning.json",
-            "candidate-set-tuning.json",
-            "candidate-grid.json",
-            "reachability-replay.json",
-        )
-    )
-    final_evaluation_count = sum(
-        int((output_dir / name).exists())
-        for name in (
-            "final-results.json",
-            "final-summary.json",
-            "final-evaluation.json",
-        )
-    )
-    return {
-        "version": PHASE_ACCESS_VERSION,
-        "final_materialization_count": final_materialization_count,
-        "final_score_access_count": final_score_access_count,
-        "final_reachability_execution_count": final_reachability_execution_count,
-        "candidate_set_selection_count": candidate_tuning_execution_count,
-        "candidate_tuning_execution_count": candidate_tuning_execution_count,
-        "conformal_calibration_count": calibration_execution_count,
-        "calibration_execution_count": calibration_execution_count,
-        "architecture_selection_execution_count": architecture_selection_execution_count,
-        "reachability_replay_count": candidate_tuning_execution_count,
-        "final_evaluation_count": final_evaluation_count,
-        "forbidden_final_access_counter": final_materialization_count + final_score_access_count + final_reachability_execution_count,
+    final_path = output_dir / "final-split-sealed-plan.json"
+    final_plan = _read_json(final_path) if final_path.exists() else {}
+    frame_rows = {
+        split: _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+        for split in ("development", "calibration", "selection", "final")
     }
+    evidence_rows = {
+        split: _read_jsonl(output_dir / split / "provider-evidence.jsonl")
+        for split in ("development", "calibration", "selection", "final")
+    }
+    return _build_measured_phase_access_counts(
+        final_plan=final_plan,
+        frame_rows_by_split=frame_rows,
+        evidence_rows_by_split=evidence_rows,
+        existing_artifacts=[path.name for path in output_dir.iterdir()],
+    )
 
 
 def _write_observation_identity_manifest(output_dir: Path) -> None:
-    frames: dict[str, list[str]] = {}
-    for split in ("development", "calibration", "selection"):
-        path = output_dir / split / "frame-metadata.jsonl"
-        rows = _read_jsonl(path)
-        frames[split] = [row["frame_id"] for row in rows]
-    payload = {
-        "development_observation_count": len(frames["development"]),
-        "calibration_observation_count": len(frames["calibration"]),
-        "selection_observation_count": len(frames["selection"]),
-        "all_frame_ids_digest": _sha256(frames),
+    frames = {
+        split: _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+        for split in ("development", "calibration", "selection")
     }
+    payload = _build_observation_identity_manifest(frames)
     _write_json(output_dir / "observation-identity-manifest.json", payload)
 
 
 def _write_split_overlap_audit(output_dir: Path) -> None:
-    split_sets: dict[str, set[str]] = {}
-    split_rows: dict[str, list[dict[str, Any]]] = {}
-    for split in ("development", "calibration", "selection"):
-        rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
-        split_rows[split] = rows
-        split_sets[split] = {row["frame_id"] for row in rows}
-    final_plan = _read_json(output_dir / "final-split-sealed-plan.json") if (output_dir / "final-split-sealed-plan.json").exists() else {}
-    final_ids = {episode_id for values in final_plan.get("sealed_episode_ids", {}).values() for episode_id in values}
-    payload = {
-        "development_calibration_overlap": len(split_sets["development"] & split_sets["calibration"]),
-        "development_selection_overlap": len(split_sets["development"] & split_sets["selection"]),
-        "calibration_selection_overlap": len(split_sets["calibration"] & split_sets["selection"]),
-        "materialized_final_plan_overlap": sum(
-            1 for split in ("development", "calibration", "selection") for row in split_rows[split] if row.get("episode_id") in final_ids or row.get("split") == "final"
-        ),
-        "final_episode_ids_digest": _sha256(sorted(final_ids)) if final_ids else None,
+    split_rows = {
+        split: _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+        for split in ("development", "calibration", "selection")
     }
+    final_path = output_dir / "final-split-sealed-plan.json"
+    final_plan = _read_json(final_path) if final_path.exists() else {}
+    payload = _build_split_overlap_audit(
+        frame_rows_by_split=split_rows,
+        final_plan=final_plan,
+    )
     _write_json(output_dir / "split-overlap-audit.json", payload)
 
 
 def audit_evidence_completeness(output_dir: Path) -> dict[str, Any]:
     policy = compile_policy_artifact()
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
-    row_actions = {str(row_id): lookup.choose(str(row_id)) for row_id in policy.source.row_ids}
-    summaries = []
-    missing_score_vectors = 0
-    invalid_scores = 0
-    missing_rankings = 0
-    missing_tie_groups = 0
-    missing_semantic_outcomes = 0
-    missing_reachability_traces = 0
-    for split in ("development", "calibration", "selection"):
-        path = output_dir / split / "provider-evidence.jsonl"
-        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
-        for row in rows:
-            if len(row["all_112_row_ids"]) != 112:
-                missing_score_vectors += 1
-            if len(row["all_112_raw_scores"]) != 112 or len(row["all_112_quantized_scores"]) != 112:
-                missing_score_vectors += 1
-            if any((score < 0 or score > QUANTIZATION_SCALE) for score in row["all_112_quantized_scores"]):
-                invalid_scores += 1
-            if len(row["complete_ordered_ranking"]) != 112:
-                missing_rankings += 1
-            if not row["tie_groups"]:
-                missing_tie_groups += 1
-            if row.get("semantic_top_set_outcome", {}).get("version") != SEMANTIC_OUTCOME_VERSION:
-                missing_semantic_outcomes += 1
-            else:
-                try:
-                    evidence = build_complete_row_evidence(
-                        row_scores=list(zip(row["all_112_row_ids"], row["all_112_raw_scores"])),
-                        policy_artifact_id=row["policy_artifact_id"],
-                        provider_id=row["provider_id"],
-                        provider_version=row["provider_version"],
-                        policy_row_ids=row["all_112_row_ids"],
-                    )
-                    if evidence.score_vector_digest != row["score_vector_digest"]:
-                        raise VPMValidationError("foreign score vector digest")
-                    semantic_top_set_outcome_from_dict(row["semantic_top_set_outcome"], evidence=evidence, row_action=row_actions)
-                except (KeyError, VPMValidationError):
-                    missing_semantic_outcomes += 1
-        frame_rows = _read_jsonl(output_dir / split / "frame-metadata.jsonl")
-        for row in frame_rows:
-            if row.get("expected_disposition") != "information_theoretic_control" and "reachability_trace" not in row.get("metadata", {}):
-                missing_reachability_traces += 1
-        summaries.append({"split": split, "provider_frame_records": len(rows)})
-    payload = {
-        "complete_score_evidence": missing_score_vectors == 0 and invalid_scores == 0 and missing_semantic_outcomes == 0 and missing_reachability_traces == 0,
-        "missing_score_vector_count": missing_score_vectors,
-        "invalid_score_count": invalid_scores,
-        "missing_ranking_count": missing_rankings,
-        "missing_tie_group_count": missing_tie_groups,
-        "missing_semantic_outcome_count": missing_semantic_outcomes,
-        "missing_reachability_trace_count": missing_reachability_traces,
-        "split_summaries": summaries,
+    row_actions = {
+        str(row_id): lookup.choose(str(row_id)) for row_id in policy.source.row_ids
     }
+    frame_rows = {
+        split: _read_jsonl(output_dir / split / "frame-metadata.jsonl")
+        for split in ("development", "calibration", "selection")
+    }
+    evidence_rows = {
+        split: _read_jsonl(output_dir / split / "provider-evidence.jsonl")
+        for split in ("development", "calibration", "selection")
+    }
+    payload = _audit_evidence_rows(
+        frame_rows_by_split=frame_rows,
+        evidence_rows_by_split=evidence_rows,
+        row_actions=row_actions,
+    )
     _write_json(output_dir / "evidence-completeness-summary.json", payload)
     return payload
 
 
 def audit_canonical_providers(output_dir: Path) -> dict[str, Any]:
-    prototypes = canonical_prototypes()
-    policy_artifact_id = compile_policy_artifact().artifact_id
-    rows = []
-    summary = {}
-    for provider_id in ("P1", "P2", "P3"):
-        exact_row_resolution = 0
-        action_resolution = 0
-        action_unanimous_tie_resolution = 0
-        conflicting_action_rejection = 0
-        unresolved_outcomes = 0
-        max_tie = 0
-        for observation_id, (row_id, action_id, _digest, observation) in prototypes.items():
-            if provider_id == "P1":
-                result = score_normalized_pixel(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id)
-            elif provider_id == "P2":
-                result = score_registered_local_correlation(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
-            else:
-                result = score_b3_joint_fit(observation=observation, prototypes=prototypes, policy_artifact_id=policy_artifact_id, source_scope=SOURCE_SCOPE)
-            outcome = result.semantic_top_set_outcome
-            exact_row_resolution += int(outcome.resolved_row_id == row_id)
-            action_resolution += int(outcome.resolved_action_id == action_id)
-            action_unanimous_tie_resolution += int(outcome.status == "action_unanimous_tie" and outcome.resolved_action_id == action_id)
-            conflicting_action_rejection += int(outcome.status == "conflicting_action_tie")
-            unresolved_outcomes += int(outcome.status == "unresolved")
-            max_tie = max(max_tie, result.maximum_tie_size)
-            rows.append(
-                {
-                    "provider_id": provider_id,
-                    "observation_id": observation_id,
-                    "expected_row": row_id,
-                    "expected_action": action_id,
-                    "winner_row": result.winner_row_id,
-                    "winner_action": result.winner_action_id,
-                    "semantic_status": outcome.status,
-                    "resolved_row": outcome.resolved_row_id,
-                    "resolved_action": outcome.resolved_action_id,
-                    "semantic_outcome_digest": outcome.semantic_outcome_digest,
-                    "semantic_tie_size": result.maximum_tie_size,
-                    "score_vector_complete": len(result.evidence.row_scores) == 112,
-                    "ranking_complete": len(result.evidence.ranking.ranked_row_ids) == 112,
-                    "tie_group_complete": bool(result.evidence.ranking.tie_groups),
-                }
-            )
-        summary[provider_id] = {
-            "canonical_observation_count": 112,
-            "exact_row_resolution_count": exact_row_resolution,
-            "action_resolution_count": action_resolution,
-            "action_unanimous_tie_resolution_count": action_unanimous_tie_resolution,
-            "conflicting_action_rejection_count": conflicting_action_rejection,
-            "unresolved_outcome_count": unresolved_outcomes,
-            "exact_top1_count": exact_row_resolution,
-            "action_top1_count": action_resolution,
-            "maximum_tie_size": max_tie,
-            "status": "canonical_diagnostic_pass" if provider_id != "P3" or exact_row_resolution == 112 else "invalid_primary_provider_instrument",
-        }
+    summary, rows = _audit_canonical_provider_results(
+        prototypes=canonical_prototypes(),
+        policy_artifact_id=compile_policy_artifact().artifact_id,
+    )
     _write_csv(output_dir / "canonical-provider-results.csv", rows)
     _write_json(output_dir / "canonical-provider-summary.json", summary)
     _write_json(output_dir / "provider-equivalence-results.json", {"providers_match_themselves": True, "quantized_evidence_exact_match": True})
@@ -887,25 +763,8 @@ def audit_canonical_providers(output_dir: Path) -> dict[str, Any]:
 
 _NON_FINAL_SPLITS = ("development", "calibration", "selection")
 _ALL_SPLITS = ("development", "calibration", "selection", "final")
-_REQUIRED_VERIFICATION_GATES = (
-    "structural_identity",
-    "semantic_outcome",
-    "seed_and_plan",
-    "episode_regeneration",
-    "family_contract",
-    "reachability",
-    "completeness_orphan",
-    "access_prohibition",
-)
 
 
-def _policy_row_action_digest(policy_artifact_id: str, row_ids: Sequence[str], row_actions: Mapping[str, str]) -> str:
-    return _sha256(
-        {
-            "policy_artifact_id": policy_artifact_id,
-            "row_action": [{"row_id": row_id, "action_id": row_actions[row_id]} for row_id in row_ids],
-        }
-    )
 
 
 def _reference_context(repo_root: Path) -> dict[str, Any]:
@@ -920,163 +779,35 @@ def _reference_context(repo_root: Path) -> dict[str, Any]:
     lookup = VPMPolicyLookup(policy, action_metric_ids=ACTIONS)
     row_ids = [str(row_id) for row_id in policy.source.row_ids]
     row_actions = {row_id: lookup.choose(row_id) for row_id in row_ids}
-    reachability_tile = _load_reachability_tile(repo_root)
     plans = {split: _episode_plans_for_split(identity, split, row_ids, row_actions) for split in _ALL_SPLITS}
-    context = {
-        "identity": identity,
-        "policy": policy,
-        "row_ids": row_ids,
-        "row_actions": row_actions,
-        "reachability_tile": reachability_tile,
-        "plans": plans,
-        "policy_row_action_digest": _policy_row_action_digest(policy.artifact_id, row_ids, row_actions),
-    }
+    context = _build_reference_context(
+        identity=identity,
+        policy=policy,
+        row_ids=row_ids,
+        row_actions=row_actions,
+        reachability_tile=_load_reachability_tile(repo_root),
+        plans=plans,
+    )
     cache[cache_key] = context
     return context
 
 
-def _finding(code: str, message: str, **details: Any) -> dict[str, Any]:
-    payload = {"code": code, "message": message}
-    payload.update({key: _json_ready(value) for key, value in details.items() if value is not None})
-    return payload
 
 
-def _gate(name: str, findings: Sequence[Mapping[str, Any]], *, counts: Mapping[str, Any] | None = None, unavailable: bool = False) -> dict[str, Any]:
-    status = "unavailable" if unavailable else ("failed" if findings else "passed")
-    return {
-        "gate": name,
-        "status": status,
-        "finding_count": len(findings),
-        "findings": [dict(item) for item in findings],
-        "counts": dict(counts or {}),
-    }
 
 
-def _first_failure_code(report: Mapping[str, Any]) -> str | None:
-    primary = _primary_failure(report)
-    return None if primary is None else str(primary["code"])
 
 
-def _primary_failure(report: Mapping[str, Any]) -> dict[str, Any] | None:
-    candidates = []
-    for gate in report.get("gates", []):
-        gate_name = str(gate.get("gate"))
-        for finding in gate.get("findings", []):
-            code = str(finding["code"])
-            candidates.append(
-                (
-                    _PRIMARY_GATE_PRECEDENCE.get(gate_name, 10_000),
-                    _PRIMARY_FAILURE_CODE_PRECEDENCE.get(code, 10_000),
-                    code,
-                    gate_name,
-                    dict(finding),
-                )
-            )
-    if not candidates:
-        return None
-    _gate_index, _code_index, code, gate_name, finding = sorted(candidates, key=lambda item: item[:4])[0]
-    return {"code": code, "gate": gate_name, "finding": finding}
 
 
-def _report_failure_codes(report: Mapping[str, Any]) -> list[dict[str, str]]:
-    rows = []
-    for gate in report.get("gates", []):
-        for finding in gate.get("findings", []):
-            rows.append({"gate": str(gate.get("gate")), "code": str(finding.get("code"))})
-    return sorted(rows, key=lambda row: (_PRIMARY_GATE_PRECEDENCE.get(row["gate"], 10_000), _PRIMARY_FAILURE_CODE_PRECEDENCE.get(row["code"], 10_000), row["gate"], row["code"]))
 
 
-def _raw_score_diagnostic_from_row(row: Mapping[str, Any], policy_row_ids: Sequence[str]) -> str:
-    scores = {str(row_id): float(score) for row_id, score in zip(row["all_112_row_ids"], row["all_112_raw_scores"])}
-    return build_complete_row_evidence(
-        row_scores=[(row_id, scores[row_id]) for row_id in policy_row_ids],
-        policy_artifact_id=str(row["policy_artifact_id"]),
-        provider_id=str(row["provider_id"]),
-        provider_version=str(row["provider_version"]),
-        policy_row_ids=policy_row_ids,
-    ).raw_score_diagnostic_digest
 
 
-def _stored_quantized_evidence(row: Mapping[str, Any], policy_row_ids: Sequence[str]) -> tuple[Any | None, list[dict[str, Any]]]:
-    findings: list[dict[str, Any]] = []
-    row_ids = [str(row_id) for row_id in row.get("all_112_row_ids", [])]
-    raw_scores = list(row.get("all_112_raw_scores", []))
-    quantized_scores = list(row.get("all_112_quantized_scores", []))
-    if row_ids != list(policy_row_ids) or len(row_ids) != 112 or len(set(row_ids)) != 112 or len(raw_scores) != 112 or len(quantized_scores) != 112:
-        findings.append(_finding("score_row_universe_mismatch", "score vector does not contain the exact frozen 112-row policy universe", frame_id=row.get("frame_id")))
-        return None, findings
-    try:
-        expected_quantized = [quantize_similarity(float(score)) for score in raw_scores]
-    except VPMValidationError:
-        findings.append(_finding("raw_diagnostic_digest_mismatch", "raw scores are not finite or quantizable", frame_id=row.get("frame_id")))
-        return None, findings
-    if [int(score) for score in quantized_scores] != expected_quantized:
-        findings.append(_finding("quantized_score_vector_mismatch", "stored quantized scores do not reconstruct from raw scores", frame_id=row.get("frame_id")))
-    try:
-        evidence = build_complete_row_evidence(
-            row_scores=[(row_id, float(score)) for row_id, score in zip(row_ids, raw_scores)],
-            policy_artifact_id=str(row["policy_artifact_id"]),
-            provider_id=str(row["provider_id"]),
-            provider_version=str(row["provider_version"]),
-            policy_row_ids=policy_row_ids,
-        )
-    except (KeyError, VPMValidationError) as exc:
-        findings.append(_finding("quantized_score_vector_mismatch", "complete row evidence could not be reconstructed", frame_id=row.get("frame_id"), error=str(exc)))
-        return None, findings
-    stored_score_digest = str(row.get("quantized_score_vector_digest", row.get("score_vector_digest")))
-    if stored_score_digest != evidence.quantized_score_vector_digest or str(row.get("score_vector_digest")) != evidence.quantized_score_vector_digest:
-        findings.append(_finding("quantized_score_vector_mismatch", "quantized score-vector identity does not match reconstructed evidence", frame_id=row.get("frame_id")))
-    if row.get("raw_score_diagnostic_digest") is not None and str(row.get("raw_score_diagnostic_digest")) != evidence.raw_score_diagnostic_digest:
-        findings.append(_finding("raw_diagnostic_digest_mismatch", "raw diagnostic identity does not match reconstructed raw scores", frame_id=row.get("frame_id")))
-    ranking_scores = tuple(RowScore(row_id=row_id, raw_score=float(raw), quantized_score=int(quantized)) for row_id, raw, quantized in zip(row_ids, raw_scores, quantized_scores))
-    expected_ranking = build_complete_ranking(ranking_scores)
-    if list(row.get("complete_ordered_ranking", [])) != list(expected_ranking.ranked_row_ids):
-        findings.append(_finding("ranking_reconstruction_mismatch", "stored ranking does not reconstruct from quantized scores", frame_id=row.get("frame_id")))
-    if list(row.get("tie_groups", [])) != [group.to_dict() for group in expected_ranking.tie_groups]:
-        findings.append(_finding("tie_group_reconstruction_mismatch", "stored tie groups do not reconstruct from quantized scores", frame_id=row.get("frame_id")))
-    if row.get("ranking_digest") is not None and str(row.get("ranking_digest")) != expected_ranking.ranking_digest:
-        findings.append(_finding("ranking_reconstruction_mismatch", "ranking digest does not match reconstructed ranking", frame_id=row.get("frame_id")))
-    return evidence, findings
 
 
-def _semantic_cache_key(row: Mapping[str, Any]) -> str:
-    return _sha256(
-        {
-            "policy_artifact_id": row.get("policy_artifact_id"),
-            "provider_id": row.get("provider_id"),
-            "provider_version": row.get("provider_version"),
-            "all_112_row_ids": row.get("all_112_row_ids"),
-            "all_112_raw_scores": row.get("all_112_raw_scores"),
-            "all_112_quantized_scores": row.get("all_112_quantized_scores"),
-            "complete_ordered_ranking": row.get("complete_ordered_ranking"),
-            "tie_groups": row.get("tie_groups"),
-            "score_vector_digest": row.get("score_vector_digest"),
-            "quantized_score_vector_digest": row.get("quantized_score_vector_digest"),
-            "raw_score_diagnostic_digest": row.get("raw_score_diagnostic_digest"),
-            "ranking_digest": row.get("ranking_digest"),
-        }
-    )
 
 
-def _expected_semantic_for_row(
-    row: Mapping[str, Any],
-    row_actions: Mapping[str, str],
-    policy_row_ids: Sequence[str],
-    cache: dict[str, Any] | None = None,
-) -> tuple[Any | None, list[dict[str, Any]]]:
-    key = _semantic_cache_key(row)
-    if cache is not None and key in cache:
-        return cache[key], []
-    evidence, findings = _stored_quantized_evidence(row, policy_row_ids)
-    if evidence is None:
-        return None, findings
-    try:
-        outcome = build_semantic_top_set_outcome(evidence=evidence, row_action=row_actions)
-    except VPMValidationError as exc:
-        return None, findings + [_finding("semantic_status_mismatch", "semantic outcome could not be reconstructed", frame_id=row.get("frame_id"), error=str(exc))]
-    if cache is not None and not findings:
-        cache[key] = outcome
-    return outcome, findings
 
 
 def _structural_identity_gate(
@@ -1641,26 +1372,10 @@ def _completeness_orphan_gate(output_dir: Path, repo_root: Path, context: Mappin
 
 
 def _access_prohibition_gate(output_dir: Path, *, max_findings: int | None = None) -> dict[str, Any]:
-    findings: list[dict[str, Any]] = []
     measured = _measured_phase_access_counts(output_dir)
-    stored = _read_json(output_dir / "phase-access-audits.json") if (output_dir / "phase-access-audits.json").exists() else {}
-    if measured["final_materialization_count"]:
-        findings.append(_finding("forbidden_final_materialization", "final split has materialized observations", count=measured["final_materialization_count"]))
-    if measured["final_score_access_count"]:
-        findings.append(_finding("forbidden_final_score_access", "final split has provider score records", count=measured["final_score_access_count"]))
-    if measured["final_reachability_execution_count"]:
-        findings.append(_finding("forbidden_final_reachability_access", "final split has reachability execution traces", count=measured["final_reachability_execution_count"]))
-    if measured["calibration_execution_count"]:
-        findings.append(_finding("forbidden_calibration_execution", "prospective calibration execution artifact is present", count=measured["calibration_execution_count"]))
-    if measured["architecture_selection_execution_count"] or measured["candidate_tuning_execution_count"]:
-        findings.append(_finding("forbidden_selection_execution", "prospective selection or candidate-tuning execution artifact is present", count=measured["architecture_selection_execution_count"] + measured["candidate_tuning_execution_count"]))
-    if measured["final_evaluation_count"]:
-        findings.append(_finding("forbidden_final_evaluation", "final evaluation artifact is present", count=measured["final_evaluation_count"]))
-    if stored and {key: stored.get(key) for key in measured if key in stored} != {key: measured.get(key) for key in measured if key in stored}:
-        findings.append(_finding("status_claim_not_supported", "stored phase-access counters do not match counters measured from concrete artifacts"))
-    if max_findings is not None and len(findings) >= max_findings:
-        return _gate("access_prohibition", findings, counts=measured)
-    return _gate("access_prohibition", findings, counts=measured)
+    stored_path = output_dir / "phase-access-audits.json"
+    stored = _read_json(stored_path) if stored_path.exists() else {}
+    return _build_access_prohibition_gate(measured, stored, max_findings=max_findings)
 
 
 def verify_reference_instrument(
@@ -1672,7 +1387,6 @@ def verify_reference_instrument(
     stop_after_first_failure: bool = False,
 ) -> dict[str, Any]:
     """Read-only independent verification of a materialized reference-instrument directory."""
-
     context = _reference_context(repo_root)
     enabled = set(enabled_gates) if enabled_gates is not None else set(_REQUIRED_VERIFICATION_GATES)
     max_findings = 1 if stop_after_first_failure else None
@@ -1694,52 +1408,11 @@ def verify_reference_instrument(
         gates.append(gate)
         if stop_after_first_failure and gate["status"] == "failed":
             break
-    passed = [gate["gate"] for gate in gates if gate["status"] == "passed"]
-    failed = [gate["gate"] for gate in gates if gate["status"] == "failed"]
-    unavailable = [gate["gate"] for gate in gates if gate["status"] == "unavailable"]
-    phase_counts = _measured_phase_access_counts(output_dir)
-    payload: dict[str, Any] = {
-        "version": REFERENCE_VERIFICATION_VERSION,
-        "authoritative_roots": {
-            "benchmark_contract_identity": context["identity"].to_dict(),
-            "root_seed_digest": context["identity"].seed_digest,
-            "policy_artifact_id": context["policy"].artifact_id,
-            "policy_row_action_digest": context["policy_row_action_digest"],
-            "episode_family_registry_digest": _episode_family_registry()["registry_digest"],
-            "reachability_tile_digest": context["reachability_tile"]["tile_digest"],
-            "provider_versions": {"P1": PROSPECTIVE_P1_VERSION, "P2": PROSPECTIVE_P2_VERSION, "P3": PROSPECTIVE_P3_VERSION},
-            "evidence_schema_versions": {
-                "complete_row_evidence": "zeromodel-video-complete-row-evidence/v2",
-                "semantic_top_set_outcome": SEMANTIC_OUTCOME_VERSION,
-                "reachability_trace": REACHABILITY_TRACE_VERSION,
-                "sealed_episode_plan": EPISODE_PLAN_VERSION,
-            },
-        },
-        "checks_executed": [gate["gate"] for gate in gates],
-        "passed_checks": passed,
-        "failed_checks": failed,
-        "unavailable_checks": unavailable,
-        "gates": gates,
-        "measured_counts": phase_counts,
-        "final_access_measurements": {
-            "final_plan_count": len(context["plans"]["final"]),
-            "final_observation_materialization_count": phase_counts["final_materialization_count"],
-            "final_provider_score_access_count": phase_counts["final_score_access_count"],
-            "final_reachability_execution_count": phase_counts["final_reachability_execution_count"],
-            "final_evaluation_count": phase_counts["final_evaluation_count"],
-            "calibration_execution_count": phase_counts["calibration_execution_count"],
-            "architecture_selection_execution_count": phase_counts["architecture_selection_execution_count"],
-            "candidate_tuning_execution_count": phase_counts["candidate_tuning_execution_count"],
-        },
-        "verified": not failed and not unavailable,
-        "primary_failure_code": None,
-        "primary_failure_gate": None,
-    }
-    primary = _primary_failure(payload)
-    payload["primary_failure_code"] = None if primary is None else primary["code"]
-    payload["primary_failure_gate"] = None if primary is None else primary["gate"]
-    payload["verification_digest"] = _sha256({key: value for key, value in payload.items() if key != "verification_digest"})
-    return payload
+    return _build_reference_verification_payload(
+        context=context,
+        gates=gates,
+        phase_counts=_measured_phase_access_counts(output_dir),
+    )
 
 
 def _file_digest(path: Path) -> str:
@@ -1763,202 +1436,14 @@ def verify_reference_read_only(output_dir: Path, repo_root: Path) -> dict[str, A
     middle = _directory_snapshot(output_dir)
     second = verify_reference_instrument(output_dir, repo_root)
     after = _directory_snapshot(output_dir)
-    payload = {
-        "read_only": before == middle == after,
-        "deterministic": first.get("verification_digest") == second.get("verification_digest") and first == second,
-        "first_verification_digest": first.get("verification_digest"),
-        "second_verification_digest": second.get("verification_digest"),
-        "path_count": len(before),
-    }
-    payload["status"] = "passed" if payload["read_only"] and payload["deterministic"] else "failed"
-    payload["digest"] = _sha256(payload)
-    return payload
+    return _build_read_only_verification_payload(before=before, middle=middle, after=after, first=first, second=second)
 
 
-_MUTATION_CASES: tuple[dict[str, Any], ...] = (
-    {"name": "evidence_raw_score_preserve_quantized_bin", "expected_primary_failure_code": "raw_diagnostic_digest_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_raw_score_cross_quantization_boundary", "expected_primary_failure_code": "quantized_score_vector_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_quantized_score_changed", "expected_primary_failure_code": "quantized_score_vector_mismatch", "artifact_class": "evidence", "digest_laundering": True},
-    {"name": "evidence_remove_row_score", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_duplicate_row_score", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_introduce_foreign_row", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_reorder_stored_rows", "expected_primary_failure_code": "score_row_universe_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_alter_ranking_order", "expected_primary_failure_code": "ranking_reconstruction_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_alter_tie_group_membership", "expected_primary_failure_code": "tie_group_reconstruction_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_split_tie_group_incorrectly", "expected_primary_failure_code": "tie_group_reconstruction_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_merge_distinct_score_groups", "expected_primary_failure_code": "tie_group_reconstruction_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_alter_quantized_score_vector_digest", "expected_primary_failure_code": "quantized_score_vector_mismatch", "artifact_class": "evidence"},
-    {"name": "evidence_alter_raw_diagnostic_digest", "expected_primary_failure_code": "raw_diagnostic_digest_mismatch", "artifact_class": "evidence"},
-    {"name": "semantic_resolved_row_for_action_unanimous_tie", "expected_primary_failure_code": "resolved_row_not_permitted", "artifact_class": "semantic"},
-    {"name": "semantic_resolved_action_for_conflicting_tie", "expected_primary_failure_code": "resolved_action_not_permitted", "artifact_class": "semantic"},
-    {"name": "semantic_convert_conflicting_tie_to_unique_row", "expected_primary_failure_code": "semantic_status_mismatch", "artifact_class": "semantic"},
-    {"name": "semantic_change_top_row_policy_action", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "semantic"},
-    {"name": "semantic_change_rejection_reason", "expected_primary_failure_code": "semantic_status_mismatch", "artifact_class": "semantic"},
-    {"name": "semantic_alter_outcome_digest", "expected_primary_failure_code": "semantic_outcome_digest_mismatch", "artifact_class": "semantic", "digest_laundering": True},
-    {"name": "semantic_lexically_reorder_tied_rows", "expected_primary_failure_code": None, "artifact_class": "semantic", "invariant": True},
-    {"name": "semantic_reorder_rows_preserving_action_equivalence", "expected_primary_failure_code": None, "artifact_class": "semantic", "invariant": True},
-    {"name": "policy_alter_row_to_action_mapping", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
-    {"name": "policy_remove_policy_row", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
-    {"name": "policy_add_undeclared_row", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
-    {"name": "policy_alter_artifact_identity", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
-    {"name": "policy_mapping_recomputed_superficial_metadata", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "policy"},
-    {"name": "observation_flip_byte_digest", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
-    {"name": "observation_change_pixels_and_recompute_digest", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation", "digest_laundering": True},
-    {"name": "observation_change_digest_without_pixels", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
-    {"name": "observation_swap_two_frame_payloads", "expected_primary_failure_code": "observation_digest_mismatch", "artifact_class": "observation"},
-    {"name": "observation_alter_frame_identity", "expected_primary_failure_code": "frame_identity_mismatch", "artifact_class": "observation"},
-    {
-        "name": "observation_reuse_under_two_episode_ids",
-        "expected_primary_failure_code": "duplicate_observation_identity_unpermitted",
-        "artifact_class": "observation",
-        "gate_scope": ("structural_identity", "completeness_orphan"),
-    },
-    {"name": "observation_substitute_frame_for_declared_gap", "expected_primary_failure_code": "gap_event_structure_mismatch", "artifact_class": "observation"},
-    {"name": "seed_alter_root_seed_material", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_root_seed_digest", "expected_primary_failure_code": "benchmark_contract_identity_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_derived_seed", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_derivation_namespace", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_episode_ordinal", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_split_identity", "expected_primary_failure_code": "episode_split_reassignment", "artifact_class": "episode_plan"},
-    {"name": "seed_move_episode_between_splits", "expected_primary_failure_code": "episode_split_reassignment", "artifact_class": "episode_plan"},
-    {"name": "seed_duplicate_episode_id", "expected_primary_failure_code": "duplicate_episode_id", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_source_row", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_splice_partner", "expected_primary_failure_code": "episode_seed_derivation_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_transformation_parameters", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_planned_family", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_sealed_plan_digest", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan"},
-    {"name": "seed_alter_final_sealed_identity", "expected_primary_failure_code": "sealed_episode_identity_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
-    {"name": "seed_final_observation_provenance_materialized", "expected_primary_failure_code": "final_observation_provenance_mismatch", "artifact_class": "episode_plan", "digest_laundering": True},
-    {"name": "family_conflicting_splice_same_action_rows", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_splice_zero_source_contribution", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_splice_output_equal_one_source", "expected_primary_failure_code": "family_regeneration_mismatch", "artifact_class": "family_output"},
-    {"name": "family_splice_valid_state_collision", "expected_primary_failure_code": "invalid_family_valid_state_collision", "artifact_class": "family_output"},
-    {"name": "family_splice_target_evidence_count_removed", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_critical_empty_coordinate_set", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_corrupt_noncritical_coordinates", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_replacement_value_identical", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_clipping_quantization_noop", "expected_primary_failure_code": "family_no_op", "artifact_class": "family_output", "digest_laundering": True},
-    {"name": "family_reordered_metadata_original_payload_order", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_identity_permutation_labelled_reordered", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_stale_label_without_repeated_bytes", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_stale_repeat_naturally_identical", "expected_primary_failure_code": "family_contract_violation", "artifact_class": "family_output"},
-    {"name": "family_impossible_transition_reachable_pair", "expected_primary_failure_code": "transition_classification_mismatch", "artifact_class": "family_output"},
-    {"name": "family_gap_event_carrying_pixels", "expected_primary_failure_code": "gap_event_has_pixels", "artifact_class": "family_output"},
-    {"name": "family_information_control_pixel_difference", "expected_primary_failure_code": "control_byte_identity_mismatch", "artifact_class": "family_output"},
-    {"name": "family_control_denominator_leak", "expected_primary_failure_code": "control_denominator_leak", "artifact_class": "family_output"},
-    {"name": "family_control_hidden_history_collapse", "expected_primary_failure_code": "control_hidden_history_not_ambiguous", "artifact_class": "family_output"},
-    {"name": "family_control_visible_source_leak", "expected_primary_failure_code": "control_provider_visible_leak", "artifact_class": "family_output"},
-    {"name": "family_episode_disposition_mismatch", "expected_primary_failure_code": "family_disposition_mismatch", "artifact_class": "family_output"},
-    {"name": "reachability_remove_applicable_edge", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_redirect_applicable_edge", "expected_primary_failure_code": "reachable_pair_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_alter_destination_action", "expected_primary_failure_code": "policy_action_mapping_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_add_impossible_edge", "expected_primary_failure_code": "reachability_tile_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_change_tile_identity", "expected_primary_failure_code": "reachability_tile_mismatch", "artifact_class": "reachability_trace", "digest_laundering": True},
-    {"name": "reachability_change_unrelated_edge", "expected_primary_failure_code": "reachability_tile_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_alter_consulted_edge_list", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_omit_consulted_edge", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_add_unconsulted_edge_to_trace", "expected_primary_failure_code": "consulted_edge_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_alter_reachable_pair_set", "expected_primary_failure_code": "reachable_pair_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_alter_retained_candidate_rows", "expected_primary_failure_code": "reachability_trace_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_alter_removed_candidate_rows", "expected_primary_failure_code": "reachability_trace_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_replace_rejection_with_lexical_winner", "expected_primary_failure_code": "executed_action_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_change_executed_action", "expected_primary_failure_code": "executed_action_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "reachability_use_foreign_trace_digest", "expected_primary_failure_code": "reachability_trace_mismatch", "artifact_class": "reachability_trace"},
-    {"name": "access_increment_final_materialization_count", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status"},
-    {"name": "access_add_final_observation_artifact", "expected_primary_failure_code": "forbidden_final_materialization", "artifact_class": "access_status"},
-    {"name": "access_add_final_score_vector_record", "expected_primary_failure_code": "forbidden_final_score_access", "artifact_class": "access_status"},
-    {"name": "access_add_final_reachability_trace", "expected_primary_failure_code": "forbidden_final_score_access", "artifact_class": "access_status"},
-    {"name": "access_increment_forbidden_access_counter", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status", "digest_laundering": True},
-    {"name": "access_record_calibration_execution", "expected_primary_failure_code": "forbidden_calibration_execution", "artifact_class": "access_status"},
-    {"name": "access_record_architecture_selection_execution", "expected_primary_failure_code": "forbidden_selection_execution", "artifact_class": "access_status"},
-    {"name": "access_change_failed_gate_status_to_passed", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status"},
-    {"name": "access_change_repository_status_to_correct", "expected_primary_failure_code": "status_claim_not_supported", "artifact_class": "access_status"},
-    {"name": "access_remove_required_gate_from_closure_report", "expected_primary_failure_code": "closure_gate_missing", "artifact_class": "access_status"},
-)
 
 
-_MUTATION_GATE_SCOPE = {
-    "evidence": ("structural_identity", "semantic_outcome"),
-    "semantic": ("structural_identity", "semantic_outcome"),
-    "policy": ("structural_identity",),
-    "observation": ("structural_identity", "episode_regeneration", "completeness_orphan"),
-    "episode_plan": ("structural_identity", "seed_and_plan"),
-    "family_output": ("structural_identity", "family_contract"),
-    "reachability_trace": ("structural_identity", "semantic_outcome", "reachability"),
-    "access_status": ("structural_identity", "access_prohibition"),
-}
-
-_PRIMARY_GATE_PRECEDENCE = {name: index for index, name in enumerate(_REQUIRED_VERIFICATION_GATES)}
-_PRIMARY_FAILURE_CODE_PRECEDENCE = {
-    code: index
-    for index, code in enumerate(
-        (
-            "expected_file_missing",
-            "benchmark_contract_identity_mismatch",
-            "benchmark_manifest_mismatch",
-            "policy_action_mapping_mismatch",
-            "provider_contract_mismatch",
-            "reachability_tile_mismatch",
-            "score_quantizer_mismatch",
-            "evidence_schema_mismatch",
-            "closure_gate_missing",
-            "score_row_universe_mismatch",
-            "quantized_score_vector_mismatch",
-            "raw_diagnostic_digest_mismatch",
-            "ranking_reconstruction_mismatch",
-            "tie_group_reconstruction_mismatch",
-            "semantic_status_mismatch",
-            "resolved_row_not_permitted",
-            "resolved_action_not_permitted",
-            "semantic_outcome_digest_mismatch",
-            "episode_seed_derivation_mismatch",
-            "episode_split_reassignment",
-            "duplicate_episode_id",
-            "final_observation_provenance_mismatch",
-            "sealed_episode_identity_mismatch",
-            "expected_record_missing",
-            "orphan_observation_record",
-            "frame_identity_mismatch",
-            "gap_event_structure_mismatch",
-            "observation_bytes_mismatch",
-            "observation_digest_mismatch",
-            "family_contract_violation",
-            "family_regeneration_mismatch",
-            "family_no_op",
-            "transition_classification_mismatch",
-            "gap_event_has_pixels",
-            "control_byte_identity_mismatch",
-            "control_denominator_leak",
-            "control_provider_visible_leak",
-            "control_hidden_history_not_ambiguous",
-            "control_hidden_label_not_ambiguous",
-            "control_hidden_history_cardinality_mismatch",
-            "family_disposition_mismatch",
-            "frame_disposition_mismatch",
-            "invalid_family_valid_state_collision",
-            "invalid_family_valid_transformation_collision",
-            "conflicting_action_evidence_absent",
-            "consulted_edge_mismatch",
-            "reachable_pair_mismatch",
-            "reachability_trace_mismatch",
-            "executed_action_mismatch",
-            "duplicate_observation_record",
-            "duplicate_observation_identity_unpermitted",
-            "orphan_score_vector_record",
-            "forbidden_final_materialization",
-            "forbidden_final_score_access",
-            "forbidden_final_reachability_access",
-            "forbidden_calibration_execution",
-            "forbidden_selection_execution",
-            "forbidden_final_evaluation",
-            "status_claim_not_supported",
-        )
-    )
-}
 
 
-def _mutation_case_by_name() -> dict[str, dict[str, Any]]:
-    return {str(case["name"]): dict(case) for case in _MUTATION_CASES}
+
 
 
 def _cached_materialized_metadata(repo_root: Path, split: str) -> list[dict[str, Any]]:
@@ -1987,101 +1472,12 @@ def _expected_digest_owners(repo_root: Path) -> dict[str, set[str]]:
     return cache[cache_key]
 
 
-def _mutation_property(case: Mapping[str, Any]) -> str:
-    return str(case.get("protected_scientific_property") or str(case["name"]).replace("_", " "))
 
 
-def _mutation_expected_files(case: Mapping[str, Any]) -> tuple[str, ...]:
-    artifact_class = str(case["artifact_class"])
-    name = str(case.get("name", case.get("mutation_id", "")))
-    if artifact_class in {"evidence", "semantic", "reachability_trace"}:
-        files = ["development/provider-evidence.jsonl", "development-manifest.json"]
-        if name in {"reachability_add_impossible_edge", "reachability_change_tile_identity", "reachability_change_unrelated_edge"}:
-            files = ["reachability-tile-reference.json"]
-        return tuple(files)
-    if artifact_class == "policy":
-        return ("policy-artifact.json",)
-    if artifact_class in {"observation", "family_output"}:
-        return ("selection/frame-metadata.jsonl", "selection-manifest.json")
-    if artifact_class == "episode_plan":
-        if name in {"seed_alter_final_sealed_identity", "seed_final_observation_provenance_materialized"}:
-            return ("final-split-sealed-plan.json", "final-split-sealed-digest.json")
-        if name in {"seed_alter_root_seed_material", "seed_alter_root_seed_digest"}:
-            return ("generator-identity.json",) if name == "seed_alter_root_seed_material" else ("benchmark-contract-identity.json",)
-        return ("episode-plan.json",)
-    if artifact_class == "access_status":
-        if name in {"access_increment_final_materialization_count", "access_increment_forbidden_access_counter"}:
-            return ("phase-access-audits.json",)
-        if name == "access_add_final_observation_artifact":
-            return ("final/frame-metadata.jsonl",)
-        if name in {"access_add_final_score_vector_record", "access_add_final_reachability_trace"}:
-            return ("final/provider-evidence.jsonl",)
-        if name == "access_record_calibration_execution":
-            return ("selected-calibration.json",)
-        if name == "access_record_architecture_selection_execution":
-            return ("selected-architecture.json",)
-        return ("reference-closure-report.json",)
-    return ()
 
 
-def mutation_catalogue() -> list[dict[str, Any]]:
-    catalogue = []
-    for case in _MUTATION_CASES:
-        expected = case.get("expected_primary_failure_code")
-        invariant = bool(case.get("invariant"))
-        catalogue.append(
-            {
-                "matrix_version": MUTATION_MATRIX_VERSION,
-                "mutation_id": case["name"],
-                "artifact_class": case["artifact_class"],
-                "protected_scientific_property": _mutation_property(case),
-                "fixture_selector": case.get("fixture_selector", f"{case['artifact_class']}:deterministic-first-matching-record"),
-                "mutator_id": f"reference-mutator:{case['name']}",
-                "immediate_digest_recomputed": bool(case.get("digest_laundering", False)),
-                "parent_digest_recomputed": bool(case.get("digest_laundering", False)) or case["artifact_class"] in {"evidence", "semantic", "observation", "family_output", "reachability_trace"},
-                "expected_result_type": "semantic_invariant" if invariant else "detected",
-                "expected_primary_failure_code": expected,
-                "permitted_secondary_failure_codes": list(case.get("permitted_secondary_failure_codes", [])),
-                "expected_changed_files": list(_mutation_expected_files(case)),
-                "validation_metadata": {
-                    "digest_laundering": bool(case.get("digest_laundering", False)),
-                    "gate_scope": list(case.get("gate_scope", _MUTATION_GATE_SCOPE.get(str(case["artifact_class"]), _REQUIRED_VERIFICATION_GATES))),
-                },
-            }
-        )
-    return catalogue
 
 
-def validate_mutation_catalogue() -> list[dict[str, Any]]:
-    findings: list[dict[str, Any]] = []
-    catalogue = mutation_catalogue()
-    mutation_ids = [str(case["mutation_id"]) for case in catalogue]
-    if len(mutation_ids) != len(set(mutation_ids)):
-        findings.append(_finding("duplicate_mutation_id", "mutation catalogue contains duplicate mutation ids"))
-    declared_ids = set(mutation_ids)
-    mutator_ids = {str(case["mutation_id"]) for case in catalogue if case.get("mutator_id")}
-    for missing in sorted(declared_ids - mutator_ids):
-        findings.append(_finding("mutation_mutator_missing", "declared mutation has no executable mutator", mutation=missing))
-    for extra in sorted(mutator_ids - declared_ids):
-        findings.append(_finding("mutation_mutator_orphan", "mutator has no declaration", mutation=extra))
-    for case in catalogue:
-        if case["expected_result_type"] == "detected" and not case.get("expected_primary_failure_code"):
-            findings.append(_finding("mutation_expected_code_missing", "expected detection lacks an expected primary failure code", mutation=case["mutation_id"]))
-        if not case.get("expected_changed_files"):
-            findings.append(_finding("mutation_expected_change_missing", "mutation lacks expected changed file metadata", mutation=case["mutation_id"]))
-    detected = sum(1 for case in catalogue if case["expected_result_type"] == "detected")
-    invariants = sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant")
-    if len(catalogue) != 93 or detected != 91 or invariants != 2:
-        findings.append(
-            _finding(
-                "mutation_matrix_count_mismatch",
-                "mutation matrix count changed without an explicit matrix revision",
-                declared_count=len(catalogue),
-                detected_count=detected,
-                invariant_count=invariants,
-            )
-        )
-    return findings
 
 
 def _structural_payload(path: Path) -> Any:
@@ -2092,20 +1488,6 @@ def _structural_payload(path: Path) -> Any:
     return path.read_text(encoding="utf-8")
 
 
-def _flatten_payload(value: Any, prefix: str) -> dict[str, Any]:
-    if isinstance(value, Mapping):
-        rows: dict[str, Any] = {}
-        for key in sorted(value):
-            rows.update(_flatten_payload(value[key], f"{prefix}.{key}" if prefix else str(key)))
-        return rows
-    if isinstance(value, list):
-        rows = {}
-        for index, item in enumerate(value):
-            rows.update(_flatten_payload(item, f"{prefix}[{index}]"))
-        if not value:
-            rows[prefix] = []
-        return rows
-    return {prefix: value}
 
 
 def _mutation_structural_snapshot(output_dir: Path, *, only_files: Sequence[str] | None = None) -> dict[str, Any]:
@@ -2124,63 +1506,10 @@ def _mutation_structural_snapshot(output_dir: Path, *, only_files: Sequence[str]
     return snapshot
 
 
-def _changed_snapshot_files(before: Mapping[str, Mapping[str, Any]], after: Mapping[str, Mapping[str, Any]]) -> list[str]:
-    changed = []
-    for file_name in sorted(set(before) | set(after)):
-        before_digest = before.get(file_name, {}).get("digest")
-        after_digest = after.get(file_name, {}).get("digest")
-        if before_digest != after_digest:
-            changed.append(file_name)
-    return changed
 
 
-def _changed_fields(before: Mapping[str, Any], after: Mapping[str, Any]) -> list[str]:
-    changed: set[str] = set()
-    for file_name in sorted(set(before) | set(after)):
-        if file_name not in before or file_name not in after:
-            changed.add(file_name)
-            continue
-        if before[file_name] == after[file_name]:
-            continue
-        before_flat = _flatten_payload(before[file_name], file_name)
-        after_flat = _flatten_payload(after[file_name], file_name)
-        for field in sorted(set(before_flat) | set(after_flat)):
-            if before_flat.get(field) != after_flat.get(field):
-                changed.add(field)
-    return sorted(changed)
 
 
-def _mutation_isolation_report(before: Mapping[str, Any], after: Mapping[str, Any], case: Mapping[str, Any]) -> dict[str, Any]:
-    changed = _changed_fields(before, after)
-    if case.get("expected_changed_files") is not None:
-        expected_files = tuple(str(item) for item in case["expected_changed_files"])
-    else:
-        expected_files = tuple(str(item) for item in _mutation_expected_files(case))
-    unexpected = [
-        field
-        for field in changed
-        if not any(field == expected or field.startswith(f"{expected}.") or field.startswith(f"{expected}[") for expected in expected_files)
-    ]
-    before_flat: dict[str, Any] = {}
-    after_flat: dict[str, Any] = {}
-    for file_name, payload in before.items():
-        before_flat.update(_flatten_payload(payload, file_name))
-    for file_name, payload in after.items():
-        after_flat.update(_flatten_payload(payload, file_name))
-    effect_payload = []
-    for field in changed:
-        if field in before or field in after:
-            effect_payload.append({"field": field, "before": before.get(field), "after": after.get(field)})
-        else:
-            effect_payload.append({"field": field, "before": before_flat.get(field), "after": after_flat.get(field)})
-    return {
-        "changed_fields": changed,
-        "expected_changed_files": list(expected_files),
-        "unexpected_changed_fields": unexpected,
-        "changed_field_count": len(changed),
-        "isolation_passed": bool(changed) and not unexpected,
-        "mutation_effect_digest": _sha256({"changed_fields": changed, "effect_payload": effect_payload}),
-    }
 
 
 def _rewrite_jsonl(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
@@ -2612,70 +1941,41 @@ def run_reference_mutation_audit(output_dir: Path, repo_root: Path, *, mutation_
     import shutil
     import tempfile
 
-    requested = None if mutation_names is None else set(str(name) for name in mutation_names)
+    requested = None if mutation_names is None else {str(name) for name in mutation_names}
     catalogue = mutation_catalogue()
     selected_cases = tuple(case for case in catalogue if requested is None or case["mutation_id"] in requested)
     catalogue_findings = validate_mutation_catalogue()
     if requested is not None:
-        missing = sorted(requested - {str(case["mutation_id"]) for case in selected_cases})
-        catalogue_findings.extend(_finding("mutation_not_declared", "requested mutation is not declared", mutation=name) for name in missing)
+        selected_names = {str(case["mutation_id"]) for case in selected_cases}
+        catalogue_findings.extend(_finding("mutation_not_declared", "requested mutation is not declared", mutation=name) for name in sorted(requested - selected_names))
     base = verify_reference_instrument(output_dir, repo_root)
-    results: list[dict[str, Any]] = []
     if not base["verified"] or catalogue_findings:
-        payload = {
-            "version": MUTATION_AUDIT_VERSION,
-            "matrix_version": MUTATION_MATRIX_VERSION,
-            "base_verified": False,
-            "base_primary_failure_code": base.get("primary_failure_code"),
-            "catalogue_findings": catalogue_findings,
-            "mutations": [],
-            "declared_mutation_count": len(catalogue),
-            "executable_mutation_count": len(selected_cases),
-            "expected_detection_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
-            "expected_mutation_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
-            "detected_mutation_count": 0,
-            "missed_mutation_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
-            "undetected_mutation_count": len([case for case in selected_cases if case["expected_result_type"] == "detected"]),
-            "unexpected_failure_code_count": len(selected_cases),
-            "invariant_count": len([case for case in selected_cases if case["expected_result_type"] == "semantic_invariant"]),
-            "invariant_pass_count": 0,
-            "invariant_failure_count": len([case for case in selected_cases if case["expected_result_type"] == "semantic_invariant"]),
-            "digest_laundering_tests": [],
-            "digest_laundering_class_closure": {},
-            "mutation_isolation_passed": False,
-            "duplicate_effect_findings": [],
-            "status": "unavailable",
-        }
-        payload["mutation_audit_digest"] = _sha256(payload)
-        return payload
+        return _build_mutation_audit_payload(
+            matrix_version=MUTATION_MATRIX_VERSION,
+            catalogue=catalogue,
+            selected_cases=selected_cases,
+            catalogue_findings=catalogue_findings,
+            results=(),
+            base_verified=False,
+            base_primary_failure_code=base.get("primary_failure_code"),
+        )
     base_directory = _directory_snapshot(output_dir)
+    results = []
     with tempfile.TemporaryDirectory(prefix="reference-mutation-audit-") as tmp:
         tmp_root = Path(tmp)
         for case in selected_cases:
             case_dir = tmp_root / str(case["mutation_id"])
             shutil.copytree(output_dir, case_dir)
-            apply_error = None
+            application_error = None
             try:
                 _apply_reference_mutation(case_dir, str(case["mutation_id"]))
-                after_directory = _directory_snapshot(case_dir)
-                changed_files = _changed_snapshot_files(base_directory, after_directory)
+                changed_files = _changed_snapshot_files(base_directory, _directory_snapshot(case_dir))
                 before = _mutation_structural_snapshot(output_dir, only_files=changed_files)
                 after = _mutation_structural_snapshot(case_dir, only_files=changed_files)
                 isolation = _mutation_isolation_report(before, after, case)
-                report = verify_reference_instrument(
-                    case_dir,
-                    repo_root,
-                    enabled_gates=case["validation_metadata"]["gate_scope"],
-                    stop_after_first_failure=True,
-                )
-                primary = report.get("primary_failure_code")
-                primary_gate = report.get("primary_failure_gate")
-                detected = primary is not None
-            except Exception as exc:  # pragma: no cover - returned in the audit report for deterministic debugging.
-                primary = "mutation_application_error"
-                primary_gate = "mutation_application"
-                detected = True
-                apply_error = type(exc).__name__
+                report = verify_reference_instrument(case_dir, repo_root, enabled_gates=case["validation_metadata"]["gate_scope"], stop_after_first_failure=True)
+            except Exception as exc:  # pragma: no cover - historical audit boundary.
+                application_error = type(exc).__name__
                 isolation = {
                     "changed_fields": [],
                     "expected_changed_files": list(case.get("expected_changed_files", [])),
@@ -2685,269 +1985,39 @@ def run_reference_mutation_audit(output_dir: Path, repo_root: Path, *, mutation_
                     "mutation_effect_digest": "sha256:application-error",
                 }
                 report = {"gates": []}
-            expected = case.get("expected_primary_failure_code")
-            expected_detected = case["expected_result_type"] == "detected"
-            secondary_codes = [row for row in _report_failure_codes(report) if row["code"] != primary or row["gate"] != primary_gate]
-            property_changed = isolation["changed_field_count"] > 0
-            results.append(
-                {
-                    "mutation": case["mutation_id"],
-                    "artifact_class": case["artifact_class"],
-                    "protected_scientific_property": case["protected_scientific_property"],
-                    "fixture_selector": case["fixture_selector"],
-                    "mutator_id": case["mutator_id"],
-                    "expected_result_type": case["expected_result_type"],
-                    "expected_primary_failure_code": expected,
-                    "actual_primary_failure_code": primary,
-                    "actual_primary_gate": primary_gate,
-                    "secondary_failure_codes": secondary_codes,
-                    "detected": detected,
-                    "expected_detected": expected_detected,
-                    "invariant": case["expected_result_type"] == "semantic_invariant",
-                    "semantic_invariant_passed": case["expected_result_type"] == "semantic_invariant" and primary is None,
-                    "digest_laundering": bool(case["validation_metadata"]["digest_laundering"]),
-                    "immediate_digest_recomputed": bool(case["immediate_digest_recomputed"]),
-                    "parent_digest_recomputed": bool(case["parent_digest_recomputed"]),
-                    "mutation_isolation": isolation,
-                    "property_changed": property_changed,
-                    "expected_code_matched": (primary == expected) if expected_detected else (primary is None),
-                    "application_error": apply_error,
-                }
-            )
-    expected_cases = [row for row in results if row["expected_detected"]]
-    detected = [row for row in expected_cases if row["detected"]]
-    missed = [row for row in expected_cases if not row["detected"]]
-    unexpected = [row for row in results if not row["expected_code_matched"]]
-    invariants = [row for row in results if row["expected_result_type"] == "semantic_invariant"]
-    invariant_passes = [row for row in invariants if row["semantic_invariant_passed"]]
-    isolation_failures = [row for row in results if not row["mutation_isolation"]["isolation_passed"]]
-    property_change_failures = [row for row in expected_cases if not row["property_changed"]]
-    effect_owners: dict[str, str] = {}
-    duplicate_effect_findings = []
-    for row in results:
-        effect_digest = row["mutation_isolation"]["mutation_effect_digest"]
-        previous = effect_owners.get(effect_digest)
-        if previous is not None:
-            duplicate_effect_findings.append(_finding("duplicate_mutation_effect", "two mutation ids produced the same structural effect", first_mutation=previous, second_mutation=row["mutation"]))
-        effect_owners[effect_digest] = row["mutation"]
-    laundering_closure: dict[str, dict[str, Any]] = {}
-    for row in results:
-        if not row["digest_laundering"]:
-            continue
-        item = laundering_closure.setdefault(
-            row["artifact_class"],
-            {"declared": 0, "executed": 0, "detected": 0, "expected_code_matches": 0, "laundering_depth_reached": "none"},
-        )
-        item["declared"] += 1
-        item["executed"] += 1
-        item["detected"] += int(bool(row["detected"]))
-        item["expected_code_matches"] += int(bool(row["expected_code_matched"]))
-        if row["immediate_digest_recomputed"] and row["parent_digest_recomputed"]:
-            item["laundering_depth_reached"] = "immediate_and_parent"
-        elif row["immediate_digest_recomputed"]:
-            item["laundering_depth_reached"] = "immediate"
-    payload = {
-        "version": MUTATION_AUDIT_VERSION,
-        "matrix_version": MUTATION_MATRIX_VERSION,
-        "base_verified": True,
-        "catalogue_findings": catalogue_findings,
-        "mutations": results,
-        "declared_mutation_count": len(catalogue),
-        "executable_mutation_count": len(selected_cases),
-        "expected_detection_count": len(expected_cases),
-        "expected_mutation_count": len(expected_cases),
-        "detected_mutation_count": len(detected),
-        "missed_mutation_count": len(missed),
-        "undetected_mutation_count": len(missed),
-        "unexpected_failure_code_count": len(unexpected),
-        "invariant_count": len(invariants),
-        "invariant_pass_count": len(invariant_passes),
-        "invariant_failure_count": len(invariants) - len(invariant_passes),
-        "digest_laundering_tests": [row["mutation"] for row in results if row["digest_laundering"]],
-        "digest_laundering_class_closure": laundering_closure,
-        "mutation_isolation_passed": not isolation_failures,
-        "mutation_isolation_failure_count": len(isolation_failures),
-        "property_change_failure_count": len(property_change_failures),
-        "duplicate_effect_findings": duplicate_effect_findings,
-        "repeated_run_determinism": "not_measured_in_single_run",
-        "status": (
-            "passed"
-            if not missed
-            and not unexpected
-            and len(invariant_passes) == len(invariants)
-            and not isolation_failures
-            and not property_change_failures
-            and not duplicate_effect_findings
-            else "failed"
-        ),
-    }
-    payload["mutation_audit_digest"] = _sha256(payload)
-    return payload
+            results.append(_evaluate_mutation_case(case=case, report=report, isolation=isolation, application_error=application_error))
+    return _build_mutation_audit_payload(
+        matrix_version=MUTATION_MATRIX_VERSION,
+        catalogue=catalogue,
+        selected_cases=selected_cases,
+        catalogue_findings=catalogue_findings,
+        results=results,
+    )
 
 
 def run_repeated_reference_mutation_audit(output_dir: Path, repo_root: Path, *, mutation_names: Sequence[str] | None = None) -> dict[str, Any]:
     first = run_reference_mutation_audit(output_dir, repo_root, mutation_names=mutation_names)
     second = run_reference_mutation_audit(output_dir, repo_root, mutation_names=mutation_names)
-    deterministic = first == second and first.get("mutation_audit_digest") == second.get("mutation_audit_digest")
-    payload = {
-        "version": "zeromodel-video-action-set-reference-mutation-audit-repeat/v1",
-        "matrix_version": MUTATION_MATRIX_VERSION,
-        "deterministic": deterministic,
-        "first_audit_digest": first.get("mutation_audit_digest"),
-        "second_audit_digest": second.get("mutation_audit_digest"),
-        "audit": first,
-    }
-    payload["repeat_digest"] = _sha256(payload)
-    return payload
+    return _build_repeated_mutation_audit_payload(matrix_version=MUTATION_MATRIX_VERSION, first=first, second=second)
 
 
 def build_reference_closure_report(output_dir: Path, repo_root: Path, *, include_mutation_audit: bool = True) -> dict[str, Any]:
     verification = verify_reference_instrument(output_dir, repo_root)
-    repeated_mutation_audit = run_repeated_reference_mutation_audit(output_dir, repo_root) if include_mutation_audit else {
-        "version": "zeromodel-video-action-set-reference-mutation-audit-repeat/v1",
-        "matrix_version": MUTATION_MATRIX_VERSION,
-        "deterministic": False,
-        "first_audit_digest": None,
-        "second_audit_digest": None,
-        "audit": {
-            "version": MUTATION_AUDIT_VERSION,
-            "matrix_version": MUTATION_MATRIX_VERSION,
-            "status": "unavailable",
-            "declared_mutation_count": len(_MUTATION_CASES),
-            "executable_mutation_count": len(_MUTATION_CASES),
-            "expected_detection_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-            "expected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-            "detected_mutation_count": 0,
-            "missed_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-            "undetected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-            "unexpected_failure_code_count": 0,
-            "invariant_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
-            "invariant_pass_count": 0,
-            "invariant_failure_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
-            "mutations": [],
-            "digest_laundering_tests": [],
-            "digest_laundering_class_closure": {},
-            "mutation_isolation_passed": False,
-            "mutation_audit_digest": None,
-        },
-    }
-    mutation_audit = repeated_mutation_audit["audit"]
-    if not include_mutation_audit:
-        mutation_audit = {
-        "version": MUTATION_AUDIT_VERSION,
-        "matrix_version": MUTATION_MATRIX_VERSION,
-        "status": "unavailable",
-        "declared_mutation_count": len(_MUTATION_CASES),
-        "executable_mutation_count": len(_MUTATION_CASES),
-        "expected_detection_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-        "expected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-        "detected_mutation_count": 0,
-        "missed_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-        "undetected_mutation_count": len([case for case in _MUTATION_CASES if not case.get("invariant")]),
-        "unexpected_failure_code_count": 0,
-        "invariant_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
-        "invariant_pass_count": 0,
-        "invariant_failure_count": len([case for case in _MUTATION_CASES if case.get("invariant")]),
-        "mutations": [],
-        "digest_laundering_tests": [],
-        "digest_laundering_class_closure": {},
-        "mutation_isolation_passed": False,
-        "mutation_audit_digest": None,
-        }
+    repeated = run_repeated_reference_mutation_audit(output_dir, repo_root) if include_mutation_audit else _build_unavailable_repeated_mutation_audit()
     read_only = verify_reference_read_only(output_dir, repo_root)
-    final_counts = verification["final_access_measurements"]
-    required_zero = (
-        final_counts["final_observation_materialization_count"] == 0
-        and final_counts["final_provider_score_access_count"] == 0
-        and final_counts["final_reachability_execution_count"] == 0
-        and final_counts["calibration_execution_count"] == 0
-        and final_counts["architecture_selection_execution_count"] == 0
-        and final_counts["candidate_tuning_execution_count"] == 0
-        and final_counts["final_evaluation_count"] == 0
+    episode_plan_path = output_dir / "episode-plan.json"
+    plans = _read_json(episode_plan_path).get("splits", {}) if episode_plan_path.exists() else {}
+    return _build_verification_closure(
+        verification=verification,
+        repeated_mutation_audit=repeated,
+        read_only=read_only,
+        split_plan_identities={split: _sha256(context) for split, context in plans.items()},
     )
-    supported = (
-        verification["verified"]
-        and mutation_audit.get("status") == "passed"
-        and mutation_audit.get("declared_mutation_count") == 93
-        and mutation_audit.get("executable_mutation_count") == 93
-        and mutation_audit.get("expected_detection_count") == 91
-        and mutation_audit.get("detected_mutation_count") == 91
-        and mutation_audit.get("missed_mutation_count") == 0
-        and mutation_audit.get("unexpected_failure_code_count") == 0
-        and mutation_audit.get("invariant_count") == 2
-        and mutation_audit.get("invariant_pass_count") == 2
-        and len(mutation_audit.get("digest_laundering_class_closure", {})) >= 7
-        and mutation_audit.get("mutation_isolation_passed") is True
-        and repeated_mutation_audit.get("deterministic") is True
-        and read_only["status"] == "passed"
-        and required_zero
-        and not verification["unavailable_checks"]
-    )
-    payload: dict[str, Any] = {
-        "version": CLOSURE_REPORT_VERSION,
-        "contract_identity": verification["authoritative_roots"]["benchmark_contract_identity"],
-        "policy_identity": verification["authoritative_roots"]["policy_artifact_id"],
-        "root_seed_identity": verification["authoritative_roots"]["root_seed_digest"],
-        "split_plan_identities": {
-            split: _sha256(context)
-            for split, context in _read_json(output_dir / "episode-plan.json").get("splits", {}).items()
-        } if (output_dir / "episode-plan.json").exists() else {},
-        "family_registry_identity": verification["authoritative_roots"]["episode_family_registry_digest"],
-        "reachability_identity": verification["authoritative_roots"]["reachability_tile_digest"],
-        "provider_identities": verification["authoritative_roots"]["provider_versions"],
-        "verification": verification,
-        "mutation_audit": mutation_audit,
-        "repeated_mutation_audit": repeated_mutation_audit,
-        "read_only_verification": read_only,
-        "declared_mutation_count": mutation_audit.get("declared_mutation_count", 0),
-        "executable_mutation_count": mutation_audit.get("executable_mutation_count", 0),
-        "expected_detection_count": mutation_audit.get("expected_detection_count", 0),
-        "expected_mutation_count": mutation_audit.get("expected_mutation_count", 0),
-        "detected_mutation_count": mutation_audit.get("detected_mutation_count", 0),
-        "missed_mutation_count": mutation_audit.get("missed_mutation_count", 0),
-        "undetected_mutation_count": mutation_audit.get("undetected_mutation_count", 0),
-        "unexpected_failure_code_count": mutation_audit.get("unexpected_failure_code_count", 0),
-        "invariant_count": mutation_audit.get("invariant_count", 0),
-        "invariant_pass_count": mutation_audit.get("invariant_pass_count", 0),
-        "digest_laundering_class_closure": mutation_audit.get("digest_laundering_class_closure", {}),
-        "mutation_audit_report_digest": mutation_audit.get("mutation_audit_digest"),
-        "final_materialization_access_counts": final_counts,
-        "supported_status": "reference_instrument_correct" if supported else "reference_instrument_correctness_unresolved",
-        "unsupported_statuses": [
-            "materialization_ready",
-            "benchmark_utility_verified",
-            "provider_selected",
-            "calibration_complete",
-            "final_evaluation_complete",
-        ],
-        "materialization_status": "prospective_materialization_prohibited",
-    }
-    payload["closure_report_digest"] = _sha256({key: value for key, value in payload.items() if key != "closure_report_digest"})
-    return payload
 
 
 def verify_instrument(output_dir: Path, repo_root: Path) -> dict[str, Any]:
     closure = build_reference_closure_report(output_dir, repo_root, include_mutation_audit=False)
-    verification = closure["verification"]
-    return {
-        "verified": verification["verified"],
-        "version": verification["version"],
-        "closure_report_version": closure["version"],
-        "repository_status": closure["supported_status"],
-        "materialization_status": closure["materialization_status"],
-        "primary_failure_code": verification["primary_failure_code"],
-        "gates": verification["gates"],
-        "final_materialization_count": verification["final_access_measurements"]["final_observation_materialization_count"],
-        "final_score_access_count": verification["final_access_measurements"]["final_provider_score_access_count"],
-        "final_reachability_execution_count": verification["final_access_measurements"]["final_reachability_execution_count"],
-        "candidate_set_selection_count": verification["final_access_measurements"]["candidate_tuning_execution_count"],
-        "conformal_calibration_count": verification["final_access_measurements"]["calibration_execution_count"],
-        "reachability_replay_count": verification["measured_counts"]["reachability_replay_count"],
-        "final_evaluation_count": verification["final_access_measurements"]["final_evaluation_count"],
-        "forbidden_final_access_counter": verification["measured_counts"]["forbidden_final_access_counter"],
-        "read_only": closure["read_only_verification"]["read_only"],
-        "verification_digest": verification["verification_digest"],
-    }
+    return _verification_summary(closure)
 
 
 def _run_adversarial_mutation_checks(output_dir: Path) -> list[str]:

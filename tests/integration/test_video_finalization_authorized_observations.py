@@ -5,7 +5,11 @@ from pathlib import Path
 import pytest
 
 from test_video_episode_plan_rmdto import plan_dto, sample_identity
-from test_video_observation_rmdto import _pixels, sample_record
+from test_video_observation_rmdto import (
+    _pixels,
+    assert_records_equivalent,
+    sample_record,
+)
 from video_final_test_support import approved_protocol, authorization
 from zeromodel.artifact import VPMValidationError
 from zeromodel.db.runtime import build_finalization_sqlite_runtime
@@ -189,4 +193,6 @@ def test_nonfinal_observation_identity_and_nullable_access_remain_unchanged(
     assert (
         saved.observation_pixel_digest == expected.observation.observation_pixel_digest
     )
-    assert loaded == record
+    assert loaded is not None
+    assert_records_equivalent(loaded, record)
+

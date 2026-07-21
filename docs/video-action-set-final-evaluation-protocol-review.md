@@ -15,6 +15,12 @@ Required review outcomes:
 - The approved protocol must identify complete final evidence requirements and
   what makes the result `passed`, `failed`, or `indeterminate`.
 - Any replacement protocol requires a new digest and a new authorization.
+- Completion reloads the authorization-bound protocol from the finalization
+  authority and refuses `draft`, `review`, or `retired` status even after a
+  reservation exists.
+- The evaluator emits a digest-bearing result that binds protocol, evidence,
+  decision, descriptive and family measurements, rejections, indeterminate
+  reasons, and actual counts. No caller-supplied result mapping is authoritative.
 
 Codex agents must not approve this protocol, choose thresholds, select providers,
 or transform this template into a live final authorization.

@@ -162,3 +162,11 @@ update a script under `scripts/` and leave execution to the operator.
 - Reservation is irreversible. Retry, resume, overwrite, force, alternate-plan,
   provider, threshold, and operating-point switches are not supported for final
   execution.
+- Final execution uses a fresh schema-marked finalization database. Never run it
+  against, migrate, or relabel a historical Stage 8 database.
+- A completed ledger state is not a receipt. Claims require the canonical receipt
+  published after artifact promotion, terminal completion, reconstruction, and
+  receipt-bound digest revalidation.
+- Possession of writable finalization-database access, an approved authorization
+  and protocol, and a registered executor is authority within the local trust
+  scope. Digest, event-chain, and compare-and-swap checks remain mandatory.

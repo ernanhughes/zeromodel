@@ -237,8 +237,9 @@ Therefore Stage 8 must stop before final unless a separate reviewed authorizatio
 ## Finalization Boundary
 
 Stage 8 closure does not approve final access. Final access requires a separate
-approved final evaluation protocol, an authorization file, an explicit durable
-SQLite database path, and the final CLI:
+approved final evaluation protocol, an authorization file, a fresh dedicated
+finalization SQLite authority, and the final CLI. The Stage 8 database is never
+upgraded or used as this authority:
 
 ```powershell
 python -m zeromodel.video_action_set_final_cli `
@@ -251,9 +252,25 @@ python -m zeromodel.video_action_set_final_cli `
 ```
 
 Preflight is read-only: it must not create a reservation, write final evidence,
-or access the final split. Non-preflight execution is irreversible after
-reservation and is operator-controlled only. There are no force, overwrite,
-retry, resume, alternate-plan, provider, threshold, or operating-point switches.
+or access the final split. It intentionally validates through a nonauthoritative
+in-memory runtime, so it does not open or initialize SQLite. Non-preflight
+execution is irreversible after reservation and is operator-controlled only.
+There are no force, overwrite, retry, resume, alternate-plan, provider,
+threshold, or operating-point switches.
+
+The authorization execution contract must bind the approved protocol file,
+execution commit, exact provider order and versions, expected evidence/episode/
+frame/provider counts, exact sealed episode IDs, expected artifact filenames,
+and the historical Stage 8
+database/evidence authority. The finalization database carries only imported
+immutable benchmark/final-plan identities and authorized final observations;
+pre-final observations remain in the historical Stage 8 authority.
+
+Final artifacts are staged beside the canonical output and promoted only after
+manifest validation. `final-execution-receipt.json` is published last, after the
+completed transition and successful ledger reconstruction. A completed ledger or
+promoted artifacts without that receipt are not finalization success. See
+`docs/video-action-set-finalization-authority.md` for schema and trust details.
 Codex agents may maintain this tooling but must not approve protocols, create
 live authorizations, execute final access, or choose scientific decision values.
 

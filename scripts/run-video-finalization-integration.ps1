@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$RepositoryPath,
     [Parameter(Mandatory = $true)][string]$ExpectedCommit,
@@ -118,7 +118,11 @@ $startedUtc = [DateTime]::UtcNow
 $results = [Collections.Generic.List[object]]::new()
 $overallStatus = "passed"
 Write-Host "Synthetic validation root: $ValidationRoot"
-Write-Host "Predicted total: $((($groups | Measure-Object PredictedSeconds -Sum).Sum)) seconds"
+$predictedTotal = 0
+foreach ($group in $groups) {
+    $predictedTotal += [int]$group["PredictedSeconds"]
+}
+Write-Host "Predicted total: $predictedTotal seconds"
 Write-RunState -Status "running" -CurrentGroup $null -GroupPid $null
 
 foreach ($group in $groups) {
@@ -239,3 +243,4 @@ if ($overallStatus -ne "passed") {
     exit 1
 }
 exit 0
+

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import ROUND_DOWN, ROUND_UP, getcontext, setcontext
 import json
 from pathlib import Path
 import subprocess
@@ -147,6 +148,76 @@ def test_evaluator_is_order_independent_and_digest_bearing() -> None:
         FinalEvaluationResultDTO.from_dict(tampered)
 
 
+def test_evaluator_is_isolated_from_hostile_global_decimal_contexts() -> None:
+    protocol = approved_protocol(
+        threshold="1.6666666666666666666666666666666666", expected_row_count=3
+    )
+    expected_counts = {
+        "evidence_row_count": 3,
+        "episode_count": 3,
+        "frame_count": 3,
+        "provider_count": 1,
+    }
+    evidence = evidence_bundle(
+        protocol,
+        rows=final_rows(("1", "2", "2")),
+        expected_counts=expected_counts,
+    )
+    original = getcontext().copy()
+    results: list[FinalEvaluationResultDTO] = []
+    try:
+        for precision, rounding in ((2, ROUND_DOWN), (9, ROUND_UP), (77, ROUND_DOWN)):
+            getcontext().prec = precision
+            getcontext().rounding = rounding
+            results.append(evaluate_final_protocol(protocol, evidence))
+            assert getcontext().prec == precision
+            assert getcontext().rounding == rounding
+    finally:
+        setcontext(original)
+
+    assert all(result.decision == "passed" for result in results)
+    assert all(result.to_dict() == results[0].to_dict() for result in results[1:])
+    assert all(
+        canonical_json_bytes(result.to_dict())
+        == canonical_json_bytes(results[0].to_dict())
+        for result in results[1:]
+    )
+    assert all(
+        result.evaluation_digest == results[0].evaluation_digest
+        for result in results[1:]
+    )
+
+
+@pytest.mark.parametrize(
+    ("aggregate", "operator", "scores", "threshold"),
+    [
+        ("mean", "gte", ("1", "2"), "1.5"),
+        ("mean", "lte", ("1", "2"), "1.5"),
+        ("minimum", "gte", ("0.2", "0.9"), "0.2"),
+        ("maximum", "lte", ("0.2", "0.9"), "0.9"),
+    ],
+)
+def test_decimal_aggregate_threshold_equality_remains_inclusive(
+    aggregate: str,
+    operator: str,
+    scores: tuple[str, ...],
+    threshold: str,
+) -> None:
+    protocol = approved_protocol(
+        decision_rule={
+            "kind": "fixed_metric_threshold",
+            "aggregate": aggregate,
+            "metric_id": "score",
+            "operator": operator,
+            "threshold": threshold,
+        }
+    )
+    result = evaluate_final_protocol(
+        protocol, evidence_bundle(protocol, rows=final_rows(scores))
+    )
+    assert result.decision == "passed"
+
+
 @pytest.mark.parametrize(
     ("scores", "threshold", "expected_count", "expected_decision"),
     [
@@ -185,7 +256,12 @@ def test_pass_fail_and_indeterminate_are_deterministic(
 @pytest.mark.parametrize(
     "rule",
     [
-        {"aggregate": "mean", "metric_id": "score", "operator": "gte", "threshold": "1"},
+        {
+            "aggregate": "mean",
+            "metric_id": "score",
+            "operator": "gte",
+            "threshold": "1",
+        },
         {
             "kind": "unknown",
             "aggregate": "mean",
@@ -293,6 +369,8 @@ def test_controlled_completion_binds_evaluation_claims_and_report(
     assert receipt.protocol_digest == evaluation.protocol_digest
     assert receipt.artifact_manifest_digest.startswith("sha256:")
     assert receipt.event_chain_digest == reconstruction["event_chain_digest"]
+    assert reconstruction["publication_status"] == "completed_receipt_valid"
+    assert reconstruction["publishable_success"] is True
     assert (output_dir / FINAL_RECEIPT_NAME).is_file()
     assert registry["claims"][0]["status"] == "eligible"
     assert receipt.access_id in report
@@ -329,9 +407,7 @@ def test_fabricated_or_unbound_evaluation_cannot_create_claims(
     )
     bound_evaluation = FinalEvaluationResultDTO.from_dict(
         json.loads(
-            (Path(auth.output_dir) / FINAL_EVALUATION_NAME).read_text(
-                encoding="utf-8"
-            )
+            (Path(auth.output_dir) / FINAL_EVALUATION_NAME).read_text(encoding="utf-8")
         )
     )
     registry = build_final_claim_registry(

@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from decimal import Decimal, InvalidOperation
+from decimal import (
+    Context,
+    Decimal,
+    Inexact,
+    InvalidOperation,
+    ROUND_HALF_EVEN,
+    Rounded,
+    localcontext,
+)
 import re
 from typing import cast
 
@@ -23,19 +31,34 @@ DECISION_RULE_KEYS = frozenset(
 )
 REQUIRED_EVIDENCE_KEYS = frozenset({"provider_id", "expected_row_count"})
 DECIMAL_RE = re.compile(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$")
+EVALUATION_DECIMAL_PRECISION = 128
+EVALUATION_DECIMAL_ROUNDING = ROUND_HALF_EVEN
+EVALUATOR_IMPLEMENTATION_IDENTITY = (
+    "zeromodel-video-final-evaluator/decimal128-half-even/v1"
+)
 
 
 def evaluate_final_protocol(
     protocol: FinalEvaluationProtocolDTO,
     evidence: FinalEvidenceBundleDTO,
 ) -> FinalEvaluationResultDTO:
-    """Evaluate canonical final evidence with exact decimal threshold semantics.
+    """Evaluate evidence under an isolated decimal128-style implementation.
 
     Rows are already sorted by the evidence DTO's stable identity. Numeric inputs
-    are integers or decimal strings; binary floats are rejected. ``gte`` and
-    ``lte`` include threshold equality.
+    are exact integers or decimal strings; binary floats are rejected. Sums must
+    remain exact at precision 128, while mean division uses ROUND_HALF_EVEN.
+    Canonical output uses plain decimal notation without redundant trailing zeros.
+    ``gte`` and ``lte`` compare the resulting value with inclusive equality.
     """
 
+    with localcontext(_evaluation_decimal_context()):
+        return _evaluate_final_protocol(protocol, evidence)
+
+
+def _evaluate_final_protocol(
+    protocol: FinalEvaluationProtocolDTO,
+    evidence: FinalEvidenceBundleDTO,
+) -> FinalEvaluationResultDTO:
     if not protocol.approved:
         raise VPMValidationError("final evaluation protocol is not approved")
     if protocol.protocol_digest != evidence.protocol_digest:
@@ -183,7 +206,10 @@ def _result(
             "protocol_digest": protocol.protocol_digest,
             "evidence_digest": evidence.evidence_digest,
             "decision": decision,
-            "descriptive_measurements": dict(descriptive_measurements),
+            "descriptive_measurements": {
+                "evaluator_implementation": EVALUATOR_IMPLEMENTATION_IDENTITY,
+            }
+            | dict(descriptive_measurements),
             "family_measurements": [dict(item) for item in family_measurements],
             "rejections": list(rejections),
             "indeterminate_reasons": list(indeterminate_reasons),
@@ -194,7 +220,13 @@ def _result(
 
 def _aggregate(values: Sequence[Decimal], kind: str) -> Decimal:
     if kind == "mean":
-        return sum(values, Decimal(0)) / Decimal(len(values))
+        with localcontext(_evaluation_decimal_context()) as context:
+            context.clear_flags()
+            total = sum(values, Decimal(0))
+            if context.flags[Inexact] or context.flags[Rounded]:
+                raise VPMValidationError("final decimal sum exceeds fixed precision")
+            context.clear_flags()
+            return total / Decimal(len(values))
     if kind == "minimum":
         return min(values)
     if kind == "maximum":
@@ -209,6 +241,17 @@ def _metric_value(row: Mapping[str, object], metric_id: str) -> Decimal:
     return _decimal(metrics[metric_id], "final metric mismatch")
 
 
+def _evaluation_decimal_context() -> Context:
+    return Context(
+        prec=EVALUATION_DECIMAL_PRECISION,
+        rounding=EVALUATION_DECIMAL_ROUNDING,
+        Emin=-999999,
+        Emax=999999,
+        capitals=1,
+        clamp=0,
+    )
+
+
 def _decimal(value: object, message: str) -> Decimal:
     if isinstance(value, bool) or not isinstance(value, (int, str)):
         raise VPMValidationError(message)
@@ -216,9 +259,12 @@ def _decimal(value: object, message: str) -> Decimal:
     if DECIMAL_RE.fullmatch(text) is None:
         raise VPMValidationError(message)
     try:
-        return Decimal(text)
+        decimal_value = Decimal(text)
     except InvalidOperation as exc:
         raise VPMValidationError(message) from exc
+    if len(decimal_value.as_tuple().digits) > EVALUATION_DECIMAL_PRECISION:
+        raise VPMValidationError(message)
+    return decimal_value
 
 
 def _decimal_text(value: Decimal) -> str:
@@ -268,6 +314,9 @@ def _reject_tuning_or_selection(value: object) -> None:
 
 
 __all__ = [
+    "EVALUATION_DECIMAL_PRECISION",
+    "EVALUATION_DECIMAL_ROUNDING",
+    "EVALUATOR_IMPLEMENTATION_IDENTITY",
     "FINAL_EVALUATION_RESULT_VERSION",
     "evaluate_final_protocol",
 ]

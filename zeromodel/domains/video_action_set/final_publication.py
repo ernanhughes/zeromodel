@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence
 from collections.abc import Callable
 from dataclasses import dataclass
 import hashlib
+import ntpath
 import os
 from pathlib import Path
 import re
@@ -24,6 +25,11 @@ FINAL_EVIDENCE_NAME = "final-evidence.json"
 FINAL_EVALUATION_NAME = "final-evaluation.json"
 FINAL_RECEIPT_NAME = "final-execution-receipt.json"
 ARTIFACT_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+WINDOWS_RESERVED_ARTIFACT_STEMS = frozenset(
+    {"con", "prn", "aux", "nul", "conin$", "conout$"}
+    | {f"com{index}" for index in range(1, 10)}
+    | {f"lpt{index}" for index in range(1, 10)}
+)
 MANIFEST_KEYS = (
     "version",
     "access_id",
@@ -72,15 +78,18 @@ class FinalArtifactManifestDTO:
         files = _manifest_files(self.files.to_value())
         if files != sorted(files, key=lambda item: str(item["filename"])):
             raise VPMValidationError("final artifact manifest ordering mismatch")
-        if len({str(item["filename"]) for item in files}) != len(files):
+        if len({str(item["filename"]).casefold() for item in files}) != len(files):
             raise VPMValidationError("duplicate canonical final artifact filename")
-        if canonical_sha256(
-            {
-                key: value
-                for key, value in self.to_dict().items()
-                if key != "artifact_manifest_digest"
-            }
-        ) != self.artifact_manifest_digest:
+        if (
+            canonical_sha256(
+                {
+                    key: value
+                    for key, value in self.to_dict().items()
+                    if key != "artifact_manifest_digest"
+                }
+            )
+            != self.artifact_manifest_digest
+        ):
             raise VPMValidationError("final artifact manifest digest mismatch")
 
     @classmethod
@@ -107,7 +116,9 @@ class FinalArtifactManifestDTO:
         if any(not isinstance(item, str) or not item for item in provider_order):
             raise VPMValidationError("final artifact provider order mismatch")
         return cls(
-            version=_string(payload["version"], "final artifact manifest version mismatch"),
+            version=_string(
+                payload["version"], "final artifact manifest version mismatch"
+            ),
             access_id=_string(payload["access_id"], "final access id mismatch"),
             authorization_digest=_string(
                 payload["authorization_digest"],
@@ -218,19 +229,23 @@ def stage_final_artifacts(
 def validate_staged_artifacts(
     staging_dir: Path,
     manifest: FinalArtifactManifestDTO,
+    *,
+    allow_receipt: bool = False,
 ) -> None:
     staging = _absolute_path(staging_dir)
     _assert_no_symlink_components(staging)
     if not staging.is_dir() or staging.is_symlink():
         raise VPMValidationError("final staging directory mismatch")
     expected = {
-        str(item["filename"])
-        for item in _manifest_files(manifest.files.to_value())
+        str(item["filename"]) for item in _manifest_files(manifest.files.to_value())
     } | {FINAL_ARTIFACT_MANIFEST_NAME}
     actual_paths = tuple(staging.iterdir())
     if any(path.is_symlink() or not path.is_file() for path in actual_paths):
         raise VPMValidationError("symlinked final staging path")
-    if {path.name for path in actual_paths} != expected:
+    actual_names = {path.name for path in actual_paths}
+    if allow_receipt:
+        actual_names.discard(FINAL_RECEIPT_NAME)
+    if actual_names != expected:
         raise VPMValidationError("final artifact file set mismatch")
     for item in _manifest_files(manifest.files.to_value()):
         path = staging / str(item["filename"])
@@ -258,7 +273,22 @@ def validate_canonical_artifacts(
     output_dir: Path,
     manifest: FinalArtifactManifestDTO,
 ) -> None:
-    validate_staged_artifacts(output_dir, manifest)
+    validate_staged_artifacts(output_dir, manifest, allow_receipt=True)
+
+
+def load_canonical_artifact_manifest(
+    output_dir: Path,
+) -> FinalArtifactManifestDTO | None:
+    output = _absolute_path(output_dir)
+    _assert_no_symlink_components(output)
+    path = output / FINAL_ARTIFACT_MANIFEST_NAME
+    if not path.exists():
+        return None
+    if path.is_symlink() or not path.is_file():
+        raise VPMValidationError("final artifact manifest path mismatch")
+    manifest = FinalArtifactManifestDTO.from_dict(_json_mapping(path))
+    validate_canonical_artifacts(output, manifest)
+    return manifest
 
 
 def publish_receipt_last(
@@ -308,7 +338,7 @@ def _staging_path(output_dir: Path, authorization_id: str) -> Path:
 
 def _artifact_names(values: Sequence[str]) -> tuple[str, ...]:
     names = tuple(values)
-    if len(set(names)) != len(names):
+    if len({name.casefold() for name in names}) != len(names):
         raise VPMValidationError("duplicate canonical final artifact filename")
     reserved = {
         FINAL_ARTIFACT_MANIFEST_NAME,
@@ -317,7 +347,8 @@ def _artifact_names(values: Sequence[str]) -> tuple[str, ...]:
         FINAL_RECEIPT_NAME,
     }
     for name in names:
-        if ARTIFACT_NAME_RE.fullmatch(name) is None or name in reserved:
+        validate_final_artifact_filename(name)
+        if name.casefold() in {item.casefold() for item in reserved}:
             raise VPMValidationError("final artifact filename mismatch")
     return names
 
@@ -332,13 +363,38 @@ def _manifest_files(value: object) -> list[dict[str, object]]:
         filename = item["filename"]
         digest = item["sha256"]
         byte_length = item["byte_length"]
-        if not isinstance(filename, str) or ARTIFACT_NAME_RE.fullmatch(filename) is None:
-            raise VPMValidationError("final artifact filename mismatch")
+        validate_final_artifact_filename(filename)
         _require_digest(digest, "final artifact file digest mismatch")
-        if not isinstance(byte_length, int) or isinstance(byte_length, bool) or byte_length < 0:
+        if (
+            not isinstance(byte_length, int)
+            or isinstance(byte_length, bool)
+            or byte_length < 0
+        ):
             raise VPMValidationError("final artifact byte length mismatch")
         result.append(dict(item))
     return result
+
+
+def validate_final_artifact_filename(value: object) -> str:
+    if not isinstance(value, str) or not value:
+        raise VPMValidationError("final artifact filename mismatch")
+    if (
+        value in {".", ".."}
+        or value.endswith((".", " "))
+        or "/" in value
+        or "\\" in value
+        or ":" in value
+        or ntpath.isabs(value)
+        or bool(ntpath.splitdrive(value)[0])
+        or any(ord(character) < 32 or ord(character) == 127 for character in value)
+        or ARTIFACT_NAME_RE.fullmatch(value) is None
+    ):
+        raise VPMValidationError("final artifact filename mismatch")
+    normalized = value.rstrip(". ")
+    stem = normalized.split(".", 1)[0].casefold()
+    if stem in WINDOWS_RESERVED_ARTIFACT_STEMS:
+        raise VPMValidationError("final artifact filename mismatch")
+    return value
 
 
 def _file_record(path: Path) -> dict[str, object]:
@@ -393,7 +449,10 @@ def _string(value: object, message: str) -> str:
 
 
 def _require_digest(value: object, message: str) -> None:
-    if not isinstance(value, str) or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None:
+    if (
+        not isinstance(value, str)
+        or re.fullmatch(r"sha256:[0-9a-f]{64}", value) is None
+    ):
         raise VPMValidationError(message)
 
 
@@ -410,11 +469,14 @@ __all__ = [
     "FINAL_ARTIFACT_MANIFEST_NAME",
     "FINAL_ARTIFACT_MANIFEST_VERSION",
     "FINAL_RECEIPT_NAME",
+    "WINDOWS_RESERVED_ARTIFACT_STEMS",
     "FinalArtifactManifestDTO",
+    "load_canonical_artifact_manifest",
     "load_published_receipt",
     "promote_staged_artifacts",
     "publish_receipt_last",
     "stage_final_artifacts",
     "validate_canonical_artifacts",
+    "validate_final_artifact_filename",
     "validate_staged_artifacts",
 ]

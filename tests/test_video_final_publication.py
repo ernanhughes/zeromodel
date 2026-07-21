@@ -19,6 +19,7 @@ from zeromodel.domains.video_action_set.final_access_service import FinalAccessS
 from zeromodel.domains.video_action_set.final_publication import (
     FINAL_RECEIPT_NAME,
     load_published_receipt,
+    validate_final_artifact_filename,
 )
 from zeromodel.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
@@ -31,14 +32,81 @@ class InjectedFailure(RuntimeError):
 
 
 @pytest.mark.parametrize(
-    ("boundary", "expected_state", "canonical_present"),
+    "name",
     [
-        ("before_promotion", "failed", False),
-        ("during_promotion", "failed", False),
-        ("after_promotion", "failed", True),
-        ("during_completed_transition", "failed", True),
-        ("before_receipt", "completed", True),
-        ("during_receipt_write", "completed", True),
+        "con",
+        "CON",
+        "Con.json",
+        "nul",
+        "PRN.txt",
+        "aux",
+        "com1",
+        "COM9.json",
+        "lpt1",
+        "LPT9.log",
+        "CONIN$",
+        "CONOUT$",
+    ],
+)
+def test_windows_reserved_artifact_names_are_rejected(name: str) -> None:
+    with pytest.raises(VPMValidationError, match="filename"):
+        validate_final_artifact_filename(name)
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "console.json",
+        "connection.json",
+        "com10.json",
+        "lpt10.json",
+        "auxiliary.json",
+    ],
+)
+def test_similar_nonreserved_artifact_names_are_allowed(name: str) -> None:
+    assert validate_final_artifact_filename(name) == name
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "",
+        ".",
+        "..",
+        "path/name.json",
+        "path\\name.json",
+        "C:\\name.json",
+        "\\\\server\\share\\name.json",
+        "name.json:stream",
+        "name.json\n",
+        "name.json.",
+        "name.json ",
+    ],
+)
+def test_invalid_windows_artifact_path_forms_remain_rejected(name: str) -> None:
+    with pytest.raises(VPMValidationError, match="filename"):
+        validate_final_artifact_filename(name)
+
+
+@pytest.mark.parametrize(
+    (
+        "boundary",
+        "expected_state",
+        "canonical_present",
+        "expected_publication_status",
+    ),
+    [
+        ("before_promotion", "failed", False, "failed"),
+        ("during_promotion", "failed", False, "failed"),
+        ("after_promotion", "failed", True, "failed"),
+        ("during_completed_transition", "failed", True, "failed"),
+        ("before_receipt", "completed", True, "completed_receipt_missing"),
+        (
+            "during_receipt_write",
+            "completed",
+            True,
+            "completed_receipt_missing",
+        ),
     ],
 )
 def test_receipt_last_failure_boundaries(
@@ -46,6 +114,7 @@ def test_receipt_last_failure_boundaries(
     boundary: str,
     expected_state: str,
     canonical_present: bool,
+    expected_publication_status: str,
 ) -> None:
     protocol = approved_protocol()
     auth = authorization(tmp_path, protocol)
@@ -68,11 +137,66 @@ def test_receipt_last_failure_boundaries(
     reconstruction = reconstruct_final_access_ledger(service.store, access_id)
     output_dir = Path(auth.output_dir)
     assert reconstruction["record"]["state"] == expected_state
+    assert reconstruction["publication_status"] == expected_publication_status
+    assert reconstruction["publishable_success"] is False
     assert output_dir.exists() is canonical_present
     assert load_published_receipt(output_dir) is None
     assert not (output_dir / FINAL_RECEIPT_NAME).exists()
     with pytest.raises(VPMValidationError, match="terminal state|transition"):
         service.execute_final_once(execution_request)
+
+
+@pytest.mark.parametrize("terminal_state", ["running", "failed", "interrupted"])
+def test_noncompleted_states_without_receipts_are_not_publishable(
+    tmp_path: Path,
+    terminal_state: str,
+) -> None:
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    service = FinalAccessService(store=InMemoryVideoActionSetStore())
+    record = service.create_authorization(auth, protocol)
+    record = service.reserve(record.access_id)
+    record = service.mark_running(record.access_id)
+    if terminal_state == "failed":
+        record = service.fail(
+            record.access_id,
+            failure_kind="synthetic",
+            error_code="synthetic",
+            error_message="synthetic",
+        )
+    elif terminal_state == "interrupted":
+        record = service.interrupt(
+            record.access_id,
+            failure_kind="synthetic",
+            error_code="synthetic",
+            error_message="synthetic",
+        )
+    reconstruction = reconstruct_final_access_ledger(service.store, record.access_id)
+    assert reconstruction["publication_status"] == terminal_state
+    assert reconstruction["publication"]["receipt_status"] == "absent"
+    assert reconstruction["publishable_success"] is False
+
+
+def test_completed_valid_and_invalid_receipts_have_distinct_statuses(
+    tmp_path: Path,
+) -> None:
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    service = FinalAccessService(
+        store=InMemoryVideoActionSetStore(),
+        final_executor=SyntheticFinalExecutor(),
+    )
+    service.execute_final_once(request(tmp_path, auth))
+    access_id = access_id_for_authorization(auth)
+    valid = reconstruct_final_access_ledger(service.store, access_id)
+    assert valid["publication_status"] == "completed_receipt_valid"
+    assert valid["publishable_success"] is True
+
+    receipt_path = Path(auth.output_dir) / FINAL_RECEIPT_NAME
+    receipt_path.write_bytes(b'{"tampered":true}')
+    invalid = reconstruct_final_access_ledger(service.store, access_id)
+    assert invalid["publication_status"] == "completed_receipt_invalid"
+    assert invalid["publishable_success"] is False
 
 
 def test_staging_tamper_between_validation_and_promotion_is_rejected(

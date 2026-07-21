@@ -137,6 +137,9 @@ RECEIPT_KEYS = (
     "provider_versions",
     "expected_counts",
     "actual_counts",
+    "historical_authority_id",
+    "historical_database_sha256",
+    "historical_evidence_manifest_digest",
     "historical_authority_digest",
     "receipt_digest",
 )
@@ -405,7 +408,9 @@ class FinalExecutionAuthorizationDTO:
             created_utc=_str(
                 payload, "created_utc", "final authorization UTC mismatch"
             ),
-            created_by=_str(payload, "created_by", "final authorization actor mismatch"),
+            created_by=_str(
+                payload, "created_by", "final authorization actor mismatch"
+            ),
             protocol_digest=_str(
                 payload, "protocol_digest", "final authorization protocol mismatch"
             ),
@@ -512,7 +517,9 @@ class FinalExecutionRequestDTO:
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, object]) -> FinalExecutionRequestDTO:
-        _require_exact_keys(payload, REQUEST_KEYS, "final request payload keys mismatch")
+        _require_exact_keys(
+            payload, REQUEST_KEYS, "final request payload keys mismatch"
+        )
         return cls(
             version=_str(payload, "version", "final request version mismatch"),
             output_dir=_str(payload, "output_dir", "final request path mismatch"),
@@ -927,7 +934,9 @@ class FinalEvidenceBundleDTO:
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, object]) -> FinalEvidenceBundleDTO:
-        _require_exact_keys(payload, EVIDENCE_BUNDLE_KEYS, "final evidence keys mismatch")
+        _require_exact_keys(
+            payload, EVIDENCE_BUNDLE_KEYS, "final evidence keys mismatch"
+        )
         return cls(
             version=_str(payload, "version", "final evidence version mismatch"),
             access_id=_str(payload, "access_id", "final access id mismatch"),
@@ -1078,9 +1087,7 @@ class FinalEvaluationResultDTO:
             descriptive_measurements=FinalJsonDTO.from_value(
                 payload["descriptive_measurements"]
             ),
-            family_measurements=FinalJsonDTO.from_value(
-                payload["family_measurements"]
-            ),
+            family_measurements=FinalJsonDTO.from_value(payload["family_measurements"]),
             rejections=FinalJsonDTO.from_value(payload["rejections"]),
             indeterminate_reasons=FinalJsonDTO.from_value(
                 payload["indeterminate_reasons"]
@@ -1129,6 +1136,9 @@ class FinalExecutionReceiptDTO:
     provider_versions: FinalJsonDTO
     expected_counts: FinalJsonDTO
     actual_counts: FinalJsonDTO
+    historical_authority_id: str
+    historical_database_sha256: str
+    historical_evidence_manifest_digest: str
     historical_authority_digest: str
     receipt_digest: str
 
@@ -1147,12 +1157,24 @@ class FinalExecutionReceiptDTO:
             (self.artifact_manifest_digest, "final receipt manifest mismatch"),
             (self.event_chain_digest, "final receipt event chain mismatch"),
             (
+                self.historical_database_sha256,
+                "final receipt historical database mismatch",
+            ),
+            (
+                self.historical_evidence_manifest_digest,
+                "final receipt historical evidence manifest mismatch",
+            ),
+            (
                 self.historical_authority_digest,
                 "final receipt historical authority mismatch",
             ),
             (self.receipt_digest, "final receipt digest mismatch"),
         ):
             _require_digest(value, message)
+        validate_final_identifier(
+            self.historical_authority_id,
+            "final receipt historical authority id mismatch",
+        )
         _validate_provider_contract(self.provider_order, self.provider_versions)
         _count_mapping(
             self.expected_counts.to_value(),
@@ -1229,6 +1251,21 @@ class FinalExecutionReceiptDTO:
             provider_versions=FinalJsonDTO.from_value(payload["provider_versions"]),
             expected_counts=FinalJsonDTO.from_value(payload["expected_counts"]),
             actual_counts=FinalJsonDTO.from_value(payload["actual_counts"]),
+            historical_authority_id=_str(
+                payload,
+                "historical_authority_id",
+                "final receipt historical authority id mismatch",
+            ),
+            historical_database_sha256=_str(
+                payload,
+                "historical_database_sha256",
+                "final receipt historical database mismatch",
+            ),
+            historical_evidence_manifest_digest=_str(
+                payload,
+                "historical_evidence_manifest_digest",
+                "final receipt historical evidence manifest mismatch",
+            ),
             historical_authority_digest=_str(
                 payload,
                 "historical_authority_digest",
@@ -1260,6 +1297,11 @@ class FinalExecutionReceiptDTO:
             "provider_versions": self.provider_versions.to_value(),
             "expected_counts": self.expected_counts.to_value(),
             "actual_counts": self.actual_counts.to_value(),
+            "historical_authority_id": self.historical_authority_id,
+            "historical_database_sha256": self.historical_database_sha256,
+            "historical_evidence_manifest_digest": (
+                self.historical_evidence_manifest_digest
+            ),
             "historical_authority_digest": self.historical_authority_digest,
             "receipt_digest": self.receipt_digest,
         }
@@ -1395,7 +1437,8 @@ def validate_final_access_event(
         allowed = (
             previous_state == "running"
             and isinstance(kind, str)
-            and kind in {
+            and kind
+            in {
                 "final_materialization_started",
                 "final_materialization_completed",
                 "provider_scoring_started",

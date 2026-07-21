@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import shutil
 import sqlite3
@@ -66,6 +67,26 @@ def test_synthetic_completion_uses_dedicated_sqlite_authority(
         service.execute_final_once(request(tmp_path, auth))
     )
     assert receipt.state == "completed"
+    observed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "zeromodel.video_action_set_final_admin_cli",
+            "observe",
+            "--database-path",
+            auth.database_path,
+            "--access-id",
+            receipt.access_id,
+        ],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert observed.returncode == 0, observed.stderr
+    payload = json.loads(observed.stdout)
+    assert payload["publication_status"] == "completed_receipt_valid"
+    assert payload["publishable_success"] is True
 
 
 def test_prefinal_stage8_database_is_not_adopted(tmp_path: Path) -> None:

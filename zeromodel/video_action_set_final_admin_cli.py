@@ -26,16 +26,30 @@ def build_argument_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> None:
     args = build_argument_parser().parse_args(argv)
     validate_final_identifier(args.access_id, "final access id mismatch")
-    database_url = args.database_path.resolve().as_uri().replace(
-        "file:///",
-        "sqlite:///",
+    database_url = (
+        args.database_path.resolve()
+        .as_uri()
+        .replace(
+            "file:///",
+            "sqlite:///",
+        )
     )
     runtime = build_finalization_sqlite_runtime(database_url)
     payload = reconstruct_final_access_ledger(
         runtime.video_action_set.engine.final_access_service.store,
         args.access_id,
     )
-    result = payload["counters"] if args.command == "observe" else payload
+    result = (
+        {
+            "access_id": args.access_id,
+            "state": payload["record"]["state"],
+            "publication_status": payload["publication_status"],
+            "publishable_success": payload["publishable_success"],
+            "counters": payload["counters"],
+        }
+        if args.command == "observe"
+        else payload
+    )
     print(json.dumps(result, indent=2, sort_keys=True, ensure_ascii=False))
 
 

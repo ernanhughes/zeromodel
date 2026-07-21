@@ -11,7 +11,13 @@ from .canonical_json import canonical_sha256
 from .final_access_dto import (
     FinalAccessEventDTO,
     FinalAccessRecordDTO,
+    FinalExecutionReceiptDTO,
     event_chain_digest,
+)
+from .final_publication import (
+    FinalArtifactManifestDTO,
+    load_canonical_artifact_manifest,
+    load_published_receipt,
 )
 from .store import VideoActionSetStore
 
@@ -20,6 +26,7 @@ FINAL_RECONSTRUCTION_VERSION = "zeromodel-video-final-reconstruction/v1"
 POST_FINAL_IMMUTABILITY_MANIFEST_VERSION = (
     "zeromodel-video-post-final-immutability-manifest/v1"
 )
+FINAL_PUBLICATION_STATUS_VERSION = "zeromodel-video-final-publication-status/v1"
 
 
 def reconstruct_final_access_ledger(
@@ -31,12 +38,16 @@ def reconstruct_final_access_ledger(
         raise VPMValidationError("final access record is missing")
     events = store.list_final_access_events(access_id)
     chain_digest = validate_final_access_event_chain(record, events)
+    publication = derive_final_publication_status(store, record, chain_digest)
     payload = {
         "version": FINAL_RECONSTRUCTION_VERSION,
         "record": record.to_dict(),
         "events": [event.to_dict() for event in events],
         "counters": final_access_counters_from_events(events),
         "event_chain_digest": chain_digest,
+        "publication_status": publication["status"],
+        "publishable_success": publication["publishable_success"],
+        "publication": publication,
     }
     return payload | {"reconstruction_digest": canonical_sha256(payload)}
 
@@ -56,6 +67,93 @@ def final_access_counters_from_events(
                 counts[f"{kind}_count"] += 1
     counts["durable_event_count"] = len(events)
     return dict(sorted(counts.items()))
+
+
+def derive_final_publication_status(
+    store: VideoActionSetStore,
+    record: FinalAccessRecordDTO,
+    chain_digest: str,
+) -> dict[str, object]:
+    authorization = store.load_final_authorization(record.authorization_id)
+    if authorization is None:
+        raise VPMValidationError("final authorization is missing")
+    output_dir = Path(authorization.output_dir)
+    manifest: FinalArtifactManifestDTO | None = None
+    artifacts_valid = False
+    receipt: FinalExecutionReceiptDTO | None = None
+    receipt_status = "absent"
+    try:
+        manifest = load_canonical_artifact_manifest(output_dir)
+        artifacts_valid = manifest is not None
+    except (OSError, VPMValidationError):
+        artifacts_valid = False
+    try:
+        receipt = load_published_receipt(output_dir)
+        if receipt is not None:
+            receipt_status = (
+                "valid"
+                if _receipt_matches_completion(
+                    receipt,
+                    record,
+                    chain_digest,
+                    manifest,
+                )
+                else "invalid"
+            )
+    except (OSError, VPMValidationError):
+        receipt_status = "invalid"
+
+    if record.state != "completed":
+        status = record.state
+    elif not artifacts_valid:
+        status = "completed_artifacts_invalid"
+    elif receipt_status == "absent":
+        status = "completed_receipt_missing"
+    elif receipt_status == "invalid":
+        status = "completed_receipt_invalid"
+    else:
+        status = "completed_receipt_valid"
+    publishable = status == "completed_receipt_valid"
+    return {
+        "version": FINAL_PUBLICATION_STATUS_VERSION,
+        "status": status,
+        "access_state": record.state,
+        "canonical_artifacts_valid": artifacts_valid,
+        "receipt_status": receipt_status,
+        "publishable_success": publishable,
+    }
+
+
+def _receipt_matches_completion(
+    receipt: FinalExecutionReceiptDTO,
+    record: FinalAccessRecordDTO,
+    chain_digest: str,
+    manifest: FinalArtifactManifestDTO | None,
+) -> bool:
+    completion = record.record_payload.to_value()
+    if not isinstance(completion, Mapping):
+        return False
+    completion = completion.get("completion")
+    if not isinstance(completion, Mapping) or manifest is None:
+        return False
+    return (
+        receipt.state == "completed"
+        and receipt.access_id == record.access_id
+        and receipt.authorization_id == record.authorization_id
+        and receipt.authorization_digest == record.authorization_digest
+        and receipt.protocol_digest == record.protocol_digest
+        and receipt.benchmark_seed_digest == record.benchmark_seed_digest
+        and receipt.sealed_plan_digest == record.sealed_plan_digest
+        and receipt.event_chain_digest == chain_digest
+        and receipt.artifact_manifest_digest == manifest.artifact_manifest_digest
+        and receipt.evidence_digest == completion.get("evidence_digest")
+        and receipt.evaluation_digest == completion.get("evaluation_digest")
+        and receipt.artifact_manifest_digest
+        == completion.get("artifact_manifest_digest")
+        and receipt.historical_authority_digest
+        == completion.get("historical_authority_digest")
+        and receipt.decision == completion.get("decision")
+    )
 
 
 def build_post_final_immutability_manifest(
@@ -112,8 +210,7 @@ def validate_final_access_event_chain(
                 or canonical.new_state != "authorized"
                 or not isinstance(payload, Mapping)
                 or payload.get("kind") != "authorization_created"
-                or payload.get("authorization_digest")
-                != record.authorization_digest
+                or payload.get("authorization_digest") != record.authorization_digest
             ):
                 raise VPMValidationError("final access event chain genesis mismatch")
         canonical_events.append(canonical)
@@ -130,9 +227,11 @@ def validate_final_access_event_chain(
 
 __all__ = [
     "FINAL_RECONSTRUCTION_VERSION",
+    "FINAL_PUBLICATION_STATUS_VERSION",
     "POST_FINAL_IMMUTABILITY_MANIFEST_VERSION",
     "build_post_final_immutability_manifest",
     "digest_files",
+    "derive_final_publication_status",
     "final_access_counters_from_events",
     "reconstruct_final_access_ledger",
     "validate_final_access_event_chain",

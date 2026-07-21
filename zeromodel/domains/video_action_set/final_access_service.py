@@ -11,7 +11,6 @@ import socket
 from typing import Any, Protocol, cast
 
 from ...artifact import VPMValidationError
-from .canonical_json import canonical_sha256
 from .final_access_dto import (
     FINAL_EVIDENCE_BUNDLE_VERSION,
     FINAL_EXECUTION_FAILURE_VERSION,
@@ -28,6 +27,11 @@ from .final_access_dto import (
     access_id_for_authorization,
 )
 from .final_evaluation import evaluate_final_protocol
+from .final_historical_authority import (
+    HISTORICAL_AUTHORITY_KEYS,
+    VerifiedHistoricalAuthorityDTO,
+    verify_historical_authority,
+)
 from .final_publication import (
     FinalArtifactManifestDTO,
     promote_staged_artifacts,
@@ -92,15 +96,6 @@ AUTHORITY_CONTRACT_KEYS = frozenset(
         "historical_authority",
     }
 )
-HISTORICAL_AUTHORITY_KEYS = frozenset(
-    {
-        "version",
-        "historical_database_path",
-        "historical_database_sha256",
-        "evidence_manifest_digest",
-        "stage8_commit",
-    }
-)
 COUNT_KEYS = frozenset(
     {"evidence_row_count", "episode_count", "frame_count", "provider_count"}
 )
@@ -116,7 +111,6 @@ class FinalAuthorizationContract:
     expected_episode_ids: tuple[str, ...]
     expected_artifacts: tuple[str, ...]
     historical_authority: Mapping[str, object]
-    historical_authority_digest: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -301,6 +295,9 @@ class FinalAccessService:
             )
             if stored_protocol != protocol:
                 raise VPMValidationError("final evaluation protocol mismatch")
+        verified_historical_authority = verify_historical_authority(
+            contract.historical_authority
+        )
         access = self.reserve(
             access.access_id,
             process_identity=request.operator_identity,
@@ -317,6 +314,7 @@ class FinalAccessService:
                 request,
                 authorization,
                 contract,
+                verified_historical_authority,
             )
         except Exception as exc:
             current = self.store.load_final_access_record(access.access_id)
@@ -347,12 +345,17 @@ class FinalAccessService:
         if authorization.database_path != request.database_path:
             raise VPMValidationError("final request database mismatch")
         if request.unattended and not authorization.unattended_permitted:
-            raise VPMValidationError("final authorization does not permit unattended use")
+            raise VPMValidationError(
+                "final authorization does not permit unattended use"
+            )
         if authorization.authorization_status != "authorized":
             raise VPMValidationError("final authorization status mismatch")
         contract = _authorization_contract(authorization)
         protocol = load_final_protocol_file(contract.protocol_file)
         _validate_authorization_protocol(authorization, protocol)
+        verified_historical_authority = verify_historical_authority(
+            contract.historical_authority
+        )
         return {
             "preflight": "passed",
             "read_only": True,
@@ -361,6 +364,18 @@ class FinalAccessService:
             "authorization_digest": authorization.authorization_digest,
             "protocol_digest": protocol.protocol_digest,
             "sealed_plan_digest": authorization.expected_sealed_plan_digest,
+            "historical_authority_id": (
+                verified_historical_authority.historical_authority_id
+            ),
+            "historical_database_sha256": (
+                verified_historical_authority.historical_database_sha256
+            ),
+            "historical_evidence_manifest_digest": (
+                verified_historical_authority.evidence_manifest_digest
+            ),
+            "historical_authority_digest": (
+                verified_historical_authority.historical_authority_digest
+            ),
             "reservation_created": False,
         }
 
@@ -370,6 +385,7 @@ class FinalAccessService:
         request: FinalExecutionRequestDTO,
         authorization: FinalExecutionAuthorizationDTO,
         contract: FinalAuthorizationContract,
+        verified_historical_authority: VerifiedHistoricalAuthorityDTO,
     ) -> dict[str, Any]:
         access = self._boundary(access, "final_materialization_started")
         materialized = cast(FinalExecutor, self.final_executor).materialize(
@@ -450,6 +466,7 @@ class FinalAccessService:
             evidence=evidence,
             evaluation=evaluation,
             manifest=manifest,
+            verified_historical_authority=verified_historical_authority,
         ).to_dict()
 
     def _evaluate_authorized_evidence(
@@ -459,7 +476,10 @@ class FinalAccessService:
         evidence: FinalEvidenceBundleDTO,
     ) -> FinalEvaluationResultDTO:
         current = self._require_record(access.access_id)
-        if current.state != "running" or current.authorization_digest != evidence.authorization_digest:
+        if (
+            current.state != "running"
+            or current.authorization_digest != evidence.authorization_digest
+        ):
             raise VPMValidationError("final access state transition mismatch")
         stored_authorization = self.store.load_final_authorization(
             current.authorization_id
@@ -491,10 +511,9 @@ class FinalAccessService:
             for row in rows
             if isinstance(row, Mapping)
         }
-        if (
-            episode_ids != set(contract.expected_episode_ids)
-            or len(frame_provider_pairs) != len(rows)
-        ):
+        if episode_ids != set(contract.expected_episode_ids) or len(
+            frame_provider_pairs
+        ) != len(rows):
             raise VPMValidationError("final evidence authorized identities mismatch")
         return evaluate_final_protocol(protocol, evidence)
 
@@ -507,6 +526,7 @@ class FinalAccessService:
         evidence: FinalEvidenceBundleDTO,
         evaluation: FinalEvaluationResultDTO,
         manifest: FinalArtifactManifestDTO,
+        verified_historical_authority: VerifiedHistoricalAuthorityDTO,
     ) -> FinalExecutionReceiptDTO:
         current = self._require_record(access.access_id)
         if current.state != "running":
@@ -520,6 +540,12 @@ class FinalAccessService:
             raise VPMValidationError("final evaluation digest mismatch")
         _validate_manifest_bindings(current, evidence, evaluation, manifest)
         validate_canonical_artifacts(Path(authorization.output_dir), manifest)
+        self._inject("before_historical_authority_reverification")
+        completion_historical_authority = verify_historical_authority(
+            contract.historical_authority
+        )
+        if completion_historical_authority != verified_historical_authority:
+            raise VPMValidationError("historical authority changed after reservation")
         events = self.store.list_final_access_events(current.access_id)
         predecessor_chain_digest = validate_final_access_event_chain(current, events)
         completion_utc = utc_now()
@@ -534,6 +560,9 @@ class FinalAccessService:
                 "evidence_digest": evidence.evidence_digest,
                 "evaluation_digest": evaluation.evaluation_digest,
                 "artifact_manifest_digest": manifest.artifact_manifest_digest,
+                "historical_authority_digest": (
+                    completion_historical_authority.historical_authority_digest
+                ),
                 "decision": evaluation.decision,
             },
             events=events,
@@ -542,6 +571,9 @@ class FinalAccessService:
                     "evidence_digest": evidence.evidence_digest,
                     "evaluation_digest": evaluation.evaluation_digest,
                     "artifact_manifest_digest": manifest.artifact_manifest_digest,
+                    "historical_authority_digest": (
+                        completion_historical_authority.historical_authority_digest
+                    ),
                     "decision": evaluation.decision,
                 }
             },
@@ -549,7 +581,9 @@ class FinalAccessService:
         validate_final_access_event_chain(record, (*events, event))
         self._inject("during_completed_transition")
         completed = self.store.complete_final_access(record, event)
-        reconstruction = reconstruct_final_access_ledger(self.store, completed.access_id)
+        reconstruction = reconstruct_final_access_ledger(
+            self.store, completed.access_id
+        )
         if reconstruction["record"]["state"] != "completed":
             raise VPMValidationError("final completion reconstruction mismatch")
         self._inject("before_receipt")
@@ -591,7 +625,18 @@ class FinalAccessService:
                 "provider_versions": dict(contract.provider_versions),
                 "expected_counts": dict(contract.expected_counts),
                 "actual_counts": evidence.actual_counts.to_value(),
-                "historical_authority_digest": contract.historical_authority_digest,
+                "historical_authority_id": (
+                    completion_historical_authority.historical_authority_id
+                ),
+                "historical_database_sha256": (
+                    completion_historical_authority.historical_database_sha256
+                ),
+                "historical_evidence_manifest_digest": (
+                    completion_historical_authority.evidence_manifest_digest
+                ),
+                "historical_authority_digest": (
+                    completion_historical_authority.historical_authority_digest
+                ),
             }
         )
         _validate_receipt_bindings(
@@ -600,7 +645,7 @@ class FinalAccessService:
             evidence,
             evaluation,
             manifest,
-            contract,
+            completion_historical_authority,
         )
         publish_receipt_last(
             output_dir=Path(authorization.output_dir),
@@ -791,14 +836,17 @@ def _authorization_contract(
         raise VPMValidationError("final authorization execution commit mismatch")
     if not isinstance(provider_order, list) or not provider_order:
         raise VPMValidationError("final authorization provider order mismatch")
-    if (
-        any(not isinstance(item, str) or not item for item in provider_order)
-        or len(set(provider_order)) != len(provider_order)
-    ):
+    if any(not isinstance(item, str) or not item for item in provider_order) or len(
+        set(provider_order)
+    ) != len(provider_order):
         raise VPMValidationError("final authorization provider order mismatch")
-    if not isinstance(provider_versions, Mapping) or set(provider_versions) != set(provider_order):
+    if not isinstance(provider_versions, Mapping) or set(provider_versions) != set(
+        provider_order
+    ):
         raise VPMValidationError("final authorization provider versions mismatch")
-    if any(not isinstance(item, str) or not item for item in provider_versions.values()):
+    if any(
+        not isinstance(item, str) or not item for item in provider_versions.values()
+    ):
         raise VPMValidationError("final authorization provider versions mismatch")
     counts = _counts(expected_counts, "final authorization expected counts mismatch")
     if counts["provider_count"] != len(provider_order):
@@ -812,12 +860,14 @@ def _authorization_contract(
         raise VPMValidationError("final authorization episode identities mismatch")
     if not isinstance(expected_artifacts, list):
         raise VPMValidationError("final authorization artifact list mismatch")
-    if (
-        any(not isinstance(item, str) for item in expected_artifacts)
-        or len(set(expected_artifacts)) != len(expected_artifacts)
-    ):
+    if any(not isinstance(item, str) for item in expected_artifacts) or len(
+        set(expected_artifacts)
+    ) != len(expected_artifacts):
         raise VPMValidationError("final authorization artifact list mismatch")
-    if not isinstance(historical, Mapping) or set(historical) != HISTORICAL_AUTHORITY_KEYS:
+    if (
+        not isinstance(historical, Mapping)
+        or set(historical) != HISTORICAL_AUTHORITY_KEYS
+    ):
         raise VPMValidationError("final historical authority mismatch")
     for key in ("historical_database_sha256", "evidence_manifest_digest"):
         digest = historical[key]
@@ -826,7 +876,13 @@ def _authorization_contract(
             or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None
         ):
             raise VPMValidationError("final historical authority mismatch")
-    for key in ("version", "historical_database_path", "stage8_commit"):
+    for key in (
+        "version",
+        "historical_authority_id",
+        "historical_database_path",
+        "evidence_manifest_path",
+        "stage8_commit",
+    ):
         if not isinstance(historical[key], str) or not historical[key]:
             raise VPMValidationError("final historical authority mismatch")
     return FinalAuthorizationContract(
@@ -838,7 +894,6 @@ def _authorization_contract(
         expected_episode_ids=tuple(cast(list[str], expected_episode_ids)),
         expected_artifacts=tuple(cast(list[str], expected_artifacts)),
         historical_authority=dict(historical),
-        historical_authority_digest=canonical_sha256(dict(historical)),
     )
 
 
@@ -897,7 +952,7 @@ def _validate_receipt_bindings(
     evidence: FinalEvidenceBundleDTO,
     evaluation: FinalEvaluationResultDTO,
     manifest: FinalArtifactManifestDTO,
-    contract: FinalAuthorizationContract,
+    historical_authority: VerifiedHistoricalAuthorityDTO,
 ) -> None:
     if (
         receipt.access_id != access.access_id
@@ -912,8 +967,14 @@ def _validate_receipt_bindings(
         or receipt.provider_versions != evidence.provider_versions
         or receipt.expected_counts != evidence.expected_counts
         or receipt.actual_counts != evidence.actual_counts
+        or receipt.historical_authority_id
+        != historical_authority.historical_authority_id
+        or receipt.historical_database_sha256
+        != historical_authority.historical_database_sha256
+        or receipt.historical_evidence_manifest_digest
+        != historical_authority.evidence_manifest_digest
         or receipt.historical_authority_digest
-        != contract.historical_authority_digest
+        != historical_authority.historical_authority_digest
     ):
         raise VPMValidationError("final receipt binding mismatch")
 

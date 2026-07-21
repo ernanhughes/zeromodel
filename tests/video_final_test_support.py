@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+import hashlib
 import json
 from pathlib import Path
 
@@ -15,6 +16,11 @@ from zeromodel.domains.video_action_set.final_access_dto import (
     FinalEvidenceBundleDTO,
     FinalExecutionAuthorizationDTO,
     FinalExecutionRequestDTO,
+)
+from zeromodel.domains.video_action_set.canonical_json import canonical_json_bytes
+from zeromodel.domains.video_action_set.final_historical_authority import (
+    HISTORICAL_EVIDENCE_MANIFEST_VERSION,
+    HistoricalEvidenceManifestDTO,
 )
 
 
@@ -64,9 +70,7 @@ def approved_protocol(
             "protocol_id": protocol_id,
             "protocol_status": status,
             "created_utc": "2026-07-21T00:00:00Z",
-            "approved_utc": "2026-07-21T00:01:00Z"
-            if status == "approved"
-            else None,
+            "approved_utc": "2026-07-21T00:01:00Z" if status == "approved" else None,
             "approved_by": "reviewer" if status == "approved" else None,
             "benchmark_seed_digest": digest("a"),
             "sealed_plan_digest": digest("b"),
@@ -107,6 +111,7 @@ def authorization(
             "provider_count": 1,
         }
     )
+    historical = synthetic_historical_authority(tmp_path, authorization_id)
     return FinalExecutionAuthorizationDTO.create(
         {
             "version": FINAL_EXECUTION_AUTHORIZATION_VERSION,
@@ -133,16 +138,44 @@ def authorization(
                     for index in range(1, counts["episode_count"] + 1)
                 ],
                 "expected_artifacts": list(expected_artifacts),
-                "historical_authority": {
-                    "version": "zeromodel-stage8-authority/v1",
-                    "historical_database_path": str(tmp_path / "stage8.sqlite3"),
-                    "historical_database_sha256": digest("d"),
-                    "evidence_manifest_digest": digest("e"),
-                    "stage8_commit": "stage8-synthetic-commit",
-                },
+                "historical_authority": historical,
             },
         }
     )
+
+
+def synthetic_historical_authority(
+    tmp_path: Path,
+    authorization_id: str = "auth-1",
+) -> dict[str, object]:
+    database_path = (tmp_path / "stage8.sqlite3").resolve()
+    if not database_path.exists():
+        database_path.write_bytes(b"synthetic Stage 8 authority\n")
+    database_sha256 = "sha256:" + hashlib.sha256(database_path.read_bytes()).hexdigest()
+    authority_id = "synthetic-stage8-authority"
+    stage8_commit = "stage8-synthetic-commit"
+    manifest = HistoricalEvidenceManifestDTO.create(
+        {
+            "version": HISTORICAL_EVIDENCE_MANIFEST_VERSION,
+            "historical_authority_id": authority_id,
+            "historical_database_path": str(database_path),
+            "historical_database_sha256": database_sha256,
+            "stage8_commit": stage8_commit,
+        }
+    )
+    manifest_path = (
+        tmp_path / f"{authorization_id}-historical-evidence-manifest.json"
+    ).resolve()
+    manifest_path.write_bytes(canonical_json_bytes(manifest.to_dict()))
+    return {
+        "version": "zeromodel-stage8-authority/v1",
+        "historical_authority_id": authority_id,
+        "historical_database_path": str(database_path),
+        "historical_database_sha256": database_sha256,
+        "evidence_manifest_path": str(manifest_path),
+        "evidence_manifest_digest": manifest.evidence_manifest_digest,
+        "stage8_commit": stage8_commit,
+    }
 
 
 def request(

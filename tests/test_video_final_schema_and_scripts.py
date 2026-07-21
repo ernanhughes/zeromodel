@@ -26,6 +26,7 @@ from zeromodel.db.session import (
 )
 from zeromodel.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
+    validate_final_identifier,
 )
 from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
 
@@ -196,29 +197,31 @@ def test_operator_scripts_pass_hostile_access_ids_only_as_data(
         "contains spaces",
         python_payload,
     )
+    for hostile in hostile_values:
+        with pytest.raises(VPMValidationError, match="final access id"):
+            validate_final_identifier(hostile, "final access id mismatch")
     for script_name in ("video-final-observe.ps1", "video-final-reconstruct.ps1"):
         script = REPO_ROOT / "scripts" / script_name
         text = script.read_text(encoding="utf-8")
         assert " -c " not in text
         assert '$script = @"' not in text
-        for hostile in hostile_values:
-            result = subprocess.run(
-                [
-                    powershell,
-                    "-NoProfile",
-                    "-File",
-                    str(script),
-                    "-DatabasePath",
-                    str(path),
-                    "-AccessId",
-                    hostile,
-                    "-Python",
-                    sys.executable,
-                ],
-                cwd=REPO_ROOT,
-                check=False,
-                capture_output=True,
-                text=True,
-            )
-            assert result.returncode != 0
-            assert not sentinel.exists()
+        result = subprocess.run(
+            [
+                powershell,
+                "-NoProfile",
+                "-File",
+                str(script),
+                "-DatabasePath",
+                str(path),
+                "-AccessId",
+                python_payload,
+                "-Python",
+                sys.executable,
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode != 0
+        assert not sentinel.exists()

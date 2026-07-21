@@ -7,6 +7,12 @@ from pathlib import Path
 from ...matrix_blob import MatrixBlob
 from .dto import BenchmarkIdentityDTO, EpisodePlanDTO, SealedSplitPlanDTO
 from .engine import VideoActionSetEngine
+from .final_access_dto import (
+    FinalAccessEventDTO,
+    FinalAccessRecordDTO,
+    FinalExecutionAuthorizationDTO,
+    FinalExecutionRequestDTO,
+)
 from .observation_dto import (
     MaterializedObservationDTO,
     ObservationDTO,
@@ -217,6 +223,43 @@ class VideoActionSetFacade:
         input_digest: str,
     ) -> tuple[ObservationDTO, ...]:
         return self.engine.list_observation_consumers_of_digest(input_digest)
+
+    def create_final_authorization(
+        self,
+        authorization: FinalExecutionAuthorizationDTO,
+    ) -> FinalAccessRecordDTO:
+        return self.engine.create_final_authorization(authorization)
+
+    def load_final_access_record(
+        self,
+        access_id: str,
+    ) -> FinalAccessRecordDTO | None:
+        return self.engine.load_final_access_record(access_id)
+
+    def list_final_access_events(
+        self,
+        access_id: str,
+    ) -> tuple[FinalAccessEventDTO, ...]:
+        return self.engine.list_final_access_events(access_id)
+
+    def reserve_final_access(self, access_id: str) -> FinalAccessRecordDTO:
+        return self.engine.reserve_final_access(access_id)
+
+    def mark_final_access_running(self, access_id: str) -> FinalAccessRecordDTO:
+        return self.engine.mark_final_access_running(access_id)
+
+    def save_final_observation_record(
+        self,
+        access_id: str,
+        record: Mapping[str, object],
+    ) -> ObservationDTO:
+        return self.engine.save_final_observation_record(access_id, record)
+
+    def execute_final_once(
+        self,
+        request: FinalExecutionRequestDTO,
+    ) -> dict[str, object]:
+        return self.engine.execute_final_once(request)
 
 
 __all__ = ["VideoActionSetFacade"]

@@ -24,6 +24,7 @@ from zeromodel.db.session import (
     FINALIZATION_AUTHORITY_ID,
     FINALIZATION_AUTHORITY_KIND,
     FINALIZATION_SCHEMA_VERSION,
+    sqlite_database_url,
 )
 from zeromodel.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
@@ -36,8 +37,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _database_url(path: Path) -> str:
-    return path.resolve().as_uri().replace("file:///", "sqlite:///")
-
+    return sqlite_database_url(path)
 
 def test_fresh_finalization_authority_is_reopenable(tmp_path: Path) -> None:
     path = tmp_path / "fresh-finalization.sqlite3"

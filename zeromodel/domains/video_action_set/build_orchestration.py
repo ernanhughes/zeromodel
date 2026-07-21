@@ -441,6 +441,10 @@ def build_split(
     *,
     progress_observer: SplitBuildProgressObserver | None = None,
 ) -> dict[str, Any]:
+    if split == "final":
+        raise VPMValidationError(
+            "final split materialization is prohibited by the sealed plan"
+        )
     runtime = _build_durable_runtime(output_dir)
     identity = runtime.video_action_set.load_identity(repo_root)
     prototypes = canonical_prototypes()

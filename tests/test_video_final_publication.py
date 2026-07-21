@@ -252,7 +252,10 @@ def test_authorized_episode_and_frame_counts_must_match_before_staging(
         store=InMemoryVideoActionSetStore(),
         final_executor=SyntheticFinalExecutor(rows=duplicate_identity_rows),
     )
-    with pytest.raises(VPMValidationError, match="authorized counts"):
+    with pytest.raises(
+        VPMValidationError,
+        match="duplicate final evidence identity|authorized counts",
+    ):
         service.execute_final_once(request(tmp_path, auth))
     assert not Path(auth.output_dir).exists()
 

@@ -405,6 +405,7 @@ class FinalAccessService:
             scored,
         )
         access = self._boundary(access, "reachability_completed")
+        raw_rows = [dict(row) for row in rows]
         evidence = FinalEvidenceBundleDTO.create(
             {
                 "version": FINAL_EVIDENCE_BUNDLE_VERSION,
@@ -417,9 +418,11 @@ class FinalAccessService:
                 "provider_order": list(contract.provider_order),
                 "provider_versions": dict(contract.provider_versions),
                 "expected_counts": dict(contract.expected_counts),
-                "rows": [dict(row) for row in rows],
+                "rows": raw_rows,
             }
         )
+        if evidence.rows.to_value() != raw_rows:
+            raise VPMValidationError("final executor evidence ordering mismatch")
         access = self._boundary(access, "evaluation_started")
         evaluation = self._evaluate_authorized_evidence(
             access,
@@ -439,6 +442,7 @@ class FinalAccessService:
         )
         access = self._boundary(access, "staged_artifact_generation_completed")
         access = self._boundary(access, "artifact_validation_started")
+        self._inject("before_staging_validation")
         staging_dir, manifest = stage_final_artifacts(
             output_dir=Path(authorization.output_dir),
             authorization_id=authorization.authorization_id,
@@ -446,6 +450,7 @@ class FinalAccessService:
             executor_artifacts=artifacts,
             evidence=evidence,
             evaluation=evaluation,
+            before_validation=lambda: self._inject("during_staging_validation"),
         )
         access = self._boundary(
             access,
@@ -546,6 +551,7 @@ class FinalAccessService:
         )
         if completion_historical_authority != verified_historical_authority:
             raise VPMValidationError("historical authority changed after reservation")
+        self._inject("before_completed_transition")
         events = self.store.list_final_access_events(current.access_id)
         predecessor_chain_digest = validate_final_access_event_chain(current, events)
         completion_utc = utc_now()
@@ -581,6 +587,7 @@ class FinalAccessService:
         validate_final_access_event_chain(record, (*events, event))
         self._inject("during_completed_transition")
         completed = self.store.complete_final_access(record, event)
+        self._inject("after_completed_transition")
         reconstruction = reconstruct_final_access_ledger(
             self.store, completed.access_id
         )
@@ -651,7 +658,12 @@ class FinalAccessService:
             output_dir=Path(authorization.output_dir),
             authorization_id=authorization.authorization_id,
             receipt=receipt,
+            before_write=lambda: self._inject("before_temporary_receipt_write"),
+            after_write=lambda: self._inject("during_temporary_receipt_write"),
             before_publish=lambda: self._inject("during_receipt_write"),
+            before_rename=lambda: self._inject("before_receipt_rename"),
+            during_rename=lambda: self._inject("during_receipt_rename"),
+            after_publish=lambda: self._inject("after_receipt_publication"),
         )
         return receipt
 

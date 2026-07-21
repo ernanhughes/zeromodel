@@ -267,12 +267,16 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
     from architecture_rules.video_science_layers import (
         video_science_forbidden_edge_violations,
     )
+    from architecture_rules.video_verification_layers import (
+        stage7b_forbidden_edge_violations,
+    )
 
     violations: list[Violation] = []
     for edge in edges:
         violations.extend(video_science_forbidden_edge_violations(edge, edge_violation))
         violations.extend(stage6_forbidden_edge_violations(edge, edge_violation))
         violations.extend(stage7a_forbidden_edge_violations(edge, edge_violation))
+        violations.extend(stage7b_forbidden_edge_violations(edge, edge_violation))
     return violations
 
 

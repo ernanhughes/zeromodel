@@ -1,0 +1,12 @@
+layer,scope,collected,passed,failed,skipped,deselected,notes
+fast_suite_overall,"tests + integration_tests + all 6 packages/*/tests",874,794,0,1,79,"python scripts/run_fast_tests.py; marker expression: not slow and not external and not research; 100.06s of 120s budget"
+package_local_core,packages/core/tests,21,20,0,1,0,"1 skip is the Lua interpreter not being installed locally (packages/core/tests/test_policy_lookup_lua.py)"
+package_local_analysis,packages/analysis/tests,65,65,0,0,0,
+package_local_observation,packages/observation/tests,32,32,0,0,0,
+package_local_vision,packages/vision/tests,10,10,0,0,0,
+package_local_video,packages/video/tests,20,20,0,0,0,"10 pre-existing + 10 new (test_video_policy_reader_contracts.py, split out of research in Stage A2)"
+package_local_sqlalchemy,packages/sqlalchemy/tests,6,6,0,0,0,
+cross_package_integration,"tests + integration_tests + packages/*/tests, -m integration --run-integration",863,108,0,0,755,"Includes both tests/integration/ files and packages/sqlalchemy/tests' cross-package tests"
+research_video_action_set,research/video_action_set/tests (30 files),36,n/a,n/a,n/a,n/a,"36 tests collected across 9-11 files; 19-20 files still fail collection for reasons unrelated to this stage's scope (see docs/reviews/post-split-research-health.md); not a production release blocker"
+public_api_manifest,docs/architecture/package-public-api-1.0.13.csv,211,n/a,n/a,n/a,n/a,"211 real per-symbol rows across 6 distributions (core 52, analysis 87, observation 12, vision 18, video 32, sqlalchemy 10); was a 6-row placeholder before Stage A2"
+sqlalchemy_mypy,"packages/sqlalchemy/src + packages/sqlalchemy/tests",13,n/a,n/a,n/a,n/a,"13 source files checked, 0 errors (was 17 errors before Stage A2, and 0 files were checked at all before Stage A1 added sqlalchemy to mypy_path)"

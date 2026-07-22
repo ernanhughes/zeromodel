@@ -5,9 +5,14 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+# Every one of the six production packages, plus the repository-wide
+# integration test tree, must appear here. If a package is ever missing from
+# this list, tests/test_quality_gate_coverage.py fails.
 FORMAT_LINT_PATHS = [
     Path("scripts/code_quality_report.py"),
     Path("scripts/check_architecture.py"),
+    Path("scripts/check_package_boundaries.py"),
     Path("scripts/check_quality.py"),
     Path("packages/core/src"),
     Path("packages/core/tests"),
@@ -21,6 +26,9 @@ FORMAT_LINT_PATHS = [
     Path("packages/vision/tests"),
     Path("packages/video/src"),
     Path("packages/video/tests"),
+    Path("packages/sqlalchemy/src"),
+    Path("packages/sqlalchemy/tests"),
+    Path("integration_tests"),
 ]
 
 TYPING_PATHS = [
@@ -31,6 +39,23 @@ TYPING_PATHS = [
     Path("packages/vision/src/zeromodel/vision/visual_policy.py"),
     Path("packages/vision/src/zeromodel/vision/__init__.py"),
     Path("packages/video/src"),
+    Path("packages/sqlalchemy/src"),
+]
+
+QUALITY_LIMIT_PATHS = [
+    Path("packages/core/src"),
+    Path("packages/analysis/src"),
+    Path("packages/analysis/tests"),
+    Path("packages/observation/src"),
+    Path("packages/observation/tests"),
+    Path("packages/vision/src/zeromodel/vision/visual.py"),
+    Path("packages/vision/src/zeromodel/vision/visual_policy.py"),
+    Path("packages/vision/src/zeromodel/vision/__init__.py"),
+    Path("packages/vision/tests"),
+    Path("packages/video/src"),
+    Path("packages/video/tests"),
+    Path("packages/sqlalchemy/src"),
+    Path("packages/sqlalchemy/tests"),
 ]
 
 
@@ -45,10 +70,13 @@ def existing_python_paths(paths_to_check: list[Path]) -> list[str]:
     return paths
 
 
-def run_step(label: str, command: list[str]) -> None:
-    print(label)
+def run_step(label: str, command: list[str], paths: list[str] | None = None) -> None:
+    print(f"== {label} ==")
+    if paths is not None:
+        print(f"paths checked: {', '.join(paths)}")
     result = subprocess.run(command, cwd=REPO_ROOT, check=False)
     if result.returncode != 0:
+        print(f"{label}: FAILED")
         raise SystemExit(result.returncode)
     print(f"{label}: passed")
 
@@ -60,26 +88,55 @@ def main() -> int:
     typing_paths = existing_python_paths(TYPING_PATHS)
     if not typing_paths:
         raise SystemExit("No governed typing paths exist")
+    quality_limit_paths = existing_python_paths(QUALITY_LIMIT_PATHS)
+    if not quality_limit_paths:
+        raise SystemExit("No governed quality-limit paths exist")
 
+    # Execution order: format -> lint -> typing -> package boundaries ->
+    # architecture -> quality limits. A failure at any stage stops the gate
+    # immediately (run_step raises SystemExit), so a later, unrelated
+    # "passed" line can never mask an earlier failure.
     run_step(
-        "Formatting",
+        "Ruff format check",
         [sys.executable, "-m", "ruff", "format", "--check", *governed_paths],
+        governed_paths,
     )
     run_step(
-        "Linting",
+        "Ruff lint check",
         [sys.executable, "-m", "ruff", "check", *governed_paths],
+        governed_paths,
     )
     run_step(
-        "Typing",
+        "mypy",
         [sys.executable, "-m", "mypy", *typing_paths],
+        typing_paths,
     )
-    run_step("Architecture", [sys.executable, "scripts/check_architecture.py"])
     run_step(
         "Package boundaries",
         [sys.executable, "scripts/check_package_boundaries.py"],
+        [
+            "packages/core/src",
+            "packages/analysis/src",
+            "packages/observation/src",
+            "packages/vision/src",
+            "packages/video/src",
+            "packages/sqlalchemy/src",
+        ],
     )
     run_step(
-        "Quality limits",
+        "Architecture rules",
+        [sys.executable, "scripts/check_architecture.py"],
+        [
+            "packages/core/src",
+            "packages/analysis/src",
+            "packages/observation/src",
+            "packages/vision/src",
+            "packages/video/src",
+            "packages/sqlalchemy/src",
+        ],
+    )
+    run_step(
+        "Code-quality limits",
         [
             sys.executable,
             "scripts/code_quality_report.py",
@@ -87,29 +144,9 @@ def main() -> int:
             "build/quality/code-quality-report.json",
             "--markdown",
             "build/quality/code-quality-report.md",
-            "--path",
-            "packages/core/src",
-            "--path",
-            "packages/analysis/src",
-            "--path",
-            "packages/analysis/tests",
-            "--path",
-            "packages/observation/src",
-            "--path",
-            "packages/observation/tests",
-            "--path",
-            "packages/vision/src/zeromodel/vision/visual.py",
-            "--path",
-            "packages/vision/src/zeromodel/vision/visual_policy.py",
-            "--path",
-            "packages/vision/src/zeromodel/vision/__init__.py",
-            "--path",
-            "packages/vision/tests",
-            "--path",
-            "packages/video/src",
-            "--path",
-            "packages/video/tests",
+            *(arg for path in quality_limit_paths for arg in ("--path", path)),
         ],
+        quality_limit_paths,
     )
     print("Quality checks passed")
     return 0

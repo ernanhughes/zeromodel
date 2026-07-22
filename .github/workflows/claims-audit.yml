@@ -35,7 +35,16 @@ jobs:
               text=True,
           ).splitlines()
 
-          package_changed = any(path.startswith("zeromodel/") for path in changed)
+          # Reacts to the current six-package workspace, not the deleted
+          # root `zeromodel/` distribution. See
+          # docs/reviews/post-split-main-audit.md finding H1.
+          GUARDED_PREFIXES = ("packages/", "tests/", "integration_tests/", "scripts/")
+          GUARDED_FILES = ("README.md", "package-boundaries.toml")
+
+          def is_guarded(path: str) -> bool:
+              return path.startswith(GUARDED_PREFIXES) or path in GUARDED_FILES
+
+          package_changed = any(is_guarded(path) for path in changed)
           audit_changed = "docs/claims-audit.md" in changed
 
           event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))

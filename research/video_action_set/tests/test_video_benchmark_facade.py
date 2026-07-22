@@ -14,7 +14,13 @@ import research.video_action_set.verification_orchestration as verification_orch
 from research.video_action_set.video_action_set_cli import main
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.research
+
+# This file lives three directories below the repository root
+# (research/video_action_set/tests/<file>.py), so parents[3] is required to
+# reach the true repo root, not parents[1] (which only reaches
+# research/video_action_set).
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_benchmark_is_direct_alias_compatibility_surface() -> None:

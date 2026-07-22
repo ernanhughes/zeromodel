@@ -1,4 +1,6 @@
 """Stage 2 local-correlation video benchmark for ZeroModel."""
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import argparse
@@ -14,16 +16,19 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+# This module lives three directories below the repository root
+# (research/video_action_set/benchmarks/<file>.py), so the repository root
+# must be resolved with parents[3], not parents[1].
+REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
-from examples.arcade_visual_local_evidence_benchmark import (  # noqa: E402
+from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
+from examples.arcade_visual_local_evidence_benchmark import (
     SOURCE_SCOPE as FRAME_SOURCE_SCOPE,
     build_arcade_local_evidence_dataset,
 )
-from examples.arcade_visual_video_baseline import (  # noqa: E402
+from examples.arcade_visual_video_baseline import (
     arcade_transition_spec,
     build_canonical_arcade_clip,
     run_exact_video_baseline,

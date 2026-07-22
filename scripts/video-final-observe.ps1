@@ -4,7 +4,7 @@ param(
     [string]$Python = "python"
 )
 
-& $Python -m zeromodel.video_action_set_final_admin_cli observe `
+& $Python -m zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli observe `
     --database-path $DatabasePath `
     --access-id $AccessId
 exit $LASTEXITCODE

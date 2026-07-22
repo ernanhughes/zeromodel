@@ -73,7 +73,7 @@ def test_preflight_only_is_read_only_with_spaced_unicode_paths(
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
             "--output-dir",
             auth.output_dir,
             "--authorization-file",
@@ -117,7 +117,7 @@ def test_admin_cli_reads_without_mutating_authority_or_artifacts(
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_admin_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
             command,
             "--database-path",
             str(database),
@@ -149,7 +149,7 @@ def test_final_cli_has_no_force_resume_or_overwrite(
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
             "--output-dir",
             str(tmp_path / "output"),
             "--authorization-file",
@@ -175,7 +175,7 @@ def test_final_cli_has_no_force_resume_or_overwrite(
 
 def test_final_cli_requires_all_paths_explicitly() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "zeromodel.video_action_set_final_cli"],
+        [sys.executable, "-m", "zeromodel.persistence.sqlalchemy.video_action_set_final_cli"],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
@@ -199,7 +199,7 @@ def test_hostile_access_id_is_data_and_cannot_execute(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_admin_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
             "observe",
             "--database-path",
             str(database),

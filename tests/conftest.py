@@ -9,20 +9,33 @@ import pytest
 import research.benchmarks.video_action_set_benchmark as benchmark
 
 
-INTEGRATION_TEST_PREFIXES = ("test_video_action_set_",)
+# Files matching these names/prefixes are genuine cross-package production
+# integration behavior. This set was reconciled against
+# docs/reviews/post-split-test-ownership.csv (Stage A1 classification, since
+# reconfirmed against test behavior): every other filename previously listed
+# here either does not exist under tests/ at all (stale, pre-dating this
+# reconciliation) or is actually a research benchmark/evidence test - those
+# now live in RESEARCH_TEST_FILES / RESEARCH_TEST_PREFIXES below instead, so
+# they are excluded from the production fast/integration gate by the
+# `research` marker rather than silently miscounted as `integration`.
+INTEGRATION_TEST_PREFIXES: tuple[str, ...] = ()
 INTEGRATION_TEST_FILES = {
-    "test_arcade_visual_local_baseline_showdown.py",
-    "test_arcade_visual_registered_calibration_v2.py",
-    "test_installed_wheel_video_instrument.py",
     "test_video_episode_plan_sql_store.py",
     "test_video_observation_sql_store.py",
+}
+
+# Scientific benchmark / evidence / arcade-closed-world-proof tests that live
+# under tests/ for historical reasons but assert research behavior, not a
+# production contract. See docs/reviews/post-split-test-ownership.csv for the
+# per-file classification evidence.
+RESEARCH_TEST_PREFIXES = ("test_video_action_set_",)
+RESEARCH_TEST_FILES = {
     "test_video_discriminative_evidence.py",
     "test_video_discriminative_measurement_audit.py",
     "test_video_discriminative_representation_audit.py",
     "test_video_discriminative_v2_benchmark.py",
     "test_video_discriminative_v2_integrity.py",
     "test_video_discriminative_v2_selection.py",
-    "test_video_local_correlation.py",
     "test_video_prospective_providers.py",
     "test_video_prospective_runtime_equivalence.py",
     "test_visual_local_baseline_result_records.py",
@@ -98,15 +111,9 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
-def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line(
-        "markers",
-        "integration: end-to-end, persistence, materialization, or cross-component tests excluded from normal development",
-    )
-    config.addinivalue_line(
-        "markers",
-        "slow: tests normally too expensive for the fast suite, including exhaustive sweeps, profiling, full builds, and mutation audits",
-    )
+# Markers are registered declaratively in pyproject.toml's
+# [tool.pytest.ini_options] `markers` list, which is the single source of
+# truth; this conftest no longer duplicates that registration.
 
 
 def pytest_collection_modifyitems(
@@ -120,10 +127,17 @@ def pytest_collection_modifyitems(
         filename = item.path.name
         if (
             "integration" in item.path.parts
+            or "integration_tests" in item.path.parts
             or filename in INTEGRATION_TEST_FILES
             or filename.startswith(INTEGRATION_TEST_PREFIXES)
         ):
             item.add_marker(pytest.mark.integration)
+        if (
+            "research" in item.path.parts
+            or filename in RESEARCH_TEST_FILES
+            or filename.startswith(RESEARCH_TEST_PREFIXES)
+        ):
+            item.add_marker(pytest.mark.research)
 
     if run_integration and run_slow:
         return

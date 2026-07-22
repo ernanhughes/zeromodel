@@ -34,7 +34,7 @@ def test_pytest_markers_keep_slow_distinct_from_integration() -> None:
     pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     conftest = (REPO_ROOT / "tests" / "conftest.py").read_text(encoding="utf-8")
 
-    assert "slow: tests normally too expensive for the fast suite" in pyproject
+    assert "slow: supported production tests that exceed the fast-suite time budget" in pyproject
     assert "deprecated compatibility alias" not in pyproject
     assert 'run_integration = bool(config.getoption("--run-integration"))' in conftest
     assert 'run_slow = bool(config.getoption("--run-slow"))' in conftest

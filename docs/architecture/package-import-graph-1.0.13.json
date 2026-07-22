@@ -1,18 +1,25 @@
 {
-  "baseline_commit": "26d7042e02b6e810a2d47a141c6fbe0f3e9d2dd2",
+  "baseline_commit": "b8f75b85f298f974b850df2da7f72b89cd4f12d9",
   "edges": [
     {
       "imported": "examples.arcade_shooter_policy",
       "importer": "examples.arcade_visual_address_benchmark",
       "kind": "runtime",
-      "line": 29,
+      "line": 27,
+      "resolved": true
+    },
+    {
+      "imported": "examples.arcade_shooter_policy",
+      "importer": "examples.arcade_visual_address_benchmark",
+      "kind": "runtime",
+      "line": 33,
       "resolved": true
     },
     {
       "imported": "examples.arcade_visual_sign_reader",
       "importer": "examples.arcade_visual_address_benchmark",
       "kind": "runtime",
-      "line": 30,
+      "line": 34,
       "resolved": true
     },
     {
@@ -40,21 +47,21 @@
       "imported": "examples.arcade_shooter_policy",
       "importer": "examples.arcade_visual_local_evidence_benchmark",
       "kind": "runtime",
-      "line": 15,
+      "line": 16,
       "resolved": true
     },
     {
       "imported": "examples.arcade_visual_address_benchmark",
       "importer": "examples.arcade_visual_local_evidence_benchmark",
       "kind": "runtime",
-      "line": 16,
+      "line": 17,
       "resolved": true
     },
     {
       "imported": "examples.arcade_visual_sign_reader",
       "importer": "examples.arcade_visual_local_evidence_benchmark",
       "kind": "runtime",
-      "line": 17,
+      "line": 18,
       "resolved": true
     },
     {
@@ -75,21 +82,21 @@
       "imported": "examples.arcade_visual_sign_reader",
       "importer": "examples.arcade_visual_video_baseline",
       "kind": "runtime",
-      "line": 26,
+      "line": 25,
       "resolved": true
     },
     {
       "imported": "examples.arcade_shooter_policy",
       "importer": "examples.arcade_visual_video_discriminative_evidence_benchmark",
       "kind": "runtime",
-      "line": 23,
+      "line": 24,
       "resolved": true
     },
     {
       "imported": "examples.arcade_visual_local_evidence_benchmark",
       "importer": "examples.arcade_visual_video_discriminative_evidence_benchmark",
       "kind": "runtime",
-      "line": 24,
+      "line": 25,
       "resolved": true
     },
     {
@@ -103,7 +110,7 @@
       "imported": "examples.arcade_visual_sign_reader",
       "importer": "examples.arcade_visual_video_discriminative_evidence_benchmark",
       "kind": "runtime",
-      "line": 25,
+      "line": 26,
       "resolved": true
     },
     {
@@ -227,7 +234,13 @@
     "tests.test_content_identity": [
       "numpy"
     ],
+    "tests.test_example_and_research_bootstraps": [
+      "pytest"
+    ],
     "tests.test_installed_wheel_video_instrument": [
+      "pytest"
+    ],
+    "tests.test_public_api_manifest": [
       "pytest"
     ],
     "tests.test_video_action_set_benchmark": [
@@ -504,7 +517,7 @@
     },
     "examples.arcade_visual_address_benchmark": {
       "classification": "examples",
-      "lines": 691,
+      "lines": 696,
       "path": "examples/arcade_visual_address_benchmark.py",
       "target_namespace": ""
     },
@@ -522,7 +535,7 @@
     },
     "examples.arcade_visual_local_evidence_benchmark": {
       "classification": "examples",
-      "lines": 630,
+      "lines": 633,
       "path": "examples/arcade_visual_local_evidence_benchmark.py",
       "target_namespace": ""
     },
@@ -546,7 +559,7 @@
     },
     "examples.arcade_visual_video_baseline": {
       "classification": "examples",
-      "lines": 150,
+      "lines": 149,
       "path": "examples/arcade_visual_video_baseline.py",
       "target_namespace": ""
     },
@@ -696,7 +709,7 @@
     },
     "scripts.check_quality": {
       "classification": "tooling",
-      "lines": 119,
+      "lines": 156,
       "path": "scripts/check_quality.py",
       "target_namespace": ""
     },
@@ -712,21 +725,27 @@
       "path": "scripts/code_quality_report.py",
       "target_namespace": ""
     },
+    "scripts.fast_suite_reporter": {
+      "classification": "tooling",
+      "lines": 89,
+      "path": "scripts/fast_suite_reporter.py",
+      "target_namespace": ""
+    },
     "scripts.run_fast_tests": {
       "classification": "tooling",
-      "lines": 65,
+      "lines": 158,
       "path": "scripts/run_fast_tests.py",
       "target_namespace": ""
     },
     "scripts.validate_release_candidate": {
       "classification": "tooling",
-      "lines": 382,
+      "lines": 615,
       "path": "scripts/validate_release_candidate.py",
       "target_namespace": ""
     },
     "tests.conftest": {
       "classification": "tooling",
-      "lines": 144,
+      "lines": 158,
       "path": "tests/conftest.py",
       "target_namespace": ""
     },
@@ -762,7 +781,7 @@
     },
     "tests.integration.test_video_finalization_package_boundary": {
       "classification": "tooling",
-      "lines": 142,
+      "lines": 121,
       "path": "tests/integration/test_video_finalization_package_boundary.py",
       "target_namespace": ""
     },
@@ -796,6 +815,24 @@
       "path": "tests/test_architecture_checker_workspace.py",
       "target_namespace": ""
     },
+    "tests.test_ci_matrix_coverage": {
+      "classification": "tooling",
+      "lines": 29,
+      "path": "tests/test_ci_matrix_coverage.py",
+      "target_namespace": ""
+    },
+    "tests.test_claims_audit_workflow_coverage": {
+      "classification": "tooling",
+      "lines": 29,
+      "path": "tests/test_claims_audit_workflow_coverage.py",
+      "target_namespace": ""
+    },
+    "tests.test_conftest_marker_assignment": {
+      "classification": "tooling",
+      "lines": 62,
+      "path": "tests/test_conftest_marker_assignment.py",
+      "target_namespace": ""
+    },
     "tests.test_content_identity": {
       "classification": "tooling",
       "lines": 61,
@@ -808,9 +845,33 @@
       "path": "tests/test_criticality_verification_example.py",
       "target_namespace": ""
     },
+    "tests.test_developer_tooling_consistency": {
+      "classification": "tooling",
+      "lines": 44,
+      "path": "tests/test_developer_tooling_consistency.py",
+      "target_namespace": ""
+    },
+    "tests.test_example_and_research_bootstraps": {
+      "classification": "tooling",
+      "lines": 58,
+      "path": "tests/test_example_and_research_bootstraps.py",
+      "target_namespace": ""
+    },
+    "tests.test_fast_suite_completeness": {
+      "classification": "tooling",
+      "lines": 100,
+      "path": "tests/test_fast_suite_completeness.py",
+      "target_namespace": ""
+    },
+    "tests.test_identity_documentation_consistency": {
+      "classification": "tooling",
+      "lines": 48,
+      "path": "tests/test_identity_documentation_consistency.py",
+      "target_namespace": ""
+    },
     "tests.test_installed_wheel_video_instrument": {
       "classification": "tooling",
-      "lines": 45,
+      "lines": 104,
       "path": "tests/test_installed_wheel_video_instrument.py",
       "target_namespace": ""
     },
@@ -820,10 +881,34 @@
       "path": "tests/test_package_boundaries.py",
       "target_namespace": ""
     },
+    "tests.test_public_api_manifest": {
+      "classification": "tooling",
+      "lines": 140,
+      "path": "tests/test_public_api_manifest.py",
+      "target_namespace": ""
+    },
+    "tests.test_pytest_marker_taxonomy": {
+      "classification": "tooling",
+      "lines": 79,
+      "path": "tests/test_pytest_marker_taxonomy.py",
+      "target_namespace": ""
+    },
+    "tests.test_quality_gate_coverage": {
+      "classification": "tooling",
+      "lines": 87,
+      "path": "tests/test_quality_gate_coverage.py",
+      "target_namespace": ""
+    },
     "tests.test_release_package_metadata": {
       "classification": "tooling",
       "lines": 32,
       "path": "tests/test_release_package_metadata.py",
+      "target_namespace": ""
+    },
+    "tests.test_release_report_test_layers": {
+      "classification": "tooling",
+      "lines": 85,
+      "path": "tests/test_release_report_test_layers.py",
       "target_namespace": ""
     },
     "tests.test_release_validator_venv_paths": {
@@ -1249,5 +1334,16 @@
   },
   "schema_version": 1,
   "strongly_connected_components": [],
-  "unresolved_dynamic_imports": []
+  "unresolved_dynamic_imports": [
+    {
+      "importer": "tests.test_public_api_manifest",
+      "line": 29,
+      "target": "<non-literal importlib.import_module>"
+    },
+    {
+      "importer": "tests.test_public_api_manifest",
+      "line": 101,
+      "target": "<non-literal importlib.import_module>"
+    }
+  ]
 }

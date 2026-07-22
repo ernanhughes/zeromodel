@@ -7,7 +7,7 @@ param(
     [string]$Python = "python"
 )
 
-& $Python -m zeromodel.video_action_set_final_cli `
+& $Python -m zeromodel.persistence.sqlalchemy.video_action_set_final_cli `
     --output-dir $OutputDir `
     --authorization-file $AuthorizationFile `
     --expected-authorization-digest $ExpectedAuthorizationDigest `

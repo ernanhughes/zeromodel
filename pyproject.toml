@@ -13,13 +13,11 @@ pythonpath = [
 ]
 addopts = "--strict-markers"
 markers = [
-    "integration: end-to-end, persistence, materialization, or cross-component tests excluded from normal development",
-    "slow: tests normally too expensive for the fast suite, including exhaustive sweeps, profiling, full builds, and mutation audits",
-    "fast: bounded production tests",
-    "slow: slow-running tests",
-    "integration: cross-package integration tests",
-    "external: tests requiring external systems or dependencies",
-    "research: research benchmarks, experiments, and evidence tests",
+    "fast: bounded, deterministic production tests with no network, credentials, or heavyweight downloads",
+    "slow: supported production tests that exceed the fast-suite time budget, including exhaustive sweeps, profiling, full builds, and mutation audits",
+    "integration: cross-package production behavior or tests requiring multiple production distributions",
+    "external: tests requiring credentials, services, external files, remote models, GPUs, or environment-specific infrastructure",
+    "research: scientific benchmark, evidence, experiment, parameter-sweep, arcade closed-world proof, negative-result provider, or unpromoted implementation test",
 ]
 
 [tool.ruff]
@@ -27,5 +25,5 @@ line-length = 88
 
 [tool.mypy]
 python_version = "3.10"
-mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/video/src"]
+mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/video/src", "packages/sqlalchemy/src"]
 explicit_package_bases = true

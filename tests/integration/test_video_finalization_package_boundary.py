@@ -1,13 +1,28 @@
+"""Package-boundary regression for the finalization CLI surface.
+
+An installed `zeromodel-video` wheel, on its own, must not carry any
+SQLAlchemy-only finalization capability. That capability (the
+`video_action_set_final_cli` / `video_action_set_final_admin_cli` entry
+points, and everything under `zeromodel.persistence.*`) lives exclusively in
+the separate `zeromodel-sqlalchemy` distribution.
+
+This replaces an earlier version of this test that built and inspected the
+retired monolithic root distribution (pre package-split, see
+`git log --follow -- tests/integration/test_video_finalization_package_boundary.py`,
+commit 5f1d9a9). That version could never pass post-split: it built
+`packages/video`'s parent checkout as a single root wheel (the root is no
+longer a buildable distribution) and asserted the presence of files at flat,
+pre-split module paths that do not exist anywhere in the current layout.
+"""
+
 from __future__ import annotations
 
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import venv
-import zipfile
 
 import pytest
 
@@ -22,23 +37,13 @@ def _environment_without_pythonpath() -> dict[str, str]:
     return environment
 
 
-def test_offline_installed_wheel_preserves_finalization_boundaries(
+def _venv_python(venv_dir: Path) -> Path:
+    return venv_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+
+
+def test_video_wheel_alone_carries_no_sqlalchemy_finalization_capability(
     tmp_path: Path,
 ) -> None:
-    source = tmp_path / "source"
-    shutil.copytree(
-        REPO_ROOT,
-        source,
-        ignore=shutil.ignore_patterns(
-            ".git",
-            ".pytest_cache",
-            "__pycache__",
-            "*.pyc",
-            "build",
-            "dist",
-            "*.egg-info",
-        ),
-    )
     wheel_dir = tmp_path / "wheel"
     wheel_dir.mkdir()
     built = subprocess.run(
@@ -47,47 +52,29 @@ def test_offline_installed_wheel_preserves_finalization_boundaries(
             "-m",
             "build",
             "--wheel",
-            "--no-isolation",
             "--outdir",
             str(wheel_dir),
+            str(REPO_ROOT / "packages" / "video"),
         ],
-        cwd=source,
+        cwd=REPO_ROOT,
         check=False,
         capture_output=True,
         text=True,
         timeout=90,
-        env=_environment_without_pythonpath(),
     )
     assert built.returncode == 0, built.stdout + built.stderr
-    wheels = tuple(wheel_dir.glob("zeromodel-*.whl"))
+    wheels = tuple(wheel_dir.glob("zeromodel_video-*.whl"))
     assert len(wheels) == 1
 
-    required_modules = {
-        "zeromodel/video_action_set_final_cli.py",
-        "zeromodel/video_action_set_final_admin_cli.py",
-        "zeromodel/domains/video_action_set/final_access_service.py",
-        "zeromodel/domains/video_action_set/final_publication.py",
-        "zeromodel/domains/video_action_set/final_reconstruction.py",
-    }
-    with zipfile.ZipFile(wheels[0]) as archive:
-        assert required_modules.issubset(archive.namelist())
-
     environment_dir = tmp_path / "environment"
-    venv.EnvBuilder(with_pip=True, system_site_packages=True).create(environment_dir)
-    python = environment_dir / (
-        "Scripts/python.exe" if os.name == "nt" else "bin/python"
-    )
+    venv.EnvBuilder(with_pip=True).create(environment_dir)
+    python = _venv_python(environment_dir)
+
+    # --no-deps: this test only needs to prove an ABSENCE (no sqlalchemy
+    # persistence capability leaks into a video-only install); it does not
+    # need core/observation/numpy actually importable to do that.
     installed = subprocess.run(
-        [
-            str(python),
-            "-m",
-            "pip",
-            "install",
-            "--no-deps",
-            "--no-index",
-            "--force-reinstall",
-            str(wheels[0]),
-        ],
+        [str(python), "-m", "pip", "install", "--no-deps", str(wheels[0])],
         cwd=tmp_path,
         check=False,
         capture_output=True,
@@ -98,32 +85,22 @@ def test_offline_installed_wheel_preserves_finalization_boundaries(
     assert installed.returncode == 0, installed.stdout + installed.stderr
 
     script = """
+import importlib
 import json
-from pathlib import Path
-import tempfile
-from zeromodel import build_runtime
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.build_orchestration import build_split
-from zeromodel.video_action_set_cli import build_argument_parser
-import zeromodel.video_action_set_final_cli
-import zeromodel.video_action_set_final_admin_cli
-import zeromodel.domains.video_action_set.final_access_service
-import zeromodel.domains.video_action_set.final_publication
-import zeromodel.domains.video_action_set.final_reconstruction
 
-service = build_runtime().video_action_set.engine.final_access_service
-options = {option for action in build_argument_parser()._actions for option in action.option_strings}
-blocked = False
-with tempfile.TemporaryDirectory() as root:
+forbidden = [
+    "zeromodel.persistence",
+    "zeromodel.persistence.sqlalchemy",
+    "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
+    "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
+]
+blocked = []
+for name in forbidden:
     try:
-        build_split("final", Path(root) / "output", Path(root) / "repository")
-    except VPMValidationError as exc:
-        blocked = "prohibited" in str(exc)
-print(json.dumps({
-    "executor_registered": service.final_executor is not None,
-    "historical_cli_has_build_final": "--build-final" in options,
-    "final_build_blocked": blocked,
-}))
+        importlib.import_module(name)
+    except ImportError:
+        blocked.append(name)
+print(json.dumps({"blocked": sorted(blocked)}))
 """
     checked = subprocess.run(
         [str(python), "-c", script],
@@ -135,8 +112,10 @@ print(json.dumps({
         env=_environment_without_pythonpath(),
     )
     assert checked.returncode == 0, checked.stderr
-    assert json.loads(checked.stdout) == {
-        "executor_registered": False,
-        "historical_cli_has_build_final": False,
-        "final_build_blocked": True,
-    }
+    result = json.loads(checked.stdout)
+    assert result["blocked"] == [
+        "zeromodel.persistence",
+        "zeromodel.persistence.sqlalchemy",
+        "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
+        "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
+    ]

@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import inspect, select, text
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.matrix_blob import MatrixBlob
@@ -37,6 +39,9 @@ from zeromodel.video.domains.video_action_set.dto import (
 )
 from zeromodel.video.domains.video_action_set.episode_planning import make_episode_plan
 from zeromodel.video.domains.video_action_set.observation_dto import ObservationDTO
+from zeromodel.video.domains.video_action_set.observation_materialization import (
+    MaterializedObservationDTO,
+)
 from zeromodel.video.domains.video_action_set.store import (
     EPISODE_PLAN_CONFLICT_MESSAGE,
     MATRIX_BLOB_CONFLICT_MESSAGE,
@@ -108,6 +113,8 @@ def _observation(plan: EpisodePlanDTO, *, sequence_number: int = 0) -> Observati
         "final_emitted_digest": None,
     }
     chain = chain_payload | {"operation_chain_digest": canonical_sha256(chain_payload)}
+    frame_seed_payload = plan.frame_plans[0].to_value()
+    assert isinstance(frame_seed_payload, dict)
     materialized = ObservationDTO.from_record(
         {
             "benchmark_version": BENCHMARK_VERSION,
@@ -135,19 +142,19 @@ def _observation(plan: EpisodePlanDTO, *, sequence_number: int = 0) -> Observati
                 "seed_digest": plan.benchmark_seed_digest,
                 "derived_seed_identity": plan.derived_seed_identity,
                 "episode_plan_digest": plan.plan_digest,
-                "frame_seed_identity": plan.frame_plans[0].to_value()[
-                    "frame_seed_identity"
-                ],
+                "frame_seed_identity": frame_seed_payload["frame_seed_identity"],
                 "observation_operation_chain": chain,
             },
         }
     )
-    if hasattr(materialized, "observation"):
+    if isinstance(materialized, MaterializedObservationDTO):
         return materialized.observation
     return materialized
 
 
-def _sql_store(path: Path) -> tuple[SqlAlchemyVideoActionSetStore, object, object]:
+def _sql_store(
+    path: Path,
+) -> tuple[SqlAlchemyVideoActionSetStore, sessionmaker[Session], Engine]:
     engine = create_database_engine(sqlite_database_url(path))
     create_schema(engine)
     session_factory = create_session_factory(engine)

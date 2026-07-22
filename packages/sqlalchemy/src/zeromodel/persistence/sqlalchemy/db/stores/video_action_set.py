@@ -5,6 +5,7 @@ from collections.abc import Mapping, Sequence
 from typing import cast
 
 from sqlalchemy import Engine, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session, sessionmaker
 
 from zeromodel.core.artifact import VPMValidationError
@@ -1067,7 +1068,11 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
                         payload_json=canonical_json_text(record.to_dict()),
                     )
                 )
-                if result.rowcount != 1:
+                # session.execute() on a Core UPDATE statement always returns a
+                # CursorResult at runtime, but its static return type is the
+                # more generic Result[Any], which does not declare `rowcount`.
+                # Narrow it explicitly instead of asserting the attribute exists.
+                if not isinstance(result, CursorResult) or result.rowcount != 1:
                     raise_final_access_state()
                 session.add(self._to_final_event_orm(event))
                 return record

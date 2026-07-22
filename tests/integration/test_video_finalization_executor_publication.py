@@ -255,7 +255,7 @@ def test_no_executor_registration_leaks_across_runtime_or_process() -> None:
             sys.executable,
             "-c",
             (
-                "from zeromodel import build_runtime; "
+                "from zeromodel.video.runtime import build_runtime; "
                 "s=build_runtime().video_action_set.engine.final_access_service; "
                 "raise SystemExit(0 if s.final_executor is None else 1)"
             ),

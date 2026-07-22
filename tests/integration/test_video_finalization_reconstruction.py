@@ -46,7 +46,7 @@ def _run_admin(database: Path, access_id: str) -> dict[str, object]:
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_admin_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
             "reconstruct",
             "--database-path",
             str(database),
@@ -76,14 +76,14 @@ def test_completed_authority_reconstructs_all_bindings_in_fresh_process(
 import json
 from pathlib import Path
 import sys
-from zeromodel.db.runtime import build_finalization_sqlite_runtime
-from zeromodel.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO
-from zeromodel.domains.video_action_set.final_publication import (
+from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.video.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO
+from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
     load_canonical_artifact_manifest,
     load_published_receipt,
 )
-from zeromodel.domains.video_action_set.final_reconstruction import reconstruct_final_access_ledger
+from zeromodel.video.domains.video_action_set.final_reconstruction import reconstruct_final_access_ledger
 
 database = Path(sys.argv[1]).resolve()
 access_id = sys.argv[2]
@@ -201,10 +201,10 @@ def test_claim_eligibility_is_derived_in_fresh_process(tmp_path: Path) -> None:
 import json
 from pathlib import Path
 import sys
-from zeromodel.db.runtime import build_finalization_sqlite_runtime
-from zeromodel.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO
-from zeromodel.domains.video_action_set.final_claims import build_final_claim_registry
-from zeromodel.domains.video_action_set.final_publication import FINAL_EVALUATION_NAME, load_published_receipt
+from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.video.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO
+from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
+from zeromodel.video.domains.video_action_set.final_publication import FINAL_EVALUATION_NAME, load_published_receipt
 
 database = Path(sys.argv[1]).resolve()
 access_id = sys.argv[2]

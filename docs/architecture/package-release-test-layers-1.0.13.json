@@ -1,0 +1,77 @@
+{
+  "cross_package_integration_tests": {
+    "errors": 0,
+    "failed": 0,
+    "passed": 1,
+    "returncode": 0,
+    "skipped": 0,
+    "summary_line": "1 passed"
+  },
+  "installed_wheel_smoke_result_by_package": {
+    "core": {
+      "imported_from_installed_wheel": true
+    }
+  },
+  "package_local_source_tests_by_package": {
+    "analysis": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 1,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "1 passed"
+    },
+    "core": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 1,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "1 passed"
+    },
+    "observation": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 1,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "1 passed"
+    },
+    "sqlalchemy": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 1,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "1 passed"
+    },
+    "video": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 1,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "1 passed"
+    },
+    "vision": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 1,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "1 passed"
+    }
+  },
+  "research": {
+    "note": "research/ is not part of the production release contract and is not executed by this validator. See docs/reviews/post-split-research-health.md for its own, separately-tracked collection/health status.",
+    "status": "excluded_by_policy"
+  },
+  "source_tree_fast_production_tests": {
+    "errors": 0,
+    "failed": 0,
+    "passed": 1,
+    "returncode": 0,
+    "skipped": 0,
+    "summary_line": "1 passed"
+  }
+}

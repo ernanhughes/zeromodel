@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -30,6 +31,7 @@ PACKAGES = {
         "wheel_stem": "zeromodel",
         "namespace": "zeromodel.core",
         "requires": {"numpy>=1.23"},
+        "depends_on": (),
     },
     "analysis": {
         "path": Path("packages/analysis"),
@@ -37,6 +39,7 @@ PACKAGES = {
         "wheel_stem": "zeromodel_analysis",
         "namespace": "zeromodel.analysis",
         "requires": {"numpy>=1.23", f"zeromodel=={VERSION}"},
+        "depends_on": ("core",),
     },
     "observation": {
         "path": Path("packages/observation"),
@@ -44,6 +47,7 @@ PACKAGES = {
         "wheel_stem": "zeromodel_observation",
         "namespace": "zeromodel.observation",
         "requires": {"numpy>=1.23", f"zeromodel=={VERSION}"},
+        "depends_on": ("core",),
     },
     "vision": {
         "path": Path("packages/vision"),
@@ -55,6 +59,7 @@ PACKAGES = {
             f"zeromodel=={VERSION}",
             f"zeromodel-observation=={VERSION}",
         },
+        "depends_on": ("core", "observation"),
     },
     "video": {
         "path": Path("packages/video"),
@@ -66,6 +71,7 @@ PACKAGES = {
             f"zeromodel=={VERSION}",
             f"zeromodel-observation=={VERSION}",
         },
+        "depends_on": ("core", "observation"),
     },
     "sqlalchemy": {
         "path": Path("packages/sqlalchemy"),
@@ -78,8 +84,18 @@ PACKAGES = {
             f"zeromodel=={VERSION}",
             f"zeromodel-video=={VERSION}",
         },
+        "depends_on": ("core", "video", "observation"),
     },
 }
+PUBLIC_API_CSV_COLUMNS = [
+    "distribution",
+    "namespace",
+    "exported_symbol",
+    "owning_module",
+    "object_kind",
+    "source_module",
+    "is_reexport",
+]
 FORBIDDEN_WHEEL_PREFIXES = ("tests/", "research/", "examples/", "docs/", "scripts/")
 FORBIDDEN_WHEEL_FILES = {"zeromodel/__init__.py", "zeromodel/persistence/__init__.py"}
 
@@ -230,7 +246,15 @@ def is_beneath(path: Path, root: Path) -> bool:
     return True
 
 
-def install_and_probe() -> None:
+def install_and_probe() -> dict[str, dict[str, Any]]:
+    """Build a clean venv, install all six wheels, and smoke-probe each namespace.
+
+    Returns a per-package wheel-smoke result dict (used by
+    release_test_layer_report() below): each package's namespace either
+    imports cleanly from the installed wheel (inside the clean venv, never
+    the checkout) or the whole validation fails outright, since this
+    function raises SystemExit on any violation before returning.
+    """
     venv = REPO_ROOT / "build" / "full-integration-venv"
     shutil.rmtree(venv, ignore_errors=True)
     run([sys.executable, "-m", "venv", str(venv)], timeout=120)
@@ -267,11 +291,22 @@ if root_import != 'blocked':
         text=True,
     )
     payload = json.loads(result.stdout)
+    namespace_to_key = {
+        expected["namespace"]: key for key, expected in PACKAGES.items()
+    }
+    wheel_smoke: dict[str, dict[str, Any]] = {}
     for name, location in payload["locations"].items():
-        if not is_beneath(Path(location), venv):
+        beneath = is_beneath(Path(location), venv)
+        wheel_smoke[namespace_to_key[name]] = {
+            "namespace": name,
+            "location": location,
+            "imported_from_installed_wheel": beneath,
+        }
+        if not beneath:
             raise SystemExit(
                 f"{name} imported from outside the clean virtual environment: {location}"
             )
+    return wheel_smoke
 
 
 def manifest_rows() -> list[dict[str, Any]]:
@@ -332,36 +367,233 @@ def write_manifest() -> None:
     print(path.relative_to(REPO_ROOT).as_posix())
 
 
+_PUBLIC_API_PROBE = """
+import importlib
+import inspect
+import json
+
+namespaces = {namespaces!r}
+report = {{}}
+for key, namespace in namespaces.items():
+    module = importlib.import_module(namespace)
+    all_symbols = getattr(module, "__all__", None)
+    if all_symbols is None:
+        raise SystemExit(f"{{namespace}}: package has no __all__")
+    symbols = {{}}
+    for name in all_symbols:
+        if name not in symbols:
+            symbols[name] = []
+        symbols[name].append(True)
+        obj = getattr(module, name)
+        if inspect.isclass(obj):
+            kind = "Class"
+        elif inspect.isfunction(obj) or inspect.isbuiltin(obj) or inspect.ismethod(obj):
+            kind = "Function"
+        else:
+            kind = "Constant"
+        source_module = getattr(obj, "__module__", None) or namespace
+        symbols[name] = {{
+            "kind": kind,
+            "source_module": source_module,
+            "count": len(symbols[name]),
+        }}
+    report[key] = {{"namespace": namespace, "all": list(all_symbols), "symbols": symbols}}
+print(json.dumps(report))
+"""
+
+
+def _probe_public_api(python: Path) -> dict[str, Any]:
+    namespaces = {key: expected["namespace"] for key, expected in PACKAGES.items()}
+    script = _PUBLIC_API_PROBE.format(namespaces=namespaces)
+    result = subprocess.run(
+        [str(python), "-c", script],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return json.loads(result.stdout)
+
+
 def write_public_exports() -> None:
-    path = REPO_ROOT / "docs" / "architecture" / "package-public-api-1.0.13.csv"
-    rows = []
+    """Generate a real, per-symbol public API manifest.
+
+    Introspects each package's actual `__all__` in the same clean venv built
+    by install_and_probe() (an isolated validation environment with all six
+    wheels installed, nothing importable from the checkout) - never a
+    placeholder row per distribution. `__all__` remains the sole authority:
+    this never walks `dir(module)` or exports anything not explicitly listed.
+    """
+    venv = REPO_ROOT / "build" / "full-integration-venv"
+    python = venv_python(venv)
+    report = _probe_public_api(python)
+
+    allowed_namespace_prefixes: dict[str, tuple[str, ...]] = {}
     for key, expected in PACKAGES.items():
-        module = expected["namespace"]
-        rows.append(
-            {
-                "distribution": expected["distribution"],
-                "namespace": module,
-                "exported_symbol": "__all__",
-                "owning_module": module,
-                "reason_public": "explicit package public API",
-            }
+        own = (expected["namespace"],)
+        deps = tuple(PACKAGES[dep]["namespace"] for dep in expected["depends_on"])
+        allowed_namespace_prefixes[key] = own + deps
+
+    rows: list[dict[str, Any]] = []
+    for key, expected in PACKAGES.items():
+        payload = report[key]
+        namespace = payload["namespace"]
+        symbols = payload["symbols"]
+        all_list = payload["all"]
+
+        duplicates = sorted({name for name in all_list if all_list.count(name) > 1})
+        if duplicates:
+            raise SystemExit(f"{namespace}: duplicate symbols in __all__: {duplicates}")
+
+        private = sorted(name for name in all_list if name.startswith("_"))
+        if private:
+            raise SystemExit(
+                f"{namespace}: __all__ exports private-looking names: {private}"
+            )
+
+        for name in all_list:
+            info = symbols[name]
+            source_module = info["source_module"]
+            allowed_prefixes = allowed_namespace_prefixes[key]
+            if not any(
+                source_module == prefix or source_module.startswith(f"{prefix}.")
+                for prefix in allowed_prefixes
+            ):
+                raise SystemExit(
+                    f"{namespace}.{name}: implementation module {source_module!r} does not "
+                    f"belong to {expected['distribution']} or one of its declared "
+                    f"dependencies {expected['depends_on']}"
+                )
+            rows.append(
+                {
+                    "distribution": expected["distribution"],
+                    "namespace": namespace,
+                    "exported_symbol": name,
+                    "owning_module": namespace,
+                    "object_kind": info["kind"],
+                    "source_module": source_module,
+                    "is_reexport": str(source_module != namespace).lower(),
+                }
+            )
+
+    if len(rows) <= len(PACKAGES):
+        raise SystemExit(
+            "Public API manifest looks like a placeholder (one row per "
+            "distribution) rather than a real per-symbol manifest."
         )
+
+    rows.sort(key=lambda row: (row["distribution"], row["exported_symbol"]))
+
+    path = REPO_ROOT / "docs" / "architecture" / "package-public-api-1.0.13.csv"
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(
-            handle,
-            [
-                "distribution",
-                "namespace",
-                "exported_symbol",
-                "owning_module",
-                "reason_public",
-            ],
-        )
+        writer = csv.DictWriter(handle, PUBLIC_API_CSV_COLUMNS)
         writer.writeheader()
         writer.writerows(rows)
+    print(
+        f"{path.relative_to(REPO_ROOT).as_posix()}: {len(rows)} public symbols across {len(PACKAGES)} distributions"
+    )
+
+
+def _pytest_count(args: list[str], *, timeout: int = 180) -> dict[str, Any]:
+    """Run pytest with -q and pull collected/passed/failed counts from its summary line.
+
+    Used only for source-tree counts here (fast suite, package-local
+    source), where full structured reporting already exists via
+    scripts/fast_suite_reporter.py for the canonical fast-suite command
+    itself; this is a lighter-weight counter for the additional per-package
+    breakdowns this report adds on top of that.
+    """
+    result = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", *args],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    summary_line = ""
+    for line in reversed(result.stdout.splitlines()):
+        if " in " in line and (
+            "passed" in line
+            or "failed" in line
+            or "error" in line
+            or "no tests ran" in line
+        ):
+            summary_line = line.strip()
+            break
+    counts = {"passed": 0, "failed": 0, "skipped": 0, "errors": 0}
+    for key in counts:
+        match = re.search(rf"(\d+) {key}", summary_line)
+        if match:
+            counts[key] = int(match.group(1))
+    counts["returncode"] = result.returncode
+    counts["summary_line"] = summary_line
+    return counts
+
+
+def release_test_layer_report() -> dict[str, Any]:
+    """Report exactly which test layers back a release candidate, and which don't.
+
+    Distinguishes source-tree fast production tests, package-local source
+    tests (per package), cross-package integration tests, installed-wheel
+    smoke results (per package, from install_and_probe()'s clean-venv
+    import probe - never editable source), and explicitly states that
+    research is out of the production release contract by policy rather
+    than leaving it silently absent from the report.
+    """
+    fast_suite = _pytest_count(
+        [
+            "--maxfail=1",
+            "-m",
+            "not slow and not external and not research",
+            "tests",
+            "integration_tests",
+        ]
+    )
+    package_local: dict[str, Any] = {}
+    for key in PACKAGES:
+        package_local[key] = _pytest_count([f"packages/{key}/tests"])
+    integration = _pytest_count(
+        [
+            "--run-integration",
+            "-m",
+            "integration",
+            "tests",
+            "integration_tests",
+            *(f"packages/{key}/tests" for key in PACKAGES),
+        ]
+    )
+
+    report = {
+        "source_tree_fast_production_tests": fast_suite,
+        "package_local_source_tests_by_package": package_local,
+        "cross_package_integration_tests": integration,
+        "installed_wheel_smoke_result_by_package": WHEEL_SMOKE_RESULTS,
+        "research": {
+            "status": "excluded_by_policy",
+            "note": (
+                "research/ is not part of the production release contract and is "
+                "not executed by this validator. See "
+                "docs/reviews/post-split-research-health.md for its own, "
+                "separately-tracked collection/health status."
+            ),
+        },
+    }
+    path = (
+        REPO_ROOT / "docs" / "architecture" / "package-release-test-layers-1.0.13.json"
+    )
+    path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(f"{path.relative_to(REPO_ROOT).as_posix()}: test-layer report written")
+    return report
+
+
+WHEEL_SMOKE_RESULTS: dict[str, dict[str, Any]] = {}
 
 
 def main() -> int:
+    global WHEEL_SMOKE_RESULTS
     parser = argparse.ArgumentParser()
     parser.add_argument("--skip-build", action="store_true")
     args = parser.parse_args()
@@ -371,9 +603,10 @@ def main() -> int:
         build_packages()
     validate_wheels()
     validate_sdists()
-    install_and_probe()
+    WHEEL_SMOKE_RESULTS = install_and_probe()
     write_manifest()
     write_public_exports()
+    release_test_layer_report()
     print("Release candidate validation passed")
     return 0
 

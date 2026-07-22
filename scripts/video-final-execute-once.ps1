@@ -10,7 +10,7 @@ param(
 )
 
 $arguments = @(
-    "-m", "zeromodel.video_action_set_final_cli",
+    "-m", "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
     "--output-dir", $OutputDir,
     "--authorization-file", $AuthorizationFile,
     "--expected-authorization-digest", $ExpectedAuthorizationDigest,

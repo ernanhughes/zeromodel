@@ -15,6 +15,12 @@ Ground truth: `packages/core/tests/test_artifact_kernel.py:16-18` pins `GOLDEN_S
 
 **Severity:** BLOCKER. A "golden identity" claim in a validation report that is documentation-only, contradicted by a sibling report, and never matched by any test is exactly the failure mode identity-consistency review exists to catch.
 
+### Resolution (Stage A2)
+
+The enforced test is authoritative: `packages/core/tests/test_artifact_kernel.py:16-18` (`GOLDEN_SAMPLE_ARTIFACT_ID`), asserted at line 58, has always pinned `32f801671139b73e349c756570c27c06d39c422a4d9a277782e1c997a473083b` for the "sample artifact" fixture (a fixed `LayoutRecipe` + `ScoreTable` built once at module scope). This is the *same fixture* the core-validation report describes - not a different, imprecisely-named one - so the resolution is case (a): the same fixture, one incorrect documented value, corrected to match the test rather than the other way around. The digest was not regenerated or altered in any way; only the documentation was corrected.
+
+`docs/architecture/package-core-validation-1.0.13.md`'s "Golden Identity Results" section now records, for this fixture: fixture name, fixture version (current, no historical predecessor), producing test, expected digest, owning test location, and status (current/enforced) - and explicitly notes the old, incorrect value as a corrected historical error rather than silently dropping it. `docs/architecture/package-integration-validation-1.0.13.md` already had the correct value and required no change. A new regression test, `tests/test_identity_documentation_consistency.py`, now enforces that both documents agree with `GOLDEN_SAMPLE_ARTIFACT_ID` going forward.
+
 ## Documentation-only quality claim (sqlalchemy)
 
 `package-sqlalchemy-validation-1.0.13.md` states the "Repository quality gate: `python scripts/check_quality.py` ... passed" and describes a "focused" ruff/mypy pass over "12 source files," presented in the same register as the equivalent, gate-backed claims in the analysis and observation reports.
@@ -22,6 +28,10 @@ Ground truth: `packages/core/tests/test_artifact_kernel.py:16-18` pins `GOLDEN_S
 This is misleading: `scripts/check_quality.py`'s `FORMAT_LINT_PATHS`/`TYPING_PATHS` (lines 8-34) and root `pyproject.toml`'s `[tool.mypy] mypy_path` (line 25) omit `packages/sqlalchemy` entirely (cross-referenced against [post-split-quality-coverage.csv](post-split-quality-coverage.csv)). `check_quality.py` passing today is true, but it is vacuously true for sqlalchemy - the script never inspects that package's code, so it cannot fail on it regardless of what the code looks like. Direct execution confirms `mypy packages/sqlalchemy/src` independently produces 17 errors (including one genuine bug: `db/stores/video_action_set.py:1070` - `Result[Any]` has no attribute `rowcount`) that the "focused" ad hoc commands in the report's own text would have had to be run manually and separately from the governed gate to get a clean result, since the governed gate never touches this code at all.
 
 **Severity:** HIGH. The report's phrasing claims equivalent assurance to packages whose quality actually is gate-enforced; it is not, and the gap is currently masking a real mypy failure.
+
+### Resolution (Stage A2)
+
+`packages/sqlalchemy/src` and `packages/sqlalchemy/tests` are now in `scripts/check_quality.py`'s `FORMAT_LINT_PATHS`/`TYPING_PATHS`/`QUALITY_LIMIT_PATHS` and root `pyproject.toml`'s `mypy_path`. The real mypy bug this gap was masking (`db/stores/video_action_set.py:1070`) is fixed with a runtime-validated `isinstance(result, CursorResult)` narrowing rather than a blanket ignore; `python -m mypy packages/sqlalchemy/src packages/sqlalchemy/tests` now passes with zero errors, verified directly. The report's claim is no longer misleading - it is now backed by the same governed gate as every other package. See `docs/reviews/post-split-stage-a2-validation.md` for full evidence.
 
 ## Stale-but-explainable module-count drift (not a defect)
 

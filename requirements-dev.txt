@@ -12,3 +12,7 @@ pytest-cov
 ruff
 mypy
 tomli>=2; python_version < "3.11"
+
+# Required by examples/render_signs_demo.py (image/GIF asset generation).
+matplotlib
+pillow

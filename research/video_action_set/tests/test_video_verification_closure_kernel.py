@@ -11,7 +11,14 @@ import pytest
 from research.video_action_set import verification
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+pytestmark = pytest.mark.research
+
+# This file lives three directories below the repository root
+# (research/video_action_set/tests/<file>.py), so parents[3] is required to
+# reach the true repo root, not parents[1] (which only reaches
+# research/video_action_set and made scripts/check_architecture.py
+# unresolvable).
+REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS_ROOT = REPO_ROOT / "scripts"
 
 

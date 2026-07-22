@@ -179,12 +179,26 @@ The import-isolation test verifies that importing `zeromodel.core` does not load
 
 ## Golden Identity Results
 
-Golden identity behavior was preserved. The artifact-kernel test retains the
-existing deterministic artifact ID:
+Golden identity behavior was preserved. The artifact-kernel fixture's
+deterministic artifact ID is:
 
-```text
-32f8013789e4ff463569e2ccbbdc8c3802bc42c6edeb8ceb361afca9a6025db1
-```
+- **Fixture name:** `sample artifact` (a fixed `LayoutRecipe` + `ScoreTable`
+  built once at module scope in the test).
+- **Fixture version:** current (no version suffix; there is exactly one
+  version of this fixture and no historical predecessor).
+- **Producing command/test:** `pytest packages/core/tests/test_artifact_kernel.py::test_deterministic_artifact_identity_and_round_trip`.
+- **Expected digest:** `32f801671139b73e349c756570c27c06d39c422a4d9a277782e1c997a473083b`.
+- **Owning test:** `packages/core/tests/test_artifact_kernel.py:16-18` (`GOLDEN_SAMPLE_ARTIFACT_ID`), asserted at line 58.
+- **Status:** current and enforced (not historical).
+
+This document previously stated a different value
+(`32f8013789e4ff463569e2ccbbdc8c3802bc42c6edeb8ceb361afca9a6025db1`) for this
+same fixture, which was corrected in Stage A2. That value was never asserted
+by any test in this repository's history (`git log --all -S` on that string
+returns only this documentation line); the digest above is, and always was,
+the one the enforced test checks. See
+[docs/reviews/post-split-identity-consistency.md](../reviews/post-split-identity-consistency.md)
+for the full reconciliation.
 
 MatrixBlob identity, metadata-sensitive identity, canonical native-endian float
 identity, compiled-plan identity, bundle reconstruction, source digest

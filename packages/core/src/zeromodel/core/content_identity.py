@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import hashlib
 import json
 from struct import pack
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping
 
 import numpy as np
 
@@ -30,7 +30,9 @@ class UnresolvedArtifactIdentity:
 
     def __post_init__(self) -> None:
         if self.label.startswith("sha256:"):
-            raise VPMValidationError("unresolved identities must not masquerade as sha256 digests")
+            raise VPMValidationError(
+                "unresolved identities must not masquerade as sha256 digests"
+            )
 
 
 def _normalize_scalar(value: Any) -> Any:
@@ -71,7 +73,11 @@ def canonical_json_bytes(value: Any) -> bytes:
 
 
 def sha256_digest(value: Any) -> str:
-    payload = value if isinstance(value, (bytes, bytearray, memoryview)) else canonical_json_bytes(value)
+    payload = (
+        value
+        if isinstance(value, (bytes, bytearray, memoryview))
+        else canonical_json_bytes(value)
+    )
     return "sha256:" + hashlib.sha256(bytes(payload)).hexdigest()
 
 
@@ -102,7 +108,9 @@ def prototype_universe_identity(
     source_scope: str,
 ) -> PrototypeUniverseIdentity:
     rows = []
-    for observation_id, (row_id, action_id, _digest, observation) in sorted(prototypes.items()):
+    for observation_id, (row_id, action_id, _digest, observation) in sorted(
+        prototypes.items()
+    ):
         rows.append(
             {
                 "observation_id": str(observation_id),

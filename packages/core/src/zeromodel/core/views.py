@@ -5,6 +5,7 @@ A ZeroModel source table can contain many possible signals at once. A
 weights up or down, emits a deterministic layout recipe, and builds a VPM view
 without regenerating or mutating the underlying evidence.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,7 +13,13 @@ from typing import Any, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from zeromodel.core.artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMValidationError, build_vpm
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    VPMArtifact,
+    VPMValidationError,
+    build_vpm,
+)
 
 
 @dataclass(frozen=True)
@@ -42,21 +49,29 @@ class ViewProfile:
                 raise VPMValidationError("ViewProfile metric ids must be non-empty")
             number = float(weight)
             if not np.isfinite(number):
-                raise VPMValidationError("ViewProfile weight for %s must be finite" % metric)
+                raise VPMValidationError(
+                    "ViewProfile weight for %s must be finite" % metric
+                )
             if abs(number) <= 1e-12:
                 continue
             weights[metric] = number
         if not weights:
-            raise VPMValidationError("ViewProfile requires at least one non-zero metric weight")
+            raise VPMValidationError(
+                "ViewProfile requires at least one non-zero metric weight"
+            )
 
         object.__setattr__(self, "name", name)
         object.__setattr__(self, "metric_weights", weights)
         object.__setattr__(self, "metadata", dict(self.metadata))
 
     @classmethod
-    def from_metric(cls, metric_id: str, *, name: Optional[str] = None, weight: float = 1.0) -> "ViewProfile":
+    def from_metric(
+        cls, metric_id: str, *, name: Optional[str] = None, weight: float = 1.0
+    ) -> "ViewProfile":
         """Create a one-metric view profile."""
-        return cls(name=name or str(metric_id), metric_weights={str(metric_id): float(weight)})
+        return cls(
+            name=name or str(metric_id), metric_weights={str(metric_id): float(weight)}
+        )
 
     def weighted_keys(self) -> tuple[dict[str, Any], ...]:
         """Return LayoutRecipe weighted-score keys for this profile."""
@@ -74,11 +89,15 @@ class ViewProfile:
             )
         return tuple(keys)
 
-    def _metric_sets(self, table: ScoreTable) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
+    def _metric_sets(
+        self, table: ScoreTable
+    ) -> tuple[tuple[str, ...], tuple[str, ...], tuple[str, ...]]:
         metrics = tuple(str(metric_id) for metric_id in table.metric_ids)
         missing = sorted(set(self.metric_weights) - set(metrics))
         if missing:
-            raise VPMValidationError("ViewProfile references unknown metrics: %s" % ", ".join(missing))
+            raise VPMValidationError(
+                "ViewProfile references unknown metrics: %s" % ", ".join(missing)
+            )
         weighted = tuple(
             metric_id
             for metric_id, _ in sorted(
@@ -162,7 +181,9 @@ class ViewSet:
         names = [profile.name for profile in normalized]
         duplicates = sorted({name for name in names if names.count(name) > 1})
         if duplicates:
-            raise VPMValidationError("Duplicate ViewProfile names: %s" % ", ".join(duplicates))
+            raise VPMValidationError(
+                "Duplicate ViewProfile names: %s" % ", ".join(duplicates)
+            )
         object.__setattr__(self, "profiles", normalized)
 
     def build(self, source: ScoreTable | VPMArtifact) -> dict[str, VPMArtifact]:
@@ -189,7 +210,9 @@ def build_view(
         table = source
         parents = []
     else:
-        raise VPMValidationError("build_view requires a ScoreTable or VPMArtifact source")
+        raise VPMValidationError(
+            "build_view requires a ScoreTable or VPMArtifact source"
+        )
 
     recipe = profile.to_recipe(table)
     merged_provenance = {

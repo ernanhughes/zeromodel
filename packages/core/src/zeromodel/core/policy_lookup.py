@@ -98,9 +98,7 @@ class VPMPolicyLookup:
                 "evidence_value_source must be 'raw' or 'normalized'"
             )
         if tie_break not in {"metric_order", "metric_id"}:
-            raise VPMValidationError(
-                "tie_break must be 'metric_order' or 'metric_id'"
-            )
+            raise VPMValidationError("tie_break must be 'metric_order' or 'metric_id'")
 
         diagnostic_metadata = artifact.source.metadata.get("policy_diagnostics")
         declared_actions: Sequence[str] | None = None
@@ -152,16 +150,14 @@ class VPMPolicyLookup:
         ]
         if missing_actions:
             raise VPMValidationError(
-                "Unknown action metric ids: %s"
-                % ", ".join(sorted(missing_actions))
+                "Unknown action metric ids: %s" % ", ".join(sorted(missing_actions))
             )
         missing_evidence = [
             metric_id for metric_id in evidence if metric_id not in metric_source_index
         ]
         if missing_evidence:
             raise VPMValidationError(
-                "Unknown evidence metric ids: %s"
-                % ", ".join(sorted(missing_evidence))
+                "Unknown evidence metric ids: %s" % ", ".join(sorted(missing_evidence))
             )
 
         self.artifact = artifact
@@ -376,15 +372,11 @@ class VPMPolicyLookup:
             "action_values": self._action_values.tolist(),
             "evidence_values": self._evidence_values.tolist(),
             "winner_indices": [int(value) for value in self._winner_indices],
-            "source_to_view_rows": [
-                int(value) for value in self._source_to_view_row
-            ],
+            "source_to_view_rows": [int(value) for value in self._source_to_view_row],
             "action_source_metric_indices": [
                 int(value) for value in self._action_source_columns
             ],
-            "action_view_columns": [
-                int(value) for value in self._action_view_columns
-            ],
+            "action_view_columns": [int(value) for value in self._action_view_columns],
             "evidence_source_metric_indices": [
                 int(value) for value in self._evidence_source_columns
             ],

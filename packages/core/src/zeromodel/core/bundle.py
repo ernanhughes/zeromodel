@@ -1,4 +1,5 @@
 """Lossless bundle serialization for VPM artifacts."""
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,9 @@ def to_bundle(artifact: VPMArtifact, path: str | Path) -> Path:
     """Write a lossless `.vpm` zip bundle for an artifact."""
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(bundle_manifest(artifact), sort_keys=True, indent=2, allow_nan=False)
+    payload = json.dumps(
+        bundle_manifest(artifact), sort_keys=True, indent=2, allow_nan=False
+    )
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.writestr(MANIFEST_NAME, payload)
     return target
@@ -35,5 +38,7 @@ def from_bundle(path: str | Path) -> VPMArtifact:
     with zipfile.ZipFile(source, "r") as zf:
         payload = json.loads(zf.read(MANIFEST_NAME).decode("utf-8"))
     if payload.get("bundle_version") != BUNDLE_VERSION:
-        raise ValueError("Unsupported bundle_version: %r" % payload.get("bundle_version"))
+        raise ValueError(
+            "Unsupported bundle_version: %r" % payload.get("bundle_version")
+        )
     return VPMArtifact.from_dict(payload["artifact"])

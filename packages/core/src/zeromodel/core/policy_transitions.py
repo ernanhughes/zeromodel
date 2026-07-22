@@ -1,4 +1,5 @@
 """Versioned transition contracts for bounded policy-row sequences."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -34,7 +35,9 @@ def _thaw(value: Any) -> Any:
 
 def _freeze(value: Any) -> Any:
     if isinstance(value, Mapping):
-        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+        return MappingProxyType(
+            {str(key): _freeze(item) for key, item in value.items()}
+        )
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     return value
@@ -73,7 +76,10 @@ class PolicyTransitionSpec:
             raise VPMValidationError("unsupported policy transition spec version")
         if int(self.maximum_frame_gap) < 1:
             raise VPMValidationError("maximum_frame_gap must be at least one")
-        if self.maximum_position_delta is not None and int(self.maximum_position_delta) < 0:
+        if (
+            self.maximum_position_delta is not None
+            and int(self.maximum_position_delta) < 0
+        ):
             raise VPMValidationError("maximum_position_delta must be non-negative")
         if str(self.transition_scope) != ROW_UNION_TRANSITION_SCOPE:
             raise VPMValidationError(
@@ -93,9 +99,13 @@ class PolicyTransitionSpec:
         if not frozen:
             raise VPMValidationError("transition graph cannot be empty")
         known = set(frozen)
-        unknown = sorted({item for values in frozen.values() for item in values if item not in known})
+        unknown = sorted(
+            {item for values in frozen.values() for item in values if item not in known}
+        )
         if unknown:
-            raise VPMValidationError("transition graph references unknown rows: %s" % unknown)
+            raise VPMValidationError(
+                "transition graph references unknown rows: %s" % unknown
+            )
         metadata = _freeze(self.metadata)
         _json_bytes(metadata)
         object.__setattr__(self, "allowed_row_transitions", MappingProxyType(frozen))
@@ -103,7 +113,9 @@ class PolicyTransitionSpec:
         object.__setattr__(
             self,
             "maximum_position_delta",
-            None if self.maximum_position_delta is None else int(self.maximum_position_delta),
+            None
+            if self.maximum_position_delta is None
+            else int(self.maximum_position_delta),
         )
         object.__setattr__(self, "transition_scope", ROW_UNION_TRANSITION_SCOPE)
         object.__setattr__(self, "metadata", metadata)
@@ -120,7 +132,8 @@ class PolicyTransitionSpec:
         return {
             "version": self.version,
             "allowed_row_transitions": {
-                key: list(value) for key, value in sorted(self.allowed_row_transitions.items())
+                key: list(value)
+                for key, value in sorted(self.allowed_row_transitions.items())
             },
             "maximum_frame_gap": self.maximum_frame_gap,
             "maximum_position_delta": self.maximum_position_delta,
@@ -146,12 +159,16 @@ class PolicyTransitionSpec:
                 if data.get("maximum_position_delta") is None
                 else int(data["maximum_position_delta"])
             ),
-            transition_scope=str(data.get("transition_scope", ROW_UNION_TRANSITION_SCOPE)),
+            transition_scope=str(
+                data.get("transition_scope", ROW_UNION_TRANSITION_SCOPE)
+            ),
             metadata=data.get("metadata") or {},
             version=str(data.get("version", POLICY_TRANSITION_SPEC_VERSION)),
         )
 
-    def _reachable_within(self, source_row_id: str, target_row_id: str, steps: int) -> bool:
+    def _reachable_within(
+        self, source_row_id: str, target_row_id: str, steps: int
+    ) -> bool:
         queue = deque([(source_row_id, 0)])
         visited = {(source_row_id, 0)}
         while queue:
@@ -194,7 +211,9 @@ class PolicyTransitionSpec:
             )
         if gap > self.maximum_frame_gap:
             return "unknown_due_to_gap"
-        if previous_observation_rejected and self._reachable_within(previous_row_id, current_row_id, gap):
+        if previous_observation_rejected and self._reachable_within(
+            previous_row_id, current_row_id, gap
+        ):
             return "possible_with_gap"
         if self._reachable_within(previous_row_id, current_row_id, gap):
             return "possible_with_gap"
@@ -224,7 +243,9 @@ class PolicyTransitionEvidence:
         object.__setattr__(
             self,
             "timestamp_delta_seconds",
-            None if self.timestamp_delta_seconds is None else float(self.timestamp_delta_seconds),
+            None
+            if self.timestamp_delta_seconds is None
+            else float(self.timestamp_delta_seconds),
         )
 
     def to_dict(self) -> Dict[str, Any]:

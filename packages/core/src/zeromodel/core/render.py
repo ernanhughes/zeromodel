@@ -3,6 +3,7 @@
 The PNG writer is intentionally tiny and standard-library only. It writes an
 8-bit grayscale PNG from a two-dimensional normalized field.
 """
+
 from __future__ import annotations
 
 import binascii
@@ -13,16 +14,19 @@ from typing import Any
 
 import numpy as np
 
+from zeromodel.core.artifact import VPMArtifact
+
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
 def as_field(value: Any) -> np.ndarray:
-    if hasattr(value, "field"):
-        value = value.field
-    arr = np.asarray(value, dtype=float)
+    """Return a normalized float field from an artifact or array-like input."""
+    if isinstance(value, VPMArtifact):
+        value = value.normalized_values
+    arr = np.asarray(value, dtype=np.float64)
     if arr.ndim != 2:
         raise ValueError("VPM field operations require a 2D matrix")
-    return arr
+    return np.clip(arr, 0.0, 1.0)
 
 
 def to_uint8(field: Any) -> np.ndarray:
@@ -41,7 +45,12 @@ def png_bytes(field: Any) -> bytes:
     height, width = image.shape
     ihdr = struct.pack("!IIBBBBB", width, height, 8, 0, 0, 0, 0)
     scanlines = b"".join(b"\x00" + image[row].tobytes() for row in range(height))
-    return PNG_SIGNATURE + _chunk(b"IHDR", ihdr) + _chunk(b"IDAT", zlib.compress(scanlines)) + _chunk(b"IEND", b"")
+    return (
+        PNG_SIGNATURE
+        + _chunk(b"IHDR", ihdr)
+        + _chunk(b"IDAT", zlib.compress(scanlines))
+        + _chunk(b"IEND", b"")
+    )
 
 
 def write_png(field: Any, path: str | Path) -> Path:
@@ -65,7 +74,15 @@ def svg_text(field: Any, *, cell_size: int = 16) -> str:
             value = int(image[row, col])
             parts.append(
                 '<rect x="%d" y="%d" width="%d" height="%d" fill="rgb(%d,%d,%d)" />'
-                % (col * cell_size, row * cell_size, cell_size, cell_size, value, value, value)
+                % (
+                    col * cell_size,
+                    row * cell_size,
+                    cell_size,
+                    cell_size,
+                    value,
+                    value,
+                    value,
+                )
             )
     parts.append("</svg>")
     return "".join(parts)

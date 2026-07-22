@@ -4,6 +4,7 @@ These helpers pull the useful Stephanie metric-normalization pattern into the
 standalone package. They convert application-specific metric dictionaries into
 stable numeric rows that can be used by ``ScoreTable``.
 """
+
 from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
@@ -41,7 +42,9 @@ def _as_float(value: Any, default: float = 0.0) -> float:
         return default
 
 
-def pack_metrics(data: Mapping[str, Any], metric_ids: Optional[Sequence[str]] = None) -> Dict[str, float]:
+def pack_metrics(
+    data: Mapping[str, Any], metric_ids: Optional[Sequence[str]] = None
+) -> Dict[str, float]:
     """Pack heterogeneous metric keys into a stable float dictionary.
 
     The function intentionally supports common aliases found in Stephanie:
@@ -57,7 +60,9 @@ def pack_metrics(data: Mapping[str, Any], metric_ids: Optional[Sequence[str]] = 
     packed["correctness"] = _as_float(src.get("correctness"))
     packed["coherence"] = _as_float(src.get("coherence"))
     packed["faithfulness"] = _as_float(src.get("faithfulness"))
-    packed["citation_support"] = _as_float(src.get("citation_support", src.get("evidence_strength")))
+    packed["citation_support"] = _as_float(
+        src.get("citation_support", src.get("evidence_strength"))
+    )
     packed["entity_consistency"] = _as_float(src.get("entity_consistency"))
     packed["readability"] = _as_float(src.get("readability"))
     packed["novelty"] = _as_float(src.get("novelty"))
@@ -89,7 +94,9 @@ def pack_metrics(data: Mapping[str, Any], metric_ids: Optional[Sequence[str]] = 
     return {metric_id: float(packed.get(metric_id, 0.0)) for metric_id in wanted}
 
 
-def metric_ids_for_rows(rows: Iterable[Mapping[str, Any]], preferred: Sequence[str] = CANONICAL_METRICS) -> List[str]:
+def metric_ids_for_rows(
+    rows: Iterable[Mapping[str, Any]], preferred: Sequence[str] = CANONICAL_METRICS
+) -> List[str]:
     """Return a stable metric id list for a collection of metric dictionaries."""
     seen = set()
     result: List[str] = []
@@ -111,7 +118,16 @@ def score_table_from_metric_rows(
     metadata: Optional[Mapping[str, Any]] = None,
 ) -> ScoreTable:
     """Build a ``ScoreTable`` from application metric dictionaries."""
-    ids = tuple(str(row_id) for row_id in (row_ids or ["row_%04d" % i for i in range(len(rows))]))
-    metrics = tuple(str(metric_id) for metric_id in (metric_ids or metric_ids_for_rows(rows)))
-    values = [[pack_metrics(row, metrics)[metric_id] for metric_id in metrics] for row in rows]
-    return ScoreTable(values=values, row_ids=ids, metric_ids=metrics, metadata=metadata or {})
+    ids = tuple(
+        str(row_id)
+        for row_id in (row_ids or ["row_%04d" % i for i in range(len(rows))])
+    )
+    metrics = tuple(
+        str(metric_id) for metric_id in (metric_ids or metric_ids_for_rows(rows))
+    )
+    values = [
+        [pack_metrics(row, metrics)[metric_id] for metric_id in metrics] for row in rows
+    ]
+    return ScoreTable(
+        values=values, row_ids=ids, metric_ids=metrics, metadata=metadata or {}
+    )

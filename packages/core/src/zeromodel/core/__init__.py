@@ -1,4 +1,5 @@
 """ZeroModel core public API."""
+
 from __future__ import annotations
 
 from .artifact import (
@@ -48,6 +49,7 @@ from .metrics import (
 from .policy_lookup import (
     POLICY_PLAN_VERSION,
     PolicyLookupDecision,
+    SignReader,
     VPMPolicyLookup,
 )
 from .policy_transitions import (
@@ -94,6 +96,7 @@ __all__ = [
     "ROW_UNION_TRANSITION_SCOPE",
     "SPEC_VERSION",
     "ScoreTable",
+    "SignReader",
     "UnresolvedArtifactIdentity",
     "VPMArtifact",
     "VPMCell",

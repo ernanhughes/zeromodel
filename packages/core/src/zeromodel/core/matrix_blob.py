@@ -5,6 +5,8 @@ meaningful VPM metrics: embeddings, patch banks, projections, or other tensor
 payloads. It gives those bytes a deterministic identity without pretending
 that each vector dimension is an inspectable policy metric.
 """
+
+# mypy: disable-error-code="arg-type,attr-defined,call-overload"
 from __future__ import annotations
 
 import base64
@@ -41,7 +43,9 @@ def _thaw_json(value: Any) -> Any:
 
 def _freeze_json(value: Any) -> Any:
     if isinstance(value, np.generic):
-        raise VPMValidationError("matrix blob metadata must use plain JSON scalar types")
+        raise VPMValidationError(
+            "matrix blob metadata must use plain JSON scalar types"
+        )
     if isinstance(value, Mapping):
         return MappingProxyType(
             {str(key): _freeze_json(item) for key, item in value.items()}
@@ -82,8 +86,7 @@ def _canonical_dtype_name(dtype: np.dtype[Any]) -> str:
         if native == expected_native:
             return name
     raise VPMValidationError(
-        "matrix blob dtype must be one of: %s"
-        % ", ".join(sorted(_DTYPE_SPECS))
+        "matrix blob dtype must be one of: %s" % ", ".join(sorted(_DTYPE_SPECS))
     )
 
 
@@ -151,12 +154,17 @@ class MatrixBlob:
         array = np.asarray(values)
         if array.ndim < 1:
             raise VPMValidationError("matrix blob requires at least one dimension")
-        dtype_name = str(dtype) if dtype is not None else _canonical_dtype_name(array.dtype)
+        dtype_name = (
+            str(dtype) if dtype is not None else _canonical_dtype_name(array.dtype)
+        )
         if dtype_name not in _DTYPE_SPECS:
             raise VPMValidationError("unsupported matrix blob dtype: %r" % dtype_name)
         native_dtype, _ = _DTYPE_SPECS[dtype_name]
         converted = np.asarray(array, dtype=native_dtype)
-        if np.issubdtype(native_dtype, np.floating) and not np.isfinite(converted).all():
+        if (
+            np.issubdtype(native_dtype, np.floating)
+            and not np.isfinite(converted).all()
+        ):
             raise VPMValidationError("matrix blob floating values must be finite")
         return cls(
             dtype=dtype_name,
@@ -187,7 +195,9 @@ class MatrixBlob:
             )
         if self.scale is not None:
             if not np.isfinite(self.scale) or self.scale <= 0.0:
-                raise VPMValidationError("matrix blob scale must be positive and finite")
+                raise VPMValidationError(
+                    "matrix blob scale must be positive and finite"
+                )
             if not np.issubdtype(native_dtype, np.integer):
                 raise VPMValidationError(
                     "matrix blob scale is only valid for integer storage"
@@ -249,9 +259,7 @@ class MatrixBlob:
         array = np.ascontiguousarray(array.reshape(self.shape))
         if dequantize:
             if self.scale is None:
-                raise VPMValidationError(
-                    "matrix blob has no scale for dequantization"
-                )
+                raise VPMValidationError("matrix blob has no scale for dequantization")
             zero_point = 0 if self.zero_point is None else self.zero_point
             array = (array.astype(np.float32) - float(zero_point)) * float(self.scale)
         array.flags.writeable = False

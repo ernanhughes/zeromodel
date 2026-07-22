@@ -89,8 +89,7 @@ def lua_policy_source(reader: VPMPolicyLookup) -> str:
                 "    [%s] = {" % _lua_string(str(row_id)),
                 "      winner = %d," % (winner + 1),
                 "      source_row_index = %d," % source_row,
-                "      view_row = %d,"
-                % int(plan["source_to_view_rows"][source_row]),
+                "      view_row = %d," % int(plan["source_to_view_rows"][source_row]),
                 "      values = %s,"
                 % _lua_number_array(list(plan["action_values"][source_row])),
                 "      evidence = %s,"
@@ -107,7 +106,7 @@ def lua_policy_source(reader: VPMPolicyLookup) -> str:
             "local function resolve(row_id)",
             "  local row = policy.rows[row_id]",
             "  if row == nil then",
-            "    error(\"Unknown policy row_id: \" .. tostring(row_id), 3)",
+            '    error("Unknown policy row_id: " .. tostring(row_id), 3)',
             "  end",
             "  return row",
             "end",

@@ -9,6 +9,8 @@ This module implements the smallest useful v2 ZeroModel surface:
 The artifact is deliberately not a decision policy. Consumers may evaluate a
 region, threshold, router, or ranking rule outside this module.
 """
+
+# mypy: disable-error-code="attr-defined,arg-type"
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -62,7 +64,9 @@ def _canonical_json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("metadata/provenance must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "metadata/provenance must be JSON-serializable"
+        ) from exc
 
 
 def _length_prefixed(label: str, data: bytes) -> bytes:
@@ -131,7 +135,9 @@ class ScoreTable:
 
     def validate(self) -> None:
         if self.values.ndim != 2:
-            raise VPMValidationError("ScoreTable values must be a two-dimensional matrix")
+            raise VPMValidationError(
+                "ScoreTable values must be a two-dimensional matrix"
+            )
         if self.values.shape != (len(self.row_ids), len(self.metric_ids)):
             raise VPMValidationError(
                 "ScoreTable shape must match row_ids and metric_ids "
@@ -179,7 +185,9 @@ class ScoreTable:
         try:
             return self.metric_ids.index(metric_id)
         except ValueError as exc:
-            raise VPMValidationError("Unknown metric_id in recipe: %s" % metric_id) from exc
+            raise VPMValidationError(
+                "Unknown metric_id in recipe: %s" % metric_id
+            ) from exc
 
     def to_identity_payload(self) -> Dict[str, Any]:
         return {
@@ -254,7 +262,9 @@ class LayoutRecipe:
         if row_kind == "explicit":
             row_ids = row_order.get("row_ids")
             if not isinstance(row_ids, tuple) or len(row_ids) == 0:
-                raise VPMValidationError("explicit row_order requires non-empty row_ids")
+                raise VPMValidationError(
+                    "explicit row_order requires non-empty row_ids"
+                )
             _validate_unique([str(row_id) for row_id in row_ids], "explicit row")
         if row_kind in {"lexicographic", "weighted_score"}:
             keys = row_order.get("keys") or row_order.get("metrics")
@@ -268,9 +278,13 @@ class LayoutRecipe:
                 if "metric_id" not in key:
                     raise VPMValidationError("row_order key requires metric_id")
                 if key.get("direction") not in {"asc", "desc"}:
-                    raise VPMValidationError("row_order key direction must be 'asc' or 'desc'")
+                    raise VPMValidationError(
+                        "row_order key direction must be 'asc' or 'desc'"
+                    )
                 if row_kind == "weighted_score" and "weight" not in key:
-                    raise VPMValidationError("weighted_score row_order keys require weight")
+                    raise VPMValidationError(
+                        "weighted_score row_order keys require weight"
+                    )
         if "tie_break" not in row_order:
             raise VPMValidationError("row_order requires explicit tie_break")
         if row_order.get("tie_break") != "row_id":
@@ -282,11 +296,17 @@ class LayoutRecipe:
         if column_kind == "explicit":
             metric_ids = column_order.get("metric_ids")
             if not isinstance(metric_ids, tuple) or len(metric_ids) == 0:
-                raise VPMValidationError("explicit column_order requires non-empty metric_ids")
-            _validate_unique([str(metric_id) for metric_id in metric_ids], "column metric")
+                raise VPMValidationError(
+                    "explicit column_order requires non-empty metric_ids"
+                )
+            _validate_unique(
+                [str(metric_id) for metric_id in metric_ids], "column metric"
+            )
         normalization_kind = normalization.get("kind")
         if normalization_kind != "per_metric_minmax":
-            raise VPMValidationError("Unsupported normalization kind: %r" % normalization_kind)
+            raise VPMValidationError(
+                "Unsupported normalization kind: %r" % normalization_kind
+            )
         _canonical_json_bytes(self.data)
 
     def validate_against(self, table: ScoreTable) -> None:
@@ -403,25 +423,32 @@ class VPMArtifact:
         self.recipe.validate_against(self.source)
         row_count, metric_count = self.source.shape
         if sorted(self.row_order) != list(range(row_count)):
-            raise VPMValidationError("row_order must be a full permutation of source rows")
+            raise VPMValidationError(
+                "row_order must be a full permutation of source rows"
+            )
         if sorted(self.column_order) != list(range(metric_count)):
-            raise VPMValidationError("column_order must be a full permutation of source metrics")
+            raise VPMValidationError(
+                "column_order must be a full permutation of source metrics"
+            )
         if self.normalized_values.shape != (row_count, metric_count):
             raise VPMValidationError(
                 "normalized_values must have source shape after view ordering "
-                "(shape=%s, source=%s)" % (self.normalized_values.shape, self.source.shape)
+                "(shape=%s, source=%s)"
+                % (self.normalized_values.shape, self.source.shape)
             )
         if not np.isfinite(self.normalized_values).all():
             raise VPMValidationError("normalized_values must be finite")
         if self.normalized_values.size and (
-            self.normalized_values.min() < -1e-12 or self.normalized_values.max() > 1 + 1e-12
+            self.normalized_values.min() < -1e-12
+            or self.normalized_values.max() > 1 + 1e-12
         ):
             raise VPMValidationError("normalized_values must be in the [0, 1] range")
         _canonical_json_bytes(self.provenance)
         expected_id = self.compute_artifact_id()
         if self.artifact_id != expected_id:
             raise VPMValidationError(
-                "artifact_id mismatch: expected %s, got %s" % (expected_id, self.artifact_id)
+                "artifact_id mismatch: expected %s, got %s"
+                % (expected_id, self.artifact_id)
             )
         self.normalized_values.flags.writeable = False
 
@@ -497,12 +524,12 @@ class VPMArtifact:
         row_indices = tuple(range(*rows.indices(len(self.row_order))))
         column_indices = tuple(range(*columns.indices(len(self.column_order))))
         cells = tuple(
-            self.cell(row, column)
-            for row in row_indices
-            for column in column_indices
+            self.cell(row, column) for row in row_indices for column in column_indices
         )
         if not row_indices or not column_indices:
-            raise VPMValidationError("region must select at least one row and one column")
+            raise VPMValidationError(
+                "region must select at least one row and one column"
+            )
         return VPMRegion(rows=row_indices, columns=column_indices, cells=cells)
 
 
@@ -513,7 +540,9 @@ def _normalize_per_metric_minmax(table: ScoreTable, clip: bool) -> np.ndarray:
     ranges = maxs - mins
     normalized = np.zeros_like(values, dtype=np.float64)
     non_constant = ranges > 0
-    normalized[:, non_constant] = (values[:, non_constant] - mins[non_constant]) / ranges[non_constant]
+    normalized[:, non_constant] = (
+        values[:, non_constant] - mins[non_constant]
+    ) / ranges[non_constant]
     constant = ~non_constant
     if np.any(constant):
         normalized[:, constant] = values[:, constant]
@@ -536,10 +565,14 @@ def _compare_lexicographic(
             return -1 if key["direction"] == "asc" else 1
         if left_value > right_value:
             return 1 if key["direction"] == "asc" else -1
-    return (table.row_ids[left] > table.row_ids[right]) - (table.row_ids[left] < table.row_ids[right])
+    return (table.row_ids[left] > table.row_ids[right]) - (
+        table.row_ids[left] < table.row_ids[right]
+    )
 
 
-def _weighted_score(table: ScoreTable, keys: Sequence[Mapping[str, Any]], row_index: int) -> float:
+def _weighted_score(
+    table: ScoreTable, keys: Sequence[Mapping[str, Any]], row_index: int
+) -> float:
     total = 0.0
     for key in keys:
         metric_index = table.metric_index(str(key["metric_id"]))
@@ -558,22 +591,25 @@ def _compile_row_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int, ..
         return row_indices
     if kind == "explicit":
         index_by_row_id = {row_id: index for index, row_id in enumerate(table.row_ids)}
-        return tuple(
-            index_by_row_id[str(row_id)] for row_id in row_order["row_ids"]
-        )
+        return tuple(index_by_row_id[str(row_id)] for row_id in row_order["row_ids"])
     keys = tuple(row_order.get("keys") or row_order.get("metrics"))
     if kind == "lexicographic":
         return tuple(
             sorted(
                 row_indices,
-                key=cmp_to_key(lambda left, right: _compare_lexicographic(table, keys, left, right)),
+                key=cmp_to_key(
+                    lambda left, right: _compare_lexicographic(table, keys, left, right)
+                ),
             )
         )
     if kind == "weighted_score":
         return tuple(
             sorted(
                 row_indices,
-                key=lambda index: (-_weighted_score(table, keys, index), table.row_ids[index]),
+                key=lambda index: (
+                    -_weighted_score(table, keys, index),
+                    table.row_ids[index],
+                ),
             )
         )
     raise VPMValidationError("Unsupported row_order kind: %r" % kind)
@@ -585,7 +621,10 @@ def _compile_column_order(table: ScoreTable, recipe: LayoutRecipe) -> Tuple[int,
     if kind == "source":
         return tuple(range(len(table.metric_ids)))
     if kind == "explicit":
-        return tuple(table.metric_index(str(metric_id)) for metric_id in column_order["metric_ids"])
+        return tuple(
+            table.metric_index(str(metric_id))
+            for metric_id in column_order["metric_ids"]
+        )
     raise VPMValidationError("Unsupported column_order kind: %r" % kind)
 
 

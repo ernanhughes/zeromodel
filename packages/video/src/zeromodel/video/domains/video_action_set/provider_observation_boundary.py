@@ -6,9 +6,17 @@ from typing import Any
 import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.observation.visual_address import IMAGE_OBSERVATION_VERSION, ImageObservation
-from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_value, canonical_sha256
-from zeromodel.video.domains.video_action_set.contracts import PROVIDER_OBSERVATION_BOUNDARY_VERSION
+from zeromodel.observation.visual_address import (
+    IMAGE_OBSERVATION_VERSION,
+    ImageObservation,
+)
+from zeromodel.video.domains.video_action_set.canonical_json import (
+    canonical_json_value,
+    canonical_sha256,
+)
+from zeromodel.video.domains.video_action_set.contracts import (
+    PROVIDER_OBSERVATION_BOUNDARY_VERSION,
+)
 
 
 def provider_observation_digest(descriptor: Mapping[str, Any]) -> str:

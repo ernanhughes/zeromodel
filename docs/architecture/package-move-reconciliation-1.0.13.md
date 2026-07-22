@@ -19,6 +19,11 @@ Reconciliation rows: `313`
   `packages/vision/tests` during the vision package validation stage. Learned,
   approximate, benchmark, video, and SQL behavior remain excluded from this
   package validation.
+- Vision closure moved learned/retrieval/dataset/corruption/registration helper
+  modules to `research/visual`; the vision wheel now ships only deterministic
+  runtime modules. Video package-local tests were added under
+  `packages/video/tests` for frame/clip contracts, provider-neutral temporal
+  policy, action-set Store behavior, import isolation, and wheel contents.
 
 | original path | original module | inventory classification | final path | final package | action | reason |
 |---|---|---|---|---|---|---|

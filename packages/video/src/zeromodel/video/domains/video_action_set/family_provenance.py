@@ -3,7 +3,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from zeromodel.video.domains.video_action_set.arcade_observation import render_row_frame, shooter_config_payload
+from zeromodel.video.domains.video_action_set.arcade_observation import (
+    render_row_frame,
+    shooter_config_payload,
+)
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
 from zeromodel.video.domains.video_action_set.contracts import (
     ARCADE_RENDERER_CONTRACT_VERSION,
@@ -16,11 +19,21 @@ from zeromodel.video.domains.video_action_set.contracts import (
     STALE_REPEATED_FRAME_VERSION,
     TRANSFORMATION_FAMILY_VERSION,
 )
-from zeromodel.video.domains.video_action_set.frame_family_kernels import apply_conflicting_splice, apply_critical_corruption
-from zeromodel.video.domains.video_action_set.observation_legacy_adapters import operation_chain, operation_record
-from zeromodel.video.domains.video_action_set.observation_provenance import valid_frame_operation_chain
+from zeromodel.video.domains.video_action_set.frame_family_kernels import (
+    apply_conflicting_splice,
+    apply_critical_corruption,
+)
+from zeromodel.video.domains.video_action_set.observation_legacy_adapters import (
+    operation_chain,
+    operation_record,
+)
+from zeromodel.video.domains.video_action_set.observation_provenance import (
+    valid_frame_operation_chain,
+)
 from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
-from zeromodel.video.domains.video_action_set.transformations import _apply_transformation
+from zeromodel.video.domains.video_action_set.transformations import (
+    _apply_transformation,
+)
 
 
 def conflicting_splice_operation_chain(

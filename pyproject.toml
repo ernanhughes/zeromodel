@@ -22,5 +22,5 @@ line-length = 88
 
 [tool.mypy]
 python_version = "3.10"
-mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src"]
+mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/video/src"]
 explicit_package_bases = true

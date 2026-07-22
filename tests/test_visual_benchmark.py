@@ -12,7 +12,7 @@ from research.benchmarks.visual_benchmark import (
     VisualBenchmarkReport,
     wilson_score_interval,
 )
-from zeromodel.vision.visual_dataset import (
+from research.visual.visual_dataset import (
     CorruptionFamilySpec,
     VisualDatasetManifest,
     VisualExampleRecord,

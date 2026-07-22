@@ -5,8 +5,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from zeromodel.core.matrix_blob import MatrixBlob
-from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO, SealedSplitPlanDTO
-from zeromodel.video.domains.video_action_set.episode_plan_service import EpisodePlanService
+from zeromodel.video.domains.video_action_set.dto import (
+    BenchmarkIdentityDTO,
+    EpisodePlanDTO,
+    SealedSplitPlanDTO,
+)
+from zeromodel.video.domains.video_action_set.episode_plan_service import (
+    EpisodePlanService,
+)
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalAccessEventDTO,
     FinalAccessRecordDTO,
@@ -14,14 +20,18 @@ from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionAuthorizationDTO,
     FinalExecutionRequestDTO,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 from zeromodel.video.domains.video_action_set.identity_service import IdentityService
 from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
     ObservationDTO,
     ObservationOperationChainDTO,
 )
-from zeromodel.video.domains.video_action_set.observation_service import ObservationService
+from zeromodel.video.domains.video_action_set.observation_service import (
+    ObservationService,
+)
 
 
 @dataclass(frozen=True, slots=True)

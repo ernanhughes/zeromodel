@@ -27,7 +27,7 @@ from zeromodel.observation.visual_address_manifest import (
     PrototypeBinding,
     VisualAddressManifest,
 )
-from zeromodel.vision.visual_encoder import EncoderManifest, FrozenVisualEncoder
+from research.visual.visual_encoder import EncoderManifest, FrozenVisualEncoder
 
 
 VECTOR_ADDRESS_READER_VERSION = "zeromodel-vector-address-reader/v2"

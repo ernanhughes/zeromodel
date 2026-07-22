@@ -3,11 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from zeromodel.video.domains.video_action_set.engine import VideoActionSetEngine
-from zeromodel.video.domains.video_action_set.episode_plan_service import EpisodePlanService
+from zeromodel.video.domains.video_action_set.episode_plan_service import (
+    EpisodePlanService,
+)
 from zeromodel.video.domains.video_action_set.facade import VideoActionSetFacade
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 from zeromodel.video.domains.video_action_set.identity_service import IdentityService
-from zeromodel.video.domains.video_action_set.observation_service import ObservationService
+from zeromodel.video.domains.video_action_set.observation_service import (
+    ObservationService,
+)
 from zeromodel.video.domains.video_action_set.store import VideoActionSetStore
 from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 

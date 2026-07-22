@@ -5,7 +5,11 @@ from typing import NoReturn, Protocol
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.matrix_blob import MatrixBlob
-from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO, EpisodePlanDTO, SealedSplitPlanDTO
+from zeromodel.video.domains.video_action_set.dto import (
+    BenchmarkIdentityDTO,
+    EpisodePlanDTO,
+    SealedSplitPlanDTO,
+)
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalAccessEventDTO,
     FinalAccessRecordDTO,

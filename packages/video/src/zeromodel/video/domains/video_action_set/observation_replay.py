@@ -8,10 +8,16 @@ import numpy as np
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.arcade_observation import render_row_frame
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.video.domains.video_action_set.contracts import OBSERVATION_OPERATION_CHAIN_VERSION
-from zeromodel.video.domains.video_action_set.observation_provenance_dto import ObservationOperationChainDTO
+from zeromodel.video.domains.video_action_set.contracts import (
+    OBSERVATION_OPERATION_CHAIN_VERSION,
+)
+from zeromodel.video.domains.video_action_set.observation_provenance_dto import (
+    ObservationOperationChainDTO,
+)
 from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
-from zeromodel.video.domains.video_action_set.transformations import _apply_transformation
+from zeromodel.video.domains.video_action_set.transformations import (
+    _apply_transformation,
+)
 
 
 class ConflictingSpliceExecutor(Protocol):

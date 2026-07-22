@@ -16,7 +16,9 @@ from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.video.domains.video_action_set.arcade_observation import render_row_frame
 from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO
-from zeromodel.video.domains.video_action_set.episode_families import expected_frame_disposition
+from zeromodel.video.domains.video_action_set.episode_families import (
+    expected_frame_disposition,
+)
 from zeromodel.video.domains.video_action_set.family_provenance import (
     conflicting_splice_operation_chain,
     critical_corruption_operation_chain,
@@ -24,15 +26,29 @@ from zeromodel.video.domains.video_action_set.family_provenance import (
     information_control_operation_chain,
     stale_repeat_operation_chain,
 )
-from zeromodel.video.domains.video_action_set.frame_family_kernels import apply_conflicting_splice, apply_critical_corruption
-from zeromodel.video.domains.video_action_set.materialization_kernels import apply_frame_plan, frame_descriptor
-from zeromodel.video.domains.video_action_set.materialization_reachability import next_materialized_row, tile_edge
+from zeromodel.video.domains.video_action_set.frame_family_kernels import (
+    apply_conflicting_splice,
+    apply_critical_corruption,
+)
+from zeromodel.video.domains.video_action_set.materialization_kernels import (
+    apply_frame_plan,
+    frame_descriptor,
+)
+from zeromodel.video.domains.video_action_set.materialization_reachability import (
+    next_materialized_row,
+    tile_edge,
+)
 from zeromodel.video.domains.video_action_set.observation_provenance import (
     gap_event_operation_chain,
     valid_frame_operation_chain,
 )
-from zeromodel.video.domains.video_action_set.pixel_digest import array_digest, pixel_digest
-from zeromodel.video.domains.video_action_set.provider_observation_boundary import refresh_provider_observation_metadata
+from zeromodel.video.domains.video_action_set.pixel_digest import (
+    array_digest,
+    pixel_digest,
+)
+from zeromodel.video.domains.video_action_set.provider_observation_boundary import (
+    refresh_provider_observation_metadata,
+)
 
 
 def valid_episode(

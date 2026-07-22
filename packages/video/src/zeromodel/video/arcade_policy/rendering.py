@@ -43,17 +43,23 @@ def render_state_frame(
     frame[12, centre - 1 : centre + 2] = TANK_VALUE
     frame[13, centre - 2 : centre + 3] = TANK_VALUE
 
-    frame[7:9, -3:-1] = COOLDOWN_BLOCKED_VALUE if int(cooldown) else COOLDOWN_READY_VALUE
+    frame[7:9, -3:-1] = (
+        COOLDOWN_BLOCKED_VALUE if int(cooldown) else COOLDOWN_READY_VALUE
+    )
     frame.flags.writeable = False
     return frame
 
 
-def enumerate_visual_frames(config: ShooterConfig = ShooterConfig()) -> Mapping[str, np.ndarray]:
+def enumerate_visual_frames(
+    config: ShooterConfig = ShooterConfig(),
+) -> Mapping[str, np.ndarray]:
     frames: dict[str, np.ndarray] = {}
     targets: Tuple[Optional[int], ...] = (None,) + tuple(range(config.width))
     for tank_x in range(config.width):
         for target_x in targets:
             for cooldown in (0, 1):
                 row_id = state_row_id(tank_x, target_x, cooldown)
-                frames[row_id] = render_state_frame(tank_x, target_x, cooldown, width=config.width)
+                frames[row_id] = render_state_frame(
+                    tank_x, target_x, cooldown, width=config.width
+                )
     return frames

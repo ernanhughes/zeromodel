@@ -11,9 +11,9 @@ import numpy as np
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.visual_address import ImageObservation
 from research.benchmarks.visual_benchmark import BenchmarkSystemResult
-from zeromodel.vision.visual_dataset import VisualDatasetManifest, VisualExampleRecord
+from research.visual.visual_dataset import VisualDatasetManifest, VisualExampleRecord
 from research.visual.visual_experiment import evaluate_visual_provider, records_for_split
-from zeromodel.vision.visual_retrieval import (
+from research.visual.visual_retrieval import (
     FrozenVectorAddressProvider,
     NormalizedPixelEncoder,
     VectorAddressIndex,

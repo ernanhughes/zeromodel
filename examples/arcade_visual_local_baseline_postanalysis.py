@@ -24,7 +24,7 @@ from research.visual.visual_local_baselines import (  # noqa: E402
     _records_digest,
     _require_split,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
+from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 
 
 DEFAULT_SOURCE_DIR = REPO_ROOT / "docs" / "results" / "visual-local-baseline-showdown-v1"

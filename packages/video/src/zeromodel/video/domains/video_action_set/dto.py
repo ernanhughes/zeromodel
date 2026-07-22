@@ -8,7 +8,11 @@ import re
 from typing import cast
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set.canonical_json import JsonValue, canonical_json_text, canonical_sha256
+from zeromodel.video.domains.video_action_set.canonical_json import (
+    JsonValue,
+    canonical_json_text,
+    canonical_sha256,
+)
 from zeromodel.video.domains.video_action_set.contracts import (
     BENCHMARK_VERSION,
     EPISODE_PLAN_VERSION,

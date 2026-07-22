@@ -1,4 +1,11 @@
-from zeromodel.video.arcade_policy.model import ACTIONS, ShooterConfig, TinyArcadeShooter, compile_policy_artifact, parse_state_row_id, state_row_id
+from zeromodel.video.arcade_policy.model import (
+    ACTIONS,
+    ShooterConfig,
+    TinyArcadeShooter,
+    compile_policy_artifact,
+    parse_state_row_id,
+    state_row_id,
+)
 from zeromodel.video.arcade_policy.rendering import (
     CELL_PIXELS,
     COOLDOWN_BLOCKED_VALUE,

@@ -8,7 +8,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.vision.visual_dataset import (
+from research.visual.visual_dataset import (
     VISUAL_BENCHMARK_REPORT_VERSION,
     _canonical_json_bytes,
     _freeze_json,

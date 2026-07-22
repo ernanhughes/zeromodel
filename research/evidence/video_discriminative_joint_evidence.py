@@ -21,7 +21,7 @@ from research.evidence.video_discriminative_evidence import (
     register_informative_translation,
 )
 from zeromodel.observation.visual_address import ImageObservation, VisualAddressContract, VisualAddressDecision
-from zeromodel.vision.visual_registration import RegistrationConfig
+from research.visual.visual_registration import RegistrationConfig
 
 
 VIDEO_JOINT_EVIDENCE_MECHANICS_VERSION = "zeromodel-video-joint-evidence-mechanics/v1"

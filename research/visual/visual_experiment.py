@@ -14,8 +14,8 @@ from research.benchmarks.visual_benchmark import (
     VisualBenchmarkMetrics,
     VisualBenchmarkReport,
 )
-from zeromodel.vision.visual_dataset import VisualDatasetManifest, VisualExampleRecord
-from zeromodel.vision.visual_encoder import FrozenVisualEncoder
+from research.visual.visual_dataset import VisualDatasetManifest, VisualExampleRecord
+from research.visual.visual_encoder import FrozenVisualEncoder
 
 
 EXPECTED_ACCEPT = "expected_accept"

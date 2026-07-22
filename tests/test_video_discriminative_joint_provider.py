@@ -11,7 +11,7 @@ from research.evidence.video_discriminative_joint_evidence import (
     build_pairwise_discriminative_masks,
 )
 from zeromodel.observation.visual_address import ImageObservation
-from zeromodel.vision.visual_registration import RegistrationConfig
+from research.visual.visual_registration import RegistrationConfig
 
 
 def _provider_fixture():

@@ -4,7 +4,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.video.domains.video_action_set.contracts import OBSERVATION_OPERATION_CHAIN_VERSION
+from zeromodel.video.domains.video_action_set.contracts import (
+    OBSERVATION_OPERATION_CHAIN_VERSION,
+)
 from zeromodel.video.domains.video_action_set.observation_provenance_dto import (
     ObservationOperationChainDTO,
     ObservationOperationDTO,

@@ -71,7 +71,11 @@ class TinyArcadeShooter:
             self.tank_x = min(self.config.width - 1, self.tank_x + 1)
         elif action == "FIRE":
             fired = True
-            if self.cooldown == 0 and self.target_x is not None and self.tank_x == self.target_x:
+            if (
+                self.cooldown == 0
+                and self.target_x is not None
+                and self.tank_x == self.target_x
+            ):
                 self.aliens.pop(0)
                 self.score += 1
 
@@ -96,7 +100,9 @@ def parse_state_row_id(row_id: str) -> tuple[int, Optional[int], int]:
     return int(values["tank"]), target, int(values["cooldown"])
 
 
-def _action_values(tank_x: int, target_x: Optional[int], cooldown: int) -> tuple[float, ...]:
+def _action_values(
+    tank_x: int, target_x: Optional[int], cooldown: int
+) -> tuple[float, ...]:
     if target_x is None:
         return (0.0, 0.0, 1.0, 0.0)
     if cooldown == 0 and tank_x == target_x:
@@ -180,7 +186,9 @@ def run_policy_episode(config: ShooterConfig = ShooterConfig()) -> dict[str, Any
     }
 
 
-def run_random_episode(config: ShooterConfig = ShooterConfig(), *, seed: int = 0) -> dict[str, Any]:
+def run_random_episode(
+    config: ShooterConfig = ShooterConfig(), *, seed: int = 0
+) -> dict[str, Any]:
     rng = random.Random(seed)
     game = TinyArcadeShooter(config)
     trace: list[dict[str, Any]] = []
@@ -189,8 +197,17 @@ def run_random_episode(config: ShooterConfig = ShooterConfig(), *, seed: int = 0
         action = rng.choice(ACTIONS)
         game.step(action)
         trace.append({**before, "action": action})
-    return {"score": game.score, "cleared": game.cleared, "steps": game.steps, "trace": trace}
+    return {
+        "score": game.score,
+        "cleared": game.cleared,
+        "steps": game.steps,
+        "trace": trace,
+    }
 
 
-def random_baseline_average(config: ShooterConfig = ShooterConfig(), *, seeds: int = 10) -> float:
-    return sum(run_random_episode(config, seed=seed)["score"] for seed in range(seeds)) / float(seeds)
+def random_baseline_average(
+    config: ShooterConfig = ShooterConfig(), *, seeds: int = 10
+) -> float:
+    return sum(
+        run_random_episode(config, seed=seed)["score"] for seed in range(seeds)
+    ) / float(seeds)

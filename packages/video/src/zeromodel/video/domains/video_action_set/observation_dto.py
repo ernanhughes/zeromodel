@@ -5,7 +5,10 @@ from dataclasses import dataclass
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.matrix_blob import MatrixBlob
-from zeromodel.video.domains.video_action_set.contracts import BENCHMARK_VERSION, GENERATOR_VERSION
+from zeromodel.video.domains.video_action_set.contracts import (
+    BENCHMARK_VERSION,
+    GENERATOR_VERSION,
+)
 from zeromodel.video.domains.video_action_set.dto import CanonicalJsonDTO, SPLITS
 from zeromodel.video.domains.video_action_set.observation_common import (
     boolean,
@@ -27,7 +30,9 @@ from zeromodel.video.domains.video_action_set.observation_provenance_dto import 
     ObservationOperationChainDTO,
     ObservationOperationDTO,
 )
-from zeromodel.video.domains.video_action_set.provider_observation_dto import ProviderObservationDescriptorDTO
+from zeromodel.video.domains.video_action_set.provider_observation_dto import (
+    ProviderObservationDescriptorDTO,
+)
 
 
 OBSERVATION_RECORD_KEYS = (

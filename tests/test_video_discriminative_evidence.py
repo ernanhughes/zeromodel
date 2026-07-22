@@ -19,7 +19,7 @@ from research.evidence.video_discriminative_evidence import (
     extract_candidate_region_evidence,
     register_informative_translation,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig
+from research.visual.visual_registration import RegistrationConfig
 
 
 def _registration() -> RegistrationConfig:

@@ -2,8 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from zeromodel.video.domains.video_action_set.final_access_dto import FinalAccessRecordDTO
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_dto import (
+    FinalAccessRecordDTO,
+)
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 from zeromodel.video.domains.video_action_set.store import VideoActionSetStore
 
 

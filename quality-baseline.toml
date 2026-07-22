@@ -102,9 +102,9 @@ reason = "Historical visual experiment module pending behavior-preserving extrac
 maximum_lines = 455
 owner = "visual-runtime-refactor"
 
-[legacy_exceptions."zeromodel/video_policy.py"]
+[legacy_exceptions."packages/video/src/zeromodel/video/video_policy.py"]
 reason = "Historical video policy module pending behavior-preserving extraction"
-maximum_lines = 406
+maximum_lines = 482
 owner = "video-action-set-refactor"
 
 [legacy_exceptions."packages/core/src/zeromodel/core/policy_lookup.py"]
@@ -127,9 +127,9 @@ reason = "Historical reference verification test pending behavior-preserving dec
 maximum_lines = 249
 owner = "video-action-set-refactor"
 
-[legacy_exceptions."zeromodel/domains/video_action_set/materialization_kernels.py"]
+[legacy_exceptions."packages/video/src/zeromodel/video/domains/video_action_set/materialization_kernels.py"]
 reason = "Historical frame_descriptor keyword-only compatibility signature exceeds new-function parameter limit"
-maximum_lines = 100
+maximum_lines = 103
 owner = "video-action-set-refactor"
 
 [legacy_exceptions."packages/core/src/zeromodel/core/lua.py"]
@@ -162,22 +162,22 @@ reason = "Stage 8 SQL store frozen before 2.x package decomposition"
 maximum_lines = 1326
 owner = "video-action-set-package-split"
 
-[legacy_exceptions."zeromodel/domains/video_action_set/final_access_dto.py"]
+[legacy_exceptions."packages/video/src/zeromodel/video/domains/video_action_set/final_access_dto.py"]
 reason = "Stage 8 final-access DTO aggregate frozen before 2.x package decomposition"
-maximum_lines = 1690
+maximum_lines = 1694
 owner = "video-action-set-package-split"
 
-[legacy_exceptions."zeromodel/domains/video_action_set/final_access_service.py"]
+[legacy_exceptions."packages/video/src/zeromodel/video/domains/video_action_set/final_access_service.py"]
 reason = "Stage 8 final-access service frozen before 2.x package decomposition"
-maximum_lines = 1025
+maximum_lines = 1030
 owner = "video-action-set-package-split"
 
-[legacy_exceptions."zeromodel/domains/video_action_set/final_evaluation.py"]
+[legacy_exceptions."packages/video/src/zeromodel/video/domains/video_action_set/final_evaluation.py"]
 reason = "Stage 8 final-evaluation kernel frozen before 2.x package decomposition"
 maximum_lines = 322
 owner = "video-action-set-package-split"
 
-[legacy_exceptions."zeromodel/stores/video_action_set_memory.py"]
+[legacy_exceptions."packages/video/src/zeromodel/video/stores/video_action_set_memory.py"]
 reason = "Stage 8 in-memory store frozen before 2.x package decomposition"
 maximum_lines = 703
 owner = "video-action-set-package-split"

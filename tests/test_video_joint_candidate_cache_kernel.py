@@ -22,7 +22,7 @@ from research.video.video_prospective_providers import (
     score_all_rows_optimized,
     score_all_rows_reference,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig
+from research.visual.visual_registration import RegistrationConfig
 
 
 POLICY_ARTIFACT_ID = "sha256:policy"

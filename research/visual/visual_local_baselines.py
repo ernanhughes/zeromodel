@@ -14,10 +14,10 @@ from zeromodel.observation.visual_address import (
     VisualAddressContract,
     VisualAddressDecision,
 )
-from zeromodel.vision.visual_dataset import VisualDatasetManifest, VisualExampleRecord
+from research.visual.visual_dataset import VisualDatasetManifest, VisualExampleRecord
 from research.benchmarks.visual_benchmark import BenchmarkSystemResult, VisualBenchmarkMetrics
 from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, evaluate_visual_provider
-from zeromodel.vision.visual_registration import (
+from research.visual.visual_registration import (
     RegistrationConfig,
     RegistrationResult,
     _grayscale,

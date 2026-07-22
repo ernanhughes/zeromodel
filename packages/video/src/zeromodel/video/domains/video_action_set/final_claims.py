@@ -5,7 +5,10 @@ from typing import Any
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.video.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO, FinalExecutionReceiptDTO
+from zeromodel.video.domains.video_action_set.final_access_dto import (
+    FinalEvaluationResultDTO,
+    FinalExecutionReceiptDTO,
+)
 
 
 FINAL_CLAIM_REGISTRY_VERSION = "zeromodel-video-final-claim-registry/v1"

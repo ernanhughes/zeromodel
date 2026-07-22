@@ -19,6 +19,8 @@ FORMAT_LINT_PATHS = [
     Path("packages/vision/src/zeromodel/vision/visual_policy.py"),
     Path("packages/vision/src/zeromodel/vision/__init__.py"),
     Path("packages/vision/tests"),
+    Path("packages/video/src"),
+    Path("packages/video/tests"),
 ]
 
 TYPING_PATHS = [
@@ -28,6 +30,7 @@ TYPING_PATHS = [
     Path("packages/vision/src/zeromodel/vision/visual.py"),
     Path("packages/vision/src/zeromodel/vision/visual_policy.py"),
     Path("packages/vision/src/zeromodel/vision/__init__.py"),
+    Path("packages/video/src"),
 ]
 
 
@@ -98,6 +101,10 @@ def main() -> int:
             "packages/vision/src/zeromodel/vision/__init__.py",
             "--path",
             "packages/vision/tests",
+            "--path",
+            "packages/video/src",
+            "--path",
+            "packages/video/tests",
         ],
     )
     print("Quality checks passed")

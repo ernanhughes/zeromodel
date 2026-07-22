@@ -7,11 +7,20 @@ import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.arcade_observation import render_row_frame
-from zeromodel.video.domains.video_action_set.contracts import EPISODE_FAMILY_REGISTRY_VERSION, FAMILY_CLOSURE_VERSION
-from zeromodel.video.domains.video_action_set.control_histories import reconstructed_control_causal_tuple_digest
+from zeromodel.video.domains.video_action_set.contracts import (
+    EPISODE_FAMILY_REGISTRY_VERSION,
+    FAMILY_CLOSURE_VERSION,
+)
+from zeromodel.video.domains.video_action_set.control_histories import (
+    reconstructed_control_causal_tuple_digest,
+)
 from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO
-from zeromodel.video.domains.video_action_set.episode_families import episode_family_registry
-from zeromodel.video.domains.video_action_set.episode_materialization import materialize_plan
+from zeromodel.video.domains.video_action_set.episode_families import (
+    episode_family_registry,
+)
+from zeromodel.video.domains.video_action_set.episode_materialization import (
+    materialize_plan,
+)
 from zeromodel.video.domains.video_action_set.family_validation import (
     frame_invalid_closure_summary,
     validate_materialized_family_record,

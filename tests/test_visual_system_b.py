@@ -11,7 +11,7 @@ import pytest
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.visual_address import ImageObservation
-from zeromodel.vision.visual_encoder import EncoderManifest
+from research.visual.visual_encoder import EncoderManifest
 from research.visual.visual_system_b import (
     build_system_b_candidates,
     select_system_b_operating_point,

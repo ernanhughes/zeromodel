@@ -5,7 +5,11 @@ from typing import Any
 
 import numpy as np
 
-from zeromodel.video.arcade_policy import ACTIONS, ShooterConfig, compile_policy_artifact
+from zeromodel.video.arcade_policy import (
+    ACTIONS,
+    ShooterConfig,
+    compile_policy_artifact,
+)
 from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.observation.visual_address import ImageObservation
 from zeromodel.video.domains.video_action_set.arcade_observation import (
@@ -23,7 +27,9 @@ from zeromodel.video.domains.video_action_set.contracts import (
     VALID_TRANSFORMATION_PARAMETER_UNIVERSE_VERSION,
 )
 from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
-from zeromodel.video.domains.video_action_set.transformations import _apply_transformation
+from zeromodel.video.domains.video_action_set.transformations import (
+    _apply_transformation,
+)
 
 
 def canonical_prototypes(

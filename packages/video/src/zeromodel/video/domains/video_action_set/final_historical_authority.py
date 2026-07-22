@@ -10,8 +10,13 @@ import re
 import stat
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_bytes, canonical_sha256
-from zeromodel.video.domains.video_action_set.final_access_dto import validate_final_identifier
+from zeromodel.video.domains.video_action_set.canonical_json import (
+    canonical_json_bytes,
+    canonical_sha256,
+)
+from zeromodel.video.domains.video_action_set.final_access_dto import (
+    validate_final_identifier,
+)
 
 
 HISTORICAL_EVIDENCE_MANIFEST_VERSION = "zeromodel-video-historical-evidence-manifest/v1"

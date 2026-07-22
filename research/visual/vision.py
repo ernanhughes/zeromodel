@@ -6,7 +6,7 @@ suggest that the learned path is already validated.
 """
 from __future__ import annotations
 
-from zeromodel.vision.visual_corruptions import (
+from research.visual.visual_corruptions import (
     add_integer_noise,
     canonical_uint8_frame,
     checkerboard_frame,
@@ -16,7 +16,7 @@ from zeromodel.vision.visual_corruptions import (
     scale_intensity,
     translate_frame,
 )
-from zeromodel.vision.visual_encoder import (
+from research.visual.visual_encoder import (
     DINO_V2_SMALL_LICENSE,
     DINO_V2_SMALL_MODEL_ID,
     DINO_V2_SMALL_REVISION,
@@ -37,11 +37,11 @@ from research.visual.visual_experiment import (
     records_for_split,
     vectors_for_records,
 )
-from zeromodel.vision.visual_precomputed import (
+from research.visual.visual_precomputed import (
     PrecomputedVectorAddressProvider,
     VectorAddressMatcher,
 )
-from zeromodel.vision.visual_retrieval import (
+from research.visual.visual_retrieval import (
     LINEAR_PROBE_VERSION,
     VECTOR_ADDRESS_READER_VERSION,
     VECTOR_CALIBRATION_VERSION,

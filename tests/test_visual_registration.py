@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.vision.visual_registration import RegistrationConfig, register_integer_translation
+from research.visual.visual_registration import RegistrationConfig, register_integer_translation
 
 
 def _frame() -> np.ndarray:

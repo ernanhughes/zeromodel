@@ -56,7 +56,7 @@ from zeromodel.observation.visual_address import ImageObservation
 from research.evidence.video_discriminative_evidence import video_discriminative_evidence as zde
 from research.evidence.video_discriminative_joint_evidence import video_discriminative_joint_evidence as zje
 from zeromodel.core.artifact import VPMValidationError  # noqa: E402
-from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
+from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"

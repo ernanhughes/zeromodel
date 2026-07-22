@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.vision.visual_retrieval import (
+from research.visual.visual_retrieval import (
     LinearProbeIndex,
     VectorAddressIndex,
     build_linear_probe,

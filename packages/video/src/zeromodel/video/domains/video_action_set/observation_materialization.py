@@ -11,7 +11,10 @@ from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.matrix_blob import MatrixBlob
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_bytes
 from zeromodel.video.domains.video_action_set.contracts import FRAME_SHAPE
-from zeromodel.video.domains.video_action_set.pixel_digest import array_digest, pixel_digest_from_bytes
+from zeromodel.video.domains.video_action_set.pixel_digest import (
+    array_digest,
+    pixel_digest_from_bytes,
+)
 
 _record_loader: Callable[..., "MaterializedObservationDTO"] | None
 _record_loader = None

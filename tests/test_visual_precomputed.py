@@ -5,8 +5,8 @@ import pytest
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.visual_address import ImageObservation
-from zeromodel.vision.visual_precomputed import PrecomputedVectorAddressProvider
-from zeromodel.vision.visual_retrieval import VectorAddressIndex, build_vector_address
+from research.visual.visual_precomputed import PrecomputedVectorAddressProvider
+from research.visual.visual_retrieval import VectorAddressIndex, build_vector_address
 
 
 def _index() -> VectorAddressIndex:

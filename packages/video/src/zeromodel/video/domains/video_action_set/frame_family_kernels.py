@@ -29,7 +29,9 @@ from zeromodel.video.domains.video_action_set.contracts import (
     SPLICE_MASK_VERSION,
     TARGET_REGION_ID,
 )
-from zeromodel.video.domains.video_action_set.observation_universe import _canonical_collision_rows
+from zeromodel.video.domains.video_action_set.observation_universe import (
+    _canonical_collision_rows,
+)
 from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
 
 

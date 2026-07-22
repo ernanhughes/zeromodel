@@ -7,8 +7,14 @@ from typing import Any
 import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_value, canonical_sha256
-from zeromodel.video.domains.video_action_set.contracts import FRAME_SHAPE, TRANSFORMATION_FAMILY_VERSION
+from zeromodel.video.domains.video_action_set.canonical_json import (
+    canonical_json_value,
+    canonical_sha256,
+)
+from zeromodel.video.domains.video_action_set.contracts import (
+    FRAME_SHAPE,
+    TRANSFORMATION_FAMILY_VERSION,
+)
 from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
 
 

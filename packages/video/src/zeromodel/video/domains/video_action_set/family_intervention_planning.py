@@ -14,7 +14,9 @@ from zeromodel.video.domains.video_action_set.contracts import (
     REACHABILITY_TILE_DIGEST,
     SEED_DERIVATION_VERSION,
 )
-from zeromodel.video.domains.video_action_set.control_histories import select_grounded_control_histories
+from zeromodel.video.domains.video_action_set.control_histories import (
+    select_grounded_control_histories,
+)
 from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO
 from zeromodel.video.domains.video_action_set.frame_family_kernels import (
     critical_coordinate_manifest,

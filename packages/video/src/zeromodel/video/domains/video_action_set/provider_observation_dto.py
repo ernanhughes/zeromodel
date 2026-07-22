@@ -6,7 +6,9 @@ from dataclasses import dataclass
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.visual_address import IMAGE_OBSERVATION_VERSION
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.video.domains.video_action_set.contracts import PROVIDER_OBSERVATION_BOUNDARY_VERSION
+from zeromodel.video.domains.video_action_set.contracts import (
+    PROVIDER_OBSERVATION_BOUNDARY_VERSION,
+)
 from zeromodel.video.domains.video_action_set.dto import CanonicalJsonDTO
 from zeromodel.video.domains.video_action_set.observation_common import (
     json_mapping,

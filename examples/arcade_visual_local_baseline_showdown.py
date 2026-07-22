@@ -25,7 +25,7 @@ from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_provider,
     select_registered_pixel_candidate,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
+from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 
 
 SHOWDOWN_PROTOCOL_VERSION = "zeromodel-visual-local-showdown/v1"

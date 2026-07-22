@@ -10,7 +10,10 @@ from pathlib import Path
 import re
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_bytes, canonical_sha256
+from zeromodel.video.domains.video_action_set.canonical_json import (
+    canonical_json_bytes,
+    canonical_sha256,
+)
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationResultDTO,
     FinalEvidenceBundleDTO,

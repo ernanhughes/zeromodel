@@ -12,7 +12,7 @@ from research.visual.visual_local_baselines import (
     build_registered_pixel_provider,
     select_registered_pixel_candidate,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig
+from research.visual.visual_registration import RegistrationConfig
 
 
 def _load_demo():

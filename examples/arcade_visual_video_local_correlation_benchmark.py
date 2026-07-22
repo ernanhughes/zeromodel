@@ -51,7 +51,7 @@ from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_provider,
     select_registered_pixel_candidate_v2,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
+from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-policy-reader-v1"
@@ -140,7 +140,7 @@ def _clip_frame(
     occlude: bool = False,
     critical_remove: bool = False,
 ) -> np.ndarray:
-    from zeromodel.vision.visual_corruptions import mask_box, scale_intensity, translate_frame
+    from research.visual.visual_corruptions import mask_box, scale_intensity, translate_frame
 
     result = translate_frame(frame, dx=dx, fill=0) if dx else np.array(frame, copy=True)
     if brightness_numerator != 100 or offset:

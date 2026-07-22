@@ -6,11 +6,19 @@ from typing import Any
 
 VIDEO_POLICY_REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 
+
 def _sha256(value: Any) -> str:
-    return "sha256:" + hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+    return (
+        "sha256:"
+        + hashlib.sha256(
+            json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+    )
 
 
-def compile_reachability_tile(*, policy_artifact_id: str, transition_spec: Any) -> dict[str, Any]:
+def compile_reachability_tile(
+    *, policy_artifact_id: str, transition_spec: Any
+) -> dict[str, Any]:
     row_ids = tuple(str(row_id) for row_id in transition_spec.row_ids)
     actions = ("LEFT", "RIGHT", "STAY", "FIRE")
     allowed = {
@@ -56,7 +64,13 @@ def verify_reachability_tile(tile: dict[str, Any]) -> dict[str, Any]:
     for edge in tile["edges"]:
         for destination in edge["reachable_row_ids"]:
             if destination not in row_universe:
-                violations.append({"source_row_id": edge["source_row_id"], "action_id": edge["action_id"], "destination": destination})
+                violations.append(
+                    {
+                        "source_row_id": edge["source_row_id"],
+                        "action_id": edge["action_id"],
+                        "destination": destination,
+                    }
+                )
     return {
         "verified": pair_count == row_count * action_count and not violations,
         "row_count": row_count,

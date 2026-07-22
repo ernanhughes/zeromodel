@@ -16,7 +16,10 @@ from zeromodel.video.domains.video_action_set.provider_observation_boundary impo
     provider_observation_descriptor_for_record,
     provider_observation_digest,
 )
-from zeromodel.video.domains.video_action_set.transformations import _apply_transformation, _transformation_parameters
+from zeromodel.video.domains.video_action_set.transformations import (
+    _apply_transformation,
+    _transformation_parameters,
+)
 
 
 def apply_family(frame: np.ndarray, family: str, *, seed: int) -> np.ndarray:

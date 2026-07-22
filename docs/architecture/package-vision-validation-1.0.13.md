@@ -181,11 +181,37 @@ This validation excludes:
 - video temporal behavior;
 - SQL persistence.
 
+## Vision Closure
+
+The follow-up closure gate classified and moved the historical helper modules
+that were previously still present in the wheel.
+
+| module | classification | required-by | shipped-in-wheel | reason |
+|---|---|---|---|---|
+| `zeromodel.vision.__init__` | public production runtime | package public API | yes | Exports deterministic visual-address API only. |
+| `zeromodel.vision.visual` | public production runtime | deterministic visual index and sign reader | yes | Owns deterministic feature extraction, index identity, calibration, and visual address recovery. |
+| `zeromodel.vision.visual_policy` | public production runtime | provider-neutral policy bridge | yes | Adapts deterministic visual addresses to observation contracts and core policy lookup. |
+| `visual_corruptions` | research or benchmark implementation | visual robustness research | no | Moved to `research/visual/visual_corruptions.py`. |
+| `visual_dataset` | research or benchmark implementation | visual benchmark datasets | no | Moved to `research/visual/visual_dataset.py`. |
+| `visual_encoder` | research or benchmark implementation | learned encoder experiments | no | Moved to `research/visual/visual_encoder.py`. |
+| `visual_precomputed` | research or benchmark implementation | approximate/precomputed provider experiments | no | Moved to `research/visual/visual_precomputed.py`. |
+| `visual_registration` | research or benchmark implementation | registration and local-baseline experiments | no | Moved to `research/visual/visual_registration.py`. |
+| `visual_retrieval` | research or benchmark implementation | vector retrieval and linear-probe experiments | no | Moved to `research/visual/visual_retrieval.py`. |
+
+The rebuilt wheel contains only:
+
+- `zeromodel/vision/__init__.py`
+- `zeromodel/vision/visual.py`
+- `zeromodel/vision/visual_policy.py`
+- `zeromodel_vision-1.0.13.dist-info/**`
+
+Closure validation results:
+
+- Source tests: `10 passed in 0.57s`
+- Installed-wheel tests: `10 passed in 0.34s`
+- Ruff, format, mypy, package boundaries, quality, build, and `twine check`: passed
+
 ## Remaining Defects
 
 No package-blocking defects remain for deterministic visual-address isolation.
-The physical wheel still contains non-exported historical vision helper modules
-under `zeromodel/vision/**`; they are outside the validated production public
-API and remain candidates for future research/package pruning.
-
 The next structural stage is `zeromodel-video` isolation.

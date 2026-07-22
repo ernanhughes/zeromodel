@@ -3,7 +3,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from zeromodel.video.domains.video_action_set.dto import EpisodePlanDTO, SealedSplitPlanDTO
+from zeromodel.video.domains.video_action_set.dto import (
+    EpisodePlanDTO,
+    SealedSplitPlanDTO,
+)
 from zeromodel.video.domains.video_action_set.store import VideoActionSetStore
 
 

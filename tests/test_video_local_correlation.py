@@ -21,7 +21,7 @@ from research.video.video_local_correlation import (
     local_region_digest,
 )
 from zeromodel.observation.visual_address import ImageObservation
-from zeromodel.vision.visual_registration import RegistrationConfig
+from research.visual.visual_registration import RegistrationConfig
 
 
 def _regions() -> tuple[LocalRegionSpec, ...]:

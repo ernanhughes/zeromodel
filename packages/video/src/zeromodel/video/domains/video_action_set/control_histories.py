@@ -3,7 +3,12 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from zeromodel.video.arcade_policy import ACTIONS, ShooterConfig, next_rows, parse_state_row_id
+from zeromodel.video.arcade_policy import (
+    ACTIONS,
+    ShooterConfig,
+    next_rows,
+    parse_state_row_id,
+)
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
 from zeromodel.video.domains.video_action_set.contracts import (

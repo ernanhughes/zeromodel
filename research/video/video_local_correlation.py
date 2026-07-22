@@ -14,7 +14,7 @@ from zeromodel.observation.visual_address import (
     VisualAddressContract,
     VisualAddressDecision,
 )
-from zeromodel.vision.visual_registration import RegistrationConfig, register_integer_translation
+from research.visual.visual_registration import RegistrationConfig, register_integer_translation
 
 
 VIDEO_LOCAL_CORRELATION_PROVIDER_VERSION = "zeromodel-video-local-correlation-provider/v1"

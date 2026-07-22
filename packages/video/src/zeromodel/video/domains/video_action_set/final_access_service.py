@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -26,7 +26,9 @@ from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionRequestDTO,
     access_id_for_authorization,
 )
-from zeromodel.video.domains.video_action_set.final_evaluation import evaluate_final_protocol
+from zeromodel.video.domains.video_action_set.final_evaluation import (
+    evaluate_final_protocol,
+)
 from zeromodel.video.domains.video_action_set.final_historical_authority import (
     HISTORICAL_AUTHORITY_KEYS,
     VerifiedHistoricalAuthorityDTO,
@@ -44,7 +46,10 @@ from zeromodel.video.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
     validate_final_access_event_chain,
 )
-from zeromodel.video.domains.video_action_set.observation_dto import MaterializedObservationDTO, ObservationDTO
+from zeromodel.video.domains.video_action_set.observation_dto import (
+    MaterializedObservationDTO,
+    ObservationDTO,
+)
 from zeromodel.video.domains.video_action_set.store import VideoActionSetStore
 
 
@@ -825,7 +830,7 @@ def default_process_identity() -> str:
 
 
 def utc_now() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _authorization_contract(

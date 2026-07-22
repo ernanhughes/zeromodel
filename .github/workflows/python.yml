@@ -38,7 +38,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   quality:
@@ -76,9 +76,16 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Prepare Ruff-formatted remediation files
-        if: steps.quality_gate.outcome == 'failure'
+      - name: Apply one-time Ruff remediation to PR branch
+        if: >-
+          steps.quality_gate.outcome == 'failure' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
         run: |
+          git fetch origin "$HEAD_BRANCH"
+          git checkout -B "$HEAD_BRANCH" "origin/$HEAD_BRANCH"
           python -m ruff format \
             zeromodel/db/orm/video_action_set.py \
             zeromodel/db/session.py \
@@ -87,22 +94,20 @@ jobs:
             zeromodel/domains/video_action_set/final_historical_authority.py \
             zeromodel/domains/video_action_set/observation_dto.py \
             zeromodel/stores/video_action_set_memory.py
-
-      - name: Upload Ruff-formatted remediation files
-        if: steps.quality_gate.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: repository-quality-formatted-files
-          path: |
-            zeromodel/db/orm/video_action_set.py
-            zeromodel/db/session.py
-            zeromodel/db/stores/video_action_set.py
-            zeromodel/domains/video_action_set/_datetime_compat.py
-            zeromodel/domains/video_action_set/final_historical_authority.py
-            zeromodel/domains/video_action_set/observation_dto.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            zeromodel/db/orm/video_action_set.py \
+            zeromodel/db/session.py \
+            zeromodel/db/stores/video_action_set.py \
+            zeromodel/domains/video_action_set/_datetime_compat.py \
+            zeromodel/domains/video_action_set/final_historical_authority.py \
+            zeromodel/domains/video_action_set/observation_dto.py \
             zeromodel/stores/video_action_set_memory.py
-          if-no-files-found: error
-          retention-days: 7
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format release files"
+            git push origin "HEAD:$HEAD_BRANCH"
+          fi
 
       - name: Fail repository quality job
         if: steps.quality_gate.outcome == 'failure'

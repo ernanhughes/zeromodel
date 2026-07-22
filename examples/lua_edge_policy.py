@@ -13,7 +13,11 @@ import json
 from pathlib import Path
 
 from arcade_shooter_policy import ACTIONS, compile_policy_artifact
-from zeromodel import VPMPolicyLookup, compiled_plan_id, write_lua_policy
+from zeromodel.core.lua import (
+    compiled_plan_id,
+    write_lua_policy,
+)
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def export_lua_policy(output: str | Path) -> dict[str, object]:

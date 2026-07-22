@@ -5,7 +5,7 @@ from pathlib import Path
 
 from examples.arcade_visual_action_equivalence_audit import run_rescore_supported_top1
 from examples.arcade_shooter_policy import compile_policy_artifact
-from zeromodel.video_action_equivalence import build_policy_row_action_map, policy_action_for_row
+from research.evidence.video_action_equivalence import build_policy_row_action_map, policy_action_for_row
 
 
 def _results(tmp_path: Path) -> list[dict[str, object]]:

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import TrainingCheckpoint, build_training_progress_vpm
-from zeromodel.artifact import VPMValidationError
+from zeromodel.analysis.training import (
+    TrainingCheckpoint,
+    build_training_progress_vpm,
+)
+from zeromodel.core.artifact import VPMValidationError
 
 
 def checkpoints():

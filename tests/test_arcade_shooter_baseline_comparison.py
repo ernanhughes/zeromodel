@@ -12,7 +12,7 @@ from typing import Any, Dict, Tuple
 
 import pytest
 
-from zeromodel import VPMPolicyLookup
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 # ---------------------------------------------------------------------------

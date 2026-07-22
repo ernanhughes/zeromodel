@@ -25,8 +25,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from zeromodel import to_bundle  # noqa: E402
-from zeromodel.arcade_policy import (  # noqa: E402
+from zeromodel.core.bundle import to_bundle
+from zeromodel.video.arcade_policy import (  # noqa: E402
     ACTIONS,
     CELL_PIXELS,
     COOLDOWN_BLOCKED_VALUE,
@@ -40,7 +40,7 @@ from zeromodel.arcade_policy import (  # noqa: E402
     enumerate_visual_frames as package_enumerate_visual_frames,
     render_state_frame,
 )
-from zeromodel.visual import (  # noqa: E402
+from zeromodel.vision.visual import (  # noqa: E402
     VisualFeatureSpec,
     VisualIndexBuild,
     VisualSignReader,

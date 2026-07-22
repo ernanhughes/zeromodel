@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from zeromodel import LayoutRecipe, ScoreTable, SignReader, VPMPolicyLookup, build_vpm
-from zeromodel.artifact import VPMValidationError
+from zeromodel.core.artifact import VPMValidationError
 
 
 def _policy_artifact():

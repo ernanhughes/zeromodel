@@ -10,10 +10,10 @@ from unittest.mock import patch
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set import provider_measurement as measurement
-from zeromodel.video_prospective_providers import score_all_rows_reference
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set import provider_measurement as measurement
+from research.video.video_prospective_providers import score_all_rows_reference
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

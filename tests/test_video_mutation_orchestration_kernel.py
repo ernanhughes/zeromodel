@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from zeromodel.domains.video_action_set import mutation_orchestration as mutation
+from zeromodel.video.domains.video_action_set import mutation_orchestration as mutation
 
 
 CASE = {

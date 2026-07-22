@@ -4,8 +4,8 @@ import math
 
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.video_complete_row_evidence import (
+from zeromodel.core.artifact import VPMValidationError
+from research.evidence.video_complete_row_evidence import (
     QUANTIZATION_SCALE,
     CompleteRowEvidence,
     SemanticTopSetOutcome,

@@ -3,7 +3,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from zeromodel import ScoreTable, SpatialOptimizer, build_optimized_view, optimize_view_profile, to_bundle, write_png, write_svg
+from zeromodel.analysis.spatial import (
+    SpatialOptimizer,
+    build_optimized_view,
+    optimize_view_profile,
+)
+from zeromodel.core.artifact import ScoreTable
+from zeromodel.core.bundle import to_bundle
+from zeromodel.core.render import (
+    write_png,
+    write_svg,
+)
 
 OUT_DIR = Path(".zeromodel-demo")
 OUT_DIR.mkdir(exist_ok=True)

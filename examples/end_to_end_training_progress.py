@@ -3,8 +3,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from zeromodel import build_training_progress_vpm, from_bundle, to_bundle, write_png, write_svg
-from zeromodel.adapters import checkpoints_from_tensorboard_scalars
+from zeromodel.analysis.training import build_training_progress_vpm
+from zeromodel.core.bundle import (
+    from_bundle,
+    to_bundle,
+)
+from zeromodel.core.render import (
+    write_png,
+    write_svg,
+)
+from zeromodel.analysis.adapters import checkpoints_from_tensorboard_scalars
 
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -1,0 +1,54 @@
+schema_version = 1
+release_version = "1.0.13"
+forbidden_roots = ["zeromodel"]
+research_root = "research"
+examples_root = "examples"
+integration_tests_root = "integration_tests"
+
+[packages.core]
+distribution = "zeromodel"
+namespace = "zeromodel.core"
+source_root = "packages/core/src"
+depends_on = []
+publishable = true
+owned_prefixes = ["zeromodel.core"]
+
+[packages.analysis]
+distribution = "zeromodel-analysis"
+namespace = "zeromodel.analysis"
+source_root = "packages/analysis/src"
+depends_on = ["core"]
+publishable = true
+owned_prefixes = ["zeromodel.analysis"]
+
+[packages.observation]
+distribution = "zeromodel-observation"
+namespace = "zeromodel.observation"
+source_root = "packages/observation/src"
+depends_on = ["core"]
+publishable = true
+owned_prefixes = ["zeromodel.observation"]
+
+[packages.vision]
+distribution = "zeromodel-vision"
+namespace = "zeromodel.vision"
+source_root = "packages/vision/src"
+depends_on = ["core", "observation"]
+publishable = true
+owned_prefixes = ["zeromodel.vision"]
+
+[packages.video]
+distribution = "zeromodel-video"
+namespace = "zeromodel.video"
+source_root = "packages/video/src"
+depends_on = ["core", "observation"]
+publishable = true
+owned_prefixes = ["zeromodel.video"]
+
+[packages.sqlalchemy]
+distribution = "zeromodel-sqlalchemy"
+namespace = "zeromodel.persistence.sqlalchemy"
+source_root = "packages/sqlalchemy/src"
+depends_on = ["core", "video"]
+publishable = true
+owned_prefixes = ["zeromodel.persistence.sqlalchemy"]

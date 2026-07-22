@@ -15,22 +15,22 @@ from video_final_test_support import (
     authorization,
     request,
 )
-from zeromodel.artifact import VPMValidationError
-from zeromodel.db.runtime import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.persistence.sqlalchemy.db.runtime import (
     build_finalization_sqlite_runtime,
     build_sqlite_runtime,
 )
-from zeromodel.db.session import (
+from zeromodel.persistence.sqlalchemy.db.session import (
     FINALIZATION_AUTHORITY_ID,
     FINALIZATION_AUTHORITY_KIND,
     FINALIZATION_SCHEMA_VERSION,
     sqlite_database_url,
 )
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
     validate_final_identifier,
 )
-from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

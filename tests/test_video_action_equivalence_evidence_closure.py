@@ -4,7 +4,7 @@ from pathlib import Path
 
 from examples.arcade_visual_action_equivalence_audit import run_audit_evidence_closure
 from examples.arcade_shooter_policy import compile_policy_artifact
-from zeromodel.video_action_equivalence import (
+from research.evidence.video_action_equivalence import (
     VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION,
     build_policy_row_action_map,
     collect_v3_preservation_manifest,

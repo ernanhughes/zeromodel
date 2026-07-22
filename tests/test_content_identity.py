@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 
-from zeromodel.content_identity import (
+from zeromodel.core.content_identity import (
     PROTOTYPE_UNIVERSE_IDENTITY_VERSION,
     UnresolvedArtifactIdentity,
     array_content_digest,
     prototype_universe_identity,
 )
-from zeromodel.visual_address import ImageObservation
+from zeromodel.observation.visual_address import ImageObservation
 
 
 def _prototypes() -> dict[str, tuple[str, str, str, ImageObservation]]:

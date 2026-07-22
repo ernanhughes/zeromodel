@@ -4,7 +4,7 @@ import importlib.util
 from pathlib import Path
 import sys
 
-from zeromodel import VPMPolicyLookup
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def _load_demo():

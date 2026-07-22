@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from zeromodel import (
-    InMemoryVideoFrameSource,
+from zeromodel.analysis.policy_transitions import (
     PolicyTransitionEvidence,
     PolicyTransitionSpec,
     ROW_UNION_TRANSITION_SCOPE,
-    TemporalEvidence,
+)
+from zeromodel.video.video import (
+    InMemoryVideoFrameSource,
     VideoClipManifest,
     VideoFrame,
     VideoFrameSource,
+)
+from zeromodel.video.video_policy import (
+    TemporalEvidence,
     VideoPolicyDecision,
     VideoPolicyReader,
     VideoPolicyTrace,

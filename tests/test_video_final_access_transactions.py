@@ -8,11 +8,11 @@ from typing import Callable
 import pytest
 
 from video_final_test_support import approved_protocol, authorization
-from zeromodel.artifact import VPMValidationError
-from zeromodel.db.runtime import build_finalization_sqlite_runtime
-from zeromodel.db.session import sqlite_database_url
-from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
+from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
 StoreFactory = Callable[[Path], object]
@@ -245,7 +245,7 @@ def test_every_event_chain_mutation_blocks_terminal_transition(
     elif mutation == "previous_digest_changed":
         object.__setattr__(events[2], "previous_event_digest", "sha256:" + "9" * 64)
     elif mutation == "payload_changed":
-        from zeromodel.domains.video_action_set.final_access_dto import FinalJsonDTO
+        from zeromodel.video.domains.video_action_set.final_access_dto import FinalJsonDTO
 
         object.__setattr__(
             events[1],

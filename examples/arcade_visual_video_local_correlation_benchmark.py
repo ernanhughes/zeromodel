@@ -28,30 +28,30 @@ from examples.arcade_visual_video_baseline import (  # noqa: E402
     build_canonical_arcade_clip,
     run_exact_video_baseline,
 )
-from zeromodel import (  # noqa: E402
-    ImageObservation,
-    InMemoryVideoFrameSource,
+from research.video.video_local_correlation import (
     LocalCorrelationVideoAddressProvider,
     LocalRegionSpec,
-    VPMPolicyLookup,
-    VideoPolicyReader,
     build_local_correlation_candidates,
     build_local_correlation_prototypes,
     select_local_correlation_candidate,
 )
-from zeromodel.artifact import VPMValidationError  # noqa: E402
-from zeromodel.video import VideoFrame  # noqa: E402
-from zeromodel.visual_experiment import (  # noqa: E402
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.video.video import InMemoryVideoFrameSource
+from zeromodel.video.video_policy import VideoPolicyReader
+from zeromodel.core.artifact import VPMValidationError  # noqa: E402
+from zeromodel.video.video import VideoFrame  # noqa: E402
+from research.visual.visual_experiment import (  # noqa: E402
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
     IMPOSSIBILITY_CONTROL,
 )
-from zeromodel.visual_local_baselines import (  # noqa: E402
+from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_candidates_v2,
     build_registered_pixel_provider,
     select_registered_pixel_candidate_v2,
 )
-from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
+from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-policy-reader-v1"
@@ -140,7 +140,7 @@ def _clip_frame(
     occlude: bool = False,
     critical_remove: bool = False,
 ) -> np.ndarray:
-    from zeromodel.visual_corruptions import mask_box, scale_intensity, translate_frame
+    from zeromodel.vision.visual_corruptions import mask_box, scale_intensity, translate_frame
 
     result = translate_frame(frame, dx=dx, fill=0) if dx else np.array(frame, copy=True)
     if brightness_numerator != 100 or offset:
@@ -322,7 +322,7 @@ def _build_v2_selection(dataset: Any, policy_lookup: VPMPolicyLookup) -> Dict[st
 
 
 def _build_v2_provider(dataset: Any, calibration_dict: Mapping[str, Any]) -> LocalCorrelationVideoAddressProvider:
-    from zeromodel.video_local_correlation import LocalCorrelationCalibration
+    from research.video.video_local_correlation import LocalCorrelationCalibration
 
     calibration = LocalCorrelationCalibration(**dict(calibration_dict))
     return LocalCorrelationVideoAddressProvider(

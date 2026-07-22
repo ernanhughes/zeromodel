@@ -38,16 +38,16 @@ from examples.arcade_visual_sign_reader import (  # noqa: E402
     enumerate_visual_frames,
     make_visual_reader,
 )
-from zeromodel import (  # noqa: E402
+from zeromodel.analysis.policy_properties import decode_key_value_row_id
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider
+from zeromodel.vision.visual_dataset import (
     CorruptionFamilySpec,
-    DeterministicVisualAddressProvider,
-    ImageObservation,
-    VPMPolicyLookup,
     VisualDatasetManifest,
     VisualExampleRecord,
-    decode_key_value_row_id,
 )
-from zeromodel.visual_corruptions import (  # noqa: E402
+from zeromodel.vision.visual_corruptions import (  # noqa: E402
     add_integer_noise,
     checkerboard_frame,
     mask_box,
@@ -56,8 +56,8 @@ from zeromodel.visual_corruptions import (  # noqa: E402
     scale_intensity,
     translate_frame,
 )
-from zeromodel.visual_encoder import HuggingFaceDinoV2Encoder  # noqa: E402
-from zeromodel.visual_experiment import (  # noqa: E402
+from zeromodel.vision.visual_encoder import HuggingFaceDinoV2Encoder  # noqa: E402
+from research.visual.visual_experiment import (  # noqa: E402
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
     IMPOSSIBILITY_CONTROL,
@@ -67,7 +67,7 @@ from zeromodel.visual_experiment import (  # noqa: E402
     records_for_split,
     vectors_for_records,
 )
-from zeromodel.visual_retrieval import (  # noqa: E402
+from zeromodel.vision.visual_retrieval import (  # noqa: E402
     FrozenVectorAddressProvider,
     LinearProbeIndex,
     NormalizedPixelEncoder,

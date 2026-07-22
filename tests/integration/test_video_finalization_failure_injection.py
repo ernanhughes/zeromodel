@@ -10,23 +10,23 @@ from video_final_test_support import (
     authorization,
     request,
 )
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationResultDTO,
     access_id_for_authorization,
 )
-from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.domains.video_action_set.final_claims import build_final_claim_registry
-from zeromodel.domains.video_action_set.final_publication import (
+from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
+from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
     FINAL_RECEIPT_NAME,
     load_published_receipt,
 )
-from zeromodel.domains.video_action_set.final_reconstruction import (
+from zeromodel.video.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
 )
-from zeromodel.domains.video_action_set.final_reporting import generate_final_report
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.video.domains.video_action_set.final_reporting import generate_final_report
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
 pytestmark = pytest.mark.integration

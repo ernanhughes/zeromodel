@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.domains.video_action_set import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.video.domains.video_action_set import (
     artifact_io,
     build_orchestration,
     mutation_filesystem,
     mutation_orchestration,
     verification_orchestration,
 )
-from zeromodel.video_action_set_cli import main
+from research.video_action_set.video_action_set_cli import main
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

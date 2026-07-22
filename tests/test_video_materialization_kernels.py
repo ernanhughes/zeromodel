@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set import materialization_kernels as kernels
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set import materialization_kernels as kernels
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

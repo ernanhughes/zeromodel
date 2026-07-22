@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import (
+from zeromodel.analysis.policy_diagnostics import with_q_diagnostics
+from zeromodel.core.artifact import (
     LayoutRecipe,
     ScoreTable,
-    VPMPolicyLookup,
     VPMValidationError,
     build_vpm,
-    with_q_diagnostics,
 )
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 ACTIONS = ("LEFT", "RIGHT", "STAY", "FIRE")
 

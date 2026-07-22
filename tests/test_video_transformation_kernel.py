@@ -5,20 +5,20 @@ from copy import deepcopy
 import numpy as np
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
+import research.benchmarks.video_action_set_benchmark as benchmark
 from test_video_observation_rmdto import _pixels, sample_record
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.domains.video_action_set.contracts import TRANSFORMATION_FAMILY_VERSION
-from zeromodel.domains.video_action_set.observation_dto import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+from zeromodel.video.domains.video_action_set.contracts import TRANSFORMATION_FAMILY_VERSION
+from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
 )
-from zeromodel.domains.video_action_set.pixel_digest import (
+from zeromodel.video.domains.video_action_set.pixel_digest import (
     array_digest,
     pixel_digest,
     pixel_digest_from_bytes,
 )
-from zeromodel.domains.video_action_set.transformations import (
+from zeromodel.video.domains.video_action_set.transformations import (
     _apply_transformation,
     _transformation_contract,
     _transformation_parameters,

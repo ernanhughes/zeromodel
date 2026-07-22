@@ -3,7 +3,18 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from zeromodel import LearningObservation, build_learning_vpm, from_bundle, to_bundle, write_png, write_svg
+from zeromodel.analysis.learning import (
+    LearningObservation,
+    build_learning_vpm,
+)
+from zeromodel.core.bundle import (
+    from_bundle,
+    to_bundle,
+)
+from zeromodel.core.render import (
+    write_png,
+    write_svg,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -6,17 +6,17 @@ from pathlib import Path
 import pytest
 from sqlalchemy import inspect
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.db.orm.video_action_set import BenchmarkIdentityORM
-from zeromodel.db.runtime import build_sqlite_runtime
-from zeromodel.db.session import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.persistence.sqlalchemy.db.orm.video_action_set import BenchmarkIdentityORM
+from zeromodel.persistence.sqlalchemy.db.runtime import build_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.session import (
     create_database_engine,
     create_schema,
     create_session_factory,
 )
-from zeromodel.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
-from zeromodel.domains.video_action_set.dto import BenchmarkIdentityDTO
-from zeromodel.domains.video_action_set.store import (
+from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
+from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO
+from zeromodel.video.domains.video_action_set.store import (
     BENCHMARK_IDENTITY_CONFLICT_MESSAGE,
 )
 

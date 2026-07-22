@@ -5,8 +5,8 @@ import json
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.video import InMemoryVideoFrameSource, VideoFrame
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.video import InMemoryVideoFrameSource, VideoFrame
 
 
 def test_lossless_frame_source_owns_memory_and_has_stable_identity() -> None:

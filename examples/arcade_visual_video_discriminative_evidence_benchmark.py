@@ -29,32 +29,34 @@ from examples.arcade_visual_video_local_correlation_benchmark import (  # noqa: 
     _regions as _stage2_regions,
     build_video_cases,
 )
-from zeromodel import (  # noqa: E402
+from research.evidence.video_discriminative_evidence import (
     DiscriminativeEvidenceCalibration,
     DiscriminativeEvidenceProvider,
     DiscriminativeRegionSpec,
-    ImageObservation,
-    JointEvidenceCalibration,
-    JointEvidenceProvider,
-    JointEvidenceRegionSpec,
-    VPMPolicyLookup,
     build_discriminative_masks,
     build_discriminative_candidate_set,
-    build_joint_candidate_masks,
-    build_joint_candidate_set,
-    build_pairwise_discriminative_masks,
     discriminative_mask_digest,
     discriminative_region_digest,
     evaluate_candidate_eligibility,
+)
+from research.evidence.video_discriminative_joint_evidence import (
+    JointEvidenceCalibration,
+    JointEvidenceProvider,
+    JointEvidenceRegionSpec,
+    build_joint_candidate_masks,
+    build_joint_candidate_set,
+    build_pairwise_discriminative_masks,
     evaluate_joint_candidate_eligibility,
     joint_candidate_mask_digest,
     joint_region_digest,
     pairwise_mask_digest,
 )
-from zeromodel import video_discriminative_evidence as zde  # noqa: E402
-from zeromodel import video_discriminative_joint_evidence as zje  # noqa: E402
-from zeromodel.artifact import VPMValidationError  # noqa: E402
-from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.observation.visual_address import ImageObservation
+from research.evidence.video_discriminative_evidence import video_discriminative_evidence as zde
+from research.evidence.video_discriminative_joint_evidence import video_discriminative_joint_evidence as zje
+from zeromodel.core.artifact import VPMValidationError  # noqa: E402
+from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"

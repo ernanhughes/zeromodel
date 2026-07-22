@@ -2,8 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import ScoreTable, ViewProfile, ViewSet, build_view, build_views
-from zeromodel.artifact import VPMValidationError
+from zeromodel.core.artifact import ScoreTable
+from zeromodel.core.views import (
+    ViewProfile,
+    ViewSet,
+    build_view,
+    build_views,
+)
+from zeromodel.core.artifact import VPMValidationError
 
 
 def _dense_scene_table() -> ScoreTable:

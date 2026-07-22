@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_encoder import EncoderManifest, square_letterbox_uint8
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.vision.visual_encoder import EncoderManifest, square_letterbox_uint8
 
 
 def _manifest() -> EncoderManifest:

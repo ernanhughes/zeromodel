@@ -11,15 +11,15 @@ from video_final_test_support import (
     evidence_bundle,
     final_rows,
 )
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationProtocolDTO,
     FinalEvidenceBundleDTO,
 )
-from zeromodel.domains.video_action_set.final_evaluation import (
+from zeromodel.video.domains.video_action_set.final_evaluation import (
     evaluate_final_protocol,
 )
-from zeromodel.domains.video_action_set.final_historical_authority import (
+from zeromodel.video.domains.video_action_set.final_historical_authority import (
     verify_historical_authority,
 )
 

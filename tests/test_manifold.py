@@ -3,13 +3,15 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel import (
+from zeromodel.analysis.manifold import (
     DecisionManifold,
-    ScoreTable,
-    SpatialOptimizer,
-    VPMValidationError,
     build_decision_manifold,
     find_inflection_points,
+)
+from zeromodel.analysis.spatial import SpatialOptimizer
+from zeromodel.core.artifact import (
+    ScoreTable,
+    VPMValidationError,
 )
 
 

@@ -6,36 +6,36 @@ from typing import Any
 import numpy as np
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.arcade_observation import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.arcade_observation import (
     render_row_frame,
     shooter_config_payload,
 )
-from zeromodel.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.domains.video_action_set.contracts import (
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+from zeromodel.video.domains.video_action_set.contracts import (
     ARCADE_RENDERER_CONTRACT_VERSION,
     GAP_EVENT_VERSION,
     OBSERVATION_OPERATION_CHAIN_VERSION,
 )
-from zeromodel.domains.video_action_set.observation_legacy_adapters import (
+from zeromodel.video.domains.video_action_set.observation_legacy_adapters import (
     operation_chain,
     operation_record,
 )
-from zeromodel.domains.video_action_set.observation_provenance import (
+from zeromodel.video.domains.video_action_set.observation_provenance import (
     gap_event_operation_chain,
     valid_frame_operation_chain,
 )
-from zeromodel.domains.video_action_set.observation_provenance_dto import (
+from zeromodel.video.domains.video_action_set.observation_provenance_dto import (
     ObservationOperationChainDTO,
     ObservationOperationDTO,
 )
-from zeromodel.domains.video_action_set.observation_replay import (
+from zeromodel.video.domains.video_action_set.observation_replay import (
     replay_observation_operation_chain,
     validate_observation_operation_chain,
 )
-from zeromodel.domains.video_action_set.pixel_digest import array_digest
-from zeromodel.domains.video_action_set.transformations import (
+from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
+from zeromodel.video.domains.video_action_set.transformations import (
     _transformation_parameters,
 )
 

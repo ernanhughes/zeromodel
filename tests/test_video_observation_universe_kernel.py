@@ -6,12 +6,12 @@ from typing import Any
 import numpy as np
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.arcade_policy import ShooterConfig, compile_policy_artifact
-from zeromodel.domains.video_action_set import arcade_observation
-from zeromodel.domains.video_action_set import observation_universe as universe
-from zeromodel.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.domains.video_action_set.contracts import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.analysis.arcade_policy import ShooterConfig, compile_policy_artifact
+from zeromodel.video.domains.video_action_set import arcade_observation
+from zeromodel.video.domains.video_action_set import observation_universe as universe
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+from zeromodel.video.domains.video_action_set.contracts import (
     ARCADE_RENDERER_CONTRACT_VERSION,
     ARCADE_RENDERER_IDENTITY_VERSION,
     CANONICAL_OBSERVATION_UNIVERSE_VERSION,
@@ -20,8 +20,8 @@ from zeromodel.domains.video_action_set.contracts import (
     VALID_OBSERVATION_UNIVERSE_VERSION,
     VALID_TRANSFORMATION_PARAMETER_UNIVERSE_VERSION,
 )
-from zeromodel.domains.video_action_set.pixel_digest import array_digest
-from zeromodel.visual_address import ImageObservation
+from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
+from zeromodel.observation.visual_address import ImageObservation
 
 
 DEFAULT_CONFIG_PAYLOAD = {"width": 7, "wave": [0, 6, 1, 5], "max_steps": 32}

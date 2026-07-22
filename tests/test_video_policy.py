@@ -17,11 +17,11 @@ from examples.arcade_visual_video_baseline import (
     build_canonical_arcade_clip,
     run_exact_video_baseline,
 )
-from zeromodel import VPMPolicyLookup
-from zeromodel.artifact import VPMValidationError
-from zeromodel.video import InMemoryVideoFrameSource, VideoFrame
-from zeromodel.video_policy import VideoPolicyReader
-from zeromodel.visual_policy import DeterministicVisualAddressProvider
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.video import InMemoryVideoFrameSource, VideoFrame
+from zeromodel.video.video_policy import VideoPolicyReader
+from zeromodel.observation.visual_policy import DeterministicVisualAddressProvider
 
 
 # The reader is immutable; sharing it avoids recompiling the 112-row visual index.

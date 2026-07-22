@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zeromodel.domains.video_action_set import evidence_audit
+from zeromodel.video.domains.video_action_set import evidence_audit
 
 
 def test_phase_access_counts_are_built_from_loaded_payloads() -> None:

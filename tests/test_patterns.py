@@ -17,9 +17,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel import LayoutRecipe, ScoreTable, build_vpm
-from zeromodel.artifact import VPMValidationError
-from zeromodel.patterns import (
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    build_vpm,
+)
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.analysis.patterns import (
     MatrixPatternDetector,
     PatternAnalysisSpec,
     build_discovered_view,
@@ -241,7 +245,7 @@ def test_view_rejects_unrelated_report_artifact() -> None:
 
 
 def test_detector_wrapper_and_bundle_round_trip(tmp_path) -> None:
-    from zeromodel.bundle import from_bundle, to_bundle
+    from zeromodel.core.bundle import from_bundle, to_bundle
 
     matrix, _ = _planted_matrix()
     artifact = _artifact_from_matrix(matrix)

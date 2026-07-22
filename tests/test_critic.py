@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import CriticObservation, build_critic_vpm, observations_from_critic_lines
-from zeromodel.artifact import VPMValidationError
+from zeromodel.analysis.critic import (
+    CriticObservation,
+    build_critic_vpm,
+    observations_from_critic_lines,
+)
+from zeromodel.core.artifact import VPMValidationError
 
 
 def test_critic_vpm_places_highest_risk_first_and_warns() -> None:

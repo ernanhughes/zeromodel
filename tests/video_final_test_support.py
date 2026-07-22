@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FINAL_EVIDENCE_BUNDLE_VERSION,
     FINAL_EVALUATION_PROTOCOL_VERSION,
     FINAL_EXECUTION_AUTHORIZATION_VERSION,
@@ -17,8 +17,8 @@ from zeromodel.domains.video_action_set.final_access_dto import (
     FinalExecutionAuthorizationDTO,
     FinalExecutionRequestDTO,
 )
-from zeromodel.domains.video_action_set.canonical_json import canonical_json_bytes
-from zeromodel.domains.video_action_set.final_historical_authority import (
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_bytes
+from zeromodel.video.domains.video_action_set.final_historical_authority import (
     HISTORICAL_EVIDENCE_MANIFEST_VERSION,
     HistoricalEvidenceManifestDTO,
 )

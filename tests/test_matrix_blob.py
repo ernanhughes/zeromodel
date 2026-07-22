@@ -5,8 +5,8 @@ import copy
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.matrix_blob import MatrixBlob
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.core.matrix_blob import MatrixBlob
 
 
 def test_matrix_blob_round_trip_preserves_identity_and_values() -> None:

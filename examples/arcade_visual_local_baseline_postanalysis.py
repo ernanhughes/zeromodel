@@ -15,8 +15,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from examples.arcade_visual_address_benchmark import SOURCE_SCOPE, build_arcade_benchmark_dataset  # noqa: E402
 from examples.arcade_visual_local_baseline_showdown import QUANTILES  # noqa: E402
-from zeromodel.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT  # noqa: E402
-from zeromodel.visual_local_baselines import (  # noqa: E402
+from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT  # noqa: E402
+from research.visual.visual_local_baselines import (  # noqa: E402
     RegisteredPixelCalibration,
     RegisteredPixelAddressProvider,
     build_registered_pixel_prototypes,
@@ -24,7 +24,7 @@ from zeromodel.visual_local_baselines import (  # noqa: E402
     _records_digest,
     _require_split,
 )
-from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
+from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
 
 
 DEFAULT_SOURCE_DIR = REPO_ROOT / "docs" / "results" / "visual-local-baseline-showdown-v1"

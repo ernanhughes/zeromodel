@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set import reachability_composition as reach
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set import reachability_composition as reach
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

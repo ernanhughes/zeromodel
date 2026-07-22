@@ -21,8 +21,14 @@ from pathlib import Path
 
 import numpy as np
 
-from zeromodel import LayoutRecipe, ScoreTable, build_vpm, to_bundle, write_png
-from zeromodel.patterns import MatrixPatternDetector, PatternAnalysisSpec
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    build_vpm,
+)
+from zeromodel.core.bundle import to_bundle
+from zeromodel.core.render import write_png
+from zeromodel.analysis.patterns import MatrixPatternDetector, PatternAnalysisSpec
 
 
 def planted_block_matrix(*, seed: int = 7, noise: float = 0.08) -> tuple[np.ndarray, np.ndarray]:

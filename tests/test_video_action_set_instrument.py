@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.video_complete_row_evidence import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from research.evidence.video_complete_row_evidence import (
     build_complete_row_evidence,
     build_semantic_top_set_outcome,
 )

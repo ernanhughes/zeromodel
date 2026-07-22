@@ -11,7 +11,7 @@ Run:
 from __future__ import annotations
 
 import json
-from zeromodel.arcade_policy.model import (
+from zeromodel.video.arcade_policy.model import (
     ACTIONS,
     ShooterConfig,
     TinyArcadeShooter,

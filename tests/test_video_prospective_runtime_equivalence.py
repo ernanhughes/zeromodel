@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from zeromodel.video_action_set_benchmark import profile_runtime, verify_provider_runtime_equivalence
+from research.benchmarks.video_action_set_benchmark import profile_runtime, verify_provider_runtime_equivalence
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

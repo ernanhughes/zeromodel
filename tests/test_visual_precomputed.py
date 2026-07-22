@@ -3,10 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_address import ImageObservation
-from zeromodel.visual_precomputed import PrecomputedVectorAddressProvider
-from zeromodel.visual_retrieval import VectorAddressIndex, build_vector_address
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.vision.visual_precomputed import PrecomputedVectorAddressProvider
+from zeromodel.vision.visual_retrieval import VectorAddressIndex, build_vector_address
 
 
 def _index() -> VectorAddressIndex:

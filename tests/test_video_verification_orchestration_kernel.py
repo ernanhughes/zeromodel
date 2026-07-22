@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from zeromodel.domains.video_action_set import (
+from zeromodel.video.domains.video_action_set import (
     verification_orchestration as verification,
 )
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.video_discriminative_evidence import (
+from zeromodel.core.artifact import VPMValidationError
+from research.evidence.video_discriminative_evidence import (
     DiscriminativeMask,
     DiscriminativeCandidateSet,
     DiscriminativeEvidenceCalibration,
@@ -19,7 +19,7 @@ from zeromodel.video_discriminative_evidence import (
     extract_candidate_region_evidence,
     register_informative_translation,
 )
-from zeromodel.visual_registration import RegistrationConfig
+from zeromodel.vision.visual_registration import RegistrationConfig
 
 
 def _registration() -> RegistrationConfig:

@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import ScoreTable, SpatialOptimizer, build_optimized_view, optimize_view_profile
-from zeromodel.artifact import VPMValidationError
+from zeromodel.analysis.spatial import (
+    SpatialOptimizer,
+    build_optimized_view,
+    optimize_view_profile,
+)
+from zeromodel.core.artifact import ScoreTable
+from zeromodel.core.artifact import VPMValidationError
 
 
 def _source_table() -> ScoreTable:

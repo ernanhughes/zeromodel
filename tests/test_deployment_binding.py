@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.deployment_binding import DeploymentBinding
-from zeromodel.visual_address import VisualAddressContract
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.observation.deployment_binding import DeploymentBinding
+from zeromodel.observation.visual_address import VisualAddressContract
 
 
 def _contract() -> VisualAddressContract:

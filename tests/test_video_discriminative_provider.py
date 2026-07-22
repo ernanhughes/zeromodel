@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import numpy as np
 
-from zeromodel import ImageObservation
-from zeromodel import video_discriminative_evidence as zde
-from zeromodel.video_discriminative_evidence import (
+from zeromodel.observation.visual_address import ImageObservation
+from research.evidence.video_discriminative_evidence import video_discriminative_evidence as zde
+from research.evidence.video_discriminative_evidence import (
     DiscriminativeEvidenceCalibration,
     DiscriminativeEvidenceProvider,
     DiscriminativeMask,
     DiscriminativeMaskSpec,
     DiscriminativeRegionSpec,
 )
-from zeromodel.visual_registration import RegistrationConfig
+from zeromodel.vision.visual_registration import RegistrationConfig
 
 
 def _region() -> DiscriminativeRegionSpec:

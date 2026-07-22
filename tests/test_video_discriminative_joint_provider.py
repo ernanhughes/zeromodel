@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from zeromodel import (
-    ImageObservation,
+from research.evidence.video_discriminative_joint_evidence import (
     JointEvidenceCalibration,
     JointEvidenceProvider,
     JointEvidenceRegionSpec,
@@ -11,7 +10,8 @@ from zeromodel import (
     build_joint_candidate_set,
     build_pairwise_discriminative_masks,
 )
-from zeromodel.visual_registration import RegistrationConfig
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.vision.visual_registration import RegistrationConfig
 
 
 def _provider_fixture():

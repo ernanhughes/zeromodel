@@ -17,17 +17,19 @@ import json
 from pathlib import Path
 from typing import Optional, Sequence, Tuple
 
-from zeromodel import (
-    LayoutRecipe,
+from zeromodel.analysis.policy_diagnostics import with_q_diagnostics
+from zeromodel.analysis.policy_properties import (
     PolicyPropertyChecker,
     PolicyPropertySpec,
-    ScoreTable,
-    VPMPolicyLookup,
-    build_vpm,
-    to_bundle,
-    with_q_diagnostics,
-    write_png,
 )
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    build_vpm,
+)
+from zeromodel.core.bundle import to_bundle
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.core.render import write_png
 
 ACTIONS: Tuple[str, ...] = ("LEFT", "RIGHT", "STAY", "FIRE")
 EVIDENCE_METRICS: Tuple[str, ...] = ("criticality", "decision_margin")

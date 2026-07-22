@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
+import research.benchmarks.video_action_set_benchmark as benchmark
 
 
 INTEGRATION_TEST_PREFIXES = ("test_video_action_set_",)

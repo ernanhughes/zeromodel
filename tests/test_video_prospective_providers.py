@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel.video_action_set_benchmark import SOURCE_SCOPE, canonical_prototypes
-from zeromodel.video_complete_row_evidence import VIDEO_COMPLETE_ROW_EVIDENCE_VERSION
-from zeromodel.video_prospective_providers import (
+from research.benchmarks.video_action_set_benchmark import SOURCE_SCOPE, canonical_prototypes
+from research.evidence.video_complete_row_evidence import VIDEO_COMPLETE_ROW_EVIDENCE_VERSION
+from research.video.video_prospective_providers import (
     clear_prospective_provider_caches,
     prospective_provider_cache_info,
     score_b3_joint_fit,

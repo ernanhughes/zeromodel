@@ -18,32 +18,32 @@ from video_final_test_support import (
     final_rows,
     request,
 )
-from zeromodel import build_runtime
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.canonical_json import canonical_json_bytes
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.video.runtime import build_runtime
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_bytes
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationResultDTO,
     FinalExecutionReceiptDTO,
     event_chain_digest,
 )
-from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.domains.video_action_set.final_claims import build_final_claim_registry
-from zeromodel.domains.video_action_set.final_evaluation import evaluate_final_protocol
-from zeromodel.domains.video_action_set.final_publication import (
+from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
+from zeromodel.video.domains.video_action_set.final_evaluation import evaluate_final_protocol
+from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
     FINAL_RECEIPT_NAME,
 )
-from zeromodel.domains.video_action_set.final_reconciler import (
+from zeromodel.video.domains.video_action_set.final_reconciler import (
     interrupt_abandoned_running_access,
 )
-from zeromodel.domains.video_action_set.final_reconstruction import (
+from zeromodel.video.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
 )
-from zeromodel.domains.video_action_set.final_reporting import generate_final_report
-from zeromodel.domains.video_action_set.observation_dto import (
+from zeromodel.video.domains.video_action_set.final_reporting import generate_final_report
+from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
 )
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -79,7 +79,7 @@ def test_authorized_final_observation_uses_service_path_only(tmp_path: Path) -> 
     auth_payload = auth.to_dict()
     auth_payload["expected_benchmark_seed_digest"] = identity.seed_digest
     auth_payload.pop("authorization_digest")
-    from zeromodel.domains.video_action_set.final_access_dto import (
+    from zeromodel.video.domains.video_action_set.final_access_dto import (
         FinalExecutionAuthorizationDTO,
     )
 
@@ -87,7 +87,7 @@ def test_authorized_final_observation_uses_service_path_only(tmp_path: Path) -> 
     protocol_payload = protocol.to_dict()
     protocol_payload["benchmark_seed_digest"] = identity.seed_digest
     protocol_payload.pop("protocol_digest")
-    from zeromodel.domains.video_action_set.final_access_dto import (
+    from zeromodel.video.domains.video_action_set.final_access_dto import (
         FinalEvaluationProtocolDTO,
     )
 
@@ -135,7 +135,7 @@ def test_evaluator_is_order_independent_and_digest_bearing() -> None:
     )
     tampered_evidence = first.to_dict()
     tampered_evidence["rows"][0]["metrics"]["score"] = "1.0"  # type: ignore[index]
-    from zeromodel.domains.video_action_set.final_access_dto import (
+    from zeromodel.video.domains.video_action_set.final_access_dto import (
         FinalEvidenceBundleDTO,
     )
 

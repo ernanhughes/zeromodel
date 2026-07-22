@@ -15,16 +15,16 @@ from video_final_test_support import (
     final_rows,
     request,
 )
-from zeromodel import build_runtime
-from zeromodel.artifact import VPMValidationError
-from zeromodel.db.runtime import build_finalization_sqlite_runtime
-from zeromodel.db.session import sqlite_database_url
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.video.runtime import build_runtime
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationResultDTO,
     FinalExecutionReceiptDTO,
 )
-from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.domains.video_action_set.final_publication import (
+from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
     FINAL_RECEIPT_NAME,
 )

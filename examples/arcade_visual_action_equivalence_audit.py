@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from examples.arcade_shooter_policy import compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_video_baseline import arcade_transition_spec  # noqa: E402
-from zeromodel.video_action_equivalence import (  # noqa: E402
+from research.evidence.video_action_equivalence import (  # noqa: E402
     VIDEO_ACTION_EQUIVALENCE_AUDIT_VERSION,
     VIDEO_RETROSPECTIVE_EVIDENCE_CLOSURE_VERSION,
     VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION,
@@ -29,7 +29,7 @@ from zeromodel.video_action_equivalence import (  # noqa: E402
     summarize_top1_records,
     verify_v3_preservation,
 )
-from zeromodel.video_policy_reachability import compile_reachability_tile, verify_reachability_tile  # noqa: E402
+from zeromodel.video.video_policy_reachability import compile_reachability_tile, verify_reachability_tile  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-policy-action-equivalence-audit-v1"

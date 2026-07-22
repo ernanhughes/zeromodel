@@ -12,20 +12,20 @@ from video_final_test_support import (
     digest,
     request,
 )
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.final_access_dto import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionAuthorizationDTO,
     FinalExecutionReceiptDTO,
     access_id_for_authorization,
 )
-from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.domains.video_action_set.final_historical_authority import (
+from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_historical_authority import (
     HistoricalEvidenceManifestDTO,
     VerifiedHistoricalAuthorityDTO,
     verify_historical_authority,
 )
-from zeromodel.domains.video_action_set.final_publication import FINAL_RECEIPT_NAME
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.video.domains.video_action_set.final_publication import FINAL_RECEIPT_NAME
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
 def _historical(

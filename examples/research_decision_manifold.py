@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from zeromodel import ScoreTable, SpatialOptimizer, build_decision_manifold
-from zeromodel.render import write_png, write_svg
+from zeromodel.analysis.manifold import build_decision_manifold
+from zeromodel.analysis.spatial import SpatialOptimizer
+from zeromodel.core.artifact import ScoreTable
+from zeromodel.core.render import write_png, write_svg
 
 
 OUT = Path(".zeromodel-demo")

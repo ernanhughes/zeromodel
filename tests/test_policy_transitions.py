@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.policy_transitions import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.analysis.policy_transitions import (
     ROW_UNION_TRANSITION_SCOPE,
     PolicyTransitionSpec,
 )

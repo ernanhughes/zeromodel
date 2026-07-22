@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zeromodel"
+version = "1.0.13"
+description = "ZeroModel core package"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "numpy>=1.23",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["zeromodel*"]

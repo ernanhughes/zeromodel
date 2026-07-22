@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-import zeromodel.video_action_set_cli as cli
+import research.video_action_set.video_action_set_cli as cli
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

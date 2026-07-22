@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from zeromodel.domains.video_action_set import verification
+from zeromodel.video.domains.video_action_set import verification
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

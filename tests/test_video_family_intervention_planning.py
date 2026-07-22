@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.domains.video_action_set import family_intervention_planning
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.video.domains.video_action_set import family_intervention_planning
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

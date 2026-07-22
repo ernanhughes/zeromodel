@@ -6,13 +6,13 @@ import sys
 
 import pytest
 
-from zeromodel.visual_experiment import EXPECTED_ACCEPT
-from zeromodel.visual_local_baselines import (
+from research.visual.visual_experiment import EXPECTED_ACCEPT
+from research.visual.visual_local_baselines import (
     build_registered_pixel_candidates,
     build_registered_pixel_provider,
     select_registered_pixel_candidate,
 )
-from zeromodel.visual_registration import RegistrationConfig
+from zeromodel.vision.visual_registration import RegistrationConfig
 
 
 def _load_demo():

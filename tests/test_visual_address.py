@@ -5,16 +5,21 @@ import json
 import numpy as np
 import pytest
 
-from zeromodel import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual import VisualFeatureSpec, VisualSignReader, build_visual_index
-from zeromodel.visual_address import (
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    build_vpm,
+)
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.vision.visual import VisualFeatureSpec, VisualSignReader, build_visual_index
+from zeromodel.observation.visual_address import (
     ImageObservation,
     VisualAddressContract,
     VisualAddressDecision,
 )
-from zeromodel.visual_address_manifest import PrototypeBinding, VisualAddressManifest
-from zeromodel.visual_policy import (
+from zeromodel.observation.visual_address_manifest import PrototypeBinding, VisualAddressManifest
+from zeromodel.observation.visual_policy import (
     DeterministicVisualAddressProvider,
     VisualPolicyReader,
 )

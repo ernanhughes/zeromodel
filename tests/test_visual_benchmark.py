@@ -4,15 +4,15 @@ import json
 
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_benchmark import (
+from zeromodel.core.artifact import VPMValidationError
+from research.benchmarks.visual_benchmark import (
     BenchmarkSystemResult,
     GovernanceAuditResult,
     VisualBenchmarkMetrics,
     VisualBenchmarkReport,
     wilson_score_interval,
 )
-from zeromodel.visual_dataset import (
+from zeromodel.vision.visual_dataset import (
     CorruptionFamilySpec,
     VisualDatasetManifest,
     VisualExampleRecord,

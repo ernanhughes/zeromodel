@@ -5,8 +5,13 @@ import json
 import numpy as np
 import pytest
 
-from zeromodel import LayoutRecipe, ScoreTable, VPMArtifact, build_vpm
-from zeromodel.artifact import VPMValidationError
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    VPMArtifact,
+    build_vpm,
+)
+from zeromodel.core.artifact import VPMValidationError
 
 
 GOLDEN_SAMPLE_ARTIFACT_ID = "32f801671139b73e349c756570c27c06d39c422a4d9a277782e1c997a473083b"

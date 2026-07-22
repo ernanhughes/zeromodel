@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set import episode_families as families
-from zeromodel.domains.video_action_set.contracts import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set import episode_families as families
+from zeromodel.video.domains.video_action_set.contracts import (
     CONFLICTING_ACTION_SPLICE_VERSION,
     CRITICAL_EVIDENCE_CORRUPTION_VERSION,
     DECLARED_GAP_OR_UNKNOWN_VERSION,

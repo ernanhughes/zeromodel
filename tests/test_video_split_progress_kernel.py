@@ -8,12 +8,12 @@ from typing import Any
 
 import pytest
 
-import zeromodel.video_action_set_cli as cli
-from zeromodel.domains.video_action_set import build_orchestration as build
-from zeromodel.domains.video_action_set import provider_measurement as measurement
-from zeromodel.domains.video_action_set.artifact_io import _sha256
-from zeromodel.domains.video_action_set.provider_measurement import SplitBuildProgress
-from zeromodel.video_prospective_providers import PROSPECTIVE_PROVIDER_IDS
+import research.video_action_set.video_action_set_cli as cli
+from zeromodel.video.domains.video_action_set import build_orchestration as build
+from zeromodel.video.domains.video_action_set import provider_measurement as measurement
+from zeromodel.video.domains.video_action_set.artifact_io import _sha256
+from research.video_action_set.provider_measurement import SplitBuildProgress
+from research.video.video_prospective_providers import PROSPECTIVE_PROVIDER_IDS
 
 
 def _records() -> list[dict[str, Any]]:

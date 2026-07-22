@@ -18,14 +18,14 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from examples.arcade_visual_address_benchmark import SOURCE_SCOPE, build_arcade_benchmark_dataset  # noqa: E402
-from zeromodel.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL, evaluate_visual_provider  # noqa: E402
-from zeromodel.visual_local_baselines import (  # noqa: E402
+from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL, evaluate_visual_provider  # noqa: E402
+from research.visual.visual_local_baselines import (  # noqa: E402
     RegisteredPixelCalibration,
     build_registered_pixel_candidates,
     build_registered_pixel_provider,
     select_registered_pixel_candidate,
 )
-from zeromodel.visual_registration import RegistrationConfig  # noqa: E402
+from zeromodel.vision.visual_registration import RegistrationConfig  # noqa: E402
 
 
 SHOWDOWN_PROTOCOL_VERSION = "zeromodel-visual-local-showdown/v1"

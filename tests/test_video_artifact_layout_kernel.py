@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from zeromodel.domains.video_action_set import artifact_layout as layout
+from zeromodel.video.domains.video_action_set import artifact_layout as layout
 
 
 def test_canonical_artifact_layout_is_frozen() -> None:

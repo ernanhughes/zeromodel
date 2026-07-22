@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import (
+from zeromodel.analysis.policy_diagnostics import with_q_diagnostics
+from zeromodel.core.artifact import (
     LayoutRecipe,
     ScoreTable,
     VPMArtifact,
-    VPMPolicyLookup,
     build_vpm,
-    with_q_diagnostics,
 )
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def _artifact(values, row_ids, metric_ids, *, column_order=None):

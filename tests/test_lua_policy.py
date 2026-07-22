@@ -6,15 +6,17 @@ import subprocess
 
 import pytest
 
-from zeromodel import (
+from zeromodel.core.artifact import (
     LayoutRecipe,
     ScoreTable,
-    VPMPolicyLookup,
     build_vpm,
+)
+from zeromodel.core.lua import (
     compiled_plan_id,
     lua_policy_source,
     write_lua_policy,
 )
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def _reader() -> VPMPolicyLookup:

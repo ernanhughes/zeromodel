@@ -1,7 +1,7 @@
 import ast
 import inspect
 
-from zeromodel.domains.video_action_set import report_rendering
+from zeromodel.video.domains.video_action_set import report_rendering
 
 
 PROFILES = [

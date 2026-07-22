@@ -7,20 +7,20 @@ import sys
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel import build_runtime
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.contracts import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.video.runtime import build_runtime
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.contracts import (
     BENCHMARK_VERSION,
     GENERATOR_VERSION,
     REACHABILITY_TILE_DIGEST,
     REACHABILITY_TILE_VERSION,
 )
-from zeromodel.domains.video_action_set.dto import BenchmarkIdentityDTO
-from zeromodel.domains.video_action_set.store import (
+from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO
+from zeromodel.video.domains.video_action_set.store import (
     BENCHMARK_IDENTITY_CONFLICT_MESSAGE,
 )
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

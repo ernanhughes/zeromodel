@@ -14,33 +14,33 @@ from test_video_observation_rmdto import (
     sample_gap_record,
     sample_record,
 )
-from zeromodel.artifact import VPMValidationError
-from zeromodel.db.orm.video_action_set import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.persistence.sqlalchemy.db.orm.video_action_set import (
     MatrixBlobORM,
     ObservationORM,
     ObservationOperationChainORM,
     ObservationOperationInputORM,
     ObservationOperationORM,
 )
-from zeromodel.db.runtime import build_sqlite_runtime
-from zeromodel.db.session import (
+from zeromodel.persistence.sqlalchemy.db.runtime import build_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.session import (
     create_database_engine,
     create_schema,
     create_session_factory,
 )
-from zeromodel.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
-from zeromodel.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.domains.video_action_set.contracts import (
+from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+from zeromodel.video.domains.video_action_set.contracts import (
     OBSERVATION_OPERATION_CHAIN_VERSION,
 )
-from zeromodel.domains.video_action_set.observation_dto import (
+from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
 )
-from zeromodel.domains.video_action_set.store import (
+from zeromodel.video.domains.video_action_set.store import (
     OBSERVATION_CONFLICT_MESSAGE,
     OBSERVATION_SEQUENCE_CONFLICT_MESSAGE,
 )
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 from test_video_episode_plan_rmdto import plan_dto
 

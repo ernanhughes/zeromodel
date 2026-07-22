@@ -23,14 +23,14 @@ from examples.arcade_visual_address_benchmark import (  # noqa: E402
     SOURCE_SCOPE,
     build_arcade_benchmark_dataset,
 )
-from zeromodel.visual_analysis import analyze_trace_sets  # noqa: E402
-from zeromodel.visual_experiment import (  # noqa: E402
+from research.visual.visual_analysis import analyze_trace_sets  # noqa: E402
+from research.visual.visual_experiment import (  # noqa: E402
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
     IMPOSSIBILITY_CONTROL,
     evaluate_visual_provider,
 )
-from zeromodel.visual_system_b import (  # noqa: E402
+from research.visual.visual_system_b import (  # noqa: E402
     build_system_b_candidates,
     build_system_b_provider,
     select_system_b_operating_point,

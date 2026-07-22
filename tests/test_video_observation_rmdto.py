@@ -10,33 +10,33 @@ from typing import Any
 import numpy as np
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
+import research.benchmarks.video_action_set_benchmark as benchmark
 from test_video_episode_plan_rmdto import plan_dto, sample_identity
-from zeromodel import build_runtime
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.domains.video_action_set.contracts import (
+from zeromodel.video.runtime import build_runtime
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+from zeromodel.video.domains.video_action_set.contracts import (
     BENCHMARK_VERSION,
     FRAME_SHAPE,
     GENERATOR_VERSION,
     OBSERVATION_OPERATION_CHAIN_VERSION,
 )
-from zeromodel.domains.video_action_set.observation_dto import (
+from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
     ObservationOperationChainDTO,
     ObservationOperationDTO,
     ProviderObservationDescriptorDTO,
 )
-from zeromodel.domains.video_action_set.store import (
+from zeromodel.video.domains.video_action_set.store import (
     MATRIX_BLOB_CONFLICT_MESSAGE,
     OBSERVATION_CONFLICT_MESSAGE,
     OBSERVATION_SEQUENCE_CONFLICT_MESSAGE,
     UNKNOWN_BENCHMARK_IDENTITY_MESSAGE,
     UNKNOWN_EPISODE_PLAN_MESSAGE,
 )
-from zeromodel.matrix_blob import MatrixBlob
-from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
-from zeromodel.visual_address import ImageObservation
+from zeromodel.core.matrix_blob import MatrixBlob
+from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
+from zeromodel.observation.visual_address import ImageObservation
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_retrieval import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.vision.visual_retrieval import (
     LinearProbeIndex,
     VectorAddressIndex,
     build_linear_probe,

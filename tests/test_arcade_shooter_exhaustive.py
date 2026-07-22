@@ -9,14 +9,16 @@ from typing import Any, Callable, Optional
 
 import pytest
 
-from zeromodel import (
+from zeromodel.core.artifact import (
     LayoutRecipe,
     ScoreTable,
-    VPMPolicyLookup,
     build_vpm,
+)
+from zeromodel.core.bundle import (
     from_bundle,
     to_bundle,
 )
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def _load_demo():

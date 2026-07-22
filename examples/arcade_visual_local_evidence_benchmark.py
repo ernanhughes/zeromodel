@@ -24,22 +24,22 @@ from examples.arcade_visual_sign_reader import (  # noqa: E402
     TANK_VALUE,
     enumerate_visual_frames,
 )
-from zeromodel import (  # noqa: E402
+from zeromodel.analysis.policy_properties import decode_key_value_row_id
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.vision.visual_dataset import (
     CorruptionFamilySpec,
-    ImageObservation,
-    VPMPolicyLookup,
     VisualDatasetManifest,
     VisualExampleRecord,
-    decode_key_value_row_id,
 )
-from zeromodel.visual_corruptions import (  # noqa: E402
+from zeromodel.vision.visual_corruptions import (  # noqa: E402
     add_integer_noise,
     checkerboard_frame,
     mask_box,
     scale_intensity,
     translate_frame,
 )
-from zeromodel.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL  # noqa: E402
+from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL  # noqa: E402
 
 
 SOURCE_SCOPE = "arcade-visual-local-evidence-v3"

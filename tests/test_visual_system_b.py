@@ -9,10 +9,10 @@ import numpy as np
 
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_address import ImageObservation
-from zeromodel.visual_encoder import EncoderManifest
-from zeromodel.visual_system_b import (
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.vision.visual_encoder import EncoderManifest
+from research.visual.visual_system_b import (
     build_system_b_candidates,
     select_system_b_operating_point,
     validate_selection_records,

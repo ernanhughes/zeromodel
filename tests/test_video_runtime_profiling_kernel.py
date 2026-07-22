@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.domains.video_action_set import runtime_profiling as profiling
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.video.domains.video_action_set import runtime_profiling as profiling
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

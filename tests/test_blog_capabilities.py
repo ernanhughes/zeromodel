@@ -4,26 +4,34 @@ import zipfile
 
 import numpy as np
 
-from zeromodel import (
-    LayoutRecipe,
-    ScoreTable,
-    TopLeftGate,
-    Thresholds,
-    VPMController,
-    build_pyramid,
-    build_vpm,
-    compare_fields,
-    from_bundle,
-    guarded_pack_artifact,
-    pack_metrics,
-    png_bytes,
-    score_table_from_metric_rows,
-    to_bundle,
+from zeromodel.analysis.compare import compare_fields
+from zeromodel.analysis.compose import (
     vpm_and,
     vpm_or,
     vpm_xor,
 )
-from zeromodel.controller import Signal
+from zeromodel.analysis.controller import (
+    Thresholds,
+    VPMController,
+)
+from zeromodel.analysis.edge import TopLeftGate
+from zeromodel.analysis.hierarchy import build_pyramid
+from zeromodel.analysis.phos import guarded_pack_artifact
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    build_vpm,
+)
+from zeromodel.core.bundle import (
+    from_bundle,
+    to_bundle,
+)
+from zeromodel.core.metrics import (
+    pack_metrics,
+    score_table_from_metric_rows,
+)
+from zeromodel.core.render import png_bytes
+from zeromodel.analysis.controller import Signal
 
 
 def recipe() -> LayoutRecipe:

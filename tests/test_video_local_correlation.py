@@ -12,16 +12,16 @@ from examples.arcade_visual_video_local_correlation_benchmark import (
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
 from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE
 from examples.arcade_visual_sign_reader import render_state_frame
-from zeromodel import VPMPolicyLookup
-from zeromodel.artifact import VPMValidationError
-from zeromodel.video_local_correlation import (
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.core.artifact import VPMValidationError
+from research.video.video_local_correlation import (
     LocalCorrelationCalibration,
     LocalCorrelationVideoAddressProvider,
     LocalRegionSpec,
     local_region_digest,
 )
-from zeromodel.visual_address import ImageObservation
-from zeromodel.visual_registration import RegistrationConfig
+from zeromodel.observation.visual_address import ImageObservation
+from zeromodel.vision.visual_registration import RegistrationConfig
 
 
 def _regions() -> tuple[LocalRegionSpec, ...]:

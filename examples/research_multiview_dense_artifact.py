@@ -3,7 +3,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from zeromodel import ScoreTable, ViewProfile, build_views, to_bundle, write_png, write_svg
+from zeromodel.core.artifact import ScoreTable
+from zeromodel.core.bundle import to_bundle
+from zeromodel.core.render import (
+    write_png,
+    write_svg,
+)
+from zeromodel.core.views import (
+    ViewProfile,
+    build_views,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]

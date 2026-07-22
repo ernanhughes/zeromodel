@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from zeromodel import LayoutRecipe, ScoreTable, build_vpm
-from zeromodel.phos import guarded_pack_artifact, pack_artifact
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    build_vpm,
+)
+from zeromodel.analysis.phos import guarded_pack_artifact, pack_artifact
 
 
 def _artifact():

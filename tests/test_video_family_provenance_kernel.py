@@ -5,16 +5,16 @@ from typing import Any
 import numpy as np
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set.arcade_observation import render_row_frame
-from zeromodel.domains.video_action_set import family_provenance as provenance
-from zeromodel.domains.video_action_set import family_validation as validation
-from zeromodel.domains.video_action_set import frame_family_kernels as kernels
-from zeromodel.domains.video_action_set.observation_replay import (
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.arcade_observation import render_row_frame
+from zeromodel.video.domains.video_action_set import family_provenance as provenance
+from zeromodel.video.domains.video_action_set import family_validation as validation
+from zeromodel.video.domains.video_action_set import frame_family_kernels as kernels
+from zeromodel.video.domains.video_action_set.observation_replay import (
     replay_observation_operation_chain,
 )
-from zeromodel.domains.video_action_set.contracts import (
+from zeromodel.video.domains.video_action_set.contracts import (
     CONFLICTING_ACTION_SPLICE_VERSION,
     CRITICAL_COORDINATE_SET_VERSION,
     CRITICAL_EVIDENCE_CORRUPTION_VERSION,
@@ -27,8 +27,8 @@ from zeromodel.domains.video_action_set.contracts import (
     STALE_REPEATED_FRAME_VERSION,
     TARGET_REGION_ID,
 )
-from zeromodel.domains.video_action_set.pixel_digest import array_digest
-from zeromodel.domains.video_action_set.transformations import (
+from zeromodel.video.domains.video_action_set.pixel_digest import array_digest
+from zeromodel.video.domains.video_action_set.transformations import (
     _transformation_parameters,
 )
 

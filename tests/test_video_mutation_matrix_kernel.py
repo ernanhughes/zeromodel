@@ -4,8 +4,8 @@ from copy import deepcopy
 
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.domains.video_action_set import mutation_matrix
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set import mutation_matrix
 
 
 def _finding(

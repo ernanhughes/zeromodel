@@ -16,7 +16,7 @@ from time import perf_counter
 from typing import Callable, Sequence
 
 from arcade_shooter_policy import ACTIONS, compile_policy_artifact
-from zeromodel import VPMPolicyLookup
+from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def _time(

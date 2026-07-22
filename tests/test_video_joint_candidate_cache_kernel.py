@@ -6,23 +6,23 @@ from typing import Any
 import numpy as np
 import pytest
 
-import zeromodel.video_discriminative_joint_evidence as joint
-import zeromodel.video_prospective_providers as providers
-from zeromodel import (
-    ImageObservation,
+import research.evidence.video_discriminative_joint_evidence as joint
+import research.video.video_prospective_providers as providers
+from research.evidence.video_discriminative_joint_evidence import (
     JointEvidenceRegionSpec,
     build_joint_candidate_masks,
     build_pairwise_discriminative_masks,
 )
-from zeromodel.video_complete_row_evidence import build_semantic_top_set_outcome
-from zeromodel.video_complete_row_evidence import build_complete_row_evidence
-from zeromodel.video_prospective_providers import (
+from zeromodel.observation.visual_address import ImageObservation
+from research.evidence.video_complete_row_evidence import build_semantic_top_set_outcome
+from research.evidence.video_complete_row_evidence import build_complete_row_evidence
+from research.video.video_prospective_providers import (
     PROSPECTIVE_P3_VERSION,
     clear_prospective_provider_caches,
     score_all_rows_optimized,
     score_all_rows_reference,
 )
-from zeromodel.visual_registration import RegistrationConfig
+from zeromodel.vision.visual_registration import RegistrationConfig
 
 
 POLICY_ARTIFACT_ID = "sha256:policy"

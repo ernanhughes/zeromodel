@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel import LearningObservation, build_learning_vpm
-from zeromodel.artifact import VPMValidationError
+from zeromodel.analysis.learning import (
+    LearningObservation,
+    build_learning_vpm,
+)
+from zeromodel.core.artifact import VPMValidationError
 
 
 def test_learning_vpm_requires_train_heldout_and_regression_evidence() -> None:

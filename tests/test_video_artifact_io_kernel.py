@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from zeromodel.domains.video_action_set import artifact_io
+from zeromodel.video.domains.video_action_set import artifact_io
 
 
 def test_json_jsonl_and_csv_bytes_match_pre_extraction_goldens(tmp_path: Path) -> None:

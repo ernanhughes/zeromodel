@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.artifact import VPMValidationError
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.core.artifact import VPMValidationError
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

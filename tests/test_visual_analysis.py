@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from zeromodel.visual_address import VisualAddressDecision
-from zeromodel.visual_analysis import (
+from zeromodel.observation.visual_address import VisualAddressDecision
+from research.visual.visual_analysis import (
     EXPLORATORY_TEST_REUSE_WARNING,
     GLOBAL_SCORE_THRESHOLD_CURVE_TYPE,
     analyze_trace_sets,
@@ -9,7 +9,7 @@ from zeromodel.visual_analysis import (
     paired_top1_outcomes,
     trace_points,
 )
-from zeromodel.visual_experiment import (
+from research.visual.visual_experiment import (
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
     IMPOSSIBILITY_CONTROL,

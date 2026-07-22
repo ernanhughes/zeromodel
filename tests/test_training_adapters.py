@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import json
 
-from zeromodel import build_training_progress_vpm
-from zeromodel.adapters import (
+from zeromodel.analysis.training import build_training_progress_vpm
+from zeromodel.analysis.adapters import (
     checkpoints_from_jsonl,
     checkpoints_from_tensorboard_scalars,
     checkpoints_from_trackio_export,

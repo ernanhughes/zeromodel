@@ -6,8 +6,8 @@ from typing import Any
 
 import pytest
 
-import zeromodel.video_action_set_benchmark as benchmark
-from zeromodel.domains.video_action_set import provider_measurement as measurement
+import research.benchmarks.video_action_set_benchmark as benchmark
+from zeromodel.video.domains.video_action_set import provider_measurement as measurement
 
 
 pytestmark = pytest.mark.integration

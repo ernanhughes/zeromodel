@@ -3,8 +3,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from zeromodel.artifact import VPMValidationError
-from zeromodel.visual_registration import RegistrationConfig, register_integer_translation
+from zeromodel.core.artifact import VPMValidationError
+from zeromodel.vision.visual_registration import RegistrationConfig, register_integer_translation
 
 
 def _frame() -> np.ndarray:

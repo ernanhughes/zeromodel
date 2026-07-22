@@ -6,13 +6,13 @@ import sys
 
 import pytest
 
-from zeromodel.visual_local_baselines import (
+from research.visual.visual_local_baselines import (
     RegisteredPixelCandidate,
     RegisteredPixelAddressProvider,
     build_registered_pixel_candidates_v2,
     select_registered_pixel_candidate_v2,
 )
-from zeromodel.visual_registration import RegistrationConfig, RegistrationResult
+from zeromodel.vision.visual_registration import RegistrationConfig, RegistrationResult
 
 
 def _load_module(name: str, relative: str):

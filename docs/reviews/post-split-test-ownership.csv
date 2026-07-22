@@ -1,0 +1,140 @@
+source_dir,file,classification,arcade_fixture_type,auto_tagged_integration,flags,notes
+tests,test_analyze_package_inventory.py,repository architecture/tooling,n/a,no,,Loads scripts/analyze_package_inventory.py; asserts import-graph determinism and CSV/JSON output shape.
+tests,test_content_identity.py,production unit,n/a,no,,zeromodel.core.content_identity digest stability/order-independence using ImageObservation fixtures.
+tests,test_criticality_verification_example.py,production unit,full arcade closed-world proof,no,,Exhaustively iterates all 112 tank/target/cooldown states via VPMPolicyLookup; runs examples/criticality_verification.py.
+tests,test_installed_wheel_video_instrument.py,needs splitting: repository architecture/tooling + obsolete,n/a,yes (exact filename match),needs splitting;obsolete,Test 2 imports zeromodel.video_prospective_providers/zeromodel.video_action_set_benchmark - confirmed ModuleNotFoundError under current layout.
+tests,test_package_boundaries.py,repository architecture/tooling,n/a,no,,Loads scripts/check_package_boundaries.py; asserts 6-package manifest and absence of zeromodel/__init__.py.
+tests,test_release_package_metadata.py,repository architecture/tooling,n/a,no,,Loads scripts/validate_release_candidate.py; validates version sync across the 6 distributions.
+tests,test_research_readiness_fixtures.py,production unit (zeromodel-analysis),n/a,no,,build_training_progress_vpm against tensorboard/wandb/trackio/jsonl fixtures + core bundle/render round-trip.
+tests,test_test_tier_commands_kernel.py,repository architecture/tooling,n/a,no,,Asserts exact text of scripts/run_fast_tests.py, runbook doc, conftest.py, CI workflow YAML.
+tests,test_video_action_set_benchmark.py,research benchmark,full arcade closed-world proof,yes (prefix),,research.benchmarks.video_action_set_benchmark; freeze/build split counts, sealed-plan invariants.
+tests,test_video_action_set_claim_quarantine.py,research evidence,n/a,yes (prefix),,Pure doc/JSON assertions on claim-status docs - no code under test.
+tests,test_video_action_set_family_reachability.py,research benchmark,full arcade closed-world proof,yes (prefix),,Episode-family registry completeness over the canonical 112-row universe.
+tests,test_video_action_set_family_semantics.py,research benchmark,full arcade closed-world proof,yes (prefix),,Legacy-collision detection over the canonical 112-row universe.
+tests,test_video_action_set_instrument.py,research benchmark,full arcade closed-world proof,yes (prefix),,freeze_benchmark -> build_split -> audit_evidence_completeness/verify_instrument pipeline.
+tests,test_video_action_set_reference_verification.py,research benchmark,full arcade closed-world proof,yes (prefix),,Full-benchmark 8-gate verification; 93-case adversarial mutation matrix (one @slow).
+tests,test_video_artifact_io_kernel.py,production unit,n/a,no,duplicate-suspect (vs packages/video/tests),artifact_io byte-exact JSON/JSONL/CSV goldens.
+tests,test_video_artifact_layout_kernel.py,production unit,n/a,no,duplicate-suspect,artifact_layout canonical path registry - frozen layout paths.
+tests,test_video_build_orchestration_kernel.py,research benchmark,n/a (mocked),no,,research.video_action_set.build_orchestration; asserts exact call order via monkeypatched fakes.
+tests,test_video_cli_kernel.py,needs splitting: research benchmark + repository architecture/tooling,n/a,no,needs splitting,CLI dispatch tests are research; test_removed_root_benchmark_module_is_not_a_compatibility_surface is a repo-architecture invariant.
+tests,test_video_complete_row_evidence.py,research evidence,n/a,no,,quantization/112-row requirement/semantic-outcome tie logic - generic.
+tests,test_video_control_history_planning.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen digests computed from arcade rows + benchmark-alias delegation check.
+tests,test_video_discriminative_evidence.py,research evidence,n/a (toy fixtures),yes (exact filename match),,Generic mask/digest/registration math on synthetic arrays; one @slow.
+tests,test_video_discriminative_joint_evidence.py,research evidence,n/a (toy fixtures),no,,Pairwise-mask symmetry/non-negativity on synthetic 2x2 images.
+tests,test_video_discriminative_joint_provider.py,research evidence,n/a (toy fixtures),no,,JointEvidenceProvider tie-safety/determinism, synthetic images.
+tests,test_video_discriminative_provider.py,research evidence,n/a (toy fixtures),no,,DiscriminativeEvidenceProvider exact/candidate-set/oversized-set logic.
+tests,test_video_episode_family_kernel.py,production unit,n/a,no,duplicate-suspect,episode_families registry/contract lookup; frozen registry digest.
+tests,test_video_episode_materialization.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen per-family observation digests from real arcade plans.
+tests,test_video_episode_plan_rmdto.py,needs splitting: production unit + production package,n/a,no,needs splitting,test_core_runtime_import_remains_sqlalchemy_free is a package-isolation invariant; also a shared helper module imported by other test files.
+tests,test_video_episode_plan_sql_store.py,production cross-package integration,generic invariant,yes (exact filename match + self pytestmark),,video DTOs persisted via zeromodel.persistence.sqlalchemy (2 distributions).
+tests,test_video_episode_planning_kernel.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen split summaries pinned to the real arcade benchmark.
+tests,test_video_evidence_audit_kernel.py,research evidence,n/a,no,,research.evidence.evidence_audit; phase-access counting, synthetic payloads.
+tests,test_video_family_intervention_planning.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen intervention/sequence digests for 8 named arcade cases.
+tests,test_video_family_provenance_kernel.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen splice/critical-corruption digests from 3 named arcade rows.
+tests,test_video_final_access_kernel.py,needs splitting: production unit + production cross-package integration,n/a,no,needs splitting;duplicate-suspect,CLI-subprocess tests reach zeromodel.persistence.sqlalchemy.video_action_set_final_cli (video+sqlalchemy) but are not auto-tagged.
+tests,test_video_final_access_transactions.py,production unit (+ partial cross-package via parametrize),n/a,no,needs splitting;duplicate-suspect,Parametrized over in-memory store and sqlite-backed store; sqlite branch is video+sqlalchemy integration without a marker.
+tests,test_video_final_historical_authority.py,production unit,n/a,no,duplicate-suspect,Historical-authority digest verification, symlink rejection, tamper handling.
+tests,test_video_final_publication.py,production unit,n/a,no,duplicate-suspect,Windows-reserved filename rejection, receipt/publication-status boundary matrix.
+tests,test_video_final_schema_and_scripts.py,production cross-package integration,n/a,no,concern,"video+sqlalchemy schema versioning; exercises scripts/video-final-*.ps1 which invoke the now-removed zeromodel.video_action_set_final_admin_cli, so the hostile-input assertion likely passes for the wrong reason (module-not-found, not real rejection)."
+tests,test_video_identity_rmdto.py,production unit (+ 1 self-marked integration test),n/a,test_core_import_does_not_import_sqlalchemy is @pytest.mark.integration,duplicate-suspect,BenchmarkIdentityDTO frozen/hashable, in-memory store, runtime facade.
+tests,test_video_identity_sql_store.py,production cross-package integration,n/a,not in conftest set - relies on own pytestmark only,inconsistent-tagging,video+sqlalchemy identity persistence; unlike sibling SQL-store files this filename is not in INTEGRATION_TEST_FILES.
+tests,test_video_joint_candidate_cache_kernel.py,research benchmark,n/a (mostly synthetic),no,,LRU cache correctness/eviction for joint-candidate scoring across architectures A3-D3.
+tests,test_video_materialization_kernels.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,apply_frame_plan/frame_descriptor frozen digests and signature contract.
+tests,test_video_materialization_reachability.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen reachability-tile digest and next-row trace.
+tests,test_video_materialization_validation.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Control-record validation status precedence, family-closure report digest.
+tests,test_video_mutation_audit_kernel.py,research evidence,n/a (synthetic),no,,research.video_action_set.mutation_audit; 93-case registry identity.
+tests,test_video_mutation_filesystem_kernel.py,research evidence,n/a,no,,research.video_action_set.mutation_filesystem; content-addressed directory snapshot.
+tests,test_video_mutation_matrix_kernel.py,research evidence,n/a (synthetic),no,,research.video_action_set.mutation_matrix; schema/count freezing.
+tests,test_video_mutation_orchestration_kernel.py,research evidence,n/a,no,,research.video_action_set.mutation_orchestration; monkeypatched baseline-failure/error handling.
+tests,test_video_observation_provenance_kernel.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen operation-chain digests for valid/gap/stale/splice/critical cases.
+tests,test_video_observation_rmdto.py,production unit,n/a,no,duplicate-suspect,Observation DTO round-trip, in-memory store; shared helper module for other test files.
+tests,test_video_observation_sql_store.py,production cross-package integration,n/a,yes (exact filename match + self pytestmark),,video+sqlalchemy: blob dedup, FK rejection, set-based batch loader, memory/SQL parity.
+tests,test_video_observation_universe_kernel.py,production unit,full arcade closed-world proof,no,,Exhaustive 112-row canonical universe; 8640-parameter transformation universe.
+tests,test_video_prospective_providers.py,research benchmark,full arcade closed-world proof,yes (exact filename match),,Complete 112-row evidence from P1/P2/P3 over the real canonical prototypes.
+tests,test_video_prospective_runtime_equivalence.py,research benchmark,n/a,yes (exact filename match),,Single @slow test verifying P1-P3 provider-runtime equivalence.
+tests,test_video_provider_observation_boundary.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,Frozen provider-observation descriptor/digest for valid and information_control plans.
+tests,test_video_public_imports.py,production package,n/a,no,,Confirms VideoFrame/VideoPolicyReader etc. are exported from the video package's public surface.
+tests,test_video_reachability_composition_kernel.py,production unit,generic invariant w/ arcade golden values,no,duplicate-suspect,7 frozen trace-digest variants computed from the real reachability tile.
+tests,test_video_reference_verification_kernel.py,research evidence,n/a,no,,research.video_action_set.reference_verification; 112-synthetic-row reconstruction.
+tests,test_video_report_rendering_kernel.py,production unit (supports research reporting),n/a,no,,report_rendering exact README/report text goldens; module has no filesystem/scientific imports.
+tests,test_video_runtime_profiling_kernel.py,research evidence,n/a,no,,research.video_action_set.runtime_profiling; frame-selection ordering/limits, mocked perf_counter.
+tests,test_video_source.py,production unit,n/a (no arcade coupling),no,,VideoFrame/InMemoryVideoFrameSource invariants.
+tests,test_video_transformation_kernel.py,production unit,n/a (no arcade coupling),no,duplicate-suspect,transformations module; frozen contract/parameter/output-byte goldens on generic np.arange arrays.
+tests,test_video_verification_orchestration_kernel.py,research evidence,n/a,no,,research.video_action_set.verification_orchestration; gate-order preservation (monkeypatched).
+tests,test_visual_analysis.py,research benchmark,n/a,no,,research.visual.visual_analysis/visual_experiment; trace-point contract, threshold curves.
+tests,test_visual_benchmark.py,research benchmark,n/a,no,,research.benchmarks.visual_benchmark; dataset manifest holdout/leakage rejection, Wilson interval.
+tests,test_visual_encoder.py,research benchmark,n/a,no,,research.visual.visual_encoder; encoder-manifest identity/tamper rejection.
+tests,test_visual_evidence_impact.py,repository architecture/tooling,n/a,no,,Loads scripts/check_visual_evidence_impact.py; CI guard for evidence-doc changes.
+tests,test_visual_local_baseline_result_records.py,research evidence,full arcade closed-world proof,yes (exact filename match),,Runs arcade_visual_local_baseline_showdown.py's full arcade dataset build; @slow.
+tests,test_visual_local_baselines.py,needs splitting: research evidence (closed-world) + research benchmark (generic),mixed,yes (exact filename match),needs splitting,2 @slow tests build the full arcade dataset; 3rd test is a generic sort-key unit test with no arcade dependency.
+tests,test_visual_registered_calibration_v2.py,needs splitting: research evidence (closed-world) + research benchmark (generic),mixed,yes (exact filename match),needs splitting,2 @slow tests build the full arcade local-evidence dataset; 3rd test (tie-break) is generic.
+tests,test_visual_registration.py,research benchmark,n/a,no,,research.visual.visual_registration; integer-translation recovery, pure numpy, no arcade.
+tests,test_visual_result_records.py,research evidence,n/a,yes (exact filename match),misnamed,"Despite the name, verifies a recovery-manifest checksum and runs arcade_visual_system_b_adjudication.py; unrelated to ""result records"" as a concept."
+tests,test_visual_retrieval.py,research benchmark,n/a,no,,research.visual.visual_retrieval; medoid/all-example prototype builds, vector/linear-probe matching.
+tests/integration,test_video_finalization_authorized_observations.py,production cross-package integration,n/a,yes (path + self pytestmark),,video+sqlalchemy: final-observation writability by access state.
+tests/integration,test_video_finalization_cli_scripts.py,obsolete,n/a,yes (path + self pytestmark),obsolete,"All subprocess invocations target flat zeromodel.video_action_set_final_cli/_admin_cli - confirmed ModuleNotFoundError under current layout."
+tests/integration,test_video_finalization_executor_publication.py,production cross-package integration,n/a,yes (path + self pytestmark),,video+sqlalchemy: untrusted-executor-row rejection, atomic real-filesystem promotion.
+tests/integration,test_video_finalization_failure_injection.py,misplaced - production unit,n/a,yes (path only - no sqlalchemy usage),misplaced,Uses only InMemoryVideoActionSetStore; no zeromodel.persistence.sqlalchemy import anywhere.
+tests/integration,test_video_finalization_historical_evaluator.py,misplaced - production unit,n/a,yes (path only - no sqlalchemy usage),misplaced,Historical-authority binding rejection; no sqlalchemy import.
+tests/integration,test_video_finalization_package_boundary.py,obsolete,n/a,yes (path + self pytestmark),obsolete,"Builds a wheel then imports zeromodel/video_action_set_final_cli.py, zeromodel/domains/video_action_set/final_access_service.py - all confirmed absent from current layout."
+tests/integration,test_video_finalization_reconstruction.py,obsolete,n/a,yes (path + self pytestmark),obsolete,"Imports zeromodel.db.runtime, zeromodel.domains.video_action_set.final_access_dto/final_claims/final_publication/final_reconstruction - all confirmed nonexistent; every test in the file is broken."
+tests/integration,test_video_finalization_schema_authority.py,production cross-package integration,n/a,yes (path + self pytestmark),,video+sqlalchemy: fresh/zero-byte authority init, malformed/partial-schema fail-closed.
+tests/integration,test_video_finalization_sqlite_concurrency.py,production cross-package integration,n/a,yes (path + self pytestmark),,video+sqlalchemy: file-sqlite CAS-winner races across separate connections.
+integration_tests,test_package_integration_smoke.py,production cross-package integration,n/a,NO - should be,conftest-gap,"The one true 6-distribution smoke test (core/analysis/observation/vision/video/sqlalchemy). Not auto-tagged: conftest.py checks exact path part ""integration"", but this file's directory is ""integration_tests"" - a real conftest matching gap."
+packages/analysis,test_analysis_api_isolation_wheel.py,production package,n/a,n/a (not root-suite collected),,"Subprocess import-isolation (forbids observation/vision/video/sqlalchemy/torch/PIL) + wheel-zip content check via ANALYSIS_WHEEL_PATH. Boundary clean."
+packages/analysis,test_analysis_capabilities.py,production unit,n/a,n/a,,compare/compose/controller/edge/hierarchy/phos via zeromodel.core.artifact. Boundary clean.
+packages/analysis,test_critic.py,production unit,n/a,n/a,,zeromodel.analysis.critic + core.artifact only.
+packages/analysis,test_learning.py,production unit,n/a,n/a,,zeromodel.analysis.learning + core only.
+packages/analysis,test_manifold.py,production unit,n/a,n/a,,zeromodel.analysis.manifold/spatial + core only.
+packages/analysis,test_patterns.py,production unit,n/a,n/a,,zeromodel.analysis.patterns; statistical/determinism kill-condition tests.
+packages/analysis,test_phos.py,production unit,n/a,n/a,,analysis.phos + core only.
+packages/analysis,test_policy_diagnostics.py,production unit,n/a,n/a,,analysis.policy_diagnostics + core.artifact/policy_lookup.
+packages/analysis,test_policy_properties.py,production unit,n/a,n/a,,analysis.policy_diagnostics/policy_properties + core.artifact/bundle/policy_lookup.
+packages/analysis,test_spatial.py,production unit,n/a,n/a,,analysis.spatial + core.artifact only.
+packages/analysis,test_training.py,production unit,n/a,n/a,,analysis.training + core.artifact only.
+packages/analysis,test_training_adapters.py,production unit,n/a,n/a,,analysis.training + analysis.adapters (jsonl/tensorboard/wandb/trackio parsers).
+packages/core,test_artifact_kernel.py,production unit,n/a,n/a,,Core-only; includes a hardcoded golden artifact_id hash regression check.
+packages/core,test_core_api_isolation_wheel.py,production package,n/a,n/a,,"Import-isolation subprocess (forbids analysis/observation/vision/video/persistence/sqlalchemy/torch/PIL) + wheel-zip check via CORE_WHEEL_PATH."
+packages/core,test_matrix_blob.py,production unit,n/a,n/a,,Core-only (MatrixBlob).
+packages/core,test_policy_lookup_lua.py,production unit,n/a,n/a,,"Core-only; one test shells out to an external lua interpreter as an oracle, skips if not installed."
+packages/core,test_policy_transitions.py,production unit,n/a,n/a,,Core-only (PolicyTransitionSpec).
+packages/core,test_views_bundle_render.py,production unit,n/a,n/a,,Core-only (ViewProfile/ViewSet/bundle/png/svg rendering).
+packages/observation,test_deployment_binding.py,production unit,n/a,n/a,,observation + core.artifact.VPMValidationError only.
+packages/observation,test_observation_api_isolation.py,production package,n/a,n/a,,"Public-__all__ shape check + subprocess import-isolation via OBSERVATION_WHEEL_PATH; wheel-content zip check actually lives in the next file."
+packages/observation,test_visual_address_contracts.py,mixed: production unit (majority) + production package (last test),n/a,n/a,,"Bulk is ImageObservation/VisualAddressContract unit tests; final function does the wheel-zip namespace check via OBSERVATION_WHEEL_PATH."
+packages/sqlalchemy,test_sqlalchemy_package_isolation.py,mixed: production package (1st test) + production cross-package integration (rest),n/a,n/a,missing-wheel-path-env,"1st test is genuine isolation/__all__-surface check via PYTHONPATH subprocess (not a built wheel - no SQLALCHEMY_WHEEL_PATH anywhere, unlike every sibling package). Remaining 4 tests genuinely exercise core+video+sqlalchemy together (expected/intentional given declared deps, not a boundary violation) but structurally unlike every other package's isolation file."
+packages/video,test_action_set_store.py,production unit,n/a,n/a,,video + core.artifact/matrix_blob only.
+packages/video,test_frame_and_clip.py,production unit,n/a,n/a,,video + core.artifact only.
+packages/video,test_import_isolation_and_wheel.py,production package,n/a,n/a,,"Import-isolation subprocess (forbidden set correctly excludes observation, a declared video dependency) + wheel-zip check via VIDEO_WHEEL_PATH."
+packages/video,test_temporal_policy.py,production unit,n/a,n/a,,video + core (policy_lookup/policy_transitions) + observation - all declared deps, clean.
+packages/vision,test_deterministic_visual_runtime.py,mixed: production unit (majority) + production package (last 2 tests),n/a,n/a,,"Core body: VisualFeatureSpec/build_visual_index/VisualSignReader/VisualPolicyReader using core+observation only. Last 2 functions: subprocess isolation smoke test + wheel-zip namespace check via VISION_WHEEL_PATH."
+research/video_action_set,test_arcade_shooter_baseline_comparison.py,research benchmark,full arcade closed-world proof,n/a,hidden-runtime-regression,"Collects fine (dynamic importlib load inside test body) but calls demo.ACTIONS/TinyArcadeShooter/compile_policy_artifact/state_row_id/_action_values which no longer exist in the rewritten examples/arcade_shooter_policy.py stub - will raise AttributeError at runtime."
+research/video_action_set,test_arcade_shooter_example.py,research benchmark,full arcade closed-world proof,n/a,hidden-runtime-regression,Same dynamic-load pattern; calls demo.compile_policy_artifact()/demo.state_row_id() which do not exist in the stub.
+research/video_action_set,test_arcade_shooter_exhaustive.py,research benchmark (incidental packages/core coverage),full arcade closed-world proof,n/a,hidden-runtime-regression,"Same dynamic-load pattern, same AttributeError risk; exhaustively exercises packages/core bundle/policy-lookup round-trip over the full 7x8x2 state space."
+research/video_action_set,test_arcade_visual_address_benchmark.py,research benchmark,full arcade closed-world proof,n/a,,"Dataset construction (family holdout controls, rejection sets) and two-system (A/B) benchmark with FAR/FRR metrics."
+research/video_action_set,test_arcade_visual_local_baseline_postanalysis.py,research evidence,generic invariant,n/a,,"_gate_bucket/_decoupled_selection_key helpers tested with synthetic decision-dict fixtures, unrelated to arcade specifics."
+research/video_action_set,test_arcade_visual_local_baseline_showdown.py,research benchmark (slow),full arcade closed-world proof,n/a,,"@pytest.mark.slow (registered marker); full showdown comparison harness producing bundle/reference/atlas artifacts."
+research/video_action_set,test_arcade_visual_registered_calibration_v2.py,research benchmark (slow),full arcade closed-world proof,n/a,,"@pytest.mark.slow; registered-calibration-v2 harness producing candidate-grid/risk-coverage artifacts."
+research/video_action_set,test_video_action_equivalence_audit.py,obsolete (collection error),n/a,n/a,stale import,"ImportError transitively via research/video_action_set/arcade_visual_action_equivalence_audit.py:13 -> examples.arcade_shooter_policy.compile_policy_artifact missing."
+research/video_action_set,test_video_action_equivalence_bounded_measurements.py,obsolete (collection error),n/a,n/a,stale import,Same transitive ImportError path as above.
+research/video_action_set,test_video_action_equivalence_evidence_closure.py,obsolete (collection error),n/a,n/a,stale import,Direct + transitive ImportError for compile_policy_artifact.
+research/video_action_set,test_video_action_equivalence_inventory.py,obsolete (collection error),n/a,n/a,stale import,Transitive ImportError via arcade_visual_action_equivalence_audit.py.
+research/video_action_set,test_video_action_equivalence_top1.py,obsolete (collection error),n/a,n/a,stale import,Direct ImportError for compile_policy_artifact.
+research/video_action_set,test_video_benchmark_facade.py,repository architecture/tooling (collection error),n/a,n/a,syntax error;needs splitting,"Line 14 literal typo 'xfrom' -> SyntaxError. Underneath: missing artifact_io import (NameError) and parents[1] REPO_ROOT miscalculation. All 5 tests are architecture/facade-layering checks, none arcade-specific despite location."
+research/video_action_set,test_video_discriminative_benchmark.py,obsolete (collection error),n/a,n/a,stale import,ImportError transitively via examples/arcade_visual_video_discriminative_evidence_benchmark.py:23.
+research/video_action_set,test_video_discriminative_measurement_audit.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_discriminative_representation_audit.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_discriminative_v2_benchmark.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_discriminative_v2_integrity.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_discriminative_v2_selection.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_discriminative_v3_benchmark.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_discriminative_v3_self_retrieval.py,obsolete (collection error),n/a,n/a,stale import,Same transitive path.
+research/video_action_set,test_video_local_correlation.py,obsolete (collection error),n/a,n/a,stale import,Direct ImportError for ACTIONS/ShooterConfig/compile_policy_artifact.
+research/video_action_set,test_video_policy.py,needs splitting (collection error blocks all),n/a,n/a,stale import;needs splitting,"Direct ImportError. 10 of 11 test functions are generic VideoPolicyReader invariants (belong in packages/video/tests); only 1 (exact canonical video reproduction) is a full closed-world proof."
+research/video_action_set,test_video_policy_reachability.py,obsolete (collection error),n/a,n/a,stale import,Transitive ImportError via arcade_visual_action_equivalence_audit.py.
+research/video_action_set,test_video_provider_measurement_kernel.py,obsolete - marker config gap (collection error),n/a,n/a,marker-registration gap,"Imports clean; fails only because pytestmark = pytest.mark.research is never registered (root pyproject.toml/conftest.py register only integration and slow) under --strict-markers."
+research/video_action_set,test_video_provider_measurement_real.py,obsolete - marker config gap (collection error),n/a,n/a,marker-registration gap,Same marker-registration gap as above.
+research/video_action_set,test_video_split_progress_kernel.py,obsolete - marker config gap (collection error),n/a,n/a,marker-registration gap,Same marker-registration gap as above.
+research/video_action_set,test_video_verification_closure_kernel.py,needs splitting (collection error),n/a,n/a,stale import/path;needs splitting,"FileNotFoundError: parents[1] REPO_ROOT miscalculation looks for research/video_action_set/scripts/check_architecture.py (does not exist) instead of repo-root scripts/check_architecture.py. Mixes generic synthetic closure-logic unit tests with duplicate architecture-layering tests also found in test_video_benchmark_facade.py."
+research/video_action_set,test_visual_local_evidence_benchmark.py,research benchmark,n/a,n/a,,v2 vs v3 dataset digest determinism/disjointness; required evidence-family coverage checks.
+research/video_action_set,test_visual_system_b.py,research evidence,n/a,n/a,,"build_system_b_candidates/select_system_b_operating_point/validate_selection_records determinism; touches core's VPMValidationError as a thin contact point."

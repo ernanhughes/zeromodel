@@ -8,7 +8,9 @@ from zeromodel.persistence.sqlalchemy.db.session import (
     initialize_finalization_authority,
     verify_finalization_authority,
 )
-from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
+from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import (
+    SqlAlchemyVideoActionSetStore,
+)
 
 
 def build_sqlite_runtime(

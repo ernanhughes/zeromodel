@@ -3,14 +3,17 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import cast
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_text
-from zeromodel.video.domains.video_action_set.contracts import BENCHMARK_VERSION, GENERATOR_VERSION
+from zeromodel.video.domains.video_action_set.contracts import (
+    BENCHMARK_VERSION,
+    GENERATOR_VERSION,
+)
 from zeromodel.video.domains.video_action_set.dto import CanonicalJsonDTO
 from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
@@ -19,7 +22,9 @@ from zeromodel.video.domains.video_action_set.observation_dto import (
     ObservationOperationDTO,
     ProviderObservationDescriptorDTO,
 )
-from zeromodel.video.domains.video_action_set.store import raise_observation_sequence_conflict
+from zeromodel.video.domains.video_action_set.store import (
+    raise_observation_sequence_conflict,
+)
 from zeromodel.core.matrix_blob import MatrixBlob
 from zeromodel.persistence.sqlalchemy.db.orm.video_action_set import (
     EpisodePlanORM,
@@ -50,7 +55,9 @@ def to_matrix_blob(row: MatrixBlobORM) -> MatrixBlob:
         raise VPMValidationError("matrix blob byte length mismatch")
     return MatrixBlob(
         dtype=row.dtype,
-        shape=_json_value(row.shape_json, "matrix blob shape mismatch"),
+        shape=cast(
+            Sequence[int], _json_value(row.shape_json, "matrix blob shape mismatch")
+        ),
         data=row.data,
         scale=row.scale,
         zero_point=row.zero_point,
@@ -387,14 +394,17 @@ def observation_select(
     has_pixels: bool | None,
 ):
     statement = select(ObservationORM)
-    predicates = optional_observation_predicates(
-        benchmark_seed_digest=benchmark_seed_digest,
-        split=split,
-        episode_id=episode_id,
-        family=family,
-        event_type=event_type,
-        denominator_class=denominator_class,
-        has_pixels=has_pixels,
+    predicates = cast(
+        tuple[Any, ...],
+        optional_observation_predicates(
+            benchmark_seed_digest=benchmark_seed_digest,
+            split=split,
+            episode_id=episode_id,
+            family=family,
+            event_type=event_type,
+            denominator_class=denominator_class,
+            has_pixels=has_pixels,
+        ),
     )
     if predicates:
         statement = statement.where(*predicates)

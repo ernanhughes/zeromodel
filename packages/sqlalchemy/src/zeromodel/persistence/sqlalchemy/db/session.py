@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import Engine, create_engine, event, inspect, select, text
@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from zeromodel.persistence.sqlalchemy.db.orm.base import Base
-from zeromodel.persistence.sqlalchemy.db.orm import video_action_set as _video_action_set_orm
+from zeromodel.persistence.sqlalchemy.db.orm import (
+    video_action_set as _video_action_set_orm,
+)
 
 
 FINALIZATION_SCHEMA_VERSION = "zeromodel-video-finalization-schema/v1"
@@ -123,7 +125,9 @@ def initialize_finalization_authority(engine: Engine) -> None:
                 authority_id=FINALIZATION_AUTHORITY_ID,
                 schema_version=FINALIZATION_SCHEMA_VERSION,
                 authority_kind=FINALIZATION_AUTHORITY_KIND,
-                created_utc=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                created_utc=datetime.now(timezone.utc)
+                .isoformat()
+                .replace("+00:00", "Z"),
             )
         )
     verify_finalization_authority(engine)

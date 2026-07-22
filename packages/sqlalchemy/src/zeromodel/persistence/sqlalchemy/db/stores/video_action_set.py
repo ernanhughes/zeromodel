@@ -696,7 +696,9 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
             raise VPMValidationError(
                 "final access requires a dedicated finalization database"
             )
-        from zeromodel.persistence.sqlalchemy.db.session import verify_finalization_authority
+        from zeromodel.persistence.sqlalchemy.db.session import (
+            verify_finalization_authority,
+        )
 
         verify_finalization_authority(self._finalization_engine)
 

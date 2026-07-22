@@ -1,0 +1,71 @@
+name: sqlalchemy-package
+
+on:
+  push:
+    paths:
+      - "packages/core/**"
+      - "packages/observation/**"
+      - "packages/video/**"
+      - "packages/sqlalchemy/**"
+      - "scripts/check_package_boundaries.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/sqlalchemy-package.yml"
+  pull_request:
+    paths:
+      - "packages/core/**"
+      - "packages/observation/**"
+      - "packages/video/**"
+      - "packages/sqlalchemy/**"
+      - "scripts/check_package_boundaries.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/sqlalchemy-package.yml"
+
+jobs:
+  validate-sqlalchemy:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine pytest ruff mypy numpy "SQLAlchemy>=2.0,<3"
+      - name: Build dependency and SQLAlchemy wheels
+        run: |
+          python -m build packages/core
+          python -m twine check packages/core/dist/*
+          python -m build packages/observation
+          python -m twine check packages/observation/dist/*
+          python -m build packages/video
+          python -m twine check packages/video/dist/*
+          python -m build packages/sqlalchemy
+          python -m twine check packages/sqlalchemy/dist/*
+      - name: Lint and type-check SQLAlchemy package
+        run: |
+          python -m ruff check packages/sqlalchemy/src packages/sqlalchemy/tests
+          python -m ruff format --check packages/sqlalchemy/src packages/sqlalchemy/tests
+          python -m mypy packages/sqlalchemy/src
+      - name: Check package boundaries
+        run: python scripts/check_package_boundaries.py
+      - name: Install wheels in clean environment
+        shell: pwsh
+        run: |
+          python -m venv build/sqlalchemy-ci-venv
+          $python = "build/sqlalchemy-ci-venv/Scripts/python.exe"
+          & $python -m pip install --upgrade pip
+          & $python -m pip install pytest
+          & $python -m pip install packages/core/dist/zeromodel-1.0.13-py3-none-any.whl
+          & $python -m pip install packages/observation/dist/zeromodel_observation-1.0.13-py3-none-any.whl
+          & $python -m pip install packages/video/dist/zeromodel_video-1.0.13-py3-none-any.whl
+          & $python -m pip install packages/sqlalchemy/dist/zeromodel_sqlalchemy-1.0.13-py3-none-any.whl
+          & $python -m pip check
+          & $python -m pytest -q packages/sqlalchemy/tests
+      - name: Verify installed import locations
+        shell: pwsh
+        run: |
+          $python = "build/sqlalchemy-ci-venv/Scripts/python.exe"
+          & $python -c "import inspect, zeromodel.core, zeromodel.video, zeromodel.persistence.sqlalchemy as zsql; print(inspect.getfile(zeromodel.core)); print(inspect.getfile(zeromodel.video)); print(inspect.getfile(zsql))"

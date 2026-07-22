@@ -6,9 +6,13 @@ import argparse
 import json
 from pathlib import Path
 
-from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.runtime import (
+    build_finalization_sqlite_runtime,
+)
 from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
-from zeromodel.video.domains.video_action_set.final_access_dto import validate_final_identifier
+from zeromodel.video.domains.video_action_set.final_access_dto import (
+    validate_final_identifier,
+)
 from zeromodel.video.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
 )
@@ -48,4 +52,4 @@ def main(argv: list[str] | None = None) -> None:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

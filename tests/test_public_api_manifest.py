@@ -45,7 +45,7 @@ def test_manifest_has_the_required_columns() -> None:
     ]
 
 
-def test_manifest_contains_all_six_distributions() -> None:
+def test_manifest_contains_all_nine_distributions() -> None:
     rows = _read_manifest_rows()
     distributions = {row["distribution"] for row in rows}
     assert distributions == {
@@ -55,6 +55,9 @@ def test_manifest_contains_all_six_distributions() -> None:
         "zeromodel-vision",
         "zeromodel-video",
         "zeromodel-sqlalchemy",
+        "zeromodel-artifacts",
+        "zeromodel-trust",
+        "zeromodel-navigation",
     }
 
 
@@ -77,6 +80,9 @@ def test_manifest_is_not_a_placeholder() -> None:
         "zeromodel.vision",
         "zeromodel.video",
         "zeromodel.persistence.sqlalchemy",
+        "zeromodel.artifacts",
+        "zeromodel.trust",
+        "zeromodel.navigation",
     ],
 )
 def test_every_actual_all_symbol_appears_exactly_once(namespace: str) -> None:

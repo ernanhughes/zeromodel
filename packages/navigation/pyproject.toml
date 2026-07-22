@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zeromodel-navigation"
+version = "1.0.13"
+description = "ZeroModel finite, deterministic artifact-corpus hierarchy compiler and traversal engine"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Ernan Hughes", email = "ernanhughes@gmail.com"}]
+keywords = [
+    "visual-policy-map",
+    "vpm",
+    "hierarchy",
+    "traversal",
+    "navigation",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "numpy>=1.23",
+    "zeromodel==1.0.13",
+    "zeromodel-artifacts==1.0.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/ernanhughes/zeromodel"
+Repository = "https://github.com/ernanhughes/zeromodel"
+Documentation = "https://ernanhughes.github.io/zeromodel/"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["zeromodel.navigation*"]

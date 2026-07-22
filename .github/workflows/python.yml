@@ -180,16 +180,16 @@ jobs:
           python -m pip install -q --upgrade pip
           python -m pip install -q build twine
 
-      - name: Build source and wheel distributions for all six packages
+      - name: Build source and wheel distributions for all nine packages
         run: |
           set -e
-          for pkg in core analysis observation vision video sqlalchemy; do
+          for pkg in core analysis observation vision video sqlalchemy artifacts trust navigation; do
             python -m build "packages/$pkg"
           done
 
       - name: Check distribution metadata
         run: |
           set -e
-          for pkg in core analysis observation vision video sqlalchemy; do
+          for pkg in core analysis observation vision video sqlalchemy artifacts trust navigation; do
             python -m twine check "packages/$pkg/dist/"*
           done

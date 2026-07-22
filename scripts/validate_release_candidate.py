@@ -86,6 +86,39 @@ PACKAGES = {
         },
         "depends_on": ("core", "video", "observation"),
     },
+    "artifacts": {
+        "path": Path("packages/artifacts"),
+        "distribution": "zeromodel-artifacts",
+        "wheel_stem": "zeromodel_artifacts",
+        "namespace": "zeromodel.artifacts",
+        "requires": {"numpy>=1.23", f"zeromodel=={VERSION}"},
+        "depends_on": ("core",),
+    },
+    "trust": {
+        "path": Path("packages/trust"),
+        "distribution": "zeromodel-trust",
+        "wheel_stem": "zeromodel_trust",
+        "namespace": "zeromodel.trust",
+        "requires": {
+            "numpy>=1.23",
+            "cryptography>=41",
+            f"zeromodel=={VERSION}",
+            f"zeromodel-artifacts=={VERSION}",
+        },
+        "depends_on": ("core", "artifacts"),
+    },
+    "navigation": {
+        "path": Path("packages/navigation"),
+        "distribution": "zeromodel-navigation",
+        "wheel_stem": "zeromodel_navigation",
+        "namespace": "zeromodel.navigation",
+        "requires": {
+            "numpy>=1.23",
+            f"zeromodel=={VERSION}",
+            f"zeromodel-artifacts=={VERSION}",
+        },
+        "depends_on": ("core", "artifacts"),
+    },
 }
 PUBLIC_API_CSV_COLUMNS = [
     "distribution",

@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "fff9c3e694ee3f85f518bbdb1aa3c23b99aedeea",
+  "baseline_commit": "216b5150ad314ffcfccebd809ffdd88ac5231e3b",
   "edges": [
     {
       "imported": "examples.arcade_shooter_policy",
@@ -709,7 +709,7 @@
     },
     "scripts.check_quality": {
       "classification": "tooling",
-      "lines": 156,
+      "lines": 177,
       "path": "scripts/check_quality.py",
       "target_namespace": ""
     },
@@ -733,13 +733,13 @@
     },
     "scripts.run_fast_tests": {
       "classification": "tooling",
-      "lines": 158,
+      "lines": 161,
       "path": "scripts/run_fast_tests.py",
       "target_namespace": ""
     },
     "scripts.validate_release_candidate": {
       "classification": "tooling",
-      "lines": 615,
+      "lines": 648,
       "path": "scripts/validate_release_candidate.py",
       "target_namespace": ""
     },
@@ -859,7 +859,7 @@
     },
     "tests.test_fast_suite_completeness": {
       "classification": "tooling",
-      "lines": 100,
+      "lines": 106,
       "path": "tests/test_fast_suite_completeness.py",
       "target_namespace": ""
     },
@@ -883,13 +883,13 @@
     },
     "tests.test_package_boundaries": {
       "classification": "tooling",
-      "lines": 40,
+      "lines": 43,
       "path": "tests/test_package_boundaries.py",
       "target_namespace": ""
     },
     "tests.test_public_api_manifest": {
       "classification": "tooling",
-      "lines": 140,
+      "lines": 146,
       "path": "tests/test_public_api_manifest.py",
       "target_namespace": ""
     },
@@ -907,7 +907,7 @@
     },
     "tests.test_release_package_metadata": {
       "classification": "tooling",
-      "lines": 32,
+      "lines": 35,
       "path": "tests/test_release_package_metadata.py",
       "target_namespace": ""
     },
@@ -1333,7 +1333,7 @@
     },
     "tests.test_workspace_ci_invariants": {
       "classification": "tooling",
-      "lines": 97,
+      "lines": 107,
       "path": "tests/test_workspace_ci_invariants.py",
       "target_namespace": ""
     },
@@ -1354,7 +1354,7 @@
     },
     {
       "importer": "tests.test_public_api_manifest",
-      "line": 101,
+      "line": 107,
       "target": "<non-literal importlib.import_module>"
     }
   ]

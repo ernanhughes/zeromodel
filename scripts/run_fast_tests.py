@@ -21,7 +21,7 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 MARKER_EXPRESSION = "not slow and not external and not research"
 
 # The canonical production fast suite: the two repository-wide test roots
-# plus every one of the six package-local suites. A package cannot silently
+# plus every one of the package-local suites. A package cannot silently
 # disappear from this list without a reviewer noticing the diff.
 TEST_ROOTS = [
     "tests",
@@ -32,6 +32,9 @@ TEST_ROOTS = [
     "packages/vision/tests",
     "packages/video/tests",
     "packages/sqlalchemy/tests",
+    "packages/artifacts/tests",
+    "packages/trust/tests",
+    "packages/navigation/tests",
 ]
 
 REPORT_PATH = REPO_ROOT / "build" / "reports" / "fast-test-summary.json"

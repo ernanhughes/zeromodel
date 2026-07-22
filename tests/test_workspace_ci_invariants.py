@@ -20,9 +20,19 @@ def _all_workflow_files() -> list[Path]:
     return sorted(WORKFLOWS_DIR.glob("*.yml"))
 
 
-def test_requirements_dev_installs_all_six_packages_editable() -> None:
+def test_requirements_dev_installs_all_nine_packages_editable() -> None:
     text = (REPO_ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
-    for package in ("core", "analysis", "observation", "vision", "video", "sqlalchemy"):
+    for package in (
+        "core",
+        "analysis",
+        "observation",
+        "vision",
+        "video",
+        "sqlalchemy",
+        "artifacts",
+        "trust",
+        "navigation",
+    ):
         assert f"-e ./packages/{package}" in text, (
             f"missing editable install for {package}"
         )

@@ -28,6 +28,12 @@ FORMAT_LINT_PATHS = [
     Path("packages/video/tests"),
     Path("packages/sqlalchemy/src"),
     Path("packages/sqlalchemy/tests"),
+    Path("packages/artifacts/src"),
+    Path("packages/artifacts/tests"),
+    Path("packages/trust/src"),
+    Path("packages/trust/tests"),
+    Path("packages/navigation/src"),
+    Path("packages/navigation/tests"),
     Path("integration_tests"),
 ]
 
@@ -40,6 +46,9 @@ TYPING_PATHS = [
     Path("packages/vision/src/zeromodel/vision/__init__.py"),
     Path("packages/video/src"),
     Path("packages/sqlalchemy/src"),
+    Path("packages/artifacts/src"),
+    Path("packages/trust/src"),
+    Path("packages/navigation/src"),
 ]
 
 QUALITY_LIMIT_PATHS = [
@@ -56,6 +65,12 @@ QUALITY_LIMIT_PATHS = [
     Path("packages/video/tests"),
     Path("packages/sqlalchemy/src"),
     Path("packages/sqlalchemy/tests"),
+    Path("packages/artifacts/src"),
+    Path("packages/artifacts/tests"),
+    Path("packages/trust/src"),
+    Path("packages/trust/tests"),
+    Path("packages/navigation/src"),
+    Path("packages/navigation/tests"),
 ]
 
 
@@ -121,6 +136,9 @@ def main() -> int:
             "packages/vision/src",
             "packages/video/src",
             "packages/sqlalchemy/src",
+            "packages/artifacts/src",
+            "packages/trust/src",
+            "packages/navigation/src",
         ],
     )
     run_step(
@@ -133,6 +151,9 @@ def main() -> int:
             "packages/vision/src",
             "packages/video/src",
             "packages/sqlalchemy/src",
+            "packages/artifacts/src",
+            "packages/trust/src",
+            "packages/navigation/src",
         ],
     )
     run_step(

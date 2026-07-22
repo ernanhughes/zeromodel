@@ -5,7 +5,7 @@
     "passed": 107,
     "returncode": 0,
     "skipped": 0,
-    "summary_line": "==================== 107 passed, 776 deselected in 44.32s ====================="
+    "summary_line": "=============== 107 passed, 840 deselected in 61.51s (0:01:01) ================"
   },
   "installed_wheel_smoke_result_by_package": {
     "analysis": {
@@ -46,7 +46,15 @@
       "passed": 65,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "============================= 65 passed in 0.98s =============================="
+      "summary_line": "============================= 65 passed in 4.43s =============================="
+    },
+    "artifacts": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 12,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "============================= 12 passed in 0.48s =============================="
     },
     "core": {
       "errors": 0,
@@ -54,7 +62,15 @@
       "passed": 20,
       "returncode": 0,
       "skipped": 1,
-      "summary_line": "======================== 20 passed, 1 skipped in 0.41s ========================"
+      "summary_line": "======================== 20 passed, 1 skipped in 1.19s ========================"
+    },
+    "navigation": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 21,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "============================= 21 passed in 0.45s =============================="
     },
     "observation": {
       "errors": 0,
@@ -62,7 +78,7 @@
       "passed": 32,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "============================= 32 passed in 0.35s =============================="
+      "summary_line": "============================= 32 passed in 0.74s =============================="
     },
     "sqlalchemy": {
       "errors": 0,
@@ -70,7 +86,15 @@
       "passed": 6,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "============================== 6 passed in 3.27s =============================="
+      "summary_line": "============================== 6 passed in 5.28s =============================="
+    },
+    "trust": {
+      "errors": 0,
+      "failed": 0,
+      "passed": 31,
+      "returncode": 0,
+      "skipped": 0,
+      "summary_line": "============================= 31 passed in 0.47s =============================="
     },
     "video": {
       "errors": 0,
@@ -78,7 +102,7 @@
       "passed": 24,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "============================= 24 passed in 0.47s =============================="
+      "summary_line": "============================= 24 passed in 1.32s =============================="
     },
     "vision": {
       "errors": 0,
@@ -86,7 +110,7 @@
       "passed": 10,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "============================= 10 passed in 0.35s =============================="
+      "summary_line": "============================= 10 passed in 0.69s =============================="
     }
   },
   "research": {
@@ -95,10 +119,10 @@
   },
   "source_tree_fast_production_tests": {
     "errors": 0,
-    "failed": 0,
-    "passed": 538,
-    "returncode": 0,
+    "failed": 1,
+    "passed": 57,
+    "returncode": 1,
     "skipped": 0,
-    "summary_line": "==================== 538 passed, 187 deselected in 36.29s ====================="
+    "summary_line": "================ 1 failed, 57 passed, 187 deselected in 8.67s ================="
   }
 }

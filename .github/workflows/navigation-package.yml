@@ -1,0 +1,66 @@
+name: navigation-package
+
+on:
+  push:
+    paths:
+      - "packages/core/**"
+      - "packages/artifacts/**"
+      - "packages/navigation/**"
+      - "scripts/check_package_boundaries.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/navigation-package.yml"
+  pull_request:
+    paths:
+      - "packages/core/**"
+      - "packages/artifacts/**"
+      - "packages/navigation/**"
+      - "scripts/check_package_boundaries.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/navigation-package.yml"
+
+jobs:
+  validate-navigation:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine pytest ruff mypy numpy
+      - name: Build dependency and Navigation wheels
+        run: |
+          python -m build packages/core
+          python -m twine check packages/core/dist/*
+          python -m build packages/artifacts
+          python -m twine check packages/artifacts/dist/*
+          python -m build packages/navigation
+          python -m twine check packages/navigation/dist/*
+      - name: Lint and type-check Navigation package
+        run: |
+          python -m ruff check packages/navigation/src packages/navigation/tests
+          python -m ruff format --check packages/navigation/src packages/navigation/tests
+          python -m mypy packages/navigation/src
+      - name: Check package boundaries
+        run: python scripts/check_package_boundaries.py
+      - name: Install wheels in clean environment
+        shell: pwsh
+        run: |
+          python -m venv build/navigation-ci-venv
+          $python = "build/navigation-ci-venv/Scripts/python.exe"
+          & $python -m pip install --upgrade pip
+          & $python -m pip install pytest
+          & $python -m pip install packages/core/dist/zeromodel-1.0.13-py3-none-any.whl
+          & $python -m pip install packages/artifacts/dist/zeromodel_artifacts-1.0.13-py3-none-any.whl
+          & $python -m pip install packages/navigation/dist/zeromodel_navigation-1.0.13-py3-none-any.whl
+          & $python -m pip check
+          & $python -m pytest -q packages/navigation/tests
+      - name: Verify installed import locations
+        shell: pwsh
+        run: |
+          $python = "build/navigation-ci-venv/Scripts/python.exe"
+          & $python -c "import inspect, zeromodel.core, zeromodel.artifacts, zeromodel.navigation; print(inspect.getfile(zeromodel.core)); print(inspect.getfile(zeromodel.artifacts)); print(inspect.getfile(zeromodel.navigation))"

@@ -15,18 +15,21 @@ sys.modules[SPEC.name] = runner
 SPEC.loader.exec_module(runner)
 
 
-SIX_PACKAGE_TEST_ROOTS = [
+NINE_PACKAGE_TEST_ROOTS = [
     "packages/core/tests",
     "packages/analysis/tests",
     "packages/observation/tests",
     "packages/vision/tests",
     "packages/video/tests",
     "packages/sqlalchemy/tests",
+    "packages/artifacts/tests",
+    "packages/trust/tests",
+    "packages/navigation/tests",
 ]
 
 
-def test_every_six_package_test_root_is_passed_to_pytest() -> None:
-    for root in SIX_PACKAGE_TEST_ROOTS:
+def test_every_nine_package_test_root_is_passed_to_pytest() -> None:
+    for root in NINE_PACKAGE_TEST_ROOTS:
         assert root in runner.TEST_ROOTS, f"{root} is missing from the canonical fast suite"
 
 
@@ -47,6 +50,9 @@ def test_package_local_suite_cannot_silently_shrink() -> None:
         "packages/vision/tests",
         "packages/video/tests",
         "packages/sqlalchemy/tests",
+        "packages/artifacts/tests",
+        "packages/trust/tests",
+        "packages/navigation/tests",
     ]
 
 

@@ -52,3 +52,27 @@ source_root = "packages/sqlalchemy/src"
 depends_on = ["core", "video"]
 publishable = true
 owned_prefixes = ["zeromodel.persistence.sqlalchemy"]
+
+[packages.artifacts]
+distribution = "zeromodel-artifacts"
+namespace = "zeromodel.artifacts"
+source_root = "packages/artifacts/src"
+depends_on = ["core"]
+publishable = true
+owned_prefixes = ["zeromodel.artifacts"]
+
+[packages.trust]
+distribution = "zeromodel-trust"
+namespace = "zeromodel.trust"
+source_root = "packages/trust/src"
+depends_on = ["core", "artifacts"]
+publishable = true
+owned_prefixes = ["zeromodel.trust"]
+
+[packages.navigation]
+distribution = "zeromodel-navigation"
+namespace = "zeromodel.navigation"
+source_root = "packages/navigation/src"
+depends_on = ["core", "artifacts"]
+publishable = true
+owned_prefixes = ["zeromodel.navigation"]

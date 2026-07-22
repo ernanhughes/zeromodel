@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   package-integration:
-    name: six-package release candidate / Python ${{ matrix.python-version }}
+    name: nine-package release candidate / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

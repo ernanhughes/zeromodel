@@ -9,6 +9,9 @@ pythonpath = [
     "packages/vision/src",
     "packages/video/src",
     "packages/sqlalchemy/src",
+    "packages/artifacts/src",
+    "packages/trust/src",
+    "packages/navigation/src",
     ".",
 ]
 addopts = "--strict-markers"
@@ -25,5 +28,5 @@ line-length = 88
 
 [tool.mypy]
 python_version = "3.10"
-mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/video/src", "packages/sqlalchemy/src"]
+mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/video/src", "packages/sqlalchemy/src", "packages/artifacts/src", "packages/trust/src", "packages/navigation/src"]
 explicit_package_bases = true

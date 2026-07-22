@@ -13,7 +13,7 @@ sys.modules[SPEC.name] = checker
 SPEC.loader.exec_module(checker)
 
 
-def test_boundary_manifest_defines_all_six_packages() -> None:
+def test_boundary_manifest_defines_all_nine_packages() -> None:
     manifest = checker.load_manifest()
 
     assert set(manifest["packages"]) == {
@@ -23,6 +23,9 @@ def test_boundary_manifest_defines_all_six_packages() -> None:
         "vision",
         "video",
         "sqlalchemy",
+        "artifacts",
+        "trust",
+        "navigation",
     }
     assert manifest["release_version"] == "1.0.13"
 

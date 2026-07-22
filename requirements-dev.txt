@@ -4,6 +4,9 @@
 -e ./packages/vision
 -e ./packages/video
 -e ./packages/sqlalchemy
+-e ./packages/artifacts
+-e ./packages/trust
+-e ./packages/navigation
 
 build
 twine
@@ -11,6 +14,7 @@ pytest
 pytest-cov
 ruff
 mypy
+cryptography>=41
 tomli>=2; python_version < "3.11"
 
 # Required by examples/render_signs_demo.py (image/GIF asset generation).

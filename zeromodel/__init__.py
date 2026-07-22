@@ -305,9 +305,7 @@ from .video_action_equivalence import (
 )
 
 
-__version__ = "1.0.11"
-
-
+__version__ = "1.0.12"
 __all__ = [
     "BenchmarkSystemResult",
     "CANONICAL_METRICS",

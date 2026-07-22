@@ -8,6 +8,7 @@ from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_
     run_evaluate,
     run_verify,
 )
+
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
 from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE
 from examples.arcade_visual_sign_reader import render_state_frame

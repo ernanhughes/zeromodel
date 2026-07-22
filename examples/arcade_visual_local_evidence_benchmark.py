@@ -1,4 +1,5 @@
 """Fresh v3 local-evidence benchmark for bounded visual-address research."""
+# ruff: noqa: E402
 from __future__ import annotations
 
 import json
@@ -7,6 +8,10 @@ import sys
 from typing import Any, Dict, Mapping, Tuple
 
 import numpy as np
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_address_benchmark import ArcadeBenchmarkDataset  # noqa: E402
@@ -36,10 +41,6 @@ from research.visual.visual_corruptions import (  # noqa: E402
 )
 from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL  # noqa: E402
 
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 SOURCE_SCOPE = "arcade-visual-local-evidence-v3"
 PROTOCOL_VERSION = "zeromodel-visual-local-evidence-protocol/v1"

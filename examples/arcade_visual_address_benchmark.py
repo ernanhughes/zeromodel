@@ -11,18 +11,26 @@ Run:
     python examples/arcade_visual_address_benchmark.py --encoder dinov2
     python examples/arcade_visual_address_benchmark.py --output-dir build/visual-phase-one
 """
+# ruff: noqa: E402
+
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import json
 from pathlib import Path
 import sys
-from typing import Any, Dict, Mapping, Tuple
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from examples.arcade_shooter_policy import ACTIONS
+from zeromodel.core.policy_lookup import VPMPolicyLookup
+from dataclasses import dataclass
+from typing import Any, Dict, Mapping, Tuple
 import numpy as np
 
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
+from examples.arcade_shooter_policy import ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_sign_reader import (  # noqa: E402
     CELL_PIXELS,
     FRAME_HEIGHT,
@@ -38,7 +46,6 @@ from zeromodel.video.arcade_policy import (
 )
 
 from zeromodel.analysis.policy_properties import decode_key_value_row_id
-from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.observation.visual_address import ImageObservation
 from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider
 from research.visual.visual_dataset import (
@@ -74,11 +81,6 @@ from research.visual.visual_retrieval import (  # noqa: E402
     build_linear_probe,
     build_vector_address,
 )
-
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 SOURCE_SCOPE = "arcade-visual-system-b-adjudication/v2"
 

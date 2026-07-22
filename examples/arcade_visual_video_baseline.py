@@ -11,6 +11,9 @@ from pathlib import Path
 import sys
 from typing import Any, Optional, Tuple
 from zeromodel.core.policy_lookup import VPMPolicyLookup
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 from zeromodel.video.arcade_policy import (  # noqa: E402
     ACTIONS,
     ShooterConfig,
@@ -28,9 +31,6 @@ from zeromodel.video.video import InMemoryVideoFrameSource  # noqa: E402
 from zeromodel.video.video_policy import VideoPolicyReader  # noqa: E402
 from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider  # noqa: E402
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 def _next_rows(
     tank_x: int,

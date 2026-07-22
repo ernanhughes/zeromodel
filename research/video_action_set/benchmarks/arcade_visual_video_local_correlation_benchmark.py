@@ -14,6 +14,10 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_local_evidence_benchmark import (  # noqa: E402
     SOURCE_SCOPE as FRAME_SOURCE_SCOPE,
@@ -47,10 +51,6 @@ from research.visual.visual_local_baselines import (  # noqa: E402
     select_registered_pixel_candidate_v2,
 )
 from research.visual.visual_registration import RegistrationConfig  # noqa: E402
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-policy-reader-v1"
 BENCHMARK_VERSION = "zeromodel-video-policy-reader-stage2/v1"

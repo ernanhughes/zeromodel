@@ -1,0 +1,7 @@
+distribution,namespace,exported_symbol,owning_module,reason_public
+zeromodel,zeromodel.core,__all__,zeromodel.core,explicit package public API
+zeromodel-analysis,zeromodel.analysis,__all__,zeromodel.analysis,explicit package public API
+zeromodel-observation,zeromodel.observation,__all__,zeromodel.observation,explicit package public API
+zeromodel-vision,zeromodel.vision,__all__,zeromodel.vision,explicit package public API
+zeromodel-video,zeromodel.video,__all__,zeromodel.video,explicit package public API
+zeromodel-sqlalchemy,zeromodel.persistence.sqlalchemy,__all__,zeromodel.persistence.sqlalchemy,explicit package public API

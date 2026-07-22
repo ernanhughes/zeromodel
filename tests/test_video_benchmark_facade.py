@@ -7,13 +7,11 @@ from pathlib import Path
 import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
-from zeromodel.video.domains.video_action_set import (
-    artifact_io,
-    build_orchestration,
-    mutation_filesystem,
-    mutation_orchestration,
-    verification_orchestration,
-)
+import research.video_action_set.build_orchestration as build_orchestration
+import research.video_action_set.mutation_filesystem as mutation_filesystem
+import research.video_action_set.mutation_orchestration as mutation_orchestration
+import research.video_action_set.verification_orchestration as verification_orchestration
+from zeromodel.video.domains.video_action_set import artifact_io
 from research.video_action_set.video_action_set_cli import main
 
 
@@ -43,7 +41,7 @@ def test_benchmark_is_direct_alias_compatibility_surface() -> None:
 
 
 def test_benchmark_facade_contains_no_function_implementations() -> None:
-    path = REPO_ROOT / "zeromodel" / "video_action_set_benchmark.py"
+    path = REPO_ROOT / "research" / "benchmarks" / "video_action_set_benchmark.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
     assert [node.name for node in tree.body if isinstance(node, ast.FunctionDef)] == [
         "_profiling_records",

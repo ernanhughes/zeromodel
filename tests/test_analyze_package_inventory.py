@@ -26,9 +26,12 @@ def test_inventory_rows_cover_unique_modules_and_allowed_classifications() -> No
     assert all(
         row["target_distribution"] and row["target_namespace"]
         for row in rows
-        if row["classification"] in {"core", "analysis", "observation", "vision", "video", "sqlalchemy"}
+        if row["classification"]
+        in {"core", "analysis", "observation", "vision", "video", "sqlalchemy"}
     )
-    assert all(row["blocking_questions"] for row in rows if row["classification"] == "undecided")
+    assert all(
+        row["blocking_questions"] for row in rows if row["classification"] == "undecided"
+    )
 
 
 def test_import_graph_is_deterministic_with_fixed_timestamp() -> None:
@@ -37,8 +40,11 @@ def test_import_graph_is_deterministic_with_fixed_timestamp() -> None:
 
     assert first == second
     assert first["schema_version"] == 1
-    assert "zeromodel.artifact" in first["modules"]
-    assert all({"importer", "imported", "line", "kind", "resolved"} <= set(edge) for edge in first["edges"])
+    assert "examples.arcade_shooter_policy" in first["modules"]
+    assert all(
+        {"importer", "imported", "line", "kind", "resolved"} <= set(edge)
+        for edge in first["edges"]
+    )
 
 
 def test_write_outputs_emit_parseable_csv_and_json() -> None:

@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
-from zeromodel.analysis.arcade_policy import ShooterConfig, compile_policy_artifact
+from zeromodel.video.arcade_policy import ShooterConfig, compile_policy_artifact
 from zeromodel.video.domains.video_action_set import arcade_observation
 from zeromodel.video.domains.video_action_set import observation_universe as universe
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256

@@ -1,0 +1,210 @@
+{
+  "artifacts": [
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel-1.0.13.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23"
+      ],
+      "distribution": "zeromodel",
+      "filename": "zeromodel-1.0.13-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "3caac617a704050bfbd4ff7d2537c84c7e8eb9518c8df5b03dcdc138c750e169",
+      "size": 29208,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel-1.0.13"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23"
+      ],
+      "distribution": "zeromodel",
+      "filename": "zeromodel-1.0.13.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "7dcfaf05abe714fd66cf1d80a729b4688f46c5fb1b0400dca8f6f22b8bfe63cf",
+      "size": 29917,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_analysis-1.0.13.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-analysis",
+      "filename": "zeromodel_analysis-1.0.13-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "1bc85512ba0db8000f8f47ade6b3c3fe7a8782076a44ae53167b57cc6aa28da0",
+      "size": 49108,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_analysis-1.0.13"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-analysis",
+      "filename": "zeromodel_analysis-1.0.13.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "cc662e72a8b39538b9432e6554c24bad35a5d09b94dde69257cc83a73fd4ea40",
+      "size": 51811,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_observation-1.0.13.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-observation",
+      "filename": "zeromodel_observation-1.0.13-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "6cdca297dab4539d655f9fef7404ae354c953bebf3461d530850d150c2303d89",
+      "size": 10845,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_observation-1.0.13"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-observation",
+      "filename": "zeromodel_observation-1.0.13.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "331d6eb73594403b75aed6df0100bd48d24a84b3e51530c6f8973afa806d57e3",
+      "size": 13686,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_vision-1.0.13.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.0.13",
+        "zeromodel-observation==1.0.13"
+      ],
+      "distribution": "zeromodel-vision",
+      "filename": "zeromodel_vision-1.0.13-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "171a49bdadbbfcd07e2b4de7e681762c867f340467e7705f44749f95d711b2f9",
+      "size": 13492,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_vision-1.0.13"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel-observation==1.0.13",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-vision",
+      "filename": "zeromodel_vision-1.0.13.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "b8310221bfcc4caeaf3f5c203e31d9335bb99b4f5f7e197e4359ab435c16b2ac",
+      "size": 17159,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_video-1.0.13.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.0.13",
+        "zeromodel-observation==1.0.13"
+      ],
+      "distribution": "zeromodel-video",
+      "filename": "zeromodel_video-1.0.13-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "b82a2392348ae01aa2b198d74405fee58806d24eb616f2a85721092ee4bca0b0",
+      "size": 128382,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_video-1.0.13"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel-observation==1.0.13",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-video",
+      "filename": "zeromodel_video-1.0.13.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "492885074108d98d6036df9abe57403a1a301b62b6a60f733d96e782e0f00c95",
+      "size": 101478,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_sqlalchemy-1.0.13.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "SQLAlchemy<3,>=2.0",
+        "zeromodel==1.0.13",
+        "zeromodel-video==1.0.13"
+      ],
+      "distribution": "zeromodel-sqlalchemy",
+      "filename": "zeromodel_sqlalchemy-1.0.13-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "70b7f075c9aa53d11f762020f43f5229365f72a0592542ac2367d35cee8c6415",
+      "size": 22344,
+      "version": "1.0.13"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_sqlalchemy-1.0.13"
+      ],
+      "direct_dependencies": [
+        "SQLAlchemy>=2.0,<3",
+        "numpy>=1.23",
+        "zeromodel-video==1.0.13",
+        "zeromodel==1.0.13"
+      ],
+      "distribution": "zeromodel-sqlalchemy",
+      "filename": "zeromodel_sqlalchemy-1.0.13.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "07af319dce6d2fd6b2310162b92cf6365811ff27ceb080676c61f23d372b209e",
+      "size": 22137,
+      "version": "1.0.13"
+    }
+  ],
+  "schema_version": 1,
+  "version": "1.0.13"
+}

@@ -2,7 +2,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from zeromodel.video.domains.video_action_set import build_orchestration as build
+from research.video_action_set import build_orchestration as build
 
 
 def test_freeze_benchmark_preserves_compile_save_seal_write_order(

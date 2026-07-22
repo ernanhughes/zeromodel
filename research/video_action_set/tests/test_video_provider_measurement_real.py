@@ -7,10 +7,10 @@ from typing import Any
 import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
-from zeromodel.video.domains.video_action_set import provider_measurement as measurement
+import research.video_action_set.provider_measurement as measurement
 
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.research
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

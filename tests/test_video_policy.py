@@ -21,7 +21,7 @@ from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.video import InMemoryVideoFrameSource, VideoFrame
 from zeromodel.video.video_policy import VideoPolicyReader
-from zeromodel.observation.visual_policy import DeterministicVisualAddressProvider
+from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider
 
 
 # The reader is immutable; sharing it avoids recompiling the 112-row visual index.

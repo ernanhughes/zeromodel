@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import shutil
 import sqlite3
@@ -34,6 +35,20 @@ from zeromodel.video.domains.video_action_set.final_access_service import FinalA
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _source_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        str(REPO_ROOT / path)
+        for path in (
+            "packages/core/src",
+            "packages/observation/src",
+            "packages/video/src",
+            "packages/sqlalchemy/src",
+        )
+    )
+    return env
 
 
 def _database_url(path: Path) -> str:
@@ -71,7 +86,7 @@ def test_synthetic_completion_uses_dedicated_sqlite_authority(
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_admin_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
             "observe",
             "--database-path",
             auth.database_path,
@@ -79,6 +94,7 @@ def test_synthetic_completion_uses_dedicated_sqlite_authority(
             receipt.access_id,
         ],
         cwd=REPO_ROOT,
+        env=_source_env(),
         check=False,
         capture_output=True,
         text=True,
@@ -173,7 +189,7 @@ def test_admin_cli_accepts_unicode_and_spaced_database_paths(tmp_path: Path) -> 
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_admin_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_admin_cli",
             "observe",
             "--database-path",
             str(path),
@@ -181,6 +197,7 @@ def test_admin_cli_accepts_unicode_and_spaced_database_paths(tmp_path: Path) -> 
             "final-access:missing",
         ],
         cwd=REPO_ROOT,
+        env=_source_env(),
         check=False,
         capture_output=True,
         text=True,

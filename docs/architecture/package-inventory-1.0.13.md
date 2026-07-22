@@ -1,6 +1,6 @@
 # ZeroModel 1.0.13 Package Inventory
 
-Baseline commit: `52be5f838e15d4b32a4fdf5a393762101afd2656`
+Baseline commit: `892511ea8e65a8704cf41d3fa217971cc4c6a36f`
 
 Generated artifacts:
 
@@ -10,16 +10,8 @@ Generated artifacts:
 
 ## Module Count By Classification
 
-- analysis: 26
-- core: 9
 - examples: 28
-- observation: 4
-- research: 11
-- split: 1
-- sqlalchemy: 9
-- tooling: 146
-- video: 69
-- vision: 10
+- tooling: 128
 
 ## Public Root API
 
@@ -43,6 +35,6 @@ The RMDTO target path is Runtime -> Facade -> Engine -> Service -> Store protoco
 
 Allowed target graph: analysis->core; observation->core; vision->observation/core; video->observation/core; sqlalchemy->video/core; research->any production package.
 
-Observed proposed classification graph: `{"analysis": ["core"], "core": ["analysis", "observation"], "observation": ["core", "vision"], "sqlalchemy": ["core", "video"], "video": ["analysis", "core", "observation", "sqlalchemy"], "vision": ["core", "observation"]}`.
+Observed proposed classification graph: `{}`.
 
-Forbidden proposed edge count: `18`.
+Forbidden proposed edge count: `0`.

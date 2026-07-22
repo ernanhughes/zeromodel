@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from decimal import ROUND_DOWN, ROUND_UP, getcontext, setcontext
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -47,6 +48,20 @@ from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSe
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _source_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        str(REPO_ROOT / path)
+        for path in (
+            "packages/core/src",
+            "packages/observation/src",
+            "packages/video/src",
+            "packages/sqlalchemy/src",
+        )
+    )
+    return env
 
 
 def test_final_authorization_state_machine_and_digest_chain(tmp_path: Path) -> None:
@@ -496,7 +511,7 @@ def test_cli_preflight_is_read_only_in_memory_validation(tmp_path: Path) -> None
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
             "--output-dir",
             auth.output_dir,
             "--authorization-file",
@@ -511,6 +526,7 @@ def test_cli_preflight_is_read_only_in_memory_validation(tmp_path: Path) -> None
             "--non-interactive",
         ],
         cwd=REPO_ROOT,
+        env=_source_env(),
         check=False,
         capture_output=True,
         text=True,
@@ -528,7 +544,7 @@ def test_cli_rejects_force_like_options(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "zeromodel.video_action_set_final_cli",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
             "--output-dir",
             str(tmp_path),
             "--authorization-file",
@@ -542,6 +558,7 @@ def test_cli_rejects_force_like_options(tmp_path: Path) -> None:
             "--force",
         ],
         cwd=REPO_ROOT,
+        env=_source_env(),
         check=False,
         capture_output=True,
         text=True,

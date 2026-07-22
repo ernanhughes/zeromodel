@@ -1861,7 +1861,16 @@ class DiscriminativeEvidenceProvider:
             critical_evidence_present=bool(best.aggregate_critical_contradiction <= self._calibration.maximum_critical_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON),
             matched_row_id=candidate_set.exact_row_id,
             exact_match=candidate_set.outcome == "exact_row_accepted",
-            accepted_by=tuple(name for name in _architecture_active_gates(self._calibration.architecture_id)[0]),
+            accepted_by=(
+                tuple(
+                    name
+                    for name in _architecture_active_gates(
+                        self._calibration.architecture_id
+                    )[0]
+                )
+                if candidate_set.outcome == "exact_row_accepted"
+                else ()
+            ),
             trace={},
         )
         trace = {

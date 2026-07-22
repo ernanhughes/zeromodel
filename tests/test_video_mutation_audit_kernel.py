@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 import research.benchmarks.video_action_set_benchmark as benchmark
-from zeromodel.video.domains.video_action_set import mutation_audit, mutation_matrix
+from research.video_action_set import mutation_audit, mutation_matrix
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
 
 

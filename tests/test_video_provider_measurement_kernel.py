@@ -11,8 +11,8 @@ from unittest.mock import patch
 import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
+import research.video_action_set.provider_measurement as measurement
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set import provider_measurement as measurement
 from research.video.video_prospective_providers import score_all_rows_reference
 
 

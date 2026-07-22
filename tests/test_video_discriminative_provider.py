@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from zeromodel.observation.visual_address import ImageObservation
-from research.evidence.video_discriminative_evidence import video_discriminative_evidence as zde
+import research.evidence.video_discriminative_evidence as zde
 from research.evidence.video_discriminative_evidence import (
     DiscriminativeEvidenceCalibration,
     DiscriminativeEvidenceProvider,

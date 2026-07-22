@@ -49,7 +49,7 @@ def main(argv: list[str] | None = None) -> None:
             "operator_identity": args.operator_identity,
             "unattended": bool(args.non_interactive),
             "request_payload": {
-                "cli": "zeromodel.video_action_set_final_cli",
+                "cli": "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
                 "preflight_only": bool(args.preflight_only),
             },
         }

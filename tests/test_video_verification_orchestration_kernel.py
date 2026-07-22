@@ -1,8 +1,6 @@
 from pathlib import Path
 
-from zeromodel.video.domains.video_action_set import (
-    verification_orchestration as verification,
-)
+import research.video_action_set.verification_orchestration as verification
 
 
 def test_reference_verification_preserves_gate_order(

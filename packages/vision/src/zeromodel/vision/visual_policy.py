@@ -110,7 +110,7 @@ class DeterministicVisualAddressProvider:
             ambiguity_measure=decision.distance_margin,
             matched_row_id=decision.matched_row_id,
             exact_match=decision.exact_feature_match,
-            accepted_by=tuple(checks),
+            accepted_by=tuple(checks) if decision.accepted else (),
             trace={
                 "observation": observation.to_descriptor(),
                 "legacy_visual_decision": decision.to_dict(),

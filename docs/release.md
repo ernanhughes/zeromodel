@@ -1,6 +1,28 @@
 # Release process
 
-ZeroModel releases use a two-phase PowerShell workflow:
+ZeroModel 1.0.13 uses a six-distribution release-candidate workflow before any
+publish, tag, or GitHub release action:
+
+```powershell
+python scripts/validate_release_candidate.py
+python scripts/run_fast_tests.py
+python scripts/check_quality.py
+```
+
+The validator builds and checks:
+
+- `zeromodel`
+- `zeromodel-analysis`
+- `zeromodel-observation`
+- `zeromodel-vision`
+- `zeromodel-video`
+- `zeromodel-sqlalchemy`
+
+It writes `docs/architecture/package-release-artifacts-1.0.13.json` and
+`docs/architecture/package-public-api-1.0.13.csv`. It does not upload to
+TestPyPI or PyPI, create tags, or create a GitHub release.
+
+Older single-package releases used a two-phase PowerShell workflow:
 
 ```text
 Prepare

@@ -590,6 +590,8 @@ class RegisteredPixelAddressProvider:
                     )
                     if ok
                 )
+                if accepted
+                else ()
             ),
             trace={
                 "raw_top1_row_id": raw_best.row_id,

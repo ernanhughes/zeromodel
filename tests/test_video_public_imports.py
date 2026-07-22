@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zeromodel.analysis.policy_transitions import (
+from zeromodel.core.policy_transitions import (
     PolicyTransitionEvidence,
     PolicyTransitionSpec,
     ROW_UNION_TRANSITION_SCOPE,

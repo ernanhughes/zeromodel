@@ -4,7 +4,9 @@
 
 A VPM is a deterministic spatial view over a table of scored items. It carries values, stable row and metric identifiers, a layout recipe, view ordering, source mapping, provenance, and deterministic identity.
 
-The package is now the clean ZeroModel 1.0 surface. There is no public `zeromodel.v2` namespace: import directly from `zeromodel`.
+The 1.0.13 release candidate is split into six namespace-package distributions.
+Import from the package namespaces directly; the legacy root compatibility surface
+is intentionally absent.
 
 Public claims are tracked in [`docs/claims-audit.md`](docs/claims-audit.md). Treat that file as the source of truth for what is validated, what is implemented with thin evidence, and what remains a roadmap claim.
 
@@ -16,19 +18,24 @@ Current GitHub install:
 python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
 ```
 
-After the production PyPI release is cut:
+For the 1.0.13 release candidate, install the pieces you need:
 
 ```bash
-python -m pip install zeromodel==1.0.12
+python -m pip install \
+  zeromodel==1.0.13 \
+  zeromodel-analysis==1.0.13 \
+  zeromodel-observation==1.0.13 \
+  zeromodel-vision==1.0.13 \
+  zeromodel-video==1.0.13 \
+  zeromodel-sqlalchemy==1.0.13
 ```
 
 For development:
 
 ```bash
-python -m pip install -e .[dev]
+python -m pip install -e packages/core -e packages/analysis -e packages/observation -e packages/vision -e packages/video -e packages/sqlalchemy
 python scripts/run_fast_tests.py
-python -m build
-python -m twine check dist/*
+python scripts/validate_release_candidate.py
 ```
 
 Release steps are documented in [`docs/release.md`](docs/release.md).
@@ -36,7 +43,7 @@ Release steps are documented in [`docs/release.md`](docs/release.md).
 ## Core artifact
 
 ```python
-from zeromodel import LayoutRecipe, ScoreTable, build_vpm
+from zeromodel.core import LayoutRecipe, ScoreTable, build_vpm
 
 score_table = ScoreTable(
     values=[[0.9, 0.2], [0.4, 0.8]],
@@ -65,33 +72,19 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 
 | Capability | Module |
 |---|---|
-| Immutable artifact kernel | `zeromodel.artifact` |
-| State-addressed policy lookup / sign reader | `zeromodel.policy_lookup` |
-| Q-policy criticality and decision-margin evidence | `zeromodel.policy_diagnostics` |
-| Exhaustive finite policy properties and linked verification artifacts | `zeromodel.policy_properties` |
-| Dense policy views over the same source table | `zeromodel.views` |
-| Spatially optimized view profiles | `zeromodel.spatial` |
-| Temporal decision manifolds | `zeromodel.manifold` |
-| Metric alias packing and score-table building | `zeromodel.metrics` |
-| PHOS sort-pack and guarded top-left concentration | `zeromodel.phos` |
-| Visual AND/OR/NOT/XOR/add/subtract | `zeromodel.compose` |
-| Baseline-vs-target differential comparison | `zeromodel.compare` |
-| Lossless `.vpm` bundle serialization | `zeromodel.bundle` |
-| Dependency-light PNG/SVG rendering | `zeromodel.render` |
-| Hierarchical pyramids | `zeromodel.hierarchy` |
-| Edge top-left gates | `zeromodel.edge` |
-| Trend-aware EDIT/RESAMPLE/ESCALATE/STOP/SPINOFF control | `zeromodel.controller` |
-| Before/after/held-out/regression learning traces | `zeromodel.learning` |
-| Model-training progress artifacts | `zeromodel.training` |
-| Tracker-export adapters | `zeromodel.adapters` |
-| Critic/evidence/policy risk artifacts | `zeromodel.critic` |
+| Immutable artifact kernel | `zeromodel.core` |
+| Analysis, views, spatial/manifold, policy diagnostics | `zeromodel.analysis` |
+| Observation DTOs and visual address contracts | `zeromodel.observation` |
+| Deterministic visual index and visual policy reader | `zeromodel.vision` |
+| Video policy, arcade fixture, video action-set DTOs/stores | `zeromodel.video` |
+| Explicit SQLAlchemy persistence runtime | `zeromodel.persistence.sqlalchemy` |
 
 ## Policy lookup: signs, not directions
 
 `VPMPolicyLookup` is the small 1.0 consumer behind the blog phrase “signs, not directions.” Rows are discretized runtime states, metric columns are candidate actions, and the consumer returns the winning action plus the exact VPM cell that produced it.
 
 ```python
-from zeromodel import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
+from zeromodel.core import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
 
 source = ScoreTable(
     values=[
@@ -139,13 +132,12 @@ decision margin = best action value - second-best action value
 Criticality estimates how consequential a poor choice could be. Decision margin measures how decisively the winner beats its nearest alternative. Describe the first metric as VIPER-style criticality only when the source values are Q-values or an equivalent consequence-bearing teacher signal.
 
 ```python
-from zeromodel import (
+from zeromodel.analysis import (
     PolicyPropertyChecker,
     PolicyPropertySpec,
-    VPMPolicyLookup,
-    build_vpm,
     with_q_diagnostics,
 )
+from zeromodel.core import VPMPolicyLookup, build_vpm
 
 ACTIONS = ("LEFT", "RIGHT", "STAY", "FIRE")
 
@@ -203,7 +195,7 @@ See [`docs/examples/criticality-verification.md`](docs/examples/criticality-veri
 A source table can contain many signals at once. A view profile is a policy lens over that dense table: turn up one set of metrics and the matching rows/columns become salient without changing the source evidence.
 
 ```python
-from zeromodel import ScoreTable, ViewProfile, build_view
+from zeromodel.core import ScoreTable, ViewProfile, build_view
 
 source = ScoreTable(
     values=[
@@ -235,7 +227,8 @@ See [`docs/examples/view-profiles.md`](docs/examples/view-profiles.md) and [`doc
 The spatial optimizer derives a `ViewProfile` for one explicit geometric objective: concentrate high-signal mass in the top-left inspection region.
 
 ```python
-from zeromodel import ScoreTable, SpatialOptimizer, build_optimized_view, optimize_view_profile
+from zeromodel.analysis import SpatialOptimizer, build_optimized_view, optimize_view_profile
+from zeromodel.core import ScoreTable
 
 source = ScoreTable(
     values=[
@@ -265,7 +258,8 @@ See [`docs/examples/spatial-optimizer.md`](docs/examples/spatial-optimizer.md) a
 A decision manifold turns a sequence of dense scored panels into optimized VPM frames, then surfaces where the spatial view changes most.
 
 ```python
-from zeromodel import ScoreTable, SpatialOptimizer, build_decision_manifold
+from zeromodel.analysis import SpatialOptimizer, build_decision_manifold
+from zeromodel.core import ScoreTable
 
 panels = [
     ScoreTable(
@@ -299,7 +293,8 @@ See [`docs/examples/decision-manifold.md`](docs/examples/decision-manifold.md) a
 ## PHOS and edge usage
 
 ```python
-from zeromodel import TopLeftGate, guarded_pack_artifact, write_png
+from zeromodel.analysis import TopLeftGate, guarded_pack_artifact
+from zeromodel.core import write_png
 
 packed = guarded_pack_artifact(artifact)
 write_png(packed.packed, "artifact_phos.png")
@@ -312,7 +307,7 @@ print(result.accepted, result.score)
 Tracking means a score moved. Learning means a feedback-driven change improves corrected work, transfers to held-out work, and avoids unacceptable regression.
 
 ```python
-from zeromodel import LearningObservation, build_learning_vpm
+from zeromodel.analysis import LearningObservation, build_learning_vpm
 
 assessment = build_learning_vpm([
     LearningObservation("claim-support", before=0.42, after=0.72, split="train"),

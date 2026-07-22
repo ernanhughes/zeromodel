@@ -53,8 +53,8 @@ from research.evidence.video_discriminative_joint_evidence import (
 )
 from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.observation.visual_address import ImageObservation
-from research.evidence.video_discriminative_evidence import video_discriminative_evidence as zde
-from research.evidence.video_discriminative_joint_evidence import video_discriminative_joint_evidence as zje
+import research.evidence.video_discriminative_evidence as zde
+import research.evidence.video_discriminative_joint_evidence as zje
 from zeromodel.core.artifact import VPMValidationError  # noqa: E402
 from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 
@@ -454,8 +454,8 @@ def _generator_identity_v2(benchmark: Stage3Benchmark) -> Dict[str, Any]:
         REPO_ROOT / "examples" / "arcade_visual_video_discriminative_evidence_benchmark.py",
         REPO_ROOT / "examples" / "arcade_visual_sign_reader.py",
         REPO_ROOT / "examples" / "arcade_shooter_policy.py",
-        REPO_ROOT / "zeromodel" / "video_discriminative_evidence.py",
-        REPO_ROOT / "zeromodel" / "visual_registration.py",
+        REPO_ROOT / "research" / "evidence" / "video_discriminative_evidence.py",
+        REPO_ROOT / "research" / "visual" / "visual_registration.py",
     ]
     file_digests = {str(path.relative_to(REPO_ROOT)).replace("\\", "/"): _file_blob_digest(path) for path in source_files}
     rows = _canonical_rows(ShooterConfig())
@@ -490,9 +490,9 @@ def _generator_identity_v3(benchmark: Stage3Benchmark) -> Dict[str, Any]:
         REPO_ROOT / "examples" / "arcade_visual_video_discriminative_evidence_benchmark.py",
         REPO_ROOT / "examples" / "arcade_visual_sign_reader.py",
         REPO_ROOT / "examples" / "arcade_shooter_policy.py",
-        REPO_ROOT / "zeromodel" / "video_discriminative_joint_evidence.py",
-        REPO_ROOT / "zeromodel" / "video_discriminative_evidence.py",
-        REPO_ROOT / "zeromodel" / "visual_registration.py",
+        REPO_ROOT / "research" / "evidence" / "video_discriminative_joint_evidence.py",
+        REPO_ROOT / "research" / "evidence" / "video_discriminative_evidence.py",
+        REPO_ROOT / "research" / "visual" / "visual_registration.py",
         REPO_ROOT / "docs" / "research" / "video-stage-three-v3-joint-evidence-amendment.md",
         REPO_ROOT / "docs" / "research" / "video-stage-three-v3-operational-contract.md",
     ]

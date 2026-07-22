@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set import mutation_filesystem
+from research.video_action_set import mutation_filesystem
 
 
 def test_directory_snapshot_is_ordered_and_content_addressed(tmp_path: Path) -> None:

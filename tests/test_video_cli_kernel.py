@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -9,6 +10,19 @@ import research.video_action_set.video_action_set_cli as cli
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _source_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join(
+        str(REPO_ROOT / path)
+        for path in (
+            "packages/core/src",
+            "packages/observation/src",
+            "packages/video/src",
+        )
+    )
+    return env
 
 
 @pytest.mark.parametrize(
@@ -145,7 +159,9 @@ def test_cli_rejects_progress_without_explicit_operation(
         cli.main()
 
 
-def test_benchmark_module_execution_remains_historically_inert(tmp_path: Path) -> None:
+def test_removed_root_benchmark_module_is_not_a_compatibility_surface(
+    tmp_path: Path,
+) -> None:
     output_dir = tmp_path / "must-not-exist"
     invocations = (
         [sys.executable, "-m", "zeromodel.video_action_set_benchmark"],
@@ -162,20 +178,22 @@ def test_benchmark_module_execution_remains_historically_inert(tmp_path: Path) -
         result = subprocess.run(
             invocation,
             cwd=REPO_ROOT,
+            env=_source_env(),
             check=False,
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0
+        assert result.returncode != 0
         assert result.stdout == ""
-        assert result.stderr == ""
+        assert "No module named zeromodel.video_action_set_benchmark" in result.stderr
     assert not output_dir.exists()
 
 
-def test_cli_module_exposes_operational_help() -> None:
+def test_research_cli_module_exposes_operational_help() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "zeromodel.video_action_set_cli", "--help"],
+        [sys.executable, "-m", "research.video_action_set.video_action_set_cli", "--help"],
         cwd=REPO_ROOT,
+        env=_source_env(),
         check=False,
         capture_output=True,
         text=True,

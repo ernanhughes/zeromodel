@@ -704,7 +704,7 @@ class VectorAddressIndex:
             ambiguity_measure=margin,
             matched_row_id=nearest_row if accepted else None,
             exact_match=False,
-            accepted_by=tuple(checks),
+            accepted_by=tuple(checks) if accepted else (),
             trace=decision_trace,
         )
 
@@ -936,7 +936,7 @@ class LinearProbeIndex:
             second_score=second_score,
             ambiguity_measure=margin,
             matched_row_id=row_id if accepted else None,
-            accepted_by=tuple(checks),
+            accepted_by=tuple(checks) if accepted else (),
             trace={
                 "acceptance_threshold": threshold,
                 "required_conflicting_action_margin": required_margin,

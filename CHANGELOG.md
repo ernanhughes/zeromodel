@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.13 - 2026-07-22
+
+Release candidate for the six-distribution namespace split:
+`zeromodel`, `zeromodel-analysis`, `zeromodel-observation`, `zeromodel-vision`,
+`zeromodel-video`, and `zeromodel-sqlalchemy`.
+
+- Removes the legacy root import compatibility API; use package namespaces such
+  as `zeromodel.core`, `zeromodel.analysis`, and
+  `zeromodel.persistence.sqlalchemy`.
+- Reclassifies stale provider-measurement benchmark coverage under research
+  ownership instead of restoring production provider-measurement modules.
+- Adds final cross-package build, wheel/sdist, clean install, dependency graph,
+  namespace-overlap, and artifact-manifest validation.
+
 ## 1.0.12 - 2026-07-22
 
 See the [ZeroModel 1.0.12 release notes](docs/releases/1.0.12.md).

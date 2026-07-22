@@ -14,6 +14,7 @@ from video_final_test_support import (
     request,
 )
 from zeromodel.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.db.session import sqlite_database_url
 from zeromodel.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
 )
@@ -26,7 +27,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _database_url(path: Path) -> str:
-    return path.resolve().as_uri().replace("file:///", "sqlite:///")
+    return sqlite_database_url(path)
 
 
 def _service(database_path: Path) -> FinalAccessService:

@@ -13,6 +13,7 @@ from test_video_observation_rmdto import (
 from video_final_test_support import approved_protocol, authorization
 from zeromodel.artifact import VPMValidationError
 from zeromodel.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.db.session import sqlite_database_url
 from zeromodel.domains.video_action_set.final_access_dto import (
     FinalEvaluationProtocolDTO,
     FinalExecutionAuthorizationDTO,
@@ -27,7 +28,7 @@ pytestmark = pytest.mark.integration
 
 
 def _database_url(path: Path) -> str:
-    return path.resolve().as_uri().replace("file:///", "sqlite:///")
+    return sqlite_database_url(path)
 
 
 def _protocol_for_identity(identity) -> FinalEvaluationProtocolDTO:
@@ -195,4 +196,3 @@ def test_nonfinal_observation_identity_and_nullable_access_remain_unchanged(
     )
     assert loaded is not None
     assert_records_equivalent(loaded, record)
-

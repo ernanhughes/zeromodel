@@ -76,6 +76,34 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Prepare Ruff-formatted remediation files
+        if: steps.quality_gate.outcome == 'failure'
+        run: |
+          python -m ruff format \
+            zeromodel/db/orm/video_action_set.py \
+            zeromodel/db/session.py \
+            zeromodel/db/stores/video_action_set.py \
+            zeromodel/domains/video_action_set/_datetime_compat.py \
+            zeromodel/domains/video_action_set/final_historical_authority.py \
+            zeromodel/domains/video_action_set/observation_dto.py \
+            zeromodel/stores/video_action_set_memory.py
+
+      - name: Upload Ruff-formatted remediation files
+        if: steps.quality_gate.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-quality-formatted-files
+          path: |
+            zeromodel/db/orm/video_action_set.py
+            zeromodel/db/session.py
+            zeromodel/db/stores/video_action_set.py
+            zeromodel/domains/video_action_set/_datetime_compat.py
+            zeromodel/domains/video_action_set/final_historical_authority.py
+            zeromodel/domains/video_action_set/observation_dto.py
+            zeromodel/stores/video_action_set_memory.py
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Fail repository quality job
         if: steps.quality_gate.outcome == 'failure'
         run: exit 1

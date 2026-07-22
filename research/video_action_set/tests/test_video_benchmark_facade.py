@@ -11,14 +11,14 @@ import research.video_action_set.build_orchestration as build_orchestration
 import research.video_action_set.mutation_filesystem as mutation_filesystem
 import research.video_action_set.mutation_orchestration as mutation_orchestration
 import research.video_action_set.verification_orchestration as verification_orchestration
-xfrom research.video_action_set.video_action_set_cli import main
+from research.video_action_set.video_action_set_cli import main
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_benchmark_is_direct_alias_compatibility_surface() -> None:
-    assert benchmark._write_json is artifact_io._write_json
+    assert benchmark._write_json is build_orchestration._write_json
     assert benchmark.freeze_benchmark is build_orchestration.freeze_benchmark
     assert (
         benchmark.verify_reference_instrument

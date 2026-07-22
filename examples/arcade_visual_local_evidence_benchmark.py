@@ -8,19 +8,17 @@ from typing import Any, Dict, Mapping, Tuple
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_address_benchmark import ArcadeBenchmarkDataset  # noqa: E402
 from examples.arcade_visual_sign_reader import (  # noqa: E402
     CELL_PIXELS,
+    enumerate_visual_frames,
+)
+from zeromodel.video.arcade_policy import (
     COOLDOWN_BLOCKED_VALUE,
     COOLDOWN_READY_VALUE,
-    TARGET_VALUE,
     TANK_VALUE,
-    enumerate_visual_frames,
+    TARGET_VALUE,
 )
 from zeromodel.analysis.policy_properties import decode_key_value_row_id
 from zeromodel.core.policy_lookup import VPMPolicyLookup
@@ -38,6 +36,10 @@ from research.visual.visual_corruptions import (  # noqa: E402
 )
 from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL  # noqa: E402
 
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 SOURCE_SCOPE = "arcade-visual-local-evidence-v3"
 PROTOCOL_VERSION = "zeromodel-visual-local-evidence-protocol/v1"

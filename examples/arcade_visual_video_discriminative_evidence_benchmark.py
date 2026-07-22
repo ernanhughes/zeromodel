@@ -16,10 +16,6 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE  # noqa: E402
 from examples.arcade_visual_sign_reader import render_state_frame  # noqa: E402
@@ -58,6 +54,9 @@ import research.evidence.video_discriminative_joint_evidence as zje
 from zeromodel.core.artifact import VPMValidationError  # noqa: E402
 from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v1"
 OUTPUT_DIR_V2 = REPO_ROOT / "docs" / "results" / "video-discriminative-local-evidence-v2"

@@ -915,9 +915,9 @@ def _compare_registration_candidates(left: Dict[str, Any], right: Dict[str, Any]
         ("valid_pixel_count", True, "valid_pixel_count"),
         ("geometric_overlap", True, "geometric_overlap"),
     )
-    for field, descending, reason in ordered_fields:
-        left_value = left[field]
-        right_value = right[field]
+    for field_name, descending, reason in ordered_fields:
+        left_value = left[field_name]
+        right_value = right[field_name]
         if descending:
             if left_value > right_value + REGISTRATION_DISTANCE_TIE_EPSILON:
                 return (-1, reason)

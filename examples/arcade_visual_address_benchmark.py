@@ -22,22 +22,21 @@ from typing import Any, Dict, Mapping, Tuple
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_sign_reader import (  # noqa: E402
     CELL_PIXELS,
-    COOLDOWN_BLOCKED_VALUE,
-    COOLDOWN_READY_VALUE,
     FRAME_HEIGHT,
-    TARGET_VALUE,
-    TANK_VALUE,
     compile_visual_index_artifact,
     enumerate_visual_frames,
     make_visual_reader,
 )
+from zeromodel.video.arcade_policy import (
+    COOLDOWN_BLOCKED_VALUE,
+    COOLDOWN_READY_VALUE,
+    TANK_VALUE,
+    TARGET_VALUE,
+)
+
 from zeromodel.analysis.policy_properties import decode_key_value_row_id
 from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.observation.visual_address import ImageObservation
@@ -76,6 +75,10 @@ from research.visual.visual_retrieval import (  # noqa: E402
     build_vector_address,
 )
 
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 SOURCE_SCOPE = "arcade-visual-system-b-adjudication/v2"
 

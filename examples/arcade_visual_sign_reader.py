@@ -21,10 +21,6 @@ from typing import Any, Mapping
 
 import numpy as np
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
 from zeromodel.core.bundle import to_bundle
 from zeromodel.video.arcade_policy import (  # noqa: E402
     ACTIONS,
@@ -42,6 +38,10 @@ from zeromodel.vision.visual import (  # noqa: E402
     VisualSignReader,
     build_visual_index,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 def arcade_visual_feature_spec(config: ShooterConfig = ShooterConfig()) -> VisualFeatureSpec:
     return VisualFeatureSpec(

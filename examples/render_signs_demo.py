@@ -27,10 +27,6 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-
 try:
     import matplotlib.pyplot as plt
     from matplotlib.gridspec import GridSpec
@@ -50,6 +46,10 @@ from examples.arcade_shooter_policy import (  # noqa: E402
 )
 from zeromodel.core.bundle import to_bundle
 from zeromodel.core.policy_lookup import VPMPolicyLookup
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "assets" / "signs-demo"
 MOVEMENT_ACTIONS = frozenset({"LEFT", "RIGHT", "STAY"})

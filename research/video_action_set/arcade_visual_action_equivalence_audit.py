@@ -4,7 +4,7 @@ import argparse
 from collections import Counter
 from pathlib import Path
 import sys
-from typing import Any
+from typing import Any, Mapping
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:

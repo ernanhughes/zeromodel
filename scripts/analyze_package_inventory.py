@@ -234,20 +234,32 @@ def identity_schema(symbols: list[str], module: str) -> str:
 
 
 def strongly_connected(graph: dict[str, set[str]]) -> list[list[str]]:
-    index = 0; stack=[]; idx={}; low={}; on=set(); out=[]
+    index = 0
+    stack=[]
+    idx={}
+    low={}
+    on=set()
+    out=[]
     def visit(v: str) -> None:
         nonlocal index
-        idx[v]=low[v]=index; index+=1; stack.append(v); on.add(v)
+        idx[v]=low[v]=index
+        index+=1
+        stack.append(v)
+        on.add(v)
         for w in sorted(graph[v]):
             if w not in idx:
-                visit(w); low[v]=min(low[v], low[w])
+                visit(w)
+                low[v]=min(low[v], low[w])
             elif w in on:
                 low[v]=min(low[v], idx[w])
         if low[v] == idx[v]:
             comp=[]
             while True:
-                w=stack.pop(); on.remove(w); comp.append(w)
-                if w == v: break
+                w=stack.pop()
+                on.remove(w)
+                comp.append(w)
+                if w == v: 
+                    break
             out.append(sorted(comp))
     for v in sorted(graph):
         if v not in idx:
@@ -265,14 +277,19 @@ def make_inventory(generated_at: str | None = None) -> dict[str, object]:
     unresolved_dynamic: list[dict[str, object]] = []
     for info in modules.values():
         edges, externals, dynamic = collect_imports(info, known)
-        all_edges.extend(edges); externals_by_module[info.module] = externals; unresolved_dynamic.extend(dynamic)
+        all_edges.extend(edges)
+        externals_by_module[info.module] = externals
+        unresolved_dynamic.extend(dynamic)
     public_by_module = {m: public_symbols(i) for m, i in modules.items()}
     inbound = Counter(e.imported for e in all_edges if e.imported in known)
     outbound = Counter(e.importer for e in all_edges if e.imported in known)
-    tests_by_mod: dict[str, set[str]] = defaultdict(set); examples_by_mod: dict[str, set[str]] = defaultdict(set)
+    tests_by_mod: dict[str, set[str]] = defaultdict(set)
+    examples_by_mod: dict[str, set[str]] = defaultdict(set)
     for e in all_edges:
-        if e.imported in known and e.importer.startswith("tests."): tests_by_mod[e.imported].add(modules[e.importer].path)
-        if e.imported in known and e.importer.startswith("examples."): examples_by_mod[e.imported].add(modules[e.importer].path)
+        if e.imported in known and e.importer.startswith("tests."): 
+            tests_by_mod[e.imported].add(modules[e.importer].path)
+        if e.imported in known and e.importer.startswith("examples."): 
+            examples_by_mod[e.imported].add(modules[e.importer].path)
     rows=[]
     class_by_module={}
     for module, info in modules.items():
@@ -294,7 +311,8 @@ def make_inventory(generated_at: str | None = None) -> dict[str, object]:
     forbidden=[]
     for e in all_edges:
         if e.imported in known:
-            a=class_by_module[e.importer]; b=class_by_module[e.imported]
+            a=class_by_module[e.importer]
+            b=class_by_module[e.imported]
             if a in DISTRIBUTIONS and b in DISTRIBUTIONS and a != b:
                 package_edges[a].add(b)
                 if b not in ALLOWED_PACKAGE_EDGES.get(a, set()):
@@ -319,7 +337,8 @@ def write_outputs(data: dict[str, object]) -> None:
     rows = data["rows"]
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-        writer.writeheader(); writer.writerows(rows)
+        writer.writeheader()
+        writer.writerows(rows)
     json_path.write_text(json.dumps(data["graph"], indent=2, sort_keys=True) + "\n", encoding="utf-8")
     counts = "\n".join(f"- {k}: {v}" for k, v in sorted(data["class_counts"].items()))
     forbidden = data["forbidden"]

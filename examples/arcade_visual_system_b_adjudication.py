@@ -11,7 +11,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
-from typing import Any, Dict, Mapping, Sequence
+from typing import Any, Dict, Sequence
 
 import numpy as np
 

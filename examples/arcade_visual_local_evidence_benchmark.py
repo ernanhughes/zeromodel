@@ -1,11 +1,10 @@
 """Fresh v3 local-evidence benchmark for bounded visual-address research."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 from pathlib import Path
 import sys
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 import numpy as np
 
@@ -19,7 +18,6 @@ from examples.arcade_visual_sign_reader import (  # noqa: E402
     CELL_PIXELS,
     COOLDOWN_BLOCKED_VALUE,
     COOLDOWN_READY_VALUE,
-    FRAME_HEIGHT,
     TARGET_VALUE,
     TANK_VALUE,
     enumerate_visual_frames,
@@ -34,7 +32,6 @@ from research.visual.visual_dataset import (
 )
 from research.visual.visual_corruptions import (  # noqa: E402
     add_integer_noise,
-    checkerboard_frame,
     mask_box,
     scale_intensity,
     translate_frame,

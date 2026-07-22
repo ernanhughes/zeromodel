@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import sys
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -44,7 +44,6 @@ from zeromodel.video.video import VideoFrame  # noqa: E402
 from research.visual.visual_experiment import (  # noqa: E402
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
-    IMPOSSIBILITY_CONTROL,
 )
 from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_candidates_v2,

@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -330,7 +330,7 @@ def run_postanalysis(*, source_dir: Path, output_dir: Path) -> Dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=False)
 
     final_summary = json.loads((source_dir / "final-summary.json").read_text(encoding="utf-8"))
-    selected_calibration = json.loads((source_dir / "selected-calibration.json").read_text(encoding="utf-8"))
+    json.loads((source_dir / "selected-calibration.json").read_text(encoding="utf-8"))
     traces = _load_jsonl(source_dir / "traces.jsonl")
     dataset = build_arcade_benchmark_dataset(variants_per_family=3)
     registration_config = RegistrationConfig(

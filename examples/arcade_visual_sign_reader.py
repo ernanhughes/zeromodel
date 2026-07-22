@@ -17,7 +17,7 @@ from itertools import product
 import json
 from pathlib import Path
 import sys
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any, Mapping
 
 import numpy as np
 
@@ -29,12 +29,8 @@ from zeromodel.core.bundle import to_bundle
 from zeromodel.video.arcade_policy import (  # noqa: E402
     ACTIONS,
     CELL_PIXELS,
-    COOLDOWN_BLOCKED_VALUE,
-    COOLDOWN_READY_VALUE,
     FRAME_HEIGHT,
     ShooterConfig,
-    TANK_VALUE,
-    TARGET_VALUE,
     TinyArcadeShooter,
     compile_policy_artifact,
     enumerate_visual_frames as package_enumerate_visual_frames,

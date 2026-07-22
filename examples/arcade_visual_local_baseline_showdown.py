@@ -11,7 +11,7 @@ from pathlib import Path
 import platform
 import subprocess
 import sys
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -20,7 +20,6 @@ if str(REPO_ROOT) not in sys.path:
 from examples.arcade_visual_address_benchmark import SOURCE_SCOPE, build_arcade_benchmark_dataset  # noqa: E402
 from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL, evaluate_visual_provider  # noqa: E402
 from research.visual.visual_local_baselines import (  # noqa: E402
-    RegisteredPixelCalibration,
     build_registered_pixel_candidates,
     build_registered_pixel_provider,
     select_registered_pixel_candidate,
@@ -275,7 +274,7 @@ def _residual_error_atlas(traces: Sequence[Mapping[str, Any]]) -> Dict[str, Any]
         if disp.get("rejection_reason") == "insufficient_overlap" or trace["decision"]["reason"] == "registered_distance_above_threshold":
             counts["insufficient_overlap"] += 1
         raw_row = disp.get("raw_top1_row_id")
-        raw_action = disp.get("raw_top1_action_id")
+        disp.get("raw_top1_action_id")
         if raw_row == trace.get("expected_row_id") and not trace["decision"]["accepted"]:
             counts["rejected_despite_correct_raw_candidate"] += 1
         if trace["top1_action_id"] == trace["expected_action_id"] and trace["top1_row_id"] != trace["expected_row_id"]:

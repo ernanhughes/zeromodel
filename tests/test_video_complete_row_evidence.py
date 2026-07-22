@@ -9,8 +9,6 @@ from research.evidence.video_complete_row_evidence import (
     QUANTIZATION_SCALE,
     CompleteRowEvidence,
     SemanticTopSetOutcome,
-    VIDEO_RAW_SCORE_DIAGNOSTIC_VERSION,
-    VIDEO_QUANTIZED_SCORE_VECTOR_VERSION,
     build_complete_row_evidence,
     build_semantic_top_set_outcome,
     quantize_similarity,

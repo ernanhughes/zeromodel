@@ -16,13 +16,12 @@ from zeromodel.observation.visual_address import (
 )
 from research.visual.visual_dataset import VisualDatasetManifest, VisualExampleRecord
 from research.benchmarks.visual_benchmark import BenchmarkSystemResult, VisualBenchmarkMetrics
-from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, evaluate_visual_provider
+from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT
 from research.visual.visual_registration import (
     RegistrationConfig,
     RegistrationResult,
     _grayscale,
     _displacement_order,
-    register_integer_translation,
 )
 
 
@@ -447,8 +446,6 @@ class RegisteredPixelAddressProvider:
         best_overlap = np.zeros(prototype_count, dtype=np.float64)
         best_valid = np.zeros(prototype_count, dtype=np.int32)
         raw_distances: Optional[np.ndarray] = None
-        raw_overlap = 0.0
-        raw_valid = 0
 
         for dx, dy in self._shift_grid:
             x0 = max(0, dx)
@@ -494,8 +491,6 @@ class RegisteredPixelAddressProvider:
 
             if dx == 0 and dy == 0:
                 raw_distances = distances.copy()
-                raw_overlap = overlap_fraction
-                raw_valid = valid_count
             improved = distances < best_distances
             if np.any(improved):
                 best_distances[improved] = distances[improved]

@@ -17,7 +17,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE, build_arcade_local_evidence_dataset  # noqa: E402
-from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, evaluate_visual_provider  # noqa: E402
+from research.visual.visual_experiment import evaluate_visual_provider  # noqa: E402
 from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_candidates_v2,
     build_registered_pixel_provider,
@@ -172,7 +172,7 @@ def run_registered_calibration_v2(
         raise RuntimeError("final run must start from a clean working tree")
 
     frozen_r1_v1 = _frozen_reference(FROZEN_R1_V1_DIR)
-    frozen_system_b = _frozen_reference(FROZEN_SYSTEM_B_DIR)
+    _frozen_reference(FROZEN_SYSTEM_B_DIR)
     dataset = build_arcade_local_evidence_dataset(variants_per_family=variants_per_family)
     environment = _environment()
     registration_config = RegistrationConfig(max_dx=max_dx, max_dy=max_dy, minimum_overlap_fraction=minimum_overlap_fraction)

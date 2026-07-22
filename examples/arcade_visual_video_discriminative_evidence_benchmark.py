@@ -12,7 +12,7 @@ import shutil
 import sys
 import tempfile
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -741,7 +741,7 @@ def _build_stage3_benchmark(*, materialize_final: bool = False) -> Stage3Benchma
     records: list[Stage3Record] = []
     prototypes: Dict[str, Tuple[str, str, str, ImageObservation]] = {}
     families = _split_family_definitions()
-    row_map = {row_id: (action_id, observation) for row_id, action_id, observation in rows}
+    {row_id: (action_id, observation) for row_id, action_id, observation in rows}
 
     for row_id, action_id, observation in rows:
         prototypes[row_id] = (row_id, action_id, observation.raw_digest, observation)
@@ -786,7 +786,6 @@ def _build_stage3_benchmark(*, materialize_final: bool = False) -> Stage3Benchma
             "calibration_negative_conflicting_regions": lambda base=observation.pixels, same=same_observation.pixels, other=conflicting_observation.pixels: _blend_region(_blend_region(base, same, top=0, left=0, height=6, width=28), other, top=10, left=0, height=4, width=28),
             "calibration_negative_out_of_bounds": lambda base=observation.pixels: _translate(base, dx=-4, dy=0),
         }
-        final_families = {"final_exact", "final_translation", "final_photometric", "final_occlusion", "final_negative_critical_removed", "final_negative_conflicting_action", "final_negative_compositional_invalid", "final_information_control"}
         for split, family_items in families.items():
             for family_id, description in family_items:
                 observation_id = _make_observation_id(split, family_id, row_id, 0)
@@ -2449,7 +2448,7 @@ def _exact_sanity_v2(*, benchmark: Stage3Benchmark, freeze: Mapping[str, Any], c
             collision = collision_by_row[record.row_id]
             expected = next(candidate for candidate in ranked if candidate.row_id == record.row_id)
             top_strength = ranked[0].candidate_strength
-            max_group = sorted(candidate.row_id for candidate in ranked if abs(candidate.candidate_strength - top_strength) <= 1e-12)
+            sorted(candidate.row_id for candidate in ranked if abs(candidate.candidate_strength - top_strength) <= 1e-12)
             if collision["collision_class"] == "unique_visual_row":
                 if expected.available_informative_mass <= 0 or ranked[0].row_id != record.row_id or not expected.eligible_for_candidate_set:
                     sanity_valid = False
@@ -3122,7 +3121,7 @@ def _run_representation_audit_v2(output_dir: Path) -> Dict[str, Any]:
         j4_scores = []
         expected_mask = freeze["masks"][row_id]
         expected_arrays = _effective_mask_arrays(expected_mask)
-        weighted_pixels = expected_arrays["positive_row_stable"]
+        expected_arrays["positive_row_stable"]
         weighted_regions = []
         for candidate_row, pixels in candidate_pixels.items():
             direct_region_similarity = []

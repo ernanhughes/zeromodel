@@ -9,7 +9,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -22,7 +22,6 @@ from zeromodel.video.arcade_policy import (  # noqa: E402
     arcade_transition_spec,
     compile_policy_artifact,
     next_rows,
-    parse_state_row_id,
 )
 from examples.arcade_visual_sign_reader import (  # noqa: E402
     compile_visual_index_artifact,
@@ -30,10 +29,6 @@ from examples.arcade_visual_sign_reader import (  # noqa: E402
     render_state_frame,
 )
 from zeromodel.core.policy_lookup import VPMPolicyLookup
-from zeromodel.core.policy_transitions import (  # noqa: E402
-    PolicyTransitionSpec,
-    ROW_UNION_TRANSITION_SCOPE,
-)
 from zeromodel.video.video import InMemoryVideoFrameSource  # noqa: E402
 from zeromodel.video.video_policy import VideoPolicyReader  # noqa: E402
 from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider  # noqa: E402

@@ -253,7 +253,7 @@ def _evidence_closure(row_action_map: tuple[dict[str, str], ...]) -> tuple[list[
     closure_rows = []
     inventory_rows = []
     policy_artifact_id = row_action_map[0]["policy_artifact_id"]
-    file_map = {(row["provider_id"], row["path"]): row for row in files}
+    {(row["provider_id"], row["path"]): row for row in files}
     for spec in _provider_specs():
         provider_id = spec["provider_id"]
         aggregate_only = provider_id == "stage3-v1"
@@ -950,7 +950,6 @@ def run_finalize_audit(
 
 def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REACHABILITY_DIR) -> dict[str, Any]:
     import filecmp
-    import shutil
     import tempfile
 
     with tempfile.TemporaryDirectory(prefix="zeromodel-audit-verify-") as tmp:

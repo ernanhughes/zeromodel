@@ -18,7 +18,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 import sys
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Mapping, Tuple
 
 import numpy as np
 

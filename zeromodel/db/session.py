@@ -60,9 +60,11 @@ _FINALIZATION_REQUIRED_COLUMNS = {
     "video_action_set_observation": {"frame_id", "final_access_id"},
 }
 
+
 def sqlite_database_url(path: Path) -> str:
     """Build a SQLite URL without URI-percent-encoding filesystem characters."""
     return f"sqlite:///{path.resolve().as_posix()}"
+
 
 def create_database_engine(database_url: str) -> Engine:
     if database_url in {"sqlite://", "sqlite:///:memory:"}:

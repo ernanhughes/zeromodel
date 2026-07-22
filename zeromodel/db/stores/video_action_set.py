@@ -396,7 +396,10 @@ class _ObservationSqlStoreMixin:
             if observation.final_access_id is not None:
                 raise_final_access_authorization()
             return
-        if final_access is None or observation.final_access_id != final_access.access_id:
+        if (
+            final_access is None
+            or observation.final_access_id != final_access.access_id
+        ):
             raise_final_access_authorization()
         row = session.get(FinalAccessRecordORM, final_access.access_id)
         if row is None:
@@ -640,10 +643,13 @@ class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetSto
                     raise_final_access_authorization()
                 if authorization.authorization_digest != record.authorization_digest:
                     raise_final_access_authorization()
-                if session.get(
-                    FinalAccessAuthorizationORM,
-                    authorization.authorization_id,
-                ) is not None:
+                if (
+                    session.get(
+                        FinalAccessAuthorizationORM,
+                        authorization.authorization_id,
+                    )
+                    is not None
+                ):
                     raise_final_access_conflict()
                 if session.get(FinalAccessRecordORM, record.access_id) is not None:
                     raise_final_access_conflict()

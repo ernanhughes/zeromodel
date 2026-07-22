@@ -14,9 +14,7 @@ from .canonical_json import canonical_json_bytes, canonical_sha256
 from .final_access_dto import validate_final_identifier
 
 
-HISTORICAL_EVIDENCE_MANIFEST_VERSION = (
-    "zeromodel-video-historical-evidence-manifest/v1"
-)
+HISTORICAL_EVIDENCE_MANIFEST_VERSION = "zeromodel-video-historical-evidence-manifest/v1"
 VERIFIED_HISTORICAL_AUTHORITY_VERSION = (
     "zeromodel-video-verified-historical-authority/v1"
 )
@@ -82,13 +80,16 @@ class HistoricalEvidenceManifestDTO:
             self.evidence_manifest_digest,
             "historical evidence manifest digest mismatch",
         )
-        if canonical_sha256(
-            {
-                key: value
-                for key, value in self.to_dict().items()
-                if key != "evidence_manifest_digest"
-            }
-        ) != self.evidence_manifest_digest:
+        if (
+            canonical_sha256(
+                {
+                    key: value
+                    for key, value in self.to_dict().items()
+                    if key != "evidence_manifest_digest"
+                }
+            )
+            != self.evidence_manifest_digest
+        ):
             raise VPMValidationError("historical evidence manifest digest mismatch")
 
     @classmethod
@@ -169,7 +170,10 @@ class VerifiedHistoricalAuthorityDTO:
         if self.version != VERIFIED_HISTORICAL_AUTHORITY_VERSION:
             raise VPMValidationError("verified historical authority version mismatch")
         for value, message in (
-            (self.historical_authority_version, "historical authority version mismatch"),
+            (
+                self.historical_authority_version,
+                "historical authority version mismatch",
+            ),
             (self.historical_database_path, "historical database path mismatch"),
             (self.evidence_manifest_path, "historical evidence manifest path mismatch"),
             (self.stage8_commit, "historical Stage 8 commit mismatch"),
@@ -194,13 +198,16 @@ class VerifiedHistoricalAuthorityDTO:
             ),
         ):
             _required_digest(value, message)
-        if canonical_sha256(
-            {
-                key: value
-                for key, value in self.to_dict().items()
-                if key != "historical_authority_digest"
-            }
-        ) != self.historical_authority_digest:
+        if (
+            canonical_sha256(
+                {
+                    key: value
+                    for key, value in self.to_dict().items()
+                    if key != "historical_authority_digest"
+                }
+            )
+            != self.historical_authority_digest
+        ):
             raise VPMValidationError("verified historical authority digest mismatch")
 
     @classmethod

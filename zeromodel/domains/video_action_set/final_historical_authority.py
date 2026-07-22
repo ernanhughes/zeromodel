@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import hashlib
 import json
@@ -436,10 +436,10 @@ def _required_digest(value: object, message: str) -> str:
 
 def _exact_keys(
     payload: Mapping[str, object],
-    keys: object,
+    keys: Iterable[str],
     message: str,
 ) -> None:
-    if set(payload) != set(keys):  # type: ignore[arg-type]
+    if set(payload) != set(keys):
         raise VPMValidationError(message)
 
 

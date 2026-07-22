@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.12 - 2026-07-22
+
+See the [ZeroModel 1.0.12 release notes](docs/releases/1.0.12.md).
+
 ## 0.1.1a1 - Unreleased
 
 First TestPyPI release candidate for the clean `zeromodel` package surface.

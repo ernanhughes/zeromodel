@@ -1,28 +1,33 @@
 from __future__ import annotations
-
+import sys
+from pathlib import Path
 import numpy as np
 
-from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_benchmark import (
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+
+from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_benchmark import ( # noqa: E402
     build_video_cases,
     run_calibrate,
     run_evaluate,
     run_verify,
 )
-
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
-from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE
-from examples.arcade_visual_sign_reader import render_state_frame
-from zeromodel.core.policy_lookup import VPMPolicyLookup
-from zeromodel.core.artifact import VPMValidationError
-from research.video.video_local_correlation import (
+from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact # noqa: E402
+from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE  # noqa: E402
+from examples.arcade_visual_sign_reader import render_state_frame # noqa: E402
+from zeromodel.core.policy_lookup import VPMPolicyLookup # noqa: E402
+from zeromodel.core.artifact import VPMValidationError # noqa: E402
+from research.video.video_local_correlation import ( # noqa: E402
     LocalCorrelationCalibration,
     LocalCorrelationVideoAddressProvider,
     LocalRegionSpec,
     local_region_digest,
 )
-from zeromodel.observation.visual_address import ImageObservation
-from research.visual.visual_registration import RegistrationConfig
-import pytest
+from zeromodel.observation.visual_address import ImageObservation # noqa: E402
+from research.visual.visual_registration import RegistrationConfig # noqa: E402
+import pytest # noqa: E402
 
 pytestmark = pytest.mark.research
 

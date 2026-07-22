@@ -15,6 +15,11 @@ addopts = "--strict-markers"
 markers = [
     "integration: end-to-end, persistence, materialization, or cross-component tests excluded from normal development",
     "slow: tests normally too expensive for the fast suite, including exhaustive sweeps, profiling, full builds, and mutation audits",
+    "fast: bounded production tests",
+    "slow: slow-running tests",
+    "integration: cross-package integration tests",
+    "external: tests requiring external systems or dependencies",
+    "research: research benchmarks, experiments, and evidence tests",
 ]
 
 [tool.ruff]

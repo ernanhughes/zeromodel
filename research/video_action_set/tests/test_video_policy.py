@@ -1,27 +1,34 @@
+# noqa: E402
 from __future__ import annotations
 
 from functools import lru_cache
 import json
+import sys
 
 import numpy as np
 import pytest
+from pathlib import Path
 
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
-from examples.arcade_visual_sign_reader import (
+REPO_ROOT = Path(__file__).resolve().parents[3]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact # noqa: E402
+from examples.arcade_visual_sign_reader import (# noqa: E402
     compile_visual_index_artifact,
     make_visual_reader,
     render_state_frame,
 )
-from examples.arcade_visual_video_baseline import (
+from examples.arcade_visual_video_baseline import (# noqa: E402
     arcade_transition_spec,
     build_canonical_arcade_clip,
     run_exact_video_baseline,
 )
-from zeromodel.core.policy_lookup import VPMPolicyLookup
-from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.video import InMemoryVideoFrameSource, VideoFrame
-from zeromodel.video.video_policy import VideoPolicyReader
-from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider
+from zeromodel.core.policy_lookup import VPMPolicyLookup # noqa: E402
+from zeromodel.core.artifact import VPMValidationError # noqa: E402
+from zeromodel.video.video import InMemoryVideoFrameSource, VideoFrame # noqa: E402
+from zeromodel.video.video_policy import VideoPolicyReader # noqa: E402
+from zeromodel.vision.visual_policy import DeterministicVisualAddressProvider # noqa: E402
 
 
 # The reader is immutable; sharing it avoids recompiling the 112-row visual index.

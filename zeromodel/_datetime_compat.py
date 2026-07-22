@@ -10,4 +10,6 @@ def ensure_datetime_utc() -> None:
         setattr(_datetime, "UTC", _datetime.timezone.utc)
 
 
+ensure_datetime_utc()
+
 __all__ = ["ensure_datetime_utc"]

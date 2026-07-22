@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
-from examples.arcade_visual_video_local_correlation_benchmark import (
+from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_benchmark import (
     build_video_cases,
     run_calibrate,
     run_evaluate,
@@ -22,6 +21,9 @@ from research.video.video_local_correlation import (
 )
 from zeromodel.observation.visual_address import ImageObservation
 from research.visual.visual_registration import RegistrationConfig
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 def _regions() -> tuple[LocalRegionSpec, ...]:

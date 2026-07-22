@@ -1,0 +1,13 @@
+-e ./packages/core
+-e ./packages/analysis
+-e ./packages/observation
+-e ./packages/vision
+-e ./packages/video
+-e ./packages/sqlalchemy
+
+build
+twine
+pytest
+pytest-cov
+ruff
+mypy

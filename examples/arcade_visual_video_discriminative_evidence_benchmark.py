@@ -23,7 +23,7 @@ if str(REPO_ROOT) not in sys.path:
 from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
 from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE  # noqa: E402
 from examples.arcade_visual_sign_reader import render_state_frame  # noqa: E402
-from examples.arcade_visual_video_local_correlation_benchmark import (  # noqa: E402
+from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_benchmark import (  # noqa: E402
     _build_v2_provider,
     _build_v2_selection,
     _regions as _stage2_regions,

@@ -520,12 +520,12 @@ def _write_audit_reproduction(output_dir: Path) -> None:
                 "# Reproduction",
                 "",
                 "```powershell",
-                "python examples/arcade_visual_action_equivalence_audit.py --audit-evidence-closure",
-                "python examples/arcade_visual_action_equivalence_audit.py --rescore-supported-top1",
-                "python examples/arcade_visual_action_equivalence_audit.py --build-reachability-tile",
-                "python examples/arcade_visual_action_equivalence_audit.py --replay-reachability",
-                "python examples/arcade_visual_action_equivalence_audit.py --verify-bounded-measurements",
-                "python examples/arcade_visual_action_equivalence_audit.py --verify-audit",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --audit-evidence-closure",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --rescore-supported-top1",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --build-reachability-tile",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --replay-reachability",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --verify-bounded-measurements",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --verify-audit",
                 "```",
                 "",
                 "These commands regenerate only the bounded retrospective outputs. They do not create new visual observations, run PR #42 grids, or execute a production temporal reader.",
@@ -557,7 +557,7 @@ def _write_reachability_docs(output_dir: Path) -> None:
                 "# Reproduction",
                 "",
                 "```powershell",
-                "python examples/arcade_visual_action_equivalence_audit.py --build-reachability-tile",
+                "python -m research.video_action_set.arcade_visual_action_equivalence_audit --build-reachability-tile",
                 "```",
                 "",
                 "This command rebuilds only the declared reachability artifact. It does not replay historical visual beliefs.",
@@ -728,7 +728,7 @@ def run_build_reachability_tile(output_dir: Path = REACHABILITY_DIR) -> dict[str
     )
     _write_markdown(
         output_dir / "reproduction.md",
-        "```powershell\npython examples/arcade_visual_action_equivalence_audit.py --build-reachability-tile\n```",
+        "```powershell\npython -m research.video_action_set.arcade_visual_action_equivalence_audit --build-reachability-tile\n```",
     )
     return verification
 

@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from examples.arcade_visual_action_equivalence_audit import run_audit_evidence_closure
+from research.video_action_set.arcade_visual_action_equivalence_audit import run_audit_evidence_closure
+
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 def test_inventory_generation_is_deterministic(tmp_path: Path) -> None:

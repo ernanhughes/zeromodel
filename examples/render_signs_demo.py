@@ -33,7 +33,6 @@ if str(REPO_ROOT) not in sys.path:
 
 try:
     import matplotlib.pyplot as plt
-    import numpy as np
     from matplotlib.gridspec import GridSpec
     from PIL import Image
 except ImportError as exc:  # pragma: no cover - dependency guidance

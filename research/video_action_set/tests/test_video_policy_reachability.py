@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from examples.arcade_visual_action_equivalence_audit import run_build_reachability_tile, run_replay_reachability
+from research.video_action_set.arcade_visual_action_equivalence_audit import run_build_reachability_tile, run_replay_reachability
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 def test_all_448_pairs_are_represented(tmp_path: Path) -> None:

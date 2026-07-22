@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
 
 import pytest
 
-from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+pytestmark = pytest.mark.research
+
 
 
 def test_v2_mask_closure_is_complete_with_full_development(tmp_path: Path) -> None:

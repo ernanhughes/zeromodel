@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from examples.arcade_visual_action_equivalence_audit import run_finalize_audit, run_verify_audit
+from research.video_action_set.arcade_visual_action_equivalence_audit import run_finalize_audit, run_verify_audit
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 def test_insufficient_historical_artifacts_is_selected(tmp_path: Path) -> None:

@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
 import pytest
 
-from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+pytestmark = pytest.mark.research
 
 
 def _load(path: Path) -> dict:

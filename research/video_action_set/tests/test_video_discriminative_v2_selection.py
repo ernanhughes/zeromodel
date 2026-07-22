@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+
 import pytest
 
-from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+pytestmark = pytest.mark.research
 
 
 @pytest.mark.slow

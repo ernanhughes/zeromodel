@@ -1,20 +1,6 @@
 {
-  "baseline_commit": "892511ea8e65a8704cf41d3fa217971cc4c6a36f",
+  "baseline_commit": "e9e083ac128dbd50a941b06f9cc30be9eab98d75",
   "edges": [
-    {
-      "imported": "examples.arcade_shooter_policy",
-      "importer": "examples.arcade_visual_action_equivalence_audit",
-      "kind": "runtime",
-      "line": 13,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_baseline",
-      "importer": "examples.arcade_visual_action_equivalence_audit",
-      "kind": "runtime",
-      "line": 14,
-      "resolved": true
-    },
     {
       "imported": "examples.arcade_shooter_policy",
       "importer": "examples.arcade_visual_address_benchmark",
@@ -54,21 +40,21 @@
       "imported": "examples.arcade_shooter_policy",
       "importer": "examples.arcade_visual_local_evidence_benchmark",
       "kind": "runtime",
-      "line": 16,
+      "line": 15,
       "resolved": true
     },
     {
       "imported": "examples.arcade_visual_address_benchmark",
       "importer": "examples.arcade_visual_local_evidence_benchmark",
       "kind": "runtime",
-      "line": 17,
+      "line": 16,
       "resolved": true
     },
     {
       "imported": "examples.arcade_visual_sign_reader",
       "importer": "examples.arcade_visual_local_evidence_benchmark",
       "kind": "runtime",
-      "line": 18,
+      "line": 17,
       "resolved": true
     },
     {
@@ -89,7 +75,7 @@
       "imported": "examples.arcade_visual_sign_reader",
       "importer": "examples.arcade_visual_video_baseline",
       "kind": "runtime",
-      "line": 27,
+      "line": 26,
       "resolved": true
     },
     {
@@ -110,7 +96,7 @@
       "imported": "examples.arcade_visual_local_evidence_benchmark",
       "importer": "examples.arcade_visual_video_discriminative_evidence_benchmark",
       "kind": "deferred",
-      "line": 3698,
+      "line": 3697,
       "resolved": true
     },
     {
@@ -121,38 +107,10 @@
       "resolved": true
     },
     {
-      "imported": "examples.arcade_visual_video_local_correlation_benchmark",
-      "importer": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "kind": "runtime",
-      "line": 26,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_shooter_policy",
-      "importer": "examples.arcade_visual_video_local_correlation_benchmark",
-      "kind": "runtime",
-      "line": 21,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_local_evidence_benchmark",
-      "importer": "examples.arcade_visual_video_local_correlation_benchmark",
-      "kind": "runtime",
-      "line": 22,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_baseline",
-      "importer": "examples.arcade_visual_video_local_correlation_benchmark",
-      "kind": "runtime",
-      "line": 26,
-      "resolved": true
-    },
-    {
       "imported": "examples.arcade_shooter_policy",
       "importer": "examples.render_signs_demo",
       "kind": "runtime",
-      "line": 45,
+      "line": 44,
       "resolved": true
     },
     {
@@ -161,174 +119,10 @@
       "kind": "runtime",
       "line": 6,
       "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_action_equivalence_audit",
-      "importer": "tests.test_video_action_equivalence_audit",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_action_equivalence_audit",
-      "importer": "tests.test_video_action_equivalence_bounded_measurements",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_shooter_policy",
-      "importer": "tests.test_video_action_equivalence_evidence_closure",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_action_equivalence_audit",
-      "importer": "tests.test_video_action_equivalence_evidence_closure",
-      "kind": "runtime",
-      "line": 5,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_action_equivalence_audit",
-      "importer": "tests.test_video_action_equivalence_inventory",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_shooter_policy",
-      "importer": "tests.test_video_action_equivalence_top1",
-      "kind": "runtime",
-      "line": 7,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_action_equivalence_audit",
-      "importer": "tests.test_video_action_equivalence_top1",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_benchmark",
-      "kind": "runtime",
-      "line": 7,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_measurement_audit",
-      "kind": "runtime",
-      "line": 9,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_representation_audit",
-      "kind": "runtime",
-      "line": 8,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_v2_benchmark",
-      "kind": "runtime",
-      "line": 8,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_v2_integrity",
-      "kind": "runtime",
-      "line": 7,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_v2_selection",
-      "kind": "runtime",
-      "line": 7,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_v3_benchmark",
-      "kind": "runtime",
-      "line": 5,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_discriminative_evidence_benchmark",
-      "importer": "tests.test_video_discriminative_v3_self_retrieval",
-      "kind": "runtime",
-      "line": 3,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_shooter_policy",
-      "importer": "tests.test_video_local_correlation",
-      "kind": "runtime",
-      "line": 12,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_local_evidence_benchmark",
-      "importer": "tests.test_video_local_correlation",
-      "kind": "runtime",
-      "line": 13,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_sign_reader",
-      "importer": "tests.test_video_local_correlation",
-      "kind": "runtime",
-      "line": 14,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_local_correlation_benchmark",
-      "importer": "tests.test_video_local_correlation",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_shooter_policy",
-      "importer": "tests.test_video_policy",
-      "kind": "runtime",
-      "line": 9,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_sign_reader",
-      "importer": "tests.test_video_policy",
-      "kind": "runtime",
-      "line": 10,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_video_baseline",
-      "importer": "tests.test_video_policy",
-      "kind": "runtime",
-      "line": 15,
-      "resolved": true
-    },
-    {
-      "imported": "examples.arcade_visual_action_equivalence_audit",
-      "importer": "tests.test_video_policy_reachability",
-      "kind": "runtime",
-      "line": 6,
-      "resolved": true
     }
   ],
   "external_dependencies": {
     "examples.analyze_visual_address_report": [
-      "research"
-    ],
-    "examples.arcade_visual_action_equivalence_audit": [
       "research"
     ],
     "examples.arcade_visual_action_set_reachability_benchmark": [
@@ -362,10 +156,6 @@
       "numpy",
       "research"
     ],
-    "examples.arcade_visual_video_local_correlation_benchmark": [
-      "numpy",
-      "research"
-    ],
     "examples.bertin_pattern_detection": [
       "numpy"
     ],
@@ -377,8 +167,7 @@
     ],
     "examples.render_signs_demo": [
       "PIL",
-      "matplotlib",
-      "numpy"
+      "matplotlib"
     ],
     "scripts.check_architecture": [
       "architecture_rules"
@@ -428,35 +217,11 @@
       "pytest",
       "video_final_test_support"
     ],
-    "tests.test_arcade_shooter_baseline_comparison": [
-      "pytest"
-    ],
-    "tests.test_arcade_shooter_exhaustive": [
-      "pytest"
-    ],
-    "tests.test_arcade_visual_address_benchmark": [
-      "numpy"
-    ],
-    "tests.test_arcade_visual_local_baseline_showdown": [
-      "pytest"
-    ],
-    "tests.test_arcade_visual_registered_calibration_v2": [
-      "pytest"
-    ],
-    "tests.test_architecture_checker_stage7a": [
-      "pytest"
-    ],
     "tests.test_content_identity": [
       "numpy"
     ],
     "tests.test_installed_wheel_video_instrument": [
       "pytest"
-    ],
-    "tests.test_video_action_equivalence_evidence_closure": [
-      "research"
-    ],
-    "tests.test_video_action_equivalence_top1": [
-      "research"
     ],
     "tests.test_video_action_set_benchmark": [
       "pytest",
@@ -483,10 +248,6 @@
     "tests.test_video_artifact_io_kernel": [
       "pytest"
     ],
-    "tests.test_video_benchmark_facade": [
-      "pytest",
-      "research"
-    ],
     "tests.test_video_build_orchestration_kernel": [
       "research"
     ],
@@ -502,9 +263,6 @@
       "pytest",
       "research"
     ],
-    "tests.test_video_discriminative_benchmark": [
-      "pytest"
-    ],
     "tests.test_video_discriminative_evidence": [
       "numpy",
       "pytest",
@@ -518,24 +276,9 @@
       "numpy",
       "research"
     ],
-    "tests.test_video_discriminative_measurement_audit": [
-      "pytest"
-    ],
     "tests.test_video_discriminative_provider": [
       "numpy",
       "research"
-    ],
-    "tests.test_video_discriminative_representation_audit": [
-      "pytest"
-    ],
-    "tests.test_video_discriminative_v2_benchmark": [
-      "pytest"
-    ],
-    "tests.test_video_discriminative_v2_integrity": [
-      "pytest"
-    ],
-    "tests.test_video_discriminative_v2_selection": [
-      "pytest"
     ],
     "tests.test_video_episode_family_kernel": [
       "pytest",
@@ -604,11 +347,6 @@
       "pytest",
       "research"
     ],
-    "tests.test_video_local_correlation": [
-      "numpy",
-      "pytest",
-      "research"
-    ],
     "tests.test_video_materialization_kernels": [
       "pytest",
       "research"
@@ -658,19 +396,11 @@
       "pytest",
       "research"
     ],
-    "tests.test_video_policy": [
-      "numpy",
-      "pytest"
-    ],
     "tests.test_video_prospective_providers": [
       "pytest",
       "research"
     ],
     "tests.test_video_prospective_runtime_equivalence": [
-      "pytest",
-      "research"
-    ],
-    "tests.test_video_provider_measurement_kernel": [
       "pytest",
       "research"
     ],
@@ -694,19 +424,11 @@
       "numpy",
       "pytest"
     ],
-    "tests.test_video_split_progress_kernel": [
-      "pytest",
-      "research"
-    ],
     "tests.test_video_transformation_kernel": [
       "numpy",
       "pytest",
       "research",
       "test_video_observation_rmdto"
-    ],
-    "tests.test_video_verification_closure_kernel": [
-      "pytest",
-      "research"
     ],
     "tests.test_video_verification_orchestration_kernel": [
       "research"
@@ -751,11 +473,6 @@
       "numpy",
       "pytest",
       "research"
-    ],
-    "tests.test_visual_system_b": [
-      "numpy",
-      "pytest",
-      "research"
     ]
   },
   "generated_at_utc": "2026-01-01T00:00:00Z",
@@ -768,14 +485,8 @@
     },
     "examples.arcade_shooter_policy": {
       "classification": "examples",
-      "lines": 38,
+      "lines": 32,
       "path": "examples/arcade_shooter_policy.py",
-      "target_namespace": ""
-    },
-    "examples.arcade_visual_action_equivalence_audit": {
-      "classification": "examples",
-      "lines": 1066,
-      "path": "examples/arcade_visual_action_equivalence_audit.py",
       "target_namespace": ""
     },
     "examples.arcade_visual_action_set_reachability_benchmark": {
@@ -798,13 +509,13 @@
     },
     "examples.arcade_visual_local_baseline_showdown": {
       "classification": "examples",
-      "lines": 656,
+      "lines": 655,
       "path": "examples/arcade_visual_local_baseline_showdown.py",
       "target_namespace": ""
     },
     "examples.arcade_visual_local_evidence_benchmark": {
       "classification": "examples",
-      "lines": 633,
+      "lines": 630,
       "path": "examples/arcade_visual_local_evidence_benchmark.py",
       "target_namespace": ""
     },
@@ -816,7 +527,7 @@
     },
     "examples.arcade_visual_sign_reader": {
       "classification": "examples",
-      "lines": 218,
+      "lines": 214,
       "path": "examples/arcade_visual_sign_reader.py",
       "target_namespace": ""
     },
@@ -828,20 +539,14 @@
     },
     "examples.arcade_visual_video_baseline": {
       "classification": "examples",
-      "lines": 155,
+      "lines": 150,
       "path": "examples/arcade_visual_video_baseline.py",
       "target_namespace": ""
     },
     "examples.arcade_visual_video_discriminative_evidence_benchmark": {
       "classification": "examples",
-      "lines": 3900,
+      "lines": 3899,
       "path": "examples/arcade_visual_video_discriminative_evidence_benchmark.py",
-      "target_namespace": ""
-    },
-    "examples.arcade_visual_video_local_correlation_benchmark": {
-      "classification": "examples",
-      "lines": 1039,
-      "path": "examples/arcade_visual_video_local_correlation_benchmark.py",
       "target_namespace": ""
     },
     "examples.bertin_pattern_detection": {
@@ -888,7 +593,7 @@
     },
     "examples.render_signs_demo": {
       "classification": "examples",
-      "lines": 375,
+      "lines": 374,
       "path": "examples/render_signs_demo.py",
       "target_namespace": ""
     },
@@ -930,7 +635,7 @@
     },
     "scripts.analyze_package_inventory": {
       "classification": "tooling",
-      "lines": 391,
+      "lines": 410,
       "path": "scripts/analyze_package_inventory.py",
       "target_namespace": ""
     },
@@ -948,7 +653,7 @@
     },
     "scripts.architecture_rules.video_action_set_modules": {
       "classification": "tooling",
-      "lines": 191,
+      "lines": 179,
       "path": "scripts/architecture_rules/video_action_set_modules.py",
       "target_namespace": ""
     },
@@ -978,7 +683,7 @@
     },
     "scripts.check_package_boundaries": {
       "classification": "tooling",
-      "lines": 185,
+      "lines": 184,
       "path": "scripts/check_package_boundaries.py",
       "target_namespace": ""
     },
@@ -1008,7 +713,7 @@
     },
     "scripts.validate_release_candidate": {
       "classification": "tooling",
-      "lines": 344,
+      "lines": 358,
       "path": "scripts/validate_release_candidate.py",
       "target_namespace": ""
     },
@@ -1078,54 +783,6 @@
       "path": "tests/test_analyze_package_inventory.py",
       "target_namespace": ""
     },
-    "tests.test_arcade_shooter_baseline_comparison": {
-      "classification": "tooling",
-      "lines": 210,
-      "path": "tests/test_arcade_shooter_baseline_comparison.py",
-      "target_namespace": ""
-    },
-    "tests.test_arcade_shooter_example": {
-      "classification": "tooling",
-      "lines": 55,
-      "path": "tests/test_arcade_shooter_example.py",
-      "target_namespace": ""
-    },
-    "tests.test_arcade_shooter_exhaustive": {
-      "classification": "tooling",
-      "lines": 457,
-      "path": "tests/test_arcade_shooter_exhaustive.py",
-      "target_namespace": ""
-    },
-    "tests.test_arcade_visual_address_benchmark": {
-      "classification": "tooling",
-      "lines": 94,
-      "path": "tests/test_arcade_visual_address_benchmark.py",
-      "target_namespace": ""
-    },
-    "tests.test_arcade_visual_local_baseline_postanalysis": {
-      "classification": "tooling",
-      "lines": 97,
-      "path": "tests/test_arcade_visual_local_baseline_postanalysis.py",
-      "target_namespace": ""
-    },
-    "tests.test_arcade_visual_local_baseline_showdown": {
-      "classification": "tooling",
-      "lines": 78,
-      "path": "tests/test_arcade_visual_local_baseline_showdown.py",
-      "target_namespace": ""
-    },
-    "tests.test_arcade_visual_registered_calibration_v2": {
-      "classification": "tooling",
-      "lines": 55,
-      "path": "tests/test_arcade_visual_registered_calibration_v2.py",
-      "target_namespace": ""
-    },
-    "tests.test_architecture_checker_stage7a": {
-      "classification": "tooling",
-      "lines": 96,
-      "path": "tests/test_architecture_checker_stage7a.py",
-      "target_namespace": ""
-    },
     "tests.test_content_identity": {
       "classification": "tooling",
       "lines": 61,
@@ -1166,36 +823,6 @@
       "classification": "tooling",
       "lines": 55,
       "path": "tests/test_test_tier_commands_kernel.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_action_equivalence_audit": {
-      "classification": "tooling",
-      "lines": 54,
-      "path": "tests/test_video_action_equivalence_audit.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_action_equivalence_bounded_measurements": {
-      "classification": "tooling",
-      "lines": 42,
-      "path": "tests/test_video_action_equivalence_bounded_measurements.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_action_equivalence_evidence_closure": {
-      "classification": "tooling",
-      "lines": 84,
-      "path": "tests/test_video_action_equivalence_evidence_closure.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_action_equivalence_inventory": {
-      "classification": "tooling",
-      "lines": 25,
-      "path": "tests/test_video_action_equivalence_inventory.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_action_equivalence_top1": {
-      "classification": "tooling",
-      "lines": 51,
-      "path": "tests/test_video_action_equivalence_top1.py",
       "target_namespace": ""
     },
     "tests.test_video_action_set_benchmark": {
@@ -1246,12 +873,6 @@
       "path": "tests/test_video_artifact_layout_kernel.py",
       "target_namespace": ""
     },
-    "tests.test_video_benchmark_facade": {
-      "classification": "tooling",
-      "lines": 136,
-      "path": "tests/test_video_benchmark_facade.py",
-      "target_namespace": ""
-    },
     "tests.test_video_build_orchestration_kernel": {
       "classification": "tooling",
       "lines": 151,
@@ -1266,7 +887,7 @@
     },
     "tests.test_video_complete_row_evidence": {
       "classification": "tooling",
-      "lines": 244,
+      "lines": 242,
       "path": "tests/test_video_complete_row_evidence.py",
       "target_namespace": ""
     },
@@ -1274,12 +895,6 @@
       "classification": "tooling",
       "lines": 104,
       "path": "tests/test_video_control_history_planning.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_benchmark": {
-      "classification": "tooling",
-      "lines": 46,
-      "path": "tests/test_video_discriminative_benchmark.py",
       "target_namespace": ""
     },
     "tests.test_video_discriminative_evidence": {
@@ -1290,7 +905,7 @@
     },
     "tests.test_video_discriminative_joint_evidence": {
       "classification": "tooling",
-      "lines": 81,
+      "lines": 80,
       "path": "tests/test_video_discriminative_joint_evidence.py",
       "target_namespace": ""
     },
@@ -1300,52 +915,10 @@
       "path": "tests/test_video_discriminative_joint_provider.py",
       "target_namespace": ""
     },
-    "tests.test_video_discriminative_measurement_audit": {
-      "classification": "tooling",
-      "lines": 92,
-      "path": "tests/test_video_discriminative_measurement_audit.py",
-      "target_namespace": ""
-    },
     "tests.test_video_discriminative_provider": {
       "classification": "tooling",
       "lines": 203,
       "path": "tests/test_video_discriminative_provider.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_representation_audit": {
-      "classification": "tooling",
-      "lines": 84,
-      "path": "tests/test_video_discriminative_representation_audit.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_v2_benchmark": {
-      "classification": "tooling",
-      "lines": 37,
-      "path": "tests/test_video_discriminative_v2_benchmark.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_v2_integrity": {
-      "classification": "tooling",
-      "lines": 49,
-      "path": "tests/test_video_discriminative_v2_integrity.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_v2_selection": {
-      "classification": "tooling",
-      "lines": 34,
-      "path": "tests/test_video_discriminative_v2_selection.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_v3_benchmark": {
-      "classification": "tooling",
-      "lines": 23,
-      "path": "tests/test_video_discriminative_v3_benchmark.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_discriminative_v3_self_retrieval": {
-      "classification": "tooling",
-      "lines": 25,
-      "path": "tests/test_video_discriminative_v3_self_retrieval.py",
       "target_namespace": ""
     },
     "tests.test_video_episode_family_kernel": {
@@ -1444,12 +1017,6 @@
       "path": "tests/test_video_joint_candidate_cache_kernel.py",
       "target_namespace": ""
     },
-    "tests.test_video_local_correlation": {
-      "classification": "tooling",
-      "lines": 128,
-      "path": "tests/test_video_local_correlation.py",
-      "target_namespace": ""
-    },
     "tests.test_video_materialization_kernels": {
       "classification": "tooling",
       "lines": 175,
@@ -1516,18 +1083,6 @@
       "path": "tests/test_video_observation_universe_kernel.py",
       "target_namespace": ""
     },
-    "tests.test_video_policy": {
-      "classification": "tooling",
-      "lines": 249,
-      "path": "tests/test_video_policy.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_policy_reachability": {
-      "classification": "tooling",
-      "lines": 36,
-      "path": "tests/test_video_policy_reachability.py",
-      "target_namespace": ""
-    },
     "tests.test_video_prospective_providers": {
       "classification": "tooling",
       "lines": 97,
@@ -1538,12 +1093,6 @@
       "classification": "tooling",
       "lines": 26,
       "path": "tests/test_video_prospective_runtime_equivalence.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_provider_measurement_kernel": {
-      "classification": "tooling",
-      "lines": 668,
-      "path": "tests/test_video_provider_measurement_kernel.py",
       "target_namespace": ""
     },
     "tests.test_video_provider_observation_boundary": {
@@ -1588,22 +1137,10 @@
       "path": "tests/test_video_source.py",
       "target_namespace": ""
     },
-    "tests.test_video_split_progress_kernel": {
-      "classification": "tooling",
-      "lines": 341,
-      "path": "tests/test_video_split_progress_kernel.py",
-      "target_namespace": ""
-    },
     "tests.test_video_transformation_kernel": {
       "classification": "tooling",
       "lines": 455,
       "path": "tests/test_video_transformation_kernel.py",
-      "target_namespace": ""
-    },
-    "tests.test_video_verification_closure_kernel": {
-      "classification": "tooling",
-      "lines": 327,
-      "path": "tests/test_video_verification_closure_kernel.py",
       "target_namespace": ""
     },
     "tests.test_video_verification_orchestration_kernel": {
@@ -1648,12 +1185,6 @@
       "path": "tests/test_visual_local_baselines.py",
       "target_namespace": ""
     },
-    "tests.test_visual_local_evidence_benchmark": {
-      "classification": "tooling",
-      "lines": 82,
-      "path": "tests/test_visual_local_evidence_benchmark.py",
-      "target_namespace": ""
-    },
     "tests.test_visual_precomputed": {
       "classification": "tooling",
       "lines": 68,
@@ -1682,12 +1213,6 @@
       "classification": "tooling",
       "lines": 190,
       "path": "tests/test_visual_retrieval.py",
-      "target_namespace": ""
-    },
-    "tests.test_visual_system_b": {
-      "classification": "tooling",
-      "lines": 141,
-      "path": "tests/test_visual_system_b.py",
       "target_namespace": ""
     },
     "tests.video_final_test_support": {

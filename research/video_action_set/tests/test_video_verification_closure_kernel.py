@@ -245,7 +245,7 @@ def test_verification_summary_preserves_legacy_projection() -> None:
             "zeromodel.domains.video_action_set.verification",
         ),
         (
-            "zeromodel.domains.video_action_set.provider_measurement",
+            "research.video_action_set.provider_measurement",
             "zeromodel.domains.video_action_set.evidence_audit",
         ),
         (

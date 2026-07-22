@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+import pytest
 
+pytestmark = pytest.mark.research
 
 def test_committed_v3_audit_reports_outcome_b() -> None:
     summary = bench._load_json(bench.OUTPUT_DIR_V3 / "architecture-self-retrieval-status.json")

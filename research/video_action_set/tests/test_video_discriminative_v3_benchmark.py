@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+import pytest
 
+pytestmark = pytest.mark.research
 
 def test_v3_freeze_preserves_counts_and_pairwise_universe(tmp_path: Path) -> None:
     payload = bench.run_freeze_benchmark_v3(tmp_path)

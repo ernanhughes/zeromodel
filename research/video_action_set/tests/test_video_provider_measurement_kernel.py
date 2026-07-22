@@ -8,12 +8,14 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-import pytest
-
 import research.benchmarks.video_action_set_benchmark as benchmark
 import research.video_action_set.provider_measurement as measurement
 from zeromodel.core.artifact import VPMValidationError
 from research.video.video_prospective_providers import score_all_rows_reference
+
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

@@ -1,6 +1,6 @@
 # ZeroModel 1.0.13 Package Inventory
 
-Baseline commit: `892511ea8e65a8704cf41d3fa217971cc4c6a36f`
+Baseline commit: `e9e083ac128dbd50a941b06f9cc30be9eab98d75`
 
 Generated artifacts:
 
@@ -10,8 +10,8 @@ Generated artifacts:
 
 ## Module Count By Classification
 
-- examples: 28
-- tooling: 128
+- examples: 26
+- tooling: 98
 
 ## Public Root API
 

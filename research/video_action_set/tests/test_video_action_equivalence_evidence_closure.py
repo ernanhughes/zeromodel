@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from examples.arcade_visual_action_equivalence_audit import run_audit_evidence_closure
+from research.video_action_set.arcade_visual_action_equivalence_audit import run_audit_evidence_closure
 from examples.arcade_shooter_policy import compile_policy_artifact
 from research.evidence.video_action_equivalence import (
     VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION,
@@ -10,6 +10,10 @@ from research.evidence.video_action_equivalence import (
     collect_v3_preservation_manifest,
     verify_v3_preservation,
 )
+
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

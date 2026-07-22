@@ -152,18 +152,6 @@ def stage7a_forbidden_edge_violations(
             "reachability_composition must not import benchmark, provider measurement, profiling, scoring, planning, materialization execution, verification, mutation audit, persistence, runtime, or filesystem layers"
         )
 
-    if importer == PROVIDER_MEASUREMENT_MODULE and (
-        imported == BENCHMARK_MODULE
-        or imported == RUNTIME_PROFILING_MODULE
-        or imported in PLANNING_MODULES
-        or imported in MATERIALIZATION_MODULES
-        or _is_forbidden_infrastructure_import(imported)
-        or _is_verification_or_audit_import(imported)
-    ):
-        reject(
-            "provider_measurement must not import benchmark, profiling, planning, materialization execution, verification, mutation audit, persistence, runtime, or filesystem layers"
-        )
-
     if importer == RUNTIME_PROFILING_MODULE and (
         imported == BENCHMARK_MODULE
         or imported == REACHABILITY_COMPOSITION_MODULE

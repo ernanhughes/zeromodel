@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 import shutil
 
+from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+
 import pytest
 
-from examples import arcade_visual_video_discriminative_evidence_benchmark as bench
+pytestmark = pytest.mark.research
 
 
 def _copy_artifacts(src: Path, dst: Path) -> None:

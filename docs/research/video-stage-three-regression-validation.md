@@ -83,7 +83,7 @@ Calibration phase isolation:
 python - <<'PY'
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from examples.arcade_visual_video_local_correlation_benchmark import run_calibrate
+from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_benchmark import run_calibrate
 with TemporaryDirectory() as d:
     run_calibrate(output_dir=Path(d))
 PY

@@ -3,14 +3,16 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from examples.arcade_visual_action_equivalence_audit import (
+from research.video_action_set.arcade_visual_action_equivalence_audit import (
     run_audit_evidence_closure,
     run_build_reachability_tile,
     run_replay_reachability,
     run_rescore_supported_top1,
     run_verify_bounded_measurements,
 )
+import pytest
 
+pytestmark = pytest.mark.research
 
 def test_unsupported_methods_produce_status_artifacts(tmp_path: Path) -> None:
     run_audit_evidence_closure(tmp_path)

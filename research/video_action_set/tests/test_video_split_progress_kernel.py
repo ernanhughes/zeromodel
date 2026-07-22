@@ -6,14 +6,16 @@ import sys
 from types import SimpleNamespace
 from typing import Any
 
-import pytest
-
 import research.video_action_set.video_action_set_cli as cli
 from research.video_action_set import build_orchestration as build
 from research.video_action_set import provider_measurement as measurement
 from zeromodel.video.domains.video_action_set.artifact_io import _sha256
 from research.video_action_set.provider_measurement import SplitBuildProgress
 from research.video.video_prospective_providers import PROSPECTIVE_PROVIDER_IDS
+
+import pytest
+
+pytestmark = pytest.mark.research
 
 
 def _records() -> list[dict[str, Any]]:

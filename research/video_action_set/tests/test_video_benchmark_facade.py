@@ -11,8 +11,7 @@ import research.video_action_set.build_orchestration as build_orchestration
 import research.video_action_set.mutation_filesystem as mutation_filesystem
 import research.video_action_set.mutation_orchestration as mutation_orchestration
 import research.video_action_set.verification_orchestration as verification_orchestration
-from zeromodel.video.domains.video_action_set import artifact_io
-from research.video_action_set.video_action_set_cli import main
+xfrom research.video_action_set.video_action_set_cli import main
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -107,7 +106,7 @@ def _load_architecture_checker():
             "zeromodel.domains.video_action_set.artifact_io",
         ),
         (
-            "zeromodel.domains.video_action_set.provider_measurement",
+            "research.video_action_set.provider_measurement",
             "zeromodel.domains.video_action_set.build_orchestration",
         ),
         ("zeromodel.domains.video_action_set.report_rendering", "pathlib"),

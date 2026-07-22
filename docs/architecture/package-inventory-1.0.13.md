@@ -1,0 +1,48 @@
+# ZeroModel 1.0.13 Package Inventory
+
+Baseline commit: `52be5f838e15d4b32a4fdf5a393762101afd2656`
+
+Generated artifacts:
+
+- `docs/architecture/package-module-map-1.0.13.csv`
+- `docs/architecture/package-import-graph-1.0.13.json`
+- `docs/architecture/package-dependency-findings-1.0.13.md`
+
+## Module Count By Classification
+
+- analysis: 26
+- core: 9
+- examples: 28
+- observation: 4
+- research: 11
+- split: 1
+- sqlalchemy: 9
+- tooling: 146
+- video: 69
+- vision: 10
+
+## Public Root API
+
+`zeromodel/__init__.py` currently re-exports symbols from core, analysis, observation, vision, video, and research/evidence modules. The approved package architecture removes this compatibility surface instead of preserving aliases. See the CSV `public_symbols` and inbound test/example columns for defining-module and consumer evidence.
+
+## Package Build And Data Inventory
+
+Current `pyproject.toml` discovers `zeromodel*`, ships the monolithic `zeromodel` distribution at version `1.0.12`, declares NumPy as the only base runtime dependency, and puts SQLAlchemy, Torch, TorchVision, Transformers, and Pillow behind optional extras. `tool.pytest.ini_options.pythonpath = ["."]` means tests can rely on repository-root imports that future wheels must not assume.
+
+## Domain Boundary Inventory
+
+The RMDTO target path is Runtime -> Facade -> Engine -> Service -> Store protocol -> Store implementation -> ORM. Current SQLAlchemy ownership is isolated under `zeromodel/db`; `zeromodel/runtime.py` and `zeromodel/stores` are classified as video and should remain SQLAlchemy-free. Suspicious and forbidden proposed edges are ranked in the dependency findings document.
+
+## Split Analysis
+
+| current module | responsibility fragment | target module | target package | symbols to move | inbound callers | identity/schema risk | recommended split order |
+|---|---|---|---|---|---|---|---|
+| zeromodel | root compatibility re-exports | package-local `__init__.py` files | core/analysis/observation/vision/video/sqlalchemy | all current `__all__` entries | tests and examples using `from zeromodel import ...` | high: root API removal changes import identity | remove root re-exports after package-local public APIs are declared |
+
+## Architecture Comparison
+
+Allowed target graph: analysis->core; observation->core; vision->observation/core; video->observation/core; sqlalchemy->video/core; research->any production package.
+
+Observed proposed classification graph: `{"analysis": ["core"], "core": ["analysis", "observation"], "observation": ["core", "vision"], "sqlalchemy": ["core", "video"], "video": ["analysis", "core", "observation", "sqlalchemy"], "vision": ["core", "observation"]}`.
+
+Forbidden proposed edge count: `18`.

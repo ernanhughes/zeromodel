@@ -29,11 +29,36 @@ def compiler_spec() -> HierarchyCompilerSpecDTO:
     )
 
 
-def make_source_artifacts(count: int, *, kind: str = CORPUS_ARTIFACT_KIND) -> tuple:
-    return tuple(
-        ArtifactRef(
-            artifact_kind=kind,
-            artifact_id=sha256_digest(f"artifact-payload-{i}".encode()),
-        )
-        for i in range(count)
-    )
+@pytest.fixture
+def make_source_artifacts():
+    """Factory fixture (not a plain module import - a bare `conftest`
+    module name collides across package test directories once more than
+    one package's tests are collected in the same pytest session, e.g. by
+    `scripts/run_fast_tests.py`) building `count` distinct source
+    ArtifactRefs.
+
+    When `store` is given, the corresponding payload is actually stored
+    under each ref - hierarchy closure now requires every source artifact
+    a leaf binding points at to genuinely resolve through the Artifacts
+    store, not merely have a well-formed digest.
+    """
+
+    def _make_source_artifacts(
+        count: int,
+        *,
+        store: InMemoryArtifactStore | None = None,
+        kind: str = CORPUS_ARTIFACT_KIND,
+    ) -> tuple:
+        refs = []
+        for i in range(count):
+            payload = f"artifact-payload-{i}".encode()
+            if store is not None:
+                ref = store.put(kind, payload)
+            else:
+                ref = ArtifactRef(
+                    artifact_kind=kind, artifact_id=sha256_digest(payload)
+                )
+            refs.append(ref)
+        return tuple(refs)
+
+    return _make_source_artifacts

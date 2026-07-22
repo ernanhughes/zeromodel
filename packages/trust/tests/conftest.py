@@ -12,6 +12,7 @@ from zeromodel.trust import (
     TrustPolicyDTO,
     TrustPolicyRuleDTO,
     compute_authorization_id,
+    compute_trust_policy_id,
     generate_signing_key,
     sign_digest,
 )
@@ -59,8 +60,11 @@ def trust_policy(signer_identity: SignerIdentityDTO) -> TrustPolicyDTO:
     trusted_signer = TrustedSignerDTO(
         signer=signer_identity, trusted_since="2026-01-01T00:00:00+00:00"
     )
+    policy_id = compute_trust_policy_id(
+        policy_epoch=5, trusted_signers=(trusted_signer,), rules=(rule,)
+    )
     return TrustPolicyDTO(
-        policy_id="policy-1",
+        policy_id=policy_id,
         policy_epoch=5,
         trusted_signers=(trusted_signer,),
         rules=(rule,),

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Optional, Tuple
 
@@ -17,6 +18,7 @@ class TrustFailureCode(str, Enum):
     MALFORMED_ENVELOPE = "malformed_envelope"
     MISSING_SIGNATURE = "missing_signature"
     SIGNATURE_INVALID = "signature_invalid"
+    SIGNER_ISSUER_MISMATCH = "signer_issuer_mismatch"
     SIGNER_UNKNOWN = "signer_unknown"
     SIGNER_UNTRUSTED = "signer_untrusted"
     ARTIFACT_KIND_NOT_ALLOWED = "artifact_kind_not_allowed"
@@ -29,6 +31,7 @@ class TrustFailureCode(str, Enum):
     REVOKED_AUTHORIZATION = "revoked_authorization"
     REVOKED_ARTIFACT = "revoked_artifact"
     REVOCATION_INDETERMINATE = "revocation_indeterminate"
+    MALFORMED_EVALUATION_TIME = "malformed_evaluation_time"
 
 
 def _require_sha256(value: str, message: str) -> None:
@@ -39,6 +42,24 @@ def _require_sha256(value: str, message: str) -> None:
 def _require_nonempty_str(value: object, message: str) -> None:
     if not isinstance(value, str) or not value:
         raise VPMValidationError(message)
+
+
+def parse_iso8601_utc(value: str, context: str) -> datetime:
+    """Parse an ISO 8601 timestamp, requiring an explicit UTC/timezone
+    offset. A naive (offset-less) timestamp is ambiguous about which
+    instant it names and is rejected rather than silently assumed to be
+    UTC or local time."""
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (ValueError, TypeError) as exc:
+        raise VPMValidationError(
+            f"{context} is not a valid ISO 8601 timestamp: {value!r}"
+        ) from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise VPMValidationError(
+            f"{context} must be a timezone-aware timestamp with an explicit UTC offset: {value!r}"
+        )
+    return parsed
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,7 +162,15 @@ class TrustPolicyRuleDTO:
 
 @dataclass(frozen=True, slots=True)
 class TrustPolicyDTO:
-    """An identified, bounded trust policy - never one universal signer."""
+    """An identified, bounded trust policy - never one universal signer.
+
+    `policy_id` is this policy's own content digest (see
+    `trust_policy_identity_payload`), the same self-validating pattern used
+    by `ArtifactAuthorizationDTO.authorization_id`: two policies with the
+    same `policy_id` are guaranteed to have identical trusted signers,
+    rules, and epoch. A `TrustDecisionDTO` can therefore record exactly
+    which policy authorized it without a separate binding mechanism.
+    """
 
     policy_id: str
     policy_epoch: int
@@ -150,11 +179,47 @@ class TrustPolicyDTO:
     spec_version: str = SPEC_VERSION
 
     def __post_init__(self) -> None:
-        _require_nonempty_str(
-            self.policy_id, "TrustPolicyDTO.policy_id must be non-empty"
+        _require_sha256(
+            self.policy_id, "TrustPolicyDTO.policy_id must be a sha256: digest"
         )
         if self.policy_epoch < 0:
             raise VPMValidationError("TrustPolicyDTO.policy_epoch must be >= 0")
+
+        seen_signer_ids: set = set()
+        seen_public_keys: set = set()
+        for entry in self.trusted_signers:
+            if entry.signer.signer_id in seen_signer_ids:
+                raise VPMValidationError(
+                    f"TrustPolicyDTO has a duplicate trusted signer_id: {entry.signer.signer_id!r}"
+                )
+            seen_signer_ids.add(entry.signer.signer_id)
+            if entry.signer.public_key_hex in seen_public_keys:
+                raise VPMValidationError(
+                    "TrustPolicyDTO has two different trusted signers sharing "
+                    f"public_key_hex {entry.signer.public_key_hex!r}"
+                )
+            seen_public_keys.add(entry.signer.public_key_hex)
+
+        seen_rule_ids: set = set()
+        for rule in self.rules:
+            if rule.rule_id in seen_rule_ids:
+                raise VPMValidationError(
+                    f"TrustPolicyDTO has a duplicate rule_id: {rule.rule_id!r}"
+                )
+            seen_rule_ids.add(rule.rule_id)
+            if rule.signer_id not in seen_signer_ids:
+                raise VPMValidationError(
+                    f"TrustPolicyDTO rule {rule.rule_id!r} references unknown "
+                    f"signer_id {rule.signer_id!r} (not in trusted_signers)"
+                )
+
+        expected_id = sha256_digest(
+            canonical_json_bytes(trust_policy_identity_payload(self))
+        )
+        if self.policy_id != expected_id:
+            raise VPMValidationError(
+                "TrustPolicyDTO.policy_id does not match its own canonical content"
+            )
 
     def signer(self, signer_id: str) -> Optional[TrustedSignerDTO]:
         for entry in self.trusted_signers:
@@ -164,6 +229,82 @@ class TrustPolicyDTO:
 
     def rules_for_signer(self, signer_id: str) -> Tuple[TrustPolicyRuleDTO, ...]:
         return tuple(rule for rule in self.rules if rule.signer_id == signer_id)
+
+
+def _deployment_scope_payload(scope: "DeploymentScopeDTO") -> dict:
+    return {
+        "organization": scope.organization,
+        "application": scope.application,
+        "environment": scope.environment,
+        "device_group": scope.device_group,
+        "location": scope.location,
+        "artifact_kind": scope.artifact_kind,
+        "corpus": scope.corpus,
+        "policy_family": scope.policy_family,
+    }
+
+
+def _trust_policy_identity_payload_fields(
+    *,
+    policy_epoch: int,
+    trusted_signers: Tuple[TrustedSignerDTO, ...],
+    rules: Tuple[TrustPolicyRuleDTO, ...],
+    spec_version: str,
+) -> dict:
+    return {
+        "spec_version": spec_version,
+        "policy_epoch": policy_epoch,
+        "trusted_signers": [
+            {
+                "signer_id": entry.signer.signer_id,
+                "public_key_hex": entry.signer.public_key_hex,
+                "key_algorithm": entry.signer.key_algorithm,
+                "trusted_since": entry.trusted_since,
+            }
+            for entry in trusted_signers
+        ],
+        "rules": [
+            {
+                "rule_id": rule.rule_id,
+                "signer_id": rule.signer_id,
+                "allowed_artifact_kinds": list(rule.allowed_artifact_kinds),
+                "scope_pattern": _deployment_scope_payload(rule.scope_pattern),
+            }
+            for rule in rules
+        ],
+    }
+
+
+def trust_policy_identity_payload(policy: TrustPolicyDTO) -> dict:
+    """The exact canonical payload `policy_id` covers."""
+    return _trust_policy_identity_payload_fields(
+        policy_epoch=policy.policy_epoch,
+        trusted_signers=policy.trusted_signers,
+        rules=policy.rules,
+        spec_version=policy.spec_version,
+    )
+
+
+def compute_trust_policy_id(
+    *,
+    policy_epoch: int,
+    trusted_signers: Tuple[TrustedSignerDTO, ...],
+    rules: Tuple[TrustPolicyRuleDTO, ...],
+    spec_version: str = SPEC_VERSION,
+) -> str:
+    """Compute the policy_id for a not-yet-constructed TrustPolicyDTO.
+
+    Used by authoring workflows to build a valid TrustPolicyDTO (which
+    validates its own id in `__post_init__`) without duplicating the
+    canonicalization logic.
+    """
+    payload = _trust_policy_identity_payload_fields(
+        policy_epoch=policy_epoch,
+        trusted_signers=trusted_signers,
+        rules=rules,
+        spec_version=spec_version,
+    )
+    return sha256_digest(canonical_json_bytes(payload))
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,6 +348,16 @@ class ArtifactAuthorizationDTO:
         if self.policy_epoch < 0:
             raise VPMValidationError(
                 "ArtifactAuthorizationDTO.policy_epoch must be >= 0"
+            )
+        valid_from_dt = parse_iso8601_utc(
+            self.valid_from, "ArtifactAuthorizationDTO.valid_from"
+        )
+        valid_until_dt = parse_iso8601_utc(
+            self.valid_until, "ArtifactAuthorizationDTO.valid_until"
+        )
+        if valid_from_dt > valid_until_dt:
+            raise VPMValidationError(
+                "ArtifactAuthorizationDTO.valid_from must not be after valid_until"
             )
         expected_id = sha256_digest(
             canonical_json_bytes(authorization_signing_payload(self))

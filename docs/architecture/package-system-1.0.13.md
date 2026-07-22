@@ -1,6 +1,6 @@
 # ZeroModel 1.0.13 Package System Architecture
 
-**Status:** Proposed architecture contract  
+**Status:** Historical baseline — describes the completed six-distribution split. Superseded as the *current* architecture by [package-system-next.md](package-system-next.md), which documents the nine-distribution workspace (this document's six packages plus `zeromodel-artifacts`, `zeromodel-trust`, `zeromodel-navigation`). This document is preserved unmodified below as the record of what Stage 1.0.13A–H actually delivered; it is not rewritten in place.  
 **Release:** `1.0.13`  
 **Repository model:** one repository, multiple independently buildable Python distributions  
 **Compatibility policy:** breaking source and import changes are permitted  

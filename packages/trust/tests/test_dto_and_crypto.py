@@ -11,8 +11,11 @@ from zeromodel.trust import (
     RevocationRecordDTO,
     SignerIdentityDTO,
     TrustDecisionDTO,
+    TrustedSignerDTO,
+    TrustPolicyDTO,
     TrustPolicyRuleDTO,
     compute_authorization_id,
+    compute_trust_policy_id,
     generate_signing_key,
     sign_digest,
     verify_signature,
@@ -99,6 +102,170 @@ def test_trust_decision_rejects_unknown_decision_value():
             epoch_valid=True,
             not_revoked=True,
             decision="maybe",
+        )
+
+
+def _make_signer(signer_id: str, public_key_hex: str) -> TrustedSignerDTO:
+    return TrustedSignerDTO(
+        signer=SignerIdentityDTO(signer_id=signer_id, public_key_hex=public_key_hex),
+        trusted_since=VALID_FROM,
+    )
+
+
+def test_trust_policy_id_must_match_own_canonical_content():
+    signer = _make_signer("signer-a", "aa" * 32)
+    rule = TrustPolicyRuleDTO(
+        rule_id="rule-1",
+        signer_id="signer-a",
+        allowed_artifact_kinds=("traffic-policy",),
+        scope_pattern=DeploymentScopeDTO(organization="acme"),
+    )
+    correct_id = compute_trust_policy_id(
+        policy_epoch=1, trusted_signers=(signer,), rules=(rule,)
+    )
+
+    # Constructing with the correct, self-consistent id succeeds.
+    TrustPolicyDTO(
+        policy_id=correct_id, policy_epoch=1, trusted_signers=(signer,), rules=(rule,)
+    )
+
+    # A fabricated id (not the digest of the actual content) is rejected.
+    with pytest.raises(VPMValidationError):
+        TrustPolicyDTO(
+            policy_id="sha256:" + "b" * 64,
+            policy_epoch=1,
+            trusted_signers=(signer,),
+            rules=(rule,),
+        )
+
+
+def test_trust_policy_rejects_duplicate_signer_id():
+    signer_a = _make_signer("signer-a", "aa" * 32)
+    signer_a_again = _make_signer("signer-a", "bb" * 32)
+    policy_id = compute_trust_policy_id(
+        policy_epoch=1, trusted_signers=(signer_a, signer_a_again), rules=()
+    )
+    with pytest.raises(VPMValidationError, match="duplicate trusted signer_id"):
+        TrustPolicyDTO(
+            policy_id=policy_id,
+            policy_epoch=1,
+            trusted_signers=(signer_a, signer_a_again),
+            rules=(),
+        )
+
+
+def test_trust_policy_rejects_two_signers_sharing_a_public_key():
+    signer_a = _make_signer("signer-a", "aa" * 32)
+    signer_b = _make_signer(
+        "signer-b", "aa" * 32
+    )  # same key, different declared identity
+    policy_id = compute_trust_policy_id(
+        policy_epoch=1, trusted_signers=(signer_a, signer_b), rules=()
+    )
+    with pytest.raises(VPMValidationError, match="sharing public_key_hex"):
+        TrustPolicyDTO(
+            policy_id=policy_id,
+            policy_epoch=1,
+            trusted_signers=(signer_a, signer_b),
+            rules=(),
+        )
+
+
+def test_trust_policy_rejects_duplicate_rule_id():
+    signer = _make_signer("signer-a", "aa" * 32)
+    rule_1 = TrustPolicyRuleDTO(
+        rule_id="rule-1",
+        signer_id="signer-a",
+        allowed_artifact_kinds=("kind-a",),
+        scope_pattern=DeploymentScopeDTO(),
+    )
+    rule_1_again = TrustPolicyRuleDTO(
+        rule_id="rule-1",
+        signer_id="signer-a",
+        allowed_artifact_kinds=("kind-b",),
+        scope_pattern=DeploymentScopeDTO(),
+    )
+    policy_id = compute_trust_policy_id(
+        policy_epoch=1, trusted_signers=(signer,), rules=(rule_1, rule_1_again)
+    )
+    with pytest.raises(VPMValidationError, match="duplicate rule_id"):
+        TrustPolicyDTO(
+            policy_id=policy_id,
+            policy_epoch=1,
+            trusted_signers=(signer,),
+            rules=(rule_1, rule_1_again),
+        )
+
+
+def test_trust_policy_rejects_a_rule_referencing_an_unknown_signer():
+    signer = _make_signer("signer-a", "aa" * 32)
+    rule_for_stranger = TrustPolicyRuleDTO(
+        rule_id="rule-1",
+        signer_id="signer-does-not-exist",
+        allowed_artifact_kinds=("kind-a",),
+        scope_pattern=DeploymentScopeDTO(),
+    )
+    policy_id = compute_trust_policy_id(
+        policy_epoch=1, trusted_signers=(signer,), rules=(rule_for_stranger,)
+    )
+    with pytest.raises(VPMValidationError, match="unknown"):
+        TrustPolicyDTO(
+            policy_id=policy_id,
+            policy_epoch=1,
+            trusted_signers=(signer,),
+            rules=(rule_for_stranger,),
+        )
+
+
+def test_authorization_rejects_valid_from_after_valid_until():
+    scope = DeploymentScopeDTO(organization="acme")
+    real_digest = "sha256:" + "e" * 64
+    inverted_id = compute_authorization_id(
+        artifact_digest=real_digest,
+        artifact_kind="traffic-policy",
+        deployment_scope=scope,
+        policy_epoch=1,
+        valid_from="2027-01-01T00:00:00+00:00",
+        valid_until="2026-01-01T00:00:00+00:00",
+        issuer_signer_id="signer-a",
+    )
+    with pytest.raises(
+        VPMValidationError, match="valid_from must not be after valid_until"
+    ):
+        ArtifactAuthorizationDTO(
+            artifact_digest=real_digest,
+            artifact_kind="traffic-policy",
+            deployment_scope=scope,
+            policy_epoch=1,
+            valid_from="2027-01-01T00:00:00+00:00",
+            valid_until="2026-01-01T00:00:00+00:00",
+            issuer_signer_id="signer-a",
+            authorization_id=inverted_id,
+        )
+
+
+def test_authorization_rejects_a_timezone_naive_validity_timestamp():
+    scope = DeploymentScopeDTO(organization="acme")
+    real_digest = "sha256:" + "f" * 64
+    naive_id = compute_authorization_id(
+        artifact_digest=real_digest,
+        artifact_kind="traffic-policy",
+        deployment_scope=scope,
+        policy_epoch=1,
+        valid_from="2026-01-01T00:00:00",  # no UTC offset
+        valid_until=VALID_UNTIL,
+        issuer_signer_id="signer-a",
+    )
+    with pytest.raises(VPMValidationError, match="timezone-aware"):
+        ArtifactAuthorizationDTO(
+            artifact_digest=real_digest,
+            artifact_kind="traffic-policy",
+            deployment_scope=scope,
+            policy_epoch=1,
+            valid_from="2026-01-01T00:00:00",
+            valid_until=VALID_UNTIL,
+            issuer_signer_id="signer-a",
+            authorization_id=naive_id,
         )
 
 

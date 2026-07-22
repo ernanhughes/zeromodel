@@ -12,11 +12,9 @@ the wall clock itself.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Optional
 
 from zeromodel.artifacts import ArtifactRef, sha256_digest
-from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.content_identity import canonical_json_bytes
 
 from zeromodel.trust import crypto
@@ -28,15 +26,10 @@ from zeromodel.trust.dto import (
     TrustFailureCode,
     TrustPolicyDTO,
     authorization_signing_payload,
+    parse_iso8601_utc,
 )
+from zeromodel.core.artifact import VPMValidationError
 from zeromodel.trust.revocation import RevocationResolver, RevocationStatus
-
-
-def _parse_iso8601(value: str) -> datetime:
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise VPMValidationError(f"not a valid ISO 8601 timestamp: {value!r}") from exc
 
 
 def _check_integrity(
@@ -67,6 +60,17 @@ def _check_signature(
 
     if signature_envelope.authorization_id != authorization.authorization_id:
         failure_codes.append(TrustFailureCode.MALFORMED_ENVELOPE.value)
+        return False
+
+    # The envelope's signer must be the same identity the (signed)
+    # authorization claims issued it. Without this check, a trusted
+    # signer could produce a validly-signed authorization whose signed
+    # content falsely names a different signer as issuer - the signature
+    # would still verify (it covers the authorization's real content
+    # including that false issuer_signer_id), so this must be a separate
+    # check, not something signature verification alone catches.
+    if signature_envelope.signer_id != authorization.issuer_signer_id:
+        failure_codes.append(TrustFailureCode.SIGNER_ISSUER_MISMATCH.value)
         return False
 
     trusted_entry = trust_policy.signer(signature_envelope.signer_id)
@@ -160,21 +164,47 @@ def _check_authorization_scope(
 def _check_freshness(
     *,
     authorization: ArtifactAuthorizationDTO,
+    trust_policy: TrustPolicyDTO,
     minimum_epoch: int,
     evaluation_time: str,
     failure_codes: list[str],
 ) -> tuple[bool, bool]:
-    """Returns (time_valid, epoch_valid)."""
-    evaluated_at = _parse_iso8601(evaluation_time)
-    valid_from = _parse_iso8601(authorization.valid_from)
-    valid_until = _parse_iso8601(authorization.valid_until)
-    time_valid = valid_from <= evaluated_at <= valid_until
-    if evaluated_at < valid_from:
-        failure_codes.append(TrustFailureCode.NOT_YET_VALID.value)
-    elif evaluated_at > valid_until:
-        failure_codes.append(TrustFailureCode.EXPIRED.value)
+    """Returns (time_valid, epoch_valid).
 
-    epoch_valid = authorization.policy_epoch >= minimum_epoch
+    `evaluation_time` is untrusted caller input (unlike
+    `authorization.valid_from`/`valid_until`, which are already guaranteed
+    parseable and UTC-aware by `ArtifactAuthorizationDTO.__post_init__`),
+    so a malformed value fails closed with a declared failure code rather
+    than raising an uncaught exception.
+
+    `epoch_valid` is a rollback guard against *two* independent floors:
+    the caller-supplied `minimum_epoch`, and the active `trust_policy`'s
+    own `policy_epoch` - an authorization issued under an epoch older than
+    the currently active policy must not be honored even if a caller
+    passes a stale `minimum_epoch`.
+    """
+    try:
+        evaluated_at = parse_iso8601_utc(evaluation_time, "evaluation_time")
+    except VPMValidationError:
+        failure_codes.append(TrustFailureCode.MALFORMED_EVALUATION_TIME.value)
+        time_valid = False
+    else:
+        valid_from = parse_iso8601_utc(
+            authorization.valid_from, "authorization.valid_from"
+        )
+        valid_until = parse_iso8601_utc(
+            authorization.valid_until, "authorization.valid_until"
+        )
+        time_valid = valid_from <= evaluated_at <= valid_until
+        if evaluated_at < valid_from:
+            failure_codes.append(TrustFailureCode.NOT_YET_VALID.value)
+        elif evaluated_at > valid_until:
+            failure_codes.append(TrustFailureCode.EXPIRED.value)
+
+    epoch_valid = (
+        authorization.policy_epoch >= minimum_epoch
+        and authorization.policy_epoch >= trust_policy.policy_epoch
+    )
     if not epoch_valid:
         failure_codes.append(TrustFailureCode.EPOCH_TOO_OLD.value)
 
@@ -228,6 +258,38 @@ def _check_revocations(
         failure_codes.append(TrustFailureCode.REVOCATION_INDETERMINATE.value)
 
     return any_revoked, any_indeterminate
+
+
+def _determine_decision(
+    *,
+    integrity_valid: bool,
+    signature_valid: bool,
+    signer_known: bool,
+    signer_trusted: bool,
+    artifact_kind_allowed: bool,
+    scope_authorized: bool,
+    time_valid: bool,
+    epoch_valid: bool,
+    any_revoked: bool,
+    any_indeterminate: bool,
+) -> str:
+    core_checks_pass = (
+        integrity_valid
+        and signature_valid
+        and signer_known
+        and signer_trusted
+        and artifact_kind_allowed
+        and scope_authorized
+        and time_valid
+        and epoch_valid
+    )
+    if core_checks_pass and not any_revoked and not any_indeterminate:
+        return "authorized"
+    if core_checks_pass and any_indeterminate and not any_revoked:
+        # Every other property held; only the revocation check could not
+        # return a confident answer. Distinct from a definite "rejected".
+        return "indeterminate"
+    return "rejected"
 
 
 def verify_artifact_for_scope(
@@ -284,6 +346,7 @@ def verify_artifact_for_scope(
     )
     time_valid, epoch_valid = _check_freshness(
         authorization=authorization,
+        trust_policy=trust_policy,
         minimum_epoch=minimum_epoch,
         evaluation_time=evaluation_time,
         failure_codes=failure_codes,
@@ -297,24 +360,18 @@ def verify_artifact_for_scope(
     )
     not_revoked = not any_revoked and not any_indeterminate
 
-    core_checks_pass = (
-        integrity_valid
-        and signature_valid
-        and signer_known
-        and signer_trusted
-        and artifact_kind_allowed
-        and scope_authorized
-        and time_valid
-        and epoch_valid
+    decision = _determine_decision(
+        integrity_valid=integrity_valid,
+        signature_valid=signature_valid,
+        signer_known=signer_known,
+        signer_trusted=signer_trusted,
+        artifact_kind_allowed=artifact_kind_allowed,
+        scope_authorized=scope_authorized,
+        time_valid=time_valid,
+        epoch_valid=epoch_valid,
+        any_revoked=any_revoked,
+        any_indeterminate=any_indeterminate,
     )
-    if core_checks_pass and not_revoked:
-        decision = "authorized"
-    elif core_checks_pass and any_indeterminate and not any_revoked:
-        # Every other property held; only the revocation check could not
-        # return a confident answer. Distinct from a definite "rejected".
-        decision = "indeterminate"
-    else:
-        decision = "rejected"
 
     return TrustDecisionDTO(
         integrity_valid=integrity_valid,

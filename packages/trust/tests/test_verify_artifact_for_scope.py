@@ -230,6 +230,58 @@ def test_changed_authorization_field_reusing_old_signature_is_malformed(
     assert TrustFailureCode.MALFORMED_ENVELOPE.value in decision.failure_codes
 
 
+def test_signer_issuer_mismatch_is_rejected(
+    artifact_ref,
+    artifact_bytes,
+    authorization_scope,
+    trust_policy,
+    requested_scope,
+    signing_key,
+):
+    """A genuinely trusted signer (signer-a) produces a validly-signed
+    envelope, but the (signed) authorization content falsely names a
+    different signer as issuer. The signature itself verifies fine - this
+    must be caught as a separate provenance check, not assumed away."""
+    authorization_id = compute_authorization_id(
+        artifact_digest=artifact_ref.artifact_id,
+        artifact_kind=artifact_ref.artifact_kind,
+        deployment_scope=authorization_scope,
+        policy_epoch=5,
+        valid_from=VALID_FROM,
+        valid_until=VALID_UNTIL,
+        issuer_signer_id="signer-b",  # false claim - never trusted, never signed by
+    )
+    authorization = ArtifactAuthorizationDTO(
+        artifact_digest=artifact_ref.artifact_id,
+        artifact_kind=artifact_ref.artifact_kind,
+        deployment_scope=authorization_scope,
+        policy_epoch=5,
+        valid_from=VALID_FROM,
+        valid_until=VALID_UNTIL,
+        issuer_signer_id="signer-b",
+        authorization_id=authorization_id,
+    )
+    signature_hex = sign_digest(signing_key.private_key, authorization_id)
+    envelope = SignatureEnvelopeDTO(
+        authorization_id=authorization_id,
+        signer_id="signer-a",
+        signature_hex=signature_hex,
+    )
+
+    decision = _verify(
+        artifact_ref=artifact_ref,
+        canonical_artifact_bytes=artifact_bytes,
+        authorization=authorization,
+        signature_envelope=envelope,
+        trust_policy=trust_policy,
+        deployment_scope=requested_scope,
+        minimum_epoch=5,
+    )
+    assert decision.signature_valid is False
+    assert decision.decision == "rejected"
+    assert TrustFailureCode.SIGNER_ISSUER_MISMATCH.value in decision.failure_codes
+
+
 def test_missing_signature_is_rejected(
     artifact_ref, artifact_bytes, authorization, trust_policy, requested_scope
 ):
@@ -441,6 +493,103 @@ def test_old_policy_epoch_is_rejected(
     assert decision.epoch_valid is False
     assert decision.decision == "rejected"
     assert TrustFailureCode.EPOCH_TOO_OLD.value in decision.failure_codes
+
+
+def test_epoch_too_old_relative_to_active_policy_even_with_permissive_minimum(
+    artifact_ref,
+    artifact_bytes,
+    authorization,
+    signature_envelope,
+    signer_identity,
+    requested_scope,
+):
+    """A caller passing a permissive (or stale) `minimum_epoch=0` must not
+    bypass the active trust policy's own, newer epoch."""
+    from zeromodel.trust import DeploymentScopeDTO as Scope
+    from zeromodel.trust import (
+        TrustPolicyDTO,
+        TrustPolicyRuleDTO,
+        TrustedSignerDTO,
+        compute_trust_policy_id,
+    )
+
+    rule = TrustPolicyRuleDTO(
+        rule_id="rule-1",
+        signer_id="signer-a",
+        allowed_artifact_kinds=("traffic-policy",),
+        scope_pattern=Scope(organization="acme"),
+    )
+    trusted_signer = TrustedSignerDTO(
+        signer=signer_identity, trusted_since="2026-01-01T00:00:00+00:00"
+    )
+    newer_policy_id = compute_trust_policy_id(
+        policy_epoch=10, trusted_signers=(trusted_signer,), rules=(rule,)
+    )
+    newer_policy = TrustPolicyDTO(
+        policy_id=newer_policy_id,
+        policy_epoch=10,
+        trusted_signers=(trusted_signer,),
+        rules=(rule,),
+    )
+
+    decision = _verify(
+        artifact_ref=artifact_ref,
+        canonical_artifact_bytes=artifact_bytes,
+        authorization=authorization,  # policy_epoch=5
+        signature_envelope=signature_envelope,
+        trust_policy=newer_policy,  # policy_epoch=10
+        deployment_scope=requested_scope,
+        minimum_epoch=0,
+    )
+    assert decision.epoch_valid is False
+    assert decision.decision == "rejected"
+    assert TrustFailureCode.EPOCH_TOO_OLD.value in decision.failure_codes
+
+
+def test_malformed_evaluation_time_fails_closed_without_raising(
+    artifact_ref,
+    artifact_bytes,
+    authorization,
+    signature_envelope,
+    trust_policy,
+    requested_scope,
+):
+    decision = _verify(
+        artifact_ref=artifact_ref,
+        canonical_artifact_bytes=artifact_bytes,
+        authorization=authorization,
+        signature_envelope=signature_envelope,
+        trust_policy=trust_policy,
+        deployment_scope=requested_scope,
+        minimum_epoch=5,
+        evaluation_time="not-a-timestamp",
+    )
+    assert decision.time_valid is False
+    assert decision.decision == "rejected"
+    assert TrustFailureCode.MALFORMED_EVALUATION_TIME.value in decision.failure_codes
+
+
+def test_timezone_naive_evaluation_time_fails_closed(
+    artifact_ref,
+    artifact_bytes,
+    authorization,
+    signature_envelope,
+    trust_policy,
+    requested_scope,
+):
+    decision = _verify(
+        artifact_ref=artifact_ref,
+        canonical_artifact_bytes=artifact_bytes,
+        authorization=authorization,
+        signature_envelope=signature_envelope,
+        trust_policy=trust_policy,
+        deployment_scope=requested_scope,
+        minimum_epoch=5,
+        evaluation_time="2026-06-01T00:00:00",  # no UTC offset
+    )
+    assert decision.time_valid is False
+    assert decision.decision == "rejected"
+    assert TrustFailureCode.MALFORMED_EVALUATION_TIME.value in decision.failure_codes
 
 
 def test_revoked_artifact_authorization_is_rejected(

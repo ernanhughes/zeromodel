@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "216b5150ad314ffcfccebd809ffdd88ac5231e3b",
+  "baseline_commit": "3eaff43cadb54e2d2fb908aab8b7c0eaef5623b7",
   "edges": [
     {
       "imported": "examples.arcade_shooter_policy",
@@ -651,6 +651,12 @@
       "classification": "examples",
       "lines": 54,
       "path": "examples/training_tracker_adapters_demo.py",
+      "target_namespace": ""
+    },
+    "examples.writer_report_adapters_demo": {
+      "classification": "examples",
+      "lines": 247,
+      "path": "examples/writer_report_adapters_demo.py",
       "target_namespace": ""
     },
     "scripts.analyze_package_inventory": {

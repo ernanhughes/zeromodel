@@ -12,8 +12,18 @@ def test_artifacts_public_api_is_deliberate() -> None:
     assert "ArtifactRef" in artifacts.__all__
     assert "ArtifactStore" in artifacts.__all__
     assert "InMemoryArtifactStore" in artifacts.__all__
+    assert "ReportAdapter" in artifacts.__all__
+    assert "ReportAdapterContractDTO" in artifacts.__all__
+    assert "AdaptedReportDTO" in artifacts.__all__
+    assert "CompiledReportArtifactDTO" in artifacts.__all__
+    assert "compile_report" in artifacts.__all__
+    assert "load_compiled_report_artifact" in artifacts.__all__
     assert "ScoreTable" not in artifacts.__all__
     assert "VideoPolicyReader" not in artifacts.__all__
+    # No domain-specific adapter may ever be defined in this package - those
+    # belong to the external application (see packages/artifacts/README.md).
+    assert "AIArtifactReportAdapter" not in artifacts.__all__
+    assert "WriterSentenceQualityReportAdapter" not in artifacts.__all__
 
 
 def test_artifacts_import_loads_core_but_no_forbidden_siblings() -> None:

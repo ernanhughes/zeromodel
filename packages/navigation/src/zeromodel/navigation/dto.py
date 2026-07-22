@@ -29,6 +29,18 @@ def _require_nonempty_str(value: object, message: str) -> None:
         raise VPMValidationError(message)
 
 
+def _pairs_to_dict(pairs: Tuple[Tuple[str, str], ...], context: str) -> dict:
+    """Convert declared key/value pairs to a dict, rejecting duplicate
+    keys rather than silently keeping the last one (plain `dict(pairs)`
+    would)."""
+    result: dict = {}
+    for key, value in pairs:
+        if key in result:
+            raise VPMValidationError(f"{context} has a duplicate key: {key!r}")
+        result[key] = value
+    return result
+
+
 def _require_sha256(value: str, message: str) -> None:
     if not is_sha256_digest(value):
         raise VPMValidationError(message)
@@ -327,7 +339,9 @@ def hierarchy_identity_payload(manifest: HierarchyManifestDTO) -> dict:
         "failure_rule": manifest.failure_rule,
         "navigation_rule_contract": manifest.navigation_rule_contract,
         "child_ordering_rule": manifest.child_ordering_rule,
-        "partition_parameters": dict(manifest.partition_parameters),
+        "partition_parameters": _pairs_to_dict(
+            manifest.partition_parameters, "HierarchyManifestDTO.partition_parameters"
+        ),
     }
 
 
@@ -353,7 +367,9 @@ def compute_hierarchy_id(
         "failure_rule": spec.failure_rule,
         "navigation_rule_contract": spec.navigation_rule_contract,
         "child_ordering_rule": spec.child_ordering_rule,
-        "partition_parameters": dict(spec.partition_parameters),
+        "partition_parameters": _pairs_to_dict(
+            spec.partition_parameters, "HierarchyCompilerSpecDTO.partition_parameters"
+        ),
     }
     return sha256_digest(canonical_json_bytes(payload))
 
@@ -402,7 +418,7 @@ class TraversalRequestDTO:
 
     @property
     def attributes_map(self) -> dict[str, str]:
-        return dict(self.attributes)
+        return _pairs_to_dict(self.attributes, "TraversalRequestDTO.attributes")
 
 
 @dataclass(frozen=True, slots=True)
@@ -479,54 +495,89 @@ class TraversalReceiptDTO:
             )
 
 
-def receipt_identity_payload(receipt: TraversalReceiptDTO) -> dict:
+def _step_identity_payload(step: TraversalStepDTO) -> dict:
     return {
-        "spec_version": receipt.spec_version,
-        "hierarchy_id": receipt.hierarchy_id,
-        "request": {
-            "request_id": receipt.request.request_id,
-            "attributes": dict(receipt.request.attributes),
+        "tile_id": step.tile_id,
+        "rule_descriptor": {
+            "rule_kind": step.rule_descriptor.rule_kind,
+            "parameters": _pairs_to_dict(
+                step.rule_descriptor.parameters, "TraversalRuleDescriptorDTO.parameters"
+            ),
         },
-        "result": {
-            "success": receipt.result.success,
-            "final_leaf_id": receipt.result.final_leaf_id,
-            "steps": [
-                {
-                    "tile_id": step.tile_id,
-                    "selected_child": step.selected_child,
-                    "tie_resolution": step.tie_resolution,
-                    "failure_condition": step.failure_condition,
-                }
-                for step in receipt.result.steps
-            ],
-        },
+        "request_id": step.request_id,
+        "eligible_children": [list(pair) for pair in step.eligible_children],
+        "selected_child": step.selected_child,
+        "tie_candidates": list(step.tie_candidates),
+        "tie_resolution": step.tie_resolution,
+        "failure_condition": step.failure_condition,
     }
+
+
+def _failure_identity_payload(failure: Optional[TraversalFailureDTO]) -> Optional[dict]:
+    if failure is None:
+        return None
+    return {
+        "failure_code": failure.failure_code,
+        "message": failure.message,
+        "at_tile_id": failure.at_tile_id,
+    }
+
+
+def _result_identity_payload(result: TraversalResultDTO) -> dict:
+    return {
+        "success": result.success,
+        "final_leaf_id": result.final_leaf_id,
+        "final_artifact_kind": result.final_artifact_kind,
+        "final_artifact_id": result.final_artifact_id,
+        "steps": [_step_identity_payload(step) for step in result.steps],
+        "failure": _failure_identity_payload(result.failure),
+    }
+
+
+def _receipt_identity_payload_fields(
+    *,
+    hierarchy_id: str,
+    request: TraversalRequestDTO,
+    result: TraversalResultDTO,
+    spec_version: str = SPEC_VERSION,
+) -> dict:
+    return {
+        "spec_version": spec_version,
+        "hierarchy_id": hierarchy_id,
+        "request": {
+            "request_id": request.request_id,
+            "attributes": _pairs_to_dict(
+                request.attributes, "TraversalRequestDTO.attributes"
+            ),
+        },
+        "result": _result_identity_payload(result),
+    }
+
+
+def receipt_identity_payload(receipt: TraversalReceiptDTO) -> dict:
+    """The exact canonical payload `receipt_id` covers.
+
+    Includes every field that distinguishes one traversal outcome from
+    another - not just the final leaf id, but the final artifact identity,
+    every step's rule descriptor, eligible children, tie candidates, and
+    the full failure detail. Two materially different traversals (e.g.
+    same final leaf id but a different bound artifact, or a different
+    failure reason) must never share a `receipt_id`.
+    """
+    return _receipt_identity_payload_fields(
+        hierarchy_id=receipt.hierarchy_id,
+        request=receipt.request,
+        result=receipt.result,
+        spec_version=receipt.spec_version,
+    )
 
 
 def build_traversal_receipt(
     *, hierarchy_id: str, request: TraversalRequestDTO, result: TraversalResultDTO
 ) -> TraversalReceiptDTO:
-    payload = {
-        "spec_version": SPEC_VERSION,
-        "hierarchy_id": hierarchy_id,
-        "request": {
-            "request_id": request.request_id,
-            "attributes": dict(request.attributes),
-        },
-        "result": {
-            "success": result.success,
-            "final_leaf_id": result.final_leaf_id,
-            "steps": [
-                {
-                    "tile_id": step.tile_id,
-                    "selected_child": step.selected_child,
-                    "tie_resolution": step.tie_resolution,
-                    "failure_condition": step.failure_condition,
-                }
-                for step in result.steps
-            ],
-        },
-    }
+    payload = _receipt_identity_payload_fields(
+        hierarchy_id=hierarchy_id, request=request, result=result
+    )
     receipt_id = sha256_digest(canonical_json_bytes(payload))
     return TraversalReceiptDTO(
         receipt_id=receipt_id, hierarchy_id=hierarchy_id, request=request, result=result

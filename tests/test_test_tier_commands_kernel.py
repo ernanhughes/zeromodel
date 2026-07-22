@@ -9,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_fast_runner_blocks_opt_in_test_tiers() -> None:
     runner = (REPO_ROOT / "scripts" / "run_fast_tests.py").read_text(encoding="utf-8")
 
+    assert 'FAST_SUITE_BUDGET_SECONDS = 120' in runner
     assert 'FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}' in runner
     assert "Run integration or slow tests explicitly with pytest instead." in runner
 

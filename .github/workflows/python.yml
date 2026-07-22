@@ -57,11 +57,28 @@ jobs:
 
       - name: Install quality tools
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install .[dev]
+          python -m pip install -q --upgrade pip
+          python -m pip install -q .[dev]
 
       - name: Run repository quality gate
-        run: python scripts/check_quality.py
+        id: quality_gate
+        continue-on-error: true
+        run: |
+          mkdir -p build/ci
+          python scripts/check_quality.py > build/ci/quality.log 2>&1
+
+      - name: Upload quality failure log
+        if: steps.quality_gate.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-quality-failure
+          path: build/ci/quality.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail repository quality job
+        if: steps.quality_gate.outcome == 'failure'
+        run: exit 1
 
   package-tests:
     name: package tests / Python ${{ matrix.python-version }}
@@ -83,11 +100,28 @@ jobs:
 
       - name: Install package and test tools
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[dev]
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e .[dev]
 
       - name: Run complete bounded fast suite
-        run: python scripts/run_fast_tests.py
+        id: fast_suite
+        continue-on-error: true
+        run: |
+          mkdir -p build/ci
+          python scripts/run_fast_tests.py > build/ci/fast-suite.log 2>&1
+
+      - name: Upload fast-suite failure log
+        if: steps.fast_suite.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-suite-python-${{ matrix.python-version }}-failure
+          path: build/ci/fast-suite.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Fail package test job
+        if: steps.fast_suite.outcome == 'failure'
+        run: exit 1
 
   lua-edge:
     name: Lua edge policy fixture
@@ -107,8 +141,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y lua5.4
-          python -m pip install --upgrade pip
-          python -m pip install -e .[dev]
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e .[dev]
 
       - name: Test Lua exporter
         run: python -m pytest -q tests/test_lua_policy.py
@@ -139,8 +173,8 @@ jobs:
 
       - name: Install build tools
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[release]
+          python -m pip install -q --upgrade pip
+          python -m pip install -q -e .[release]
 
       - name: Build source and wheel distributions
         run: python -m build

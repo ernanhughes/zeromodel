@@ -10,6 +10,7 @@ import pytest
 from video_final_test_support import approved_protocol, authorization
 from zeromodel.artifact import VPMValidationError
 from zeromodel.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.db.session import sqlite_database_url
 from zeromodel.domains.video_action_set.final_access_service import FinalAccessService
 from zeromodel.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
@@ -23,12 +24,8 @@ def _memory_store(_tmp_path: Path) -> InMemoryVideoActionSetStore:
 
 def _sqlite_store(tmp_path: Path) -> object:
     database_path = tmp_path / "finalization.sqlite3"
-    database_url = database_path.resolve().as_uri().replace(
-        "file:///",
-        "sqlite:///",
-    )
     runtime = build_finalization_sqlite_runtime(
-        database_url,
+        sqlite_database_url(database_path),
         initialize_authority=True,
     )
     return runtime.video_action_set.engine.final_access_service.store

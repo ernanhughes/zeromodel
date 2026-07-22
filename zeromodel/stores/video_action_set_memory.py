@@ -335,7 +335,10 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         with self._final_lock:
             if authorization.authorization_status != "authorized":
                 raise_final_access_authorization()
-            if not protocol.approved or protocol.protocol_digest != authorization.protocol_digest:
+            if (
+                not protocol.approved
+                or protocol.protocol_digest != authorization.protocol_digest
+            ):
                 raise_final_access_authorization()
             if authorization.authorization_id != record.authorization_id:
                 raise_final_access_authorization()
@@ -478,7 +481,9 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         kind = payload.get("kind") if isinstance(payload, dict) else None
         validate_final_access_event(previous_state, record.state, kind)
         existing_events = self._final_events.get(record.access_id, [])
-        expected_ordinal = -1 if expected_previous is None else expected_previous.current_event_ordinal
+        expected_ordinal = (
+            -1 if expected_previous is None else expected_previous.current_event_ordinal
+        )
         if (
             event.ordinal != len(existing_events)
             or event.ordinal != expected_ordinal + 1
@@ -576,7 +581,10 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
             if observation.final_access_id is not None:
                 raise_final_access_authorization()
             return
-        if final_access is None or observation.final_access_id != final_access.access_id:
+        if (
+            final_access is None
+            or observation.final_access_id != final_access.access_id
+        ):
             raise_final_access_authorization()
         stored = self._final_access_records.get(final_access.access_id)
         if stored != final_access or final_access.state != "running":

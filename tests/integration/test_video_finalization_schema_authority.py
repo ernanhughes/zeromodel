@@ -17,6 +17,7 @@ from zeromodel.db.session import (
     FINALIZATION_AUTHORITY_ID,
     FINALIZATION_AUTHORITY_KIND,
     FINALIZATION_SCHEMA_VERSION,
+    sqlite_database_url,
 )
 
 
@@ -24,7 +25,7 @@ pytestmark = pytest.mark.integration
 
 
 def _database_url(path: Path) -> str:
-    return path.resolve().as_uri().replace("file:///", "sqlite:///")
+    return sqlite_database_url(path)
 
 
 @pytest.mark.parametrize("precreate_zero_byte", [False, True])

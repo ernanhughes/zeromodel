@@ -278,8 +278,13 @@ class ObservationDTO:
         )
 
     def _validate_materialization_contract(self) -> None:
-        if self.split == "final" and self.final_access_id is None and (
-            self.matrix_blob_id is not None or self.observation_pixel_digest is not None
+        if (
+            self.split == "final"
+            and self.final_access_id is None
+            and (
+                self.matrix_blob_id is not None
+                or self.observation_pixel_digest is not None
+            )
         ):
             raise VPMValidationError(
                 "final split observation materialization is prohibited"

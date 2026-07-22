@@ -1,5 +1,6 @@
 """Runtime domain slice for video action-set capabilities."""
 
+from . import _datetime_compat  # noqa: F401
 from .dto import (
     BenchmarkIdentityDTO,
     CanonicalJsonDTO,

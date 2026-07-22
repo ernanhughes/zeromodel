@@ -145,7 +145,9 @@ class FinalAccessAuthorizationORM(Base):
         index=True,
         nullable=False,
     )
-    benchmark_seed_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    benchmark_seed_digest: Mapped[str] = mapped_column(
+        String, index=True, nullable=False
+    )
     sealed_plan_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
     created_utc: Mapped[str] = mapped_column(String, nullable=False)
     payload_json: Mapped[str] = mapped_column(Text, nullable=False)
@@ -181,7 +183,9 @@ class FinalAccessRecordORM(Base):
         nullable=False,
     )
     state: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    benchmark_seed_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    benchmark_seed_digest: Mapped[str] = mapped_column(
+        String, index=True, nullable=False
+    )
     sealed_plan_digest: Mapped[str] = mapped_column(String, index=True, nullable=False)
     protocol_digest: Mapped[str] = mapped_column(
         String,

@@ -38,7 +38,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
@@ -75,44 +75,6 @@ jobs:
           path: build/ci/quality.log
           if-no-files-found: error
           retention-days: 7
-
-      - name: Apply one-time typing remediation to PR branch
-        if: >-
-          steps.quality_gate.outcome == 'failure' &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          HEAD_BRANCH: ${{ github.head_ref }}
-        run: |
-          git fetch origin "$HEAD_BRANCH"
-          git checkout -B "$HEAD_BRANCH" "origin/$HEAD_BRANCH"
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("zeromodel/domains/video_action_set/final_historical_authority.py")
-          text = path.read_text(encoding="utf-8")
-          text = text.replace(
-              "from collections.abc import Mapping",
-              "from collections.abc import Iterable, Mapping",
-          )
-          text = text.replace(
-              "    keys: object,\n",
-              "    keys: Iterable[str],\n",
-          )
-          text = text.replace(
-              "    if set(payload) != set(keys):  # type: ignore[arg-type]\n",
-              "    if set(payload) != set(keys):\n",
-          )
-          path.write_text(text, encoding="utf-8")
-          PY
-          python -m ruff format zeromodel/domains/video_action_set/final_historical_authority.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- zeromodel/domains/video_action_set/final_historical_authority.py
-          if ! git diff --cached --quiet; then
-            git commit -m "fix: narrow historical authority key types"
-            git push origin "HEAD:$HEAD_BRANCH"
-          fi
 
       - name: Fail repository quality job
         if: steps.quality_gate.outcome == 'failure'

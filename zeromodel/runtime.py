@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from . import _datetime_compat  # noqa: F401
 from .domains.video_action_set.engine import VideoActionSetEngine
 from .domains.video_action_set.episode_plan_service import EpisodePlanService
 from .domains.video_action_set.facade import VideoActionSetFacade

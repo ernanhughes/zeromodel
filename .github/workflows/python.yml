@@ -3,14 +3,16 @@ name: Python package
 on:
   pull_request:
     paths:
-      - "zeromodel/**"
+      - "packages/**"
       - "tests/**"
+      - "integration_tests/**"
       - "scripts/**"
       - "examples/**"
       - "docs/examples/**"
       - "docs/architecture/**"
-      - "scripts/**"
+      - "requirements-dev.txt"
       - "pyproject.toml"
+      - "package-boundaries.toml"
       - "AGENTS.md"
       - "README.md"
       - "CHANGELOG.md"
@@ -21,14 +23,16 @@ on:
     branches:
       - main
     paths:
-      - "zeromodel/**"
+      - "packages/**"
       - "tests/**"
+      - "integration_tests/**"
       - "scripts/**"
       - "examples/**"
       - "docs/examples/**"
       - "docs/architecture/**"
-      - "scripts/**"
+      - "requirements-dev.txt"
       - "pyproject.toml"
+      - "package-boundaries.toml"
       - "AGENTS.md"
       - "README.md"
       - "CHANGELOG.md"
@@ -58,7 +62,7 @@ jobs:
       - name: Install quality tools
         run: |
           python -m pip install -q --upgrade pip
-          python -m pip install -q .[dev]
+          python -m pip install -q -r requirements-dev.txt
 
       - name: Run repository quality gate
         id: quality_gate
@@ -101,7 +105,7 @@ jobs:
       - name: Install package and test tools
         run: |
           python -m pip install -q --upgrade pip
-          python -m pip install -q -e .[dev]
+          python -m pip install -q -r requirements-dev.txt
 
       - name: Run complete bounded fast suite
         id: fast_suite
@@ -142,10 +146,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y lua5.4
           python -m pip install -q --upgrade pip
-          python -m pip install -q -e .[dev]
+          python -m pip install -q -r requirements-dev.txt
 
       - name: Test Lua exporter
-        run: python -m pytest -q tests/test_lua_policy.py
+        run: python -m pytest -q packages/core/tests/test_policy_lookup_lua.py
 
       - name: Export arcade policy for Lua
         run: |
@@ -174,10 +178,18 @@ jobs:
       - name: Install build tools
         run: |
           python -m pip install -q --upgrade pip
-          python -m pip install -q -e .[release]
+          python -m pip install -q build twine
 
-      - name: Build source and wheel distributions
-        run: python -m build
+      - name: Build source and wheel distributions for all six packages
+        run: |
+          set -e
+          for pkg in core analysis observation vision video sqlalchemy; do
+            python -m build "packages/$pkg"
+          done
 
       - name: Check distribution metadata
-        run: python -m twine check dist/*
+        run: |
+          set -e
+          for pkg in core analysis observation vision video sqlalchemy; do
+            python -m twine check "packages/$pkg/dist/"*
+          done

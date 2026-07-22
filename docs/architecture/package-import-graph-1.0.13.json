@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "e9e083ac128dbd50a941b06f9cc30be9eab98d75",
+  "baseline_commit": "26d7042e02b6e810a2d47a141c6fbe0f3e9d2dd2",
   "edges": [
     {
       "imported": "examples.arcade_shooter_policy",
@@ -170,7 +170,11 @@
       "matplotlib"
     ],
     "scripts.check_architecture": [
-      "architecture_rules"
+      "architecture_rules",
+      "tomli"
+    ],
+    "scripts.check_package_boundaries": [
+      "tomli"
     ],
     "scripts.validate_release_candidate": [
       "tomli"
@@ -216,6 +220,9 @@
     "tests.integration.test_video_finalization_sqlite_concurrency": [
       "pytest",
       "video_final_test_support"
+    ],
+    "tests.test_architecture_checker_workspace": [
+      "pytest"
     ],
     "tests.test_content_identity": [
       "numpy"
@@ -485,7 +492,7 @@
     },
     "examples.arcade_shooter_policy": {
       "classification": "examples",
-      "lines": 32,
+      "lines": 55,
       "path": "examples/arcade_shooter_policy.py",
       "target_namespace": ""
     },
@@ -677,19 +684,19 @@
     },
     "scripts.check_architecture": {
       "classification": "tooling",
-      "lines": 300,
+      "lines": 326,
       "path": "scripts/check_architecture.py",
       "target_namespace": ""
     },
     "scripts.check_package_boundaries": {
       "classification": "tooling",
-      "lines": 184,
+      "lines": 255,
       "path": "scripts/check_package_boundaries.py",
       "target_namespace": ""
     },
     "scripts.check_quality": {
       "classification": "tooling",
-      "lines": 115,
+      "lines": 119,
       "path": "scripts/check_quality.py",
       "target_namespace": ""
     },
@@ -713,7 +720,7 @@
     },
     "scripts.validate_release_candidate": {
       "classification": "tooling",
-      "lines": 358,
+      "lines": 382,
       "path": "scripts/validate_release_candidate.py",
       "target_namespace": ""
     },
@@ -783,6 +790,12 @@
       "path": "tests/test_analyze_package_inventory.py",
       "target_namespace": ""
     },
+    "tests.test_architecture_checker_workspace": {
+      "classification": "tooling",
+      "lines": 88,
+      "path": "tests/test_architecture_checker_workspace.py",
+      "target_namespace": ""
+    },
     "tests.test_content_identity": {
       "classification": "tooling",
       "lines": 61,
@@ -811,6 +824,12 @@
       "classification": "tooling",
       "lines": 32,
       "path": "tests/test_release_package_metadata.py",
+      "target_namespace": ""
+    },
+    "tests.test_release_validator_venv_paths": {
+      "classification": "tooling",
+      "lines": 76,
+      "path": "tests/test_release_validator_venv_paths.py",
       "target_namespace": ""
     },
     "tests.test_research_readiness_fixtures": {
@@ -1213,6 +1232,12 @@
       "classification": "tooling",
       "lines": 190,
       "path": "tests/test_visual_retrieval.py",
+      "target_namespace": ""
+    },
+    "tests.test_workspace_ci_invariants": {
+      "classification": "tooling",
+      "lines": 97,
+      "path": "tests/test_workspace_ci_invariants.py",
       "target_namespace": ""
     },
     "tests.video_final_test_support": {

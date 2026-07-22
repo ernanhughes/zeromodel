@@ -4,10 +4,15 @@ import ast
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[no-redef]
+
 from architecture_rules import TRACKED_EXTERNAL_MODULES, print_violations
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_ROOT = REPO_ROOT / "zeromodel"
+BOUNDARIES = REPO_ROOT / "package-boundaries.toml"
 
 
 @dataclass(frozen=True)
@@ -29,8 +34,8 @@ def relative_path(path: Path) -> str:
     return path.relative_to(REPO_ROOT).as_posix()
 
 
-def module_name_for_path(path: Path) -> str:
-    parts = list(path.relative_to(REPO_ROOT).with_suffix("").parts)
+def module_name_for_path(path: Path, source_root: Path) -> str:
+    parts = list(path.relative_to(source_root).with_suffix("").parts)
     if parts[-1] == "__init__":
         parts = parts[:-1]
     return ".".join(parts)
@@ -42,12 +47,27 @@ def package_name_for_module(module_name: str, path: Path) -> str:
     return module_name.rsplit(".", 1)[0]
 
 
-def discover_modules() -> dict[str, Path]:
-    modules = {
-        module_name_for_path(path): path
-        for path in PACKAGE_ROOT.rglob("*.py")
-        if "__pycache__" not in path.parts
+def workspace_source_roots() -> dict[str, Path]:
+    """Every production distribution's source root, keyed by package name.
+
+    Read from package-boundaries.toml so this stays the single shared authority
+    for "what is a production source root" (see scripts/check_package_boundaries.py,
+    which reads the same manifest).
+    """
+    manifest = tomllib.loads(BOUNDARIES.read_text(encoding="utf-8"))
+    return {
+        name: REPO_ROOT / config["source_root"]
+        for name, config in manifest["packages"].items()
     }
+
+
+def discover_modules() -> dict[str, Path]:
+    modules: dict[str, Path] = {}
+    for source_root in workspace_source_roots().values():
+        for path in sorted(source_root.rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            modules[module_name_for_path(path, source_root)] = path
     return dict(sorted(modules.items()))
 
 
@@ -287,12 +307,18 @@ def forbidden_edge_violations(edges: list[ImportEdge]) -> list[Violation]:
 
 
 def main() -> int:
-    graph, edges = build_import_graph(discover_modules())
+    modules = discover_modules()
+    if not modules:
+        raise SystemExit(
+            "Architecture check found zero production modules - "
+            "package-boundaries.toml source roots are missing or misconfigured"
+        )
+    graph, edges = build_import_graph(modules)
     violations = [*cycle_violations(graph), *forbidden_edge_violations(edges)]
     if violations:
         print_violations(violations)
         return 1
-    print("Architecture check: passed")
+    print(f"Architecture check: passed ({len(modules)} production modules inspected)")
     return 0
 
 

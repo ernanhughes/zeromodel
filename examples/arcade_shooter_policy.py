@@ -8,25 +8,48 @@ Run:
 
     python examples/arcade_shooter_policy.py
 """
+
 from __future__ import annotations
 
 import json
 from zeromodel.video.arcade_policy.model import (
+    ACTIONS,
     ShooterConfig,
+    TinyArcadeShooter,
+    _action_values,
+    compile_policy_artifact,
     random_baseline_average,
     run_policy_episode,
+    state_row_id,
 )
+
+__all__ = [
+    "ACTIONS",
+    "ShooterConfig",
+    "TinyArcadeShooter",
+    "_action_values",
+    "compile_policy_artifact",
+    "random_baseline_average",
+    "run_policy_episode",
+    "state_row_id",
+]
 
 
 if __name__ == "__main__":
     config = ShooterConfig()
     policy = run_policy_episode(config)
     baseline = random_baseline_average(config)
-    print(json.dumps({
-        "artifact_id": policy["artifact_id"],
-        "policy_score": policy["score"],
-        "policy_cleared": policy["cleared"],
-        "policy_steps": policy["steps"],
-        "random_average_score_10_seeds": baseline,
-        "first_moves": policy["trace"][:8],
-    }, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "artifact_id": policy["artifact_id"],
+                "policy_score": policy["score"],
+                "policy_cleared": policy["cleared"],
+                "policy_steps": policy["steps"],
+                "random_average_score_10_seeds": baseline,
+                "first_moves": policy["trace"][:8],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )

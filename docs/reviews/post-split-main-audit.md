@@ -173,3 +173,23 @@ Companion deliverables (read alongside this document, not duplicated in full her
     4. F6 (fake public API manifest) and F7 (wrong golden identity) - documentation/tooling-output correctness, no execution risk.
     5. F8 (no working release orchestration) - needed before any real release is attempted, not before routine CI is green.
     6. H1-H4, then the MEDIUM and LOW items as routine backlog.
+
+## Remediation status (Stage A1)
+
+This is an append-only status update; the findings above are left exactly as originally written. See [post-split-stage-a1-validation.md](post-split-stage-a1-validation.md) for the full account.
+
+Stage A1 ("verification command liveness") addressed **F1, F2, F3, M2, M5, M11, L1**, plus a minimal, scoped exception under **H4** (restoring missing re-exports in `examples/arcade_shooter_policy.py`) that was strictly required to make the `python.yml` `lua-edge` job's Lua-export command executable. All changes were verified by direct execution in this session:
+
+| finding | status | evidence |
+|---|---|---|
+| F1 (root non-buildable install commands break every job) | **fixed** | `python.yml`, `integration.yml`, `visual-address-benchmark.yml` now install from `requirements-dev.txt` (or explicit `-e packages/...`); `publish-testpypi.yml` and `python.yml`'s `package-build` job now build the six packages explicitly instead of the root |
+| F2 (Windows-only path crashes the release validator on Linux CI) | **fixed** | `venv_python()` helper added, unit-tested for both branches; full validator run passed end-to-end on Windows in this session; Linux branch is logic-verified but not executed on a real Linux runner here |
+| F3 (architecture check scans zero modules) | **fixed** | `check_architecture.py` now discovers modules from `package-boundaries.toml`'s six source roots, hard-fails on zero modules, and reports "112 production modules inspected" (verified); `check_quality.py` now also runs `check_package_boundaries.py` so the boundary/research-import rules are genuinely enforced by the gate |
+| M2 (CI trigger-path gaps) | **fixed for python.yml / package-integration.yml** | `packages/**`, `tests/**`, `integration_tests/**`, `requirements-dev.txt`, and root `pyproject.toml` added where missing; duplicate `scripts/**` entry removed; stale `zeromodel/**` entry removed. Not re-audited for the six per-package workflows (`core-package.yml` etc.), which were out of this stage's scope |
+| M5 (visual research workflow/doc use the broken `.[vision]` extra) | **fixed** | both `visual-address-benchmark.yml` and `docs/research/visual-address-phase-one.md` now use `-e packages/core -e packages/observation -e packages/vision`; a second, unrelated import break in `.github/scripts/run_visual_address_smoke.py` was discovered in the process and is documented, not fixed |
+| M11 (`check_package_boundaries.py` has no Python 3.10 tomllib fallback) | **fixed** | try/except `tomli` fallback added, matching `validate_release_candidate.py`; `requirements-dev.txt` now declares `tomli>=2; python_version < "3.11"` |
+| L1 (README dev-install section omits dev tools) | **fixed** | README now points at `pip install -r requirements-dev.txt` directly |
+| H4 (research tests broken by `arcade_shooter_policy.py` rewrite) | **partially addressed (minimal, scoped exception only)** | missing re-exports restored because the `lua-edge` CI job could not otherwise execute; research collection improved from 25/21 to 36/20 as a side effect, but full H4 resolution remains out of scope for this stage |
+| F4, F5, F6, F7, F8, H1, H2, H3 (Linux coverage for 5 of 6 packages), and all MEDIUM/LOW items not listed above | **unchanged** | left exactly as originally found; F5 in particular was explicitly deferred to a future "Stage A2" per this stage's own instructions |
+
+Twenty-two new repository-tooling regression tests were added (`tests/test_release_validator_venv_paths.py`, `tests/test_architecture_checker_workspace.py`, `tests/test_workspace_ci_invariants.py`) to guard against these specific regressions recurring. No production or research test was moved, skipped, or altered; no package runtime behavior changed.

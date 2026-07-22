@@ -4,6 +4,7 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -207,11 +208,33 @@ def validate_sdists() -> None:
             raise SystemExit(f"{artifact.path.name}: forbidden sdist members {bad[:5]}")
 
 
+def venv_python(venv: Path, *, is_windows: bool | None = None) -> Path:
+    """Return the interpreter path for a venv created at ``venv``, on either OS.
+
+    ``is_windows`` is an explicit override so this is unit-testable on any host;
+    it defaults to the actual running platform via ``os.name``.
+    """
+    if is_windows is None:
+        is_windows = os.name == "nt"
+    if is_windows:
+        return venv / "Scripts" / "python.exe"
+    return venv / "bin" / "python"
+
+
+def is_beneath(path: Path, root: Path) -> bool:
+    """True if ``path`` resolves to a location inside ``root``."""
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
 def install_and_probe() -> None:
     venv = REPO_ROOT / "build" / "full-integration-venv"
     shutil.rmtree(venv, ignore_errors=True)
     run([sys.executable, "-m", "venv", str(venv)], timeout=120)
-    python = venv / "Scripts" / "python.exe"
+    python = venv_python(venv)
     run([str(python), "-m", "pip", "install", "--upgrade", "pip"], timeout=120)
     run([str(python), "-m", "pip", "install", *map(str, wheel_names())], timeout=180)
     run([str(python), "-m", "pip", "check"], timeout=120)
@@ -244,10 +267,11 @@ if root_import != 'blocked':
         text=True,
     )
     payload = json.loads(result.stdout)
-    site_packages = str(venv / "Lib" / "site-packages")
     for name, location in payload["locations"].items():
-        if not str(location).startswith(site_packages):
-            raise SystemExit(f"{name} imported from checkout: {location}")
+        if not is_beneath(Path(location), venv):
+            raise SystemExit(
+                f"{name} imported from outside the clean virtual environment: {location}"
+            )
 
 
 def manifest_rows() -> list[dict[str, Any]]:

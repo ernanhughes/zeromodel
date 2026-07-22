@@ -33,7 +33,7 @@ python -m pip install \
 For development:
 
 ```bash
-python -m pip install -e packages/core -e packages/analysis -e packages/observation -e packages/vision -e packages/video -e packages/sqlalchemy
+python -m pip install -r requirements-dev.txt
 python scripts/run_fast_tests.py
 python scripts/validate_release_candidate.py
 ```

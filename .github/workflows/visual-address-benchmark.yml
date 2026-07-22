@@ -52,7 +52,7 @@ jobs:
             --index-url https://download.pytorch.org/whl/cpu \
             'torch>=2.2' \
             'torchvision>=0.17'
-          python -m pip install -e '.[vision]'
+          python -m pip install -e packages/core -e packages/observation -e packages/vision
 
       - name: Run pinned held-out benchmark
         shell: bash

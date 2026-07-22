@@ -1,6 +1,6 @@
 # ZeroModel 1.0.13 Package Dependency Findings
 
-Baseline commit: `e9e083ac128dbd50a941b06f9cc30be9eab98d75`
+Baseline commit: `26d7042e02b6e810a2d47a141c6fbe0f3e9d2dd2`
 
 ## Blocker
 

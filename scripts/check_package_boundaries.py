@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import ast
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[no-redef]
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BOUNDARIES = REPO_ROOT / "package-boundaries.toml"
@@ -52,7 +56,9 @@ def discover_modules(manifest: dict[str, object]) -> dict[str, ModuleRecord]:
                 continue
             module = module_name(path, root)
             if module in modules:
-                raise SystemExit(f"Duplicate module {module}: {path} and {modules[module].path}")
+                raise SystemExit(
+                    f"Duplicate module {module}: {path} and {modules[module].path}"
+                )
             modules[module] = ModuleRecord(module, path, package, root)
     return modules
 
@@ -80,7 +86,11 @@ def import_kind(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> str:
     current: ast.AST | None = node
     while current in parents:
         current = parents[current]
-        if isinstance(current, ast.If) and isinstance(current.test, ast.Name) and current.test.id == "TYPE_CHECKING":
+        if (
+            isinstance(current, ast.If)
+            and isinstance(current.test, ast.Name)
+            and current.test.id == "TYPE_CHECKING"
+        ):
             return "type-checking"
         if isinstance(current, (ast.FunctionDef, ast.AsyncFunctionDef)):
             kind = "deferred"
@@ -91,32 +101,82 @@ def import_kind(node: ast.AST, parents: dict[ast.AST, ast.AST]) -> str:
 
 def collect_edges(record: ModuleRecord, known: set[str]) -> list[ImportEdge]:
     tree = ast.parse(record.path.read_text(encoding="utf-8"), filename=str(record.path))
-    parents = {child: parent for parent in ast.walk(tree) for child in ast.iter_child_nodes(parent)}
+    parents = {
+        child: parent
+        for parent in ast.walk(tree)
+        for child in ast.iter_child_nodes(parent)
+    }
     edges: list[ImportEdge] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 if target := best_known(alias.name, known):
-                    edges.append(ImportEdge(record.module, target, node.lineno, import_kind(node, parents)))
+                    edges.append(
+                        ImportEdge(
+                            record.module,
+                            target,
+                            node.lineno,
+                            import_kind(node, parents),
+                        )
+                    )
                 elif alias.name == "research" or alias.name.startswith("research."):
-                    edges.append(ImportEdge(record.module, alias.name, node.lineno, import_kind(node, parents)))
+                    edges.append(
+                        ImportEdge(
+                            record.module,
+                            alias.name,
+                            node.lineno,
+                            import_kind(node, parents),
+                        )
+                    )
                 elif alias.name == "tests" or alias.name.startswith("tests."):
-                    edges.append(ImportEdge(record.module, alias.name, node.lineno, import_kind(node, parents)))
+                    edges.append(
+                        ImportEdge(
+                            record.module,
+                            alias.name,
+                            node.lineno,
+                            import_kind(node, parents),
+                        )
+                    )
         elif isinstance(node, ast.ImportFrom):
-            base = resolve_relative(record, node.level, node.module) if node.level else (node.module or "")
-            candidates = [base] if any(alias.name == "*" for alias in node.names) else [f"{base}.{alias.name}" for alias in node.names]
+            base = (
+                resolve_relative(record, node.level, node.module)
+                if node.level
+                else (node.module or "")
+            )
+            candidates = (
+                [base]
+                if any(alias.name == "*" for alias in node.names)
+                else [f"{base}.{alias.name}" for alias in node.names]
+            )
             for candidate in candidates:
                 if target := best_known(candidate, known):
-                    edges.append(ImportEdge(record.module, target, node.lineno, import_kind(node, parents)))
+                    edges.append(
+                        ImportEdge(
+                            record.module,
+                            target,
+                            node.lineno,
+                            import_kind(node, parents),
+                        )
+                    )
                 elif base == "research" or base.startswith("research."):
-                    edges.append(ImportEdge(record.module, base, node.lineno, import_kind(node, parents)))
+                    edges.append(
+                        ImportEdge(
+                            record.module, base, node.lineno, import_kind(node, parents)
+                        )
+                    )
                 elif base == "tests" or base.startswith("tests."):
-                    edges.append(ImportEdge(record.module, base, node.lineno, import_kind(node, parents)))
+                    edges.append(
+                        ImportEdge(
+                            record.module, base, node.lineno, import_kind(node, parents)
+                        )
+                    )
     return sorted(set(edges), key=lambda e: (e.importer, e.imported, e.line, e.kind))
 
 
 def dependency_cycles(packages: dict[str, object]) -> list[list[str]]:
-    graph = {name: set(config.get("depends_on", [])) for name, config in packages.items()}
+    graph = {
+        name: set(config.get("depends_on", [])) for name, config in packages.items()
+    }
     cycles: list[list[str]] = []
 
     def visit(start: str, current: str, path: list[str]) -> None:
@@ -144,7 +204,11 @@ def validate_metadata(manifest: dict[str, object]) -> list[str]:
             errors.append(f"{pyproject}: version is not {version}")
     if (REPO_ROOT / "zeromodel" / "__init__.py").exists():
         errors.append("old root zeromodel/__init__.py still exists")
-    if any((REPO_ROOT / "zeromodel").rglob("*.py")) if (REPO_ROOT / "zeromodel").exists() else False:
+    if (
+        any((REPO_ROOT / "zeromodel").rglob("*.py"))
+        if (REPO_ROOT / "zeromodel").exists()
+        else False
+    ):
         errors.append("old root zeromodel tree still contains Python modules")
     return errors
 
@@ -153,15 +217,22 @@ def main() -> int:
     manifest = load_manifest()
     modules = discover_modules(manifest)
     known = set(modules)
-    allowed = {name: set(config.get("depends_on", [])) for name, config in manifest["packages"].items()}
+    allowed = {
+        name: set(config.get("depends_on", []))
+        for name, config in manifest["packages"].items()
+    }
     errors = validate_metadata(manifest)
     for cycle in dependency_cycles(manifest["packages"]):
         errors.append("package dependency cycle: " + " -> ".join(cycle))
 
     for record in modules.values():
         for edge in collect_edges(record, known):
-            if edge.imported.startswith("research") or edge.imported.startswith("tests"):
-                errors.append(f"{record.path.relative_to(REPO_ROOT).as_posix()}:{edge.line}: production import of {edge.imported}")
+            if edge.imported.startswith("research") or edge.imported.startswith(
+                "tests"
+            ):
+                errors.append(
+                    f"{record.path.relative_to(REPO_ROOT).as_posix()}:{edge.line}: production import of {edge.imported}"
+                )
                 continue
             imported_record = modules.get(edge.imported)
             if imported_record and imported_record.package != record.package:

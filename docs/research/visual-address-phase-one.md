@@ -34,7 +34,7 @@ python examples/arcade_visual_address_benchmark.py
 Pinned DINOv2 research run:
 
 ```bash
-pip install -e '.[vision]'
+pip install -e packages/core -e packages/observation -e packages/vision
 python examples/arcade_visual_address_benchmark.py \
   --encoder dinov2 \
   --output-dir build/visual-phase-one

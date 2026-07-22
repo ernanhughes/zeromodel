@@ -75,6 +75,10 @@ def main() -> int:
     )
     run_step("Architecture", [sys.executable, "scripts/check_architecture.py"])
     run_step(
+        "Package boundaries",
+        [sys.executable, "scripts/check_package_boundaries.py"],
+    )
+    run_step(
         "Quality limits",
         [
             sys.executable,

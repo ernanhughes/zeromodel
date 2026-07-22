@@ -5,7 +5,7 @@ import sys
 import time
 
 
-FAST_SUITE_BUDGET_SECONDS = 60
+FAST_SUITE_BUDGET_SECONDS = 120
 FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
 
 

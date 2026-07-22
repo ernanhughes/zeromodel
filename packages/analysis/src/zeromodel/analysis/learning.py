@@ -4,6 +4,7 @@ This module distinguishes tracking from learning. A score moving over time is on
 tracking. Learning requires a before/after change tied to feedback plus evidence
 that the change transfers to held-out work without unacceptable regression.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,7 +12,13 @@ from typing import Any, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from zeromodel.core.artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMValidationError, build_vpm
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    VPMArtifact,
+    VPMValidationError,
+    build_vpm,
+)
 
 LEARNING_METRICS: Tuple[str, ...] = (
     "learning_score",
@@ -57,9 +64,13 @@ class LearningObservation:
             raise VPMValidationError("Unsupported learning split: %r" % split)
         values = [before, after, feedback_alignment, weight]
         if not np.isfinite(values).all():
-            raise VPMValidationError("LearningObservation numeric values must be finite")
+            raise VPMValidationError(
+                "LearningObservation numeric values must be finite"
+            )
         if not (0.0 <= before <= 1.0 and 0.0 <= after <= 1.0):
-            raise VPMValidationError("LearningObservation before/after scores must be in [0, 1]")
+            raise VPMValidationError(
+                "LearningObservation before/after scores must be in [0, 1]"
+            )
         if not (0.0 <= feedback_alignment <= 1.0):
             raise VPMValidationError("feedback_alignment must be in [0, 1]")
         if weight <= 0:
@@ -140,7 +151,9 @@ class LearningAssessment:
             "heldout_delta": self.heldout_delta,
             "regression_degradation": self.regression_degradation,
             "thresholds": dict(self.thresholds),
-            "observations": [observation.to_dict() for observation in self.observations],
+            "observations": [
+                observation.to_dict() for observation in self.observations
+            ],
         }
 
 
@@ -171,17 +184,25 @@ def _weighted_mean(values: Sequence[float], weights: Sequence[float]) -> float:
     total_weight = float(sum(weights))
     if total_weight <= 0:
         return 0.0
-    return float(sum(value * weight for value, weight in zip(values, weights)) / total_weight)
+    return float(
+        sum(value * weight for value, weight in zip(values, weights)) / total_weight
+    )
 
 
 def _mean_delta(observations: Sequence[LearningObservation], split: str) -> float:
     subset = [observation for observation in observations if observation.split == split]
-    return _weighted_mean([observation.delta for observation in subset], [observation.weight for observation in subset])
+    return _weighted_mean(
+        [observation.delta for observation in subset],
+        [observation.weight for observation in subset],
+    )
 
 
 def _mean_degradation(observations: Sequence[LearningObservation], split: str) -> float:
     subset = [observation for observation in observations if observation.split == split]
-    return _weighted_mean([observation.degradation for observation in subset], [observation.weight for observation in subset])
+    return _weighted_mean(
+        [observation.degradation for observation in subset],
+        [observation.weight for observation in subset],
+    )
 
 
 def build_learning_vpm(
@@ -202,15 +223,22 @@ def build_learning_vpm(
     3. regression observations do not degrade beyond the allowed threshold.
     """
     normalized_observations = tuple(
-        item if isinstance(item, LearningObservation) else LearningObservation(**dict(item))
+        item
+        if isinstance(item, LearningObservation)
+        else LearningObservation(**dict(item))
         for item in observations
     )
     if not normalized_observations:
         raise VPMValidationError("build_learning_vpm requires at least one observation")
 
-    row_ids = tuple("%s:%s" % (observation.split, observation.unit_id) for observation in normalized_observations)
+    row_ids = tuple(
+        "%s:%s" % (observation.split, observation.unit_id)
+        for observation in normalized_observations
+    )
     if len(set(row_ids)) != len(row_ids):
-        raise VPMValidationError("Learning observations require unique split:unit_id row identifiers")
+        raise VPMValidationError(
+            "Learning observations require unique split:unit_id row identifiers"
+        )
 
     table = ScoreTable(
         values=[observation.metric_row() for observation in normalized_observations],
@@ -218,7 +246,9 @@ def build_learning_vpm(
         metric_ids=LEARNING_METRICS,
         metadata={
             "kind": "learning_trace",
-            "observations": [observation.to_dict() for observation in normalized_observations],
+            "observations": [
+                observation.to_dict() for observation in normalized_observations
+            ],
         },
     )
 

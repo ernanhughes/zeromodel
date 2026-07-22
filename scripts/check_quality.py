@@ -5,19 +5,31 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-GOVERNED_PATHS = [
+FORMAT_LINT_PATHS = [
     Path("scripts/code_quality_report.py"),
     Path("scripts/check_architecture.py"),
     Path("scripts/check_quality.py"),
-    Path("zeromodel/runtime.py"),
-    Path("zeromodel/domains/video_action_set"),
-    Path("zeromodel/stores"),
-    Path("zeromodel/db"),
+    Path("packages/core/src"),
+    Path("packages/core/tests"),
+    Path("packages/analysis/src"),
+    Path("packages/analysis/tests"),
+]
+
+TYPING_PATHS = [
+    Path("packages/core/src"),
+    Path("packages/analysis/src"),
 ]
 
 
-def existing_governed_paths() -> list[str]:
-    return [path.as_posix() for path in GOVERNED_PATHS if (REPO_ROOT / path).exists()]
+def existing_python_paths(paths_to_check: list[Path]) -> list[str]:
+    paths: list[str] = []
+    for path in paths_to_check:
+        resolved = REPO_ROOT / path
+        if resolved.is_file() and resolved.suffix in {".py", ".pyi"}:
+            paths.append(path.as_posix())
+        elif resolved.is_dir() and any(resolved.rglob("*.py")):
+            paths.append(path.as_posix())
+    return paths
 
 
 def run_step(label: str, command: list[str]) -> None:
@@ -29,9 +41,12 @@ def run_step(label: str, command: list[str]) -> None:
 
 
 def main() -> int:
-    governed_paths = existing_governed_paths()
+    governed_paths = existing_python_paths(FORMAT_LINT_PATHS)
     if not governed_paths:
         raise SystemExit("No governed quality paths exist")
+    typing_paths = existing_python_paths(TYPING_PATHS)
+    if not typing_paths:
+        raise SystemExit("No governed typing paths exist")
 
     run_step(
         "Formatting",
@@ -43,7 +58,7 @@ def main() -> int:
     )
     run_step(
         "Typing",
-        [sys.executable, "-m", "mypy", "--follow-imports=skip", *governed_paths],
+        [sys.executable, "-m", "mypy", *typing_paths],
     )
     run_step("Architecture", [sys.executable, "scripts/check_architecture.py"])
     run_step(
@@ -55,6 +70,12 @@ def main() -> int:
             "build/quality/code-quality-report.json",
             "--markdown",
             "build/quality/code-quality-report.md",
+            "--path",
+            "packages/core/src",
+            "--path",
+            "packages/analysis/src",
+            "--path",
+            "packages/analysis/tests",
         ],
     )
     print("Quality checks passed")

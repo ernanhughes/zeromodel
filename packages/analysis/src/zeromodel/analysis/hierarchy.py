@@ -1,4 +1,5 @@
 """Hierarchical VPM pyramid helpers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,7 +18,9 @@ class HierarchyLevel:
     source_shape: tuple[int, int]
 
 
-def reduce_blocks(field: Any, *, factor: int = 2, reduction: str = "mean") -> np.ndarray:
+def reduce_blocks(
+    field: Any, *, factor: int = 2, reduction: str = "mean"
+) -> np.ndarray:
     """Reduce a field by non-overlapping blocks, padding bottom/right as needed."""
     arr = as_field(field)
     if factor < 2:
@@ -39,20 +42,37 @@ def reduce_blocks(field: Any, *, factor: int = 2, reduction: str = "mean") -> np
     raise ValueError("Unsupported reduction: %r" % reduction)
 
 
-def build_pyramid(field: Any, *, max_levels: int | None = None, factor: int = 2, reduction: str = "mean") -> List[HierarchyLevel]:
+def build_pyramid(
+    field: Any,
+    *,
+    max_levels: int | None = None,
+    factor: int = 2,
+    reduction: str = "mean",
+) -> List[HierarchyLevel]:
     """Build a bounded hierarchy from a field.
 
     Level 0 is the original field; each later level reduces by ``factor`` until
     the field is 1x1 or ``max_levels`` is reached.
     """
     current = as_field(field)
-    levels = [HierarchyLevel(level=0, field=current, reduction="source", source_shape=current.shape)]
+    levels = [
+        HierarchyLevel(
+            level=0, field=current, reduction="source", source_shape=current.shape
+        )
+    ]
     level = 0
     while current.shape != (1, 1):
         if max_levels is not None and level + 1 >= max_levels:
             break
         reduced = reduce_blocks(current, factor=factor, reduction=reduction)
         level += 1
-        levels.append(HierarchyLevel(level=level, field=reduced, reduction=reduction, source_shape=current.shape))
+        levels.append(
+            HierarchyLevel(
+                level=level,
+                field=reduced,
+                reduction=reduction,
+                source_shape=current.shape,
+            )
+        )
         current = reduced
     return levels

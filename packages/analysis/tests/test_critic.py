@@ -69,8 +69,12 @@ def test_critic_observation_computes_energy_and_verifiability() -> None:
         semantic_drift=0.20,
     )
 
-    assert observation.computed_hallucination_energy == pytest.approx((0.20 + 0.40 + 0.60 + 0.20) / 4.0)
-    assert observation.computed_verifiability == pytest.approx((0.60 + 0.40 + 0.80) / 3.0)
+    assert observation.computed_hallucination_energy == pytest.approx(
+        (0.20 + 0.40 + 0.60 + 0.20) / 4.0
+    )
+    assert observation.computed_verifiability == pytest.approx(
+        (0.60 + 0.40 + 0.80) / 3.0
+    )
     assert observation.critic_risk == pytest.approx(0.50)
 
 

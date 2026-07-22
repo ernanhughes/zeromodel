@@ -5,6 +5,7 @@ trainer and it does not inspect model internals. It summarizes observable traini
 evidence: train improvement, held-out improvement, regression safety, stability,
 efficiency, and checkpoint selection signals.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,7 +13,13 @@ from typing import Any, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from zeromodel.core.artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMValidationError, build_vpm
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    VPMArtifact,
+    VPMValidationError,
+    build_vpm,
+)
 
 TRAINING_METRICS: Tuple[str, ...] = (
     "progress_score",
@@ -148,13 +155,21 @@ def _metric_progress(
     direction: str,
 ) -> list[float]:
     baseline = checkpoints[0].metric(metric)
-    return [_relative_progress(baseline, checkpoint.metric(metric), direction) for checkpoint in checkpoints]
+    return [
+        _relative_progress(baseline, checkpoint.metric(metric), direction)
+        for checkpoint in checkpoints
+    ]
 
 
-def _direct_metric(checkpoints: Sequence[TrainingCheckpoint], metric: Optional[str], default: float) -> list[float]:
+def _direct_metric(
+    checkpoints: Sequence[TrainingCheckpoint], metric: Optional[str], default: float
+) -> list[float]:
     if metric is None:
         return [float(default) for _ in checkpoints]
-    return [_bounded01(checkpoint.metric(metric), label=metric) for checkpoint in checkpoints]
+    return [
+        _bounded01(checkpoint.metric(metric), label=metric)
+        for checkpoint in checkpoints
+    ]
 
 
 def _efficiency_progress(
@@ -165,7 +180,9 @@ def _efficiency_progress(
 ) -> list[float]:
     if metric is None:
         return [float(default) for _ in checkpoints]
-    return [min(1.0, value) for value in _metric_progress(checkpoints, metric, direction)]
+    return [
+        min(1.0, value) for value in _metric_progress(checkpoints, metric, direction)
+    ]
 
 
 def _weighted_score(
@@ -223,28 +240,42 @@ def build_training_progress_vpm(
     checkpoint telemetry meets the declared evidence thresholds.
     """
     normalized_checkpoints = tuple(
-        item if isinstance(item, TrainingCheckpoint) else TrainingCheckpoint(**dict(item))
+        item
+        if isinstance(item, TrainingCheckpoint)
+        else TrainingCheckpoint(**dict(item))
         for item in checkpoints
     )
     if len(normalized_checkpoints) < 2:
-        raise VPMValidationError("build_training_progress_vpm requires at least two checkpoints")
+        raise VPMValidationError(
+            "build_training_progress_vpm requires at least two checkpoints"
+        )
 
     steps = [checkpoint.step for checkpoint in normalized_checkpoints]
     if steps != sorted(steps):
-        raise VPMValidationError("Training checkpoints must be ordered by non-decreasing step")
+        raise VPMValidationError(
+            "Training checkpoints must be ordered by non-decreasing step"
+        )
     checkpoint_ids = [checkpoint.checkpoint_id for checkpoint in normalized_checkpoints]
     if len(set(checkpoint_ids)) != len(checkpoint_ids):
-        raise VPMValidationError("Training checkpoints require unique checkpoint_id values")
+        raise VPMValidationError(
+            "Training checkpoints require unique checkpoint_id values"
+        )
 
     train_direction = _validate_direction(train_direction)
     heldout_direction = _validate_direction(heldout_direction)
     efficiency_direction = _validate_direction(efficiency_direction)
 
-    train_progress = _metric_progress(normalized_checkpoints, train_metric, train_direction)
-    heldout_progress = _metric_progress(normalized_checkpoints, heldout_metric, heldout_direction)
+    train_progress = _metric_progress(
+        normalized_checkpoints, train_metric, train_direction
+    )
+    heldout_progress = _metric_progress(
+        normalized_checkpoints, heldout_metric, heldout_direction
+    )
     regression_safety = _direct_metric(normalized_checkpoints, regression_metric, 1.0)
     stability = _direct_metric(normalized_checkpoints, stability_metric, 1.0)
-    efficiency = _efficiency_progress(normalized_checkpoints, efficiency_metric, efficiency_direction, 1.0)
+    efficiency = _efficiency_progress(
+        normalized_checkpoints, efficiency_metric, efficiency_direction, 1.0
+    )
 
     weights = {
         "train_progress": 0.25,
@@ -258,7 +289,9 @@ def build_training_progress_vpm(
 
     rows: list[Tuple[float, ...]] = []
     progress_scores: list[float] = []
-    for values in zip(train_progress, heldout_progress, regression_safety, stability, efficiency):
+    for values in zip(
+        train_progress, heldout_progress, regression_safety, stability, efficiency
+    ):
         score = _weighted_score(*values, weights=weights)
         progress_scores.append(score)
         rows.append((score, *values))
@@ -270,7 +303,10 @@ def build_training_progress_vpm(
     best = normalized_checkpoints[best_index]
 
     warnings: list[str] = []
-    if train_progress[best_index] >= min_train_progress and heldout_progress[best_index] < min_heldout_progress:
+    if (
+        train_progress[best_index] >= min_train_progress
+        and heldout_progress[best_index] < min_heldout_progress
+    ):
         warnings.append("train_progress_without_heldout_transfer")
     if regression_safety[best_index] < min_regression_safety:
         warnings.append("regression_safety_below_threshold")
@@ -288,7 +324,11 @@ def build_training_progress_vpm(
 
     table = ScoreTable(
         values=rows,
-        row_ids=tuple(checkpoint.checkpoint_id for checkpoint in normalized_checkpoints if checkpoint.checkpoint_id is not None),
+        row_ids=tuple(
+            checkpoint.checkpoint_id
+            for checkpoint in normalized_checkpoints
+            if checkpoint.checkpoint_id is not None
+        ),
         metric_ids=TRAINING_METRICS,
         metadata={
             "kind": "training_progress",
@@ -297,7 +337,9 @@ def build_training_progress_vpm(
             "regression_metric": regression_metric,
             "stability_metric": stability_metric,
             "efficiency_metric": efficiency_metric,
-            "checkpoints": [checkpoint.to_dict() for checkpoint in normalized_checkpoints],
+            "checkpoints": [
+                checkpoint.to_dict() for checkpoint in normalized_checkpoints
+            ],
         },
     )
 

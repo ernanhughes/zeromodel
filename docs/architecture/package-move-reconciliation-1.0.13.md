@@ -4,6 +4,15 @@ Baseline inventory commit: `52be5f838e15d4b32a4fdf5a393762101afd2656`
 
 Reconciliation rows: `313`
 
+## Validation Updates
+
+- Core-owned historical tests were moved to `packages/core/tests` during core
+  validation commit `c827a36b6498990f2d7eb10e8ec4fc6a584fb502`.
+- Analysis-owned historical tests were moved to `packages/analysis/tests` during
+  the analysis package validation stage. Remaining root tests are reserved for
+  observation, vision, video, SQLAlchemy, research, examples, tooling, or
+  integration validation.
+
 | original path | original module | inventory classification | final path | final package | action | reason |
 |---|---|---|---|---|---|---|
 | `examples/analyze_visual_address_report.py` | `examples.analyze_visual_address_report` | `examples` | `examples/analyze_visual_address_report.py` | `examples` | `retained` | Retained in repository tooling/example area with imports rewritten where needed. |

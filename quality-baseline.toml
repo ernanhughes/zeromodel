@@ -107,7 +107,7 @@ reason = "Historical video policy module pending behavior-preserving extraction"
 maximum_lines = 406
 owner = "video-action-set-refactor"
 
-[legacy_exceptions."zeromodel/policy_lookup.py"]
+[legacy_exceptions."packages/core/src/zeromodel/core/policy_lookup.py"]
 reason = "Historical policy lookup module pending behavior-preserving extraction"
 maximum_lines = 399
 owner = "policy-runtime-refactor"
@@ -117,9 +117,9 @@ reason = "Historical visual calibration script pending behavior-preserving decom
 maximum_lines = 395
 owner = "visual-research-refactor"
 
-[legacy_exceptions."zeromodel/training.py"]
+[legacy_exceptions."packages/analysis/src/zeromodel/analysis/training.py"]
 reason = "Historical training assessment module pending behavior-preserving extraction"
-maximum_lines = 331
+maximum_lines = 373
 owner = "training-runtime-refactor"
 
 [legacy_exceptions."tests/test_video_action_set_reference_verification.py"]
@@ -132,7 +132,7 @@ reason = "Historical frame_descriptor keyword-only compatibility signature excee
 maximum_lines = 100
 owner = "video-action-set-refactor"
 
-[legacy_exceptions."zeromodel/lua.py"]
+[legacy_exceptions."packages/core/src/zeromodel/core/lua.py"]
 reason = "Historical Lua exporter module pending behavior-preserving extraction"
 maximum_lines = 170
 owner = "edge-runtime-refactor"

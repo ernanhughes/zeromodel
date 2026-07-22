@@ -4,6 +4,7 @@ The adapters in this package intentionally parse exported files rather than live
 tracker APIs. That keeps ZeroModel dependency-light and makes the resulting
 training progress artifacts reproducible from checked-in fixtures.
 """
+
 from __future__ import annotations
 
 import csv
@@ -55,7 +56,9 @@ def _load_json(path: Path) -> list[Mapping[str, Any]]:
         else:
             records = [payload]
     else:
-        raise VPMValidationError("JSON tracker export must be an object or list of objects")
+        raise VPMValidationError(
+            "JSON tracker export must be an object or list of objects"
+        )
     if not all(isinstance(item, Mapping) for item in records):
         raise VPMValidationError("Tracker export records must be objects")
     return [dict(item) for item in records]
@@ -63,13 +66,17 @@ def _load_json(path: Path) -> list[Mapping[str, Any]]:
 
 def _load_jsonl(path: Path) -> list[Mapping[str, Any]]:
     records: list[Mapping[str, Any]] = []
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
         text = line.strip()
         if not text:
             continue
         item = json.loads(text)
         if not isinstance(item, Mapping):
-            raise VPMValidationError("JSONL tracker record on line %s must be an object" % line_number)
+            raise VPMValidationError(
+                "JSONL tracker record on line %s must be an object" % line_number
+            )
         records.append(dict(item))
     return records
 
@@ -103,7 +110,9 @@ def _metric_name(name: str, aliases: Mapping[str, str]) -> str:
     return str(aliases.get(name, name)).replace("/", "_").replace(" ", "_")
 
 
-def _metadata_for_record(record: Mapping[str, Any], metadata_keys: Iterable[str]) -> dict[str, Any]:
+def _metadata_for_record(
+    record: Mapping[str, Any], metadata_keys: Iterable[str]
+) -> dict[str, Any]:
     return {key: record[key] for key in metadata_keys if key in record}
 
 
@@ -131,14 +140,18 @@ def records_to_checkpoints(
     if not records:
         raise VPMValidationError("Tracker export contained no records")
 
-    aliases = {str(key): str(value) for key, value in dict(metric_aliases or {}).items()}
+    aliases = {
+        str(key): str(value) for key, value in dict(metric_aliases or {}).items()
+    }
     ignored = {str(key) for key in ignore_keys}
     by_step: "OrderedDict[int, dict[str, Any]]" = OrderedDict()
 
     for record in records:
         step_key = _first_present(record, step_keys)
         if step_key is None:
-            raise VPMValidationError("Tracker record is missing a step key; tried %r" % (tuple(step_keys),))
+            raise VPMValidationError(
+                "Tracker record is missing a step key; tried %r" % (tuple(step_keys),)
+            )
         step_number = _as_number(record[step_key])
         if step_number is None:
             raise VPMValidationError("Tracker step value must be numeric")

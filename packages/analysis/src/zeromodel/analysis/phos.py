@@ -4,6 +4,7 @@ PHOS is implemented here as a pure consumer layer around VPM artifacts. It does
 not change artifact identity or source mapping; it creates derived visual fields
 that can be measured, rendered, compared, or used by edge consumers.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -59,7 +60,9 @@ def to_square(vec: np.ndarray, pad_value: float = 0.0) -> np.ndarray:
     side = int(np.ceil(np.sqrt(values.size)))
     pad = side * side - values.size
     if pad:
-        values = np.concatenate([values, np.full(pad, float(pad_value), dtype=np.float64)])
+        values = np.concatenate(
+            [values, np.full(pad, float(pad_value), dtype=np.float64)]
+        )
     return values.reshape(side, side)
 
 
@@ -89,7 +92,9 @@ def image_entropy(field: np.ndarray) -> float:
     return float(-np.sum(p * np.log(p + 1e-12)))
 
 
-def phos_sort_pack(values: np.ndarray, *, robust: bool = True) -> Tuple[np.ndarray, Tuple[int, ...]]:
+def phos_sort_pack(
+    values: np.ndarray, *, robust: bool = True
+) -> Tuple[np.ndarray, Tuple[int, ...]]:
     """Sort descending and square-pack values so high mass concentrates first."""
     vec = np.asarray(values, dtype=np.float64).reshape(-1)
     vec01 = robust01(vec) if robust else np.clip(vec, 0.0, 1.0)
@@ -98,7 +103,9 @@ def phos_sort_pack(values: np.ndarray, *, robust: bool = True) -> Tuple[np.ndarr
     return packed, order
 
 
-def pack_artifact(artifact: VPMArtifact, *, top_left_fraction: float = 0.25, robust: bool = False) -> PHOSResult:
+def pack_artifact(
+    artifact: VPMArtifact, *, top_left_fraction: float = 0.25, robust: bool = False
+) -> PHOSResult:
     """Create a PHOS-packed visual field from a VPM artifact."""
     raw = np.asarray(artifact.normalized_values, dtype=np.float64)
     raw_square = to_square(raw.reshape(-1))
@@ -142,7 +149,9 @@ def guarded_pack_artifact(
     if guarded:
         return guarded[0]
 
-    chosen = max(candidates, key=lambda item: (item.improvement_ratio, item.absolute_improvement))
+    chosen = max(
+        candidates, key=lambda item: (item.improvement_ratio, item.absolute_improvement)
+    )
     return PHOSResult(
         raw=chosen.raw,
         packed=chosen.packed,

@@ -1,4 +1,5 @@
 """Differential analysis helpers for VPM artifacts and fields."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -20,7 +21,9 @@ class VPMComparison:
     improvement_ratio: float
 
 
-def compare_fields(baseline: Any, target: Any, *, overlap_weight: float = 0.25) -> VPMComparison:
+def compare_fields(
+    baseline: Any, target: Any, *, overlap_weight: float = 0.25
+) -> VPMComparison:
     """Compare a baseline field with a target field.
 
     ``gain`` is positive target-minus-baseline mass; ``loss`` is negative mass;
@@ -29,7 +32,10 @@ def compare_fields(baseline: Any, target: Any, *, overlap_weight: float = 0.25) 
     base = as_field(baseline)
     tgt = as_field(target)
     if base.shape != tgt.shape:
-        raise ValueError("VPM fields must have identical shapes; got %s and %s" % (base.shape, tgt.shape))
+        raise ValueError(
+            "VPM fields must have identical shapes; got %s and %s"
+            % (base.shape, tgt.shape)
+        )
 
     signed = tgt - base
     gain = float(np.sum(np.clip(signed, 0.0, None)))

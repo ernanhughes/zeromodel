@@ -34,7 +34,9 @@ def test_guarded_pack_uses_first_ratio_guard_not_largest_window() -> None:
     artifact = _artifact()
     fractions = (0.09, 0.36)
 
-    chosen = guarded_pack_artifact(artifact, top_left_fractions=fractions, min_improvement=0.0)
+    chosen = guarded_pack_artifact(
+        artifact, top_left_fractions=fractions, min_improvement=0.0
+    )
     first = pack_artifact(artifact, top_left_fraction=fractions[0])
 
     assert chosen.top_left_fraction == first.top_left_fraction
@@ -44,6 +46,8 @@ def test_guarded_pack_uses_first_ratio_guard_not_largest_window() -> None:
 def test_guarded_pack_fallback_marks_unimproved_candidate() -> None:
     artifact = _artifact()
 
-    chosen = guarded_pack_artifact(artifact, top_left_fractions=(0.09, 0.36), min_improvement=100.0)
+    chosen = guarded_pack_artifact(
+        artifact, top_left_fractions=(0.09, 0.36), min_improvement=100.0
+    )
 
     assert chosen.improved is False

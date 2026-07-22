@@ -1,4 +1,5 @@
 """Explicit, shape-checked visual composition operators for VPM fields."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,7 +25,9 @@ def _pair(left: Any, right: Any) -> tuple[np.ndarray, np.ndarray]:
     a = as_field(left)
     b = as_field(right)
     if a.shape != b.shape:
-        raise ValueError("VPM fields must have identical shapes; got %s and %s" % (a.shape, b.shape))
+        raise ValueError(
+            "VPM fields must have identical shapes; got %s and %s" % (a.shape, b.shape)
+        )
     return a, b
 
 

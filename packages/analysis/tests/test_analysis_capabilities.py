@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import zipfile
-
 import numpy as np
 
 from zeromodel.analysis.compare import compare_fields
@@ -22,15 +20,6 @@ from zeromodel.core.artifact import (
     ScoreTable,
     build_vpm,
 )
-from zeromodel.core.bundle import (
-    from_bundle,
-    to_bundle,
-)
-from zeromodel.core.metrics import (
-    pack_metrics,
-    score_table_from_metric_rows,
-)
-from zeromodel.core.render import png_bytes
 from zeromodel.analysis.controller import Signal
 
 
@@ -59,29 +48,6 @@ def artifact():
     return build_vpm(table, recipe())
 
 
-def test_metric_packing_accepts_stephanie_aliases() -> None:
-    packed = pack_metrics(
-        {
-            "claim_coverage": 0.8,
-            "hallucination_rate": 0.1,
-            "figure_results": {"overall_figure_score": 0.6},
-        },
-        metric_ids=["coverage", "no_halluc", "figure_ground"],
-    )
-    assert packed == {"coverage": 0.8, "no_halluc": 0.9, "figure_ground": 0.6}
-
-
-def test_metric_rows_build_score_table() -> None:
-    table = score_table_from_metric_rows(
-        [{"overall": 0.9, "claim_coverage": 0.7}, {"overall": 0.4, "coverage": 0.6}],
-        row_ids=["first", "second"],
-        metric_ids=["overall", "coverage"],
-    )
-    assert table.row_ids == ("first", "second")
-    assert table.metric_ids == ("overall", "coverage")
-    assert table.values.shape == (2, 2)
-
-
 def test_phos_guarded_pack_measures_concentration() -> None:
     result = guarded_pack_artifact(artifact())
     assert result.packed.shape[0] == result.packed.shape[1]
@@ -98,20 +64,6 @@ def test_visual_logic_and_diff_are_shape_checked() -> None:
     assert comparison.gain > 0
     assert comparison.loss > 0
     assert 0 <= comparison.improvement_ratio <= 1
-
-
-def test_bundle_roundtrip_preserves_artifact_identity(tmp_path) -> None:
-    art = artifact()
-    path = tmp_path / "artifact.vpm"
-    to_bundle(art, path)
-    assert zipfile.is_zipfile(path)
-    loaded = from_bundle(path)
-    assert loaded.artifact_id == art.artifact_id
-
-
-def test_png_renderer_emits_png_signature() -> None:
-    data = png_bytes(artifact())
-    assert data.startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def test_hierarchy_builds_reduced_levels() -> None:

@@ -6,6 +6,7 @@ threshold, explanation, and input metadata. ZeroModel does not train or run that
 critic. It turns critic/evidence outputs into deterministic VPM artifacts that
 surface which items deserve inspection first.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -13,7 +14,13 @@ from typing import Any, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
-from zeromodel.core.artifact import LayoutRecipe, ScoreTable, VPMArtifact, VPMValidationError, build_vpm
+from zeromodel.core.artifact import (
+    LayoutRecipe,
+    ScoreTable,
+    VPMArtifact,
+    VPMValidationError,
+    build_vpm,
+)
 
 CRITIC_METRICS: Tuple[str, ...] = (
     "risk_score",
@@ -28,7 +35,12 @@ CRITIC_METRICS: Tuple[str, ...] = (
 
 _NUMERIC_FEATURE_ALIASES: Mapping[str, Tuple[str, ...]] = {
     "policy_fit": ("policy_fit", "policy_score", "policy_alignment"),
-    "evidence_support": ("evidence_support", "support_score", "source_support", "grounding_score"),
+    "evidence_support": (
+        "evidence_support",
+        "support_score",
+        "source_support",
+        "grounding_score",
+    ),
     "citation_match": ("citation_match", "citation_score", "citation_support"),
     "semantic_drift": ("semantic_drift", "drift", "semantic_distance"),
     "hallucination_energy": ("hallucination_energy", "hallucination_risk", "he"),
@@ -102,11 +114,27 @@ class CriticObservation:
         if not item_id:
             raise VPMValidationError("CriticObservation item_id must be non-empty")
         object.__setattr__(self, "item_id", item_id)
-        object.__setattr__(self, "critic_score", _bounded01(self.critic_score, label="critic_score"))
-        object.__setattr__(self, "policy_fit", _bounded01(self.policy_fit, label="policy_fit"))
-        object.__setattr__(self, "evidence_support", _bounded01(self.evidence_support, label="evidence_support"))
-        object.__setattr__(self, "citation_match", _bounded01(self.citation_match, label="citation_match"))
-        object.__setattr__(self, "semantic_drift", _bounded01(self.semantic_drift, label="semantic_drift"))
+        object.__setattr__(
+            self, "critic_score", _bounded01(self.critic_score, label="critic_score")
+        )
+        object.__setattr__(
+            self, "policy_fit", _bounded01(self.policy_fit, label="policy_fit")
+        )
+        object.__setattr__(
+            self,
+            "evidence_support",
+            _bounded01(self.evidence_support, label="evidence_support"),
+        )
+        object.__setattr__(
+            self,
+            "citation_match",
+            _bounded01(self.citation_match, label="citation_match"),
+        )
+        object.__setattr__(
+            self,
+            "semantic_drift",
+            _bounded01(self.semantic_drift, label="semantic_drift"),
+        )
         if self.hallucination_energy is not None:
             object.__setattr__(
                 self,
@@ -114,8 +142,14 @@ class CriticObservation:
                 _bounded01(self.hallucination_energy, label="hallucination_energy"),
             )
         if self.verifiability is not None:
-            object.__setattr__(self, "verifiability", _bounded01(self.verifiability, label="verifiability"))
-        object.__setattr__(self, "explanation", tuple(dict(item) for item in self.explanation))
+            object.__setattr__(
+                self,
+                "verifiability",
+                _bounded01(self.verifiability, label="verifiability"),
+            )
+        object.__setattr__(
+            self, "explanation", tuple(dict(item) for item in self.explanation)
+        )
 
     @property
     def critic_risk(self) -> float:
@@ -151,7 +185,9 @@ class CriticObservation:
     def computed_verifiability(self) -> float:
         if self.verifiability is not None:
             return float(self.verifiability)
-        return _clip01((self.evidence_support + self.citation_match + self.policy_fit) / 3.0)
+        return _clip01(
+            (self.evidence_support + self.citation_match + self.policy_fit) / 3.0
+        )
 
     @property
     def risk_score(self) -> float:
@@ -207,11 +243,17 @@ class CriticObservation:
     ) -> "CriticObservation":
         """Create an observation from a Writer-style critic result mapping."""
         features = _merge_features(result)
-        resolved_item_id = item_id or result.get("item_id") or result.get("id") or result.get("index")
+        resolved_item_id = (
+            item_id or result.get("item_id") or result.get("id") or result.get("index")
+        )
         if resolved_item_id is None:
             resolved_item_id = "critic_item"
         text = result.get("text") or result.get("claim")
-        metadata = dict(result.get("metadata") or {}) if isinstance(result.get("metadata"), Mapping) else {}
+        metadata = (
+            dict(result.get("metadata") or {})
+            if isinstance(result.get("metadata"), Mapping)
+            else {}
+        )
         if text is not None:
             metadata["text"] = str(text)
         if "threshold" in result:
@@ -221,22 +263,49 @@ class CriticObservation:
 
         return cls(
             item_id=str(resolved_item_id),
-            critic_score=_bounded01(result.get("score", result.get("critic_score", 0.0)), label="critic_score"),
-            policy_fit=_clip01(_first_numeric(features, _NUMERIC_FEATURE_ALIASES["policy_fit"]) or default_policy_fit),
-            evidence_support=_clip01(_first_numeric(features, _NUMERIC_FEATURE_ALIASES["evidence_support"]) or default_evidence_support),
-            citation_match=_clip01(_first_numeric(features, _NUMERIC_FEATURE_ALIASES["citation_match"]) or default_citation_match),
-            semantic_drift=_clip01(_first_numeric(features, _NUMERIC_FEATURE_ALIASES["semantic_drift"]) or default_semantic_drift),
+            critic_score=_bounded01(
+                result.get("score", result.get("critic_score", 0.0)),
+                label="critic_score",
+            ),
+            policy_fit=_clip01(
+                _first_numeric(features, _NUMERIC_FEATURE_ALIASES["policy_fit"])
+                or default_policy_fit
+            ),
+            evidence_support=_clip01(
+                _first_numeric(features, _NUMERIC_FEATURE_ALIASES["evidence_support"])
+                or default_evidence_support
+            ),
+            citation_match=_clip01(
+                _first_numeric(features, _NUMERIC_FEATURE_ALIASES["citation_match"])
+                or default_citation_match
+            ),
+            semantic_drift=_clip01(
+                _first_numeric(features, _NUMERIC_FEATURE_ALIASES["semantic_drift"])
+                or default_semantic_drift
+            ),
             hallucination_energy=(
                 _clip01(value)
-                if (value := _first_numeric(features, _NUMERIC_FEATURE_ALIASES["hallucination_energy"])) is not None
+                if (
+                    value := _first_numeric(
+                        features, _NUMERIC_FEATURE_ALIASES["hallucination_energy"]
+                    )
+                )
+                is not None
                 else None
             ),
             verifiability=(
                 _clip01(value)
-                if (value := _first_numeric(features, _NUMERIC_FEATURE_ALIASES["verifiability"])) is not None
+                if (
+                    value := _first_numeric(
+                        features, _NUMERIC_FEATURE_ALIASES["verifiability"]
+                    )
+                )
+                is not None
                 else None
             ),
-            verdict=str(result.get("verdict")) if result.get("verdict") is not None else None,
+            verdict=str(result.get("verdict"))
+            if result.get("verdict") is not None
+            else None,
             explanation=result.get("explanation") or (),
             metadata=metadata,
         )
@@ -262,7 +331,9 @@ class CriticAssessment:
             "risky_count": self.risky_count,
             "warnings": list(self.warnings),
             "thresholds": dict(self.thresholds),
-            "observations": [observation.to_dict() for observation in self.observations],
+            "observations": [
+                observation.to_dict() for observation in self.observations
+            ],
         }
 
 
@@ -287,17 +358,23 @@ def critic_recipe() -> LayoutRecipe:
     )
 
 
-def observations_from_critic_lines(result: Mapping[str, Any]) -> list[CriticObservation]:
+def observations_from_critic_lines(
+    result: Mapping[str, Any],
+) -> list[CriticObservation]:
     """Convert a Writer ``criticize_lines`` style result into observations."""
     items = result.get("items")
     if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
-        raise VPMValidationError("criticize_lines result must contain an items sequence")
+        raise VPMValidationError(
+            "criticize_lines result must contain an items sequence"
+        )
     observations: list[CriticObservation] = []
     for item in items:
         if not isinstance(item, Mapping):
             raise VPMValidationError("criticize_lines items must be mappings")
         index = item.get("index", len(observations))
-        observations.append(CriticObservation.from_critic_result(item, item_id="line_%s" % index))
+        observations.append(
+            CriticObservation.from_critic_result(item, item_id="line_%s" % index)
+        )
     return observations
 
 
@@ -312,7 +389,9 @@ def build_critic_vpm(
 ) -> CriticAssessment:
     """Build a deterministic VPM for critic/evidence/policy observations."""
     normalized = tuple(
-        item if isinstance(item, CriticObservation) else CriticObservation.from_critic_result(dict(item))
+        item
+        if isinstance(item, CriticObservation)
+        else CriticObservation.from_critic_result(dict(item))
         for item in observations
     )
     if not normalized:
@@ -326,7 +405,9 @@ def build_critic_vpm(
         hallucination_energy_threshold,
         label="hallucination_energy_threshold",
     )
-    verifiability_threshold = _bounded01(verifiability_threshold, label="verifiability_threshold")
+    verifiability_threshold = _bounded01(
+        verifiability_threshold, label="verifiability_threshold"
+    )
 
     table = ScoreTable(
         values=[observation.metric_row() for observation in normalized],
@@ -338,14 +419,27 @@ def build_critic_vpm(
         },
     )
 
-    highest = max(normalized, key=lambda observation: (observation.risk_score, observation.item_id))
-    risky = [observation for observation in normalized if observation.risk_score >= risk_threshold]
+    highest = max(
+        normalized,
+        key=lambda observation: (observation.risk_score, observation.item_id),
+    )
+    risky = [
+        observation
+        for observation in normalized
+        if observation.risk_score >= risk_threshold
+    ]
     warnings: list[str] = []
     if risky:
         warnings.append("risk_score_above_threshold")
-    if any(observation.computed_hallucination_energy >= hallucination_energy_threshold for observation in normalized):
+    if any(
+        observation.computed_hallucination_energy >= hallucination_energy_threshold
+        for observation in normalized
+    ):
         warnings.append("hallucination_energy_above_threshold")
-    if any(observation.computed_verifiability < verifiability_threshold for observation in normalized):
+    if any(
+        observation.computed_verifiability < verifiability_threshold
+        for observation in normalized
+    ):
         warnings.append("verifiability_below_threshold")
 
     artifact = build_vpm(

@@ -10,6 +10,7 @@ accuracy. It exposes deterministic geometry over scored panels: optimized mass,
 metric-weight movement, row/column order movement, metric affinity, and
 inflection points worth inspecting.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -30,7 +31,9 @@ def _as_table(source: SourcePanel) -> ScoreTable:
         return source.source
     if isinstance(source, ScoreTable):
         return source
-    raise VPMValidationError("decision manifold panels must be ScoreTable or VPMArtifact")
+    raise VPMValidationError(
+        "decision manifold panels must be ScoreTable or VPMArtifact"
+    )
 
 
 def _as_tables(source: Sequence[SourcePanel]) -> tuple[ScoreTable, ...]:
@@ -42,16 +45,25 @@ def _as_tables(source: Sequence[SourcePanel]) -> tuple[ScoreTable, ...]:
     shape = tables[0].shape
     for table in tables[1:]:
         if table.shape != shape:
-            raise VPMValidationError("all decision manifold panels must have identical shape")
+            raise VPMValidationError(
+                "all decision manifold panels must have identical shape"
+            )
         if table.metric_ids != metric_ids:
-            raise VPMValidationError("all decision manifold panels must have identical metric_ids")
+            raise VPMValidationError(
+                "all decision manifold panels must have identical metric_ids"
+            )
         if table.row_ids != row_ids:
-            raise VPMValidationError("all decision manifold panels must have identical row_ids")
+            raise VPMValidationError(
+                "all decision manifold panels must have identical row_ids"
+            )
     return tables
 
 
 def _weight_vector(result: SpatialOptimizationResult) -> np.ndarray:
-    return np.array([float(result.metric_weights[metric_id]) for metric_id in result.metric_ids], dtype=np.float64)
+    return np.array(
+        [float(result.metric_weights[metric_id]) for metric_id in result.metric_ids],
+        dtype=np.float64,
+    )
 
 
 def _permutation_delta(left: Sequence[int], right: Sequence[int]) -> float:
@@ -203,7 +215,11 @@ class DecisionManifold:
             optimization = self.optimizer.fit(
                 table,
                 name="%s-frame-%04d" % (name, index),
-                metadata={"manifold": name, "frame_index": index, **dict(metadata or {})},
+                metadata={
+                    "manifold": name,
+                    "frame_index": index,
+                    **dict(metadata or {}),
+                },
             )
             artifact = build_view(
                 table,
@@ -221,7 +237,9 @@ class DecisionManifold:
                     source_digest="sha256:%s" % table.digest,
                     artifact=artifact,
                     optimization=optimization,
-                    top_left_mass=self.optimizer.top_left_mass(artifact.normalized_values),
+                    top_left_mass=self.optimizer.top_left_mass(
+                        artifact.normalized_values
+                    ),
                     row_order=tuple(artifact.row_order),
                     column_order=tuple(artifact.column_order),
                     metric_weights=dict(optimization.metric_weights),
@@ -256,7 +274,9 @@ class DecisionManifold:
             mass_delta = abs(float(right.top_left_mass) - float(left.top_left_mass))
             weight_delta = float(np.sum(np.abs(right_weights - left_weights)))
             row_order_delta = _permutation_delta(left.row_order, right.row_order)
-            column_order_delta = _permutation_delta(left.column_order, right.column_order)
+            column_order_delta = _permutation_delta(
+                left.column_order, right.column_order
+            )
             curvature = (
                 self.mass_weight * mass_delta
                 + self.metric_weight * weight_delta
@@ -280,7 +300,9 @@ class DecisionManifold:
         """Return a simple metric affinity graph from frame weight co-activation."""
         if not frames:
             raise VPMValidationError("metric_graph requires at least one frame")
-        vectors = np.stack([_weight_vector(frame.optimization) for frame in frames], axis=0)
+        vectors = np.stack(
+            [_weight_vector(frame.optimization) for frame in frames], axis=0
+        )
         graph = np.zeros((vectors.shape[1], vectors.shape[1]), dtype=np.float64)
         for vector in vectors:
             graph += np.outer(vector, vector)
@@ -307,16 +329,25 @@ def find_inflection_points(
         raise VPMValidationError("top_k must be positive when provided")
 
     if threshold is None and top_k is None:
-        curvatures = np.array([transition.curvature for transition in items], dtype=np.float64)
+        curvatures = np.array(
+            [transition.curvature for transition in items], dtype=np.float64
+        )
         threshold = float(curvatures.mean() + curvatures.std())
 
     if threshold is not None:
-        selected = [transition for transition in items if transition.curvature >= float(threshold)]
+        selected = [
+            transition
+            for transition in items
+            if transition.curvature >= float(threshold)
+        ]
     else:
         selected = list(items)
 
     if top_k is not None:
-        selected = sorted(selected, key=lambda transition: (-transition.curvature, transition.to_index))[: int(top_k)]
+        selected = sorted(
+            selected,
+            key=lambda transition: (-transition.curvature, transition.to_index),
+        )[: int(top_k)]
 
     return tuple(sorted(int(transition.to_index) for transition in selected))
 

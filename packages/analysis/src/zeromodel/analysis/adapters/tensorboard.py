@@ -4,6 +4,7 @@ This adapter parses exported scalar CSV/JSON/JSONL files. It deliberately does n
 parse TensorBoard event protobufs directly, keeping ZeroModel free of TensorBoard
 runtime dependencies.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

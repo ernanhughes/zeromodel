@@ -1,0 +1,62 @@
+name: analysis-package
+
+on:
+  push:
+    paths:
+      - "packages/core/**"
+      - "packages/analysis/**"
+      - "scripts/check_package_boundaries.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/analysis-package.yml"
+  pull_request:
+    paths:
+      - "packages/core/**"
+      - "packages/analysis/**"
+      - "scripts/check_package_boundaries.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/analysis-package.yml"
+
+jobs:
+  validate-analysis:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine pytest ruff mypy numpy
+      - name: Build core and analysis wheels
+        run: |
+          python -m build packages/core
+          python -m twine check packages/core/dist/*
+          python -m build packages/analysis
+          python -m twine check packages/analysis/dist/*
+      - name: Lint and type-check analysis
+        run: |
+          python -m ruff check packages/analysis/src packages/analysis/tests
+          python -m ruff format --check packages/analysis/src packages/analysis/tests
+          python -m mypy packages/analysis/src
+      - name: Check package boundaries
+        run: python scripts/check_package_boundaries.py
+      - name: Install wheels in clean environment
+        shell: pwsh
+        run: |
+          python -m venv build/analysis-ci-venv
+          $python = "build/analysis-ci-venv/Scripts/python.exe"
+          & $python -m pip install --upgrade pip
+          & $python -m pip install pytest
+          & $python -m pip install packages/core/dist/zeromodel-1.0.13-py3-none-any.whl
+          & $python -m pip install packages/analysis/dist/zeromodel_analysis-1.0.13-py3-none-any.whl
+          & $python -m pip check
+          $env:ANALYSIS_WHEEL_PATH = "$PWD/packages/analysis/dist/zeromodel_analysis-1.0.13-py3-none-any.whl"
+          & $python -m pytest -q packages/analysis/tests
+      - name: Verify installed import locations
+        shell: pwsh
+        run: |
+          $python = "build/analysis-ci-venv/Scripts/python.exe"
+          & $python -c "import inspect, zeromodel.core, zeromodel.analysis; print(inspect.getfile(zeromodel.core)); print(inspect.getfile(zeromodel.analysis))"

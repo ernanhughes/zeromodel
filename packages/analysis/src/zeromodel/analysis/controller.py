@@ -3,6 +3,7 @@
 The controller is a consumer of metric rows. It does not mutate VPM artifacts;
 it turns metric history into explicit workflow signals.
 """
+
 from __future__ import annotations
 
 import statistics as stats
@@ -41,8 +42,18 @@ class Policy:
     stickiness_dim: str = "stickiness"
     spinoff_novelty_min: float = 0.75
     spinoff_stickiness_max: float = 0.45
-    local_gap_dims: tuple[str, ...] = ("citation_support", "entity_consistency", "lint_clean", "type_safe")
-    zscore_clip_dims: tuple[str, ...] = ("coverage", "coherence", "correctness", "tests_pass_rate")
+    local_gap_dims: tuple[str, ...] = (
+        "citation_support",
+        "entity_consistency",
+        "lint_clean",
+        "type_safe",
+    )
+    zscore_clip_dims: tuple[str, ...] = (
+        "coverage",
+        "coherence",
+        "correctness",
+        "tests_pass_rate",
+    )
     zscore_clip_sigma: float = 3.5
 
 
@@ -84,18 +95,32 @@ class VPMController:
         self.cooldown_until_step: Dict[str, int] = {}
         self.last_signal: Dict[str, Signal] = {}
 
-    def add_vpm_row(self, metrics: Mapping[str, Any], unit: str, *, candidate_exemplars: Optional[List[str]] = None) -> Decision:
+    def add_vpm_row(
+        self,
+        metrics: Mapping[str, Any],
+        unit: str,
+        *,
+        candidate_exemplars: Optional[List[str]] = None,
+    ) -> Decision:
         kind = "code" if "tests_pass_rate" in metrics else "text"
         row = VPMRow(
             unit=unit,
             kind=kind,
-            dims={k: float(v) for k, v in dict(metrics).items() if isinstance(v, (int, float))},
-            step_idx=metrics.get("step_idx") if isinstance(metrics.get("step_idx"), int) else None,
+            dims={
+                k: float(v)
+                for k, v in dict(metrics).items()
+                if isinstance(v, (int, float))
+            },
+            step_idx=metrics.get("step_idx")
+            if isinstance(metrics.get("step_idx"), int)
+            else None,
             meta=dict(metrics),
         )
         return self.add(row, candidate_exemplars=candidate_exemplars)
 
-    def add(self, row: VPMRow, *, candidate_exemplars: Optional[List[str]] = None) -> Decision:
+    def add(
+        self, row: VPMRow, *, candidate_exemplars: Optional[List[str]] = None
+    ) -> Decision:
         row = self._clipped(row)
         history = self.history.setdefault(row.unit, [])
         history.append(row)
@@ -103,20 +128,32 @@ class VPMController:
             self.history[row.unit] = history[-100:]
             history = self.history[row.unit]
 
-        thresholds = self.thresholds_code if row.kind == "code" else self.thresholds_text
-        window = history[-self.policy.window:]
+        thresholds = (
+            self.thresholds_code if row.kind == "code" else self.thresholds_text
+        )
+        window = history[-self.policy.window :]
 
         if row.meta.get("total_steps", row.step_idx or 0) >= self.policy.max_steps:
             return self._decision(row, Signal.STOP, "Max steps reached", {})
         if self._in_cooldown(row):
-            return self._decision(row, Signal.HOLD, "Cooldown", {"until_step": self.cooldown_until_step[row.unit]})
+            return self._decision(
+                row,
+                Signal.HOLD,
+                "Cooldown",
+                {"until_step": self.cooldown_until_step[row.unit]},
+            )
         if self._stable_above(window, thresholds):
             return self._decision(row, Signal.STOP, "Stable above thresholds", {})
         if self._should_spinoff(row):
-            return self._decision(row, Signal.SPINOFF, "High novelty with low stickiness", {
-                "novelty": row.dims.get(self.policy.spinoff_dim),
-                "stickiness": row.dims.get(self.policy.stickiness_dim),
-            })
+            return self._decision(
+                row,
+                Signal.SPINOFF,
+                "High novelty with low stickiness",
+                {
+                    "novelty": row.dims.get(self.policy.spinoff_dim),
+                    "stickiness": row.dims.get(self.policy.stickiness_dim),
+                },
+            )
         if self._regressions(window) > self.policy.max_regressions:
             return self._resample(row, "Too many regressions", candidate_exemplars)
 
@@ -128,12 +165,16 @@ class VPMController:
             return self._resample(row, "Stagnation on core dims", candidate_exemplars)
         if gaps and self.resample_counts.get(row.unit, 0) >= self.policy.escalate_after:
             self._set_cooldown(row)
-            return self._decision(row, Signal.ESCALATE, "Global gaps after resamples", {"gaps": gaps})
+            return self._decision(
+                row, Signal.ESCALATE, "Global gaps after resamples", {"gaps": gaps}
+            )
         if gaps:
             return self._resample(row, "Below thresholds", candidate_exemplars)
         return self._decision(row, Signal.EDIT, "Default edit", {"gaps": gaps})
 
-    def _decision(self, row: VPMRow, signal: Signal, reason: str, params: Dict[str, Any]) -> Decision:
+    def _decision(
+        self, row: VPMRow, signal: Signal, reason: str, params: Dict[str, Any]
+    ) -> Decision:
         self.last_signal[row.unit] = signal
         exemplar = row.meta.get("exemplar_id")
         if exemplar and self.bandit_update and signal in (Signal.EDIT, Signal.STOP):
@@ -142,10 +183,17 @@ class VPMController:
             signal=signal,
             reason=reason,
             params=params,
-            snapshot={"unit": row.unit, "kind": row.kind, "step_idx": row.step_idx, "dims": dict(row.dims)},
+            snapshot={
+                "unit": row.unit,
+                "kind": row.kind,
+                "step_idx": row.step_idx,
+                "dims": dict(row.dims),
+            },
         )
 
-    def _resample(self, row: VPMRow, why: str, candidates: Optional[List[str]]) -> Decision:
+    def _resample(
+        self, row: VPMRow, why: str, candidates: Optional[List[str]]
+    ) -> Decision:
         self.resample_counts[row.unit] = self.resample_counts.get(row.unit, 0) + 1
         self._set_cooldown(row)
         params: Dict[str, Any] = {"why": why}
@@ -155,15 +203,21 @@ class VPMController:
 
     def _set_cooldown(self, row: VPMRow) -> None:
         if row.step_idx is not None:
-            self.cooldown_until_step[row.unit] = row.step_idx + self.policy.cooldown_steps
+            self.cooldown_until_step[row.unit] = (
+                row.step_idx + self.policy.cooldown_steps
+            )
 
     def _in_cooldown(self, row: VPMRow) -> bool:
-        return row.step_idx is not None and row.unit in self.cooldown_until_step and row.step_idx < self.cooldown_until_step[row.unit]
+        return (
+            row.step_idx is not None
+            and row.unit in self.cooldown_until_step
+            and row.step_idx < self.cooldown_until_step[row.unit]
+        )
 
     def _stable_above(self, window: List[VPMRow], thresholds: Thresholds) -> bool:
         if len(window) < self.policy.patience:
             return False
-        recent = window[-self.policy.patience:]
+        recent = window[-self.policy.patience :]
         for item in recent:
             for dim, minimum in thresholds.mins.items():
                 if item.dims.get(dim, 0.0) < minimum + thresholds.stop_margin:
@@ -175,11 +229,15 @@ class VPMController:
         stickiness = row.dims.get(self.policy.stickiness_dim)
         if novelty is None or stickiness is None:
             return False
-        return novelty >= self.policy.spinoff_novelty_min and stickiness <= self.policy.spinoff_stickiness_max
+        return (
+            novelty >= self.policy.spinoff_novelty_min
+            and stickiness <= self.policy.spinoff_stickiness_max
+        )
 
     def _gaps(self, row: VPMRow, thresholds: Thresholds) -> List[str]:
         return [
-            dim for dim, minimum in thresholds.mins.items()
+            dim
+            for dim, minimum in thresholds.mins.items()
             if row.dims.get(dim, 1.0) < minimum - self.policy.edit_margin
         ]
 
@@ -189,14 +247,18 @@ class VPMController:
         regressions = 0
         dims = set(window[-1].dims)
         for prev, cur in zip(window, window[1:]):
-            dips = sum(1 for dim in dims if cur.dims.get(dim, 0.0) < prev.dims.get(dim, 0.0) - 1e-6)
+            dips = sum(
+                1
+                for dim in dims
+                if cur.dims.get(dim, 0.0) < prev.dims.get(dim, 0.0) - 1e-6
+            )
             regressions += 1 if dips >= max(1, len(dims) // 4) else 0
         return regressions
 
     def _stagnating(self, window: List[VPMRow], thresholds: Thresholds) -> bool:
         if len(window) < self.policy.patience + 1:
             return False
-        recent = window[-(self.policy.patience + 1):]
+        recent = window[-(self.policy.patience + 1) :]
         for dim in thresholds.mins:
             if dim not in recent[-1].dims:
                 continue
@@ -219,7 +281,12 @@ class VPMController:
             std = stats.pstdev(series) or 1e-6
             z = abs((dims[dim] - mean) / std)
             if z > self.policy.zscore_clip_sigma:
-                dims[dim] = mean + self.policy.zscore_clip_sigma * (1 if dims[dim] > mean else -1) * std
+                dims[dim] = (
+                    mean
+                    + self.policy.zscore_clip_sigma
+                    * (1 if dims[dim] > mean else -1)
+                    * std
+                )
         row.dims = dims
         return row
 
@@ -230,6 +297,21 @@ class VPMController:
 
 def default_controller() -> VPMController:
     return VPMController(
-        thresholds_code=Thresholds({"tests_pass_rate": 1.0, "coverage": 0.70, "type_safe": 1.0, "lint_clean": 1.0}),
-        thresholds_text=Thresholds({"coverage": 0.80, "correctness": 0.75, "coherence": 0.75, "citation_support": 0.65, "entity_consistency": 0.80}),
+        thresholds_code=Thresholds(
+            {
+                "tests_pass_rate": 1.0,
+                "coverage": 0.70,
+                "type_safe": 1.0,
+                "lint_clean": 1.0,
+            }
+        ),
+        thresholds_text=Thresholds(
+            {
+                "coverage": 0.80,
+                "correctness": 0.75,
+                "coherence": 0.75,
+                "citation_support": 0.65,
+                "entity_consistency": 0.80,
+            }
+        ),
     )

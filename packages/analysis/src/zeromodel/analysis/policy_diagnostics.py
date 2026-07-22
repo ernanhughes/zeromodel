@@ -35,7 +35,9 @@ def with_q_diagnostics(
 
     actions = tuple(str(metric_id) for metric_id in action_metric_ids)
     if len(actions) < 2:
-        raise VPMValidationError("with_q_diagnostics requires at least two action metrics")
+        raise VPMValidationError(
+            "with_q_diagnostics requires at least two action metrics"
+        )
     if len(set(actions)) != len(actions):
         raise VPMValidationError("action_metric_ids must be unique")
 
@@ -48,7 +50,9 @@ def with_q_diagnostics(
     derived_ids = (str(criticality_metric_id), str(decision_margin_metric_id))
     if len(set(derived_ids)) != len(derived_ids):
         raise VPMValidationError("diagnostic metric ids must be distinct")
-    conflicts = [metric_id for metric_id in derived_ids if metric_id in table.metric_ids]
+    conflicts = [
+        metric_id for metric_id in derived_ids if metric_id in table.metric_ids
+    ]
     if conflicts:
         raise VPMValidationError(
             "Diagnostic metric ids already exist: %s" % ", ".join(sorted(conflicts))

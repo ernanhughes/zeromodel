@@ -84,8 +84,7 @@ class PatternAnalysisSpec:
             raise VPMValidationError("Unsupported pattern method: %r" % self.method)
         if self.value_source not in {"normalized", "raw"}:
             raise VPMValidationError(
-                "value_source must be 'normalized' or 'raw', got %r"
-                % self.value_source
+                "value_source must be 'normalized' or 'raw', got %r" % self.value_source
             )
         if not self.objectives:
             raise VPMValidationError("At least one objective is required")
@@ -269,6 +268,7 @@ class PatternDiscoveryArtifacts:
 # Deterministic spectral seriation
 # ---------------------------------------------------------------------------
 
+
 def _source_matrix(artifact: VPMArtifact, value_source: str) -> np.ndarray:
     values = np.asarray(artifact.source.values, dtype=np.float64)
     if value_source == "raw":
@@ -325,6 +325,7 @@ def _spectral_order(
 # Structural objectives (higher = more structure)
 # ---------------------------------------------------------------------------
 
+
 def _adjacent_coherence(ordered_matrix: np.ndarray) -> float:
     """Negative mean squared difference between vertically adjacent cells."""
 
@@ -379,6 +380,7 @@ def _run_pipeline(
 # Selection-corrected null calibration
 # ---------------------------------------------------------------------------
 
+
 def detect_patterns(
     artifact: VPMArtifact,
     spec: Optional[PatternAnalysisSpec] = None,
@@ -397,9 +399,7 @@ def detect_patterns(
 
     matrix = _source_matrix(artifact, spec.value_source)
     row_ids = artifact.source.row_ids
-    order, observed_scores, degenerate = _run_pipeline(
-        matrix, row_ids, spec.objectives
-    )
+    order, observed_scores, degenerate = _run_pipeline(matrix, row_ids, spec.objectives)
 
     rng = np.random.default_rng(spec.seed)
     null_scores: Dict[str, list] = {objective: [] for objective in spec.objectives}
@@ -407,9 +407,7 @@ def detect_patterns(
     for _ in range(spec.null_samples):
         null_matrix = np.empty_like(matrix)
         for column in range(matrix.shape[1]):
-            null_matrix[:, column] = matrix[
-                rng.permutation(matrix.shape[0]), column
-            ]
+            null_matrix[:, column] = matrix[rng.permutation(matrix.shape[0]), column]
         _, scores, _ = _run_pipeline(null_matrix, null_row_ids, spec.objectives)
         for objective, score in scores.items():
             null_scores[objective].append(score)
@@ -538,9 +536,7 @@ def build_discovered_view(
         for parent in report_parents
         if isinstance(parent, Mapping)
     ):
-        raise VPMValidationError(
-            "report_artifact must link to the analyzed artifact"
-        )
+        raise VPMValidationError("report_artifact must link to the analyzed artifact")
     recipe = LayoutRecipe.from_dict(
         {
             "version": "vpm-layout/0",

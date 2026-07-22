@@ -3,6 +3,7 @@
 Supports JSON/JSONL/CSV metric exports shaped as flat rows or rows with nested
 ``metrics`` dictionaries. No Trackio runtime dependency is required.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

@@ -61,7 +61,9 @@ def test_spatial_optimizer_accepts_table_series() -> None:
         metric_ids=first.metric_ids,
     )
 
-    result = optimize_view_profile([first, second], optimizer=SpatialOptimizer(Kc=2, Kr=2, max_evals=20))
+    result = optimize_view_profile(
+        [first, second], optimizer=SpatialOptimizer(Kc=2, Kr=2, max_evals=20)
+    )
 
     assert result.metric_weights["target"] > 0.0
     assert result.optimized_mass >= result.baseline_mass

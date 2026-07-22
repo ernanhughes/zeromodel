@@ -114,7 +114,9 @@ def test_find_inflection_points_supports_threshold_and_top_k():
     selected = find_inflection_points(summary.transitions, top_k=1)
     assert selected == (2,)
 
-    threshold_selected = find_inflection_points(summary.transitions, threshold=summary.transitions[1].curvature)
+    threshold_selected = find_inflection_points(
+        summary.transitions, threshold=summary.transitions[1].curvature
+    )
     assert 2 in threshold_selected
 
 

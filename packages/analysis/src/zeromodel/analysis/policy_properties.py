@@ -79,8 +79,7 @@ def decode_key_value_row_id(row_id: str) -> dict[str, Any]:
         key, separator, raw_value = part.partition("=")
         if not separator or not key:
             raise VPMValidationError(
-                "key-value-row-id/v1 requires key=value components: %s"
-                % row_id
+                "key-value-row-id/v1 requires key=value components: %s" % row_id
             )
         if key in state:
             raise VPMValidationError(
@@ -113,8 +112,7 @@ class PolicyPropertySpec:
             )
         if not isinstance(assertion, Mapping):
             raise VPMValidationError(
-                "Policy property %s requires an assertion mapping"
-                % property_id
+                "Policy property %s requires an assertion mapping" % property_id
             )
         return cls(
             property_id=property_id,
@@ -157,12 +155,10 @@ class PolicyPropertyViolation:
             "view_row": int(self.view_row),
             "view_column": int(self.view_column),
             "candidates": {
-                str(key): float(value)
-                for key, value in self.candidates.items()
+                str(key): float(value) for key, value in self.candidates.items()
             },
             "evidence": {
-                str(key): float(value)
-                for key, value in self.evidence.items()
+                str(key): float(value) for key, value in self.evidence.items()
             },
             "state": _json_copy(self.state),
         }
@@ -187,9 +183,7 @@ class PolicyPropertyResult:
             "passed": bool(self.passed),
             "rows_checked": int(self.rows_checked),
             "violation_count": len(self.violations),
-            "violations": [
-                violation.to_dict() for violation in self.violations
-            ],
+            "violations": [violation.to_dict() for violation in self.violations],
         }
 
 
@@ -294,9 +288,7 @@ class PolicyPropertyChecker:
         tie_break: str = "metric_order",
     ) -> None:
         if state_encoding != "key-value-row-id/v1":
-            raise VPMValidationError(
-                "Unsupported state_encoding: %s" % state_encoding
-            )
+            raise VPMValidationError("Unsupported state_encoding: %s" % state_encoding)
         self.artifact = artifact
         self.state_encoding = state_encoding
         self.reader = VPMPolicyLookup(
@@ -318,9 +310,7 @@ class PolicyPropertyChecker:
             )
         keys = [(spec.property_id, spec.version) for spec in specs]
         if len(set(keys)) != len(keys):
-            raise VPMValidationError(
-                "Policy property id/version pairs must be unique"
-            )
+            raise VPMValidationError("Policy property id/version pairs must be unique")
 
         results = []
         for spec in specs:
@@ -401,9 +391,7 @@ def _resolve_var(path: str, context: Mapping[str, Any]) -> Any:
 
 def _binary_args(name: str, value: Any) -> tuple[Any, Any]:
     if not isinstance(value, list) or len(value) != 2:
-        raise VPMValidationError(
-            "Property operator %s requires a two-item list" % name
-        )
+        raise VPMValidationError("Property operator %s requires a two-item list" % name)
     return value[0], value[1]
 
 
@@ -452,9 +440,7 @@ def _evaluate(expression: Any, context: Mapping[str, Any]) -> Any:
         return not bool(_evaluate(value, context))
     if operator == "implies":
         left, right = _binary_args(operator, value)
-        return (not bool(_evaluate(left, context))) or bool(
-            _evaluate(right, context)
-        )
+        return (not bool(_evaluate(left, context))) or bool(_evaluate(right, context))
 
     left, right = _binary_args(operator, value)
     left_value = _evaluate(left, context)

@@ -36,8 +36,18 @@ def test_tensorboard_scalar_csv_groups_tags_by_step(tmp_path) -> None:
 def test_wandb_jsonl_flat_history_rows(tmp_path) -> None:
     path = tmp_path / "wandb-history.jsonl"
     rows = [
-        {"_step": 1000, "train/loss": 1.0, "val/accuracy": 0.50, "regression/safety": 0.99},
-        {"_step": 2000, "train/loss": 0.82, "val/accuracy": 0.57, "regression/safety": 0.98},
+        {
+            "_step": 1000,
+            "train/loss": 1.0,
+            "val/accuracy": 0.50,
+            "regression/safety": 0.99,
+        },
+        {
+            "_step": 2000,
+            "train/loss": 0.82,
+            "val/accuracy": 0.57,
+            "regression/safety": 0.98,
+        },
     ]
     path.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
 
@@ -55,8 +65,22 @@ def test_trackio_nested_json_export(tmp_path) -> None:
         json.dumps(
             {
                 "checkpoints": [
-                    {"step": 1000, "metrics": {"train_loss": 1.0, "heldout_score": 0.50, "regression_safety": 0.99}},
-                    {"step": 2000, "metrics": {"train_loss": 0.76, "heldout_score": 0.62, "regression_safety": 0.97}},
+                    {
+                        "step": 1000,
+                        "metrics": {
+                            "train_loss": 1.0,
+                            "heldout_score": 0.50,
+                            "regression_safety": 0.99,
+                        },
+                    },
+                    {
+                        "step": 2000,
+                        "metrics": {
+                            "train_loss": 0.76,
+                            "heldout_score": 0.62,
+                            "regression_safety": 0.97,
+                        },
+                    },
                 ]
             }
         ),
@@ -73,8 +97,22 @@ def test_trackio_nested_json_export(tmp_path) -> None:
 def test_generic_jsonl_adapter_supports_nested_metrics(tmp_path) -> None:
     path = tmp_path / "training.jsonl"
     rows = [
-        {"step": 10, "metrics": {"train_loss": 1.2, "heldout_score": 0.4, "regression_safety": 1.0}},
-        {"step": 20, "metrics": {"train_loss": 0.9, "heldout_score": 0.45, "regression_safety": 1.0}},
+        {
+            "step": 10,
+            "metrics": {
+                "train_loss": 1.2,
+                "heldout_score": 0.4,
+                "regression_safety": 1.0,
+            },
+        },
+        {
+            "step": 20,
+            "metrics": {
+                "train_loss": 0.9,
+                "heldout_score": 0.45,
+                "regression_safety": 1.0,
+            },
+        },
     ]
     path.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
 

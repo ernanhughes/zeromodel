@@ -3,6 +3,7 @@
 These consumers demonstrate the blog claim that a deployed decision can inspect
 an already-built artifact without running a model at decision time.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -25,7 +26,13 @@ class TopLeftGateResult:
 class TopLeftGate:
     """Evaluate the mean intensity in a top-left region."""
 
-    def __init__(self, threshold: float = 0.75, rows: int | None = None, columns: int | None = None, fraction: float = 0.25):
+    def __init__(
+        self,
+        threshold: float = 0.75,
+        rows: int | None = None,
+        columns: int | None = None,
+        fraction: float = 0.25,
+    ):
         self.threshold = float(threshold)
         self.rows = rows
         self.columns = columns

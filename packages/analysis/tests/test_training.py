@@ -70,8 +70,22 @@ def test_training_progress_vpm_selects_best_checkpoint() -> None:
 def test_training_progress_warns_when_train_improves_without_heldout_transfer() -> None:
     assessment = build_training_progress_vpm(
         [
-            {"step": 0, "metrics": {"train_loss": 1.0, "heldout_score": 0.50, "regression_safety": 0.99}},
-            {"step": 1, "metrics": {"train_loss": 0.5, "heldout_score": 0.50, "regression_safety": 0.99}},
+            {
+                "step": 0,
+                "metrics": {
+                    "train_loss": 1.0,
+                    "heldout_score": 0.50,
+                    "regression_safety": 0.99,
+                },
+            },
+            {
+                "step": 1,
+                "metrics": {
+                    "train_loss": 0.5,
+                    "heldout_score": 0.50,
+                    "regression_safety": 0.99,
+                },
+            },
         ]
     )
 
@@ -82,8 +96,22 @@ def test_training_progress_warns_when_train_improves_without_heldout_transfer() 
 def test_training_progress_regression_blocks_learning() -> None:
     assessment = build_training_progress_vpm(
         [
-            {"step": 0, "metrics": {"train_loss": 1.0, "heldout_score": 0.50, "regression_safety": 0.99}},
-            {"step": 1, "metrics": {"train_loss": 0.7, "heldout_score": 0.60, "regression_safety": 0.70}},
+            {
+                "step": 0,
+                "metrics": {
+                    "train_loss": 1.0,
+                    "heldout_score": 0.50,
+                    "regression_safety": 0.99,
+                },
+            },
+            {
+                "step": 1,
+                "metrics": {
+                    "train_loss": 0.7,
+                    "heldout_score": 0.60,
+                    "regression_safety": 0.70,
+                },
+            },
         ]
     )
 
@@ -92,7 +120,9 @@ def test_training_progress_regression_blocks_learning() -> None:
 
 
 def test_training_progress_cell_maps_to_checkpoint() -> None:
-    assessment = build_training_progress_vpm(checkpoints(), stability_metric="stability")
+    assessment = build_training_progress_vpm(
+        checkpoints(), stability_metric="stability"
+    )
     cell = assessment.artifact.cell(0, 0)
 
     assert cell.metric_id == "progress_score"
@@ -102,7 +132,9 @@ def test_training_progress_cell_maps_to_checkpoint() -> None:
 
 def test_training_progress_rejects_invalid_checkpoints() -> None:
     with pytest.raises(VPMValidationError, match="at least two checkpoints"):
-        build_training_progress_vpm([{"step": 0, "metrics": {"train_loss": 1.0, "heldout_score": 0.5}}])
+        build_training_progress_vpm(
+            [{"step": 0, "metrics": {"train_loss": 1.0, "heldout_score": 0.5}}]
+        )
 
     with pytest.raises(VPMValidationError, match="ordered"):
         build_training_progress_vpm(

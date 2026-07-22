@@ -9,6 +9,7 @@ This module deliberately avoids claiming task accuracy, semantic correctness, or
 universal optimality. It optimizes one explicit geometric objective over scored
 matrices: top-left mass after column and row ordering.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -46,7 +47,9 @@ def _as_table(source: ScoreTable | VPMArtifact) -> ScoreTable:
     raise VPMValidationError("spatial optimizer requires a ScoreTable or VPMArtifact")
 
 
-def _as_tables(source: ScoreTable | VPMArtifact | Sequence[ScoreTable | VPMArtifact]) -> tuple[ScoreTable, ...]:
+def _as_tables(
+    source: ScoreTable | VPMArtifact | Sequence[ScoreTable | VPMArtifact],
+) -> tuple[ScoreTable, ...]:
     if isinstance(source, (ScoreTable, VPMArtifact)):
         return (_as_table(source),)
     tables = tuple(_as_table(item) for item in source)
@@ -55,7 +58,9 @@ def _as_tables(source: ScoreTable | VPMArtifact | Sequence[ScoreTable | VPMArtif
     first_metrics = tables[0].metric_ids
     for table in tables[1:]:
         if table.metric_ids != first_metrics:
-            raise VPMValidationError("all spatial optimizer tables must have identical metric_ids")
+            raise VPMValidationError(
+                "all spatial optimizer tables must have identical metric_ids"
+            )
     return tables
 
 
@@ -128,9 +133,19 @@ class SpatialOptimizer:
             raise VPMValidationError("alpha must be in (0, 1)")
         if l2 < 0.0:
             raise VPMValidationError("l2 must be non-negative")
-        if max_evals is not None and max_iters is not None and int(max_evals) != int(max_iters):
-            raise VPMValidationError("use max_evals or max_iters, not conflicting values")
-        eval_budget = int(max_evals if max_evals is not None else (80 if max_iters is None else max_iters))
+        if (
+            max_evals is not None
+            and max_iters is not None
+            and int(max_evals) != int(max_iters)
+        ):
+            raise VPMValidationError(
+                "use max_evals or max_iters, not conflicting values"
+            )
+        eval_budget = int(
+            max_evals
+            if max_evals is not None
+            else (80 if max_iters is None else max_iters)
+        )
         if eval_budget <= 0:
             raise VPMValidationError("max_evals must be positive")
         if min_step <= 0.0:
@@ -157,7 +172,9 @@ class SpatialOptimizer:
         decay = self.alpha ** (i + j)
         return float(np.sum(values[:rows, :cols] * decay))
 
-    def ordered_values(self, values: np.ndarray, weights: Sequence[float]) -> tuple[np.ndarray, tuple[int, ...], tuple[int, ...]]:
+    def ordered_values(
+        self, values: np.ndarray, weights: np.ndarray | Sequence[float]
+    ) -> tuple[np.ndarray, tuple[int, ...], tuple[int, ...]]:
         """Order columns by weight and rows by weighted intensity."""
         matrix = _normalize_per_metric(np.asarray(values, dtype=np.float64))
         w = _simplex(np.asarray(weights, dtype=np.float64))
@@ -170,9 +187,15 @@ class SpatialOptimizer:
         row_scores = matrix[:, weighted_columns] @ w[weighted_columns]
         row_order = np.argsort(-row_scores, kind="stable")
         ordered = matrix[np.ix_(row_order, column_order)]
-        return ordered, tuple(int(i) for i in row_order), tuple(int(i) for i in column_order)
+        return (
+            ordered,
+            tuple(int(i) for i in row_order),
+            tuple(int(i) for i in column_order),
+        )
 
-    def score_weights(self, tables: Sequence[ScoreTable], weights: Sequence[float]) -> float:
+    def score_weights(
+        self, tables: Sequence[ScoreTable], weights: np.ndarray | Sequence[float]
+    ) -> float:
         """Evaluate a metric-weight vector on the explicit top-left objective."""
         w = _simplex(np.asarray(weights, dtype=np.float64))
         total = 0.0
@@ -202,7 +225,9 @@ class SpatialOptimizer:
             candidates.append(one_hot)
         return candidates
 
-    def learn_weights(self, source: ScoreTable | VPMArtifact | Sequence[ScoreTable | VPMArtifact]) -> tuple[np.ndarray, int, float, float]:
+    def learn_weights(
+        self, source: ScoreTable | VPMArtifact | Sequence[ScoreTable | VPMArtifact]
+    ) -> tuple[np.ndarray, int, float, float]:
         """Learn non-negative metric weights for the source table or table series."""
         tables = _as_tables(source)
         metric_count = len(tables[0].metric_ids)
@@ -246,7 +271,10 @@ class SpatialOptimizer:
         tables = _as_tables(source)
         metric_ids = tuple(str(metric_id) for metric_id in tables[0].metric_ids)
         weights, evaluations, baseline, optimized = self.learn_weights(tables)
-        weight_map = {metric_id: float(weights[index]) for index, metric_id in enumerate(metric_ids)}
+        weight_map = {
+            metric_id: float(weights[index])
+            for index, metric_id in enumerate(metric_ids)
+        }
         canonical_metric_ids = tuple(
             metric_id
             for metric_id, _ in sorted(
@@ -308,7 +336,9 @@ def build_optimized_view(
     metadata: Optional[Mapping[str, Any]] = None,
 ) -> VPMArtifact:
     """Fit an optimized profile and build a VPM view for the first source table."""
-    result = optimize_view_profile(source, name=name, optimizer=optimizer, metadata=metadata)
+    result = optimize_view_profile(
+        source, name=name, optimizer=optimizer, metadata=metadata
+    )
     table = _as_tables(source)[0]
     return build_view(
         table,

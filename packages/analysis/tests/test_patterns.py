@@ -50,7 +50,9 @@ def _artifact_from_matrix(matrix: np.ndarray, prefix: str = "row"):
     return build_vpm(table, recipe, provenance={"kind": "pattern-test"})
 
 
-def _planted_matrix(seed: int = 7, noise: float = 0.08) -> tuple[np.ndarray, np.ndarray]:
+def _planted_matrix(
+    seed: int = 7, noise: float = 0.08
+) -> tuple[np.ndarray, np.ndarray]:
     """Three planted row blocks with distinct column signatures, shuffled."""
 
     rng = np.random.default_rng(seed)
@@ -70,9 +72,7 @@ def _planted_matrix(seed: int = 7, noise: float = 0.08) -> tuple[np.ndarray, np.
 def _same_block_adjacency(order_row_ids, row_ids, labels) -> float:
     label_by_row_id = dict(zip(row_ids, labels))
     ordered_labels = [label_by_row_id[row_id] for row_id in order_row_ids]
-    adjacent = sum(
-        1 for a, b in zip(ordered_labels, ordered_labels[1:]) if a == b
-    )
+    adjacent = sum(1 for a, b in zip(ordered_labels, ordered_labels[1:]) if a == b)
     return adjacent / (len(ordered_labels) - 1)
 
 
@@ -82,9 +82,7 @@ def test_planted_structure_is_recovered_and_significant() -> None:
     spec = PatternAnalysisSpec(null_samples=99, seed=11)
     report = detect_patterns(artifact, spec)
 
-    adjacency = _same_block_adjacency(
-        report.row_order, artifact.source.row_ids, labels
-    )
+    adjacency = _same_block_adjacency(report.row_order, artifact.source.row_ids, labels)
     # Perfect recovery groups all three blocks: 21/23 same-block adjacencies.
     assert adjacency > 0.85
     assert report.family_p_value <= spec.alpha
@@ -122,9 +120,7 @@ def test_alpha_is_part_of_the_specification_contract() -> None:
     assert default_report.significant == (
         default_report.family_p_value <= default.alpha
     )
-    assert strict_report.significant == (
-        strict_report.family_p_value <= stricter.alpha
-    )
+    assert strict_report.significant == (strict_report.family_p_value <= stricter.alpha)
 
 
 @pytest.mark.parametrize("alpha", [0.0, 1.0, -0.1, 1.1, float("nan"), float("inf")])
@@ -153,7 +149,9 @@ def test_report_and_view_are_deterministic_and_frozen() -> None:
     # changes p-values but not the order, the recipe, or the rendered content.
     # The view's record identity legitimately differs because its provenance
     # cites a different report lineage; content invariants must still match.
-    other_seed = detect_patterns(artifact, PatternAnalysisSpec(null_samples=25, seed=99))
+    other_seed = detect_patterns(
+        artifact, PatternAnalysisSpec(null_samples=25, seed=99)
+    )
     other_artifact = other_seed.to_vpm()
     assert other_seed.row_order == first.row_order
     assert other_seed.digest != first.digest
@@ -257,9 +255,7 @@ def test_detector_wrapper_and_bundle_round_trip(tmp_path) -> None:
         "adjacent_coherence",
         "anti_robinson",
     }
-    report_path = to_bundle(
-        result.report_artifact, tmp_path / "pattern-report.vpm"
-    )
+    report_path = to_bundle(result.report_artifact, tmp_path / "pattern-report.vpm")
     view_path = to_bundle(result.view_artifact, tmp_path / "pattern-view.vpm")
     assert from_bundle(report_path).artifact_id == result.report_artifact.artifact_id
     assert from_bundle(view_path).artifact_id == result.view_artifact.artifact_id

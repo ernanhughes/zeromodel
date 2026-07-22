@@ -2,6 +2,7 @@
 
 Supports exported history JSONL/JSON/CSV files. No W&B SDK is required.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

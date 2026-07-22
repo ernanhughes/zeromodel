@@ -7,6 +7,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = REPO_ROOT / "quality-baseline.toml"
@@ -292,8 +293,18 @@ def is_excluded(path: Path) -> bool:
     return rel.startswith(EXCLUDED_PREFIXES)
 
 
-def discover_python_files() -> list[Path]:
-    files = [path for path in REPO_ROOT.rglob("*.py") if not is_excluded(path)]
+def discover_python_files(roots: Sequence[Path] | None = None) -> list[Path]:
+    search_roots = roots or [REPO_ROOT]
+    files: list[Path] = []
+    for root in search_roots:
+        resolved = root if root.is_absolute() else REPO_ROOT / root
+        if resolved.is_file() and resolved.suffix == ".py":
+            if not is_excluded(resolved):
+                files.append(resolved)
+        elif resolved.is_dir():
+            files.extend(
+                path for path in resolved.rglob("*.py") if not is_excluded(path)
+            )
     return sorted(files, key=relative_path)
 
 
@@ -532,7 +543,9 @@ def metric_as_dict(
     }
 
 
-def build_report(config: QualityConfig) -> dict[str, object]:
+def build_report(
+    config: QualityConfig, roots: Sequence[Path] | None = None
+) -> dict[str, object]:
     files: list[dict[str, object]] = []
     errors: list[str] = []
     seen_paths: set[str] = set()
@@ -540,7 +553,7 @@ def build_report(config: QualityConfig) -> dict[str, object]:
     hard_limit_file_count = 0
     ceiling_violation_count = 0
 
-    for path in discover_python_files():
+    for path in discover_python_files(roots):
         rel = relative_path(path)
         seen_paths.add(rel)
         try:
@@ -577,11 +590,12 @@ def build_report(config: QualityConfig) -> dict[str, object]:
             )
         )
 
-    missing_exceptions = sorted(set(config.legacy_exceptions) - seen_paths)
-    for exception_path in missing_exceptions:
-        errors.append(
-            f"{exception_path}: legacy exception references a missing Python source file"
-        )
+    if roots is None:
+        missing_exceptions = sorted(set(config.legacy_exceptions) - seen_paths)
+        for exception_path in missing_exceptions:
+            errors.append(
+                f"{exception_path}: legacy exception references a missing Python source file"
+            )
 
     return {
         "config": config.quality_thresholds(),
@@ -701,6 +715,13 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--markdown", type=Path, help="Write Markdown report to this path."
     )
+    parser.add_argument(
+        "--path",
+        action="append",
+        type=Path,
+        dest="paths",
+        help="Limit the report to a file or directory. May be passed more than once.",
+    )
     return parser.parse_args(argv)
 
 
@@ -708,7 +729,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
         config = parse_baseline_file(CONFIG_PATH)
-        report = build_report(config)
+        report = build_report(config, args.paths)
     except ConfigError as exc:
         print(f"Quality configuration error: {exc}", file=sys.stderr)
         return 2

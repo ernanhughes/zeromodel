@@ -26,6 +26,7 @@ from zeromodel.trust.dto import (
     TrustFailureCode,
     TrustPolicyDTO,
     authorization_signing_payload,
+    compute_deployment_scope_id,
     parse_iso8601_utc,
 )
 from zeromodel.core.artifact import VPMValidationError
@@ -292,6 +293,12 @@ def _determine_decision(
     return "rejected"
 
 
+def _resolve_signature_envelope_id(
+    signature_envelope: Optional[SignatureEnvelopeDTO],
+) -> Optional[str]:
+    return signature_envelope.signature_hex if signature_envelope is not None else None
+
+
 def verify_artifact_for_scope(
     *,
     artifact_ref: ArtifactRef,
@@ -359,7 +366,6 @@ def verify_artifact_for_scope(
         failure_codes=failure_codes,
     )
     not_revoked = not any_revoked and not any_indeterminate
-
     decision = _determine_decision(
         integrity_valid=integrity_valid,
         signature_valid=signature_valid,
@@ -384,6 +390,12 @@ def verify_artifact_for_scope(
         epoch_valid=epoch_valid,
         not_revoked=not_revoked,
         decision=decision,
+        trust_policy_id=trust_policy.policy_id,
+        authorization_id=authorization.authorization_id,
+        artifact_digest=artifact_ref.artifact_id,
+        signer_id=signer_id,
+        deployment_scope_id=compute_deployment_scope_id(deployment_scope),
+        signature_envelope_id=_resolve_signature_envelope_id(signature_envelope),
         failure_codes=tuple(dict.fromkeys(failure_codes)),
         evaluated_at=evaluation_time,
     )

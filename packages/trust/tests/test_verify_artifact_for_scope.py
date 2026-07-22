@@ -12,6 +12,7 @@ from zeromodel.trust import (
     SignatureEnvelopeDTO,
     TrustFailureCode,
     compute_authorization_id,
+    compute_deployment_scope_id,
     require_authorized,
     sign_digest,
     verify_artifact_for_scope,
@@ -87,6 +88,58 @@ def test_valid_artifact_is_authorized(
             decision.not_revoked,
         ]
     )
+
+
+def test_decision_carries_a_complete_audit_receipt(
+    artifact_ref,
+    artifact_bytes,
+    authorization,
+    signature_envelope,
+    trust_policy,
+    requested_scope,
+):
+    """Regression for review finding #6: a decision must identify exactly
+    which policy, authorization, artifact, signer, and scope it evaluated -
+    not just booleans - so it can serve as an audit receipt on its own.
+    """
+    decision = _verify(
+        artifact_ref=artifact_ref,
+        canonical_artifact_bytes=artifact_bytes,
+        authorization=authorization,
+        signature_envelope=signature_envelope,
+        trust_policy=trust_policy,
+        deployment_scope=requested_scope,
+        minimum_epoch=5,
+    )
+    assert decision.trust_policy_id == trust_policy.policy_id
+    assert decision.authorization_id == authorization.authorization_id
+    assert decision.artifact_digest == artifact_ref.artifact_id
+    assert decision.signer_id == signature_envelope.signer_id
+    assert decision.deployment_scope_id == compute_deployment_scope_id(requested_scope)
+    assert decision.signature_envelope_id == signature_envelope.signature_hex
+
+
+def test_decision_without_signature_has_no_signature_envelope_id(
+    artifact_ref,
+    artifact_bytes,
+    authorization,
+    trust_policy,
+    requested_scope,
+):
+    decision = _verify(
+        artifact_ref=artifact_ref,
+        canonical_artifact_bytes=artifact_bytes,
+        authorization=authorization,
+        signature_envelope=None,
+        trust_policy=trust_policy,
+        deployment_scope=requested_scope,
+        minimum_epoch=5,
+        require_signature=False,
+    )
+    assert decision.signature_envelope_id is None
+    # signer_id falls back to the authorization's own issuer claim when no
+    # envelope was presented to authenticate that claim.
+    assert decision.signer_id == authorization.issuer_signer_id
 
 
 def test_deterministic_repeated_verification(

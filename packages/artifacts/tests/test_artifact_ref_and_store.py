@@ -120,3 +120,27 @@ def test_store_manifest_is_immutable_from_the_outside() -> None:
     assert store.resolve_manifest(ref)["note"] == "mutable-source-dict"
     with pytest.raises(TypeError):
         store.resolve_manifest(ref)["note"] = "mutated-via-accessor"  # type: ignore[index]
+
+
+def test_store_manifest_is_deeply_immutable_not_just_top_level() -> None:
+    """Regression for review finding #4: `MappingProxyType(dict(manifest))`
+    only protects the top-level mapping. A nested mutable list or dict
+    inside a manifest value must not alias the caller's own object, or
+    mutating it after `put()` silently changes the stored record.
+    """
+    store = InMemoryArtifactStore()
+    manifest = {"lineage": {"parents": ["p0"]}}
+    ref = store.put(
+        "zeromodel.trust.policy", canonical_json_bytes({"x": 1}), manifest=manifest
+    )
+
+    # Mutate the nested list/dict the caller still holds a reference to.
+    manifest["lineage"]["parents"].append("new-parent")
+    manifest["lineage"]["extra"] = "leaked"
+
+    stored = store.resolve_manifest(ref)
+    assert stored["lineage"]["parents"] == ("p0",)
+    assert "extra" not in stored["lineage"]
+
+    with pytest.raises(TypeError):
+        stored["lineage"]["parents"] = ("mutated",)  # type: ignore[index]

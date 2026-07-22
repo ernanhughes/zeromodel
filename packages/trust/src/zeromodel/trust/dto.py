@@ -244,6 +244,17 @@ def _deployment_scope_payload(scope: "DeploymentScopeDTO") -> dict:
     }
 
 
+def compute_deployment_scope_id(scope: "DeploymentScopeDTO") -> str:
+    """Content digest identifying one concrete deployment scope.
+
+    Lets a `TrustDecisionDTO` record exactly which scope it was evaluated
+    for without embedding the full `DeploymentScopeDTO` - the same
+    reference-by-digest pattern used for `TrustPolicyDTO.policy_id` and
+    `ArtifactAuthorizationDTO.authorization_id`.
+    """
+    return sha256_digest(canonical_json_bytes(_deployment_scope_payload(scope)))
+
+
 def _trust_policy_identity_payload_fields(
     *,
     policy_epoch: int,
@@ -551,7 +562,16 @@ class TrustVerificationRequestDTO:
 
 @dataclass(frozen=True, slots=True)
 class TrustDecisionDTO:
-    """Every component outcome, preserved - never collapsed to one boolean."""
+    """Every component outcome, preserved - never collapsed to one boolean.
+
+    Also a complete audit receipt: `trust_policy_id`, `authorization_id`,
+    `artifact_digest`, `signer_id`, `deployment_scope_id`, and (when a
+    signature was presented) `signature_envelope_id` identify exactly which
+    policy, authorization, artifact, signer, scope, and signature this
+    decision was computed from - without these, a caller could see that
+    *some* artifact was authorized but not reconstruct, from the decision
+    alone, which policy or authorization actually granted it.
+    """
 
     integrity_valid: bool
     signature_valid: bool
@@ -563,6 +583,12 @@ class TrustDecisionDTO:
     epoch_valid: bool
     not_revoked: bool
     decision: str  # "authorized" | "rejected" | "indeterminate"
+    trust_policy_id: str
+    authorization_id: str
+    artifact_digest: str
+    signer_id: str
+    deployment_scope_id: str
+    signature_envelope_id: Optional[str] = None
     failure_codes: Tuple[str, ...] = field(default_factory=tuple)
     evaluated_at: str = ""
     spec_version: str = SPEC_VERSION
@@ -573,6 +599,30 @@ class TrustDecisionDTO:
         if self.decision not in self._VALID_DECISIONS:
             raise VPMValidationError(
                 f"TrustDecisionDTO.decision must be one of {self._VALID_DECISIONS}"
+            )
+        _require_sha256(
+            self.trust_policy_id,
+            "TrustDecisionDTO.trust_policy_id must be a sha256: digest",
+        )
+        _require_sha256(
+            self.authorization_id,
+            "TrustDecisionDTO.authorization_id must be a sha256: digest",
+        )
+        _require_sha256(
+            self.artifact_digest,
+            "TrustDecisionDTO.artifact_digest must be a sha256: digest",
+        )
+        _require_nonempty_str(
+            self.signer_id, "TrustDecisionDTO.signer_id must be non-empty"
+        )
+        _require_sha256(
+            self.deployment_scope_id,
+            "TrustDecisionDTO.deployment_scope_id must be a sha256: digest",
+        )
+        if self.signature_envelope_id is not None:
+            _require_nonempty_str(
+                self.signature_envelope_id,
+                "TrustDecisionDTO.signature_envelope_id must be non-empty when present",
             )
 
     @property

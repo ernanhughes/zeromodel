@@ -26,6 +26,7 @@ from zeromodel.trust.dto import (
     TrustVerificationRequestDTO,
     authorization_signing_payload,
     compute_authorization_id,
+    compute_deployment_scope_id,
     compute_trust_policy_id,
     trust_policy_identity_payload,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "TrustVerificationRequestDTO",
     "authorization_signing_payload",
     "compute_authorization_id",
+    "compute_deployment_scope_id",
     "compute_trust_policy_id",
     "generate_signing_key",
     "require_authorized",

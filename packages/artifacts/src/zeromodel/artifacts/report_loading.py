@@ -18,6 +18,7 @@ from zeromodel.artifacts.compiled_artifact import (
     CellBindingDTO,
     CompiledReportArtifactDTO,
 )
+from zeromodel.artifacts.core_artifact_persistence import load_vpm_artifact
 from zeromodel.artifacts.ref import ArtifactRef
 from zeromodel.artifacts.report_dto import (
     AdaptedDimensionDTO,
@@ -28,6 +29,7 @@ from zeromodel.artifacts.report_dto import (
 from zeromodel.artifacts.report_errors import ReportCompilationError
 from zeromodel.artifacts.score_semantics import ScoreSemantics
 from zeromodel.artifacts.store import ArtifactResolver
+from zeromodel.core.artifact import VPMArtifact
 
 
 def _decode_attributes(payload: dict) -> Tuple[Tuple[str, str], ...]:
@@ -81,12 +83,20 @@ def _decode_source_binding(payload: dict) -> SourceBindingDTO:
 
 def _decode_cell_binding(payload: dict) -> CellBindingDTO:
     return CellBindingDTO(
-        row_index=payload["row_index"],
-        column_index=payload["column_index"],
+        view_row=payload["view_row"],
+        view_column=payload["view_column"],
+        source_row_index=payload["source_row_index"],
+        source_metric_index=payload["source_metric_index"],
         subject_id=payload["subject_id"],
         dimension_id=payload["dimension_id"],
         value_index=payload["value_index"],
         source_binding=_decode_source_binding(payload["source_binding"]),
+    )
+
+
+def _decode_artifact_ref(payload: dict) -> ArtifactRef:
+    return ArtifactRef(
+        artifact_kind=payload["artifact_kind"], artifact_id=payload["artifact_id"]
     )
 
 
@@ -118,9 +128,11 @@ def load_compiled_report_artifact(
         adapted_report_id=payload["adapted_report_id"],
         adapter_contract_id=payload["adapter_contract_id"],
         compatibility_id=payload["compatibility_id"],
-        score_table_identity=payload["score_table_identity"],
-        layout_recipe_identity=payload["layout_recipe_identity"],
-        vpm_artifact_identity=payload["vpm_artifact_identity"],
+        compatibility_schema_id=payload["compatibility_schema_id"],
+        missing_value_semantics=payload["missing_value_semantics"],
+        score_table_ref=_decode_artifact_ref(payload["score_table_ref"]),
+        layout_recipe_ref=_decode_artifact_ref(payload["layout_recipe_ref"]),
+        vpm_artifact_ref=_decode_artifact_ref(payload["vpm_artifact_ref"]),
         subjects=tuple(_decode_subject(item) for item in payload["subjects"]),
         dimensions=tuple(_decode_dimension(item) for item in payload["dimensions"]),
         cell_bindings=tuple(
@@ -129,3 +141,16 @@ def load_compiled_report_artifact(
         artifact_kind=payload["artifact_kind"],
         spec_version=payload["spec_version"],
     )
+
+
+def load_compiled_report_vpm(
+    compiled: CompiledReportArtifactDTO, *, resolver: ArtifactResolver
+) -> VPMArtifact:
+    """Resolve a compiled report's actual `VPMArtifact` for rendering.
+
+    This is the operation the persisted `vpm_artifact_ref` exists to make
+    possible: load a compiled report, resolve its VPM, and render it -
+    without ever having held on to the original in-memory `VPMArtifact`
+    from the process that compiled it.
+    """
+    return load_vpm_artifact(compiled.vpm_artifact_ref, resolver=resolver)

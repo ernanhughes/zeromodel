@@ -89,20 +89,54 @@ def test_revocation_record_rejects_unknown_target_kind():
         )
 
 
+def _make_trust_decision(**overrides) -> TrustDecisionDTO:
+    fields = dict(
+        integrity_valid=True,
+        signature_valid=True,
+        signer_known=True,
+        signer_trusted=True,
+        artifact_kind_allowed=True,
+        scope_authorized=True,
+        time_valid=True,
+        epoch_valid=True,
+        not_revoked=True,
+        decision="authorized",
+        trust_policy_id="sha256:" + "a" * 64,
+        authorization_id="sha256:" + "b" * 64,
+        artifact_digest="sha256:" + "c" * 64,
+        signer_id="signer-a",
+        deployment_scope_id="sha256:" + "d" * 64,
+    )
+    fields.update(overrides)
+    return TrustDecisionDTO(**fields)
+
+
 def test_trust_decision_rejects_unknown_decision_value():
     with pytest.raises(VPMValidationError):
-        TrustDecisionDTO(
-            integrity_valid=True,
-            signature_valid=True,
-            signer_known=True,
-            signer_trusted=True,
-            artifact_kind_allowed=True,
-            scope_authorized=True,
-            time_valid=True,
-            epoch_valid=True,
-            not_revoked=True,
-            decision="maybe",
-        )
+        _make_trust_decision(decision="maybe")
+
+
+def test_trust_decision_requires_sha256_evidence_identities():
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(trust_policy_id="not-a-digest")
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(authorization_id="not-a-digest")
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(artifact_digest="not-a-digest")
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(deployment_scope_id="not-a-digest")
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(signer_id="")
+
+
+def test_trust_decision_carries_a_complete_audit_receipt():
+    decision = _make_trust_decision(signature_envelope_id="deadbeef")
+    assert decision.trust_policy_id == "sha256:" + "a" * 64
+    assert decision.authorization_id == "sha256:" + "b" * 64
+    assert decision.artifact_digest == "sha256:" + "c" * 64
+    assert decision.signer_id == "signer-a"
+    assert decision.deployment_scope_id == "sha256:" + "d" * 64
+    assert decision.signature_envelope_id == "deadbeef"
 
 
 def _make_signer(signer_id: str, public_key_hex: str) -> TrustedSignerDTO:

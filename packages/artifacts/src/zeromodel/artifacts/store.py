@@ -2,12 +2,34 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any, Mapping, Protocol, runtime_checkable
+from typing import Any, Mapping, Protocol, Sequence, runtime_checkable
 
 from zeromodel.core.artifact import VPMValidationError
 
 from zeromodel.artifacts.canonicalization import sha256_digest
 from zeromodel.artifacts.ref import ArtifactRef
+
+
+def _deep_freeze(value: Any) -> Any:
+    """Recursively freeze a manifest value so no nested mutable structure
+    (a list, or a dict inside a dict) can alias a caller-owned object.
+
+    `MappingProxyType(dict(manifest))` alone only protects the top-level
+    mapping: a nested list or dict inside a manifest value remains the
+    *same object* the caller passed in, so mutating it after `put()`
+    silently changes the artifact record already stored under that
+    identity. Freezing recursively - mappings become `MappingProxyType`,
+    sequences become `tuple` - closes that gap.
+    """
+    if isinstance(value, Mapping):
+        return MappingProxyType(
+            {key: _deep_freeze(item) for key, item in value.items()}
+        )
+    if isinstance(value, (list, tuple)) or (
+        isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray))
+    ):
+        return tuple(_deep_freeze(item) for item in value)
+    return value
 
 
 class ArtifactNotFoundError(VPMValidationError):
@@ -90,7 +112,7 @@ class InMemoryArtifactStore:
         digest = sha256_digest(payload)
         ref = ArtifactRef(artifact_kind=artifact_kind, artifact_id=digest)
         key = (ref.artifact_kind, ref.artifact_id)
-        new_manifest = dict(manifest or {})
+        new_manifest = _deep_freeze(manifest or {})
         existing = self._records.get(key)
         if existing is not None:
             if existing.canonical_bytes != payload:
@@ -100,7 +122,7 @@ class InMemoryArtifactStore:
                 raise ArtifactIntegrityError(
                     f"digest collision for {artifact_kind} {digest}: stored content differs"
                 )
-            if dict(existing.manifest) != new_manifest:
+            if existing.manifest != new_manifest:
                 raise ArtifactManifestConflictError(
                     f"manifest conflict for {artifact_kind} {digest}: a different "
                     "manifest is already stored under this artifact identity"
@@ -110,7 +132,7 @@ class InMemoryArtifactStore:
         self._records[key] = _StoredArtifact(
             ref=ref,
             canonical_bytes=payload,
-            manifest=MappingProxyType(new_manifest),
+            manifest=new_manifest,
         )
         return ref
 

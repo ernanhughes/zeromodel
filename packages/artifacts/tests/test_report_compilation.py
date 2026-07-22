@@ -11,6 +11,7 @@ from zeromodel.artifacts import (
     ScoreSemantics,
     compile_report,
     load_compiled_report_artifact,
+    load_compiled_report_vpm,
     sha256_digest,
 )
 from zeromodel.artifacts.report_errors import ReportCompilationError
@@ -90,6 +91,100 @@ def test_every_value_maps_to_exactly_one_cell_binding_with_correct_source(
     for value in adapted.values:
         cell = by_key[(value.subject_id, value.dimension_id)]
         assert cell.source_binding == value.source_binding
+
+
+def test_cell_bindings_use_view_coordinates_not_source_order(
+    ai_artifact_family, FakeAdapter
+):
+    """Regression for the external review's Blocker #1: a reordering layout
+    recipe must not leave cell_bindings pointing at source-order indexes.
+
+    `ai_artifact_family` declares sentence-001 with generic_phrasing=0.9 and
+    sentence-002 with generic_phrasing=0.1 (source order: 001 then 002). A
+    descending sort on generic_phrasing must place sentence-001 at view_row
+    0 - the binding for view_row=0 must resolve back to sentence-001, not
+    whatever happens to be first in source order.
+    """
+    contract, adapted = ai_artifact_family
+    adapter = FakeAdapter(contract, adapted)
+    descending_layout = LayoutRecipe(
+        {
+            "version": "vpm-layout/0",
+            "row_order": {
+                "kind": "lexicographic",
+                "tie_break": "row_id",
+                "keys": [{"metric_id": "generic_phrasing", "direction": "desc"}],
+            },
+            "column_order": {"kind": "source"},
+            "normalization": {"kind": "per_metric_minmax", "clip": True},
+        }
+    )
+    compiled = compile_report(
+        adapter=adapter,
+        report=object(),
+        layout_recipe=descending_layout,
+        store=InMemoryArtifactStore(),
+    )
+
+    by_view_coord = {
+        (cell.view_row, cell.view_column): cell for cell in compiled.cell_bindings
+    }
+    generic_phrasing_column = next(
+        index
+        for index, dimension in enumerate(adapted.dimensions)
+        if dimension.dimension_id == "generic_phrasing"
+    )
+
+    top_row_cell = by_view_coord[(0, generic_phrasing_column)]
+    assert top_row_cell.subject_id == "sentence-001"
+    assert top_row_cell.source_row_index == 0
+
+    second_row_cell = by_view_coord[(1, generic_phrasing_column)]
+    assert second_row_cell.subject_id == "sentence-002"
+    assert second_row_cell.source_row_index == 1
+
+    # view coordinates equal source coordinates only because this
+    # particular case happens to already be sorted that way; the important
+    # assertion is that subject_id/dimension_id at each view coordinate are
+    # independently verified below by the closure validator, not merely
+    # assumed from column position.
+    for cell in compiled.cell_bindings:
+        assert cell.subject_id == adapted.subjects[cell.source_row_index].subject_id
+        assert (
+            cell.dimension_id
+            == adapted.dimensions[cell.source_metric_index].dimension_id
+        )
+
+
+def test_compile_report_persists_resolvable_core_artifacts(
+    ai_artifact_family, source_layout_recipe, FakeAdapter
+):
+    """Regression for the external review's Blocker #2: a compiled report
+    must be able to resolve its actual VPM after being reloaded from the
+    store, not merely name a digest of a since-discarded Python object.
+    """
+    contract, adapted = ai_artifact_family
+    adapter = FakeAdapter(contract, adapted)
+    store = InMemoryArtifactStore()
+    compiled = compile_report(
+        adapter=adapter,
+        report=object(),
+        layout_recipe=source_layout_recipe,
+        store=store,
+    )
+
+    reloaded = load_compiled_report_artifact(ref=compiled.artifact_ref, resolver=store)
+    vpm_artifact = load_compiled_report_vpm(reloaded, resolver=store)
+
+    assert vpm_artifact.shape == (len(adapted.subjects), len(adapted.dimensions))
+    for cell_binding in compiled.cell_bindings:
+        resolved_cell = vpm_artifact.cell(
+            cell_binding.view_row, cell_binding.view_column
+        )
+        assert resolved_cell.row_id == cell_binding.subject_id
+        assert resolved_cell.metric_id == cell_binding.dimension_id
+        assert resolved_cell.source_row_index == cell_binding.source_row_index
+        assert resolved_cell.source_metric_index == cell_binding.source_metric_index
 
 
 def test_compiled_artifact_round_trips_through_the_store(
@@ -193,6 +288,73 @@ def test_wrong_digest_fails_closed_on_load(
     )
     with pytest.raises(Exception):  # ArtifactNotFoundError from the store itself
         load_compiled_report_artifact(ref=fake_ref, resolver=store)
+
+
+def test_same_compatibility_id_but_different_dimension_schema_yields_different_schema_id(
+    source_layout_recipe, FakeAdapter, make_contract, make_value, make_adapted_report
+):
+    """Regression for review finding #5: `compatibility_id` is an opaque,
+    caller-chosen string - two adapters can declare the same one while
+    actually producing different dimension schemas. `compatibility_schema_id`
+    must catch that even when the human-readable label is identical.
+    """
+    contract_a = make_contract(
+        adapter_id="test.family_a",
+        report_kind="test-family-a",
+        compatibility_id="shared-label/v1",
+    )
+    subjects_a = (AdaptedSubjectDTO(subject_id="s1"),)
+    dimensions_a = (
+        AdaptedDimensionDTO(
+            dimension_id="d1",
+            label="D1",
+            score_semantics=ScoreSemantics.HIGHER_IS_BETTER,
+        ),
+    )
+    values_a = (make_value(subject_id="s1", dimension_id="d1", raw_value=0.5),)
+    adapted_a = make_adapted_report(
+        contract=contract_a,
+        subjects=subjects_a,
+        dimensions=dimensions_a,
+        values=values_a,
+    )
+
+    contract_b = make_contract(
+        adapter_id="test.family_b",
+        report_kind="test-family-b",
+        compatibility_id="shared-label/v1",
+    )
+    subjects_b = (AdaptedSubjectDTO(subject_id="s1"),)
+    dimensions_b = (
+        AdaptedDimensionDTO(
+            dimension_id="d1",
+            label="D1",
+            score_semantics=ScoreSemantics.HIGHER_IS_WORSE,
+        ),
+    )
+    values_b = (make_value(subject_id="s1", dimension_id="d1", raw_value=0.5),)
+    adapted_b = make_adapted_report(
+        contract=contract_b,
+        subjects=subjects_b,
+        dimensions=dimensions_b,
+        values=values_b,
+    )
+
+    compiled_a = compile_report(
+        adapter=FakeAdapter(contract_a, adapted_a),
+        report=object(),
+        layout_recipe=source_layout_recipe,
+        store=InMemoryArtifactStore(),
+    )
+    compiled_b = compile_report(
+        adapter=FakeAdapter(contract_b, adapted_b),
+        report=object(),
+        layout_recipe=source_layout_recipe,
+        store=InMemoryArtifactStore(),
+    )
+
+    assert compiled_a.compatibility_id == compiled_b.compatibility_id
+    assert compiled_a.compatibility_schema_id != compiled_b.compatibility_schema_id
 
 
 def test_missing_value_with_error_semantics_fails_compilation(

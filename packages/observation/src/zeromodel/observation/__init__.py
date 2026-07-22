@@ -1,4 +1,5 @@
 """ZeroModel observation public API."""
+
 from __future__ import annotations
 
 from .deployment_binding import (

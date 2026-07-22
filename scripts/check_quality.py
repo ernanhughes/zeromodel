@@ -13,11 +13,14 @@ FORMAT_LINT_PATHS = [
     Path("packages/core/tests"),
     Path("packages/analysis/src"),
     Path("packages/analysis/tests"),
+    Path("packages/observation/src"),
+    Path("packages/observation/tests"),
 ]
 
 TYPING_PATHS = [
     Path("packages/core/src"),
     Path("packages/analysis/src"),
+    Path("packages/observation/src"),
 ]
 
 
@@ -76,6 +79,10 @@ def main() -> int:
             "packages/analysis/src",
             "--path",
             "packages/analysis/tests",
+            "--path",
+            "packages/observation/src",
+            "--path",
+            "packages/observation/tests",
         ],
     )
     print("Quality checks passed")

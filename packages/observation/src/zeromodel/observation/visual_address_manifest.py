@@ -1,4 +1,5 @@
 """Identity-bearing prototype-to-policy bindings over MatrixBlob vectors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -24,6 +25,9 @@ class PrototypeBinding:
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "prototype_id", str(self.prototype_id))
+        object.__setattr__(self, "vector_index", int(self.vector_index))
+        object.__setattr__(self, "policy_row_id", str(self.policy_row_id))
         _nonempty("prototype_id", self.prototype_id)
         _nonempty("policy_row_id", self.policy_row_id)
         if self.vector_index < 0:
@@ -64,13 +68,35 @@ class VisualAddressManifest:
     manifest_id: Optional[str] = None
 
     def __post_init__(self) -> None:
+        for name in (
+            "address_kind",
+            "policy_artifact_id",
+            "matrix_blob_id",
+            "representation_spec_digest",
+            "calibration_artifact_id",
+            "score_semantics",
+            "source_scope",
+            "deployment_status",
+            "version",
+        ):
+            object.__setattr__(self, name, str(getattr(self, name)))
+        object.__setattr__(self, "matrix_row_count", int(self.matrix_row_count))
+        object.__setattr__(
+            self,
+            "encoder_manifest_id",
+            None if self.encoder_manifest_id is None else str(self.encoder_manifest_id),
+        )
         object.__setattr__(self, "prototype_bindings", tuple(self.prototype_bindings))
         object.__setattr__(self, "metadata", _freeze(self.metadata))
         if self.version != VISUAL_ADDRESS_MANIFEST_VERSION:
             raise VPMValidationError("unsupported visual address manifest version")
         for name in (
-            "address_kind", "policy_artifact_id", "matrix_blob_id",
-            "representation_spec_digest", "calibration_artifact_id", "source_scope",
+            "address_kind",
+            "policy_artifact_id",
+            "matrix_blob_id",
+            "representation_spec_digest",
+            "calibration_artifact_id",
+            "source_scope",
         ):
             _nonempty(name, str(getattr(self, name)))
         if self.score_semantics not in _SCORE_SEMANTICS:
@@ -80,7 +106,9 @@ class VisualAddressManifest:
         if self.matrix_row_count <= 0:
             raise VPMValidationError("matrix_row_count must be positive")
         if len(self.prototype_bindings) != self.matrix_row_count:
-            raise VPMValidationError("prototype bindings must cover every matrix row exactly")
+            raise VPMValidationError(
+                "prototype bindings must cover every matrix row exactly"
+            )
         ids = [item.prototype_id for item in self.prototype_bindings]
         indices = [item.vector_index for item in self.prototype_bindings]
         if len(set(ids)) != len(ids):
@@ -123,10 +151,12 @@ class VisualAddressManifest:
 
     def to_dict(self) -> Dict[str, Any]:
         result = self.identity_payload()
-        result.update({
-            "manifest_id": self.manifest_id,
-            "deployment_permitted": self.deployment_permitted,
-        })
+        result.update(
+            {
+                "manifest_id": self.manifest_id,
+                "deployment_permitted": self.deployment_permitted,
+            }
+        )
         return result
 
     @classmethod

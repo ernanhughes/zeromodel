@@ -1,4 +1,5 @@
 """Approved binding between a visual address contract and a VPM policy."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

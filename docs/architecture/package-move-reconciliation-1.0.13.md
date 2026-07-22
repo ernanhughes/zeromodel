@@ -12,6 +12,9 @@ Reconciliation rows: `313`
   the analysis package validation stage. Remaining root tests are reserved for
   observation, vision, video, SQLAlchemy, research, examples, tooling, or
   integration validation.
+- Observation-owned historical tests were moved to `packages/observation/tests`
+  during the observation package validation stage. Mixed visual-provider tests
+  remain classified for vision validation.
 
 | original path | original module | inventory classification | final path | final package | action | reason |
 |---|---|---|---|---|---|---|

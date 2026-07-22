@@ -15,12 +15,16 @@ from video_final_test_support import (
     authorization,
     request,
 )
-from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.runtime import (
+    build_finalization_sqlite_runtime,
+)
 from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 
 
 pytestmark = pytest.mark.integration
@@ -41,6 +45,7 @@ def _tree_digests(root: Path) -> dict[str, str]:
 
 def _database_url(path: Path) -> str:
     return sqlite_database_url(path)
+
 
 def _completed(tmp_path: Path) -> tuple[object, FinalExecutionReceiptDTO]:
     protocol = approved_protocol()
@@ -175,7 +180,11 @@ def test_final_cli_has_no_force_resume_or_overwrite(
 
 def test_final_cli_requires_all_paths_explicitly() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "zeromodel.persistence.sqlalchemy.video_action_set_final_cli"],
+        [
+            sys.executable,
+            "-m",
+            "zeromodel.persistence.sqlalchemy.video_action_set_final_cli",
+        ],
         cwd=REPO_ROOT,
         check=False,
         capture_output=True,
@@ -217,6 +226,7 @@ def test_hostile_access_id_is_data_and_cannot_execute(tmp_path: Path) -> None:
     assert not sentinel.exists()
 
 
+@pytest.mark.external  # requires a pwsh/PowerShell executable on PATH
 @pytest.mark.parametrize(
     ("script_name", "expected_key"),
     [

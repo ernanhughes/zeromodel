@@ -41,6 +41,7 @@ def _venv_python(venv_dir: Path) -> Path:
     return venv_dir / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 
 
+@pytest.mark.slow
 def test_video_wheel_alone_carries_no_sqlalchemy_finalization_capability(
     tmp_path: Path,
 ) -> None:

@@ -109,3 +109,81 @@ python scripts/validate_release_candidate.py -> Release candidate validation pas
 ## Confirmation
 
 Nothing was published, tagged, or version-bumped in this stage. No commit was made or push performed - all changes described above remain in the working tree pending your explicit go-ahead.
+
+---
+
+## Stage A2.1 addendum: verification hardening
+
+**Starting commit for this addendum:** `fff9c3e694ee3f85f518bbdb1aa3c23b99aedeea` (the Stage A2 work above, already committed to `main` by the time this addendum began - the "uncommitted" note above describes Stage A2's own state at the time it was written, not this addendum's).
+
+This addendum responds to a review of the Stage A2 report identifying three items needing correction/hardening before the stage is considered closed: (1) a claimed "production DTO schema mismatch" that needed verification, (2) fast-suite runtime margin that was too thin to trust, (3) an imprecise "Ruff passes" claim. All three are resolved below.
+
+### 1. The `ObservationDTO` / `OBSERVATION_RECORD_KEYS` finding was corrected, not fixed as a production bug
+
+Full trace of `ObservationDTO.from_record()`/`to_record()` (`packages/video/src/zeromodel/video/domains/video_action_set/observation_dto.py`) proved the original Stage A2 report's claim wrong: `OBSERVATION_RECORD_KEYS` is not supposed to equal every dataclass field. It is the top-level JSON *record* schema, deliberately narrower than the dataclass because five fields are read from inside the record's own `metadata` sub-dict (`benchmark_seed_digest`, `episode_plan_digest`, `provider_observation_descriptor`, `provider_observation_digest`, `operation_chain`) and two more are derived from the optional `pixels` key or supplied as an external keyword argument (`matrix_blob_id`, `final_access_id`). This is correct, intentional production design, not drift.
+
+The actual defect was a stale, incomplete fixture in `tests/test_video_action_set_benchmark.py` (a genuine research file) - its hand-built `fake_records` payload was missing 8 required top-level keys (`benchmark_version`, `generator_version`, `event_type`, `episode_family`, `episode_disposition`, `frame_disposition`, `denominator_class`, `observation_pixel_digest`) that the current record schema requires. That fixture was corrected field-by-field, verifying each requirement against the real, correctly-enforced validation logic at every layer (record keys → ID/split scheme → pixel digest → operation chain → provider descriptor). The fixture now passes every `ObservationDTO`-level validation; it still fails on one further, orthogonal requirement (referential integrity against a real persisted benchmark identity/episode plan, which only exists after `research.benchmarks.video_action_set_benchmark.freeze_benchmark()` runs inside the same test) - a deeper, separate mocking-strategy gap in that one research test, not part of the DTO schema question this addendum was asked to resolve, and not chased further given it does not affect the production gate.
+
+A precise, permanent regression test was added at `packages/video/tests/test_observation_record_schema.py` (production-owning package, not research): it asserts `OBSERVATION_RECORD_KEYS` is a strict subset of the dataclass fields, and that every excluded field is explicitly accounted for in one of two named, documented buckets (`METADATA_EMBEDDED_FIELDS`, `DERIVED_OR_EXTERNAL_FIELDS`). If a future field is added to `ObservationDTO` without a decision about which bucket it belongs to, this test fails loudly instead of silently passing or silently drifting.
+
+**Verdict: not a production bug.** Corrected in the record above; no production code semantics changed (the one line touched in `packages/sqlalchemy/src/.../db/stores/video_action_set.py` in Stage A2 - the `CursorResult` narrowing - remains the only production behavior change across A2 and this addendum).
+
+### 2. Fast-suite runtime: profiled, and the real cost driver fixed rather than the timeout raised
+
+`pytest --durations=40` with the exact canonical fast-suite invocation (all 8 test roots, `--run-integration`, `-m "not slow and not external and not research"`) identified the actual cost driver precisely:
+
+- `tests/integration/test_video_finalization_package_boundary.py::test_video_wheel_alone_carries_no_sqlalchemy_finalization_capability` - **15.75s alone** (it builds a real wheel and creates a venv from scratch - never a "fast, bounded" operation by definition).
+- `tests/integration/test_video_finalization_cli_scripts.py::test_powershell_admin_wrapper_propagates_json_and_exit_code` (2 parametrized cases) - ~3.2s each, spawning a separate PowerShell process per case - an environment-specific dependency (a `pwsh`/PowerShell executable on `PATH`), not a computation cost.
+
+Neither was optimized in place; both were reclassified per the taxonomy's own rules (own criteria: "tests that are inherently expensive should receive the slow marker... rather than remaining fast solely because they once completed under two minutes"):
+- the wheel-building test gained `@pytest.mark.slow` (in addition to its existing `integration` marker from directory placement);
+- the PowerShell-invoking test gained `@pytest.mark.external` (environment-specific infrastructure, matching that marker's own definition exactly).
+
+Result, profiled with `--durations=15` after reclassification: **no single test exceeds 2.3s**, and three consecutive full `python scripts/run_fast_tests.py` runs measured:
+
+| run | duration | result |
+|---|---|---|
+| 1 | 75.34s | 795 passed, 0 failed |
+| 2 | 73.80s | 795 passed, 0 failed |
+| 3 | 73.84s | 795 passed, 0 failed |
+
+Slowest run 75.34s, median ~74s - both comfortably inside the requested acceptance target (slowest < 100s, median < 90s), and a real ~45s improvement over the pre-fix 122.84s worst case observed during profiling. A regression test (`tests/test_fast_suite_runtime_stability.py`) asserts both markers stay in place so this cannot silently regress back.
+
+### 3. Ruff claim corrected: governed-gate result vs. whole-repository result, stated separately and precisely
+
+Both commands were run exactly as specified, unscoped:
+
+```
+ruff check .          -> FAILS: 8 pre-existing E402 findings
+                          (6 in examples/arcade_visual_video_discriminative_evidence_benchmark.py,
+                           2 in examples/render_signs_demo.py)
+ruff format --check . -> FAILS: 141 files would be reformatted
+```
+
+Both files with lint findings were confirmed untouched by any Stage A1/A2/A2.1 change (`git diff --stat HEAD` on each returns empty) - pre-existing, not a regression introduced here. One genuine regression *was* found and fixed during this check: `packages/video/tests/test_video_policy_reader_contracts.py` (new in Stage A2) needed reformatting; it has been reformatted and re-verified.
+
+The governed gate (`scripts/check_quality.py`'s exact `FORMAT_LINT_PATHS`) is separately confirmed 100% clean for both commands. The prior report's unqualified "Ruff passes" line is superseded by this precise statement. A regression test (`tests/test_ruff_scope_claims.py`) now (a) asserts the governed paths pass both commands, and (b) asserts the whole-repo lint run's offender set never grows beyond the two currently-known, currently-out-of-scope files - so a *new* file added anywhere in the repo with an E402-style violation will fail this test, while the two pre-existing ones remain explicitly, visibly tolerated rather than silently ignored.
+
+### A2.1 validation commands run
+
+```
+python -m mypy packages/sqlalchemy/src packages/sqlalchemy/tests -> Success: no issues found in 13 source files
+python scripts/check_package_boundaries.py                       -> Package boundary check passed: 112 production modules
+python scripts/check_architecture.py                             -> Architecture check: passed (112 production modules inspected)
+python scripts/check_quality.py                                  -> Quality checks passed
+python scripts/run_fast_tests.py (x3)                             -> 795/795/795 passed, 0 failed, 75.34s/73.80s/73.84s
+python -m pytest packages/video/tests -q                          -> 24 passed
+python -m pytest packages/sqlalchemy/tests -q                     -> 6 passed
+python -m pytest integration_tests -q                             -> 1 passed
+python scripts/validate_release_candidate.py                     -> Release candidate validation passed (211 public symbols; test-layer report: 538 fast, 107 integration, all 6 packages' wheel smoke true)
+git diff --check                                                 -> clean (line-ending warnings only, exit 0)
+ruff check . / ruff format --check .                             -> fail unscoped as documented above; governed gate clean
+```
+
+### A2.1 files changed
+
+`packages/sqlalchemy/tests/test_sqlalchemy_package_isolation.py` was not touched in this addendum (already fixed in A2). New/changed in this addendum: `tests/test_video_action_set_benchmark.py` (fixture repaired), `packages/video/tests/test_observation_record_schema.py` (new), `tests/integration/test_video_finalization_package_boundary.py` (`@pytest.mark.slow` added), `tests/integration/test_video_finalization_cli_scripts.py` (`@pytest.mark.external` added, reformatted), `tests/test_fast_suite_runtime_stability.py` (new), `tests/test_ruff_scope_claims.py` (new), `packages/video/tests/test_video_policy_reader_contracts.py` (reformatting fix only, no logic change).
+
+### A2.1 confirmation
+
+Nothing was published, tagged, or version-bumped. No commit or push was performed by this addendum - all changes remain in the working tree pending your explicit go-ahead, on top of the already-committed `fff9c3e`.

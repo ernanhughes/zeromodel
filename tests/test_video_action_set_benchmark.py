@@ -9,6 +9,13 @@ import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
 from zeromodel.core.artifact import VPMValidationError
+from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+from zeromodel.video.domains.video_action_set.contracts import (
+    OBSERVATION_OPERATION_CHAIN_VERSION,
+)
+from zeromodel.video.domains.video_action_set.provider_observation_dto import (
+    ProviderObservationDescriptorDTO,
+)
 from research.evidence.video_complete_row_evidence import (
     build_complete_row_evidence,
     build_semantic_top_set_outcome,
@@ -16,6 +23,44 @@ from research.evidence.video_complete_row_evidence import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _fake_operation(final_digest: str | None) -> dict[str, object]:
+    parameters = {"event_type": "gap_unknown" if final_digest is None else "frame"}
+    payload = {
+        "index": 0,
+        "operation": "emit_observation",
+        "operation_version": OBSERVATION_OPERATION_CHAIN_VERSION,
+        "input_digests": [final_digest],
+        "parameters": parameters,
+        "parameter_digest": canonical_sha256(parameters),
+        "output_digest": final_digest,
+    }
+    return payload | {"operation_digest": canonical_sha256(payload)}
+
+
+def _fake_operation_chain(final_digest: str) -> dict[str, object]:
+    chain_payload = {
+        "version": OBSERVATION_OPERATION_CHAIN_VERSION,
+        "operations": [_fake_operation(final_digest)],
+        "final_emitted_digest": final_digest,
+    }
+    return chain_payload | {"operation_chain_digest": canonical_sha256(chain_payload)}
+
+
+# array_digest() of a FRAME_SHAPE=(16, 28) all-zero np.uint8 frame (the shape
+# required by validate_observation_matrix_blob) - this fixture's fake frame's
+# pixel content/digest pair.
+_FAKE_PIXELS = [[0] * 28 for _ in range(16)]
+_FAKE_PIXEL_DIGEST = (
+    "sha256:5c55c8f4db4010ba9203d83536d0609856af8c847ac039e37e7dde8fbd574b61"
+)
+# _provider_raw_digest()'s domain-separated hash of the same all-zero
+# (16, 28) frame - a different digest scheme than the plain pixel digest
+# above, used specifically for ProviderObservationDescriptorDTO.raw_digest.
+_FAKE_PROVIDER_RAW_DIGEST = (
+    "sha256:cdc08e35906d759b232d985e4f5a3a46ae4aed501f6165273a682e5b4af5c13a"
+)
 
 
 def _row_actions() -> tuple[list[str], dict[str, str]]:
@@ -100,44 +145,66 @@ def test_materialized_split_counts_and_final_freeze(tmp_path: Path) -> None:
     assert phase_access["final_score_access_count"] == 0
 
 
+def _fake_provider_descriptor(source_id: str) -> dict[str, object]:
+    return {
+        "version": "zeromodel-image-observation/v1",
+        "raw_digest": _FAKE_PROVIDER_RAW_DIGEST,
+        "shape": [16, 28],
+        "timestamp": None,
+        "source_id": source_id,
+        "metadata": {},
+    }
+
+
+def _fake_record(split: str) -> dict[str, object]:
+    # ObservationDTO._validate_ids() requires this exact (if unusual) doubled
+    # id scheme: episode_id already carries the split prefix, and clip_id /
+    # frame_id are then built as f"{split}:{episode_id}:...".
+    episode_id = f"{split}:episode-001"
+    frame_id = f"{split}:{episode_id}:frame-0"
+    descriptor_payload = _fake_provider_descriptor(frame_id)
+    descriptor = ProviderObservationDescriptorDTO.from_dict(descriptor_payload)
+    return {
+        "benchmark_version": benchmark.BENCHMARK_VERSION,
+        "generator_version": benchmark.GENERATOR_VERSION,
+        "split": split,
+        "episode_id": episode_id,
+        "clip_id": f"{split}:{episode_id}:clip",
+        "frame_id": frame_id,
+        "sequence_number": 0,
+        "event_type": "frame",
+        "family": "exact",
+        "expected_disposition": "valid",
+        "episode_family": "valid",
+        "episode_disposition": "valid",
+        "frame_disposition": "valid",
+        "denominator_class": "valid_denominator",
+        "expected_row": "row-000",
+        "expected_action": "left",
+        "actual_executed_action": "left",
+        "action_known": True,
+        "gap_declaration": None,
+        "observation_pixel_digest": _FAKE_PIXEL_DIGEST,
+        "metadata": {
+            "episode_seed": 1,
+            "seed_digest": "sha256:" + "1" * 64,
+            "episode_plan_digest": "sha256:" + "2" * 64,
+            "reachability_trace": {"reachable_row_ids": ["row-000"]},
+            "observation_operation_chain": _fake_operation_chain(_FAKE_PIXEL_DIGEST),
+            "provider_observation_descriptor": descriptor_payload,
+            "provider_observation_digest": descriptor.descriptor_digest,
+        },
+        "pixels": _FAKE_PIXELS,
+    }
+
+
 def test_build_split_writes_overlap_and_observation_manifests(tmp_path: Path) -> None:
     benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
     fake_output = _fake_provider_output()
     monkeypatch = pytest.MonkeyPatch()
-    fake_records = [
-        {
-            "split": "development",
-            "episode_id": "episode-001",
-            "clip_id": "clip-001",
-            "frame_id": "development:episode-001:frame-00",
-            "sequence_number": 0,
-            "family": "exact",
-            "expected_disposition": "valid",
-            "expected_row": "row-000",
-            "expected_action": "left",
-            "actual_executed_action": "left",
-            "action_known": True,
-            "gap_declaration": None,
-            "metadata": {
-                "episode_seed": 1,
-                "seed_digest": "sha256:test",
-                "reachability_trace": {"reachable_row_ids": ["row-000"]},
-            },
-            "pixels": [[0]],
-        }
-    ]
-    fake_records_calibration = [
-        {
-            **record,
-            "split": "calibration",
-            "frame_id": "calibration:episode-001:frame-00",
-        }
-        for record in fake_records
-    ]
-    fake_records_selection = [
-        {**record, "split": "selection", "frame_id": "selection:episode-001:frame-00"}
-        for record in fake_records
-    ]
+    fake_records = [_fake_record("development")]
+    fake_records_calibration = [_fake_record("calibration")]
+    fake_records_selection = [_fake_record("selection")]
     monkeypatch.setattr(
         benchmark,
         "_materialize_records",

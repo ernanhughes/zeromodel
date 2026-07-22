@@ -2,64 +2,91 @@
   "cross_package_integration_tests": {
     "errors": 0,
     "failed": 0,
-    "passed": 1,
+    "passed": 107,
     "returncode": 0,
     "skipped": 0,
-    "summary_line": "1 passed"
+    "summary_line": "==================== 107 passed, 776 deselected in 44.32s ====================="
   },
   "installed_wheel_smoke_result_by_package": {
+    "analysis": {
+      "imported_from_installed_wheel": true,
+      "location": "C:\\Projects\\zeromodel\\build\\full-integration-venv\\Lib\\site-packages\\zeromodel\\analysis\\__init__.py",
+      "namespace": "zeromodel.analysis"
+    },
     "core": {
-      "imported_from_installed_wheel": true
+      "imported_from_installed_wheel": true,
+      "location": "C:\\Projects\\zeromodel\\build\\full-integration-venv\\Lib\\site-packages\\zeromodel\\core\\__init__.py",
+      "namespace": "zeromodel.core"
+    },
+    "observation": {
+      "imported_from_installed_wheel": true,
+      "location": "C:\\Projects\\zeromodel\\build\\full-integration-venv\\Lib\\site-packages\\zeromodel\\observation\\__init__.py",
+      "namespace": "zeromodel.observation"
+    },
+    "sqlalchemy": {
+      "imported_from_installed_wheel": true,
+      "location": "C:\\Projects\\zeromodel\\build\\full-integration-venv\\Lib\\site-packages\\zeromodel\\persistence\\sqlalchemy\\__init__.py",
+      "namespace": "zeromodel.persistence.sqlalchemy"
+    },
+    "video": {
+      "imported_from_installed_wheel": true,
+      "location": "C:\\Projects\\zeromodel\\build\\full-integration-venv\\Lib\\site-packages\\zeromodel\\video\\__init__.py",
+      "namespace": "zeromodel.video"
+    },
+    "vision": {
+      "imported_from_installed_wheel": true,
+      "location": "C:\\Projects\\zeromodel\\build\\full-integration-venv\\Lib\\site-packages\\zeromodel\\vision\\__init__.py",
+      "namespace": "zeromodel.vision"
     }
   },
   "package_local_source_tests_by_package": {
     "analysis": {
       "errors": 0,
       "failed": 0,
-      "passed": 1,
+      "passed": 65,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "1 passed"
+      "summary_line": "============================= 65 passed in 0.98s =============================="
     },
     "core": {
       "errors": 0,
       "failed": 0,
-      "passed": 1,
+      "passed": 20,
       "returncode": 0,
-      "skipped": 0,
-      "summary_line": "1 passed"
+      "skipped": 1,
+      "summary_line": "======================== 20 passed, 1 skipped in 0.41s ========================"
     },
     "observation": {
       "errors": 0,
       "failed": 0,
-      "passed": 1,
+      "passed": 32,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "1 passed"
+      "summary_line": "============================= 32 passed in 0.35s =============================="
     },
     "sqlalchemy": {
       "errors": 0,
       "failed": 0,
-      "passed": 1,
+      "passed": 6,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "1 passed"
+      "summary_line": "============================== 6 passed in 3.27s =============================="
     },
     "video": {
       "errors": 0,
       "failed": 0,
-      "passed": 1,
+      "passed": 24,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "1 passed"
+      "summary_line": "============================= 24 passed in 0.47s =============================="
     },
     "vision": {
       "errors": 0,
       "failed": 0,
-      "passed": 1,
+      "passed": 10,
       "returncode": 0,
       "skipped": 0,
-      "summary_line": "1 passed"
+      "summary_line": "============================= 10 passed in 0.35s =============================="
     }
   },
   "research": {
@@ -69,9 +96,9 @@
   "source_tree_fast_production_tests": {
     "errors": 0,
     "failed": 0,
-    "passed": 1,
+    "passed": 538,
     "returncode": 0,
     "skipped": 0,
-    "summary_line": "1 passed"
+    "summary_line": "==================== 538 passed, 187 deselected in 36.29s ====================="
   }
 }

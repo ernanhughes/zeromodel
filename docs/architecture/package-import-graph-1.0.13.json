@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "b8f75b85f298f974b850df2da7f72b89cd4f12d9",
+  "baseline_commit": "fff9c3e694ee3f85f518bbdb1aa3c23b99aedeea",
   "edges": [
     {
       "imported": "examples.arcade_shooter_policy",
@@ -757,7 +757,7 @@
     },
     "tests.integration.test_video_finalization_cli_scripts": {
       "classification": "tooling",
-      "lines": 259,
+      "lines": 269,
       "path": "tests/integration/test_video_finalization_cli_scripts.py",
       "target_namespace": ""
     },
@@ -781,7 +781,7 @@
     },
     "tests.integration.test_video_finalization_package_boundary": {
       "classification": "tooling",
-      "lines": 121,
+      "lines": 122,
       "path": "tests/integration/test_video_finalization_package_boundary.py",
       "target_namespace": ""
     },
@@ -863,6 +863,12 @@
       "path": "tests/test_fast_suite_completeness.py",
       "target_namespace": ""
     },
+    "tests.test_fast_suite_runtime_stability": {
+      "classification": "tooling",
+      "lines": 33,
+      "path": "tests/test_fast_suite_runtime_stability.py",
+      "target_namespace": ""
+    },
     "tests.test_identity_documentation_consistency": {
       "classification": "tooling",
       "lines": 48,
@@ -923,6 +929,12 @@
       "path": "tests/test_research_readiness_fixtures.py",
       "target_namespace": ""
     },
+    "tests.test_ruff_scope_claims": {
+      "classification": "tooling",
+      "lines": 85,
+      "path": "tests/test_ruff_scope_claims.py",
+      "target_namespace": ""
+    },
     "tests.test_test_tier_commands_kernel": {
       "classification": "tooling",
       "lines": 55,
@@ -931,7 +943,7 @@
     },
     "tests.test_video_action_set_benchmark": {
       "classification": "tooling",
-      "lines": 295,
+      "lines": 362,
       "path": "tests/test_video_action_set_benchmark.py",
       "target_namespace": ""
     },

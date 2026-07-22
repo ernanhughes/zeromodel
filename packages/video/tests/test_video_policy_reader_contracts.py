@@ -139,7 +139,9 @@ def test_impossible_transition_rejects_but_retains_raw_prediction() -> None:
     assert trace.decisions[1].policy is None
 
 
-def test_rejected_frame_is_not_silently_carried_forward_and_recovery_is_explicit() -> None:
+def test_rejected_frame_is_not_silently_carried_forward_and_recovery_is_explicit() -> (
+    None
+):
     source = InMemoryVideoFrameSource.from_arrays(
         [_frame(0), _frame(1), _frame(2)],
         clip_id="occlusion-gap",
@@ -163,7 +165,9 @@ def test_stale_repeated_frame_is_rejected_after_declared_horizon() -> None:
         clip_id="stale-repeat",
         nominal_fps=10.0,
     )
-    trace = _reader(("left", "left", "left"), maximum_identical_frame_run=2).read(source)
+    trace = _reader(("left", "left", "left"), maximum_identical_frame_run=2).read(
+        source
+    )
 
     assert trace.decisions[0].accepted
     assert trace.decisions[1].accepted
@@ -268,7 +272,9 @@ def test_reader_rejects_tampered_manifest_frame_digest() -> None:
         def frames(self):
             return source.frames()
 
-    with pytest.raises(VPMValidationError, match="frame digest does not match manifest"):
+    with pytest.raises(
+        VPMValidationError, match="frame digest does not match manifest"
+    ):
         _reader(("left", "left")).read(TamperedManifestSource())
 
 
@@ -316,7 +322,9 @@ def test_reader_rejects_source_digest_mismatch() -> None:
         def frames(self):
             return frames
 
-    with pytest.raises(VPMValidationError, match="source digest does not match manifest"):
+    with pytest.raises(
+        VPMValidationError, match="source digest does not match manifest"
+    ):
         _reader(("left", "left")).read(TamperedSourceDigestSource())
 
 

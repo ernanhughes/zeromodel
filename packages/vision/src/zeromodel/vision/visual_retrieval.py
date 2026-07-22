@@ -5,6 +5,7 @@ with normalized pixels, precomputed frozen embeddings, or any future encoder tha
 implements ``FrozenVisualEncoder``. Policy selection remains in
 ``VPMPolicyLookup`` after a row is accepted.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,7 +23,10 @@ from zeromodel.observation.visual_address import (
     VisualAddressContract,
     VisualAddressDecision,
 )
-from zeromodel.observation.visual_address_manifest import PrototypeBinding, VisualAddressManifest
+from zeromodel.observation.visual_address_manifest import (
+    PrototypeBinding,
+    VisualAddressManifest,
+)
 from zeromodel.vision.visual_encoder import EncoderManifest, FrozenVisualEncoder
 
 
@@ -44,7 +48,9 @@ def _freeze(value: Any) -> Any:
     if isinstance(value, np.generic):
         raise VPMValidationError("vector-address JSON must use plain scalar types")
     if isinstance(value, Mapping):
-        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+        return MappingProxyType(
+            {str(key): _freeze(item) for key, item in value.items()}
+        )
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     return value
@@ -60,7 +66,9 @@ def _json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("vector-address values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "vector-address values must be JSON-serializable"
+        ) from exc
 
 
 def _sha256_json(value: Any) -> str:
@@ -146,16 +154,13 @@ class VectorCalibration:
 
     def __post_init__(self) -> None:
         thresholds = {
-            str(key): float(value)
-            for key, value in self.acceptance_thresholds.items()
+            str(key): float(value) for key, value in self.acceptance_thresholds.items()
         }
         margins = {
-            str(key): float(value)
-            for key, value in self.ambiguity_margins.items()
+            str(key): float(value) for key, value in self.ambiguity_margins.items()
         }
         counts = {
-            str(key): int(value)
-            for key, value in self.calibration_counts.items()
+            str(key): int(value) for key, value in self.calibration_counts.items()
         }
         conflict_rows = tuple(
             sorted(set(str(value) for value in self.conflicting_action_rows))
@@ -209,9 +214,7 @@ class VectorCalibration:
                     "calibration_counts must cover every calibrated row"
                 )
             if any(value <= 0 for value in counts.values()):
-                raise VPMValidationError(
-                    "per-row calibration counts must be positive"
-                )
+                raise VPMValidationError("per-row calibration counts must be positive")
             if sum(counts.values()) != int(self.calibration_count):
                 raise VPMValidationError(
                     "per-row calibration counts must sum to calibration_count"
@@ -246,9 +249,7 @@ class VectorCalibration:
             "calibration_count": int(self.calibration_count),
             "calibration_counts": dict(self.calibration_counts),
             "conflicting_action_rows": list(self.conflicting_action_rows),
-            "conflict_contract_complete": bool(
-                self.conflict_contract_complete
-            ),
+            "conflict_contract_complete": bool(self.conflict_contract_complete),
             "method": self.method,
             "metadata": _thaw(self.metadata),
         }
@@ -256,9 +257,7 @@ class VectorCalibration:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "VectorCalibration":
         payload = dict(data)
-        version = str(
-            payload.get("version", LEGACY_VECTOR_CALIBRATION_VERSION)
-        )
+        version = str(payload.get("version", LEGACY_VECTOR_CALIBRATION_VERSION))
         if version == LEGACY_VECTOR_CALIBRATION_VERSION:
             payload.setdefault("calibration_counts", {})
             payload.setdefault("conflicting_action_rows", ())
@@ -280,9 +279,7 @@ class VectorAddressBuild:
             tuple(str(value) for value in self.prototype_action_ids),
         )
         if self.matrix_blob.shape[0] != len(self.prototype_action_ids):
-            raise VPMValidationError(
-                "prototype action ids must cover matrix rows"
-            )
+            raise VPMValidationError("prototype action ids must cover matrix rows")
         if self.matrix_blob.blob_id != self.manifest.matrix_blob_id:
             raise VPMValidationError(
                 "address manifest does not reference supplied matrix blob"
@@ -304,21 +301,14 @@ def _validate_labels(
     rows = tuple(str(value) for value in row_ids)
     actions = tuple(str(value) for value in action_ids)
     observations = tuple(str(value) for value in observation_ids)
-    if not (
-        len(rows)
-        == len(actions)
-        == len(observations)
-        == vectors.shape[0]
-    ):
+    if not (len(rows) == len(actions) == len(observations) == vectors.shape[0]):
         raise VPMValidationError(
             "%s vectors and labels must have identical length" % label
         )
     if any(not value for value in rows + actions + observations):
         raise VPMValidationError("%s labels cannot be empty" % label)
     if len(set(observations)) != len(observations):
-        raise VPMValidationError(
-            "%s observation ids must be unique" % label
-        )
+        raise VPMValidationError("%s observation ids must be unique" % label)
     return rows, actions, observations
 
 
@@ -328,9 +318,7 @@ def _select_medoid_indices(
 ) -> Tuple[int, ...]:
     selected = []
     for row_id in sorted(set(row_ids)):
-        indices = [
-            index for index, value in enumerate(row_ids) if value == row_id
-        ]
+        indices = [index for index, value in enumerate(row_ids) if value == row_id]
         local = vectors[indices]
         similarity = local @ local.T
         totals = similarity.sum(axis=1)
@@ -374,9 +362,7 @@ def _calibrate_prototypes(
             raise VPMValidationError(
                 "calibration row has no matching prototype: %s" % row_id
             )
-        correct_score = max(
-            float(similarities[index]) for index in same
-        )
+        correct_score = max(float(similarities[index]) for index in same)
         conflicts = [
             index
             for index, candidate_action in enumerate(prototype_actions_tuple)
@@ -385,18 +371,12 @@ def _calibrate_prototypes(
         values_by_row.setdefault(row_id, []).append(correct_score)
         if conflicts:
             conflict_rows.add(row_id)
-            conflict_score = max(
-                float(similarities[index]) for index in conflicts
-            )
-            margins_by_row.setdefault(row_id, []).append(
-                correct_score - conflict_score
-            )
+            conflict_score = max(float(similarities[index]) for index in conflicts)
+            margins_by_row.setdefault(row_id, []).append(correct_score - conflict_score)
 
     expected_rows = set(prototype_rows_tuple)
     if set(values_by_row) != expected_rows:
-        raise VPMValidationError(
-            "calibration split must cover every prototype row"
-        )
+        raise VPMValidationError("calibration split must cover every prototype row")
     thresholds = {
         row_id: _lower_quantile(values_by_row[row_id], quantile)
         for row_id in sorted(expected_rows)
@@ -410,8 +390,7 @@ def _calibrate_prototypes(
         for row_id in sorted(expected_rows)
     }
     calibration_counts = {
-        row_id: len(values_by_row[row_id])
-        for row_id in sorted(expected_rows)
+        row_id: len(values_by_row[row_id]) for row_id in sorted(expected_rows)
     }
     return VectorCalibration(
         acceptance_thresholds=thresholds,
@@ -424,9 +403,7 @@ def _calibrate_prototypes(
         metadata={
             "prototype_strategy": strategy,
             "score": "cosine_similarity",
-            "no_conflicting_action_rows": sorted(
-                expected_rows - conflict_rows
-            ),
+            "no_conflicting_action_rows": sorted(expected_rows - conflict_rows),
         },
     )
 
@@ -468,9 +445,7 @@ def build_vector_address(
         label="calibration",
     )
     if set(prototype_rows) != set(calibration_rows):
-        raise VPMValidationError(
-            "prototype and calibration rows must match"
-        )
+        raise VPMValidationError("prototype and calibration rows must match")
 
     if strategy == "medoid":
         selected = _select_medoid_indices(
@@ -480,9 +455,7 @@ def build_vector_address(
     elif strategy == "all":
         selected = tuple(range(prototype_matrix.shape[0]))
     else:
-        raise VPMValidationError(
-            "prototype strategy must be 'medoid' or 'all'"
-        )
+        raise VPMValidationError("prototype strategy must be 'medoid' or 'all'")
 
     vectors = np.ascontiguousarray(
         prototype_matrix[list(selected)],
@@ -508,9 +481,7 @@ def build_vector_address(
             "kind": "visual_address_prototypes",
             "strategy": strategy,
             "representation_spec_digest": representation_spec_digest,
-            "representation_identity_scope": (
-                "exact_float32_under_encoder_manifest"
-            ),
+            "representation_identity_scope": ("exact_float32_under_encoder_manifest"),
             "execution_scope_digest": (
                 encoder_manifest_id or representation_spec_digest
             ),
@@ -544,9 +515,7 @@ def build_vector_address(
         deployment_status=str(deployment_status),
         metadata={
             "calibration_quantile": float(calibration_quantile),
-            "representation_identity_scope": (
-                "exact_float32_under_encoder_manifest"
-            ),
+            "representation_identity_scope": ("exact_float32_under_encoder_manifest"),
             "execution_scope_digest": (
                 encoder_manifest_id or representation_spec_digest
             ),
@@ -568,12 +537,10 @@ class VectorAddressIndex:
         matrix = build.matrix_blob.to_array()
         self._matrix = l2_normalize_rows(matrix)
         self._row_ids = tuple(
-            binding.policy_row_id
-            for binding in build.manifest.prototype_bindings
+            binding.policy_row_id for binding in build.manifest.prototype_bindings
         )
         self._prototype_ids = tuple(
-            binding.prototype_id
-            for binding in build.manifest.prototype_bindings
+            binding.prototype_id for binding in build.manifest.prototype_bindings
         )
         self._action_ids = tuple(build.prototype_action_ids)
 
@@ -582,21 +549,15 @@ class VectorAddressIndex:
             provider_kind=self.build.manifest.address_kind,
             provider_version=VECTOR_ADDRESS_READER_VERSION,
             score_semantics="similarity",
-            observation_spec_digest=(
-                self.build.manifest.representation_spec_digest
-            ),
-            representation_spec_digest=(
-                self.build.manifest.representation_spec_digest
-            ),
+            observation_spec_digest=(self.build.manifest.representation_spec_digest),
+            representation_spec_digest=(self.build.manifest.representation_spec_digest),
             address_artifact_id=str(self.build.manifest.manifest_id),
             calibration_artifact_id=self.build.calibration.digest,
             policy_artifact_id=self.build.manifest.policy_artifact_id,
             source_scope=self.build.manifest.source_scope,
             replay_contract="exact_decision",
             metadata={
-                "encoder_manifest_id": (
-                    self.build.manifest.encoder_manifest_id
-                ),
+                "encoder_manifest_id": (self.build.manifest.encoder_manifest_id),
                 "prototype_count": len(self._row_ids),
                 "representation_identity_scope": (
                     "exact_float32_under_encoder_manifest"
@@ -670,13 +631,9 @@ class VectorAddressIndex:
         nearest_row = self._row_ids[first]
         nearest_action = self._action_ids[first]
         conflict_candidates = [
-            index
-            for index in ranking[1:]
-            if self._action_ids[index] != nearest_action
+            index for index in ranking[1:] if self._action_ids[index] != nearest_action
         ]
-        has_conflict = self.build.calibration.has_conflicting_action(
-            nearest_row
-        )
+        has_conflict = self.build.calibration.has_conflicting_action(nearest_row)
         if has_conflict and not conflict_candidates:
             raise VPMValidationError(
                 "calibration requires a conflicting action candidate that "
@@ -684,17 +641,9 @@ class VectorAddressIndex:
             )
         second = int(conflict_candidates[0]) if conflict_candidates else None
         nearest_score = float(similarities[first])
-        second_score = (
-            float(similarities[second]) if second is not None else None
-        )
-        margin = (
-            nearest_score - second_score
-            if second_score is not None
-            else None
-        )
-        threshold = float(
-            self.build.calibration.acceptance_thresholds[nearest_row]
-        )
+        second_score = float(similarities[second]) if second is not None else None
+        margin = nearest_score - second_score if second_score is not None else None
+        threshold = float(self.build.calibration.acceptance_thresholds[nearest_row])
         required_margin = (
             float(self.build.calibration.ambiguity_margins[nearest_row])
             if has_conflict
@@ -733,9 +682,7 @@ class VectorAddressIndex:
             "acceptance_threshold": threshold,
             "required_conflicting_action_margin": required_margin,
             "has_conflicting_action_candidate": has_conflict,
-            "representation_identity_scope": (
-                "exact_float32_under_encoder_manifest"
-            ),
+            "representation_identity_scope": ("exact_float32_under_encoder_manifest"),
             "execution_scope_digest": execution_scope,
         }
         decision_trace.update(dict(trace or {}))
@@ -752,9 +699,7 @@ class VectorAddressIndex:
             policy_artifact_id=contract.policy_artifact_id,
             nearest_row_id=nearest_row,
             nearest_score=nearest_score,
-            second_row_id=(
-                self._row_ids[second] if second is not None else None
-            ),
+            second_row_id=(self._row_ids[second] if second is not None else None),
             second_score=second_score,
             ambiguity_measure=margin,
             matched_row_id=nearest_row if accepted else None,
@@ -775,9 +720,7 @@ class FrozenVectorAddressProvider:
         manifest = encoder.manifest()
         expected = index.build.manifest.encoder_manifest_id
         if expected is not None and expected != manifest.manifest_id:
-            raise VPMValidationError(
-                "encoder manifest does not match address index"
-            )
+            raise VPMValidationError("encoder manifest does not match address index")
         if manifest.output_dimension != index._matrix.shape[1]:
             raise VPMValidationError(
                 "encoder output dimension does not match address index"
@@ -802,9 +745,7 @@ class NormalizedPixelEncoder:
 
     def __init__(self, *, height: int, width: int) -> None:
         if height <= 0 or width <= 0:
-            raise VPMValidationError(
-                "pixel encoder dimensions must be positive"
-            )
+            raise VPMValidationError("pixel encoder dimensions must be positive")
         self.height = int(height)
         self.width = int(width)
         spec = {
@@ -826,9 +767,7 @@ class NormalizedPixelEncoder:
             framework="numpy",
             framework_version=np.__version__,
             license_id="not-applicable",
-            source_record=(
-                "zeromodel.visual_retrieval.NormalizedPixelEncoder"
-            ),
+            source_record=("zeromodel.visual_retrieval.NormalizedPixelEncoder"),
             metadata=spec,
         )
 
@@ -841,9 +780,7 @@ class NormalizedPixelEncoder:
     ) -> np.ndarray:
         items = tuple(observations)
         if not items:
-            raise VPMValidationError(
-                "pixel encoder batch cannot be empty"
-            )
+            raise VPMValidationError("pixel encoder batch cannot be empty")
         rows = []
         for observation in items:
             array = observation.pixels
@@ -854,10 +791,7 @@ class NormalizedPixelEncoder:
             if array.ndim == 3:
                 rgb = array[:, :, :3].astype(np.uint16)
                 gray = (
-                    77 * rgb[:, :, 0]
-                    + 150 * rgb[:, :, 1]
-                    + 29 * rgb[:, :, 2]
-                    + 128
+                    77 * rgb[:, :, 0] + 150 * rgb[:, :, 1] + 29 * rgb[:, :, 2] + 128
                 ) // 256
             else:
                 gray = array
@@ -892,9 +826,7 @@ class LinearProbeIndex:
         self.build = build
         self._weights = build.weights_blob.to_array()
         if self._weights.shape[1] != len(build.row_ids):
-            raise VPMValidationError(
-                "linear probe class count does not match row ids"
-            )
+            raise VPMValidationError("linear probe class count does not match row ids")
 
     def contract(self) -> VisualAddressContract:
         return VisualAddressContract(
@@ -924,17 +856,9 @@ class LinearProbeIndex:
         observation_digest: str,
     ) -> VisualAddressDecision:
         query = np.asarray(vector, dtype=np.float32).reshape(-1)
-        if (
-            query.size + 1 != self._weights.shape[0]
-            or not np.isfinite(query).all()
-        ):
-            raise VPMValidationError(
-                "linear probe query violates fitted dimension"
-            )
-        scores = (
-            np.concatenate((query, np.ones(1, dtype=np.float32)))
-            @ self._weights
-        )
+        if query.size + 1 != self._weights.shape[0] or not np.isfinite(query).all():
+            raise VPMValidationError("linear probe query violates fitted dimension")
+        scores = np.concatenate((query, np.ones(1, dtype=np.float32))) @ self._weights
         ranking = sorted(
             range(len(self.build.row_ids)),
             key=lambda index: (
@@ -945,9 +869,7 @@ class LinearProbeIndex:
         first = ranking[0]
         action = self.build.action_ids[first]
         conflicts = [
-            index
-            for index in ranking[1:]
-            if self.build.action_ids[index] != action
+            index for index in ranking[1:] if self.build.action_ids[index] != action
         ]
         row_id = self.build.row_ids[first]
         has_conflict = self.build.calibration.has_conflicting_action(row_id)
@@ -959,12 +881,8 @@ class LinearProbeIndex:
         second = conflicts[0] if conflicts else None
         nearest = float(scores[first])
         second_score = float(scores[second]) if second is not None else None
-        margin = (
-            nearest - second_score if second_score is not None else None
-        )
-        threshold = float(
-            self.build.calibration.acceptance_thresholds[row_id]
-        )
+        margin = nearest - second_score if second_score is not None else None
+        threshold = float(self.build.calibration.acceptance_thresholds[row_id])
         required_margin = (
             float(self.build.calibration.ambiguity_margins[row_id])
             if has_conflict
@@ -1014,9 +932,7 @@ class LinearProbeIndex:
             policy_artifact_id=contract.policy_artifact_id,
             nearest_row_id=row_id,
             nearest_score=nearest,
-            second_row_id=(
-                self.build.row_ids[second] if second is not None else None
-            ),
+            second_row_id=(self.build.row_ids[second] if second is not None else None),
             second_score=second_score,
             ambiguity_measure=margin,
             matched_row_id=row_id if accepted else None,
@@ -1064,13 +980,9 @@ def build_linear_probe(
         key = str(row_id)
         value = str(action_id)
         if key in action_by_row and action_by_row[key] != value:
-            raise VPMValidationError(
-                "one policy row cannot map to multiple actions"
-            )
+            raise VPMValidationError("one policy row cannot map to multiple actions")
         action_by_row[key] = value
-    class_index = {
-        row_id: index for index, row_id in enumerate(rows)
-    }
+    class_index = {row_id: index for index, row_id in enumerate(rows)}
     y = np.zeros((x.shape[0], len(rows)), dtype=np.float32)
     for sample, row_id in enumerate(prototype_row_ids):
         y[sample, class_index[str(row_id)]] = 1.0
@@ -1081,25 +993,26 @@ def build_linear_probe(
         ),
         axis=1,
     )
-    regularizer = (
-        np.eye(x_aug.shape[1], dtype=np.float32) * float(ridge)
-    )
+    regularizer = np.eye(x_aug.shape[1], dtype=np.float32) * float(ridge)
     regularizer[-1, -1] = 0.0
     weights = np.linalg.solve(
         x_aug.T @ x_aug + regularizer,
         x_aug.T @ y,
     ).astype(np.float32)
 
-    calibration_scores = np.concatenate(
-        (
-            calibration_x,
-            np.ones(
-                (calibration_x.shape[0], 1),
-                dtype=np.float32,
+    calibration_scores = (
+        np.concatenate(
+            (
+                calibration_x,
+                np.ones(
+                    (calibration_x.shape[0], 1),
+                    dtype=np.float32,
+                ),
             ),
-        ),
-        axis=1,
-    ) @ weights
+            axis=1,
+        )
+        @ weights
+    )
     score_rows = np.eye(len(rows), dtype=np.float32)
     calibration = _calibrate_prototypes(
         score_rows,
@@ -1117,9 +1030,7 @@ def build_linear_probe(
         metadata={
             "kind": "visual_linear_probe",
             "ridge": float(ridge),
-            "representation_identity_scope": (
-                "exact_float32_under_encoder_manifest"
-            ),
+            "representation_identity_scope": ("exact_float32_under_encoder_manifest"),
             "execution_scope_digest": encoder_manifest_id,
         },
     )

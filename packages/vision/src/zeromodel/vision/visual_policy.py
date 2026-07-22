@@ -1,13 +1,20 @@
 """Runtime composition of visual addressing and VPM policy lookup."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 from typing import Any, Dict, Optional
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.deployment_binding import DeploymentBinding
 from zeromodel.core.policy_lookup import PolicyLookupDecision, VPMPolicyLookup
-from zeromodel.vision.visual import VISUAL_READER_VERSION, VisualDecision, VisualSignReader
+from zeromodel.vision.visual import (
+    VISUAL_READER_VERSION,
+    VisualDecision,
+    VisualSignReader,
+)
 from zeromodel.observation.visual_address import (
     ImageObservation,
     VisualAddressContract,
@@ -17,6 +24,21 @@ from zeromodel.observation.visual_address import (
 
 
 VISUAL_POLICY_DECISION_VERSION = "zeromodel-visual-policy-decision/v1"
+
+
+def _canonical_json_bytes(value: Any) -> bytes:
+    try:
+        return json.dumps(
+            value,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise VPMValidationError(
+            "visual policy decision must be JSON-serializable"
+        ) from exc
 
 
 class DeterministicVisualAddressProvider:
@@ -51,9 +73,7 @@ class DeterministicVisualAddressProvider:
         observation: ImageObservation,
     ) -> VisualAddressDecision:
         if not isinstance(observation, ImageObservation):
-            raise VPMValidationError(
-                "provider requires ImageObservation"
-            )
+            raise VPMValidationError("provider requires ImageObservation")
         return self._map(
             observation,
             self.reader.read(observation.pixels),
@@ -65,18 +85,13 @@ class DeterministicVisualAddressProvider:
         decision: VisualDecision,
     ) -> VisualAddressDecision:
         checks = []
-        if (
-            decision.nearest_distance
-            <= decision.acceptance_threshold + 1e-12
-        ):
-            checks.append("distance_threshold")
-        if (
-            decision.distance_margin + 1e-12
-            >= decision.required_margin
-        ):
-            checks.append("absolute_gap")
-        if decision.exact_feature_match:
-            checks.append("exact_feature_codeword")
+        if decision.accepted:
+            if decision.nearest_distance <= decision.acceptance_threshold + 1e-12:
+                checks.append("distance_threshold")
+            if decision.distance_margin + 1e-12 >= decision.required_margin:
+                checks.append("absolute_gap")
+            if decision.exact_feature_match:
+                checks.append("exact_feature_codeword")
         return VisualAddressDecision(
             accepted=decision.accepted,
             reason=decision.reason,
@@ -86,9 +101,7 @@ class DeterministicVisualAddressProvider:
             provider_version=self._contract.provider_version,
             score_semantics="distance",
             address_artifact_id=self._contract.address_artifact_id,
-            calibration_artifact_id=(
-                self._contract.calibration_artifact_id
-            ),
+            calibration_artifact_id=(self._contract.calibration_artifact_id),
             policy_artifact_id=self._contract.policy_artifact_id,
             nearest_row_id=decision.nearest_row_id,
             nearest_score=decision.nearest_distance,
@@ -117,22 +130,18 @@ class VisualPolicyDecision:
 
     def __post_init__(self) -> None:
         if self.version != VISUAL_POLICY_DECISION_VERSION:
-            raise VPMValidationError(
-                "unsupported visual policy decision version"
-            )
+            raise VPMValidationError("unsupported visual policy decision version")
         if self.accepted:
             if self.policy is None or not self.address.accepted:
                 raise VPMValidationError(
                     "accepted visual policy decision needs both traces"
                 )
             if self.policy.row_id != self.address.matched_row_id:
-                raise VPMValidationError(
-                    "address and policy rows do not match"
-                )
+                raise VPMValidationError("address and policy rows do not match")
         elif self.policy is not None:
-            raise VPMValidationError(
-                "rejected decision cannot include policy evidence"
-            )
+            raise VPMValidationError("rejected decision cannot include policy evidence")
+        if bool(self.accepted) != bool(self.address.accepted):
+            raise VPMValidationError("visual policy acceptance must match address")
 
     @property
     def action(self) -> Optional[str]:
@@ -144,11 +153,47 @@ class VisualPolicyDecision:
             "accepted": self.accepted,
             "reason": self.reason,
             "address": self.address.to_dict(),
-            "policy": (
-                None if self.policy is None else self.policy.to_dict()
-            ),
+            "policy": (None if self.policy is None else self.policy.to_dict()),
             "action": self.action,
         }
+
+    @property
+    def digest(self) -> str:
+        return hashlib.sha256(
+            b"zeromodel.visual-policy-decision.identity.v1\0"
+            + _canonical_json_bytes(self.to_dict())
+        ).hexdigest()
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "VisualPolicyDecision":
+        return cls(
+            accepted=bool(data["accepted"]),
+            reason=str(data["reason"]),
+            address=VisualAddressDecision.from_dict(data["address"]),
+            policy=(
+                None
+                if data.get("policy") is None
+                else PolicyLookupDecision(
+                    artifact_id=str(data["policy"]["artifact_id"]),
+                    row_id=str(data["policy"]["row_id"]),
+                    action=str(data["policy"]["action"]),
+                    value=float(data["policy"]["value"]),
+                    source_row_index=int(data["policy"]["source_row_index"]),
+                    source_metric_index=int(data["policy"]["source_metric_index"]),
+                    view_row=int(data["policy"]["view_row"]),
+                    view_column=int(data["policy"]["view_column"]),
+                    candidates={
+                        str(key): float(value)
+                        for key, value in data["policy"]["candidates"].items()
+                    },
+                    evidence={
+                        str(key): float(value)
+                        for key, value in data["policy"].get("evidence", {}).items()
+                    },
+                )
+            ),
+            version=str(data.get("version", VISUAL_POLICY_DECISION_VERSION)),
+        )
 
 
 class VisualPolicyReader:

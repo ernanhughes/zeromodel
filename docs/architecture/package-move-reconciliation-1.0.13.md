@@ -15,6 +15,10 @@ Reconciliation rows: `313`
 - Observation-owned historical tests were moved to `packages/observation/tests`
   during the observation package validation stage. Mixed visual-provider tests
   remain classified for vision validation.
+- Vision-owned deterministic visual-address tests were consolidated under
+  `packages/vision/tests` during the vision package validation stage. Learned,
+  approximate, benchmark, video, and SQL behavior remain excluded from this
+  package validation.
 
 | original path | original module | inventory classification | final path | final package | action | reason |
 |---|---|---|---|---|---|---|

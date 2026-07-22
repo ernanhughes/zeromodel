@@ -1,4 +1,5 @@
 """Deterministic uint8 image transformations for visual-address benchmarks."""
+
 from __future__ import annotations
 
 from typing import Any, Mapping, Sequence, Tuple
@@ -22,7 +23,9 @@ def canonical_uint8_frame(frame: Any) -> np.ndarray:
 
 
 def _owned(frame: Any) -> np.ndarray:
-    result = np.array(canonical_uint8_frame(frame), dtype=np.uint8, order="C", copy=True)
+    result = np.array(
+        canonical_uint8_frame(frame), dtype=np.uint8, order="C", copy=True
+    )
     result.flags.writeable = True
     return result
 
@@ -35,7 +38,9 @@ def scale_intensity(
     offset: int = 0,
 ) -> np.ndarray:
     if denominator <= 0 or numerator < 0:
-        raise VPMValidationError("intensity scale requires non-negative numerator and positive denominator")
+        raise VPMValidationError(
+            "intensity scale requires non-negative numerator and positive denominator"
+        )
     values = _owned(frame).astype(np.int32)
     values = (values * int(numerator) + int(denominator) // 2) // int(denominator)
     values = np.clip(values + int(offset), 0, 255).astype(np.uint8)
@@ -43,7 +48,9 @@ def scale_intensity(
     return values
 
 
-def translate_frame(frame: Any, *, dx: int = 0, dy: int = 0, fill: int = 0) -> np.ndarray:
+def translate_frame(
+    frame: Any, *, dx: int = 0, dy: int = 0, fill: int = 0
+) -> np.ndarray:
     source = canonical_uint8_frame(frame)
     if not (0 <= int(fill) <= 255):
         raise VPMValidationError("translation fill must be in [0, 255]")
@@ -66,7 +73,9 @@ def translate_frame(frame: Any, *, dx: int = 0, dy: int = 0, fill: int = 0) -> n
 
 def remap_levels(frame: Any, mapping: Mapping[int, int]) -> np.ndarray:
     result = _owned(frame)
-    for source, target in sorted((int(key), int(value)) for key, value in mapping.items()):
+    for source, target in sorted(
+        (int(key), int(value)) for key, value in mapping.items()
+    ):
         if not (0 <= source <= 255 and 0 <= target <= 255):
             raise VPMValidationError("level remapping values must be in [0, 255]")
         result[result == source] = target
@@ -152,7 +161,9 @@ def overlay_background_patch(
                 width=width,
                 value=int(value),
             )
-    raise VPMValidationError("no all-zero background patch fits the requested dimensions")
+    raise VPMValidationError(
+        "no all-zero background patch fits the requested dimensions"
+    )
 
 
 def checkerboard_frame(

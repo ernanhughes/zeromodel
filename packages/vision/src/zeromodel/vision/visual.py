@@ -11,6 +11,7 @@ This module does not perform open-world perception or learned generalization.
 It matches an observation against a complete, calibrated visual codebook and
 either returns the addressed policy decision or a first-class rejection trace.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -82,9 +83,7 @@ class VisualFeatureSpec:
                 "Unsupported grayscale contract: %r" % self.grayscale
             )
         if self.pooling != "box-integer":
-            raise VPMValidationError(
-                "Unsupported pooling contract: %r" % self.pooling
-            )
+            raise VPMValidationError("Unsupported pooling contract: %r" % self.pooling)
         if self.quantization != "uniform-uint8":
             raise VPMValidationError(
                 "Unsupported visual quantization contract: %r" % self.quantization
@@ -95,16 +94,14 @@ class VisualFeatureSpec:
             ("target_height", self.target_height),
             ("target_width", self.target_width),
         ):
+            if isinstance(value, bool):
+                raise VPMValidationError("%s must be an integer, not bool" % name)
             if int(value) <= 0:
                 raise VPMValidationError("%s must be positive" % name)
         if self.input_height % self.target_height != 0:
-            raise VPMValidationError(
-                "target_height must divide input_height exactly"
-            )
+            raise VPMValidationError("target_height must divide input_height exactly")
         if self.input_width % self.target_width != 0:
-            raise VPMValidationError(
-                "target_width must divide input_width exactly"
-            )
+            raise VPMValidationError("target_width must divide input_width exactly")
         if not (2 <= int(self.quantization_levels) <= 256):
             raise VPMValidationError("quantization_levels must be in [2, 256]")
 
@@ -188,13 +185,9 @@ class VisualIndexCalibration:
         if int(self.feature_count) < 1:
             raise VPMValidationError("visual index requires at least one feature")
         if len(self.closest_pair_row_ids) != 2:
-            raise VPMValidationError(
-                "closest_pair_row_ids must contain two row ids"
-            )
+            raise VPMValidationError("closest_pair_row_ids must contain two row ids")
         if self.closest_pair_row_ids[0] == self.closest_pair_row_ids[1]:
-            raise VPMValidationError(
-                "closest pair must contain distinct row ids"
-            )
+            raise VPMValidationError("closest pair must contain distinct row ids")
         for name, value in (
             ("min_between_distance", self.min_between_distance),
             ("threshold_fraction", self.threshold_fraction),
@@ -206,19 +199,13 @@ class VisualIndexCalibration:
                 raise VPMValidationError("%s must be finite" % name)
         if float(self.min_between_distance) <= 0.0:
             raise VPMValidationError(
-                "visual states are not separable: "
-                "min_between_distance must be positive"
+                "visual states are not separable: min_between_distance must be positive"
             )
         if not (0.0 < float(self.threshold_fraction) < 0.5):
-            raise VPMValidationError(
-                "threshold_fraction must be between 0 and 0.5"
-            )
+            raise VPMValidationError("threshold_fraction must be between 0 and 0.5")
         if not (0.0 < float(self.margin_fraction) <= 1.0):
             raise VPMValidationError("margin_fraction must be in (0, 1]")
-        if (
-            float(self.margin_fraction)
-            <= self.guaranteed_margin_fraction + 1e-12
-        ):
+        if float(self.margin_fraction) <= self.guaranteed_margin_fraction + 1e-12:
             raise VPMValidationError(
                 "margin_fraction is vacuous for threshold_fraction; "
                 "absolute-gap calibration requires "
@@ -228,20 +215,14 @@ class VisualIndexCalibration:
         expected_threshold = float(self.min_between_distance) * float(
             self.threshold_fraction
         )
-        expected_margin = float(self.min_between_distance) * float(
-            self.margin_fraction
-        )
-        if not np.isclose(
-            float(self.acceptance_threshold), expected_threshold
-        ):
+        expected_margin = float(self.min_between_distance) * float(self.margin_fraction)
+        if not np.isclose(float(self.acceptance_threshold), expected_threshold):
             raise VPMValidationError(
-                "acceptance_threshold does not match "
-                "the declared separation audit"
+                "acceptance_threshold does not match the declared separation audit"
             )
         if not np.isclose(float(self.required_margin), expected_margin):
             raise VPMValidationError(
-                "required_margin does not match "
-                "the declared separation audit"
+                "required_margin does not match the declared separation audit"
             )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -256,27 +237,25 @@ class VisualIndexCalibration:
             "acceptance_threshold": float(self.acceptance_threshold),
             "margin_fraction": float(self.margin_fraction),
             "required_margin": float(self.required_margin),
-            "guaranteed_margin_fraction": float(
-                self.guaranteed_margin_fraction
-            ),
+            "guaranteed_margin_fraction": float(self.guaranteed_margin_fraction),
         }
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "VisualIndexCalibration":
+        pair_raw = data["closest_pair_row_ids"]
+        if not isinstance(pair_raw, (list, tuple)) or len(pair_raw) != 2:
+            raise VPMValidationError("closest_pair_row_ids must contain two row ids")
+        closest_pair = (str(pair_raw[0]), str(pair_raw[1]))
         calibration = cls(
             state_count=int(data["state_count"]),
             feature_count=int(data["feature_count"]),
             min_between_distance=float(data["min_between_distance"]),
-            closest_pair_row_ids=tuple(
-                str(value) for value in data["closest_pair_row_ids"]
-            ),
+            closest_pair_row_ids=closest_pair,
             threshold_fraction=float(data["threshold_fraction"]),
             acceptance_threshold=float(data["acceptance_threshold"]),
             margin_fraction=float(data["margin_fraction"]),
             required_margin=float(data["required_margin"]),
-            distance_metric=str(
-                data.get("distance_metric", DISTANCE_METRIC)
-            ),
+            distance_metric=str(data.get("distance_metric", DISTANCE_METRIC)),
             margin_rule=str(data.get("margin_rule", MARGIN_RULE)),
         )
         calibration.validate()
@@ -349,9 +328,7 @@ class VisualDecision:
             "nearest_row_id": self.nearest_row_id,
             "nearest_distance": float(self.nearest_distance),
             "second_nearest_row_id": self.second_nearest_row_id,
-            "second_nearest_distance": float(
-                self.second_nearest_distance
-            ),
+            "second_nearest_distance": float(self.second_nearest_distance),
             "distance_margin": float(self.distance_margin),
             "acceptance_threshold": float(self.acceptance_threshold),
             "required_margin": float(self.required_margin),
@@ -364,19 +341,15 @@ class VisualDecision:
             "view_row": self.view_row,
             "view_column": self.view_column,
             "candidates": {
-                str(key): float(value)
-                for key, value in self.candidates.items()
+                str(key): float(value) for key, value in self.candidates.items()
             },
             "evidence": {
-                str(key): float(value)
-                for key, value in self.evidence.items()
+                str(key): float(value) for key, value in self.evidence.items()
             },
         }
 
 
-def _grayscale_uint8(
-    frame: Any, spec: VisualFeatureSpec
-) -> np.ndarray:
+def _grayscale_uint8(frame: Any, spec: VisualFeatureSpec) -> np.ndarray:
     """Return an owned, immutable canonical grayscale frame.
 
     The returned array never aliases caller-owned memory. This is deliberately
@@ -388,30 +361,20 @@ def _grayscale_uint8(
     array = np.asarray(frame)
     if array.dtype.kind not in {"u", "i"}:
         raise VPMValidationError(
-            "visual frames must contain integer samples "
-            "in the [0, 255] range"
+            "visual frames must contain integer samples in the [0, 255] range"
         )
     if array.size == 0:
         raise VPMValidationError("visual frame cannot be empty")
     if int(array.min()) < 0 or int(array.max()) > 255:
-        raise VPMValidationError(
-            "visual frame samples must be in the [0, 255] range"
-        )
+        raise VPMValidationError("visual frame samples must be in the [0, 255] range")
 
     if array.ndim == 2:
         gray = np.asarray(array, dtype=np.uint8)
     elif array.ndim == 3 and array.shape[2] in {3, 4}:
         rgb = np.asarray(array[:, :, :3], dtype=np.uint16)
-        gray = (
-            77 * rgb[:, :, 0]
-            + 150 * rgb[:, :, 1]
-            + 29 * rgb[:, :, 2]
-            + 128
-        ) // 256
+        gray = (77 * rgb[:, :, 0] + 150 * rgb[:, :, 1] + 29 * rgb[:, :, 2] + 128) // 256
     else:
-        raise VPMValidationError(
-            "visual frame must be HxW grayscale or HxWx3/4 RGB(A)"
-        )
+        raise VPMValidationError("visual frame must be HxW grayscale or HxWx3/4 RGB(A)")
 
     if gray.shape != (spec.input_height, spec.input_width):
         raise VPMValidationError(
@@ -424,39 +387,35 @@ def _grayscale_uint8(
     return owned
 
 
-def _features_from_gray(
-    gray: np.ndarray, spec: VisualFeatureSpec
-) -> np.ndarray:
+def _features_from_gray(gray: np.ndarray, spec: VisualFeatureSpec) -> np.ndarray:
     block_height = spec.input_height // spec.target_height
     block_width = spec.input_width // spec.target_width
     area = block_height * block_width
-    pooled_sum = gray.astype(np.uint32).reshape(
-        spec.target_height,
-        block_height,
-        spec.target_width,
-        block_width,
-    ).sum(axis=(1, 3))
+    pooled_sum = (
+        gray.astype(np.uint32)
+        .reshape(
+            spec.target_height,
+            block_height,
+            spec.target_width,
+            block_width,
+        )
+        .sum(axis=(1, 3))
+    )
     pooled = (pooled_sum + area // 2) // area
     levels = int(spec.quantization_levels)
     quantized = (pooled * (levels - 1) + 127) // 255
-    features = np.ascontiguousarray(
-        quantized.astype(np.uint8).reshape(-1)
-    )
+    features = np.ascontiguousarray(quantized.astype(np.uint8).reshape(-1))
     features.flags.writeable = False
     return features
 
 
-def extract_visual_features(
-    frame: Any, spec: VisualFeatureSpec
-) -> np.ndarray:
+def extract_visual_features(frame: Any, spec: VisualFeatureSpec) -> np.ndarray:
     """Extract the canonical quantized feature vector for one frame."""
 
     return _features_from_gray(_grayscale_uint8(frame, spec), spec)
 
 
-def _input_digest_from_gray(
-    gray: np.ndarray, spec: VisualFeatureSpec
-) -> str:
+def _input_digest_from_gray(gray: np.ndarray, spec: VisualFeatureSpec) -> str:
     payload = b"".join(
         (
             b"zeromodel.visual-input.v1\0",
@@ -469,22 +428,16 @@ def _input_digest_from_gray(
     return "sha256:" + _sha256(payload)
 
 
-def visual_input_digest(
-    frame: Any, spec: VisualFeatureSpec
-) -> str:
+def visual_input_digest(frame: Any, spec: VisualFeatureSpec) -> str:
     """Digest the canonical grayscale observation under the feature contract."""
 
     return _input_digest_from_gray(_grayscale_uint8(frame, spec), spec)
 
 
-def visual_feature_digest(
-    features: np.ndarray, spec: VisualFeatureSpec
-) -> str:
+def visual_feature_digest(features: np.ndarray, spec: VisualFeatureSpec) -> str:
     vector = np.asarray(features, dtype=np.uint8).reshape(-1)
     if vector.size != spec.feature_count:
-        raise VPMValidationError(
-            "feature vector does not match the feature spec"
-        )
+        raise VPMValidationError("feature vector does not match the feature spec")
     payload = b"".join(
         (
             b"zeromodel.visual-feature-vector.v1\0",
@@ -498,11 +451,7 @@ def visual_feature_digest(
 def _pairwise_distances(matrix: np.ndarray) -> np.ndarray:
     values = np.asarray(matrix, dtype=np.float64)
     squared = np.sum(values**2, axis=1)
-    distances_squared = (
-        squared[:, None]
-        + squared[None, :]
-        - 2.0 * (values @ values.T)
-    )
+    distances_squared = squared[:, None] + squared[None, :] - 2.0 * (values @ values.T)
     np.maximum(distances_squared, 0.0, out=distances_squared)
     return np.sqrt(distances_squared)
 
@@ -531,9 +480,7 @@ def build_visual_index(
         )
 
     feature_rows = [
-        extract_visual_features(
-            frames_by_row_id[row_id], feature_spec
-        )
+        extract_visual_features(frames_by_row_id[row_id], feature_spec)
         for row_id in policy_row_ids
     ]
     matrix = np.asarray(feature_rows, dtype=np.float64)
@@ -541,16 +488,12 @@ def build_visual_index(
         len(policy_row_ids),
         feature_spec.feature_count,
     ):
-        raise VPMValidationError(
-            "visual feature matrix shape mismatch"
-        )
+        raise VPMValidationError("visual feature matrix shape mismatch")
 
     distances = _pairwise_distances(matrix)
     np.fill_diagonal(distances, np.inf)
     closest_flat = int(np.argmin(distances))
-    left_index, right_index = np.unravel_index(
-        closest_flat, distances.shape
-    )
+    left_index, right_index = np.unravel_index(closest_flat, distances.shape)
     min_between = float(distances[left_index, right_index])
     calibration = VisualIndexCalibration(
         state_count=len(policy_row_ids),
@@ -561,17 +504,14 @@ def build_visual_index(
             policy_row_ids[int(right_index)],
         ),
         threshold_fraction=float(threshold_fraction),
-        acceptance_threshold=(
-            min_between * float(threshold_fraction)
-        ),
+        acceptance_threshold=(min_between * float(threshold_fraction)),
         margin_fraction=float(margin_fraction),
         required_margin=min_between * float(margin_fraction),
     )
     calibration.validate()
 
     metric_ids = tuple(
-        "visual:%04d" % index
-        for index in range(feature_spec.feature_count)
+        "visual:%04d" % index for index in range(feature_spec.feature_count)
     )
     table = ScoreTable(
         values=matrix,
@@ -580,9 +520,7 @@ def build_visual_index(
         metadata={
             "kind": "visual_index",
             "visual_index_version": VISUAL_INDEX_VERSION,
-            "addresses_policy_artifact_id": (
-                policy_artifact.artifact_id
-            ),
+            "addresses_policy_artifact_id": (policy_artifact.artifact_id),
             "feature_spec": feature_spec.to_dict(),
             "feature_spec_digest": feature_spec.digest,
             "calibration": calibration.to_dict(),
@@ -647,16 +585,9 @@ class VisualSignReader:
             raise VPMValidationError(
                 "VisualSignReader requires a visual_index artifact"
             )
-        if (
-            metadata.get("visual_index_version")
-            != VISUAL_INDEX_VERSION
-        ):
-            raise VPMValidationError(
-                "Unsupported visual index version"
-            )
-        addressed_policy = str(
-            metadata.get("addresses_policy_artifact_id") or ""
-        )
+        if metadata.get("visual_index_version") != VISUAL_INDEX_VERSION:
+            raise VPMValidationError("Unsupported visual index version")
+        addressed_policy = str(metadata.get("addresses_policy_artifact_id") or "")
         if addressed_policy != policy_artifact.artifact_id:
             raise VPMValidationError(
                 "visual index addresses policy %s, not %s"
@@ -665,71 +596,40 @@ class VisualSignReader:
                     policy_artifact.artifact_id,
                 )
             )
-        if tuple(
-            visual_index_artifact.source.row_ids
-        ) != tuple(policy_artifact.source.row_ids):
+        if tuple(visual_index_artifact.source.row_ids) != tuple(
+            policy_artifact.source.row_ids
+        ):
             raise VPMValidationError(
-                "visual index and policy must have "
-                "identical ordered row ids"
+                "visual index and policy must have identical ordered row ids"
             )
 
-        parents = tuple(
-            visual_index_artifact.provenance.get("parents") or ()
-        )
+        parents = tuple(visual_index_artifact.provenance.get("parents") or ())
         if not any(
             isinstance(parent, Mapping)
             and parent.get("relation") == "addresses"
-            and parent.get("artifact_id")
-            == policy_artifact.artifact_id
+            and parent.get("artifact_id") == policy_artifact.artifact_id
             for parent in parents
         ):
             raise VPMValidationError(
-                "visual index provenance must address "
-                "the supplied policy artifact"
+                "visual index provenance must address the supplied policy artifact"
             )
 
         feature_spec_data = metadata.get("feature_spec")
         calibration_data = metadata.get("calibration")
         if not isinstance(feature_spec_data, Mapping):
-            raise VPMValidationError(
-                "visual index metadata requires feature_spec"
-            )
+            raise VPMValidationError("visual index metadata requires feature_spec")
         if not isinstance(calibration_data, Mapping):
-            raise VPMValidationError(
-                "visual index metadata requires calibration"
-            )
-        feature_spec = VisualFeatureSpec.from_dict(
-            feature_spec_data
-        )
-        calibration = VisualIndexCalibration.from_dict(
-            calibration_data
-        )
-        if (
-            str(metadata.get("feature_spec_digest"))
-            != feature_spec.digest
-        ):
-            raise VPMValidationError(
-                "visual feature spec digest mismatch"
-            )
-        if (
-            str(metadata.get("calibration_digest"))
-            != calibration.digest
-        ):
-            raise VPMValidationError(
-                "visual calibration digest mismatch"
-            )
-        if calibration.state_count != len(
-            visual_index_artifact.source.row_ids
-        ):
-            raise VPMValidationError(
-                "visual calibration state count mismatch"
-            )
-        if calibration.feature_count != len(
-            visual_index_artifact.source.metric_ids
-        ):
-            raise VPMValidationError(
-                "visual calibration feature count mismatch"
-            )
+            raise VPMValidationError("visual index metadata requires calibration")
+        feature_spec = VisualFeatureSpec.from_dict(feature_spec_data)
+        calibration = VisualIndexCalibration.from_dict(calibration_data)
+        if str(metadata.get("feature_spec_digest")) != feature_spec.digest:
+            raise VPMValidationError("visual feature spec digest mismatch")
+        if str(metadata.get("calibration_digest")) != calibration.digest:
+            raise VPMValidationError("visual calibration digest mismatch")
+        if calibration.state_count != len(visual_index_artifact.source.row_ids):
+            raise VPMValidationError("visual calibration state count mismatch")
+        if calibration.feature_count != len(visual_index_artifact.source.metric_ids):
+            raise VPMValidationError("visual calibration feature count mismatch")
 
         raw_matrix = np.asarray(
             visual_index_artifact.source.values,
@@ -737,17 +637,9 @@ class VisualSignReader:
         )
         rounded = np.rint(raw_matrix)
         if not np.array_equal(raw_matrix, rounded):
-            raise VPMValidationError(
-                "visual index features must be integral"
-            )
-        if (
-            raw_matrix.min() < 0
-            or raw_matrix.max()
-            >= feature_spec.quantization_levels
-        ):
-            raise VPMValidationError(
-                "visual index features exceed quantization range"
-            )
+            raise VPMValidationError("visual index features must be integral")
+        if raw_matrix.min() < 0 or raw_matrix.max() >= feature_spec.quantization_levels:
+            raise VPMValidationError("visual index features exceed quantization range")
         matrix = np.array(
             raw_matrix,
             dtype=np.float64,
@@ -761,20 +653,14 @@ class VisualSignReader:
         self.feature_spec = feature_spec
         self.calibration = calibration
         self._matrix = matrix
-        self._row_ids = tuple(
-            visual_index_artifact.source.row_ids
-        )
+        self._row_ids = tuple(visual_index_artifact.source.row_ids)
         self._row_norms = np.sum(matrix**2, axis=1)
         self._exact_rows = {
-            np.asarray(
-                matrix[index], dtype=np.uint8
-            ).tobytes(order="C"): index
+            np.asarray(matrix[index], dtype=np.uint8).tobytes(order="C"): index
             for index in range(matrix.shape[0])
         }
         if len(self._exact_rows) != len(self._row_ids):
-            raise VPMValidationError(
-                "visual index contains duplicate feature vectors"
-            )
+            raise VPMValidationError("visual index contains duplicate feature vectors")
         pairwise = _pairwise_distances(matrix)
         np.fill_diagonal(pairwise, np.inf)
         self._nearest_other_distance = pairwise.min(axis=1)
@@ -794,28 +680,20 @@ class VisualSignReader:
         key = features.tobytes(order="C")
         exact_index = self._exact_rows.get(key)
         if exact_index is not None:
-            second_index = int(
-                self._nearest_other_index[exact_index]
-            )
+            second_index = int(self._nearest_other_index[exact_index])
             return (
                 int(exact_index),
                 second_index,
                 0.0,
-                float(
-                    self._nearest_other_distance[exact_index]
-                ),
+                float(self._nearest_other_distance[exact_index]),
                 True,
             )
 
         query = np.asarray(features, dtype=np.float64)
         distances_squared = (
-            self._row_norms
-            + float(np.sum(query**2))
-            - 2.0 * (self._matrix @ query)
+            self._row_norms + float(np.sum(query**2)) - 2.0 * (self._matrix @ query)
         )
-        np.maximum(
-            distances_squared, 0.0, out=distances_squared
-        )
+        np.maximum(distances_squared, 0.0, out=distances_squared)
         distances = np.sqrt(distances_squared)
         ranking = sorted(
             range(len(self._row_ids)),
@@ -836,12 +714,8 @@ class VisualSignReader:
     def read(self, frame: Any) -> VisualDecision:
         gray = _grayscale_uint8(frame, self.feature_spec)
         features = _features_from_gray(gray, self.feature_spec)
-        input_digest = _input_digest_from_gray(
-            gray, self.feature_spec
-        )
-        feature_digest = visual_feature_digest(
-            features, self.feature_spec
-        )
+        input_digest = _input_digest_from_gray(gray, self.feature_spec)
+        feature_digest = visual_feature_digest(features, self.feature_spec)
         (
             first,
             second,
@@ -853,14 +727,8 @@ class VisualSignReader:
         nearest_row_id = self._row_ids[first]
         second_row_id = self._row_ids[second]
 
-        distance_ok = (
-            nearest
-            <= self.calibration.acceptance_threshold + 1e-12
-        )
-        margin_ok = (
-            margin + 1e-12
-            >= self.calibration.required_margin
-        )
+        distance_ok = nearest <= self.calibration.acceptance_threshold + 1e-12
+        margin_ok = margin + 1e-12 >= self.calibration.required_margin
         if not distance_ok or not margin_ok:
             reason = (
                 "visual_distance_above_threshold"
@@ -873,12 +741,8 @@ class VisualSignReader:
                 input_digest=input_digest,
                 feature_digest=feature_digest,
                 reader_version=VISUAL_READER_VERSION,
-                visual_index_artifact_id=(
-                    self.visual_index_artifact.artifact_id
-                ),
-                policy_artifact_id=(
-                    self.policy_artifact.artifact_id
-                ),
+                visual_index_artifact_id=(self.visual_index_artifact.artifact_id),
+                policy_artifact_id=(self.policy_artifact.artifact_id),
                 feature_spec_digest=self.feature_spec.digest,
                 calibration_digest=self.calibration.digest,
                 nearest_row_id=nearest_row_id,
@@ -886,27 +750,19 @@ class VisualSignReader:
                 second_nearest_row_id=second_row_id,
                 second_nearest_distance=second_nearest,
                 distance_margin=margin,
-                acceptance_threshold=(
-                    self.calibration.acceptance_threshold
-                ),
-                required_margin=(
-                    self.calibration.required_margin
-                ),
+                acceptance_threshold=(self.calibration.acceptance_threshold),
+                required_margin=(self.calibration.required_margin),
                 exact_feature_match=exact,
             )
 
-        policy_decision = self.policy_lookup.read(
-            nearest_row_id
-        )
+        policy_decision = self.policy_lookup.read(nearest_row_id)
         return VisualDecision(
             accepted=True,
             reason="accepted",
             input_digest=input_digest,
             feature_digest=feature_digest,
             reader_version=VISUAL_READER_VERSION,
-            visual_index_artifact_id=(
-                self.visual_index_artifact.artifact_id
-            ),
+            visual_index_artifact_id=(self.visual_index_artifact.artifact_id),
             policy_artifact_id=self.policy_artifact.artifact_id,
             feature_spec_digest=self.feature_spec.digest,
             calibration_digest=self.calibration.digest,
@@ -915,20 +771,14 @@ class VisualSignReader:
             second_nearest_row_id=second_row_id,
             second_nearest_distance=second_nearest,
             distance_margin=margin,
-            acceptance_threshold=(
-                self.calibration.acceptance_threshold
-            ),
+            acceptance_threshold=(self.calibration.acceptance_threshold),
             required_margin=self.calibration.required_margin,
             exact_feature_match=exact,
             matched_row_id=nearest_row_id,
             action=policy_decision.action,
             value=policy_decision.value,
-            source_row_index=(
-                policy_decision.source_row_index
-            ),
-            source_metric_index=(
-                policy_decision.source_metric_index
-            ),
+            source_row_index=(policy_decision.source_row_index),
+            source_metric_index=(policy_decision.source_metric_index),
             view_row=policy_decision.view_row,
             view_column=policy_decision.view_column,
             candidates=dict(policy_decision.candidates),

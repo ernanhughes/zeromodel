@@ -4,6 +4,7 @@ This module intentionally contains no encoder, training, or automatic mode
 selection. It defines the evidence boundary required before any deterministic
 or learned visual address artifact can be called validated.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -236,10 +237,10 @@ class VisualExampleRecord:
                 raise VPMValidationError(
                     "OOD examples cannot declare a valid row_id or action_id"
                 )
-        elif not reject_without_label and (self.row_id is None or self.action_id is None):
-            raise VPMValidationError(
-                "non-OOD examples require row_id and action_id"
-            )
+        elif not reject_without_label and (
+            self.row_id is None or self.action_id is None
+        ):
+            raise VPMValidationError("non-OOD examples require row_id and action_id")
         if self.partition is not None and not self.partition:
             raise VPMValidationError("partition cannot be empty when present")
         if (
@@ -348,9 +349,7 @@ class VisualDatasetManifest:
             raise VPMValidationError("visual dataset family ids must be unique")
         observation_ids = [record.observation_id for record in self.records]
         if len(set(observation_ids)) != len(observation_ids):
-            raise VPMValidationError(
-                "visual dataset observation ids must be unique"
-            )
+            raise VPMValidationError("visual dataset observation ids must be unique")
         family_id_set = set(family_ids)
         unknown_families = sorted(
             {record.family_id for record in self.records} - family_id_set
@@ -436,9 +435,7 @@ class VisualDatasetManifest:
                 for split in ("prototype", "calibration", "test")
             }
             if not (
-                row_sets["prototype"]
-                == row_sets["calibration"]
-                == row_sets["test"]
+                row_sets["prototype"] == row_sets["calibration"] == row_sets["test"]
             ):
                 raise VPMValidationError(
                     "prototype, calibration, and test splits must cover identical rows"
@@ -466,15 +463,10 @@ class VisualDatasetManifest:
             source_scope=str(data["source_scope"]),
             policy_artifact_id=str(data["policy_artifact_id"]),
             families=[
-                CorruptionFamilySpec.from_dict(item)
-                for item in data["families"]
+                CorruptionFamilySpec.from_dict(item) for item in data["families"]
             ],
-            records=[
-                VisualExampleRecord.from_dict(item) for item in data["records"]
-            ],
-            enforce_family_holdout=bool(
-                data.get("enforce_family_holdout", True)
-            ),
+            records=[VisualExampleRecord.from_dict(item) for item in data["records"]],
+            enforce_family_holdout=bool(data.get("enforce_family_holdout", True)),
             metadata=data.get("metadata") or {},
             version=str(data.get("version", VISUAL_DATASET_MANIFEST_VERSION)),
         )

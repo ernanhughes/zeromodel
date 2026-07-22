@@ -1,4 +1,5 @@
 """Provider adapter for benchmark representations extracted exactly once."""
+
 from __future__ import annotations
 
 from types import MappingProxyType
@@ -7,7 +8,11 @@ from typing import Mapping, Protocol, runtime_checkable
 import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.observation.visual_address import ImageObservation, VisualAddressContract, VisualAddressDecision
+from zeromodel.observation.visual_address import (
+    ImageObservation,
+    VisualAddressContract,
+    VisualAddressDecision,
+)
 
 
 @runtime_checkable
@@ -42,7 +47,9 @@ class PrecomputedVectorAddressProvider:
         for digest, value in vectors_by_observation_digest.items():
             key = str(digest)
             if not key:
-                raise VPMValidationError("precomputed observation digest cannot be empty")
+                raise VPMValidationError(
+                    "precomputed observation digest cannot be empty"
+                )
             vector = np.asarray(value, dtype=np.float32).reshape(-1)
             if vector.size == 0 or not np.isfinite(vector).all():
                 raise VPMValidationError(

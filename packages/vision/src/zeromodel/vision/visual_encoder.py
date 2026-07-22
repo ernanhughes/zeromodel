@@ -4,6 +4,7 @@ The core package remains NumPy-only. Concrete learned encoders import their heav
 runtime dependencies lazily and are intended for explicit research runs, not for
 implicit downloads during normal package import or CI.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -11,7 +12,16 @@ import hashlib
 import json
 import math
 from types import MappingProxyType
-from typing import Any, Dict, Mapping, Optional, Protocol, Sequence, Tuple, runtime_checkable
+from typing import (
+    Any,
+    Dict,
+    Mapping,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    runtime_checkable,
+)
 
 import numpy as np
 
@@ -38,7 +48,9 @@ def _freeze(value: Any) -> Any:
     if isinstance(value, np.generic):
         raise VPMValidationError("encoder manifest JSON must use plain scalar types")
     if isinstance(value, Mapping):
-        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+        return MappingProxyType(
+            {str(key): _freeze(item) for key, item in value.items()}
+        )
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     return value
@@ -54,7 +66,9 @@ def _json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("encoder manifest values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "encoder manifest values must be JSON-serializable"
+        ) from exc
 
 
 def _sha256(value: bytes) -> str:
@@ -237,16 +251,16 @@ def _letterbox_canvas_side(processor: Any, height: int, width: int) -> int:
     return max(maximum, int(math.ceil(float(maximum) / visible_fraction)) + 2)
 
 
-def _canonical_processor_digest(processor: Any, canonicalization: Mapping[str, Any]) -> str:
+def _canonical_processor_digest(
+    processor: Any, canonicalization: Mapping[str, Any]
+) -> str:
     if not hasattr(processor, "to_dict"):
         raise VPMValidationError("visual processor must expose to_dict()")
     payload = {
         "processor": processor.to_dict(),
         "canonicalization": dict(canonicalization),
     }
-    return _sha256(
-        b"zeromodel.visual-preprocessing.v2\0" + _json_bytes(payload)
-    )
+    return _sha256(b"zeromodel.visual-preprocessing.v2\0" + _json_bytes(payload))
 
 
 def _torch_state_dict_digest(torch_module: Any, state_dict: Mapping[str, Any]) -> str:

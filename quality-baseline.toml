@@ -47,7 +47,7 @@ reason = "Historical video benchmark script pending behavior-preserving decompos
 maximum_lines = 1039
 owner = "video-action-set-refactor"
 
-[legacy_exceptions."zeromodel/visual.py"]
+[legacy_exceptions."packages/vision/src/zeromodel/vision/visual.py"]
 reason = "Historical visual facade module pending behavior-preserving extraction"
 maximum_lines = 936
 owner = "visual-runtime-refactor"

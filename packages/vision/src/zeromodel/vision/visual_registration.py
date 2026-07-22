@@ -1,10 +1,11 @@
 """Deterministic integer-translation registration for local visual baselines."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
 import json
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -25,7 +26,9 @@ def _json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("registration values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "registration values must be JSON-serializable"
+        ) from exc
 
 
 def _sha256_json(value: Any) -> str:
@@ -77,18 +80,24 @@ def _normalized_overlap_distance(
     left_sum = float(left.sum(dtype=np.float64))
     right_sum = float(right.sum(dtype=np.float64))
     left_sum_sq = float(np.multiply(left, left, dtype=np.float32).sum(dtype=np.float64))
-    right_sum_sq = float(np.multiply(right, right, dtype=np.float32).sum(dtype=np.float64))
+    right_sum_sq = float(
+        np.multiply(right, right, dtype=np.float32).sum(dtype=np.float64)
+    )
     cross_sum = float(np.multiply(left, right, dtype=np.float32).sum(dtype=np.float64))
 
     left_centered_sum_sq = max(0.0, left_sum_sq - (left_sum * left_sum) / pixel_count)
-    right_centered_sum_sq = max(0.0, right_sum_sq - (right_sum * right_sum) / pixel_count)
+    right_centered_sum_sq = max(
+        0.0, right_sum_sq - (right_sum * right_sum) / pixel_count
+    )
     if left_centered_sum_sq <= 1e-12 and right_centered_sum_sq <= 1e-12:
         distance = 0.0
     elif left_centered_sum_sq <= 1e-12 or right_centered_sum_sq <= 1e-12:
         distance = 1.0
     else:
         centered_cross_sum = cross_sum - (left_sum * right_sum) / pixel_count
-        cosine = centered_cross_sum / np.sqrt(left_centered_sum_sq * right_centered_sum_sq)
+        cosine = centered_cross_sum / np.sqrt(
+            left_centered_sum_sq * right_centered_sum_sq
+        )
         cosine = float(np.clip(cosine, -1.0, 1.0))
         distance = float(np.sqrt(max(0.0, 2.0 - (2.0 * cosine))))
     return (distance, overlap_fraction, valid_count)
@@ -119,7 +128,9 @@ class RegistrationConfig:
         if self.metric != "normalized_l2":
             raise VPMValidationError("registration metric must be normalized_l2")
         if int(self.padding_value) != 0:
-            raise VPMValidationError("padding_value must remain zero for invalid-region exclusion")
+            raise VPMValidationError(
+                "padding_value must remain zero for invalid-region exclusion"
+            )
 
     @property
     def digest(self) -> str:

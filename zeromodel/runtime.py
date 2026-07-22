@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ._datetime_compat import ensure_datetime_utc
+
+ensure_datetime_utc()
+
 from .domains.video_action_set.engine import VideoActionSetEngine
 from .domains.video_action_set.episode_plan_service import EpisodePlanService
 from .domains.video_action_set.facade import VideoActionSetFacade

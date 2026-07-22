@@ -1,21 +1,23 @@
 {
-  "python.defaultInterpreterPath": "C:/Projects/zeromodel/venv/Scripts/python.exe",
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
   "python.analysis.extraPaths": [
-    "./packages/analysis",
-    "./packages/core",
-    "./packages/observation",
-    "./packages/sqlalchemy",
-    "./packages/video",
-    "./packages/vision",
+    "${workspaceFolder}/packages/core/src",
+    "${workspaceFolder}/packages/analysis/src",
+    "${workspaceFolder}/packages/observation/src",
+    "${workspaceFolder}/packages/vision/src",
+    "${workspaceFolder}/packages/video/src",
+    "${workspaceFolder}/packages/sqlalchemy/src"
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
-    "./packages/analysis",
-    "./packages/core",
-    "./packages/observation",
-    "./packages/sqlalchemy",
-    "./packages/video",
-    "./packages/vision",
+    "tests",
+    "integration_tests",
+    "packages/core/tests",
+    "packages/analysis/tests",
+    "packages/observation/tests",
+    "packages/vision/tests",
+    "packages/video/tests",
+    "packages/sqlalchemy/tests"
   ]
 }

@@ -159,7 +159,7 @@ class ScoreTable:
 
     @property
     def shape(self) -> Tuple[int, int]:
-        return self.values.shape
+        return (int(self.values.shape[0]), int(self.values.shape[1]))
 
     @property
     def digest(self) -> str:
@@ -407,7 +407,10 @@ class VPMArtifact:
 
     @property
     def shape(self) -> Tuple[int, int]:
-        return self.normalized_values.shape
+        return (
+            int(self.normalized_values.shape[0]),
+            int(self.normalized_values.shape[1]),
+        )
 
     @property
     def identity_bytes(self) -> bytes:

@@ -1089,6 +1089,15 @@ docs/results/local-model-zero-arcade-direct-action-comparison-v1/
 
 Do not overwrite the original labelled smoke result with stronger later experiments.
 
+A controlled representation-only variant of Stage 5 (colour, shape, and lane
+intervention recipes compared while every other identity stays fixed) is
+implemented as a separate harness:
+[docs/research/controlled-png-representation-benchmark.md](../research/controlled-png-representation-benchmark.md)
+(`examples/arcade_png_representation_benchmark.py`). It reuses this
+example's fixture, renderer, response parser, and providers verbatim and
+adds only the PNG intervention recipes and the comparison/classification
+layer.
+
 Each result record should contain:
 
 * research question;

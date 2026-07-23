@@ -1,0 +1,29 @@
+{
+  "accepted": 8,
+  "action_accuracy_over_attempted": 1.0,
+  "action_changing_count": 0,
+  "action_correct": 8,
+  "action_equivalent_count": 0,
+  "attempted": 8,
+  "base_render_mode": "labelled",
+  "exact_state_accuracy_over_attempted": 1.0,
+  "exact_state_correct": 8,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 1.0,
+    "tank_column": 1.0,
+    "target_column": 1.0,
+    "target_present": 1.0
+  },
+  "latency_us": {
+    "max": 6454331,
+    "median": 2080155,
+    "min": 2005343,
+    "p95": 6454331
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "recipe_id": "sha256:393c0e10adf416fc1f7f3305fe7db33d04776f063bf7c23be06501d036c147b0",
+  "rejected": 0,
+  "rejection_reasons": {},
+  "run_id": "sha256:c2b9d1e48aea9b2b442bd124e7867d17582f590e18bb76346cd37d7a77fe0022",
+  "variant_id": "labelled-v1"
+}

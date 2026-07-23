@@ -1,0 +1,29 @@
+{
+  "accepted": 8,
+  "action_accuracy_over_attempted": 0.875,
+  "action_changing_count": 1,
+  "action_correct": 7,
+  "action_equivalent_count": 4,
+  "attempted": 8,
+  "base_render_mode": "unlabelled",
+  "exact_state_accuracy_over_attempted": 0.375,
+  "exact_state_correct": 3,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 0.5,
+    "tank_column": 0.625,
+    "target_column": 0.75,
+    "target_present": 1.0
+  },
+  "latency_us": {
+    "max": 2181562,
+    "median": 2047138,
+    "min": 1888501,
+    "p95": 2181562
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "recipe_id": "sha256:6785eea0347b07f400ed2f791c956a56579ef1f311e43260c4f027a768d5e72c",
+  "rejected": 0,
+  "rejection_reasons": {},
+  "run_id": "sha256:aeebada422bc228c26409a60cf1fb3f8d2688d2f373259617682fb6a75988ade",
+  "variant_id": "unlabelled-v1"
+}

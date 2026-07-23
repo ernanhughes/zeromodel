@@ -1,0 +1,43 @@
+{
+  "base_render_mode": "unlabelled",
+  "metadata": {
+    "family": "cooldown"
+  },
+  "operations": [
+    {
+      "operation": "cooldown_dual_overlay",
+      "operation_version": "v1",
+      "parameters": {
+        "background_color": [
+          13,
+          18,
+          30
+        ],
+        "blocked_color": [
+          242,
+          74,
+          74
+        ],
+        "outline_color": [
+          224,
+          232,
+          245
+        ],
+        "position": [
+          20,
+          18,
+          56,
+          54
+        ],
+        "ready_color": [
+          70,
+          225,
+          125
+        ]
+      }
+    }
+  ],
+  "recipe_id": "sha256:69f74cd8792f3f284cdfc8c5d95d49e25aaced68f42f0f1880eb8c290a0cf7f7",
+  "variant_id": "cooldown-dual-v1",
+  "version": "arcade-png-intervention-recipe/v1"
+}

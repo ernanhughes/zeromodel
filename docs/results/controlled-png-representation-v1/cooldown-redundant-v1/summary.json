@@ -1,0 +1,29 @@
+{
+  "accepted": 8,
+  "action_accuracy_over_attempted": 0.75,
+  "action_changing_count": 2,
+  "action_correct": 6,
+  "action_equivalent_count": 3,
+  "attempted": 8,
+  "base_render_mode": "unlabelled",
+  "exact_state_accuracy_over_attempted": 0.375,
+  "exact_state_correct": 3,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 0.5,
+    "tank_column": 0.625,
+    "target_column": 0.625,
+    "target_present": 0.625
+  },
+  "latency_us": {
+    "max": 2053426,
+    "median": 2008380,
+    "min": 1908660,
+    "p95": 2053426
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "recipe_id": "sha256:2d9de1ead619b1184b4a9a59c832d215eeda51351560b31f40c5097e388d6ab3",
+  "rejected": 0,
+  "rejection_reasons": {},
+  "run_id": "sha256:a81c09fa0b736f014ffda7fdb64d4cec2d0c4c5ce1d64a2dd704be0c400e8a84",
+  "variant_id": "cooldown-redundant-v1"
+}

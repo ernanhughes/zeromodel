@@ -1,0 +1,48 @@
+{
+  "arguments": {
+    "backend": "ollama",
+    "base_url": "http://localhost:11434",
+    "combined_cooldown": null,
+    "combined_lane": null,
+    "compile_reports": true,
+    "confidence_threshold": 0.0,
+    "fixture": "smoke",
+    "max_cases": null,
+    "model": "qwen3.5:latest",
+    "output_dir": "local-results\\controlled-png-representation-v1-smoke-20260723T220702Z",
+    "overwrite_output": false,
+    "resume": true,
+    "seed": 0,
+    "sqlite_path": "local-results\\controlled-png-representation-v1-smoke-20260723T220702Z\\benchmark.sqlite",
+    "store": "sqlite",
+    "timeout": 180.0,
+    "variants": [
+      "labelled-v1",
+      "unlabelled-v1",
+      "cooldown-shape-v1",
+      "cooldown-dual-v1",
+      "cooldown-redundant-v1",
+      "lane-enhanced-v1"
+    ],
+    "write_pngs": true
+  },
+  "case_mode": "arcade-smoke-v1",
+  "created": "20260723T221416Z",
+  "fixture_identity": "arcade-png-representation-benchmark:smoke",
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "provider_configuration_id": "sha256:8f878520d89c432ff73073849150e1423b281cebbe4389de2ddd631738b8a4e0",
+  "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+  "resumed_variants": [
+    "labelled-v1",
+    "unlabelled-v1"
+  ],
+  "schema_version": "zeromodel-local-model-arcade-text-state/v2",
+  "variants": [
+    "labelled-v1",
+    "unlabelled-v1",
+    "cooldown-shape-v1",
+    "cooldown-dual-v1",
+    "cooldown-redundant-v1",
+    "lane-enhanced-v1"
+  ]
+}

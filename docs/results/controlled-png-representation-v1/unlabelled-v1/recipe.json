@@ -1,0 +1,10 @@
+{
+  "base_render_mode": "unlabelled",
+  "metadata": {
+    "family": "reference"
+  },
+  "operations": [],
+  "recipe_id": "sha256:6785eea0347b07f400ed2f791c956a56579ef1f311e43260c4f027a768d5e72c",
+  "variant_id": "unlabelled-v1",
+  "version": "arcade-png-intervention-recipe/v1"
+}

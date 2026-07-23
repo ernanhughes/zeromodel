@@ -1,0 +1,75 @@
+{
+  "case_ids": [
+    "sha256:698aeaafcab18fe4b3af6ae25faae214d12cdc4be8e2c01d118d49cad6621352",
+    "sha256:1cbc2cbcb579c9490908fe7603560b2e2eddaca80ccc43dc5eb63799cfd3097b",
+    "sha256:bace0f33dd9edd91be35016953a932bf096ca13e1b6c3ae415fc0608f2408d65",
+    "sha256:38ac47e4e5dfe306f42459fb73205e0ca208080511d870a8b030bc49e38aa2ff",
+    "sha256:8a1938d5434541a7008ca009b8caf3148733e249a83f2fe1cfc250cf55fbb94d",
+    "sha256:8a95a9fb3746dc7d46ed84824179af5c8bca7200e3a5c6514ec38b7555055f9b",
+    "sha256:eeb7ccec4d6e27103a22e050514c8f7afe31e71031560a6764d470ea38d4ffda",
+    "sha256:7b356004f4fec1f142626d1fea565f20ac4edc60034de3cc23887769b1d7a3c2"
+  ],
+  "case_mode": "arcade-smoke-v1",
+  "fixture_identity": "arcade-png-representation-benchmark:smoke",
+  "metadata": {
+    "backend": "ollama",
+    "model": "qwen3.5:latest",
+    "recipe_id": "sha256:69f74cd8792f3f284cdfc8c5d95d49e25aaced68f42f0f1880eb8c290a0cf7f7"
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "provider_configuration": {
+    "context_length": null,
+    "inference_options": {
+      "num_predict": 128,
+      "temperature": 0.0
+    },
+    "metadata": {
+      "backend": "ollama",
+      "fixed_predict_render_mode": "unlabelled"
+    },
+    "model_digest": "sha256:b8571dca341cc2f9ee4365b30ccaecae43617284b5e44630b8985a12cc1576a7",
+    "model_name": "qwen3.5:latest",
+    "prompt_digest": "sha256:356a657aecb1b3c7e3b5e13eb830ae24ceeb76acc2156dfd771ea8921375efda",
+    "protocol_version": "zeromodel-local-model-arcade-text-state/v2",
+    "provider_configuration_id": "sha256:8f878520d89c432ff73073849150e1423b281cebbe4389de2ddd631738b8a4e0",
+    "provider_kind": "ollama",
+    "provider_version": null,
+    "runtime_name": "ollama",
+    "runtime_version": null,
+    "seed": 0,
+    "version": "zeromodel-video-action-set-provider-evaluation-configuration/v1"
+  },
+  "representation_mode": "cooldown-dual-v1",
+  "run_id": "sha256:66b86fe62c6551339d3b28acf34398767fb08ed2dd6604adb99680c8f108fd38",
+  "summary": {
+    "accepted_count": 8,
+    "action_changing_count": 1,
+    "action_correct_count": 7,
+    "action_equivalent_count": 4,
+    "attempted_count": 8,
+    "exact_count": 3,
+    "factor_correct_counts": {
+      "cooldown": 4,
+      "tank_column": 5,
+      "target_column": 5,
+      "target_present": 6
+    },
+    "factor_denominators": {
+      "cooldown": 8,
+      "tank_column": 8,
+      "target_column": 8,
+      "target_present": 8
+    },
+    "latency_max_us": 2173042,
+    "latency_median_us": 1946052,
+    "latency_min_us": 1913320,
+    "latency_p95_us": 2173042,
+    "latency_sample_count": 8,
+    "latency_total_us": 16026706,
+    "rejected_count": 0,
+    "rejection_reason_counts": {},
+    "summary_id": "sha256:cfc46740d2feae8dda213cd2399ad02be63d91ecf173fdb637ec48dd1c7aa1ec",
+    "version": "zeromodel-video-action-set-provider-evaluation-summary/v1"
+  },
+  "version": "zeromodel-video-action-set-provider-evaluation-run/v1"
+}

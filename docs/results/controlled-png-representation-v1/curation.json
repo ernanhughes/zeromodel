@@ -1,0 +1,39 @@
+{
+  "excluded_from_commit_package": [
+    {
+      "path": "benchmark.sqlite",
+      "reason": "Large local evidence store; the curated JSON/JSONL projections retain the review surface. Preserve SQLite locally."
+    },
+    {
+      "path": "lane-enhanced-v1.zip",
+      "reason": "Accidental nested review archive; duplicates selected evidence and is not benchmark output."
+    },
+    {
+      "path": "all unselected PNGs",
+      "reason": "The complete local archive remains the pixel-level source; a representative, consequence-focused subset is committed."
+    }
+  ],
+  "included_variants": [
+    "labelled-v1",
+    "unlabelled-v1",
+    "cooldown-shape-v1",
+    "cooldown-dual-v1",
+    "cooldown-redundant-v1",
+    "lane-enhanced-v1"
+  ],
+  "manifest_note": "experiment.json is the final resume invocation manifest. labelled-v1 and unlabelled-v1 were created in the preceding baseline invocation and are named in resumed_variants.",
+  "source_archive": "controlled-png-representation-v1-smoke-20260723.zip",
+  "source_archive_sha256": "752bcac30991e5d89932934b87d61beabac7973968a72f6b1a6d9ad1e838a8eb",
+  "sqlite_reconciliation": {
+    "benchmark_identities": 8,
+    "episode_plans": 8,
+    "matrix_blobs": 48,
+    "note": "The resume invocation creates identity/plan bookkeeping before discovering the two reusable reference runs, leaving two unused identity/plan pairs. No evaluation run or case points to them.",
+    "observations": 48,
+    "operation_chains": 48,
+    "operation_records": 88,
+    "provider_evaluation_cases": 48,
+    "provider_evaluation_configurations": 1,
+    "provider_evaluation_runs": 6
+  }
+}

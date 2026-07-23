@@ -1,0 +1,29 @@
+{
+  "accepted": 8,
+  "action_accuracy_over_attempted": 0.875,
+  "action_changing_count": 1,
+  "action_correct": 7,
+  "action_equivalent_count": 3,
+  "attempted": 8,
+  "base_render_mode": "unlabelled",
+  "exact_state_accuracy_over_attempted": 0.5,
+  "exact_state_correct": 4,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 0.5,
+    "tank_column": 0.625,
+    "target_column": 0.875,
+    "target_present": 1.0
+  },
+  "latency_us": {
+    "max": 3164967,
+    "median": 1957883,
+    "min": 1892911,
+    "p95": 3164967
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "recipe_id": "sha256:3b7989211402a39e423b2c8bb6784ea9bb7fa8bbb5a6b51429bf12c3a9f02e70",
+  "rejected": 0,
+  "rejection_reasons": {},
+  "run_id": "sha256:bc5074d552d3039de1f738b3e03bdd35553ad92cbe9228c7a3a4d07f0458de87",
+  "variant_id": "cooldown-shape-v1"
+}

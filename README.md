@@ -339,3 +339,17 @@ assessment = build_learning_vpm([
 print(assessment.learned)
 learning_artifact = assessment.artifact
 ```
+
+## Local vision-model provider evaluation
+
+A local vision-language model can act as an external observation provider for
+a compiled ZeroModel policy: it perceives a rendered frame, ZeroModel
+validates and addresses the observation, and an independently compiled VPM
+policy selects the action. Every case is persisted through a dedicated
+provider-evaluation aggregate that separates exact-state correctness from
+policy-action correctness.
+
+See [`docs/examples/local_model_zero_arcade_test.md`](docs/examples/local_model_zero_arcade_test.md),
+[`docs/architecture/provider-evaluation-rmdto.md`](docs/architecture/provider-evaluation-rmdto.md),
+and the controlled PNG-representation benchmark built on that aggregate,
+[`docs/research/controlled-png-representation-benchmark.md`](docs/research/controlled-png-representation-benchmark.md).

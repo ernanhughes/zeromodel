@@ -42,6 +42,9 @@ from zeromodel.artifacts.core_artifact_persistence import (
     store_vpm_artifact,
 )
 from zeromodel.artifacts.ref import ArtifactRef
+from zeromodel.artifacts.report_adapter_contract_persistence import (
+    store_report_adapter_contract,
+)
 from zeromodel.artifacts.report_dto import (
     AdaptedReportDTO,
     AdaptedValueDTO,
@@ -163,6 +166,7 @@ def compile_report(
     adapted = adapter.adapt(report)
     _validate_adapted_report_matches_contract(adapted, contract)
     adapted_report_ref = store_adapted_report(adapted, store=store)
+    adapter_contract_ref = store_report_adapter_contract(contract, store=store)
 
     score_table, value_lookup = _build_score_table(adapted, contract)
     vpm_artifact = build_vpm(
@@ -210,7 +214,7 @@ def compile_report(
     )
     artifact_id = compute_compiled_report_artifact_id(
         adapted_report_ref=adapted_report_ref,
-        adapter_contract_id=contract.contract_id,
+        adapter_contract_ref=adapter_contract_ref,
         compatibility=compatibility,
         report_semantics=report_semantics,
         core_refs=core_refs,
@@ -224,7 +228,7 @@ def compile_report(
             artifact_id=artifact_id,
         ),
         adapted_report_ref=adapted_report_ref,
-        adapter_contract_id=contract.contract_id,
+        adapter_contract_ref=adapter_contract_ref,
         compatibility_id=contract.compatibility_id,
         compatibility_schema_id=compatibility_schema_id,
         missing_value_semantics=contract.missing_value_semantics,

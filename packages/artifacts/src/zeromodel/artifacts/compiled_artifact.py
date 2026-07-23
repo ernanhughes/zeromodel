@@ -164,7 +164,7 @@ class CompiledReportArtifactDTO:
 
     artifact_ref: ArtifactRef
     adapted_report_ref: ArtifactRef
-    adapter_contract_id: str
+    adapter_contract_ref: ArtifactRef
     compatibility_id: str
     compatibility_schema_id: str
     missing_value_semantics: str
@@ -199,6 +199,10 @@ class CompiledReportArtifactDTO:
     @property
     def adapted_report_id(self) -> str:
         return self.adapted_report_ref.artifact_id
+
+    @property
+    def adapter_contract_id(self) -> str:
+        return self.adapter_contract_ref.artifact_id
 
     def _validate_basic_shape(self) -> None:
         if self.artifact_ref.artifact_kind != self.artifact_kind:
@@ -378,7 +382,7 @@ class CompiledReportArtifactDTO:
 def _identity_payload_fields(
     *,
     adapted_report_ref: ArtifactRef,
-    adapter_contract_id: str,
+    adapter_contract_ref: ArtifactRef,
     compatibility: CompatibilityInfo,
     report_semantics: ReportSemanticsInfo,
     core_refs: CoreArtifactRefs,
@@ -392,7 +396,7 @@ def _identity_payload_fields(
         "spec_version": spec_version,
         "artifact_kind": artifact_kind,
         "adapted_report_ref": _artifact_ref_payload(adapted_report_ref),
-        "adapter_contract_id": adapter_contract_id,
+        "adapter_contract_ref": _artifact_ref_payload(adapter_contract_ref),
         "compatibility_id": compatibility.compatibility_id,
         "compatibility_schema_id": compatibility.compatibility_schema_id,
         "missing_value_semantics": compatibility.missing_value_semantics,
@@ -414,7 +418,7 @@ def compiled_report_identity_payload(compiled: CompiledReportArtifactDTO) -> dic
     """The exact canonical payload `artifact_ref.artifact_id` covers."""
     return _identity_payload_fields(
         adapted_report_ref=compiled.adapted_report_ref,
-        adapter_contract_id=compiled.adapter_contract_id,
+        adapter_contract_ref=compiled.adapter_contract_ref,
         compatibility=CompatibilityInfo(
             compatibility_id=compiled.compatibility_id,
             compatibility_schema_id=compiled.compatibility_schema_id,
@@ -443,7 +447,7 @@ def compiled_report_identity_payload(compiled: CompiledReportArtifactDTO) -> dic
 def compute_compiled_report_artifact_id(
     *,
     adapted_report_ref: ArtifactRef,
-    adapter_contract_id: str,
+    adapter_contract_ref: ArtifactRef,
     compatibility: CompatibilityInfo,
     report_semantics: ReportSemanticsInfo,
     core_refs: CoreArtifactRefs,
@@ -455,7 +459,7 @@ def compute_compiled_report_artifact_id(
 ) -> str:
     payload = _identity_payload_fields(
         adapted_report_ref=adapted_report_ref,
-        adapter_contract_id=adapter_contract_id,
+        adapter_contract_ref=adapter_contract_ref,
         compatibility=compatibility,
         report_semantics=report_semantics,
         core_refs=core_refs,

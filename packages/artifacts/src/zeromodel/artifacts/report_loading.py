@@ -74,7 +74,7 @@ def load_compiled_report_artifact(
     return CompiledReportArtifactDTO(
         artifact_ref=ref,
         adapted_report_ref=_decode_artifact_ref(payload["adapted_report_ref"]),
-        adapter_contract_id=payload["adapter_contract_id"],
+        adapter_contract_ref=_decode_artifact_ref(payload["adapter_contract_ref"]),
         compatibility_id=payload["compatibility_id"],
         compatibility_schema_id=payload["compatibility_schema_id"],
         missing_value_semantics=payload["missing_value_semantics"],

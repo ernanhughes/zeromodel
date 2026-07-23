@@ -44,8 +44,12 @@ fixture, report, or source-controlled file.
 
 `TrustDecisionDTO.signature_envelope_id` is a content-derived digest
 (`compute_signature_envelope_id`, binding `authorization_id`, `signer_id`,
-`signature_hex`, and `key_algorithm`) - never the raw signature hex stored
-under an identity-shaped field name. Signature-envelope revocation
+`signature_hex`, `key_algorithm`, and `spec_version`) - never the raw
+signature hex stored under an identity-shaped field name.
+`SignatureEnvelopeDTO.__post_init__` rejects any `spec_version` other than
+the current supported one (multi-version verification is not deliberately
+implemented), so the envelope identity always reflects the version that
+was actually verified. Signature-envelope revocation
 (`RevocationRecordDTO(target_kind="signature_envelope", ...)`) targets this
 same computed identity, so a decision's recorded evidence and the
 revocation check that can block it always agree on what "this envelope"

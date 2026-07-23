@@ -156,6 +156,7 @@ zeromodel-artifacts,zeromodel.artifacts,CompiledReportClosureReceiptDTO,zeromode
 zeromodel-artifacts,zeromodel.artifacts,CoreArtifactRefs,zeromodel.artifacts,Class,zeromodel.artifacts.compiled_artifact,true
 zeromodel-artifacts,zeromodel.artifacts,InMemoryArtifactStore,zeromodel.artifacts,Class,zeromodel.artifacts.store,true
 zeromodel-artifacts,zeromodel.artifacts,LAYOUT_RECIPE_ARTIFACT_KIND,zeromodel.artifacts,Constant,zeromodel.artifacts,false
+zeromodel-artifacts,zeromodel.artifacts,REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,zeromodel.artifacts,Constant,zeromodel.artifacts,false
 zeromodel-artifacts,zeromodel.artifacts,ReportAdaptationError,zeromodel.artifacts,Class,zeromodel.artifacts.report_errors,true
 zeromodel-artifacts,zeromodel.artifacts,ReportAdapter,zeromodel.artifacts,Class,zeromodel.artifacts.adapter,true
 zeromodel-artifacts,zeromodel.artifacts,ReportAdapterContractDTO,zeromodel.artifacts,Class,zeromodel.artifacts.report_dto,true
@@ -177,11 +178,13 @@ zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_aggregate,zeromodel
 zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_artifact,zeromodel.artifacts,Function,zeromodel.artifacts.report_loading,true
 zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_vpm,zeromodel.artifacts,Function,zeromodel.artifacts.report_loading,true
 zeromodel-artifacts,zeromodel.artifacts,load_layout_recipe,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
+zeromodel-artifacts,zeromodel.artifacts,load_report_adapter_contract,zeromodel.artifacts,Function,zeromodel.artifacts.report_adapter_contract_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,load_score_table,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,load_vpm_artifact,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,sha256_digest,zeromodel.artifacts,Function,zeromodel.core.content_identity,true
 zeromodel-artifacts,zeromodel.artifacts,store_adapted_report,zeromodel.artifacts,Function,zeromodel.artifacts.adapted_report_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,store_layout_recipe,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
+zeromodel-artifacts,zeromodel.artifacts,store_report_adapter_contract,zeromodel.artifacts,Function,zeromodel.artifacts.report_adapter_contract_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,store_score_table,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,store_vpm_artifact,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,validate_compiled_report_aggregate,zeromodel.artifacts,Function,zeromodel.artifacts.aggregate,true

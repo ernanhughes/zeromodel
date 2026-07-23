@@ -496,6 +496,12 @@ class SignatureEnvelopeDTO:
             raise VPMValidationError(
                 f"unsupported key_algorithm: {self.key_algorithm!r} (only 'ed25519' is implemented)"
             )
+        if self.spec_version != SPEC_VERSION:
+            raise VPMValidationError(
+                f"unsupported SignatureEnvelopeDTO spec_version: {self.spec_version!r} "
+                f"(only {SPEC_VERSION!r} is implemented; multi-version verification is not "
+                "deliberately supported)"
+            )
 
 
 def signature_envelope_identity_payload(envelope: "SignatureEnvelopeDTO") -> dict:

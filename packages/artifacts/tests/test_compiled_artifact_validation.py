@@ -13,6 +13,7 @@ import pytest
 
 from zeromodel.artifacts import (
     ADAPTED_REPORT_ARTIFACT_KIND,
+    REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
     AdaptedDimensionDTO,
     AdaptedSubjectDTO,
     ArtifactRef,
@@ -40,6 +41,9 @@ _MISSING_VALUE_SEMANTICS = "error"
 
 _FAKE_ADAPTED_REPORT_REF = ArtifactRef(
     artifact_kind=ADAPTED_REPORT_ARTIFACT_KIND, artifact_id=sha256_digest(b"w")
+)
+_FAKE_ADAPTER_CONTRACT_REF = ArtifactRef(
+    artifact_kind=REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND, artifact_id=sha256_digest(b"v")
 )
 _FAKE_REF = ArtifactRef(
     artifact_kind="zeromodel.core.score-table/v1", artifact_id=sha256_digest(b"x")
@@ -171,7 +175,7 @@ def _build(cell_bindings: tuple) -> CompiledReportArtifactDTO:
     )
     artifact_id = compute_compiled_report_artifact_id(
         adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
-        adapter_contract_id="contract-1",
+        adapter_contract_ref=_FAKE_ADAPTER_CONTRACT_REF,
         compatibility=compatibility,
         report_semantics=_REPORT_SEMANTICS,
         core_refs=core_refs,
@@ -184,7 +188,7 @@ def _build(cell_bindings: tuple) -> CompiledReportArtifactDTO:
             artifact_kind=COMPILED_REPORT_ARTIFACT_KIND, artifact_id=artifact_id
         ),
         adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
-        adapter_contract_id="contract-1",
+        adapter_contract_ref=_FAKE_ADAPTER_CONTRACT_REF,
         compatibility_id="test/v1",
         compatibility_schema_id=compatibility_schema_id,
         missing_value_semantics=_MISSING_VALUE_SEMANTICS,
@@ -328,7 +332,7 @@ def test_duplicate_subject_id_is_rejected() -> None:
     )
     artifact_id = compute_compiled_report_artifact_id(
         adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
-        adapter_contract_id="contract-1",
+        adapter_contract_ref=_FAKE_ADAPTER_CONTRACT_REF,
         compatibility=compatibility,
         report_semantics=_REPORT_SEMANTICS,
         core_refs=core_refs,
@@ -342,7 +346,7 @@ def test_duplicate_subject_id_is_rejected() -> None:
                 artifact_kind=COMPILED_REPORT_ARTIFACT_KIND, artifact_id=artifact_id
             ),
             adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
-            adapter_contract_id="contract-1",
+            adapter_contract_ref=_FAKE_ADAPTER_CONTRACT_REF,
             compatibility_id="test/v1",
             compatibility_schema_id=compatibility_schema_id,
             missing_value_semantics=_MISSING_VALUE_SEMANTICS,

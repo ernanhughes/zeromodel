@@ -1,6 +1,6 @@
 # ADR: Artifacts, Trust, and Navigation as three new distributions
 
-- **Status:** Accepted. The storage kernel is merged and hardened (Stage 1A), the adapter-first report-compilation capability on `zeromodel.artifacts` (Stage B) is complete, and the report aggregate is now fully closed and recoverable (Stage C) — see [post-split-stage-1a-hardening.md](../reviews/post-split-stage-1a-hardening.md), [post-split-stage-b-adapter-artifacts.md](../reviews/post-split-stage-b-adapter-artifacts.md), and [post-c203e7a7-aggregate-closure.md](../reviews/post-c203e7a7-aggregate-closure.md).
+- **Status:** Accepted. The storage kernel is merged and hardened (Stage 1A), the adapter-first report-compilation capability on `zeromodel.artifacts` (Stage B) is complete, and the report aggregate is now fully closed and recoverable (Stage C) — see [post-split-stage-1a-hardening.md](../reviews/post-split-stage-1a-hardening.md), [post-split-stage-b-adapter-artifacts.md](../reviews/post-split-stage-b-adapter-artifacts.md), [post-c203e7a7-aggregate-closure.md](../reviews/post-c203e7a7-aggregate-closure.md), and its own follow-up review response [post-0e56558-review-response.md](../reviews/post-0e56558-review-response.md) (closing a fabricated-visual blocker plus three high-priority aggregate/contract/envelope gaps).
 - **Date:** 2026-07-22
 - **Scope:** `zeromodel-artifacts`, `zeromodel-trust`, `zeromodel-navigation` — their existence, dependency direction, ownership boundaries, and relationship to the six-package baseline in [package-system-1.0.13.md](package-system-1.0.13.md)
 

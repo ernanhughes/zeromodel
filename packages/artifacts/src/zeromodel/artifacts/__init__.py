@@ -35,6 +35,11 @@ from zeromodel.artifacts.core_artifact_persistence import (
     store_vpm_artifact,
 )
 from zeromodel.artifacts.ref import ARTIFACT_REF_VERSION, ArtifactRef, is_sha256_digest
+from zeromodel.artifacts.report_adapter_contract_persistence import (
+    REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
+    load_report_adapter_contract,
+    store_report_adapter_contract,
+)
 from zeromodel.artifacts.report_compiler import compile_report
 from zeromodel.artifacts.report_dto import (
     AdaptedDimensionDTO,
@@ -67,6 +72,7 @@ __all__ = [
     "ADAPTED_REPORT_ARTIFACT_KIND",
     "ARTIFACT_REF_VERSION",
     "LAYOUT_RECIPE_ARTIFACT_KIND",
+    "REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND",
     "SCORE_TABLE_ARTIFACT_KIND",
     "VPM_ARTIFACT_ARTIFACT_KIND",
     "AdaptedDimensionDTO",
@@ -103,11 +109,13 @@ __all__ = [
     "load_compiled_report_artifact",
     "load_compiled_report_vpm",
     "load_layout_recipe",
+    "load_report_adapter_contract",
     "load_score_table",
     "load_vpm_artifact",
     "sha256_digest",
     "store_adapted_report",
     "store_layout_recipe",
+    "store_report_adapter_contract",
     "store_score_table",
     "store_vpm_artifact",
     "validate_compiled_report_aggregate",

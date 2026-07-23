@@ -70,6 +70,22 @@ def test_signer_identity_rejects_non_ed25519_algorithm():
         )
 
 
+def test_signature_envelope_rejects_unsupported_spec_version():
+    """Regression for the external review of 0e56558 (finding 4): a
+    caller-provided `spec_version` that verify.py's envelope-id resolution
+    would silently default around must be rejected at construction, not
+    silently accepted and then ignored."""
+    from zeromodel.trust import SignatureEnvelopeDTO
+
+    with pytest.raises(VPMValidationError):
+        SignatureEnvelopeDTO(
+            authorization_id="sha256:" + "b" * 64,
+            signer_id="signer-a",
+            signature_hex="aa" * 64,
+            spec_version="zeromodel-trust/v2",
+        )
+
+
 def test_trust_policy_rule_rejects_empty_allowed_kinds():
     with pytest.raises(VPMValidationError):
         TrustPolicyRuleDTO(
@@ -375,14 +391,22 @@ def test_signature_envelope_id_changes_with_any_component():
         signature_hex="aa" * 64,
         key_algorithm="ed448",
     )
+    different_spec_version = compute_signature_envelope_id(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-a",
+        signature_hex="aa" * 64,
+        key_algorithm="ed25519",
+        spec_version="zeromodel-trust/v2",
+    )
     identities = {
         base,
         different_authorization,
         different_signer,
         different_signature,
         different_algorithm,
+        different_spec_version,
     }
-    assert len(identities) == 5
+    assert len(identities) == 6
 
 
 def test_crypto_sign_and_verify_round_trip():

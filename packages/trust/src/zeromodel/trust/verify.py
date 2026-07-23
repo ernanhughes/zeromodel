@@ -319,6 +319,7 @@ def _resolve_signature_envelope_id(
         signer_id=signature_envelope.signer_id,
         signature_hex=signature_envelope.signature_hex,
         key_algorithm=signature_envelope.key_algorithm,
+        spec_version=signature_envelope.spec_version,
     )
 
 

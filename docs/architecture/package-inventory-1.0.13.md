@@ -1,6 +1,6 @@
 # ZeroModel 1.0.13 Package Inventory
 
-Baseline commit: `c203e7a7dddd2f8d3bad1a41e46c18a283c6b163`
+Baseline commit: `0e56558fad7ba3d2a74ab39d35c7d4ae14357acc`
 
 Generated artifacts:
 

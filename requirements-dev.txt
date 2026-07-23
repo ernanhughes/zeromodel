@@ -1,7 +1,7 @@
-# Keep NumPy below 2.3 while the repository targets Python 3.10 in mypy.
-# NumPy 2.3+ ships PEP 695 type-alias syntax in its stubs, which mypy
-# correctly rejects when configured for the repository's Python 3.10 floor.
-numpy>=1.23,<2.3
+# Keep NumPy on the 1.x stub format while mypy targets the repository's
+# Python 3.10 floor. NumPy 2.2+ uses Python 3.12 PEP 695 `type` statements in
+# installed stubs, which mypy correctly rejects under a 3.10 target.
+numpy>=1.23,<2.0
 
 -e ./packages/core
 -e ./packages/analysis

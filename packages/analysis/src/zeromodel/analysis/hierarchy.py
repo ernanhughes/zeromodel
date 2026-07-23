@@ -57,7 +57,10 @@ def build_pyramid(
     current = as_field(field)
     levels = [
         HierarchyLevel(
-            level=0, field=current, reduction="source", source_shape=current.shape
+            level=0,
+            field=current,
+            reduction="source",
+            source_shape=(int(current.shape[0]), int(current.shape[1])),
         )
     ]
     level = 0
@@ -71,7 +74,7 @@ def build_pyramid(
                 level=level,
                 field=reduced,
                 reduction=reduction,
-                source_shape=current.shape,
+                source_shape=(int(current.shape[0]), int(current.shape[1])),
             )
         )
         current = reduced

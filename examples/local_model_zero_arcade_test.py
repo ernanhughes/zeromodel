@@ -4,6 +4,13 @@
 A local vision-language model observes a rendered arcade frame and returns a
 small text-protocol state description. ZeroModel validates that description,
 addresses an independently compiled VPM policy, and selects the action.
+
+Every case is now recorded as a first-class `ProviderEvaluationCaseDTO`
+through the video action-set RMDTO aggregate (see
+`docs/architecture/provider-evaluation-rmdto.md`): observation-correctness
+(exact state) and application-behaviour-correctness (policy action) are kept
+as separate, database-backed evidence rather than being collapsed into one
+accuracy number in an ad hoc JSON file.
 """
 
 from __future__ import annotations
@@ -13,11 +20,11 @@ import base64
 import hashlib
 import json
 import math
-import statistics
 import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from io import BytesIO
@@ -30,7 +37,47 @@ except ImportError as exc:
     raise SystemExit("Install Pillow: python -m pip install pillow") from exc
 
 try:
+    import numpy as np
+except ImportError as exc:
+    raise SystemExit("Install NumPy: python -m pip install numpy") from exc
+
+try:
     from zeromodel.core import LayoutRecipe, ScoreTable, VPMPolicyLookup, build_vpm
+    from zeromodel.core.matrix_blob import MatrixBlob
+    from zeromodel.observation.visual_address import ImageObservation
+    from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
+    from zeromodel.video.domains.video_action_set.contracts import (
+        BENCHMARK_VERSION,
+        EPISODE_PLAN_VERSION,
+        GENERATOR_VERSION,
+        OBSERVATION_OPERATION_CHAIN_VERSION,
+        SEED_DERIVATION_VERSION,
+    )
+    from zeromodel.video.domains.video_action_set.dto import (
+        BenchmarkIdentityDTO,
+        CanonicalJsonDTO,
+        EpisodePlanDTO,
+    )
+    from zeromodel.video.domains.video_action_set.observation_dto import (
+        MaterializedObservationDTO,
+        ObservationDTO,
+    )
+    from zeromodel.video.domains.video_action_set.observation_provenance_dto import (
+        ObservationOperationChainDTO,
+    )
+    from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
+        MaterializedProviderEvaluationRunDTO,
+        ProviderConfigurationDTO,
+        ProviderEvaluationCaseContext,
+        ProviderEvaluationCaseDTO,
+        ProviderResponseEvidence,
+        build_provider_evaluation_run,
+        confidence_to_basis_points,
+    )
+    from zeromodel.video.domains.video_action_set.provider_observation_dto import (
+        ProviderObservationDescriptorDTO,
+    )
+    from zeromodel.video.runtime import ZeroModelRuntime, build_runtime
 except ImportError as exc:
     raise SystemExit(
         "ZeroModel is not importable. From the repository root run:\n"
@@ -146,24 +193,40 @@ class ProviderReply:
 
 
 class Provider(Protocol):
-    def predict(
-        self, image: bytes, render_mode: str, truth: ArcadeState
-    ) -> ProviderReply: ...
+    """The provider boundary. `predict()` receives only observable input -
+    the rendered image and the render mode - never ground truth. Expected
+    state, expected row, and expected action remain owned exclusively by the
+    evaluation harness that calls this protocol, never by the provider it
+    calls.
+    """
+
+    def predict(self, image: bytes, render_mode: str) -> ProviderReply: ...
 
 
-class FakeProvider:
-    def predict(
-        self, image: bytes, render_mode: str, truth: ArcadeState
-    ) -> ProviderReply:
-        del image, render_mode
-        payload = {
-            "tank_column": truth.tank_column,
-            "target_present": truth.target_present,
-            "target_column": -1 if truth.target_column is None else truth.target_column,
-            "cooldown": truth.cooldown,
-            "confidence": 1.0,
-        }
-        return ProviderReply(json.dumps(payload), payload, 0.0, {"backend": "fake"})
+class ScriptedProvider:
+    """A scripted wiring-test provider, not an oracle.
+
+    `predict()` itself sees only image bytes and render mode - exactly what
+    `Provider` declares - and looks up a pre-scripted reply by the image's
+    content digest. The mapping from image digest to reply is built once,
+    before any `predict()` call, by `_build_scripted_replies()`, which *does*
+    know the deterministic fixture's ground truth (that is what "scripting"
+    the replies means). This keeps the truth/prediction split real: fixture
+    construction knows the truth, the provider call boundary does not.
+    """
+
+    def __init__(self, replies_by_image_digest: Mapping[str, ProviderReply]) -> None:
+        self._replies_by_image_digest = dict(replies_by_image_digest)
+
+    def predict(self, image: bytes, render_mode: str) -> ProviderReply:
+        del render_mode
+        digest = _image_digest(image)
+        try:
+            return self._replies_by_image_digest[digest]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"no scripted provider reply for image digest {digest}"
+            ) from exc
 
 
 class OllamaProvider:
@@ -219,10 +282,7 @@ class OllamaProvider:
             + (", ".join(available) or "<none>")
         )
 
-    def predict(
-        self, image: bytes, render_mode: str, truth: ArcadeState
-    ) -> ProviderReply:
-        del truth  # not used in provider
+    def predict(self, image: bytes, render_mode: str) -> ProviderReply:
         prompt = prompt_for(render_mode)
         base64_image = base64.b64encode(image).decode("ascii")
         payload = {
@@ -550,6 +610,55 @@ def png_bytes(image: Image.Image) -> bytes:
     return stream.getvalue()
 
 
+def _image_digest(data: bytes) -> str:
+    """The one canonical content-digest convention for full-resolution PNG
+    bytes in this example - used for the scripted-provider reply key, the
+    per-case `image_sha256` record field, and the observation's
+    `full_resolution_image_sha256` metadata, so there is exactly one digest
+    convention for "this image's bytes," not several."""
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _prerender_states(
+    states: Sequence[ArcadeState], render_mode: str
+) -> list[tuple[Image.Image, bytes]]:
+    """Render every state's frame once, up front. Reused both to avoid
+    re-rendering per case and so `_build_scripted_replies` can compute each
+    scripted reply's image-digest key from the exact bytes `predict()` will
+    later receive."""
+    rendered: list[tuple[Image.Image, bytes]] = []
+    for truth in states:
+        image = render(truth, render_mode)
+        rendered.append((image, png_bytes(image)))
+    return rendered
+
+
+def _build_scripted_replies(
+    states: Sequence[ArcadeState],
+    prerendered: Sequence[tuple[Image.Image, bytes]],
+) -> dict[str, ProviderReply]:
+    """Build the fake backend's scripted reply-by-image-digest mapping.
+
+    This function knows the ground truth (`states`) - that is what
+    "scripting" the replies means. `ScriptedProvider.predict()` itself never
+    sees `states` or any `ArcadeState`; it only ever sees the image bytes and
+    render mode, then looks up the reply this function already prepared.
+    """
+    replies: dict[str, ProviderReply] = {}
+    for truth, (_image, raw_image) in zip(states, prerendered, strict=True):
+        payload = {
+            "tank_column": truth.tank_column,
+            "target_present": truth.target_present,
+            "target_column": -1 if truth.target_column is None else truth.target_column,
+            "cooldown": truth.cooldown,
+            "confidence": 1.0,
+        }
+        replies[_image_digest(raw_image)] = ProviderReply(
+            json.dumps(payload), payload, 0.0, {"backend": "fake"}
+        )
+    return replies
+
+
 def safe_name(text: str) -> str:
     return text.replace("|", "__").replace("=", "-")
 
@@ -569,6 +678,229 @@ def p95(values: list[float]) -> float | None:
     return ordered[index]
 
 
+def _build_benchmark_identity(
+    *, model: str, artifact_id: str, stamp: str
+) -> BenchmarkIdentityDTO:
+    seed_material = f"local-model-arcade:{model}:{stamp}"
+    seed_digest = "sha256:" + hashlib.sha256(seed_material.encode("utf-8")).hexdigest()
+    return BenchmarkIdentityDTO(
+        contract_commit="local-model-zero-arcade-example",
+        seed_material=seed_material,
+        seed_digest=seed_digest,
+        policy_artifact_id=artifact_id,
+        parent_audit_sha="n/a",
+        parent_v3_sha="n/a",
+    )
+
+
+def _build_episode_plan(
+    *, identity: BenchmarkIdentityDTO, episode_id: str, frame_count: int
+) -> EpisodePlanDTO:
+    """Build the minimal `EpisodePlanDTO` this synthetic arcade fixture needs
+    to own its observations. `ObservationDTO` requires a real owning episode
+    plan (see `docs/architecture/video-action-set-rmdto.md`); this mirrors the
+    RMDTO test suite's own minimal-fixture builder pattern
+    (`sample_identity()`/`sample_plan_payload()` in
+    `tests/test_video_episode_plan_rmdto.py`) rather than inventing a second
+    convention.
+    """
+    split = "development"
+
+    def _seed_node(
+        namespace: str, parents: tuple[tuple[str, str], ...] = ()
+    ) -> dict[str, Any]:
+        payload = {
+            "version": SEED_DERIVATION_VERSION,
+            "root_seed_digest": identity.seed_digest,
+            "split": split,
+            "episode_ordinal": 0,
+            "namespace": namespace,
+            "parent_identities": [
+                {"name": name, "identity": value} for name, value in parents
+            ],
+        }
+        digest = canonical_sha256(payload)
+        seed_int64 = int(digest.removeprefix("sha256:")[:16], 16)
+        return payload | {"seed_digest": digest, "seed_int64": seed_int64}
+
+    root_node = _seed_node("root")
+    concrete_node = _seed_node(
+        "concrete_episode_seed",
+        parents=(("root", root_node["seed_digest"]),),
+    )
+    seed_lineage = {"root": root_node, "concrete_episode_seed": concrete_node}
+    frame_plans = [{"frame_index": index} for index in range(frame_count)]
+    payload = {
+        "version": EPISODE_PLAN_VERSION,
+        "seed_derivation_version": SEED_DERIVATION_VERSION,
+        "episode_id": episode_id,
+        "split": split,
+        "ordinal": 0,
+        "family_label": "valid",
+        "family_ordinal": 0,
+        "episode_family": "valid",
+        "episode_disposition": "valid_episode",
+        "denominator_class": "valid",
+        "final_observation_provenance": {
+            "materialization_status": "materialized",
+            "observation_payload_included": True,
+            "provenance": "in_memory_generation",
+        },
+        "mutation_kind": None,
+        "source_row_id": "local-model-arcade:source",
+        "secondary_row_id": None,
+        "family_contract": {},
+        "family_intervention": {},
+        "derived_seed_identity": concrete_node["seed_digest"],
+        "episode_seed": concrete_node["seed_int64"],
+        "frame_count": frame_count,
+        "seed_lineage": seed_lineage,
+        "frame_plans": frame_plans,
+    }
+    return EpisodePlanDTO.from_dict(
+        payload | {"plan_digest": canonical_sha256(payload)}
+    )
+
+
+def _build_observation(
+    *,
+    identity: BenchmarkIdentityDTO,
+    plan: EpisodePlanDTO,
+    frame_index: int,
+    image: Image.Image,
+    raw_image: bytes,
+    render_mode: str,
+    truth_row_id: str,
+    truth_action: str,
+) -> MaterializedObservationDTO:
+    """Materialize one rendered arcade frame as an `ObservationDTO`.
+
+    `ObservationDTO`'s existing pixel-materialization contract
+    (`validate_observation_matrix_blob`) is hard-coded to the reachability
+    benchmark's fixed 16x28 uint8 frame shape - it is not a general-purpose
+    image store, and the brief explicitly rules out building one. Rather than
+    weakening that existing, preserved contract, this computes one
+    deterministic 16x28 grayscale thumbnail of the real rendered PNG to
+    satisfy it, and links the two by digest in metadata. The full-resolution
+    PNG on disk - not the thumbnail - remains the actual frame sent to the
+    provider and referenced by the evaluation case.
+    """
+    frame_id = f"{plan.split}:{plan.episode_id}:frame-{frame_index:02d}"
+    thumbnail = np.asarray(image.convert("L").resize((28, 16)), dtype=np.uint8)
+    pixel_digest = (
+        "sha256:"
+        + hashlib.sha256(np.ascontiguousarray(thumbnail).tobytes(order="C")).hexdigest()
+    )
+    blob = MatrixBlob.from_array(
+        thumbnail,
+        dtype="uint8",
+        metadata={
+            "kind": "video_action_set_frame_pixels",
+            "pixel_digest": pixel_digest,
+        },
+    )
+    descriptor = ProviderObservationDescriptorDTO.from_dict(
+        ImageObservation(thumbnail, source_id=frame_id).to_descriptor()
+    )
+    full_resolution_digest = _image_digest(raw_image)
+    operation_payload: dict[str, Any] = {
+        "index": 0,
+        "operation": "render_frame",
+        "operation_version": SCHEMA_VERSION,
+        "input_digests": [None],
+        "parameters": {
+            "render_mode": render_mode,
+            "full_resolution_png_sha256": full_resolution_digest,
+        },
+        "output_digest": pixel_digest,
+    }
+    operation_payload["parameter_digest"] = canonical_sha256(
+        operation_payload["parameters"]
+    )
+    operation_payload = operation_payload | {
+        "operation_digest": canonical_sha256(operation_payload)
+    }
+    chain_payload = {
+        "version": OBSERVATION_OPERATION_CHAIN_VERSION,
+        "operations": [operation_payload],
+        "final_emitted_digest": pixel_digest,
+    }
+    chain = ObservationOperationChainDTO.from_dict(
+        chain_payload | {"operation_chain_digest": canonical_sha256(chain_payload)}
+    )
+    observation = ObservationDTO(
+        benchmark_version=BENCHMARK_VERSION,
+        generator_version=GENERATOR_VERSION,
+        benchmark_seed_digest=identity.seed_digest,
+        episode_plan_digest=plan.plan_digest,
+        split=plan.split,
+        episode_id=plan.episode_id,
+        clip_id=f"{plan.split}:{plan.episode_id}:clip",
+        frame_id=frame_id,
+        sequence_number=frame_index,
+        event_type="frame",
+        family="local_model_arcade",
+        expected_disposition="valid",
+        episode_family=plan.episode_family,
+        episode_disposition=plan.episode_disposition,
+        frame_disposition="valid_frame_payload",
+        denominator_class=plan.denominator_class,
+        expected_row=truth_row_id,
+        expected_action=truth_action,
+        actual_executed_action=truth_action,
+        action_known=True,
+        gap_declaration=None,
+        observation_pixel_digest=pixel_digest,
+        matrix_blob_id=blob.blob_id,
+        provider_observation_descriptor=descriptor,
+        provider_observation_digest=descriptor.descriptor_digest,
+        operation_chain=chain,
+        metadata=CanonicalJsonDTO.from_value(
+            {
+                "full_resolution_image_sha256": full_resolution_digest,
+                "render_mode": render_mode,
+                "pixel_note": (
+                    "matrix_blob/provider descriptor are a deterministic 16x28 "
+                    "grayscale thumbnail of the full-resolution PNG referenced "
+                    "by full_resolution_image_sha256; the full-resolution PNG "
+                    "on disk is the actual frame the provider evaluated."
+                ),
+            }
+        ),
+        final_access_id=None,
+    )
+    return MaterializedObservationDTO(observation, blob)
+
+
+def _state_factors(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in payload.items()
+        if key not in {"row_id", "confidence"}
+    }
+
+
+def _decision_payload(decision: Any, *, policy_artifact_id: str) -> dict[str, Any]:
+    """Normalize a `PolicyLookupDecision` into the video domain's sha256:-prefixed
+    identity convention. `VPMArtifact.artifact_id` (and therefore
+    `PolicyLookupDecision.artifact_id`) is a bare hex digest - Core's own
+    convention - while every identity field in the provider-evaluation
+    aggregate uses the `sha256:`-prefixed convention used throughout
+    `video_action_set`. This is the one place that boundary is crossed.
+    """
+    return dict(decision.to_dict()) | {"artifact_id": policy_artifact_id}
+
+
+def _build_runtime(args: argparse.Namespace) -> ZeroModelRuntime:
+    if args.store == "sqlite":
+        from zeromodel.persistence.sqlalchemy.db.runtime import build_sqlite_runtime
+
+        return build_sqlite_runtime(
+            f"sqlite:///{args.sqlite_path}", initialize_schema=True
+        )
+    return build_runtime()
+
+
 def run(args: argparse.Namespace) -> int:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     model_path = args.model.replace(".", "_").replace(":", "_")
@@ -581,31 +913,91 @@ def run(args: argparse.Namespace) -> int:
     print(f"[INFO] Results will be written to {output}")
 
     reader, artifact_id = policy_reader()
-    provider: Provider = (
-        FakeProvider()
-        if args.backend == "fake"
-        else OllamaProvider(args.ollama_url, args.model, args.timeout, args.seed)
-    )
+    policy_artifact_id = f"sha256:{artifact_id}"
     states = smoke_states() if args.mode == "smoke" else all_states()
     if args.max_cases:
         states = states[: args.max_cases]
+    prerendered = _prerender_states(states, args.render)
+
+    provider: Provider
+    if args.backend == "fake":
+        # Fixture construction (this branch) knows the ground truth; the
+        # provider call boundary (`ScriptedProvider.predict`) does not - see
+        # `Provider`'s docstring.
+        provider = ScriptedProvider(_build_scripted_replies(states, prerendered))
+    else:
+        provider = OllamaProvider(args.ollama_url, args.model, args.timeout, args.seed)
+
+    runtime = _build_runtime(args)
+    facade = runtime.video_action_set
+
+    identity = _build_benchmark_identity(
+        model=args.model, artifact_id=policy_artifact_id, stamp=stamp
+    )
+    facade.save_identity(identity)
+    episode_id = f"development:local-model-arcade-{stamp}"
+    plan = _build_episode_plan(
+        identity=identity, episode_id=episode_id, frame_count=len(states)
+    )
+    facade.save_episode_plan(plan)
+
+    provider_kind = "fake" if args.backend == "fake" else "ollama"
+    model_name = args.model if args.backend == "ollama" else "fake"
+    model_digest = "sha256:" + hashlib.sha256(model_name.encode("utf-8")).hexdigest()
+    prompt_digest = (
+        "sha256:" + hashlib.sha256(prompt_for(args.render).encode("utf-8")).hexdigest()
+    )
+    provider_configuration = ProviderConfigurationDTO.build(
+        provider_kind=provider_kind,
+        model_name=model_name,
+        model_digest=model_digest,
+        runtime_name="ollama" if args.backend == "ollama" else "in-process-fake",
+        protocol_version=SCHEMA_VERSION,
+        prompt_digest=prompt_digest,
+        seed=args.seed,
+        inference_options=(
+            {"temperature": 0.0, "num_predict": 128} if args.backend == "ollama" else {}
+        ),
+        metadata={"backend": args.backend},
+    )
 
     records: list[dict[str, Any]] = []
+    cases: list[ProviderEvaluationCaseDTO] = []
     cases_path = output / "cases.jsonl"
     print(f"[INFO] Running {len(states)} case(s) -> {output}")
 
     with cases_path.open("w", encoding="utf-8", newline="\n") as stream:
         for index, truth in enumerate(states, 1):
+            frame_index = index - 1
             print(f"\n[INFO] === Case {index}/{len(states)}: {truth.row_id} ===")
-            raw_image = png_bytes(render(truth, args.render))
+            image, raw_image = prerendered[frame_index]
             image_path = images / f"{index:03d}-{safe_name(truth.row_id)}.png"
             image_path.write_bytes(raw_image)
             print(f"[INFO] Image saved to {image_path}")
-            truth_action = reader.read(truth.row_id).action
+
+            truth_decision = reader.read(truth.row_id)
+            truth_action = truth_decision.action
+
+            materialized_observation = _build_observation(
+                identity=identity,
+                plan=plan,
+                frame_index=frame_index,
+                image=image,
+                raw_image=raw_image,
+                render_mode=args.render,
+                truth_row_id=truth.row_id,
+                truth_action=truth_action,
+            )
+            saved_observation = facade.save_materialized_observation(
+                materialized_observation
+            )
+            frame_id = saved_observation.frame_id
+
             record: dict[str, Any] = {
                 "index": index,
+                "frame_id": frame_id,
                 "image_path": image_path.as_posix(),
-                "image_sha256": "sha256:" + hashlib.sha256(raw_image).hexdigest(),
+                "image_sha256": _image_digest(raw_image),
                 "truth": truth.payload(),
                 "truth_action": truth_action,
                 "accepted": False,
@@ -616,9 +1008,22 @@ def run(args: argparse.Namespace) -> int:
                 "rejection_reason": None,
                 "provider": None,
             }
+            case_context = ProviderEvaluationCaseContext(
+                policy_artifact_id=policy_artifact_id,
+                provider_configuration_id=provider_configuration.provider_configuration_id,
+            )
+            case_kwargs: dict[str, Any] = dict(
+                case_ordinal=frame_index,
+                frame_id=frame_id,
+                context=case_context,
+                expected_state=_state_factors(truth.payload()),
+                expected_decision=_decision_payload(
+                    truth_decision, policy_artifact_id=policy_artifact_id
+                ),
+            )
             try:
                 print("[INFO] Calling provider.predict()...")
-                reply = provider.predict(raw_image, args.render, truth)
+                reply = provider.predict(raw_image, args.render)
                 print(f"[INFO] Provider replied in {reply.duration_ms:.2f} ms")
                 print(f"[INFO] Parsed state text: {reply.parsed}")
                 prediction = Prediction.parse(reply.parsed)
@@ -630,10 +1035,25 @@ def run(args: argparse.Namespace) -> int:
                     "metadata": reply.metadata,
                 }
                 record["prediction"] = prediction.payload()
+                latency_us = int(round(reply.duration_ms * 1000))
+                confidence_basis_points = confidence_to_basis_points(
+                    prediction.confidence
+                )
                 if prediction.confidence < args.confidence_threshold:
                     record["rejection_reason"] = "confidence_below_threshold"
                     print(
                         f"[INFO] Rejected: confidence {prediction.confidence} < threshold {args.confidence_threshold}"
+                    )
+                    case = ProviderEvaluationCaseDTO.build(
+                        **case_kwargs,
+                        accepted=False,
+                        evidence=ProviderResponseEvidence(
+                            rejection_reason="confidence_below_threshold",
+                            provider_confidence_basis_points=confidence_basis_points,
+                            provider_latency_us=latency_us,
+                            provider_raw_response_text=reply.raw_text,
+                            provider_response_metadata=reply.metadata,
+                        ),
                     )
                 else:
                     decision = reader.read(prediction.row_id)
@@ -647,6 +1067,20 @@ def run(args: argparse.Namespace) -> int:
                     print(
                         f"[INFO] Exact state match: {record['exact_state_match']}, action match: {record['action_match']}"
                     )
+                    case = ProviderEvaluationCaseDTO.build(
+                        **case_kwargs,
+                        accepted=True,
+                        predicted_state=_state_factors(prediction.payload()),
+                        predicted_decision=_decision_payload(
+                            decision, policy_artifact_id=policy_artifact_id
+                        ),
+                        evidence=ProviderResponseEvidence(
+                            provider_confidence_basis_points=confidence_basis_points,
+                            provider_latency_us=latency_us,
+                            provider_raw_response_text=reply.raw_text,
+                            provider_response_metadata=reply.metadata,
+                        ),
+                    )
             except Exception as exc:
                 print(
                     f"[ERROR] Exception during processing: {type(exc).__name__}: {exc}"
@@ -655,6 +1089,21 @@ def run(args: argparse.Namespace) -> int:
 
                 traceback.print_exc()
                 record["rejection_reason"] = f"{type(exc).__name__}: {exc}"
+                case = ProviderEvaluationCaseDTO.build(
+                    **case_kwargs,
+                    accepted=False,
+                    evidence=ProviderResponseEvidence(
+                        rejection_reason=record["rejection_reason"]
+                    ),
+                )
+            # provider_confidence_basis_points is the persisted case's source
+            # truth; provider_confidence is a derived presentation float and
+            # must not be treated as identity-bearing.
+            record["provider_confidence_basis_points"] = (
+                case.provider_confidence_basis_points
+            )
+            record["provider_confidence"] = case.provider_confidence
+            cases.append(case)
             records.append(record)
             stream.write(json.dumps(record, sort_keys=True) + "\n")
             stream.flush()
@@ -666,17 +1115,33 @@ def run(args: argparse.Namespace) -> int:
                 f"{'action-ok' if record['action_match'] else 'action-wrong'}"
             )
 
-    accepted = [r for r in records if r["accepted"]]
-    durations = [
-        float(r["provider"]["duration_ms"]) for r in records if r.get("provider")
-    ]
-    factor_names = ("tank_column", "target_present", "target_column", "cooldown")
-    factor_accuracy = {}
-    for name in factor_names:
-        correct = sum(r["truth"][name] == r["prediction"][name] for r in accepted)
-        factor_accuracy[name] = correct / len(accepted) if accepted else None
-    exact = sum(bool(r["exact_state_match"]) for r in accepted)
-    action = sum(bool(r["action_match"]) for r in accepted)
+    materialized_run = build_provider_evaluation_run(
+        fixture_identity=f"local-model-arcade:{args.mode}:{args.render}",
+        provider_configuration=provider_configuration,
+        policy_artifact_id=policy_artifact_id,
+        case_mode=args.mode,
+        representation_mode=args.render,
+        cases=cases,
+        metadata={"model": args.model, "backend": args.backend},
+    )
+    saved_run = facade.save_provider_evaluation_run(materialized_run)
+    reloaded_run = facade.get_materialized_provider_evaluation_run(saved_run.run.run_id)
+    if reloaded_run != materialized_run:
+        raise RuntimeError(
+            "provider evaluation aggregate failed to reload identically after save"
+        )
+    print(
+        f"[INFO] Provider evaluation run saved and reload-verified: {saved_run.run.run_id}"
+    )
+
+    summary_dto = saved_run.summary
+    factor_correct = summary_dto.factor_correct_counts.to_value()
+    factor_denominators = summary_dto.factor_denominators.to_value()
+    factor_accuracy = {
+        key: (factor_correct[key] / factor_denominators[key])
+        for key in factor_denominators
+        if factor_denominators[key]
+    }
     summary = {
         "schema_version": SCHEMA_VERSION,
         "backend": args.backend,
@@ -685,40 +1150,74 @@ def run(args: argparse.Namespace) -> int:
         "case_mode": args.mode,
         "confidence_threshold": args.confidence_threshold,
         "policy_artifact_id": artifact_id,
-        "attempted": len(records),
-        "accepted": len(accepted),
-        "rejected": len(records) - len(accepted),
-        "exact_state_correct": exact,
-        "exact_state_accuracy_over_attempted": exact / len(records)
-        if records
-        else None,
-        "action_correct": action,
-        "action_accuracy_over_attempted": action / len(records) if records else None,
+        "run_id": saved_run.run.run_id,
+        "attempted": summary_dto.attempted_count,
+        "accepted": summary_dto.accepted_count,
+        "rejected": summary_dto.rejected_count,
+        "exact_state_correct": summary_dto.exact_count,
+        "exact_state_accuracy_over_attempted": (
+            summary_dto.exact_count / summary_dto.attempted_count
+            if summary_dto.attempted_count
+            else None
+        ),
+        "action_correct": summary_dto.action_correct_count,
+        "action_accuracy_over_attempted": (
+            summary_dto.action_correct_count / summary_dto.attempted_count
+            if summary_dto.attempted_count
+            else None
+        ),
+        "action_equivalent_count": summary_dto.action_equivalent_count,
+        "action_changing_count": summary_dto.action_changing_count,
         "factor_accuracy_over_accepted": factor_accuracy,
         "latency_ms": {
-            "mean": statistics.fmean(durations) if durations else None,
-            "median": statistics.median(durations) if durations else None,
-            "p95": p95(durations),
-            "min": min(durations) if durations else None,
-            "max": max(durations) if durations else None,
+            "mean": (
+                summary_dto.latency_total_us / summary_dto.latency_sample_count / 1000.0
+                if summary_dto.latency_sample_count
+                else None
+            ),
+            "median": (
+                summary_dto.latency_median_us / 1000.0
+                if summary_dto.latency_median_us is not None
+                else None
+            ),
+            "p95": (
+                summary_dto.latency_p95_us / 1000.0
+                if summary_dto.latency_p95_us is not None
+                else None
+            ),
+            "min": (
+                summary_dto.latency_min_us / 1000.0
+                if summary_dto.latency_min_us is not None
+                else None
+            ),
+            "max": (
+                summary_dto.latency_max_us / 1000.0
+                if summary_dto.latency_max_us is not None
+                else None
+            ),
         },
-        "rejection_reasons": count_values(
-            str(r.get("rejection_reason") or "accepted") for r in records
-        ),
+        "rejection_reasons": dict(summary_dto.rejection_reason_counts.to_value()),
     }
     summary_path = output / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+
+    report_path: Path | None = None
+    if args.compile_report:
+        report_path = _compile_report(saved_run, output=output)
+
     (output / "run-manifest.json").write_text(
         json.dumps(
             {
                 "schema_version": SCHEMA_VERSION,
                 "python": sys.version,
+                "run_id": saved_run.run.run_id,
                 "arguments": {
                     k: str(v) if isinstance(v, Path) else v
                     for k, v in vars(args).items()
                 },
                 "summary": summary_path.as_posix(),
                 "cases": cases_path.as_posix(),
+                "report": None if report_path is None else report_path.as_posix(),
             },
             indent=2,
             sort_keys=True,
@@ -730,6 +1229,50 @@ def run(args: argparse.Namespace) -> int:
     print(json.dumps(summary, indent=2, sort_keys=True))
     print(f"\n[INFO] Files written:\n  {summary_path}\n  {cases_path}")
     return 0 if not summary["rejected"] else 2
+
+
+def _compile_report(
+    saved_run: MaterializedProviderEvaluationRunDTO, *, output: Path
+) -> Path:
+    from provider_evaluation_report_adapter import compile_provider_evaluation_report
+    from zeromodel.artifacts import (
+        InMemoryArtifactStore,
+        load_compiled_report_aggregate,
+    )
+
+    layout_recipe = LayoutRecipe.from_dict(
+        {
+            "version": "vpm-layout/0",
+            "name": "provider-evaluation-priority-order",
+            "row_order": {"kind": "source", "tie_break": "row_id"},
+            "column_order": {"kind": "source"},
+            "normalization": {"kind": "per_metric_minmax", "clip": True},
+        }
+    )
+    artifact_store = InMemoryArtifactStore()
+    compiled = compile_provider_evaluation_report(
+        saved_run, layout_recipe=layout_recipe, store=artifact_store
+    )
+    aggregate = load_compiled_report_aggregate(
+        ref=compiled.artifact_ref, resolver=artifact_store
+    )
+    report_path = output / "report.json"
+    report_path.write_text(
+        json.dumps(
+            {
+                "compiled_report_artifact_id": compiled.artifact_ref.artifact_id,
+                "adapted_report_id": aggregate.adapted_report.adapted_report_id,
+                "vpm_artifact_id": aggregate.vpm_artifact.artifact_id,
+                "subject_count": len(aggregate.adapted_report.subjects),
+                "dimension_count": len(aggregate.adapted_report.dimensions),
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
+    )
+    print(f"[INFO] Compiled report written to {report_path}")
+    return report_path
 
 
 def arguments() -> argparse.Namespace:
@@ -746,6 +1289,13 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--max-cases", type=int)
     parser.add_argument("--output-dir", type=Path)
+    parser.add_argument("--store", choices=("memory", "sqlite"), default="memory")
+    parser.add_argument("--sqlite-path", type=Path)
+    parser.add_argument(
+        "--compile-report",
+        action="store_true",
+        help="Compile the evaluation run into a VPM report via the external adapter.",
+    )
     args = parser.parse_args()
     if not 0 <= args.confidence_threshold <= 1:
         parser.error("--confidence-threshold must be in [0,1]")
@@ -755,6 +1305,8 @@ def arguments() -> argparse.Namespace:
         parser.error("--max-cases must be positive")
     if args.output_dir and args.output_dir.exists():
         parser.error("--output-dir must not already exist")
+    if args.store == "sqlite" and args.sqlite_path is None:
+        parser.error("--sqlite-path is required when --store sqlite")
     return args
 
 

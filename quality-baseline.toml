@@ -178,11 +178,11 @@ maximum_lines = 322
 owner = "video-action-set-package-split"
 
 [legacy_exceptions."packages/video/src/zeromodel/video/stores/video_action_set_memory.py"]
-reason = "Stage 8 in-memory store frozen before 2.x package decomposition"
-maximum_lines = 703
+reason = "Stage 8 in-memory store frozen before 2.x package decomposition; ceiling raised by 16 lines in Stage 2D to mix _ProviderEvaluationMemoryStoreMixin (defined in stores/provider_evaluation_memory.py, not grown here) into InMemoryVideoActionSetStore"
+maximum_lines = 719
 owner = "video-action-set-package-split"
 
 [legacy_exceptions."packages/sqlalchemy/src/zeromodel/persistence/sqlalchemy/db/stores/video_action_set.py"]
-reason = "SQLAlchemy SQL store frozen before 2.x package decomposition; only added to the governed quality gate in Stage A2 (was previously excluded from check_quality.py entirely, see docs/reviews/post-split-main-audit.md finding F4)"
-maximum_lines = 1333
+reason = "SQLAlchemy SQL store frozen before 2.x package decomposition; only added to the governed quality gate in Stage A2 (was previously excluded from check_quality.py entirely, see docs/reviews/post-split-main-audit.md finding F4); ceiling raised by 5 lines in Stage 2D to mix ProviderEvaluationSqlStoreMixin (defined in stores/provider_evaluation.py, not grown here) into SqlAlchemyVideoActionSetStore"
+maximum_lines = 1338
 owner = "video-action-set-package-split"

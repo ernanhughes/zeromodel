@@ -20,6 +20,7 @@ INTEGRATION_TEST_PREFIXES: tuple[str, ...] = ()
 INTEGRATION_TEST_FILES = {
     "test_video_episode_plan_sql_store.py",
     "test_video_observation_sql_store.py",
+    "test_video_provider_evaluation_sql_store.py",
 }
 
 # Scientific benchmark / evidence / arcade-closed-world-proof tests that live

@@ -22,6 +22,11 @@ from zeromodel.video.domains.video_action_set.observation_dto import (
     ObservationDTO,
     ObservationOperationChainDTO,
 )
+from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
+    ProviderConfigurationDTO,
+    ProviderEvaluationCaseDTO,
+    ProviderEvaluationRunDTO,
+)
 from zeromodel.video.domains.video_action_set.store import (
     VideoActionSetStore,
     raise_episode_plan_conflict,
@@ -37,9 +42,14 @@ from zeromodel.video.domains.video_action_set.store import (
     raise_unknown_episode_plan,
 )
 from zeromodel.core.matrix_blob import MatrixBlob
+from zeromodel.video.stores.provider_evaluation_memory import (
+    _ProviderEvaluationMemoryStoreMixin,
+)
 
 
-class InMemoryVideoActionSetStore(VideoActionSetStore):
+class InMemoryVideoActionSetStore(
+    _ProviderEvaluationMemoryStoreMixin, VideoActionSetStore
+):
     def __init__(self) -> None:
         self._identities: dict[str, BenchmarkIdentityDTO] = {}
         self._episode_plans: dict[str, EpisodePlanDTO] = {}
@@ -53,6 +63,12 @@ class InMemoryVideoActionSetStore(VideoActionSetStore):
         self._final_events: dict[str, list[FinalAccessEventDTO]] = {}
         self._final_seed_sealed_index: dict[tuple[str, str], str] = {}
         self._final_lock = RLock()
+        self._provider_evaluation_configurations: dict[
+            str, ProviderConfigurationDTO
+        ] = {}
+        self._provider_evaluation_runs: dict[str, ProviderEvaluationRunDTO] = {}
+        self._provider_evaluation_cases: dict[str, ProviderEvaluationCaseDTO] = {}
+        self._provider_evaluation_run_case_ids: dict[str, tuple[str, ...]] = {}
 
     def save_identity(self, identity: BenchmarkIdentityDTO) -> BenchmarkIdentityDTO:
         existing = self._identities.get(identity.seed_digest)

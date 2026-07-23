@@ -44,6 +44,21 @@ INFORMATION_CONTROL_AMBIGUITY_VERSION = (
 )
 INFORMATION_CONTROL_VERSION = "zeromodel-video-action-set-family-information-control/v3"
 OBSERVATION_OPERATION_CHAIN_VERSION = "zeromodel-video-observation-operation-chain/v1"
+PROVIDER_EVALUATION_CASE_VERSION = (
+    "zeromodel-video-action-set-provider-evaluation-case/v1"
+)
+PROVIDER_EVALUATION_CONFIGURATION_VERSION = (
+    "zeromodel-video-action-set-provider-evaluation-configuration/v1"
+)
+PROVIDER_EVALUATION_RAW_RESPONSE_DIGEST_VERSION = (
+    "zeromodel-video-action-set-provider-evaluation-raw-response/v1"
+)
+PROVIDER_EVALUATION_RUN_VERSION = (
+    "zeromodel-video-action-set-provider-evaluation-run/v1"
+)
+PROVIDER_EVALUATION_SUMMARY_VERSION = (
+    "zeromodel-video-action-set-provider-evaluation-summary/v1"
+)
 PROVIDER_OBSERVATION_BOUNDARY_VERSION = (
     "zeromodel-video-action-set-provider-observation-boundary/v1"
 )
@@ -92,6 +107,11 @@ __all__ = [
     "INFORMATION_CONTROL_AMBIGUITY_VERSION",
     "INFORMATION_CONTROL_VERSION",
     "OBSERVATION_OPERATION_CHAIN_VERSION",
+    "PROVIDER_EVALUATION_CASE_VERSION",
+    "PROVIDER_EVALUATION_CONFIGURATION_VERSION",
+    "PROVIDER_EVALUATION_RAW_RESPONSE_DIGEST_VERSION",
+    "PROVIDER_EVALUATION_RUN_VERSION",
+    "PROVIDER_EVALUATION_SUMMARY_VERSION",
     "PROVIDER_OBSERVATION_BOUNDARY_VERSION",
     "REACHABILITY_TILE_DIGEST",
     "REACHABILITY_TILE_VERSION",

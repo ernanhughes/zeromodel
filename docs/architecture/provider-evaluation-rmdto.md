@@ -357,3 +357,8 @@ This stage does not:
 It is the evidence substrate: a persisted, closure-validated record of what a
 provider actually returned, what the policy actually decided, and how those
 two differ, that any of the above would need to consume.
+
+The first controlled experiment built on this aggregate is documented at
+[docs/research/controlled-png-representation-benchmark.md](../research/controlled-png-representation-benchmark.md):
+it holds provider, model, prompt, policy, and fixture identity fixed across
+compared runs and varies only a declared PNG representation recipe.

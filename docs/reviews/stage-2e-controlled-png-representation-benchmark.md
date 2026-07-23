@@ -178,40 +178,64 @@ python scripts/check_architecture.py          # Architecture check: passed (152 
 
 `ruff format .` reformatted 147 files. Diffing before/after `git status`
 against the intentional Stage 2E file list, 140 unrelated pre-existing
-files were reformatting drift and were reverted with `git checkout --`;
-only the 6 new/touched Stage 2E files kept their (already-clean) formatting.
+files were reformatting drift and were reverted with `git checkout --`.
+**One further corrective pass was needed** (see "Corrective pass" below):
+`ruff format .` had also reformatted unrelated pre-existing Python code
+blocks inside `README.md`, which the first `git status`-based revert missed
+because `README.md` was already `M` (from this stage's own intentional
+addition) before `ruff format` ran, so its *content* delta was never
+separately diffed. That has been corrected; `README.md`'s diff against
+`stage-2d-provider-evaluation-aggregate` now contains only the new "Local
+vision-model provider evaluation" section.
 
-`ruff check .` and `scripts/check_quality.py` (which runs its own scoped
-`ruff check`) and `scripts/run_fast_tests.py` (via
-`tests/test_ruff_scope_claims.py`) all currently **fail on this branch for a
-pre-existing, environment-level reason unrelated to this change**: `ruff` is
-unpinned in `requirements-dev.txt` (and in every `.github/workflows/*.yml`
-package CI job), and the `ruff` version resolved into this fresh virtualenv
-(0.16.0) reports substantially more lint findings across virtually the
-entire pre-existing codebase than whatever version the repository's own
-`tests/test_ruff_scope_claims.py::test_unscoped_ruff_still_has_known_pre_existing_findings`
-was last calibrated against. Confirmed pre-existing and unrelated to this
-change: `git diff --stat stage-2d-provider-evaluation-aggregate --
-packages/ scripts/ integration_tests/ tests/test_ruff_scope_claims.py`
-shows zero changes - this branch never touches any file these checks
-inspect. Scoped to only the files this stage adds/touches, both checks are
-clean:
+### Base-vs-head Ruff/quality/fast-suite comparison
+
+`ruff check .`, `scripts/check_quality.py`, and `scripts/run_fast_tests.py`
+all fail on this branch. To confirm this is pre-existing toolchain drift and
+not something Stage 2E introduces, the identical isolated-venv setup
+(`python -m venv`, `pip install -r requirements-dev.txt`, unpinned `ruff`)
+was built twice from a clean `pip install`, once against
+`stage-2d-provider-evaluation-aggregate` in a separate worktree
+(`../zeromodel-stage2d-baseline`) and once against this branch's HEAD, both
+resolving to the same `ruff 0.16.0` (unpinned in `requirements-dev.txt` and
+in every `.github/workflows/*.yml` package CI job, so a fresh install today
+is not guaranteed to match whatever version the repository's own
+`tests/test_ruff_scope_claims.py` was last calibrated against).
+
+| Check | Base (`stage-2d-provider-evaluation-aggregate`) | Head (this branch) | Delta |
+|---|---|---|---|
+| `ruff check .` | 2132 errors | 2132 errors | **0** |
+| `scripts/check_quality.py` | fails at "Ruff lint check" step, 903 errors over governed paths | fails at "Ruff lint check" step, 903 errors over governed paths | **0** (identical failure point; Stage 2E's `examples/`/`tests/` files are outside `check_quality.py`'s governed paths entirely) |
+| `scripts/check_package_boundaries.py` | passed, 152 modules | passed, 152 modules | 0 |
+| `scripts/check_architecture.py` | passed, 152 modules | passed, 152 modules | 0 |
+| `scripts/run_fast_tests.py` (as-is) | fails at `tests/test_ruff_scope_claims.py::test_governed_ruff_lint_paths_pass` (stops after 1 failure; 208 passed, 82 deselected before stopping) | fails at the same test (stops after 1 failure) | same failing test |
+| fast suite with both `test_ruff_scope_claims.py` ruff-version-sensitive tests deselected | 980 passed, 1 skipped, 201 deselected | 1024 passed, 1 skipped, 201 deselected | **+44 passed, 0 regressions** (the 44 are this stage's new fast tests: 45 added, 1 is `@pytest.mark.integration` and stays deselected in both) |
+
+This is **Outcome A**: the base branch fails identically, run for run, with
+the same tool version. The failure is confirmed pre-existing toolchain
+drift, not something this stage introduces. Deselecting only the two
+ruff-version-sensitive tests, every other fast test - baseline and this
+stage's 44 new fast tests alike - passes with zero regressions.
+
+Scoped to only the files this stage adds/touches, `ruff check` is clean on
+its own:
 
 ```text
 ruff check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py examples/arcade_png_representation_runner.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py
 # All checks passed!
 ```
 
-With only the two ruff-version-sensitive tests deselected,
-`scripts/run_fast_tests.py`'s underlying suite (`pytest tests
-integration_tests packages/*/tests -m "not slow and not external and not
-research"`) is fully green including every new test this stage adds:
+### On pinning Ruff
 
-```text
-1024 passed, 1 skipped, 201 deselected in 50.36s
-```
-
-(The 1 skip is pre-existing and unrelated to this change.)
+Per the base-vs-head result (Outcome A), fixing the toolchain drift means
+pinning the repository's intended `ruff` version in `requirements-dev.txt`
+and every `.github/workflows/*.yml` package job - a repo-wide dependency
+change unrelated to the PNG representation benchmark, touching files this
+stage has no other reason to modify. Consistent with Stage 2D's own
+precedent (see `docs/reviews/stage-2d-provider-evaluation-rmdto.md`: "`ruff
+format` was not applied repo-wide... applied only to the files this stage
+actually touches"), that fix does not belong in this stage's diff. It is
+flagged as a separate follow-up rather than bundled here.
 
 ## Deviations from the brief
 
@@ -277,4 +301,35 @@ adds machinery and fake-backend wiring evidence, not a measured result.
 ## Confirmation
 
 No files outside this stage's stated scope were changed; the 140
-`ruff format` unrelated-file reformats were reverted before committing.
+`ruff format` unrelated-file reformats were reverted before committing, and
+the one that survived the first pass (`README.md`'s pre-existing code
+blocks - see "Corrective pass") was reverted in a follow-up commit.
+
+## Corrective pass
+
+An external review of the first pushed commit (`33e8fe27998b4a2dfe9e6f903c67823a70b67f46`)
+found three items:
+
+1. **PR base/stacking.** No PR was opened by the agent session that pushed
+   the branch - only `git push -u origin
+   stage-2e-controlled-png-intervention-benchmark`. When a PR is opened, it
+   must target `stage-2d-provider-evaluation-aggregate` as its base (a
+   stacked PR), not `main`, until Stage 2D merges - opening against `main`
+   directly would present both stages' diffs as one combined PR.
+2. **Unresolved repo-wide validation.** The original report inferred "the
+   Ruff failures are pre-existing" from a `git diff --stat` showing no
+   changes to the failing files. That is necessary but not sufficient -
+   fixed by the base-vs-head comparison above, run with the identical
+   isolated-venv toolchain against both branches.
+3. **README formatting leak.** `ruff format .`'s revert step compared
+   `git status` before/after and reverted every file that transitioned
+   untracked/unmodified -> modified. `README.md` was already modified
+   (this stage's own intentional new section) before `ruff format` ran, so
+   its file-level status didn't change, and `ruff format`'s *additional*
+   reformatting of ~15 unrelated pre-existing Python code blocks inside it
+   went undetected and was committed. Fixed by resetting `README.md` to the
+   `stage-2d-provider-evaluation-aggregate` version and re-applying only the
+   new section.
+
+All three are addressed in this document and in the follow-up commit that
+adds this section. No PR has been opened as of this commit.

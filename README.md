@@ -69,19 +69,17 @@ score_table = ScoreTable(
     metric_ids=["quality", "uncertainty"],
 )
 
-recipe = LayoutRecipe.from_dict(
-    {
-        "version": "vpm-layout/0",
-        "name": "quality-first",
-        "row_order": {
-            "kind": "lexicographic",
-            "keys": [{"metric_id": "quality", "direction": "desc"}],
-            "tie_break": "row_id",
-        },
-        "column_order": {"kind": "source"},
-        "normalization": {"kind": "per_metric_minmax", "clip": True},
-    }
-)
+recipe = LayoutRecipe.from_dict({
+    "version": "vpm-layout/0",
+    "name": "quality-first",
+    "row_order": {
+        "kind": "lexicographic",
+        "keys": [{"metric_id": "quality", "direction": "desc"}],
+        "tie_break": "row_id",
+    },
+    "column_order": {"kind": "source"},
+    "normalization": {"kind": "per_metric_minmax", "clip": True},
+})
 
 artifact = build_vpm(score_table, recipe)
 cell = artifact.cell(view_row=0, view_column=0)
@@ -118,15 +116,13 @@ source = ScoreTable(
     row_ids=["state:left", "state:right", "state:aligned"],
     metric_ids=["LEFT", "RIGHT", "STAY", "FIRE"],
 )
-recipe = LayoutRecipe.from_dict(
-    {
-        "version": "vpm-layout/0",
-        "name": "policy-source-order",
-        "row_order": {"kind": "source", "tie_break": "row_id"},
-        "column_order": {"kind": "source"},
-        "normalization": {"kind": "per_metric_minmax", "clip": True},
-    }
-)
+recipe = LayoutRecipe.from_dict({
+    "version": "vpm-layout/0",
+    "name": "policy-source-order",
+    "row_order": {"kind": "source", "tie_break": "row_id"},
+    "column_order": {"kind": "source"},
+    "normalization": {"kind": "per_metric_minmax", "clip": True},
+})
 
 artifact = build_vpm(source, recipe)
 decision = VPMPolicyLookup(artifact).read("state:aligned")
@@ -181,23 +177,19 @@ Evidence metrics are returned with the decision but never participate in action 
 A finite policy property is declarative and versioned:
 
 ```python
-fire_requires_alignment = PolicyPropertySpec.from_dict(
-    {
-        "id": "fire_requires_alignment",
-        "version": "1",
-        "assert": {
-            "implies": [
-                {"eq": [{"var": "winner"}, "FIRE"]},
-                {
-                    "all": [
-                        {"eq": [{"var": "state.tank"}, {"var": "state.target"}]},
-                        {"eq": [{"var": "state.cooldown"}, 0]},
-                    ]
-                },
-            ]
-        },
-    }
-)
+fire_requires_alignment = PolicyPropertySpec.from_dict({
+    "id": "fire_requires_alignment",
+    "version": "1",
+    "assert": {
+        "implies": [
+            {"eq": [{"var": "winner"}, "FIRE"]},
+            {"all": [
+                {"eq": [{"var": "state.tank"}, {"var": "state.target"}]},
+                {"eq": [{"var": "state.cooldown"}, 0]},
+            ]},
+        ]
+    },
+})
 
 report = PolicyPropertyChecker(
     artifact,
@@ -243,8 +235,8 @@ risk_view = build_view(source, ViewProfile.from_metric("risk", name="risk"))
 
 assert people_view.source.digest == tree_view.source.digest == risk_view.source.digest
 print(people_view.cell(0, 0).row_id)  # crowd
-print(tree_view.cell(0, 0).row_id)  # forest
-print(risk_view.cell(0, 0).row_id)  # traffic
+print(tree_view.cell(0, 0).row_id)    # forest
+print(risk_view.cell(0, 0).row_id)    # traffic
 ```
 
 Positive weights make high values salient. Negative weights make low values salient.
@@ -256,11 +248,7 @@ See [`docs/examples/view-profiles.md`](docs/examples/view-profiles.md) and [`doc
 The spatial optimizer derives a `ViewProfile` for one explicit geometric objective: concentrate high-signal mass in the top-left inspection region.
 
 ```python
-from zeromodel.analysis import (
-    SpatialOptimizer,
-    build_optimized_view,
-    optimize_view_profile,
-)
+from zeromodel.analysis import SpatialOptimizer, build_optimized_view, optimize_view_profile
 from zeromodel.core import ScoreTable
 
 source = ScoreTable(
@@ -342,15 +330,11 @@ Tracking means a score moved. Learning means a feedback-driven change improves c
 ```python
 from zeromodel.analysis import LearningObservation, build_learning_vpm
 
-assessment = build_learning_vpm(
-    [
-        LearningObservation("claim-support", before=0.42, after=0.72, split="train"),
-        LearningObservation("related-claim", before=0.50, after=0.63, split="heldout"),
-        LearningObservation(
-            "summary-quality", before=0.82, after=0.81, split="regression"
-        ),
-    ]
-)
+assessment = build_learning_vpm([
+    LearningObservation("claim-support", before=0.42, after=0.72, split="train"),
+    LearningObservation("related-claim", before=0.50, after=0.63, split="heldout"),
+    LearningObservation("summary-quality", before=0.82, after=0.81, split="regression"),
+])
 
 print(assessment.learned)
 learning_artifact = assessment.artifact

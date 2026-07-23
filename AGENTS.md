@@ -4,29 +4,31 @@
 
 ZeroModel is a small Python package for building deterministic Visual Policy Map (VPM) artifacts from scored tables, then consuming those artifacts through views, spatial transforms, comparisons, gates, and higher-level assessment modules.
 
-The package is intentionally split into:
+The package is split into nine namespace-package distributions, each under its
+own `packages/<key>/` directory with its own `pyproject.toml`, `src/`, and
+`tests/`. `package-boundaries.toml` at the repo root is the authoritative,
+machine-readable source for package names, namespaces, source roots, and
+allowed internal dependency edges — treat it as ground truth over any prose
+description, including this one.
 
-- `zeromodel.artifact`: core immutable artifact kernel and identity rules.
-- `zeromodel.*` consumers: views, spatial/manifold logic, learning/training/critic projections, rendering, bundling, composition, and controllers.
-
-Keep the artifact kernel conservative. Most new behavior should be added in consumer modules first, not by widening the core artifact contract.
+Keep the core artifact kernel conservative. Most new behavior should be added
+in consumer packages (analysis, observation, vision, video) first, not by
+widening `zeromodel.core`'s contract.
 
 ## Repo Map
 
-- `zeromodel/__init__.py`: public import surface.
-- `zeromodel/artifact.py`: `ScoreTable`, `LayoutRecipe`, `VPMArtifact`, normalization, ordering, artifact identity.
-- `zeromodel/views.py`: dense-table policy lenses via `ViewProfile` and `build_view`.
-- `zeromodel/spatial.py`: top-left mass optimization and optimized views.
-- `zeromodel/manifold.py`: temporal series over optimized panels.
-- `zeromodel/learning.py`: before/after/held-out/regression learning evidence.
-- `zeromodel/training.py`: checkpoint-level training telemetry assessment.
-- `zeromodel/critic.py`: critic/evidence/policy risk assessment.
-- `zeromodel/compose.py`, `compare.py`, `hierarchy.py`, `edge.py`, `controller.py`: downstream consumers over VPM fields/artifacts.
-- `zeromodel/render.py`: dependency-light PNG/SVG output.
-- `zeromodel/bundle.py`: `.vpm` bundle serialization.
-- `zeromodel/metrics.py`: metric alias packing and `ScoreTable` helpers.
-- `zeromodel/adapters/`: tracker export adapters.
-- `tests/`: module-level contract tests plus a broad capability smoke test.
+- `packages/core/src/zeromodel/core`: `ScoreTable`, `LayoutRecipe`, `VPMArtifact`, normalization, ordering, artifact identity, `VPMPolicyLookup`. No internal dependencies.
+- `packages/analysis/src/zeromodel/analysis`: views, spatial/manifold logic, learning/training/critic projections, PHOS gates, tracker-export adapters. Depends on core.
+- `packages/observation/src/zeromodel/observation`: observation DTOs, visual address contracts, deployment bindings. Depends on core.
+- `packages/vision/src/zeromodel/vision`: deterministic visual index and visual policy reader. Depends on core, observation.
+- `packages/video/src/zeromodel/video`: video policy, arcade fixture, video action-set RMDTO (Runtime/Facade/Engine/Service/Store) domain. Depends on core, observation.
+- `packages/sqlalchemy/src/zeromodel/persistence/sqlalchemy`: explicit SQLAlchemy persistence runtime and Store implementations. Depends on core, video.
+- `packages/artifacts/src/zeromodel/artifacts`: content-addressed artifact storage and reference identity; storage/content-reference authority. Depends on core.
+- `packages/trust/src/zeromodel/trust`: signature envelopes, trust receipts, revocation. Depends on core, artifacts. Leaf package — does not depend on navigation.
+- `packages/navigation/src/zeromodel/navigation`: artifact navigation over the artifacts store. Depends on core, artifacts. Leaf package — does not depend on trust. Search is not yet implemented here.
+- `tests/`: repository-wide and cross-package contract tests, run alongside each package's own `packages/*/tests/`.
+- `integration_tests/`: cross-package production behavior requiring multiple distributions together.
+- `research/`: benchmark, evidence, and unpromoted experimental machinery; excluded from the production package contract and from the fast/quality gates.
 - `docs/examples/`: usage-oriented examples that usually map cleanly to tests.
 - `docs/research/`: hypothesis and framing docs; do not treat these as implementation proof.
 
@@ -36,13 +38,13 @@ Keep the artifact kernel conservative. Most new behavior should be added in cons
 - `LayoutRecipe` is explicit. Ordering and normalization should stay deterministic.
 - `VPMArtifact.artifact_id` is content-derived. Any semantic change to artifact payload changes identity.
 - Consumers can add provenance, derived summaries, or alternative orderings, but should not mutate source evidence.
-- When adding new public APIs, prefer exposing them through `zeromodel/__init__.py` only after tests exist.
+- When adding new public APIs, prefer exposing them through the owning package's `__init__.py` only after tests exist. There is no root `zeromodel/__init__.py` compatibility surface to fall back on — it has been removed, and `package-boundaries.toml`'s `forbidden_roots` keeps it that way.
 
 ## Review Priorities
 
 When reviewing or extending this repo, check these first:
 
-1. Packaging/version consistency between `pyproject.toml`, `zeromodel/__init__.py`, README, and release docs.
+1. Package/version consistency between each package's `packages/<key>/pyproject.toml`, `package-boundaries.toml`, README, and release docs.
 2. Public flags that look configurable but do not change behavior.
 3. Provenance and artifact identity stability after serialization or derived-view construction.
 4. Whether README claims are backed by tests or by committed example fixtures.
@@ -51,9 +53,9 @@ When reviewing or extending this repo, check these first:
 
 ```powershell
 python scripts/run_fast_tests.py
-pytest tests/test_artifact_kernel.py -q
-pytest tests/test_views.py tests/test_spatial.py tests/test_manifold.py -q
-python -m build
+pytest packages/core/tests/test_artifact_kernel.py -q
+pytest packages/analysis/tests/test_spatial.py packages/analysis/tests/test_manifold.py -q
+python -m build packages/core
 ```
 
 ## Test Execution Policy
@@ -68,7 +70,7 @@ The default repository validation command is:
 python scripts/run_fast_tests.py
 ```
 
-The complete fast suite has a hard 60-second budget.
+The complete fast suite has a hard 120-second budget (`FAST_SUITE_BUDGET_SECONDS` in `scripts/run_fast_tests.py`) and runs `tests/`, `integration_tests/`, and every `packages/*/tests/` directory with the marker expression `not slow and not external and not research`.
 
 During implementation:
 

@@ -4,41 +4,59 @@
 
 A VPM is a deterministic spatial view over a table of scored items. It carries values, stable row and metric identifiers, a layout recipe, view ordering, source mapping, provenance, and deterministic identity.
 
-The 1.0.13 release candidate is split into six namespace-package distributions.
-Import from the package namespaces directly; the legacy root compatibility surface
-is intentionally absent.
+The 1.0.13 release candidate is split into nine namespace-package distributions:
+`zeromodel` (core), `zeromodel-analysis`, `zeromodel-observation`, `zeromodel-vision`,
+`zeromodel-video`, `zeromodel-sqlalchemy`, `zeromodel-artifacts`, `zeromodel-trust`,
+and `zeromodel-navigation`. Import from the package namespaces directly; the legacy
+root compatibility surface (`zeromodel/__init__.py` re-exporting every capability)
+has been removed and is not present in a clean checkout.
 
-Public claims are tracked in [`docs/claims-audit.md`](docs/claims-audit.md). Treat that file as the source of truth for what is validated, what is implemented with thin evidence, and what remains a roadmap claim.
+Public claims for the original VPM/policy-lookup/visual-addressing surface are
+tracked in [`docs/claims-audit.md`](docs/claims-audit.md); treat that file as the
+source of truth for what is validated, what is implemented with thin evidence, and
+what remains a roadmap claim for those packages. That audit predates the nine-package
+split and does not yet cover `zeromodel-artifacts`, `zeromodel-trust`, or
+`zeromodel-navigation` — see the scope note at the top of the file, and consult
+those packages' own READMEs and stage completion reports for their claims.
 
 ## Install
 
-Current GitHub install:
+These packages are not currently published to a package index. Install from a
+local clone:
 
 ```bash
-python -m pip install "git+https://github.com/ernanhughes/zeromodel.git@main"
+git clone https://github.com/ernanhughes/zeromodel.git
+cd zeromodel
+python -m pip install -r requirements-dev.txt
 ```
 
-For the 1.0.13 release candidate, install the pieces you need:
+`requirements-dev.txt` installs all nine packages in editable mode plus the
+development toolchain (pytest, ruff, mypy, build, twine). For a non-editable
+install of only the packages you need, after cloning:
 
 ```bash
 python -m pip install \
-  zeromodel==1.0.13 \
-  zeromodel-analysis==1.0.13 \
-  zeromodel-observation==1.0.13 \
-  zeromodel-vision==1.0.13 \
-  zeromodel-video==1.0.13 \
-  zeromodel-sqlalchemy==1.0.13
+  ./packages/core \
+  ./packages/analysis \
+  ./packages/observation \
+  ./packages/vision \
+  ./packages/video \
+  ./packages/sqlalchemy \
+  ./packages/artifacts \
+  ./packages/trust \
+  ./packages/navigation
 ```
 
-For development:
+Then verify the checkout:
 
 ```bash
-python -m pip install -r requirements-dev.txt
 python scripts/run_fast_tests.py
-python scripts/validate_release_candidate.py
 ```
 
-Release steps are documented in [`docs/release.md`](docs/release.md).
+`scripts/validate_release_candidate.py` builds every wheel/sdist into a clean
+virtual environment and runs the full test-layer suite; see
+[`docs/release.md`](docs/release.md) before running it, since it is a heavier,
+release-gating command rather than a routine development check.
 
 ## Core artifact
 
@@ -78,6 +96,9 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Deterministic visual index and visual policy reader | `zeromodel.vision` |
 | Video policy, arcade fixture, video action-set DTOs/stores | `zeromodel.video` |
 | Explicit SQLAlchemy persistence runtime | `zeromodel.persistence.sqlalchemy` |
+| Content-addressed artifact storage and reference identity | `zeromodel.artifacts` |
+| Signature envelopes, trust receipts, revocation | `zeromodel.trust` |
+| Artifact navigation (Search remains unimplemented) | `zeromodel.navigation` |
 
 ## Policy lookup: signs, not directions
 

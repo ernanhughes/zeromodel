@@ -33,7 +33,8 @@ jobs:
       - name: Install validation tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install build twine pytest ruff mypy numpy "SQLAlchemy>=2.0,<3"
+          python -m pip install build twine pytest ruff mypy "numpy<2.0" "SQLAlchemy>=2.0,<3"
+          python -c "import numpy; print('NumPy', numpy.__version__)"
       - name: Build dependency and SQLAlchemy wheels
         run: |
           python -m build packages/core
@@ -44,11 +45,22 @@ jobs:
           python -m twine check packages/video/dist/*
           python -m build packages/sqlalchemy
           python -m twine check packages/sqlalchemy/dist/*
-      - name: Lint and type-check SQLAlchemy package
+      - name: Lint SQLAlchemy package
+        run: python -m ruff check packages/sqlalchemy/src packages/sqlalchemy/tests
+      - name: Check SQLAlchemy formatting
+        run: python -m ruff format --check packages/sqlalchemy/src packages/sqlalchemy/tests
+      - name: Type-check SQLAlchemy package
+        shell: pwsh
         run: |
-          python -m ruff check packages/sqlalchemy/src packages/sqlalchemy/tests
-          python -m ruff format --check packages/sqlalchemy/src packages/sqlalchemy/tests
-          python -m mypy packages/sqlalchemy/src
+          New-Item -ItemType Directory -Force build | Out-Null
+          python -m mypy packages/sqlalchemy/src 2>&1 | Tee-Object -FilePath build/sqlalchemy-mypy.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload SQLAlchemy mypy failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sqlalchemy-mypy-failure
+          path: build/sqlalchemy-mypy.log
       - name: Check package boundaries
         run: python scripts/check_package_boundaries.py
       - name: Install wheels in clean environment

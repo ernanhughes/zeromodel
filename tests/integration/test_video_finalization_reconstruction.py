@@ -77,6 +77,7 @@ import json
 from pathlib import Path
 import sys
 from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
 from zeromodel.video.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO
 from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
@@ -87,7 +88,7 @@ from zeromodel.video.domains.video_action_set.final_reconstruction import recons
 
 database = Path(sys.argv[1]).resolve()
 access_id = sys.argv[2]
-url = database.as_uri().replace("file:///", "sqlite:///")
+url = sqlite_database_url(database)
 store = build_finalization_sqlite_runtime(url).video_action_set.engine.final_access_service.store
 record = store.load_final_access_record(access_id)
 authorization = store.load_final_authorization(record.authorization_id)
@@ -202,13 +203,14 @@ import json
 from pathlib import Path
 import sys
 from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
 from zeromodel.video.domains.video_action_set.final_access_dto import FinalEvaluationResultDTO
 from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
 from zeromodel.video.domains.video_action_set.final_publication import FINAL_EVALUATION_NAME, load_published_receipt
 
 database = Path(sys.argv[1]).resolve()
 access_id = sys.argv[2]
-url = database.as_uri().replace("file:///", "sqlite:///")
+url = sqlite_database_url(database)
 store = build_finalization_sqlite_runtime(url).video_action_set.engine.final_access_service.store
 record = store.load_final_access_record(access_id)
 authorization = store.load_final_authorization(record.authorization_id)

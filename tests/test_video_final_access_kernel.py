@@ -24,9 +24,11 @@ from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_bytes
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationResultDTO,
+    FinalExecutionAuthorizationDTO,
     FinalExecutionReceiptDTO,
     event_chain_digest,
 )
+import zeromodel.video.domains.video_action_set.final_access_service as final_access_service_module
 from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
 from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
 from zeromodel.video.domains.video_action_set.final_evaluation import evaluate_final_protocol
@@ -593,3 +595,152 @@ def test_reconciler_interrupts_only_after_process_is_gone(tmp_path: Path) -> Non
     )
     assert interrupted is not None
     assert interrupted.state == "interrupted"
+
+
+def test_execute_final_once_reads_authorization_and_protocol_files_exactly_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Regression for the final-authorization TOCTOU fix: before the fix,
+    `execute_final_once()` called `load_final_authorization_file()` once
+    inside `preflight_final_execution()` and a second time directly, with
+    an open window between the two reads. Every authority-bearing file may
+    now be read at most once per `execute_final_once()` call."""
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    req = request(tmp_path, auth)
+    service = FinalAccessService(
+        store=InMemoryVideoActionSetStore(),
+        final_executor=SyntheticFinalExecutor(),
+    )
+
+    authorization_reads: list[Path] = []
+    protocol_reads: list[Path] = []
+    original_load_authorization = final_access_service_module.load_final_authorization_file
+    original_load_protocol = final_access_service_module.load_final_protocol_file
+
+    def counting_load_authorization(path: Path) -> FinalExecutionAuthorizationDTO:
+        authorization_reads.append(path)
+        return original_load_authorization(path)
+
+    def counting_load_protocol(path: Path):
+        protocol_reads.append(path)
+        return original_load_protocol(path)
+
+    monkeypatch.setattr(
+        final_access_service_module,
+        "load_final_authorization_file",
+        counting_load_authorization,
+    )
+    monkeypatch.setattr(
+        final_access_service_module, "load_final_protocol_file", counting_load_protocol
+    )
+
+    service.execute_final_once(req)
+
+    assert len(authorization_reads) == 1
+    assert len(protocol_reads) == 1
+
+
+def test_authorization_file_replaced_mid_execution_cannot_become_execution_authority(
+    tmp_path: Path,
+) -> None:
+    """Authorization A is resolved once at the start of `execute_final_once()`.
+    Replacing the authorization file on disk after that resolution - here,
+    at the `final_materialization_started` boundary, well inside actual
+    execution - must not let the replacement (authorization B) become the
+    execution authority: the resulting receipt must still reflect A's own
+    `execution_commit`, never B's."""
+    protocol = approved_protocol()
+    auth_a = authorization(tmp_path, protocol)
+    req = request(tmp_path, auth_a)
+    authorization_file = Path(req.authorization_file)
+
+    replacement_payload = auth_a.to_dict()
+    replacement_payload["authorization_payload"] = dict(
+        replacement_payload["authorization_payload"]
+    )
+    replacement_payload["authorization_payload"]["execution_commit"] = (
+        "replacement-commit-must-never-execute"
+    )
+    replacement_payload.pop("authorization_digest")
+    auth_b = FinalExecutionAuthorizationDTO.create(replacement_payload)
+    assert auth_b.authorization_digest != auth_a.authorization_digest
+
+    def replace_authorization_file(boundary: str) -> None:
+        if boundary == "final_materialization_started":
+            authorization_file.write_text(
+                json.dumps(auth_b.to_dict(), ensure_ascii=False), encoding="utf-8"
+            )
+
+    service = FinalAccessService(
+        store=InMemoryVideoActionSetStore(),
+        final_executor=SyntheticFinalExecutor(),
+        failure_injector=replace_authorization_file,
+    )
+
+    receipt = FinalExecutionReceiptDTO.from_dict(service.execute_final_once(req))
+
+    # The replacement genuinely landed on disk...
+    on_disk = json.loads(authorization_file.read_text(encoding="utf-8"))
+    assert (
+        on_disk["authorization_payload"]["execution_commit"]
+        == "replacement-commit-must-never-execute"
+    )
+    # ...but execution still used the authorization resolved before that
+    # boundary fired, never the replacement.
+    assert receipt.execution_commit == "synthetic-execution-commit"
+    assert receipt.authorization_digest == auth_a.authorization_digest
+
+
+def test_preflight_only_creates_no_store_state(tmp_path: Path) -> None:
+    """`preflight_only=True` must remain read-only at the service level
+    (not merely at the CLI level): no authorization, access record, or
+    reservation is created in the store."""
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    req = request(tmp_path, auth, preflight_only=True)
+    store = InMemoryVideoActionSetStore()
+    service = FinalAccessService(store=store, final_executor=SyntheticFinalExecutor())
+
+    result = service.execute_final_once(req)
+
+    assert result["preflight"] == "passed"
+    assert result["reservation_created"] is False
+    assert store.load_final_authorization(auth.authorization_id) is None
+    assert not Path(auth.database_path).exists()
+
+
+def test_mismatched_existing_authorization_creates_no_reservation(
+    tmp_path: Path,
+) -> None:
+    """An authorization already recorded under the same id, but not equal
+    to the one currently on disk, must be rejected before any reservation
+    is attempted."""
+    protocol = approved_protocol()
+    auth = authorization(tmp_path, protocol)
+    store = InMemoryVideoActionSetStore()
+    service = FinalAccessService(store=store, final_executor=SyntheticFinalExecutor())
+    service.create_authorization(auth, protocol)
+
+    mutated_payload = auth.to_dict()
+    mutated_payload["authorization_payload"] = dict(
+        mutated_payload["authorization_payload"]
+    )
+    mutated_payload["authorization_payload"]["execution_commit"] = "different-commit"
+    mutated_payload.pop("authorization_digest")
+    mutated_auth = FinalExecutionAuthorizationDTO.create(mutated_payload)
+    # request() writes whatever authorization object it is given to
+    # `<authorization_id>-authorization.json` - both `auth` and
+    # `mutated_auth` share authorization_id "auth-1", so this overwrites
+    # the file with the mutated content while producing a request whose
+    # expected digest matches it.
+    req = request(tmp_path, mutated_auth)
+
+    with pytest.raises(VPMValidationError, match="authorization mismatch"):
+        service.execute_final_once(req)
+
+    record = store.load_final_access_record(
+        final_access_service_module.access_id_for_authorization(auth)
+    )
+    assert record is not None
+    assert record.state == "authorized"

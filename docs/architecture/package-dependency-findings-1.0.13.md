@@ -1,19 +1,24 @@
-# ZeroModel 1.0.13 Package Dependency Findings
+# ZeroModel Current Architecture Package Dependency Findings
 
-Baseline commit: `12746ff0b7cbca8c21d0bd502732fe32c43ef020`
+**Status: current architecture findings** (not a historical migration snapshot).
+
+Generator version: `2.0.0`
+Baseline commit: `42e08cacb6965e7f7ff5bdfc21d153b821f5387c`
+Generated (UTC): `2026-07-23T10:48:57Z`
+Source tree dirty: `true`
 
 ## Blocker
 
-No blocker forbidden proposed edges detected by the generated classifier.
+No blocker forbidden edges detected by the generated classifier.
 
 ## High
 
-- Root `zeromodel/__init__.py` imports heavyweight and research-facing modules at import time, contradicting the lightweight core import requirement. Remedy: remove root compatibility exports during Stage 1.0.13A after package-local APIs are declared.
+- (none currently detected by the generated classifier; see Blocker section for any forbidden edges.)
 
 ## Medium
 
-- Optional dependencies are declared globally in one distribution, while modules requiring them are intermingled in the `zeromodel` namespace. Remedy: move dependency-owning implementations to vision, research, or sqlalchemy packages before publishing wheels.
+- (none currently detected by the generated classifier.)
 
 ## Low
 
-- CI and release scripts assume one distribution and one `dist/` directory. Remedy: replace with workspace-aware build matrix in Stage 1.0.13H.
+- (none currently detected by the generated classifier.)

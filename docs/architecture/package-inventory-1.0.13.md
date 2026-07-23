@@ -1,6 +1,11 @@
-# ZeroModel 1.0.13 Package Inventory
+# ZeroModel Current Architecture Package Inventory
 
-Baseline commit: `12746ff0b7cbca8c21d0bd502732fe32c43ef020`
+**Status: current architecture inventory** (not a historical migration snapshot; the nine-package split described here is the present state of `main`, not a plan).
+
+Generator version: `2.0.0`
+Baseline commit: `42e08cacb6965e7f7ff5bdfc21d153b821f5387c`
+Generated (UTC): `2026-07-23T10:48:57Z`
+Source tree dirty: `true`
 
 Generated artifacts:
 
@@ -10,31 +15,47 @@ Generated artifacts:
 
 ## Module Count By Classification
 
+- analysis: 22
+- artifacts: 17
+- core: 11
 - examples: 27
-- tooling: 115
+- navigation: 7
+- observation: 4
+- research: 64
+- sqlalchemy: 12
+- tooling: 172
+- trust: 6
+- video: 60
+- vision: 3
 
-## Public Root API
+## Production Packages
 
-`zeromodel/__init__.py` currently re-exports symbols from core, analysis, observation, vision, video, and research/evidence modules. The approved package architecture removes this compatibility surface instead of preserving aliases. See the CSV `public_symbols` and inbound test/example columns for defining-module and consumer evidence.
+Production source is discovered exclusively from the `source_root` entries in `package-boundaries.toml` (the authoritative package configuration), one row per configured package:
+
+- `zeromodel` (`zeromodel.core`) - packages/core/src
+- `zeromodel-analysis` (`zeromodel.analysis`) - packages/analysis/src
+- `zeromodel-observation` (`zeromodel.observation`) - packages/observation/src
+- `zeromodel-vision` (`zeromodel.vision`) - packages/vision/src
+- `zeromodel-video` (`zeromodel.video`) - packages/video/src
+- `zeromodel-sqlalchemy` (`zeromodel.persistence.sqlalchemy`) - packages/sqlalchemy/src
+- `zeromodel-artifacts` (`zeromodel.artifacts`) - packages/artifacts/src
+- `zeromodel-trust` (`zeromodel.trust`) - packages/trust/src
+- `zeromodel-navigation` (`zeromodel.navigation`) - packages/navigation/src
+
+The historical monolithic root (`package-boundaries.toml`'s `forbidden_roots = ["zeromodel"]`) is not scanned by this script and is never reported as current production implementation.
 
 ## Package Build And Data Inventory
 
-Current `pyproject.toml` discovers `zeromodel*`, ships the monolithic `zeromodel` distribution at version `1.0.12`, declares NumPy as the only base runtime dependency, and puts SQLAlchemy, Torch, TorchVision, Transformers, and Pillow behind optional extras. `tool.pytest.ini_options.pythonpath = ["."]` means tests can rely on repository-root imports that future wheels must not assume.
+Each production package under `packages/*/` ships its own `pyproject.toml`, distribution name, and version. `package-boundaries.toml` declares `release_version = "1.0.13"` as the coordinated release-candidate version across all nine packages; see the individual package manifests under `packages/*/pyproject.toml` for exact per-package dependency declarations. The repository root `pyproject.toml` no longer declares a `[project]` section or builds a distribution of its own; it only holds shared tool configuration (pytest, ruff, mypy) that spans all nine packages via `pythonpath`/`mypy_path` entries under `packages/*/src`.
 
 ## Domain Boundary Inventory
 
-The RMDTO target path is Runtime -> Facade -> Engine -> Service -> Store protocol -> Store implementation -> ORM. Current SQLAlchemy ownership is isolated under `zeromodel/db`; `zeromodel/runtime.py` and `zeromodel/stores` are classified as video and should remain SQLAlchemy-free. Suspicious and forbidden proposed edges are ranked in the dependency findings document.
-
-## Split Analysis
-
-| current module | responsibility fragment | target module | target package | symbols to move | inbound callers | identity/schema risk | recommended split order |
-|---|---|---|---|---|---|---|---|
-| zeromodel | root compatibility re-exports | package-local `__init__.py` files | core/analysis/observation/vision/video/sqlalchemy | all current `__all__` entries | tests and examples using `from zeromodel import ...` | high: root API removal changes import identity | remove root re-exports after package-local public APIs are declared |
+The RMDTO target path is Runtime -> Facade -> Engine -> Service -> Store protocol -> Store implementation -> ORM. SQLAlchemy ownership is isolated under `packages/sqlalchemy/src/zeromodel/persistence/sqlalchemy`; video runtime and stores live under `packages/video/src/zeromodel/video` and are expected to stay SQLAlchemy-free at the domain-service layer. Suspicious and forbidden observed edges are ranked in the dependency findings document.
 
 ## Architecture Comparison
 
-Allowed target graph: analysis->core; observation->core; vision->observation/core; video->observation/core; sqlalchemy->video/core; research->any production package.
+Allowed target graph (derived from `package-boundaries.toml` `depends_on`): analysis->core; artifacts->core; core->(none); navigation->artifacts,core; observation->core; sqlalchemy->core,video; trust->artifacts,core; video->core,observation; vision->core,observation.
 
-Observed proposed classification graph: `{}`.
+Observed classification graph: `{"analysis": ["core"], "artifacts": ["core"], "navigation": ["artifacts", "core"], "observation": ["core"], "sqlalchemy": ["core", "video"], "trust": ["artifacts", "core"], "video": ["core", "observation"], "vision": ["core", "observation"]}`.
 
-Forbidden proposed edge count: `0`.
+Forbidden observed edge count: `0`.

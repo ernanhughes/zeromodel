@@ -168,8 +168,8 @@ maximum_lines = 1694
 owner = "video-action-set-package-split"
 
 [legacy_exceptions."packages/video/src/zeromodel/video/domains/video_action_set/final_access_service.py"]
-reason = "Stage 8 final-access service frozen before 2.x package decomposition"
-maximum_lines = 1030
+reason = "Stage 8 final-access service frozen before 2.x package decomposition; ceiling raised for the pre-audit stabilization TOCTOU fix (ResolvedFinalExecutionPreflight resolves authorization/protocol/contract/historical-authority exactly once instead of preflight and execute each re-deriving them separately)"
+maximum_lines = 1090
 owner = "video-action-set-package-split"
 
 [legacy_exceptions."packages/video/src/zeromodel/video/domains/video_action_set/final_evaluation.py"]

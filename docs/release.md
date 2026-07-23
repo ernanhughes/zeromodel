@@ -1,6 +1,8 @@
 # Release process
 
-ZeroModel 1.0.13 uses a six-distribution release-candidate workflow before any
+## Current: 1.0.13 nine-package release-candidate validation
+
+ZeroModel 1.0.13 uses a nine-distribution release-candidate workflow before any
 publish, tag, or GitHub release action:
 
 ```powershell
@@ -9,20 +11,39 @@ python scripts/run_fast_tests.py
 python scripts/check_quality.py
 ```
 
-The validator builds and checks:
+The validator builds and checks all nine packages declared in
+`package-boundaries.toml` (the authoritative package configuration; the
+validator fails if its own package list drifts from that file):
 
-- `zeromodel`
+- `zeromodel` (core)
 - `zeromodel-analysis`
 - `zeromodel-observation`
 - `zeromodel-vision`
 - `zeromodel-video`
 - `zeromodel-sqlalchemy`
+- `zeromodel-artifacts`
+- `zeromodel-trust`
+- `zeromodel-navigation`
 
 It writes `docs/architecture/package-release-artifacts-1.0.13.json` and
 `docs/architecture/package-public-api-1.0.13.csv`. It does not upload to
-TestPyPI or PyPI, create tags, or create a GitHub release.
+TestPyPI or PyPI, create tags, or create a GitHub release. No publication of
+the 1.0.13 nine-package release has occurred as of this writing; the workflow
+below (Phase 1/Phase 2, `scripts/create-release.ps1`) has not been adapted to
+drive a nine-package publish and should not be run against 1.0.13 without
+that work first — see "Historical: 1.0.12 single-package workflow" below.
 
-Older single-package releases used a two-phase PowerShell workflow:
+## Historical: 1.0.12 single-package workflow
+
+The following two-phase PowerShell workflow published ZeroModel 1.0.12, when
+the repository still shipped one monolithic `zeromodel` distribution. It is
+recorded here as history and as a starting point for a future nine-package
+publish orchestrator, not as a currently runnable process:
+`scripts/create-release.ps1` still reads and rewrites `zeromodel\__init__.py`
+and a single root `pyproject.toml` version, both of which no longer exist in
+this checkout (each of the nine packages now carries its own
+`packages/*/pyproject.toml` and version). Do not run this script against the
+current tree until it is updated for the nine-package layout.
 
 ```text
 Prepare
@@ -194,10 +215,10 @@ It does not establish:
 
 ## Next development version
 
-After ZeroModel 1.0.12 is published, begin the package-architecture work under:
-
-```text
-2.0.0.dev0
-```
-
-The package split is a breaking distribution and import-boundary change, so it belongs to the 2.x development line rather than 1.0.13.
+The nine-package split described above is not future work: it is the current
+state of `main` at release-candidate version 1.0.13, and the removal of the
+legacy root compatibility import surface is already in effect in this
+checkout. There is no pending `2.0.0.dev0` package-architecture line still to
+begin. Any future major-version bump should be driven by a new breaking
+change identified after the 1.0.13 nine-package release candidate is
+published, not by the split itself.

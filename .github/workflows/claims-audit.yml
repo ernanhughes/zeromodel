@@ -35,7 +35,7 @@ jobs:
               text=True,
           ).splitlines()
 
-          # Reacts to the current six-package workspace, not the deleted
+          # Reacts to the current nine-package workspace, not the deleted
           # root `zeromodel/` distribution. See
           # docs/reviews/post-split-main-audit.md finding H1.
           GUARDED_PREFIXES = ("packages/", "tests/", "integration_tests/", "scripts/")

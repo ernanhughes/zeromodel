@@ -195,7 +195,10 @@ def _apply_transformation(
     params: Mapping[str, Any],
 ) -> tuple[np.ndarray, dict[str, Any]]:
     source = np.ascontiguousarray(frame, dtype=np.uint8)
-    _validate_transformation_parameters(params, image_shape=tuple(source.shape))
+    _validate_transformation_parameters(
+        params,
+        image_shape=(int(source.shape[0]), int(source.shape[1])),
+    )
     result = np.array(source, copy=True)
     dx = int(params["dx"])
     dy = int(params["dy"])

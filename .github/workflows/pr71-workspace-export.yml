@@ -1,17 +1,15 @@
 name: PR 71 apply review fixes
 
 on:
-  push:
-    branches:
-      - fix/pre-audit-main-stabilization
-    paths:
-      - ".github/workflows/pr71-workspace-export.yml"
+  pull_request:
+    types: [synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.event.pull_request.number == 71 && github.event.pull_request.head.ref == 'fix/pre-audit-main-stabilization'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +25,7 @@ jobs:
           git apply /tmp/pr71-fixes.patch
       - name: Regenerate current architecture inventory
         env:
-          ZEROMODEL_INVENTORY_BASELINE: ${{ github.sha }}
+          ZEROMODEL_INVENTORY_BASELINE: ${{ github.event.pull_request.head.sha }}
           ZEROMODEL_INVENTORY_DIRTY: "true"
         run: python scripts/analyze_package_inventory.py --write
       - name: Remove temporary repair machinery

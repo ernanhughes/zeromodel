@@ -25,12 +25,5 @@
     "packages/artifacts/tests",
     "packages/trust/tests",
     "packages/navigation/tests"
-  ],
-  "python-envs.pythonProjects": [
-    {
-      "path": ".claude/worktrees",
-      "envManager": "ms-python.python:venv",
-      "packageManager": "ms-python.python:pip"
-    }
   ]
 }

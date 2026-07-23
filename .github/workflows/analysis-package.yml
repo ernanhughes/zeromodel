@@ -36,11 +36,22 @@ jobs:
           python -m twine check packages/core/dist/*
           python -m build packages/analysis
           python -m twine check packages/analysis/dist/*
-      - name: Lint and type-check analysis
+      - name: Lint analysis
+        run: python -m ruff check packages/analysis/src packages/analysis/tests
+      - name: Check analysis formatting
+        run: python -m ruff format --check packages/analysis/src packages/analysis/tests
+      - name: Type-check analysis
+        shell: pwsh
         run: |
-          python -m ruff check packages/analysis/src packages/analysis/tests
-          python -m ruff format --check packages/analysis/src packages/analysis/tests
-          python -m mypy packages/analysis/src
+          New-Item -ItemType Directory -Force build | Out-Null
+          python -m mypy packages/analysis/src 2>&1 | Tee-Object -FilePath build/analysis-mypy.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload analysis mypy failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-mypy-failure
+          path: build/analysis-mypy.log
       - name: Check package boundaries
         run: python scripts/check_package_boundaries.py
       - name: Install wheels in clean environment

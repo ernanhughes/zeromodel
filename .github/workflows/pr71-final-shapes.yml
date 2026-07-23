@@ -16,6 +16,8 @@ jobs:
         with:
           ref: fix/pre-audit-main-stabilization
           fetch-depth: 0
+      - name: Install formatting tool
+        run: python -m pip install ruff
       - name: Correct fixed-length shape construction and formatting
         run: |
           python - <<'PY'
@@ -35,27 +37,10 @@ jobs:
 
           transformations = Path('packages/video/src/zeromodel/video/domains/video_action_set/transformations.py')
           text = transformations.read_text(encoding='utf-8')
-          old = '''    _validate_transformation_parameters(
-              params,
-              image_shape=(int(source.shape[0]), int(source.shape[1])),
+          start = text.index(
+              '    _validate_transformation_parameters(\n',
+              text.index('def _apply_transformation'),
           )
-          '''.replace('          ', '    ')
-          # The previous automated edit left the arguments under-indented.
-          if '_validate_transformation_parameters(\n    params,' in text:
-              text = text.replace(
-                  '''    _validate_transformation_parameters(
-              params,
-              image_shape=(int(source.shape[0]), int(source.shape[1])),
-          )
-          '''.replace('              ', '    '),
-                  '''    _validate_transformation_parameters(
-              params,
-              image_shape=(int(source.shape[0]), int(source.shape[1])),
-          )
-          '''.replace('          ', '    '),
-              )
-          # Normalize the exact block directly, independent of the malformed spacing.
-          start = text.index('    _validate_transformation_parameters(\n', text.index('def _apply_transformation'))
           end = text.index('    result = np.array(source, copy=True)\n', start)
           block = '''    _validate_transformation_parameters(
               params,

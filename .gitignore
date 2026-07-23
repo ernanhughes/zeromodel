@@ -1,5 +1,6 @@
 test.md
 test-results/
+local-results/
 *.codebase.md
 
 .codex_integration_pr_body.md

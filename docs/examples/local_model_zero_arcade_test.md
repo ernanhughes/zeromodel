@@ -1,4 +1,4 @@
-# Local Gemma 4 → ZeroModel Arcade Test
+# Local Qwen3.5 → ZeroModel Arcade Test
 
 This is a **local-only experiment**. Do not add it to GitHub Actions.
 
@@ -7,7 +7,7 @@ This is a **local-only experiment**. Do not add it to GitHub Actions.
 ```text
 rendered arcade frame
         ↓
-local Gemma 4 through Ollama
+local Qwen3.5 through Ollama
         ↓
 strict state JSON
         ↓
@@ -51,19 +51,19 @@ Expected: 8 accepted, 8 exact states, 8 correct actions.
 ```powershell
 python .\local_gemma4_zero_arcade_test.py `
   --backend ollama `
-  --model gemma4:e4b `
+  --model qwen3.5:latest `
   --mode smoke `
   --render labelled
 ```
 
-Replace `gemma4:e4b` with your installed tag.
+Replace `qwen3.5:latest` with your installed tag.
 
 ## 3. Harder unlabelled test
 
 ```powershell
 python .\local_gemma4_zero_arcade_test.py `
   --backend ollama `
-  --model gemma4:e4b `
+  --model qwen3.5:latest `
   --mode smoke `
   --render unlabelled
 ```
@@ -73,9 +73,9 @@ python .\local_gemma4_zero_arcade_test.py `
 Run this only after the smoke test is sensible:
 
 ```powershell
-python .\local_gemma4_zero_arcade_test.py `
+python .\local_model_zero_arcade_test.py `
   --backend ollama `
-  --model gemma4:e4b `
+  --model qwen3.5:latest `
   --mode all `
   --render labelled `
   --confidence-threshold 0.70

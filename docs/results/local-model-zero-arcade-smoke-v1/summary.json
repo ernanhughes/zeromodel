@@ -1,0 +1,32 @@
+{
+  "accepted": 8,
+  "action_accuracy_over_attempted": 1.0,
+  "action_correct": 8,
+  "attempted": 8,
+  "backend": "ollama",
+  "case_mode": "smoke",
+  "confidence_threshold": 0.0,
+  "exact_state_accuracy_over_attempted": 1.0,
+  "exact_state_correct": 8,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 1.0,
+    "tank_column": 1.0,
+    "target_column": 1.0,
+    "target_present": 1.0
+  },
+  "latency_ms": {
+    "max": 6220.271,
+    "mean": 2489.0644375,
+    "median": 1959.9836,
+    "min": 1884.9169,
+    "p95": 6220.271
+  },
+  "model": "qwen3.5:latest",
+  "policy_artifact_id": "b1a64a9222e1635e49f323761c3389a1fba602fc2ebf79b0ecb3966fc3b6f260",
+  "rejected": 0,
+  "rejection_reasons": {
+    "accepted": 8
+  },
+  "render_mode": "labelled",
+  "schema_version": "zeromodel-local-qwen3.5-arcade-text-state/v2"
+}

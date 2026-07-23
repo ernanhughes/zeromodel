@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Local-only Gemma 4 -> ZeroModel arcade perception smoke test.
+"""Local vision model -> ZeroModel arcade perception experiment.
 
-Run from a ZeroModel checkout with Ollama serving a vision-capable Gemma 4 model.
-The VLM reads state only; an independently compiled VPM policy chooses actions.
+A local vision-language model observes a rendered arcade frame and returns a
+small text-protocol state description. ZeroModel validates that description,
+addresses an independently compiled VPM policy, and selects the action.
 """
 
 from __future__ import annotations
@@ -38,35 +39,7 @@ except ImportError as exc:
 
 WIDTH = 7
 ACTIONS = ("LEFT", "RIGHT", "STAY", "FIRE")
-SCHEMA_VERSION = "zeromodel-local-qwen3.5-arcade-state/v1"
-
-STATE_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "properties": {
-        "tank_column": {"type": "integer", "minimum": 0, "maximum": 6},
-        "target_present": {"type": "boolean"},
-        "target_column": {
-            "type": "integer",
-            "minimum": -1,
-            "maximum": 6,
-            "description": "-1 exactly when no target is visible",
-        },
-        "cooldown": {
-            "type": "integer",
-            "enum": [0, 1],
-            "description": "0 means ready; 1 means blocked",
-        },
-        "confidence": {"type": "number", "minimum": 0.0, "maximum": 1.0},
-    },
-    "required": [
-        "tank_column",
-        "target_present",
-        "target_column",
-        "cooldown",
-        "confidence",
-    ],
-    "additionalProperties": False,
-}
+SCHEMA_VERSION = "zeromodel-local-qwen3.5-arcade-text-state/v2"
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,7 +113,13 @@ class Prediction:
             raise ValueError("confidence must be in [0,1]")
         if present != (target_raw != -1):
             raise ValueError("target_present and target_column disagree")
-        return cls(tank, present, None if target_raw == -1 else target_raw, cooldown, confidence)
+        return cls(
+            tank,
+            present,
+            None if target_raw == -1 else target_raw,
+            cooldown,
+            confidence,
+        )
 
     @property
     def row_id(self) -> str:
@@ -167,11 +146,15 @@ class ProviderReply:
 
 
 class Provider(Protocol):
-    def predict(self, image: bytes, render_mode: str, truth: ArcadeState) -> ProviderReply: ...
+    def predict(
+        self, image: bytes, render_mode: str, truth: ArcadeState
+    ) -> ProviderReply: ...
 
 
 class FakeProvider:
-    def predict(self, image: bytes, render_mode: str, truth: ArcadeState) -> ProviderReply:
+    def predict(
+        self, image: bytes, render_mode: str, truth: ArcadeState
+    ) -> ProviderReply:
         del image, render_mode
         payload = {
             "tank_column": truth.tank_column,
@@ -189,9 +172,14 @@ class OllamaProvider:
         self.model = model
         self.timeout = timeout
         self.seed = seed
+        print(
+            f"[INFO] OllamaProvider: connecting to {self.base_url}, model={self.model}"
+        )
         self.model_record = self._find_model()
 
-    def _json(self, method: str, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _json(
+        self, method: str, path: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         data = None if payload is None else json.dumps(payload).encode()
         headers = {"Accept": "application/json"}
         if data is not None:
@@ -206,12 +194,15 @@ class OllamaProvider:
             detail = exc.read().decode(errors="replace")
             raise RuntimeError(f"Ollama HTTP {exc.code}: {detail}") from exc
         except urllib.error.URLError as exc:
-            raise RuntimeError(f"Cannot reach Ollama at {self.base_url}: {exc}") from exc
+            raise RuntimeError(
+                f"Cannot reach Ollama at {self.base_url}: {exc}"
+            ) from exc
         if not isinstance(result, dict):
             raise RuntimeError("Ollama returned non-object JSON")
         return result
 
     def _find_model(self) -> dict[str, Any]:
+        print("[INFO] Checking available Ollama models...")
         models = self._json("GET", "/api/tags").get("models", [])
         available: list[str] = []
         for item in models:
@@ -221,35 +212,83 @@ class OllamaProvider:
             if name:
                 available.append(name)
             if name == self.model or str(item.get("model", "")) == self.model:
+                print(f"[INFO] Model {self.model!r} found.")
                 return item
         raise RuntimeError(
             f"Ollama model {self.model!r} not found. Installed: "
             + (", ".join(available) or "<none>")
         )
 
-    def predict(self, image: bytes, render_mode: str, truth: ArcadeState) -> ProviderReply:
-        del truth
+    def predict(
+        self, image: bytes, render_mode: str, truth: ArcadeState
+    ) -> ProviderReply:
+        del truth  # not used in provider
+        prompt = prompt_for(render_mode)
+        base64_image = base64.b64encode(image).decode("ascii")
         payload = {
             "model": self.model,
-            "prompt": prompt_for(render_mode),
-            "images": [base64.b64encode(image).decode("ascii")],
-            "format": STATE_SCHEMA,
-            "stream": False,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt,
+                    "images": [base64_image],
+                }
+            ],
+            # Qwen 3.5 is a thinking model. Disable thinking at the top-level
+            # Ollama request field so the answer budget is used for visible text.
             "think": False,
-            "keep_alive": "10m",
+            "stream": False,
+            # Do not use Ollama's server-side JSON/schema mode here. Local VLMs
+            # are more reliable with a tiny text protocol parsed client-side.
             "options": {"temperature": 0.0, "seed": self.seed, "num_predict": 128},
         }
+        print(
+            f"[INFO] Sending chat request (image size: {len(image)} bytes, prompt length: {len(prompt)} chars)"
+        )
         started = time.perf_counter()
-        response = self._json("POST", "/api/generate", payload)
+        try:
+            response = self._json("POST", "/api/chat", payload)
+        except Exception as e:
+            print(f"[ERROR] Ollama request failed: {e}")
+            raise
         wall_ms = (time.perf_counter() - started) * 1000
-        raw = response.get("response")
+
+        message = response.get("message")
+        if not isinstance(message, dict):
+            print(
+                f"[ERROR] Ollama response missing 'message' dict, got: {type(message)}"
+            )
+            raise RuntimeError("Ollama response has no 'message' object")
+
+        raw = message.get("content")
+        thinking = message.get("thinking")
         if not isinstance(raw, str):
-            raise RuntimeError("Ollama response has no string 'response'")
-        parsed = json.loads(raw)
-        if not isinstance(parsed, dict):
-            raise ValueError("model response must decode to a JSON object")
+            print(f"[ERROR] Ollama message missing 'content' string, got: {type(raw)}")
+            raise RuntimeError("Ollama response has no string 'content' in message")
+
+        thinking_length = len(thinking) if isinstance(thinking, str) else 0
+        print(
+            "[INFO] Ollama response: "
+            f"content_chars={len(raw)}, thinking_chars={thinking_length}, "
+            f"done_reason={response.get('done_reason')!r}"
+        )
+        if not raw.strip():
+            raise RuntimeError(
+                "Ollama returned empty message.content "
+                f"(thinking_chars={thinking_length}, "
+                f"eval_count={response.get('eval_count')}, "
+                f"done_reason={response.get('done_reason')!r})"
+            )
+
+        print(f"[INFO] Ollama raw response (first 500 chars): {raw[:500]}...")
+        parsed = parse_state_text(raw)
+
         duration = response.get("total_duration")
-        duration_ms = float(duration) / 1_000_000 if isinstance(duration, (int, float)) else wall_ms
+        duration_ms = (
+            float(duration) / 1_000_000
+            if isinstance(duration, (int, float))
+            else wall_ms
+        )
         return ProviderReply(
             raw,
             parsed,
@@ -262,8 +301,72 @@ class OllamaProvider:
                 "prompt_eval_count": response.get("prompt_eval_count"),
                 "eval_count": response.get("eval_count"),
                 "done_reason": response.get("done_reason"),
+                "thinking_length": thinking_length,
+                "response_keys": sorted(response.keys()),
+                "message_keys": sorted(message.keys()),
             },
         )
+
+
+def parse_state_text(raw: str) -> dict[str, Any]:
+    """Parse a small labelled text protocol into the existing state payload.
+
+    The parser tolerates whitespace, hyphens, equals signs, and harmless prose,
+    but it requires one unambiguous value for each declared field.
+    """
+    import re
+
+    def one(pattern: str, name: str) -> str:
+        matches = re.findall(pattern, raw, flags=re.IGNORECASE | re.MULTILINE)
+        values = [str(value).strip() for value in matches]
+        unique = list(dict.fromkeys(value.lower() for value in values))
+        if not unique:
+            raise ValueError(f"model text is missing {name}: {raw!r}")
+        if len(unique) != 1:
+            raise ValueError(f"model text has conflicting {name} values: {values!r}")
+        return values[0]
+
+    tank_text = one(
+        r"(?:tank(?:[_ -]?column)?|cyan(?:[_ -]?tank)?(?:[_ -]?lane)?)\s*[:=]\s*([0-6])\b",
+        "tank column",
+    )
+    target_text = one(
+        r"(?:target(?:[_ -]?column)?|magenta(?:[_ -]?(?:target|alien))?(?:[_ -]?lane)?)"
+        r"\s*[:=]\s*(none|absent|no[_ -]?target|-1|[0-6])\b",
+        "target column",
+    )
+    cooldown_text = one(
+        r"(?:cooldown|status(?:[_ -]?(?:light|indicator))?)\s*[:=]\s*"
+        r"(ready|green|blocked|red|0|1)\b",
+        "cooldown",
+    )
+    confidence_text = one(
+        r"confidence\s*[:=]\s*(100|[0-9]{1,2})(?:\s*%)?\b",
+        "confidence",
+    )
+
+    tank = int(tank_text)
+    target_missing = target_text.strip().lower() in {
+        "none",
+        "absent",
+        "no_target",
+        "no-target",
+        "no target",
+        "-1",
+    }
+    target = -1 if target_missing else int(target_text)
+
+    cooldown_token = cooldown_text.strip().lower()
+    cooldown = 0 if cooldown_token in {"ready", "green", "0"} else 1
+    confidence = int(confidence_text) / 100.0
+
+    return {
+        "tank_column": tank,
+        "target_present": target != -1,
+        "target_column": target,
+        "cooldown": cooldown,
+        "confidence": confidence,
+    }
 
 
 def strict_int(value: Any, name: str) -> int:
@@ -292,14 +395,18 @@ You are a perception-only component in a bounded arcade experiment.
 Do not choose LEFT, RIGHT, STAY, or FIRE. Do not explain strategy.
 
 Read exactly these visible variables:
-- tank_column: lane containing the cyan tank at the bottom
-- target_present: whether a magenta alien is visible near the top
-- target_column: alien lane, or -1 if no alien is visible
-- cooldown: 0 when the top-left indicator is green/READY; 1 when red/BLOCKED
-- confidence: confidence in the complete state from 0.0 to 1.0
+- tank column: lane containing the cyan tank at the bottom
+- target column: magenta alien lane, or NONE when no alien is visible
+- cooldown: READY when the top-left indicator is green; BLOCKED when red
+- confidence: whole-number confidence percentage from 0 to 100
 
 {lanes}
-Return only the JSON object required by the supplied schema.
+
+Return exactly these four labelled lines. Do not return JSON and do not add prose:
+TANK_COLUMN: <0-6>
+TARGET_COLUMN: <NONE or 0-6>
+COOLDOWN: <READY or BLOCKED>
+CONFIDENCE: <0-100>
 """.strip()
 
 
@@ -339,17 +446,18 @@ def smoke_states() -> list[ArcadeState]:
 
 
 def policy_reader() -> tuple[VPMPolicyLookup, str]:
+    print("[INFO] Building VPM policy table...")
     states = all_states()
     table = ScoreTable(
         values=[action_values(state) for state in states],
         row_ids=[state.row_id for state in states],
         metric_ids=ACTIONS,
-        metadata={"kind": "local_qwen3.5_arcade_policy", "schema": SCHEMA_VERSION},
+        metadata={"kind": "local_model_arcade_policy", "schema": SCHEMA_VERSION},
     )
     recipe = LayoutRecipe.from_dict(
         {
             "version": "vpm-layout/0",
-            "name": "local-qwen3.5-source-order",
+            "name": "local-model-arcade-source-order",
             "row_order": {"kind": "source", "tie_break": "row_id"},
             "column_order": {"kind": "source"},
             "normalization": {"kind": "per_metric_minmax", "clip": True},
@@ -360,10 +468,14 @@ def policy_reader() -> tuple[VPMPolicyLookup, str]:
         recipe,
         provenance={"kind": "local_only_experiment", "provider": "local_vlm"},
     )
-    return VPMPolicyLookup(artifact, action_metric_ids=ACTIONS), artifact.artifact_id
+    reader = VPMPolicyLookup(artifact, action_metric_ids=ACTIONS)
+    print(f"[INFO] Policy built, artifact_id={artifact.artifact_id}")
+    return reader, artifact.artifact_id
 
 
-def render(state: ArcadeState, mode: str, width: int = 896, height: int = 512) -> Image.Image:
+def render(
+    state: ArcadeState, mode: str, width: int = 896, height: int = 512
+) -> Image.Image:
     bg, grid = (13, 18, 30), (53, 66, 92)
     cyan, magenta = (65, 220, 255), (255, 74, 171)
     green, red, white = (70, 225, 125), (242, 74, 74), (224, 232, 245)
@@ -374,9 +486,15 @@ def render(state: ArcadeState, mode: str, width: int = 896, height: int = 512) -
     lane_w = (width - left - right) / WIDTH
 
     indicator = green if state.cooldown == 0 else red
-    draw.rounded_rectangle((20, 18, 56, 54), radius=8, fill=indicator, outline=white, width=2)
+    draw.rounded_rectangle(
+        (20, 18, 56, 54), radius=8, fill=indicator, outline=white, width=2
+    )
     if mode == "labelled":
-        draw.text((68, 27), "READY (cooldown 0)" if state.cooldown == 0 else "BLOCKED (cooldown 1)", fill=white)
+        draw.text(
+            (68, 27),
+            "READY (cooldown 0)" if state.cooldown == 0 else "BLOCKED (cooldown 1)",
+            fill=white,
+        )
 
     for i in range(WIDTH + 1):
         x = round(left + i * lane_w)
@@ -395,13 +513,29 @@ def render(state: ArcadeState, mode: str, width: int = 896, height: int = 512) -
         )
         for eye_x in (cx - body_w * 0.18, cx + body_w * 0.18):
             draw.ellipse((eye_x - 5, cy - 12, eye_x + 5, cy - 2), fill=bg)
-        draw.line((cx - body_w * 0.28, cy + 12, cx + body_w * 0.28, cy + 12), fill=bg, width=4)
+        draw.line(
+            (cx - body_w * 0.28, cy + 12, cx + body_w * 0.28, cy + 12), fill=bg, width=4
+        )
 
     cx = left + (state.tank_column + 0.5) * lane_w
     y, body_w = bottom - 45, lane_w * 0.58
-    draw.rounded_rectangle((cx - body_w / 2, y - 13, cx + body_w / 2, y + 17), radius=8, fill=cyan, outline=(215, 250, 255), width=3)
+    draw.rounded_rectangle(
+        (cx - body_w / 2, y - 13, cx + body_w / 2, y + 17),
+        radius=8,
+        fill=cyan,
+        outline=(215, 250, 255),
+        width=3,
+    )
     draw.rectangle((cx - 7, y - 37, cx + 7, y - 10), fill=cyan)
-    draw.polygon([(cx - body_w * 0.42, y + 17), (cx + body_w * 0.42, y + 17), (cx + body_w * 0.30, y + 33), (cx - body_w * 0.30, y + 33)], fill=cyan)
+    draw.polygon(
+        [
+            (cx - body_w * 0.42, y + 17),
+            (cx + body_w * 0.42, y + 17),
+            (cx + body_w * 0.30, y + 33),
+            (cx - body_w * 0.30, y + 33),
+        ],
+        fill=cyan,
+    )
 
     if mode == "labelled":
         for i in range(WIDTH):
@@ -437,10 +571,14 @@ def p95(values: list[float]) -> float | None:
 
 def run(args: argparse.Namespace) -> int:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    output = args.output_dir or Path("local-results") / f"{args.model}-zero-arcade-{stamp}"
+    model_path = args.model.replace(".", "_").replace(":", "_")
+    output = (
+        args.output_dir or Path("./local-results") / f"{model_path}-zero-arcade-{stamp}"
+    )
     output.mkdir(parents=True, exist_ok=False)
     images = output / "images"
     images.mkdir()
+    print(f"[INFO] Results will be written to {output}")
 
     reader, artifact_id = policy_reader()
     provider: Provider = (
@@ -454,13 +592,15 @@ def run(args: argparse.Namespace) -> int:
 
     records: list[dict[str, Any]] = []
     cases_path = output / "cases.jsonl"
-    print(f"Running {len(states)} case(s) -> {output}")
+    print(f"[INFO] Running {len(states)} case(s) -> {output}")
 
     with cases_path.open("w", encoding="utf-8", newline="\n") as stream:
         for index, truth in enumerate(states, 1):
+            print(f"\n[INFO] === Case {index}/{len(states)}: {truth.row_id} ===")
             raw_image = png_bytes(render(truth, args.render))
             image_path = images / f"{index:03d}-{safe_name(truth.row_id)}.png"
             image_path.write_bytes(raw_image)
+            print(f"[INFO] Image saved to {image_path}")
             truth_action = reader.read(truth.row_id).action
             record: dict[str, Any] = {
                 "index": index,
@@ -477,8 +617,12 @@ def run(args: argparse.Namespace) -> int:
                 "provider": None,
             }
             try:
+                print("[INFO] Calling provider.predict()...")
                 reply = provider.predict(raw_image, args.render, truth)
+                print(f"[INFO] Provider replied in {reply.duration_ms:.2f} ms")
+                print(f"[INFO] Parsed state text: {reply.parsed}")
                 prediction = Prediction.parse(reply.parsed)
+                print(f"[INFO] Parsed prediction: {prediction}")
                 record["provider"] = {
                     "raw_text": reply.raw_text,
                     "parsed": reply.parsed,
@@ -488,19 +632,34 @@ def run(args: argparse.Namespace) -> int:
                 record["prediction"] = prediction.payload()
                 if prediction.confidence < args.confidence_threshold:
                     record["rejection_reason"] = "confidence_below_threshold"
+                    print(
+                        f"[INFO] Rejected: confidence {prediction.confidence} < threshold {args.confidence_threshold}"
+                    )
                 else:
                     decision = reader.read(prediction.row_id)
                     record["accepted"] = True
                     record["predicted_action"] = decision.action
                     record["exact_state_match"] = prediction.row_id == truth.row_id
                     record["action_match"] = decision.action == truth_action
+                    print(
+                        f"[INFO] Accepted. Predicted state: {prediction.row_id}, action: {decision.action}"
+                    )
+                    print(
+                        f"[INFO] Exact state match: {record['exact_state_match']}, action match: {record['action_match']}"
+                    )
             except Exception as exc:
+                print(
+                    f"[ERROR] Exception during processing: {type(exc).__name__}: {exc}"
+                )
+                import traceback
+
+                traceback.print_exc()
                 record["rejection_reason"] = f"{type(exc).__name__}: {exc}"
             records.append(record)
             stream.write(json.dumps(record, sort_keys=True) + "\n")
             stream.flush()
             print(
-                f"[{index:03d}/{len(states):03d}] "
+                f"[STATUS] {index:03d}/{len(states):03d} "
                 f"{'ACCEPT' if record['accepted'] else 'REJECT':<6} "
                 f"{truth.row_id:<37} "
                 f"{'exact' if record['exact_state_match'] else 'not-exact':<9} "
@@ -508,7 +667,9 @@ def run(args: argparse.Namespace) -> int:
             )
 
     accepted = [r for r in records if r["accepted"]]
-    durations = [float(r["provider"]["duration_ms"]) for r in records if r.get("provider")]
+    durations = [
+        float(r["provider"]["duration_ms"]) for r in records if r.get("provider")
+    ]
     factor_names = ("tank_column", "target_present", "target_column", "cooldown")
     factor_accuracy = {}
     for name in factor_names:
@@ -528,7 +689,9 @@ def run(args: argparse.Namespace) -> int:
         "accepted": len(accepted),
         "rejected": len(records) - len(accepted),
         "exact_state_correct": exact,
-        "exact_state_accuracy_over_attempted": exact / len(records) if records else None,
+        "exact_state_accuracy_over_attempted": exact / len(records)
+        if records
+        else None,
         "action_correct": action,
         "action_accuracy_over_attempted": action / len(records) if records else None,
         "factor_accuracy_over_accepted": factor_accuracy,
@@ -539,7 +702,9 @@ def run(args: argparse.Namespace) -> int:
             "min": min(durations) if durations else None,
             "max": max(durations) if durations else None,
         },
-        "rejection_reasons": count_values(str(r.get("rejection_reason") or "accepted") for r in records),
+        "rejection_reasons": count_values(
+            str(r.get("rejection_reason") or "accepted") for r in records
+        ),
     }
     summary_path = output / "summary.json"
     summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
@@ -548,7 +713,10 @@ def run(args: argparse.Namespace) -> int:
             {
                 "schema_version": SCHEMA_VERSION,
                 "python": sys.version,
-                "arguments": {k: str(v) if isinstance(v, Path) else v for k, v in vars(args).items()},
+                "arguments": {
+                    k: str(v) if isinstance(v, Path) else v
+                    for k, v in vars(args).items()
+                },
                 "summary": summary_path.as_posix(),
                 "cases": cases_path.as_posix(),
             },
@@ -557,8 +725,10 @@ def run(args: argparse.Namespace) -> int:
         )
         + "\n"
     )
-    print("\n" + json.dumps(summary, indent=2, sort_keys=True))
-    print(f"\nSend back:\n  {summary_path}\n  {cases_path}")
+    print("\n" + "=" * 60)
+    print("[INFO] Summary:")
+    print(json.dumps(summary, indent=2, sort_keys=True))
+    print(f"\n[INFO] Files written:\n  {summary_path}\n  {cases_path}")
     return 0 if not summary["rejected"] else 2
 
 
@@ -568,7 +738,9 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--model", default="qwen3.5")
     parser.add_argument("--ollama-url", default="http://localhost:11434")
     parser.add_argument("--mode", choices=("smoke", "all"), default="smoke")
-    parser.add_argument("--render", choices=("labelled", "unlabelled"), default="labelled")
+    parser.add_argument(
+        "--render", choices=("labelled", "unlabelled"), default="labelled"
+    )
     parser.add_argument("--confidence-threshold", type=float, default=0.0)
     parser.add_argument("--timeout", type=float, default=180.0)
     parser.add_argument("--seed", type=int, default=0)

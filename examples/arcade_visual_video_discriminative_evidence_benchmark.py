@@ -30,7 +30,7 @@ from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_
     _regions as _stage2_regions,
     build_video_cases,
 )
-from research.evidence.video_discriminative_evidence import (
+from research.evidence.video_discriminative_evidence import ( # noqa: E402
     DiscriminativeEvidenceCalibration,
     DiscriminativeEvidenceProvider,
     DiscriminativeRegionSpec,
@@ -40,7 +40,7 @@ from research.evidence.video_discriminative_evidence import (
     discriminative_region_digest,
     evaluate_candidate_eligibility,
 )
-from research.evidence.video_discriminative_joint_evidence import (
+from research.evidence.video_discriminative_joint_evidence import ( # noqa: E402
     JointEvidenceCalibration,
     JointEvidenceProvider,
     JointEvidenceRegionSpec,
@@ -52,10 +52,10 @@ from research.evidence.video_discriminative_joint_evidence import (
     joint_region_digest,
     pairwise_mask_digest,
 )
-from zeromodel.core.policy_lookup import VPMPolicyLookup
-from zeromodel.observation.visual_address import ImageObservation
-import research.evidence.video_discriminative_evidence as zde
-import research.evidence.video_discriminative_joint_evidence as zje
+from zeromodel.core.policy_lookup import VPMPolicyLookup # noqa: E402
+from zeromodel.observation.visual_address import ImageObservation # noqa: E402
+import research.evidence.video_discriminative_evidence as zde # noqa: E402
+import research.evidence.video_discriminative_joint_evidence as zje # noqa: E402
 from zeromodel.core.artifact import VPMValidationError  # noqa: E402
 from research.visual.visual_registration import RegistrationConfig  # noqa: E402
 

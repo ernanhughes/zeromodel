@@ -48,8 +48,8 @@ from examples.arcade_shooter_policy import (  # noqa: E402
     compile_policy_artifact,
     random_baseline_average,
 )
-from zeromodel.core.bundle import to_bundle
-from zeromodel.core.policy_lookup import VPMPolicyLookup
+from zeromodel.core.bundle import to_bundle # noqa: E402
+from zeromodel.core.policy_lookup import VPMPolicyLookup # noqa: E402
 
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "assets" / "signs-demo"
 MOVEMENT_ACTIONS = frozenset({"LEFT", "RIGHT", "STAY"})

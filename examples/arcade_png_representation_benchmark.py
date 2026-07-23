@@ -28,12 +28,18 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
+
+
 from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
     MaterializedProviderEvaluationRunDTO,
 )
 
-import examples.local_model_zero_arcade_test as arcade
-from examples.arcade_png_interventions import (
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+import examples.local_model_zero_arcade_test as arcade # noqa: E402
+from examples.arcade_png_interventions import ( # noqa: E402
     ALL_VARIANTS,
     COMBINED_VARIANT,
     COOLDOWN_VARIANTS,
@@ -44,7 +50,7 @@ from examples.arcade_png_interventions import (
     apply_recipe,
     build_recipe,
 )
-from examples.arcade_png_representation_comparison import (
+from examples.arcade_png_representation_comparison import ( # noqa: E402
     COOLDOWN_TARGET_METRICS,
     GENERIC_TARGET_METRICS,
     LANE_TARGET_METRICS,
@@ -56,7 +62,7 @@ from examples.arcade_png_representation_comparison import (
     write_comparison_json,
     write_comparison_md,
 )
-from examples.arcade_png_representation_runner import (
+from examples.arcade_png_representation_runner import ( # noqa: E402
     build_provider_configuration,
     build_scripted_replies_for_variant,
     find_resumable_run,

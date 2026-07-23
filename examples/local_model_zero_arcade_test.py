@@ -39,7 +39,7 @@ except ImportError as exc:
 
 WIDTH = 7
 ACTIONS = ("LEFT", "RIGHT", "STAY", "FIRE")
-SCHEMA_VERSION = "zeromodel-local-qwen3.5-arcade-text-state/v2"
+SCHEMA_VERSION = "zeromodel-local-model-arcade-text-state/v2"
 
 
 @dataclass(frozen=True, slots=True)

@@ -14,6 +14,9 @@ from zeromodel.video.domains.video_action_set.identity_service import IdentitySe
 from zeromodel.video.domains.video_action_set.observation_service import (
     ObservationService,
 )
+from zeromodel.video.domains.video_action_set.provider_evaluation_service import (
+    ProviderEvaluationService,
+)
 from zeromodel.video.domains.video_action_set.store import VideoActionSetStore
 from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
@@ -32,11 +35,13 @@ def build_runtime(
     episode_plan_service = EpisodePlanService(store=store)
     observation_service = ObservationService(store=store)
     final_access_service = FinalAccessService(store=store)
+    provider_evaluation_service = ProviderEvaluationService(store=store)
     engine = VideoActionSetEngine(
         identity_service=identity_service,
         episode_plan_service=episode_plan_service,
         observation_service=observation_service,
         final_access_service=final_access_service,
+        provider_evaluation_service=provider_evaluation_service,
     )
     facade = VideoActionSetFacade(engine=engine)
     return ZeroModelRuntime(video_action_set=facade)

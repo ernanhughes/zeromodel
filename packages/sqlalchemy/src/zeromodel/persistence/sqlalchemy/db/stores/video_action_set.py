@@ -56,6 +56,9 @@ from zeromodel.persistence.sqlalchemy.db.orm.video_action_set import (
     ObservationOperationORM,
     SealedSplitPlanORM,
 )
+from zeromodel.persistence.sqlalchemy.db.stores.provider_evaluation import (
+    ProviderEvaluationSqlStoreMixin,
+)
 from zeromodel.persistence.sqlalchemy.db.stores.video_action_set_observation import (
     chain_for_frame,
     materialized_observations_from_rows,
@@ -479,7 +482,9 @@ class _ObservationSqlStoreMixin:
         return blob
 
 
-class SqlAlchemyVideoActionSetStore(_ObservationSqlStoreMixin, VideoActionSetStore):
+class SqlAlchemyVideoActionSetStore(
+    _ObservationSqlStoreMixin, ProviderEvaluationSqlStoreMixin, VideoActionSetStore
+):
     def __init__(
         self,
         session_factory: sessionmaker[Session],

@@ -32,6 +32,14 @@ from zeromodel.video.domains.video_action_set.observation_dto import (
 from zeromodel.video.domains.video_action_set.observation_service import (
     ObservationService,
 )
+from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
+    MaterializedProviderEvaluationRunDTO,
+    ProviderEvaluationCaseDTO,
+    ProviderEvaluationRunDTO,
+)
+from zeromodel.video.domains.video_action_set.provider_evaluation_service import (
+    ProviderEvaluationService,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +48,7 @@ class VideoActionSetEngine:
     episode_plan_service: EpisodePlanService
     observation_service: ObservationService
     final_access_service: FinalAccessService
+    provider_evaluation_service: ProviderEvaluationService
 
     def load_identity(self, repo_root: Path) -> BenchmarkIdentityDTO:
         return self.identity_service.load_identity(repo_root)
@@ -281,6 +290,62 @@ class VideoActionSetEngine:
         request: FinalExecutionRequestDTO,
     ) -> dict[str, object]:
         return self.final_access_service.execute_final_once(request)
+
+    def save_provider_evaluation_run(
+        self,
+        run: MaterializedProviderEvaluationRunDTO,
+    ) -> MaterializedProviderEvaluationRunDTO:
+        return self.provider_evaluation_service.save_run(run)
+
+    def get_provider_evaluation_run(
+        self,
+        run_id: str,
+    ) -> ProviderEvaluationRunDTO | None:
+        return self.provider_evaluation_service.get_run(run_id)
+
+    def get_materialized_provider_evaluation_run(
+        self,
+        run_id: str,
+    ) -> MaterializedProviderEvaluationRunDTO | None:
+        return self.provider_evaluation_service.get_materialized_run(run_id)
+
+    def list_provider_evaluation_runs(
+        self,
+        *,
+        fixture_identity: str | None = None,
+        provider_kind: str | None = None,
+        model_digest: str | None = None,
+        policy_artifact_id: str | None = None,
+        case_mode: str | None = None,
+        representation_mode: str | None = None,
+    ) -> tuple[ProviderEvaluationRunDTO, ...]:
+        return self.provider_evaluation_service.list_runs(
+            fixture_identity=fixture_identity,
+            provider_kind=provider_kind,
+            model_digest=model_digest,
+            policy_artifact_id=policy_artifact_id,
+            case_mode=case_mode,
+            representation_mode=representation_mode,
+        )
+
+    def list_provider_evaluation_cases(
+        self,
+        *,
+        run_id: str | None = None,
+        outcome: str | None = None,
+        accepted: bool | None = None,
+        exact_state_match: bool | None = None,
+        action_match: bool | None = None,
+        frame_id: str | None = None,
+    ) -> tuple[ProviderEvaluationCaseDTO, ...]:
+        return self.provider_evaluation_service.list_cases(
+            run_id=run_id,
+            outcome=outcome,
+            accepted=accepted,
+            exact_state_match=exact_state_match,
+            action_match=action_match,
+            frame_id=frame_id,
+        )
 
 
 __all__ = ["VideoActionSetEngine"]

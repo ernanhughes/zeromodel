@@ -30,6 +30,13 @@ ZeroModel performs **state validation, policy addressing, action selection, and 
 
 The model is never given the action policy and is never asked to choose `LEFT`, `RIGHT`, `STAY`, or `FIRE`.
 
+Every case is additionally persisted as a `ProviderEvaluationCaseDTO` through
+the video action-set RMDTO aggregate (see
+[docs/architecture/provider-evaluation-rmdto.md](../architecture/provider-evaluation-rmdto.md)),
+so exact-state correctness and policy-action correctness stay separate,
+closure-validated, queryable evidence rather than only living inside
+`cases.jsonl`.
+
 ---
 
 ## Why this example exists
@@ -266,10 +273,33 @@ local-results/<model>-zero-arcade-<timestamp>/
 ├── images/
 ├── cases.jsonl
 ├── summary.json
+├── report.json          # only with --compile-report
 └── run-manifest.json
 ```
 
 The generated `local-results/` directory is environment-specific evidence and should not normally be committed.
+
+### Persistence and reporting flags
+
+```text
+--store {memory,sqlite}   default: memory
+--sqlite-path <path>      required when --store sqlite
+--compile-report          compile the run into a VPM report via the external adapter
+```
+
+`--store memory` (the default) keeps the run in an in-process
+`InMemoryVideoActionSetStore` for the duration of the script.
+`--store sqlite --sqlite-path <path>` persists identity, episode plan,
+observations, and the provider-evaluation run to a durable SQLite database
+through the existing `zeromodel-sqlalchemy` runtime composition. Either way,
+the script reloads the saved aggregate immediately after saving it and fails
+if the reload does not reconstruct byte-for-byte identically - a closure
+round-trip proof, not just a write.
+
+`--compile-report` runs the aggregate through
+`examples/provider_evaluation_report_adapter.py` and writes `report.json`
+with the compiled report/adapted-report/VPM artifact ids; this import is
+lazy, so the default path has no dependency on `zeromodel-artifacts`.
 
 A curated result may instead be preserved under `docs/results/` with:
 
@@ -536,6 +566,9 @@ Typical fields include:
   "rejected": 0,
   "exact_state_correct": 8,
   "action_correct": 8,
+  "action_equivalent_count": 0,
+  "action_changing_count": 0,
+  "run_id": "sha256:...",
   "factor_accuracy_over_accepted": {
     "tank_column": 1.0,
     "target_present": 1.0,
@@ -544,6 +577,17 @@ Typical fields include:
   }
 }
 ```
+
+`action_equivalent_count` and `action_changing_count` come straight from the
+persisted `ProviderEvaluationSummaryDTO` (see
+[docs/architecture/provider-evaluation-rmdto.md](../architecture/provider-evaluation-rmdto.md)):
+`action_correct` (`exact_state_correct + action_equivalent_count`) can exceed
+`exact_state_correct` whenever a wrong predicted state still lands on a row
+whose policy action matches the ground truth. A nonzero `action_changing_count`
+means at least one case crossed a policy boundary - the predicted action
+itself was wrong, which is a materially different failure than an
+action-equivalent miss. `run_id` addresses the full aggregate in the
+configured Store (`--store sqlite` makes this durable).
 
 ### `run-manifest.json`
 

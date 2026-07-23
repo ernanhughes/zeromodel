@@ -94,7 +94,7 @@ region = artifact.region(rows=slice(0, 1), columns=slice(0, 2))
 | Analysis, views, spatial/manifold, policy diagnostics | `zeromodel.analysis` |
 | Observation DTOs and visual address contracts | `zeromodel.observation` |
 | Deterministic visual index and visual policy reader | `zeromodel.vision` |
-| Video policy, arcade fixture, video action-set DTOs/stores | `zeromodel.video` |
+| Video policy, arcade fixture, video action-set DTOs/stores, provider evaluation aggregate | `zeromodel.video` |
 | Explicit SQLAlchemy persistence runtime | `zeromodel.persistence.sqlalchemy` |
 | Content-addressed artifact storage and reference identity | `zeromodel.artifacts` |
 | Signature envelopes, trust receipts, revocation | `zeromodel.trust` |

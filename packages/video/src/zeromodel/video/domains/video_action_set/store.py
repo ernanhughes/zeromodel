@@ -22,6 +22,11 @@ from zeromodel.video.domains.video_action_set.observation_dto import (
     ObservationDTO,
     ObservationOperationChainDTO,
 )
+from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
+    MaterializedProviderEvaluationRunDTO,
+    ProviderEvaluationCaseDTO,
+    ProviderEvaluationRunDTO,
+)
 
 
 BENCHMARK_IDENTITY_CONFLICT_MESSAGE = "benchmark identity conflict for seed digest"
@@ -43,6 +48,19 @@ UNKNOWN_EPISODE_PLAN_MESSAGE = "observation references unknown episode plan"
 FINAL_ACCESS_CONFLICT_MESSAGE = "final access record conflict"
 FINAL_ACCESS_STATE_MESSAGE = "final access state transition mismatch"
 FINAL_ACCESS_AUTHORIZATION_MESSAGE = "final execution authorization mismatch"
+PROVIDER_EVALUATION_CONFIGURATION_CONFLICT_MESSAGE = (
+    "provider evaluation configuration conflict for configuration id"
+)
+PROVIDER_EVALUATION_RUN_CONFLICT_MESSAGE = "provider evaluation run conflict for run id"
+PROVIDER_EVALUATION_CASE_CONFLICT_MESSAGE = (
+    "provider evaluation case conflict for case id"
+)
+UNKNOWN_OBSERVATION_FOR_PROVIDER_EVALUATION_MESSAGE = (
+    "provider evaluation case references unknown observation frame"
+)
+PROVIDER_EVALUATION_POLICY_MISMATCH_MESSAGE = (
+    "provider evaluation case policy artifact does not match its owning run"
+)
 
 
 class VideoActionSetStore(Protocol):
@@ -243,6 +261,43 @@ class VideoActionSetStore(Protocol):
         failure: FinalExecutionFailureDTO,
     ) -> FinalAccessRecordDTO: ...
 
+    def save_provider_evaluation_run(
+        self,
+        run: MaterializedProviderEvaluationRunDTO,
+    ) -> MaterializedProviderEvaluationRunDTO: ...
+
+    def get_provider_evaluation_run(
+        self,
+        run_id: str,
+    ) -> ProviderEvaluationRunDTO | None: ...
+
+    def get_materialized_provider_evaluation_run(
+        self,
+        run_id: str,
+    ) -> MaterializedProviderEvaluationRunDTO | None: ...
+
+    def list_provider_evaluation_runs(
+        self,
+        *,
+        fixture_identity: str | None = None,
+        provider_kind: str | None = None,
+        model_digest: str | None = None,
+        policy_artifact_id: str | None = None,
+        case_mode: str | None = None,
+        representation_mode: str | None = None,
+    ) -> tuple[ProviderEvaluationRunDTO, ...]: ...
+
+    def list_provider_evaluation_cases(
+        self,
+        *,
+        run_id: str | None = None,
+        outcome: str | None = None,
+        accepted: bool | None = None,
+        exact_state_match: bool | None = None,
+        action_match: bool | None = None,
+        frame_id: str | None = None,
+    ) -> tuple[ProviderEvaluationCaseDTO, ...]: ...
+
 
 def raise_identity_conflict() -> NoReturn:
     raise VPMValidationError(BENCHMARK_IDENTITY_CONFLICT_MESSAGE)
@@ -296,6 +351,26 @@ def raise_final_access_authorization() -> NoReturn:
     raise VPMValidationError(FINAL_ACCESS_AUTHORIZATION_MESSAGE)
 
 
+def raise_provider_evaluation_configuration_conflict() -> NoReturn:
+    raise VPMValidationError(PROVIDER_EVALUATION_CONFIGURATION_CONFLICT_MESSAGE)
+
+
+def raise_provider_evaluation_run_conflict() -> NoReturn:
+    raise VPMValidationError(PROVIDER_EVALUATION_RUN_CONFLICT_MESSAGE)
+
+
+def raise_provider_evaluation_case_conflict() -> NoReturn:
+    raise VPMValidationError(PROVIDER_EVALUATION_CASE_CONFLICT_MESSAGE)
+
+
+def raise_unknown_observation_for_provider_evaluation() -> NoReturn:
+    raise VPMValidationError(UNKNOWN_OBSERVATION_FOR_PROVIDER_EVALUATION_MESSAGE)
+
+
+def raise_provider_evaluation_policy_mismatch() -> NoReturn:
+    raise VPMValidationError(PROVIDER_EVALUATION_POLICY_MISMATCH_MESSAGE)
+
+
 __all__ = [
     "BENCHMARK_IDENTITY_CONFLICT_MESSAGE",
     "EPISODE_PLAN_CONFLICT_MESSAGE",
@@ -307,9 +382,14 @@ __all__ = [
     "OBSERVATION_CONFLICT_MESSAGE",
     "OPERATION_CHAIN_CONFLICT_MESSAGE",
     "OBSERVATION_SEQUENCE_CONFLICT_MESSAGE",
+    "PROVIDER_EVALUATION_CASE_CONFLICT_MESSAGE",
+    "PROVIDER_EVALUATION_CONFIGURATION_CONFLICT_MESSAGE",
+    "PROVIDER_EVALUATION_POLICY_MISMATCH_MESSAGE",
+    "PROVIDER_EVALUATION_RUN_CONFLICT_MESSAGE",
     "SEALED_SPLIT_PLAN_CONFLICT_MESSAGE",
     "UNKNOWN_BENCHMARK_IDENTITY_MESSAGE",
     "UNKNOWN_EPISODE_PLAN_MESSAGE",
+    "UNKNOWN_OBSERVATION_FOR_PROVIDER_EVALUATION_MESSAGE",
     "VideoActionSetStore",
     "raise_episode_plan_conflict",
     "raise_final_access_authorization",
@@ -321,7 +401,12 @@ __all__ = [
     "raise_observation_conflict",
     "raise_observation_sequence_conflict",
     "raise_operation_chain_conflict",
+    "raise_provider_evaluation_case_conflict",
+    "raise_provider_evaluation_configuration_conflict",
+    "raise_provider_evaluation_policy_mismatch",
+    "raise_provider_evaluation_run_conflict",
     "raise_sealed_split_plan_conflict",
     "raise_unknown_benchmark_identity",
     "raise_unknown_episode_plan",
+    "raise_unknown_observation_for_provider_evaluation",
 ]

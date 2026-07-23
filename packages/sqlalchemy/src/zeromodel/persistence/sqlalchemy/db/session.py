@@ -9,6 +9,9 @@ from sqlalchemy.pool import StaticPool
 
 from zeromodel.persistence.sqlalchemy.db.orm.base import Base
 from zeromodel.persistence.sqlalchemy.db.orm import (
+    provider_evaluation as _provider_evaluation_orm,
+)
+from zeromodel.persistence.sqlalchemy.db.orm import (
     video_action_set as _video_action_set_orm,
 )
 
@@ -110,6 +113,9 @@ def create_schema(engine: Engine) -> None:
     _ = _video_action_set_orm.ObservationOperationInputORM
     _ = _video_action_set_orm.ObservationOperationORM
     _ = _video_action_set_orm.SealedSplitPlanORM
+    _ = _provider_evaluation_orm.ProviderEvaluationConfigurationORM
+    _ = _provider_evaluation_orm.ProviderEvaluationRunORM
+    _ = _provider_evaluation_orm.ProviderEvaluationCaseORM
     Base.metadata.create_all(engine)
 
 

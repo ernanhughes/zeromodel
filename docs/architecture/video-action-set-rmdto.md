@@ -177,3 +177,10 @@ Future slices can add DTOs, Stores, and persistence mappings for:
 
 Those later slices should preserve the same dependency direction and must not
 reconstruct the monolith inside a new package.
+
+**Provider evaluation and policy-impact verification** (implemented, Stage 2D)
+is the first such slice: it turns one external-provider evaluation run into an
+immutable, database-backed aggregate that references existing observations by
+`frame_id` rather than duplicating pixels or provenance. See
+[provider-evaluation-rmdto.md](provider-evaluation-rmdto.md) for its aggregate
+ownership, identity model, and Store semantics.

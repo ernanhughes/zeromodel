@@ -57,6 +57,16 @@ def test_all_nine_production_source_roots_are_discovered() -> None:
     assert discovered == PRODUCTION_PACKAGE_KEYS
 
 
+
+def test_all_nine_package_test_roots_are_discovered() -> None:
+    boundaries = inventory.load_package_boundaries()
+    data = inventory.make_inventory("2026-01-01T00:00:00Z")
+    paths = {row["path"] for row in data["rows"]}
+    for key, config in boundaries.items():
+        test_root = (Path(config["source_root"]).parent / "tests").as_posix()
+        assert any(path.startswith(f"{test_root}/") for path in paths), key
+
+
 def test_package_keys_and_namespaces_agree_with_package_boundaries_toml() -> None:
     boundaries = inventory.load_package_boundaries()
     data = inventory.make_inventory("2026-01-01T00:00:00Z")
@@ -113,13 +123,24 @@ def test_import_graph_is_deterministic_with_fixed_timestamp() -> None:
     )
 
 
-def test_write_outputs_emit_parseable_csv_and_json() -> None:
-    data = inventory.make_inventory("2026-01-01T00:00:00Z")
-    inventory.write_outputs(data)
+def test_write_outputs_emit_parseable_csv_and_json_without_mutating_docs(
+    tmp_path: Path,
+) -> None:
+    canonical_paths = [
+        Path("docs/architecture/package-module-map-1.0.13.csv"),
+        Path("docs/architecture/package-import-graph-1.0.13.json"),
+        Path("docs/architecture/package-inventory-1.0.13.md"),
+        Path("docs/architecture/package-dependency-findings-1.0.13.md"),
+    ]
+    before = {path: path.read_bytes() for path in canonical_paths}
 
-    csv_path = Path("docs/architecture/package-module-map-1.0.13.csv")
-    json_path = Path("docs/architecture/package-import-graph-1.0.13.json")
-    inv_path = Path("docs/architecture/package-inventory-1.0.13.md")
+    data = inventory.make_inventory("2026-01-01T00:00:00Z")
+    output_dir = tmp_path / "architecture"
+    inventory.write_outputs(data, output_dir)
+
+    csv_path = output_dir / "package-module-map-1.0.13.csv"
+    json_path = output_dir / "package-import-graph-1.0.13.json"
+    inv_path = output_dir / "package-inventory-1.0.13.md"
 
     with csv_path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
@@ -128,10 +149,13 @@ def test_write_outputs_emit_parseable_csv_and_json() -> None:
     assert len(rows) == len(data["rows"])
     assert parsed["generated_at_utc"] == "2026-01-01T00:00:00Z"
     assert parsed["generator_version"] == inventory.GENERATOR_VERSION
+    assert parsed["source_tree_dirty"] == data["source_tree_dirty"]
 
     report_text = inv_path.read_text(encoding="utf-8")
     assert "current architecture inventory" in report_text.lower()
     assert data["baseline"] in report_text
     assert inventory.GENERATOR_VERSION in report_text
+    assert "source tree dirty" in report_text.lower()
     assert "1.0.12" not in report_text
     assert "ships the monolithic" not in report_text.lower()
+    assert {path: path.read_bytes() for path in canonical_paths} == before

@@ -1,5 +1,5 @@
 {
-  "baseline_commit": "dab3494087c2b65012a2a6e28a6b7a6130b0de82",
+  "baseline_commit": "42e08cacb6965e7f7ff5bdfc21d153b821f5387c",
   "edges": [
     {
       "imported": "research.visual.visual_analysis",
@@ -888,6 +888,1301 @@
       "importer": "integration_tests.test_package_integration_smoke",
       "kind": "runtime",
       "line": 31,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis",
+      "importer": "packages.analysis.tests.test_analysis_api_isolation_wheel",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.compare",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.compose",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.controller",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.controller",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 23,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.edge",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 15,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.hierarchy",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 16,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.phos",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 17,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_analysis_capabilities",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.critic",
+      "importer": "packages.analysis.tests.test_critic",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_critic",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.learning",
+      "importer": "packages.analysis.tests.test_learning",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_learning",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.manifold",
+      "importer": "packages.analysis.tests.test_manifold",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.spatial",
+      "importer": "packages.analysis.tests.test_manifold",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_manifold",
+      "kind": "runtime",
+      "line": 12,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.patterns",
+      "importer": "packages.analysis.tests.test_patterns",
+      "kind": "runtime",
+      "line": 26,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_patterns",
+      "kind": "runtime",
+      "line": 20,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_patterns",
+      "kind": "runtime",
+      "line": 25,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.bundle",
+      "importer": "packages.analysis.tests.test_patterns",
+      "kind": "deferred",
+      "line": 246,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.phos",
+      "importer": "packages.analysis.tests.test_phos",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_phos",
+      "kind": "runtime",
+      "line": 3,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.policy_diagnostics",
+      "importer": "packages.analysis.tests.test_policy_diagnostics",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_policy_diagnostics",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_lookup",
+      "importer": "packages.analysis.tests.test_policy_diagnostics",
+      "kind": "runtime",
+      "line": 12,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.policy_diagnostics",
+      "importer": "packages.analysis.tests.test_policy_properties",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.policy_properties",
+      "importer": "packages.analysis.tests.test_policy_properties",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_policy_properties",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.bundle",
+      "importer": "packages.analysis.tests.test_policy_properties",
+      "kind": "runtime",
+      "line": 17,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_lookup",
+      "importer": "packages.analysis.tests.test_policy_properties",
+      "kind": "runtime",
+      "line": 21,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.spatial",
+      "importer": "packages.analysis.tests.test_spatial",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_spatial",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_spatial",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.training",
+      "importer": "packages.analysis.tests.test_training",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.analysis.tests.test_training",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.adapters",
+      "importer": "packages.analysis.tests.test_training_adapters",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.analysis.training",
+      "importer": "packages.analysis.tests.test_training_adapters",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.conftest",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.conftest",
+      "kind": "runtime",
+      "line": 16,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.conftest",
+      "kind": "runtime",
+      "line": 20,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_adapted_report_identity",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.test_adapted_report_identity",
+      "kind": "runtime",
+      "line": 14,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_adapted_report_identity",
+      "kind": "runtime",
+      "line": 15,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_adapted_report_persistence",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_adapted_report_persistence",
+      "kind": "deferred",
+      "line": 56,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_adapted_report_persistence",
+      "kind": "deferred",
+      "line": 109,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_adapted_report_persistence",
+      "kind": "deferred",
+      "line": 188,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.test_adapted_report_persistence",
+      "kind": "deferred",
+      "line": 105,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_errors",
+      "importer": "packages.artifacts.tests.test_adapted_report_persistence",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_artifact_ref_and_store",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_artifact_ref_and_store",
+      "kind": "runtime",
+      "line": 13,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_artifacts_api_isolation",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_compiled_artifact_validation",
+      "kind": "runtime",
+      "line": 14,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.compatibility_schema",
+      "importer": "packages.artifacts.tests.test_compiled_artifact_validation",
+      "kind": "runtime",
+      "line": 27,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.compiled_artifact",
+      "importer": "packages.artifacts.tests.test_compiled_artifact_validation",
+      "kind": "runtime",
+      "line": 31,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_errors",
+      "importer": "packages.artifacts.tests.test_compiled_artifact_validation",
+      "kind": "runtime",
+      "line": 38,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "runtime",
+      "line": 16,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "deferred",
+      "line": 158,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.aggregate",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "deferred",
+      "line": 280,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.compatibility_schema",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "deferred",
+      "line": 315,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "deferred",
+      "line": 281,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "runtime",
+      "line": 24,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "deferred",
+      "line": 164,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_errors",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate",
+      "kind": "runtime",
+      "line": 25,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 381,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 576,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.adapted_report_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "runtime",
+      "line": 30,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.aggregate",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 670,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.aggregate",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 712,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.compatibility_schema",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "runtime",
+      "line": 31,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.compiled_artifact",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "runtime",
+      "line": 32,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 153,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 197,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 246,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 363,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 671,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.core_artifact_persistence",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 713,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 387,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_errors",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "runtime",
+      "line": 39,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "runtime",
+      "line": 40,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 154,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 198,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_compiled_report_aggregate_adversarial",
+      "kind": "deferred",
+      "line": 247,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_reference_kind_and_receipt_invariants",
+      "kind": "runtime",
+      "line": 12,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.aggregate",
+      "importer": "packages.artifacts.tests.test_reference_kind_and_receipt_invariants",
+      "kind": "runtime",
+      "line": 20,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.canonicalization",
+      "importer": "packages.artifacts.tests.test_reference_kind_and_receipt_invariants",
+      "kind": "runtime",
+      "line": 24,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.compiled_artifact",
+      "importer": "packages.artifacts.tests.test_reference_kind_and_receipt_invariants",
+      "kind": "runtime",
+      "line": 25,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_errors",
+      "importer": "packages.artifacts.tests.test_reference_kind_and_receipt_invariants",
+      "kind": "runtime",
+      "line": 31,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_report_adapter_contract",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_dto",
+      "importer": "packages.artifacts.tests.test_report_adapter_contract",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_report_adapter_contract",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_report_compilation",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts.report_errors",
+      "importer": "packages.artifacts.tests.test_report_compilation",
+      "kind": "runtime",
+      "line": 17,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.artifacts.tests.test_report_compilation",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.artifacts.tests.test_report_families",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_artifact_kernel",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_core_api_isolation_wheel",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_matrix_blob",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_policy_lookup_lua",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_policy_transitions",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_views_bundle_render",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.core.tests.test_views_bundle_render",
+      "kind": "runtime",
+      "line": 15,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.navigation.tests.conftest",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.conftest",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.navigation.tests.test_closure_over_corpus",
+      "kind": "runtime",
+      "line": 17,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation",
+      "importer": "packages.navigation.tests.test_closure_over_corpus",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_closure_over_corpus",
+      "kind": "runtime",
+      "line": 19,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.errors",
+      "importer": "packages.navigation.tests.test_closure_over_corpus",
+      "kind": "runtime",
+      "line": 30,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.storage",
+      "importer": "packages.navigation.tests.test_closure_over_corpus",
+      "kind": "runtime",
+      "line": 31,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "deferred",
+      "line": 148,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "deferred",
+      "line": 225,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "deferred",
+      "line": 294,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.errors",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.storage",
+      "importer": "packages.navigation.tests.test_compile_and_closure",
+      "kind": "runtime",
+      "line": 19,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.navigation.tests.test_load_integrity",
+      "kind": "runtime",
+      "line": 17,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.navigation.tests.test_load_integrity",
+      "kind": "runtime",
+      "line": 18,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.content_identity",
+      "importer": "packages.navigation.tests.test_load_integrity",
+      "kind": "runtime",
+      "line": 19,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_load_integrity",
+      "kind": "runtime",
+      "line": 20,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.storage",
+      "importer": "packages.navigation.tests.test_load_integrity",
+      "kind": "runtime",
+      "line": 30,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation",
+      "importer": "packages.navigation.tests.test_navigation_api_isolation",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.navigation.tests.test_traversal",
+      "kind": "deferred",
+      "line": 195,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.navigation.tests.test_traversal",
+      "kind": "deferred",
+      "line": 252,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation",
+      "importer": "packages.navigation.tests.test_traversal",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.dto",
+      "importer": "packages.navigation.tests.test_traversal",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.rules",
+      "importer": "packages.navigation.tests.test_traversal",
+      "kind": "runtime",
+      "line": 15,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.navigation.rules",
+      "importer": "packages.navigation.tests.test_traversal",
+      "kind": "deferred",
+      "line": 77,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.observation.tests.test_deployment_binding",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation.deployment_binding",
+      "importer": "packages.observation.tests.test_deployment_binding",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation.visual_address",
+      "importer": "packages.observation.tests.test_deployment_binding",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation",
+      "importer": "packages.observation.tests.test_observation_api_isolation",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.observation.tests.test_visual_address_contracts",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation",
+      "importer": "packages.observation.tests.test_visual_address_contracts",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 15,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.matrix_blob",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 16,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.persistence.sqlalchemy",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 17,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.persistence.sqlalchemy.db.orm.video_action_set",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 25,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.canonical_json",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 29,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.contracts",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 30,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.dto",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 35,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.episode_planning",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 40,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.observation_dto",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 41,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.observation_materialization",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 42,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.store",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 45,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.stores.video_action_set_memory",
+      "importer": "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation",
+      "kind": "runtime",
+      "line": 50,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.trust.tests.conftest",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.conftest",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.trust.tests.test_dto_and_crypto",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_dto_and_crypto",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_dto_and_crypto",
+      "kind": "deferred",
+      "line": 78,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_signature_envelope_revocation",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_trust_api_isolation",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.artifacts",
+      "importer": "packages.trust.tests.test_verify_artifact_for_scope",
+      "kind": "runtime",
+      "line": 5,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_verify_artifact_for_scope",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_verify_artifact_for_scope",
+      "kind": "deferred",
+      "line": 571,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust",
+      "importer": "packages.trust.tests.test_verify_artifact_for_scope",
+      "kind": "deferred",
+      "line": 572,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.trust.dto",
+      "importer": "packages.trust.tests.test_verify_artifact_for_scope",
+      "kind": "runtime",
+      "line": 21,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.video.tests.test_action_set_store",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.matrix_blob",
+      "importer": "packages.video.tests.test_action_set_store",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video",
+      "importer": "packages.video.tests.test_action_set_store",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.dto",
+      "importer": "packages.video.tests.test_action_set_store",
+      "kind": "runtime",
+      "line": 11,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.episode_planning",
+      "importer": "packages.video.tests.test_action_set_store",
+      "kind": "runtime",
+      "line": 16,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.video.tests.test_frame_and_clip",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video",
+      "importer": "packages.video.tests.test_frame_and_clip",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video.domains.video_action_set.observation_dto",
+      "importer": "packages.video.tests.test_observation_record_schema",
+      "kind": "runtime",
+      "line": 33,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.video.tests.test_temporal_policy",
+      "kind": "runtime",
+      "line": 6,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.video.tests.test_temporal_policy",
+      "kind": "runtime",
+      "line": 7,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_lookup",
+      "importer": "packages.video.tests.test_temporal_policy",
+      "kind": "runtime",
+      "line": 8,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_transitions",
+      "importer": "packages.video.tests.test_temporal_policy",
+      "kind": "runtime",
+      "line": 9,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation",
+      "importer": "packages.video.tests.test_temporal_policy",
+      "kind": "runtime",
+      "line": 10,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video",
+      "importer": "packages.video.tests.test_temporal_policy",
+      "kind": "runtime",
+      "line": 15,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.video.tests.test_video_policy_reader_contracts",
+      "kind": "runtime",
+      "line": 31,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.artifact",
+      "importer": "packages.video.tests.test_video_policy_reader_contracts",
+      "kind": "runtime",
+      "line": 32,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_lookup",
+      "importer": "packages.video.tests.test_video_policy_reader_contracts",
+      "kind": "runtime",
+      "line": 33,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_transitions",
+      "importer": "packages.video.tests.test_video_policy_reader_contracts",
+      "kind": "runtime",
+      "line": 34,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation",
+      "importer": "packages.video.tests.test_video_policy_reader_contracts",
+      "kind": "runtime",
+      "line": 35,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.video",
+      "importer": "packages.video.tests.test_video_policy_reader_contracts",
+      "kind": "runtime",
+      "line": 40,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core",
+      "importer": "packages.vision.tests.test_deterministic_visual_runtime",
+      "kind": "runtime",
+      "line": 12,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.core.policy_lookup",
+      "importer": "packages.vision.tests.test_deterministic_visual_runtime",
+      "kind": "runtime",
+      "line": 13,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.observation",
+      "importer": "packages.vision.tests.test_deterministic_visual_runtime",
+      "kind": "runtime",
+      "line": 14,
+      "resolved": true
+    },
+    {
+      "imported": "zeromodel.vision",
+      "importer": "packages.vision.tests.test_deterministic_visual_runtime",
+      "kind": "runtime",
+      "line": 19,
       "resolved": true
     },
     {
@@ -8494,6 +9789,138 @@
       "PIL",
       "matplotlib"
     ],
+    "packages.analysis.tests.test_analysis_capabilities": [
+      "numpy"
+    ],
+    "packages.analysis.tests.test_critic": [
+      "pytest"
+    ],
+    "packages.analysis.tests.test_learning": [
+      "pytest"
+    ],
+    "packages.analysis.tests.test_manifold": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.analysis.tests.test_patterns": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.analysis.tests.test_policy_diagnostics": [
+      "pytest"
+    ],
+    "packages.analysis.tests.test_policy_properties": [
+      "pytest"
+    ],
+    "packages.analysis.tests.test_spatial": [
+      "pytest"
+    ],
+    "packages.analysis.tests.test_training": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.conftest": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_adapted_report_identity": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_adapted_report_persistence": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_artifact_ref_and_store": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_compiled_artifact_validation": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_compiled_report_aggregate": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_compiled_report_aggregate_adversarial": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_reference_kind_and_receipt_invariants": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_report_adapter_contract": [
+      "pytest"
+    ],
+    "packages.artifacts.tests.test_report_compilation": [
+      "pytest"
+    ],
+    "packages.core.tests.test_artifact_kernel": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.core.tests.test_matrix_blob": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.core.tests.test_policy_lookup_lua": [
+      "pytest"
+    ],
+    "packages.core.tests.test_policy_transitions": [
+      "pytest"
+    ],
+    "packages.core.tests.test_views_bundle_render": [
+      "pytest"
+    ],
+    "packages.navigation.tests.conftest": [
+      "pytest"
+    ],
+    "packages.navigation.tests.test_closure_over_corpus": [
+      "pytest"
+    ],
+    "packages.navigation.tests.test_compile_and_closure": [
+      "pytest"
+    ],
+    "packages.navigation.tests.test_load_integrity": [
+      "pytest"
+    ],
+    "packages.navigation.tests.test_traversal": [
+      "pytest"
+    ],
+    "packages.observation.tests.test_deployment_binding": [
+      "pytest"
+    ],
+    "packages.observation.tests.test_visual_address_contracts": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation": [
+      "pytest",
+      "sqlalchemy"
+    ],
+    "packages.trust.tests.conftest": [
+      "pytest"
+    ],
+    "packages.trust.tests.test_dto_and_crypto": [
+      "pytest"
+    ],
+    "packages.trust.tests.test_verify_artifact_for_scope": [
+      "pytest"
+    ],
+    "packages.video.tests.test_action_set_store": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.video.tests.test_frame_and_clip": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.video.tests.test_temporal_policy": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.video.tests.test_video_policy_reader_contracts": [
+      "numpy",
+      "pytest"
+    ],
+    "packages.vision.tests.test_deterministic_visual_runtime": [
+      "numpy",
+      "pytest"
+    ],
     "research.benchmarks.visual_benchmark": [
       "numpy"
     ],
@@ -8628,6 +10055,9 @@
     "research.visual.visual_system_b": [
       "numpy"
     ],
+    "scripts._validate_release_candidate_impl": [
+      "tomli"
+    ],
     "scripts.analyze_package_inventory": [
       "tomli"
     ],
@@ -8636,9 +10066,6 @@
       "tomli"
     ],
     "scripts.check_package_boundaries": [
-      "tomli"
-    ],
-    "scripts.validate_release_candidate": [
       "tomli"
     ],
     "tests.conftest": [
@@ -9016,7 +10443,7 @@
       "numpy"
     ]
   },
-  "generated_at_utc": "2026-01-01T00:00:00Z",
+  "generated_at_utc": "2026-07-23T10:48:57Z",
   "generator_version": "2.0.0",
   "inventory_kind": "current_architecture",
   "modules": {
@@ -9186,6 +10613,318 @@
       "classification": "tooling",
       "lines": 177,
       "path": "integration_tests/test_package_integration_smoke.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_analysis_api_isolation_wheel": {
+      "classification": "tooling",
+      "lines": 120,
+      "path": "packages/analysis/tests/test_analysis_api_isolation_wheel.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_analysis_capabilities": {
+      "classification": "tooling",
+      "lines": 92,
+      "path": "packages/analysis/tests/test_analysis_capabilities.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_critic": {
+      "classification": "tooling",
+      "lines": 156,
+      "path": "packages/analysis/tests/test_critic.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_learning": {
+      "classification": "tooling",
+      "lines": 125,
+      "path": "packages/analysis/tests/test_learning.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_manifold": {
+      "classification": "tooling",
+      "lines": 131,
+      "path": "packages/analysis/tests/test_manifold.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_patterns": {
+      "classification": "tooling",
+      "lines": 262,
+      "path": "packages/analysis/tests/test_patterns.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_phos": {
+      "classification": "tooling",
+      "lines": 53,
+      "path": "packages/analysis/tests/test_phos.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_policy_diagnostics": {
+      "classification": "tooling",
+      "lines": 77,
+      "path": "packages/analysis/tests/test_policy_diagnostics.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_policy_properties": {
+      "classification": "tooling",
+      "lines": 232,
+      "path": "packages/analysis/tests/test_policy_properties.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_spatial": {
+      "classification": "tooling",
+      "lines": 95,
+      "path": "packages/analysis/tests/test_spatial.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_training": {
+      "classification": "tooling",
+      "lines": 148,
+      "path": "packages/analysis/tests/test_training.py",
+      "target_namespace": ""
+    },
+    "packages.analysis.tests.test_training_adapters": {
+      "classification": "tooling",
+      "lines": 122,
+      "path": "packages/analysis/tests/test_training_adapters.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.conftest": {
+      "classification": "tooling",
+      "lines": 241,
+      "path": "packages/artifacts/tests/conftest.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_adapted_report_identity": {
+      "classification": "tooling",
+      "lines": 430,
+      "path": "packages/artifacts/tests/test_adapted_report_identity.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_adapted_report_persistence": {
+      "classification": "tooling",
+      "lines": 209,
+      "path": "packages/artifacts/tests/test_adapted_report_persistence.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_artifact_ref_and_store": {
+      "classification": "tooling",
+      "lines": 146,
+      "path": "packages/artifacts/tests/test_artifact_ref_and_store.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_artifacts_api_isolation": {
+      "classification": "tooling",
+      "lines": 98,
+      "path": "packages/artifacts/tests/test_artifacts_api_isolation.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_compiled_artifact_validation": {
+      "classification": "tooling",
+      "lines": 364,
+      "path": "packages/artifacts/tests/test_compiled_artifact_validation.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_compiled_report_aggregate": {
+      "classification": "tooling",
+      "lines": 321,
+      "path": "packages/artifacts/tests/test_compiled_report_aggregate.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_compiled_report_aggregate_adversarial": {
+      "classification": "tooling",
+      "lines": 761,
+      "path": "packages/artifacts/tests/test_compiled_report_aggregate_adversarial.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_reference_kind_and_receipt_invariants": {
+      "classification": "tooling",
+      "lines": 242,
+      "path": "packages/artifacts/tests/test_reference_kind_and_receipt_invariants.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_report_adapter_contract": {
+      "classification": "tooling",
+      "lines": 63,
+      "path": "packages/artifacts/tests/test_report_adapter_contract.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_report_compilation": {
+      "classification": "tooling",
+      "lines": 409,
+      "path": "packages/artifacts/tests/test_report_compilation.py",
+      "target_namespace": ""
+    },
+    "packages.artifacts.tests.test_report_families": {
+      "classification": "tooling",
+      "lines": 184,
+      "path": "packages/artifacts/tests/test_report_families.py",
+      "target_namespace": ""
+    },
+    "packages.core.tests.test_artifact_kernel": {
+      "classification": "tooling",
+      "lines": 120,
+      "path": "packages/core/tests/test_artifact_kernel.py",
+      "target_namespace": ""
+    },
+    "packages.core.tests.test_core_api_isolation_wheel": {
+      "classification": "tooling",
+      "lines": 106,
+      "path": "packages/core/tests/test_core_api_isolation_wheel.py",
+      "target_namespace": ""
+    },
+    "packages.core.tests.test_matrix_blob": {
+      "classification": "tooling",
+      "lines": 62,
+      "path": "packages/core/tests/test_matrix_blob.py",
+      "target_namespace": ""
+    },
+    "packages.core.tests.test_policy_lookup_lua": {
+      "classification": "tooling",
+      "lines": 115,
+      "path": "packages/core/tests/test_policy_lookup_lua.py",
+      "target_namespace": ""
+    },
+    "packages.core.tests.test_policy_transitions": {
+      "classification": "tooling",
+      "lines": 56,
+      "path": "packages/core/tests/test_policy_transitions.py",
+      "target_namespace": ""
+    },
+    "packages.core.tests.test_views_bundle_render": {
+      "classification": "tooling",
+      "lines": 87,
+      "path": "packages/core/tests/test_views_bundle_render.py",
+      "target_namespace": ""
+    },
+    "packages.navigation.tests.conftest": {
+      "classification": "tooling",
+      "lines": 64,
+      "path": "packages/navigation/tests/conftest.py",
+      "target_namespace": ""
+    },
+    "packages.navigation.tests.test_closure_over_corpus": {
+      "classification": "tooling",
+      "lines": 212,
+      "path": "packages/navigation/tests/test_closure_over_corpus.py",
+      "target_namespace": ""
+    },
+    "packages.navigation.tests.test_compile_and_closure": {
+      "classification": "tooling",
+      "lines": 338,
+      "path": "packages/navigation/tests/test_compile_and_closure.py",
+      "target_namespace": ""
+    },
+    "packages.navigation.tests.test_load_integrity": {
+      "classification": "tooling",
+      "lines": 148,
+      "path": "packages/navigation/tests/test_load_integrity.py",
+      "target_namespace": ""
+    },
+    "packages.navigation.tests.test_navigation_api_isolation": {
+      "classification": "tooling",
+      "lines": 106,
+      "path": "packages/navigation/tests/test_navigation_api_isolation.py",
+      "target_namespace": ""
+    },
+    "packages.navigation.tests.test_traversal": {
+      "classification": "tooling",
+      "lines": 255,
+      "path": "packages/navigation/tests/test_traversal.py",
+      "target_namespace": ""
+    },
+    "packages.observation.tests.test_deployment_binding": {
+      "classification": "tooling",
+      "lines": 86,
+      "path": "packages/observation/tests/test_deployment_binding.py",
+      "target_namespace": ""
+    },
+    "packages.observation.tests.test_observation_api_isolation": {
+      "classification": "tooling",
+      "lines": 58,
+      "path": "packages/observation/tests/test_observation_api_isolation.py",
+      "target_namespace": ""
+    },
+    "packages.observation.tests.test_visual_address_contracts": {
+      "classification": "tooling",
+      "lines": 308,
+      "path": "packages/observation/tests/test_visual_address_contracts.py",
+      "target_namespace": ""
+    },
+    "packages.sqlalchemy.tests.test_sqlalchemy_package_isolation": {
+      "classification": "tooling",
+      "lines": 345,
+      "path": "packages/sqlalchemy/tests/test_sqlalchemy_package_isolation.py",
+      "target_namespace": ""
+    },
+    "packages.trust.tests.conftest": {
+      "classification": "tooling",
+      "lines": 126,
+      "path": "packages/trust/tests/conftest.py",
+      "target_namespace": ""
+    },
+    "packages.trust.tests.test_dto_and_crypto": {
+      "classification": "tooling",
+      "lines": 459,
+      "path": "packages/trust/tests/test_dto_and_crypto.py",
+      "target_namespace": ""
+    },
+    "packages.trust.tests.test_signature_envelope_revocation": {
+      "classification": "tooling",
+      "lines": 120,
+      "path": "packages/trust/tests/test_signature_envelope_revocation.py",
+      "target_namespace": ""
+    },
+    "packages.trust.tests.test_trust_api_isolation": {
+      "classification": "tooling",
+      "lines": 93,
+      "path": "packages/trust/tests/test_trust_api_isolation.py",
+      "target_namespace": ""
+    },
+    "packages.trust.tests.test_verify_artifact_for_scope": {
+      "classification": "tooling",
+      "lines": 791,
+      "path": "packages/trust/tests/test_verify_artifact_for_scope.py",
+      "target_namespace": ""
+    },
+    "packages.video.tests.test_action_set_store": {
+      "classification": "tooling",
+      "lines": 105,
+      "path": "packages/video/tests/test_action_set_store.py",
+      "target_namespace": ""
+    },
+    "packages.video.tests.test_frame_and_clip": {
+      "classification": "tooling",
+      "lines": 60,
+      "path": "packages/video/tests/test_frame_and_clip.py",
+      "target_namespace": ""
+    },
+    "packages.video.tests.test_import_isolation_and_wheel": {
+      "classification": "tooling",
+      "lines": 80,
+      "path": "packages/video/tests/test_import_isolation_and_wheel.py",
+      "target_namespace": ""
+    },
+    "packages.video.tests.test_observation_record_schema": {
+      "classification": "tooling",
+      "lines": 79,
+      "path": "packages/video/tests/test_observation_record_schema.py",
+      "target_namespace": ""
+    },
+    "packages.video.tests.test_temporal_policy": {
+      "classification": "tooling",
+      "lines": 141,
+      "path": "packages/video/tests/test_temporal_policy.py",
+      "target_namespace": ""
+    },
+    "packages.video.tests.test_video_policy_reader_contracts": {
+      "classification": "tooling",
+      "lines": 342,
+      "path": "packages/video/tests/test_video_policy_reader_contracts.py",
+      "target_namespace": ""
+    },
+    "packages.vision.tests.test_deterministic_visual_runtime": {
+      "classification": "tooling",
+      "lines": 365,
+      "path": "packages/vision/tests/test_deterministic_visual_runtime.py",
       "target_namespace": ""
     },
     "research.benchmarks.video_action_set_benchmark": {
@@ -9572,9 +11311,15 @@
       "path": "research/visual/visual_system_b.py",
       "target_namespace": ""
     },
+    "scripts._validate_release_candidate_impl": {
+      "classification": "tooling",
+      "lines": 869,
+      "path": "scripts/_validate_release_candidate_impl.py",
+      "target_namespace": ""
+    },
     "scripts.analyze_package_inventory": {
       "classification": "tooling",
-      "lines": 765,
+      "lines": 819,
       "path": "scripts/analyze_package_inventory.py",
       "target_namespace": ""
     },
@@ -9658,7 +11403,7 @@
     },
     "scripts.validate_release_candidate": {
       "classification": "tooling",
-      "lines": 869,
+      "lines": 92,
       "path": "scripts/validate_release_candidate.py",
       "target_namespace": ""
     },
@@ -9706,7 +11451,7 @@
     },
     "tests.integration.test_video_finalization_reconstruction": {
       "classification": "tooling",
-      "lines": 237,
+      "lines": 239,
       "path": "tests/integration/test_video_finalization_reconstruction.py",
       "target_namespace": ""
     },
@@ -9724,7 +11469,7 @@
     },
     "tests.test_analyze_package_inventory": {
       "classification": "tooling",
-      "lines": 137,
+      "lines": 161,
       "path": "tests/test_analyze_package_inventory.py",
       "target_namespace": ""
     },
@@ -9754,7 +11499,7 @@
     },
     "tests.test_conftest_research_import_isolation": {
       "classification": "tooling",
-      "lines": 96,
+      "lines": 98,
       "path": "tests/test_conftest_research_import_isolation.py",
       "target_namespace": ""
     },
@@ -9828,6 +11573,12 @@
       "classification": "tooling",
       "lines": 87,
       "path": "tests/test_quality_gate_coverage.py",
+      "target_namespace": ""
+    },
+    "tests.test_release_candidate_all_skipped": {
+      "classification": "tooling",
+      "lines": 54,
+      "path": "tests/test_release_candidate_all_skipped.py",
       "target_namespace": ""
     },
     "tests.test_release_candidate_validation": {
@@ -11128,6 +12879,7 @@
     }
   },
   "schema_version": 1,
+  "source_tree_dirty": true,
   "strongly_connected_components": [],
   "unresolved_dynamic_imports": [
     {

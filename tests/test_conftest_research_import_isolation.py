@@ -56,12 +56,14 @@ def test_unrelated_production_test_collection_does_not_import_research_benchmark
     assert imported is False
 
 
-def test_stage6_materialization_test_collection_can_still_import_research_benchmark() -> (
-    None
-):
-    """Sanity check for the other direction: collecting a real Stage 6
-    materialization test module still reaches the lazy import inside the
-    fixture (proving the fix didn't simply delete the capability)."""
+def test_stage6_module_collection_imports_its_declared_research_dependency() -> None:
+    """The Stage 6 module itself still declares a top-level research import.
+
+    This assertion is intentionally about the module dependency, not fixture
+    execution: fixtures do not run during ``--collect-only``. The separate
+    unrelated-module test is the regression that proves root ``conftest.py``
+    no longer imports research globally.
+    """
     imported = _collect_and_check_research_import(
         "tests/test_video_episode_materialization.py"
     )

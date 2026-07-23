@@ -4,6 +4,7 @@ import argparse
 import ast
 import csv
 import json
+import os
 import subprocess
 import sys
 from collections import Counter, defaultdict
@@ -106,16 +107,36 @@ def module_for_path(path: Path, base: Path) -> str:
     return ".".join(parts)
 
 
-def discover_tooling_files() -> list[Path]:
-    """Repository tooling roots: tests, examples, scripts, research,
-    integration_tests. These are inspected for coverage/consumer evidence
-    and research quarantine, never treated as production source."""
+def discover_tooling_files(
+    boundaries: dict[str, dict[str, Any]] | None = None,
+) -> list[Path]:
+    """Discover repository-wide and package-local tooling modules.
+
+    Package-local test roots are derived from each configured production
+    ``source_root`` so the current nine-package inventory cannot silently omit
+    the tests that provide most package evidence.
+    """
+    boundaries = boundaries if boundaries is not None else load_package_boundaries()
     paths: list[Path] = []
     for root in TOOLING_ROOTS:
         base = REPO_ROOT / root
         if base.exists():
             paths.extend(p for p in base.rglob("*.py") if "__pycache__" not in p.parts)
-    return sorted(paths, key=rel)
+    for config in boundaries.values():
+        package_tests = (REPO_ROOT / config["source_root"]).parent / "tests"
+        if package_tests.exists():
+            paths.extend(
+                p for p in package_tests.rglob("*.py") if "__pycache__" not in p.parts
+            )
+    return sorted(set(paths), key=rel)
+
+
+def is_test_path(path: str) -> bool:
+    return (
+        path.startswith(("tests/", "integration_tests/"))
+        or path.startswith("packages/")
+        and "/tests/" in path
+    )
 
 
 def discover_package_files(
@@ -212,6 +233,7 @@ def external_name(candidate: str, known: set[str]) -> str | None:
         "scripts",
         "research",
         "integration_tests",
+        "packages",
     }:
         return None
     if top in STDLIB_HINTS:
@@ -349,7 +371,7 @@ def classify(
     Tooling-root modules (tests/examples/scripts/research/integration_tests)
     keep the previous path-prefix classification.
     """
-    if path.startswith("tests/"):
+    if is_test_path(path):
         return (
             "tooling",
             "",
@@ -482,20 +504,43 @@ def allowed_package_edges(boundaries: dict[str, dict[str, Any]]) -> dict[str, se
     return {key: set(config["depends_on"]) for key, config in boundaries.items()}
 
 
+def resolve_source_state() -> tuple[str, bool]:
+    """Return the source baseline and whether the analyzed tree is dirty.
+
+    Environment overrides support generation from an exported checkout that
+    intentionally omits ``.git`` while keeping provenance explicit.
+    """
+    baseline_override = os.environ.get("ZEROMODEL_INVENTORY_BASELINE")
+    dirty_override = os.environ.get("ZEROMODEL_INVENTORY_DIRTY")
+    if baseline_override is not None:
+        dirty = str(dirty_override or "false").lower() in {"1", "true", "yes"}
+        return baseline_override, dirty
+    try:
+        baseline = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
+        ).strip()
+        dirty = bool(
+            subprocess.check_output(
+                ["git", "status", "--porcelain"], cwd=REPO_ROOT, text=True
+            ).strip()
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return "unavailable", True
+    return baseline, dirty
+
+
 def make_inventory(
     generated_at: str | None = None,
     boundaries: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, object]:
     boundaries = boundaries if boundaries is not None else load_package_boundaries()
-    baseline = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
-    ).strip()
+    baseline, source_tree_dirty = resolve_source_state()
     generated_at = generated_at or datetime.now(timezone.utc).replace(
         microsecond=0
     ).isoformat().replace("+00:00", "Z")
 
     package_files = discover_package_files(boundaries)
-    tooling_modules = load_modules(discover_tooling_files(), REPO_ROOT)
+    tooling_modules = load_modules(discover_tooling_files(boundaries), REPO_ROOT)
     modules: dict[str, ModuleInfo] = dict(tooling_modules)
     module_package_key: dict[str, str] = {}
     for key, paths in package_files.items():
@@ -521,7 +566,7 @@ def make_inventory(
     tests_by_mod: dict[str, set[str]] = defaultdict(set)
     examples_by_mod: dict[str, set[str]] = defaultdict(set)
     for e in all_edges:
-        if e.imported in known and e.importer.startswith("tests."):
+        if e.imported in known and is_test_path(modules[e.importer].path):
             tests_by_mod[e.imported].add(modules[e.importer].path)
         if e.imported in known and e.importer.startswith("examples."):
             examples_by_mod[e.imported].add(modules[e.importer].path)
@@ -587,6 +632,7 @@ def make_inventory(
         "inventory_kind": "current_architecture",
         "baseline_commit": baseline,
         "generated_at_utc": generated_at,
+        "source_tree_dirty": source_tree_dirty,
         "modules": {
             m: {
                 "path": i.path,
@@ -617,6 +663,7 @@ def make_inventory(
     return {
         "baseline": baseline,
         "generated_at": generated_at,
+        "source_tree_dirty": source_tree_dirty,
         "rows": rows,
         "graph": graph_json,
         "class_counts": Counter(r["classification"] for r in rows),
@@ -626,8 +673,11 @@ def make_inventory(
     }
 
 
-def write_outputs(data: dict[str, object]) -> None:
-    arch = REPO_ROOT / "docs" / "architecture"
+def write_outputs(
+    data: dict[str, object], output_dir: Path | None = None
+) -> None:
+    arch = output_dir or REPO_ROOT / "docs" / "architecture"
+    arch.mkdir(parents=True, exist_ok=True)
     csv_path = arch / "package-module-map-1.0.13.csv"
     json_path = arch / "package-import-graph-1.0.13.json"
     inv_path = arch / "package-inventory-1.0.13.md"
@@ -659,6 +709,7 @@ def write_outputs(data: dict[str, object]) -> None:
 Generator version: `{GENERATOR_VERSION}`
 Baseline commit: `{data["baseline"]}`
 Generated (UTC): `{data["generated_at"]}`
+Source tree dirty: `{str(data["source_tree_dirty"]).lower()}`
 
 Generated artifacts:
 
@@ -703,6 +754,8 @@ Forbidden observed edge count: `{len(forbidden)}`.
         "",
         f"Generator version: `{GENERATOR_VERSION}`",
         f"Baseline commit: `{data['baseline']}`",
+        f"Generated (UTC): `{data['generated_at']}`",
+        f"Source tree dirty: `{str(data['source_tree_dirty']).lower()}`",
         "",
     ]
     finding_lines += ["## Blocker", ""]
@@ -742,10 +795,11 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--generated-at")
+    parser.add_argument("--output-dir", type=Path)
     args = parser.parse_args()
     data = make_inventory(args.generated_at)
     if args.write:
-        write_outputs(data)
+        write_outputs(data, args.output_dir)
     else:
         print(
             json.dumps(

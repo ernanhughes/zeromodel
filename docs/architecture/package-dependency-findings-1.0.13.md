@@ -3,7 +3,9 @@
 **Status: current architecture findings** (not a historical migration snapshot).
 
 Generator version: `2.0.0`
-Baseline commit: `dab3494087c2b65012a2a6e28a6b7a6130b0de82`
+Baseline commit: `42e08cacb6965e7f7ff5bdfc21d153b821f5387c`
+Generated (UTC): `2026-07-23T10:48:57Z`
+Source tree dirty: `true`
 
 ## Blocker
 

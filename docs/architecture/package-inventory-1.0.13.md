@@ -3,8 +3,9 @@
 **Status: current architecture inventory** (not a historical migration snapshot; the nine-package split described here is the present state of `main`, not a plan).
 
 Generator version: `2.0.0`
-Baseline commit: `dab3494087c2b65012a2a6e28a6b7a6130b0de82`
-Generated (UTC): `2026-01-01T00:00:00Z`
+Baseline commit: `42e08cacb6965e7f7ff5bdfc21d153b821f5387c`
+Generated (UTC): `2026-07-23T10:48:57Z`
+Source tree dirty: `true`
 
 Generated artifacts:
 
@@ -22,7 +23,7 @@ Generated artifacts:
 - observation: 4
 - research: 64
 - sqlalchemy: 12
-- tooling: 118
+- tooling: 172
 - trust: 6
 - video: 60
 - vision: 3

@@ -14,6 +14,18 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = inventory
 SPEC.loader.exec_module(inventory)
 
+PRODUCTION_PACKAGE_KEYS = {
+    "core",
+    "analysis",
+    "observation",
+    "vision",
+    "video",
+    "sqlalchemy",
+    "artifacts",
+    "trust",
+    "navigation",
+}
+
 
 def test_inventory_rows_cover_unique_modules_and_allowed_classifications() -> None:
     data = inventory.make_inventory("2026-01-01T00:00:00Z")
@@ -26,12 +38,64 @@ def test_inventory_rows_cover_unique_modules_and_allowed_classifications() -> No
     assert all(
         row["target_distribution"] and row["target_namespace"]
         for row in rows
-        if row["classification"]
-        in {"core", "analysis", "observation", "vision", "video", "sqlalchemy"}
+        if row["classification"] in PRODUCTION_PACKAGE_KEYS
     )
     assert all(
-        row["blocking_questions"] for row in rows if row["classification"] == "undecided"
+        row["blocking_questions"]
+        for row in rows
+        if row["classification"] == "undecided"
     )
+
+
+def test_all_nine_production_source_roots_are_discovered() -> None:
+    """No production package may be silently omitted from discovery: every
+    key configured in package-boundaries.toml must contribute at least one
+    classified row."""
+    data = inventory.make_inventory("2026-01-01T00:00:00Z")
+    rows = data["rows"]
+    discovered = {row["classification"] for row in rows} & PRODUCTION_PACKAGE_KEYS
+    assert discovered == PRODUCTION_PACKAGE_KEYS
+
+
+def test_package_keys_and_namespaces_agree_with_package_boundaries_toml() -> None:
+    boundaries = inventory.load_package_boundaries()
+    data = inventory.make_inventory("2026-01-01T00:00:00Z")
+    rows = data["rows"]
+    for row in rows:
+        cls = row["classification"]
+        if cls not in PRODUCTION_PACKAGE_KEYS:
+            continue
+        config = boundaries[cls]
+        assert row["target_distribution"] == config["distribution"]
+        assert row["target_namespace"].startswith(config["namespace"])
+
+
+def test_missing_package_source_root_fails_loudly(tmp_path: Path) -> None:
+    boundaries = inventory.load_package_boundaries()
+    broken = {k: dict(v) for k, v in boundaries.items()}
+    broken["trust"]["source_root"] = str(tmp_path / "does-not-exist")
+    try:
+        inventory.make_inventory("2026-01-01T00:00:00Z", boundaries=broken)
+    except SystemExit as exc:
+        assert "trust" in str(exc)
+        assert "does not exist" in str(exc)
+    else:
+        raise AssertionError("expected SystemExit for a missing package source root")
+
+
+def test_zero_module_package_source_root_fails_loudly(tmp_path: Path) -> None:
+    empty_dir = tmp_path / "empty-src"
+    empty_dir.mkdir()
+    boundaries = inventory.load_package_boundaries()
+    broken = {k: dict(v) for k, v in boundaries.items()}
+    broken["navigation"]["source_root"] = str(empty_dir)
+    try:
+        inventory.make_inventory("2026-01-01T00:00:00Z", boundaries=broken)
+    except SystemExit as exc:
+        assert "navigation" in str(exc)
+        assert "zero Python modules" in str(exc)
+    else:
+        raise AssertionError("expected SystemExit for an empty package source root")
 
 
 def test_import_graph_is_deterministic_with_fixed_timestamp() -> None:
@@ -40,6 +104,8 @@ def test_import_graph_is_deterministic_with_fixed_timestamp() -> None:
 
     assert first == second
     assert first["schema_version"] == 1
+    assert first["generator_version"] == inventory.GENERATOR_VERSION
+    assert first["inventory_kind"] == "current_architecture"
     assert "examples.arcade_shooter_policy" in first["modules"]
     assert all(
         {"importer", "imported", "line", "kind", "resolved"} <= set(edge)
@@ -53,6 +119,7 @@ def test_write_outputs_emit_parseable_csv_and_json() -> None:
 
     csv_path = Path("docs/architecture/package-module-map-1.0.13.csv")
     json_path = Path("docs/architecture/package-import-graph-1.0.13.json")
+    inv_path = Path("docs/architecture/package-inventory-1.0.13.md")
 
     with csv_path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
@@ -60,3 +127,11 @@ def test_write_outputs_emit_parseable_csv_and_json() -> None:
 
     assert len(rows) == len(data["rows"])
     assert parsed["generated_at_utc"] == "2026-01-01T00:00:00Z"
+    assert parsed["generator_version"] == inventory.GENERATOR_VERSION
+
+    report_text = inv_path.read_text(encoding="utf-8")
+    assert "current architecture inventory" in report_text.lower()
+    assert data["baseline"] in report_text
+    assert inventory.GENERATOR_VERSION in report_text
+    assert "1.0.12" not in report_text
+    assert "ships the monolithic" not in report_text.lower()

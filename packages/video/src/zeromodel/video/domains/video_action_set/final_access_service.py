@@ -119,6 +119,31 @@ class FinalAuthorizationContract:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolvedFinalExecutionPreflight:
+    """Every authority-bearing preflight input, resolved and validated
+    exactly once.
+
+    Previously, `execute_final_once()` called `preflight_final_execution()`
+    (which loaded and validated the authorization and protocol files) and
+    then, for the non-preflight-only path, loaded the authorization file a
+    *second* time to obtain the objects it actually executed with. A
+    replacement of the file on disk between those two reads could make
+    execution use a different authorization from the one the request and
+    preflight approved (TOCTOU). This aggregate is built by
+    `FinalAccessService._resolve_final_execution_preflight()` once per
+    `execute_final_once()`/`preflight_final_execution()` call; both methods
+    consume this same aggregate afterward and never read the authorization
+    or protocol files again before reservation.
+    """
+
+    request: FinalExecutionRequestDTO
+    authorization: FinalExecutionAuthorizationDTO
+    protocol: FinalEvaluationProtocolDTO
+    contract: FinalAuthorizationContract
+    historical_authority: VerifiedHistoricalAuthorityDTO
+
+
+@dataclass(frozen=True, slots=True)
 class FinalAccessService:
     store: VideoActionSetStore
     final_executor: FinalExecutor | None = None
@@ -274,16 +299,17 @@ class FinalAccessService:
         return self.store.save_authorized_final_observations(access, (item,))[0]
 
     def execute_final_once(self, request: FinalExecutionRequestDTO) -> dict[str, Any]:
-        preflight = self.preflight_final_execution(request)
+        resolved = self._resolve_final_execution_preflight(request)
         if request.preflight_only:
-            return preflight
+            return _preflight_response(resolved)
         if self.final_executor is None:
             raise VPMValidationError(
                 "final execution requires an explicit registered final executor"
             )
-        authorization = load_final_authorization_file(Path(request.authorization_file))
-        contract = _authorization_contract(authorization)
-        protocol = load_final_protocol_file(contract.protocol_file)
+        authorization = resolved.authorization
+        protocol = resolved.protocol
+        contract = resolved.contract
+        verified_historical_authority = resolved.historical_authority
         existing = self.store.load_final_authorization(authorization.authorization_id)
         if existing is None:
             access = self.create_authorization(
@@ -300,9 +326,6 @@ class FinalAccessService:
             )
             if stored_protocol != protocol:
                 raise VPMValidationError("final evaluation protocol mismatch")
-        verified_historical_authority = verify_historical_authority(
-            contract.historical_authority
-        )
         access = self.reserve(
             access.access_id,
             process_identity=request.operator_identity,
@@ -337,6 +360,20 @@ class FinalAccessService:
         self,
         request: FinalExecutionRequestDTO,
     ) -> dict[str, Any]:
+        resolved = self._resolve_final_execution_preflight(request)
+        return _preflight_response(resolved)
+
+    def _resolve_final_execution_preflight(
+        self,
+        request: FinalExecutionRequestDTO,
+    ) -> ResolvedFinalExecutionPreflight:
+        """Resolve and validate every authority-bearing preflight input
+        exactly once. Read the authorization and protocol files here, and
+        only here - `execute_final_once()` and `preflight_final_execution()`
+        both consume the returned aggregate afterward and must never read
+        either file again before reservation (see
+        `ResolvedFinalExecutionPreflight`'s docstring).
+        """
         authorization = load_final_authorization_file(Path(request.authorization_file))
         if authorization.authorization_digest != request.expected_authorization_digest:
             raise VPMValidationError("final request authorization digest mismatch")
@@ -361,28 +398,13 @@ class FinalAccessService:
         verified_historical_authority = verify_historical_authority(
             contract.historical_authority
         )
-        return {
-            "preflight": "passed",
-            "read_only": True,
-            "validation_store": "in-memory-nonauthoritative",
-            "authorization_id": authorization.authorization_id,
-            "authorization_digest": authorization.authorization_digest,
-            "protocol_digest": protocol.protocol_digest,
-            "sealed_plan_digest": authorization.expected_sealed_plan_digest,
-            "historical_authority_id": (
-                verified_historical_authority.historical_authority_id
-            ),
-            "historical_database_sha256": (
-                verified_historical_authority.historical_database_sha256
-            ),
-            "historical_evidence_manifest_digest": (
-                verified_historical_authority.evidence_manifest_digest
-            ),
-            "historical_authority_digest": (
-                verified_historical_authority.historical_authority_digest
-            ),
-            "reservation_created": False,
-        }
+        return ResolvedFinalExecutionPreflight(
+            request=request,
+            authorization=authorization,
+            protocol=protocol,
+            contract=contract,
+            historical_authority=verified_historical_authority,
+        )
 
     def _execute_running_access(
         self,
@@ -815,6 +837,30 @@ class FinalAccessService:
             self.failure_injector(boundary)
 
 
+def _preflight_response(resolved: ResolvedFinalExecutionPreflight) -> dict[str, Any]:
+    """Project the read-only preflight summary from an already-resolved
+    aggregate - never re-reads the authorization or protocol files."""
+    authorization = resolved.authorization
+    protocol = resolved.protocol
+    historical_authority = resolved.historical_authority
+    return {
+        "preflight": "passed",
+        "read_only": True,
+        "validation_store": "in-memory-nonauthoritative",
+        "authorization_id": authorization.authorization_id,
+        "authorization_digest": authorization.authorization_digest,
+        "protocol_digest": protocol.protocol_digest,
+        "sealed_plan_digest": authorization.expected_sealed_plan_digest,
+        "historical_authority_id": historical_authority.historical_authority_id,
+        "historical_database_sha256": historical_authority.historical_database_sha256,
+        "historical_evidence_manifest_digest": (
+            historical_authority.evidence_manifest_digest
+        ),
+        "historical_authority_digest": historical_authority.historical_authority_digest,
+        "reservation_created": False,
+    }
+
+
 def load_final_authorization_file(path: Path) -> FinalExecutionAuthorizationDTO:
     payload = _load_json_mapping(path, "final authorization payload keys mismatch")
     return FinalExecutionAuthorizationDTO.from_dict(payload)
@@ -1023,6 +1069,7 @@ __all__ = [
     "FinalAccessService",
     "FinalAuthorizationContract",
     "FinalExecutor",
+    "ResolvedFinalExecutionPreflight",
     "default_process_identity",
     "load_final_authorization_file",
     "load_final_protocol_file",

@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tarfile
 import zipfile
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from email.parser import Parser
 from pathlib import Path
@@ -84,7 +85,14 @@ PACKAGES = {
             f"zeromodel=={VERSION}",
             f"zeromodel-video=={VERSION}",
         },
-        "depends_on": ("core", "video", "observation"),
+        # Must agree with package-boundaries.toml's [packages.sqlalchemy]
+        # depends_on - see validate_package_boundary_consistency(). It was
+        # previously ("core", "video", "observation"); "observation" was a
+        # spurious extra edge nothing under packages/sqlalchemy/src actually
+        # imports from (verified: no zeromodel.observation reference exists
+        # there), and silently widened what write_public_exports() would
+        # accept as a legitimate source_module for this package's public API.
+        "depends_on": ("core", "video"),
     },
     "artifacts": {
         "path": Path("packages/artifacts"),
@@ -149,6 +157,81 @@ def run(command: list[str], *, timeout: int = 120) -> None:
 def package_pyproject(package_key: str) -> dict[str, Any]:
     path = REPO_ROOT / PACKAGES[package_key]["path"] / "pyproject.toml"
     return tomllib.loads(path.read_text(encoding="utf-8"))
+
+
+def load_package_boundaries() -> dict[str, dict[str, Any]]:
+    """Load `package-boundaries.toml`'s `[packages.*]` tables.
+
+    This file is the machine-readable authority for package names,
+    namespaces, source roots, and declared internal dependency edges (see
+    AGENTS.md / `docs/architecture/package-system-next.md`).
+    `validate_package_boundary_consistency()` fails release validation if
+    this release script's own `PACKAGES` dict drifts from it.
+    """
+    path = REPO_ROOT / "package-boundaries.toml"
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
+    return dict(data["packages"])
+
+
+def validate_package_boundary_consistency(
+    boundaries: Mapping[str, Mapping[str, Any]] | None = None,
+    packages: Mapping[str, Mapping[str, Any]] | None = None,
+) -> None:
+    """Fail if `PACKAGES` disagrees with `package-boundaries.toml`.
+
+    Metadata `package-boundaries.toml` does not model - wheel stems, exact
+    external (non-internal) dependency version constraints - may still live
+    only in `PACKAGES`; this only compares the fields boundaries.toml does
+    own: the package key set, each package's namespace, distribution,
+    source root, and internal `depends_on` edges. A release validation run
+    must fail on drift rather than silently trusting whichever copy a
+    release script happens to list (see the historical `sqlalchemy`
+    `depends_on` drift this check exists to catch).
+    """
+    boundaries = load_package_boundaries() if boundaries is None else boundaries
+    packages = PACKAGES if packages is None else packages
+    errors: list[str] = []
+
+    if set(boundaries) != set(packages):
+        errors.append(
+            "package key set mismatch: "
+            f"PACKAGES={sorted(packages)} package-boundaries.toml={sorted(boundaries)}"
+        )
+
+    for key in sorted(set(boundaries) & set(packages)):
+        expected = packages[key]
+        authority = boundaries[key]
+        if expected["namespace"] != authority["namespace"]:
+            errors.append(
+                f"{key}: namespace mismatch PACKAGES={expected['namespace']!r} "
+                f"package-boundaries.toml={authority['namespace']!r}"
+            )
+        if expected["distribution"] != authority["distribution"]:
+            errors.append(
+                f"{key}: distribution mismatch PACKAGES={expected['distribution']!r} "
+                f"package-boundaries.toml={authority['distribution']!r}"
+            )
+        expected_root = Path(expected["path"]).as_posix() + "/src"
+        authority_root = Path(authority["source_root"]).as_posix()
+        if expected_root != authority_root:
+            errors.append(
+                f"{key}: source_root mismatch PACKAGES={expected_root!r} "
+                f"package-boundaries.toml={authority_root!r}"
+            )
+        expected_deps = set(expected["depends_on"])
+        authority_deps = set(authority["depends_on"])
+        if expected_deps != authority_deps:
+            errors.append(
+                f"{key}: depends_on mismatch PACKAGES={sorted(expected_deps)} "
+                f"package-boundaries.toml={sorted(authority_deps)}"
+            )
+
+    if errors:
+        raise SystemExit(
+            "package authority drift between scripts/validate_release_candidate.py's "
+            "PACKAGES and package-boundaries.toml:\n"
+            + "\n".join(f"  - {message}" for message in errors)
+        )
 
 
 def validate_versions() -> None:
@@ -279,8 +362,37 @@ def is_beneath(path: Path, root: Path) -> bool:
     return True
 
 
+def wheel_smoke_probe_namespaces() -> list[str]:
+    """The namespaces `install_and_probe()` must smoke-test.
+
+    Generated from `PACKAGES` - the authoritative package configuration -
+    rather than a second, independently maintained list, so a new package
+    can never be silently omitted from the installed-wheel probe the way
+    `zeromodel.artifacts`/`zeromodel.trust`/`zeromodel.navigation`
+    previously were when this was a hardcoded six-entry literal.
+    """
+    return [expected["namespace"] for expected in PACKAGES.values()]
+
+
+_WHEEL_SMOKE_PROBE = """
+import importlib, inspect, json, sys
+modules = {modules!r}
+locations = {{name: inspect.getfile(importlib.import_module(name)) for name in modules}}
+try:
+    from zeromodel import ScoreTable
+except ImportError:
+    root_import = 'blocked'
+else:
+    root_import = 'available'
+print(json.dumps({{'locations': locations, 'root_import': root_import}}, sort_keys=True))
+if root_import != 'blocked':
+    raise SystemExit('root import unexpectedly available')
+"""
+
+
 def install_and_probe() -> dict[str, dict[str, Any]]:
-    """Build a clean venv, install all six wheels, and smoke-probe each namespace.
+    """Build a clean venv, install every configured wheel, and smoke-probe
+    every configured namespace (see `wheel_smoke_probe_namespaces()`).
 
     Returns a per-package wheel-smoke result dict (used by
     release_test_layer_report() below): each package's namespace either
@@ -295,27 +407,7 @@ def install_and_probe() -> dict[str, dict[str, Any]]:
     run([str(python), "-m", "pip", "install", "--upgrade", "pip"], timeout=120)
     run([str(python), "-m", "pip", "install", *map(str, wheel_names())], timeout=180)
     run([str(python), "-m", "pip", "check"], timeout=120)
-    probe = """
-import importlib, inspect, json, sys
-modules = [
-    'zeromodel.core',
-    'zeromodel.analysis',
-    'zeromodel.observation',
-    'zeromodel.vision',
-    'zeromodel.video',
-    'zeromodel.persistence.sqlalchemy',
-]
-locations = {name: inspect.getfile(importlib.import_module(name)) for name in modules}
-try:
-    from zeromodel import ScoreTable
-except ImportError:
-    root_import = 'blocked'
-else:
-    root_import = 'available'
-print(json.dumps({'locations': locations, 'root_import': root_import}, sort_keys=True))
-if root_import != 'blocked':
-    raise SystemExit('root import unexpectedly available')
-"""
+    probe = _WHEEL_SMOKE_PROBE.format(modules=wheel_smoke_probe_namespaces())
     result = subprocess.run(
         [str(python), "-c", probe],
         cwd=REPO_ROOT,
@@ -624,6 +716,129 @@ def release_test_layer_report() -> dict[str, Any]:
 
 WHEEL_SMOKE_RESULTS: dict[str, dict[str, Any]] = {}
 
+_LAYER_STATUS_PASSED = "passed"
+_LAYER_STATUS_FAILED = "failed"
+_LAYER_STATUS_NOT_EXECUTED = "not_executed"
+_LAYER_STATUS_EXCLUDED = "excluded_by_policy"
+_COUNT_KEYS = ("passed", "failed", "errors", "skipped")
+
+
+@dataclass(frozen=True)
+class ReleaseLayerVerdict:
+    """One release test layer's truthful pass/fail decision.
+
+    Isolated from subprocess and filesystem code on purpose (see
+    `evaluate_release_test_layers()`) so the actual release-pass/fail
+    decision is directly unit-testable against a report payload, without
+    running pytest or building anything.
+    """
+
+    name: str
+    status: str
+    reasons: tuple[str, ...] = ()
+
+    @property
+    def ok(self) -> bool:
+        return self.status in (_LAYER_STATUS_PASSED, _LAYER_STATUS_EXCLUDED)
+
+
+def _evaluate_required_layer(
+    name: str, counts: Mapping[str, Any] | None
+) -> ReleaseLayerVerdict:
+    """A required layer passes only if it actually ran, ran cleanly, and
+    exercised at least one meaningful test.
+
+    `counts` is the shape `_pytest_count()` returns: `returncode`,
+    `passed`, `failed`, `errors`, `skipped`. A required layer fails when
+    any of these hold: `returncode != 0`; `failed > 0`; `errors > 0`; the
+    layer collected/ran zero relevant tests (`passed + failed + errors +
+    skipped == 0` - pytest's own "no tests ran" case); or the layer's
+    result is entirely missing from the report.
+    """
+    if counts is None:
+        return ReleaseLayerVerdict(
+            name, _LAYER_STATUS_NOT_EXECUTED, ("required layer result is missing",)
+        )
+    reasons: list[str] = []
+    returncode = counts.get("returncode")
+    if returncode != 0:
+        reasons.append(f"returncode={returncode!r}")
+    failed = int(counts.get("failed") or 0)
+    if failed:
+        reasons.append(f"failed={failed}")
+    errors = int(counts.get("errors") or 0)
+    if errors:
+        reasons.append(f"errors={errors}")
+    total = sum(int(counts.get(key) or 0) for key in _COUNT_KEYS)
+    if total == 0:
+        reasons.append("collected zero relevant tests")
+    if reasons:
+        return ReleaseLayerVerdict(name, _LAYER_STATUS_FAILED, tuple(reasons))
+    return ReleaseLayerVerdict(name, _LAYER_STATUS_PASSED)
+
+
+def evaluate_release_test_layers(
+    report: Mapping[str, Any],
+) -> tuple[ReleaseLayerVerdict, ...]:
+    """Decide, truthfully, whether every required release test layer passed.
+
+    Pure function over the `release_test_layer_report()` payload shape -
+    no subprocess, no filesystem access - so it is directly testable with
+    a hand-built payload shaped like the committed release-test report.
+    Required layers: the source-tree fast production suite, every
+    package's local source tests, and the cross-package integration
+    layer. Research remains explicitly excluded by policy and never fails
+    the production release verdict, but its exclusion is itself recorded
+    as a verdict entry rather than left silently absent.
+    """
+    verdicts: list[ReleaseLayerVerdict] = [
+        _evaluate_required_layer(
+            "source_tree_fast_production_tests",
+            report.get("source_tree_fast_production_tests"),
+        )
+    ]
+    package_local = report.get("package_local_source_tests_by_package")
+    package_local_map = package_local if isinstance(package_local, Mapping) else {}
+    for key in PACKAGES:
+        verdicts.append(
+            _evaluate_required_layer(
+                f"package_local_source_tests:{key}",
+                package_local_map.get(key),
+            )
+        )
+    verdicts.append(
+        _evaluate_required_layer(
+            "cross_package_integration_tests",
+            report.get("cross_package_integration_tests"),
+        )
+    )
+    research = report.get("research")
+    research_status = (
+        research.get("status") if isinstance(research, Mapping) else None
+    )
+    if research_status == _LAYER_STATUS_EXCLUDED:
+        verdicts.append(ReleaseLayerVerdict("research", _LAYER_STATUS_EXCLUDED))
+    else:
+        verdicts.append(
+            ReleaseLayerVerdict(
+                "research",
+                _LAYER_STATUS_NOT_EXECUTED,
+                (f"expected research.status={_LAYER_STATUS_EXCLUDED!r}, got "
+                 f"{research_status!r}",),
+            )
+        )
+    return tuple(verdicts)
+
+
+def release_verdict_passed(verdicts: Iterable[ReleaseLayerVerdict]) -> bool:
+    return all(verdict.ok for verdict in verdicts)
+
+
+def print_release_verdicts(verdicts: Iterable[ReleaseLayerVerdict]) -> None:
+    for verdict in verdicts:
+        detail = f" ({'; '.join(verdict.reasons)})" if verdict.reasons else ""
+        print(f"release layer [{verdict.status}] {verdict.name}{detail}")
+
 
 def main() -> int:
     global WHEEL_SMOKE_RESULTS
@@ -631,6 +846,7 @@ def main() -> int:
     parser.add_argument("--skip-build", action="store_true")
     args = parser.parse_args()
     validate_versions()
+    validate_package_boundary_consistency()
     if not args.skip_build:
         clean_artifacts()
         build_packages()
@@ -639,7 +855,12 @@ def main() -> int:
     WHEEL_SMOKE_RESULTS = install_and_probe()
     write_manifest()
     write_public_exports()
-    release_test_layer_report()
+    report = release_test_layer_report()
+    verdicts = evaluate_release_test_layers(report)
+    print_release_verdicts(verdicts)
+    if not release_verdict_passed(verdicts):
+        print("Release candidate validation FAILED")
+        return 1
     print("Release candidate validation passed")
     return 0
 

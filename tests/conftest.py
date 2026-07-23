@@ -6,8 +6,6 @@ from typing import Any
 
 import pytest
 
-import research.benchmarks.video_action_set_benchmark as benchmark
-
 
 # Files matching these names/prefixes are genuine cross-package production
 # integration behavior. This set was reconciled against
@@ -69,11 +67,23 @@ def _stage6_plan_cache_key(
 
 @pytest.fixture(scope="module", autouse=True)
 def cache_stage6_materialization_plans(request: pytest.FixtureRequest):
-    """Reuse deterministic plans only in the Stage 6 materialization tests."""
+    """Reuse deterministic plans only in the Stage 6 materialization tests.
+
+    `research.benchmarks.video_action_set_benchmark` is imported here,
+    lazily, only after confirming the current module is one of the small
+    Stage 6 materialization set that actually needs it - never at conftest
+    module-import time. Research is explicitly excluded from the
+    production release/test contract (see AGENTS.md, docs/release.md);
+    importing it unconditionally at collection time meant production fast
+    suite *collection* could fail if the research runtime failed to
+    import, even for test runs that never touch Stage 6 at all.
+    """
     module_name = request.module.__name__.rsplit(".", 1)[-1]
     if module_name not in _STAGE6_MATERIALIZATION_TEST_MODULES:
         yield
         return
+
+    import research.benchmarks.video_action_set_benchmark as benchmark
 
     original = benchmark._episode_plans_for_split
 

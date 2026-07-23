@@ -10,7 +10,6 @@ store's manifest as authoritative.
 from __future__ import annotations
 
 import json
-from typing import Tuple
 
 from zeromodel.artifacts.canonicalization import sha256_digest
 from zeromodel.artifacts.compiled_artifact import (
@@ -20,65 +19,14 @@ from zeromodel.artifacts.compiled_artifact import (
 )
 from zeromodel.artifacts.core_artifact_persistence import load_vpm_artifact
 from zeromodel.artifacts.ref import ArtifactRef
-from zeromodel.artifacts.report_dto import (
-    AdaptedDimensionDTO,
-    AdaptedSubjectDTO,
-    ReportFindingRefDTO,
-    SourceBindingDTO,
+from zeromodel.artifacts.report_decode import (
+    decode_dimension,
+    decode_source_binding,
+    decode_subject,
 )
 from zeromodel.artifacts.report_errors import ReportCompilationError
-from zeromodel.artifacts.score_semantics import ScoreSemantics
 from zeromodel.artifacts.store import ArtifactResolver
 from zeromodel.core.artifact import VPMArtifact
-
-
-def _decode_attributes(payload: dict) -> Tuple[Tuple[str, str], ...]:
-    return tuple(sorted(payload.items()))
-
-
-def _decode_subject(payload: dict) -> AdaptedSubjectDTO:
-    return AdaptedSubjectDTO(
-        subject_id=payload["subject_id"],
-        label=payload["label"],
-        ordinal=payload["ordinal"],
-        source_ref=payload["source_ref"],
-        attributes=_decode_attributes(payload["attributes"]),
-    )
-
-
-def _decode_dimension(payload: dict) -> AdaptedDimensionDTO:
-    return AdaptedDimensionDTO(
-        dimension_id=payload["dimension_id"],
-        label=payload["label"],
-        score_semantics=ScoreSemantics(payload["score_semantics"]),
-        family=payload["family"],
-        value_min=payload["value_min"],
-        value_max=payload["value_max"],
-        target_min=payload["target_min"],
-        target_max=payload["target_max"],
-        default_importance=payload["default_importance"],
-        attributes=_decode_attributes(payload["attributes"]),
-    )
-
-
-def _decode_finding_ref(payload: dict) -> ReportFindingRefDTO:
-    return ReportFindingRefDTO(
-        report_id=payload["report_id"],
-        finding_id=payload["finding_id"],
-        finding_kind=payload["finding_kind"],
-    )
-
-
-def _decode_source_binding(payload: dict) -> SourceBindingDTO:
-    return SourceBindingDTO(
-        subject_id=payload["subject_id"],
-        dimension_id=payload["dimension_id"],
-        finding_ref=_decode_finding_ref(payload["finding_ref"]),
-        source_uri=payload["source_uri"],
-        source_start=payload["source_start"],
-        source_end=payload["source_end"],
-        attributes=_decode_attributes(payload["attributes"]),
-    )
 
 
 def _decode_cell_binding(payload: dict) -> CellBindingDTO:
@@ -90,7 +38,7 @@ def _decode_cell_binding(payload: dict) -> CellBindingDTO:
         subject_id=payload["subject_id"],
         dimension_id=payload["dimension_id"],
         value_index=payload["value_index"],
-        source_binding=_decode_source_binding(payload["source_binding"]),
+        source_binding=decode_source_binding(payload["source_binding"]),
     )
 
 
@@ -125,16 +73,21 @@ def load_compiled_report_artifact(
 
     return CompiledReportArtifactDTO(
         artifact_ref=ref,
-        adapted_report_id=payload["adapted_report_id"],
+        adapted_report_ref=_decode_artifact_ref(payload["adapted_report_ref"]),
         adapter_contract_id=payload["adapter_contract_id"],
         compatibility_id=payload["compatibility_id"],
         compatibility_schema_id=payload["compatibility_schema_id"],
         missing_value_semantics=payload["missing_value_semantics"],
+        report_kind=payload["report_kind"],
+        subject_kind=payload["subject_kind"],
+        dimension_namespace=payload["dimension_namespace"],
+        duplicate_value_semantics=payload["duplicate_value_semantics"],
+        report_semantics_id=payload["report_semantics_id"],
         score_table_ref=_decode_artifact_ref(payload["score_table_ref"]),
         layout_recipe_ref=_decode_artifact_ref(payload["layout_recipe_ref"]),
         vpm_artifact_ref=_decode_artifact_ref(payload["vpm_artifact_ref"]),
-        subjects=tuple(_decode_subject(item) for item in payload["subjects"]),
-        dimensions=tuple(_decode_dimension(item) for item in payload["dimensions"]),
+        subjects=tuple(decode_subject(item) for item in payload["subjects"]),
+        dimensions=tuple(decode_dimension(item) for item in payload["dimensions"]),
         cell_bindings=tuple(
             _decode_cell_binding(item) for item in payload["cell_bindings"]
         ),

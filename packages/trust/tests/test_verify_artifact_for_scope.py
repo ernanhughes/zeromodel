@@ -13,6 +13,7 @@ from zeromodel.trust import (
     TrustFailureCode,
     compute_authorization_id,
     compute_deployment_scope_id,
+    compute_signature_envelope_id,
     require_authorized,
     sign_digest,
     verify_artifact_for_scope,
@@ -116,7 +117,16 @@ def test_decision_carries_a_complete_audit_receipt(
     assert decision.artifact_digest == artifact_ref.artifact_id
     assert decision.signer_id == signature_envelope.signer_id
     assert decision.deployment_scope_id == compute_deployment_scope_id(requested_scope)
-    assert decision.signature_envelope_id == signature_envelope.signature_hex
+    # signature_envelope_id is a content-derived identity - never the raw
+    # signature hex stored under an identity-shaped name (Stage C, finding 6
+    # follow-up).
+    assert decision.signature_envelope_id == compute_signature_envelope_id(
+        authorization_id=signature_envelope.authorization_id,
+        signer_id=signature_envelope.signer_id,
+        signature_hex=signature_envelope.signature_hex,
+        key_algorithm=signature_envelope.key_algorithm,
+    )
+    assert decision.signature_envelope_id != signature_envelope.signature_hex
 
 
 def test_decision_without_signature_has_no_signature_envelope_id(

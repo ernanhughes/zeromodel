@@ -39,3 +39,14 @@ Private-key generation/signing helpers in `zeromodel.trust.crypto` exist for
 tests and explicit authoring workflows only. Production loading only ever
 verifies; it never signs, and no private key material is ever written to a
 fixture, report, or source-controlled file.
+
+## Signature-envelope identity
+
+`TrustDecisionDTO.signature_envelope_id` is a content-derived digest
+(`compute_signature_envelope_id`, binding `authorization_id`, `signer_id`,
+`signature_hex`, and `key_algorithm`) - never the raw signature hex stored
+under an identity-shaped field name. Signature-envelope revocation
+(`RevocationRecordDTO(target_kind="signature_envelope", ...)`) targets this
+same computed identity, so a decision's recorded evidence and the
+revocation check that can block it always agree on what "this envelope"
+means.

@@ -27,6 +27,7 @@ from zeromodel.trust.dto import (
     TrustPolicyDTO,
     authorization_signing_payload,
     compute_deployment_scope_id,
+    compute_signature_envelope_id,
     parse_iso8601_utc,
 )
 from zeromodel.core.artifact import VPMValidationError
@@ -216,18 +217,26 @@ def _check_revocations(
     *,
     signer_id: str,
     authorization: ArtifactAuthorizationDTO,
-    signature_envelope: Optional[SignatureEnvelopeDTO],
+    signature_envelope_id: Optional[str],
     revocations: RevocationResolver,
     failure_codes: list[str],
 ) -> tuple[bool, bool]:
     """Returns (any_revoked, any_indeterminate) across signer, signature
-    envelope, artifact authorization, and artifact digest."""
+    envelope, artifact authorization, and artifact digest.
+
+    `signature_envelope_id` is the content-derived identity computed by
+    `compute_signature_envelope_id`, never the raw signature hex - a
+    revocation targeting the old raw-hex value would silently fail to
+    match after this migration, which is the intended, documented
+    behavior (see the Stage C implementation report), not a bug to work
+    around with a second target kind.
+    """
     checks = [("signer", signer_id, TrustFailureCode.REVOKED_SIGNER)]
-    if signature_envelope is not None:
+    if signature_envelope_id is not None:
         checks.append(
             (
                 "signature_envelope",
-                signature_envelope.signature_hex,
+                signature_envelope_id,
                 TrustFailureCode.REVOKED_ENVELOPE,
             )
         )
@@ -296,7 +305,21 @@ def _determine_decision(
 def _resolve_signature_envelope_id(
     signature_envelope: Optional[SignatureEnvelopeDTO],
 ) -> Optional[str]:
-    return signature_envelope.signature_hex if signature_envelope is not None else None
+    """Content-derived envelope identity, never the raw `signature_hex`.
+
+    Feeds both `TrustDecisionDTO.signature_envelope_id` (the audit
+    receipt) and `_check_revocations`'s "signature_envelope" target - the
+    same identity must be used for both so a revocation actually targets
+    what the decision records.
+    """
+    if signature_envelope is None:
+        return None
+    return compute_signature_envelope_id(
+        authorization_id=signature_envelope.authorization_id,
+        signer_id=signature_envelope.signer_id,
+        signature_hex=signature_envelope.signature_hex,
+        key_algorithm=signature_envelope.key_algorithm,
+    )
 
 
 def verify_artifact_for_scope(
@@ -361,7 +384,7 @@ def verify_artifact_for_scope(
     any_revoked, any_indeterminate = _check_revocations(
         signer_id=signer_id,
         authorization=authorization,
-        signature_envelope=signature_envelope,
+        signature_envelope_id=_resolve_signature_envelope_id(signature_envelope),
         revocations=revocations,
         failure_codes=failure_codes,
     )

@@ -498,6 +498,56 @@ class SignatureEnvelopeDTO:
             )
 
 
+def signature_envelope_identity_payload(envelope: "SignatureEnvelopeDTO") -> dict:
+    """The exact canonical payload a signature envelope's identity covers.
+
+    Binds every field that makes one signature envelope a different claim
+    from another: which authorization it signs, who signed it, the raw
+    signature bytes, and the key algorithm. `TrustDecisionDTO` records the
+    digest of this payload (via `compute_signature_envelope_id`) rather
+    than the raw `signature_hex` - a signature value is not itself a
+    stable identity (a resigned envelope over the same authorization by
+    the same signer would compare equal by content but is a different
+    signing event only if any of these fields actually changed; storing
+    the raw hex under an identity-shaped field name conflated "the
+    signature value" with "the identity of this envelope").
+    """
+    return {
+        "spec_version": envelope.spec_version,
+        "authorization_id": envelope.authorization_id,
+        "signer_id": envelope.signer_id,
+        "signature_hex": envelope.signature_hex,
+        "key_algorithm": envelope.key_algorithm,
+    }
+
+
+def compute_signature_envelope_id(
+    *,
+    authorization_id: str,
+    signer_id: str,
+    signature_hex: str,
+    key_algorithm: str = "ed25519",
+    spec_version: str = SPEC_VERSION,
+) -> str:
+    """Compute the content-derived identity of a signature envelope.
+
+    Used both by `verify_artifact_for_scope` (to populate
+    `TrustDecisionDTO.signature_envelope_id`) and by revocation lookups
+    (to target the same identity `RevocationRecordDTO` records under
+    `target_kind="signature_envelope"`) - the two must always agree on
+    what "this envelope's identity" means, which is why both go through
+    this one function rather than each hashing the fields independently.
+    """
+    payload = {
+        "spec_version": spec_version,
+        "authorization_id": authorization_id,
+        "signer_id": signer_id,
+        "signature_hex": signature_hex,
+        "key_algorithm": key_algorithm,
+    }
+    return sha256_digest(canonical_json_bytes(payload))
+
+
 @dataclass(frozen=True, slots=True)
 class RevocationRecordDTO:
     """One auditable revocation entry."""
@@ -571,6 +621,10 @@ class TrustDecisionDTO:
     decision was computed from - without these, a caller could see that
     *some* artifact was authorized but not reconstruct, from the decision
     alone, which policy or authorization actually granted it.
+    `signature_envelope_id` is a content-derived identity computed by
+    `compute_signature_envelope_id` (binding authorization_id, signer_id,
+    signature_hex, and key_algorithm) - never the raw signature hex stored
+    under an identity-shaped name.
     """
 
     integrity_valid: bool
@@ -620,9 +674,11 @@ class TrustDecisionDTO:
             "TrustDecisionDTO.deployment_scope_id must be a sha256: digest",
         )
         if self.signature_envelope_id is not None:
-            _require_nonempty_str(
+            _require_sha256(
                 self.signature_envelope_id,
-                "TrustDecisionDTO.signature_envelope_id must be non-empty when present",
+                "TrustDecisionDTO.signature_envelope_id must be a sha256: digest when present "
+                "(see compute_signature_envelope_id - it is a content-derived identity, never "
+                "the raw signature hex)",
             )
 
     @property

@@ -27,7 +27,9 @@ from zeromodel.trust.dto import (
     authorization_signing_payload,
     compute_authorization_id,
     compute_deployment_scope_id,
+    compute_signature_envelope_id,
     compute_trust_policy_id,
+    signature_envelope_identity_payload,
     trust_policy_identity_payload,
 )
 from zeromodel.trust.revocation import (
@@ -60,10 +62,12 @@ __all__ = [
     "authorization_signing_payload",
     "compute_authorization_id",
     "compute_deployment_scope_id",
+    "compute_signature_envelope_id",
     "compute_trust_policy_id",
     "generate_signing_key",
     "require_authorized",
     "sign_digest",
+    "signature_envelope_identity_payload",
     "trust_policy_identity_payload",
     "verify_artifact_for_scope",
     "verify_signature",

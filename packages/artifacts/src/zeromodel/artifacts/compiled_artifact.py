@@ -9,13 +9,15 @@ identified separately and must never change this identity - only the
 report's own content (raw values, score semantics, source bindings, the
 layout recipe actually used) can.
 
-The Core `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` this record
-describes are not embedded here - they are persisted separately through
-the same injected `ArtifactStore` (see `core_artifact_persistence.py`) and
+The `AdaptedReportDTO` and the Core `ScoreTable`, `LayoutRecipe`, and
+`VPMArtifact` this record describes are not embedded here - they are
+persisted separately through the same injected `ArtifactStore` (see
+`adapted_report_persistence.py`/`core_artifact_persistence.py`) and
 referenced by real `ArtifactRef` values, so a reloaded
-`CompiledReportArtifactDTO` can actually resolve its own VPM rather than
-merely naming a digest that once existed in a since-discarded Python
-object.
+`CompiledReportArtifactDTO` can actually resolve its own adapted report and
+VPM rather than merely naming a digest that once existed in a
+since-discarded Python object. `zeromodel.artifacts.aggregate` resolves and
+cross-validates all four together.
 """
 
 from __future__ import annotations
@@ -24,7 +26,10 @@ from dataclasses import dataclass
 from typing import NamedTuple, Tuple
 
 from zeromodel.artifacts.canonicalization import canonical_json_bytes, sha256_digest
-from zeromodel.artifacts.compatibility_schema import compute_compatibility_schema_id
+from zeromodel.artifacts.compatibility_schema import (
+    compute_compatibility_schema_id,
+    compute_report_semantics_id,
+)
 from zeromodel.artifacts.ref import ArtifactRef
 from zeromodel.artifacts.report_dto import (
     AdaptedDimensionDTO,
@@ -53,12 +58,30 @@ class CoreArtifactRefs(NamedTuple):
 
 
 class CompatibilityInfo(NamedTuple):
-    """The three ingredients of a report's compatibility claim, grouped so
-    identity-payload builders take one parameter instead of three."""
+    """The three ingredients of a report's dimension-schema compatibility
+    claim, grouped so identity-payload builders take one parameter instead
+    of three. See `ReportSemanticsInfo` for the separate report/subject
+    compatibility layer this does not cover."""
 
     compatibility_id: str
     compatibility_schema_id: str
     missing_value_semantics: str
+
+
+class ReportSemanticsInfo(NamedTuple):
+    """The report/subject-level compatibility layer `CompatibilityInfo`
+    does not cover (see `compatibility_schema.py`'s module docstring):
+    `compatibility_schema_id` is a digest over *dimensions only* - two
+    reports over sentences and claims that happen to declare the same
+    dimension ids/semantics would otherwise look schema-compatible even
+    though comparing a sentence-level score to a claim-level score is not
+    meaningful. `report_semantics_id` closes that gap."""
+
+    report_kind: str
+    subject_kind: str
+    dimension_namespace: str
+    duplicate_value_semantics: str
+    report_semantics_id: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,17 +157,22 @@ def _artifact_ref_payload(ref: ArtifactRef) -> dict:
 class CompiledReportArtifactDTO:
     """The canonical compiled report artifact.
 
-    References (never embeds) the Core `ScoreTable`/`LayoutRecipe`/
-    `VPMArtifact` this compilation produced, via real, independently
-    resolvable `ArtifactRef` values.
+    References (never embeds) the persisted `AdaptedReportDTO` and the Core
+    `ScoreTable`/`LayoutRecipe`/`VPMArtifact` this compilation produced, via
+    real, independently resolvable `ArtifactRef` values.
     """
 
     artifact_ref: ArtifactRef
-    adapted_report_id: str
+    adapted_report_ref: ArtifactRef
     adapter_contract_id: str
     compatibility_id: str
     compatibility_schema_id: str
     missing_value_semantics: str
+    report_kind: str
+    subject_kind: str
+    dimension_namespace: str
+    duplicate_value_semantics: str
+    report_semantics_id: str
     score_table_ref: ArtifactRef
     layout_recipe_ref: ArtifactRef
     vpm_artifact_ref: ArtifactRef
@@ -158,6 +186,7 @@ class CompiledReportArtifactDTO:
         self._validate_basic_shape()
         self._validate_closure()
         self._validate_compatibility_schema()
+        self._validate_report_semantics()
         expected_id = sha256_digest(
             canonical_json_bytes(compiled_report_identity_payload(self))
         )
@@ -167,15 +196,15 @@ class CompiledReportArtifactDTO:
                 "canonical content"
             )
 
+    @property
+    def adapted_report_id(self) -> str:
+        return self.adapted_report_ref.artifact_id
+
     def _validate_basic_shape(self) -> None:
         if self.artifact_ref.artifact_kind != self.artifact_kind:
             raise ReportCompilationError(
                 "CompiledReportArtifactDTO.artifact_ref.artifact_kind must equal artifact_kind"
             )
-        _require_nonempty_str(
-            self.adapted_report_id,
-            "CompiledReportArtifactDTO.adapted_report_id must be non-empty",
-        )
         _require_nonempty_str(
             self.compatibility_id,
             "CompiledReportArtifactDTO.compatibility_id must be non-empty",
@@ -188,6 +217,25 @@ class CompiledReportArtifactDTO:
             raise ReportCompilationError(
                 "CompiledReportArtifactDTO.missing_value_semantics must be 'error' or 'absent'"
             )
+        _require_nonempty_str(
+            self.report_kind, "CompiledReportArtifactDTO.report_kind must be non-empty"
+        )
+        _require_nonempty_str(
+            self.subject_kind,
+            "CompiledReportArtifactDTO.subject_kind must be non-empty",
+        )
+        _require_nonempty_str(
+            self.dimension_namespace,
+            "CompiledReportArtifactDTO.dimension_namespace must be non-empty",
+        )
+        _require_nonempty_str(
+            self.duplicate_value_semantics,
+            "CompiledReportArtifactDTO.duplicate_value_semantics must be non-empty",
+        )
+        _require_nonempty_str(
+            self.report_semantics_id,
+            "CompiledReportArtifactDTO.report_semantics_id must be non-empty",
+        )
         if not self.subjects:
             raise ReportCompilationError(
                 "CompiledReportArtifactDTO.subjects must not be empty"
@@ -217,6 +265,28 @@ class CompiledReportArtifactDTO:
             raise ReportCompilationError(
                 "CompiledReportArtifactDTO.compatibility_schema_id does not match the content "
                 "digest of its own dimensions/missing_value_semantics"
+            )
+
+    def _validate_report_semantics(self) -> None:
+        """The dimension-schema digest above says nothing about *what kind
+        of thing* is being scored - two reports over sentences and claims
+        could declare identical dimension schemas. This recomputes the
+        report/subject-level digest from this record's own declared
+        `report_kind`/`subject_kind`/`dimension_namespace`/
+        `duplicate_value_semantics` and requires it to match
+        `report_semantics_id`.
+        """
+        expected_semantics_id = compute_report_semantics_id(
+            report_kind=self.report_kind,
+            subject_kind=self.subject_kind,
+            dimension_namespace=self.dimension_namespace,
+            duplicate_value_semantics=self.duplicate_value_semantics,
+        )
+        if self.report_semantics_id != expected_semantics_id:
+            raise ReportCompilationError(
+                "CompiledReportArtifactDTO.report_semantics_id does not match the content "
+                "digest of its own report_kind/subject_kind/dimension_namespace/"
+                "duplicate_value_semantics"
             )
 
     def _validate_closure(self) -> None:
@@ -307,9 +377,10 @@ class CompiledReportArtifactDTO:
 
 def _identity_payload_fields(
     *,
-    adapted_report_id: str,
+    adapted_report_ref: ArtifactRef,
     adapter_contract_id: str,
     compatibility: CompatibilityInfo,
+    report_semantics: ReportSemanticsInfo,
     core_refs: CoreArtifactRefs,
     subjects: Tuple[AdaptedSubjectDTO, ...],
     dimensions: Tuple[AdaptedDimensionDTO, ...],
@@ -320,11 +391,16 @@ def _identity_payload_fields(
     return {
         "spec_version": spec_version,
         "artifact_kind": artifact_kind,
-        "adapted_report_id": adapted_report_id,
+        "adapted_report_ref": _artifact_ref_payload(adapted_report_ref),
         "adapter_contract_id": adapter_contract_id,
         "compatibility_id": compatibility.compatibility_id,
         "compatibility_schema_id": compatibility.compatibility_schema_id,
         "missing_value_semantics": compatibility.missing_value_semantics,
+        "report_kind": report_semantics.report_kind,
+        "subject_kind": report_semantics.subject_kind,
+        "dimension_namespace": report_semantics.dimension_namespace,
+        "duplicate_value_semantics": report_semantics.duplicate_value_semantics,
+        "report_semantics_id": report_semantics.report_semantics_id,
         "score_table_ref": _artifact_ref_payload(core_refs.score_table_ref),
         "layout_recipe_ref": _artifact_ref_payload(core_refs.layout_recipe_ref),
         "vpm_artifact_ref": _artifact_ref_payload(core_refs.vpm_artifact_ref),
@@ -337,12 +413,19 @@ def _identity_payload_fields(
 def compiled_report_identity_payload(compiled: CompiledReportArtifactDTO) -> dict:
     """The exact canonical payload `artifact_ref.artifact_id` covers."""
     return _identity_payload_fields(
-        adapted_report_id=compiled.adapted_report_id,
+        adapted_report_ref=compiled.adapted_report_ref,
         adapter_contract_id=compiled.adapter_contract_id,
         compatibility=CompatibilityInfo(
             compatibility_id=compiled.compatibility_id,
             compatibility_schema_id=compiled.compatibility_schema_id,
             missing_value_semantics=compiled.missing_value_semantics,
+        ),
+        report_semantics=ReportSemanticsInfo(
+            report_kind=compiled.report_kind,
+            subject_kind=compiled.subject_kind,
+            dimension_namespace=compiled.dimension_namespace,
+            duplicate_value_semantics=compiled.duplicate_value_semantics,
+            report_semantics_id=compiled.report_semantics_id,
         ),
         core_refs=CoreArtifactRefs(
             score_table_ref=compiled.score_table_ref,
@@ -359,9 +442,10 @@ def compiled_report_identity_payload(compiled: CompiledReportArtifactDTO) -> dic
 
 def compute_compiled_report_artifact_id(
     *,
-    adapted_report_id: str,
+    adapted_report_ref: ArtifactRef,
     adapter_contract_id: str,
     compatibility: CompatibilityInfo,
+    report_semantics: ReportSemanticsInfo,
     core_refs: CoreArtifactRefs,
     subjects: Tuple[AdaptedSubjectDTO, ...],
     dimensions: Tuple[AdaptedDimensionDTO, ...],
@@ -370,9 +454,10 @@ def compute_compiled_report_artifact_id(
     spec_version: str = SPEC_VERSION,
 ) -> str:
     payload = _identity_payload_fields(
-        adapted_report_id=adapted_report_id,
+        adapted_report_ref=adapted_report_ref,
         adapter_contract_id=adapter_contract_id,
         compatibility=compatibility,
+        report_semantics=report_semantics,
         core_refs=core_refs,
         subjects=subjects,
         dimensions=dimensions,

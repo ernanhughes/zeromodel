@@ -20,14 +20,19 @@ from typing import Dict, List, Tuple, TypeVar
 
 import numpy as np
 
+from zeromodel.artifacts.adapted_report_persistence import store_adapted_report
 from zeromodel.artifacts.adapter import ReportAdapter
 from zeromodel.artifacts.canonicalization import canonical_json_bytes
-from zeromodel.artifacts.compatibility_schema import compute_compatibility_schema_id
+from zeromodel.artifacts.compatibility_schema import (
+    compute_compatibility_schema_id,
+    compute_report_semantics_id,
+)
 from zeromodel.artifacts.compiled_artifact import (
     CellBindingDTO,
     CompatibilityInfo,
     CompiledReportArtifactDTO,
     CoreArtifactRefs,
+    ReportSemanticsInfo,
     compiled_report_identity_payload,
     compute_compiled_report_artifact_id,
 )
@@ -157,6 +162,7 @@ def compile_report(
     contract = adapter.contract()
     adapted = adapter.adapt(report)
     _validate_adapted_report_matches_contract(adapted, contract)
+    adapted_report_ref = store_adapted_report(adapted, store=store)
 
     score_table, value_lookup = _build_score_table(adapted, contract)
     vpm_artifact = build_vpm(
@@ -189,10 +195,24 @@ def compile_report(
         compatibility_schema_id=compatibility_schema_id,
         missing_value_semantics=contract.missing_value_semantics,
     )
+    report_semantics_id = compute_report_semantics_id(
+        report_kind=adapted.report_kind,
+        subject_kind=contract.subject_kind,
+        dimension_namespace=contract.dimension_namespace,
+        duplicate_value_semantics=contract.duplicate_value_semantics,
+    )
+    report_semantics = ReportSemanticsInfo(
+        report_kind=adapted.report_kind,
+        subject_kind=contract.subject_kind,
+        dimension_namespace=contract.dimension_namespace,
+        duplicate_value_semantics=contract.duplicate_value_semantics,
+        report_semantics_id=report_semantics_id,
+    )
     artifact_id = compute_compiled_report_artifact_id(
-        adapted_report_id=adapted.adapted_report_id,
+        adapted_report_ref=adapted_report_ref,
         adapter_contract_id=contract.contract_id,
         compatibility=compatibility,
+        report_semantics=report_semantics,
         core_refs=core_refs,
         subjects=adapted.subjects,
         dimensions=adapted.dimensions,
@@ -203,11 +223,16 @@ def compile_report(
             artifact_kind="zeromodel.artifacts.compiled-report/v1",
             artifact_id=artifact_id,
         ),
-        adapted_report_id=adapted.adapted_report_id,
+        adapted_report_ref=adapted_report_ref,
         adapter_contract_id=contract.contract_id,
         compatibility_id=contract.compatibility_id,
         compatibility_schema_id=compatibility_schema_id,
         missing_value_semantics=contract.missing_value_semantics,
+        report_kind=adapted.report_kind,
+        subject_kind=contract.subject_kind,
+        dimension_namespace=contract.dimension_namespace,
+        duplicate_value_semantics=contract.duplicate_value_semantics,
+        report_semantics_id=report_semantics_id,
         score_table_ref=score_table_ref,
         layout_recipe_ref=layout_recipe_ref,
         vpm_artifact_ref=vpm_artifact_ref,

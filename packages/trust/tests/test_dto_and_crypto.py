@@ -15,6 +15,7 @@ from zeromodel.trust import (
     TrustPolicyDTO,
     TrustPolicyRuleDTO,
     compute_authorization_id,
+    compute_signature_envelope_id,
     compute_trust_policy_id,
     generate_signing_key,
     sign_digest,
@@ -129,14 +130,30 @@ def test_trust_decision_requires_sha256_evidence_identities():
         _make_trust_decision(signer_id="")
 
 
+def test_trust_decision_requires_sha256_signature_envelope_id_when_present():
+    """Regression: `signature_envelope_id` must be a content-derived digest,
+    never the raw signature hex stored under an identity-shaped name."""
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(signature_envelope_id="deadbeef")
+    with pytest.raises(VPMValidationError):
+        _make_trust_decision(
+            signature_envelope_id="aa" * 64
+        )  # raw hex, no sha256: prefix
+
+
 def test_trust_decision_carries_a_complete_audit_receipt():
-    decision = _make_trust_decision(signature_envelope_id="deadbeef")
+    envelope_id = compute_signature_envelope_id(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-a",
+        signature_hex="aa" * 64,
+    )
+    decision = _make_trust_decision(signature_envelope_id=envelope_id)
     assert decision.trust_policy_id == "sha256:" + "a" * 64
     assert decision.authorization_id == "sha256:" + "b" * 64
     assert decision.artifact_digest == "sha256:" + "c" * 64
     assert decision.signer_id == "signer-a"
     assert decision.deployment_scope_id == "sha256:" + "d" * 64
-    assert decision.signature_envelope_id == "deadbeef"
+    assert decision.signature_envelope_id == envelope_id
 
 
 def _make_signer(signer_id: str, public_key_hex: str) -> TrustedSignerDTO:
@@ -311,6 +328,61 @@ def test_deployment_scope_pattern_wildcards_unset_fields():
     non_matching = DeploymentScopeDTO(organization="other-org")
     assert matching.matches_pattern(pattern)
     assert not non_matching.matches_pattern(pattern)
+
+
+def test_signature_envelope_id_is_deterministic():
+    kwargs = dict(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-a",
+        signature_hex="aa" * 64,
+    )
+    assert compute_signature_envelope_id(**kwargs) == compute_signature_envelope_id(
+        **kwargs
+    )
+
+
+def test_signature_envelope_id_changes_with_any_component():
+    """Regression for Stage C section 12: the envelope identity must bind
+    authorization_id, signer_id, signature_hex, and key_algorithm - changing
+    any one of them must change the identity."""
+    base = compute_signature_envelope_id(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-a",
+        signature_hex="aa" * 64,
+        key_algorithm="ed25519",
+    )
+    different_authorization = compute_signature_envelope_id(
+        authorization_id="sha256:" + "c" * 64,
+        signer_id="signer-a",
+        signature_hex="aa" * 64,
+        key_algorithm="ed25519",
+    )
+    different_signer = compute_signature_envelope_id(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-b",
+        signature_hex="aa" * 64,
+        key_algorithm="ed25519",
+    )
+    different_signature = compute_signature_envelope_id(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-a",
+        signature_hex="bb" * 64,
+        key_algorithm="ed25519",
+    )
+    different_algorithm = compute_signature_envelope_id(
+        authorization_id="sha256:" + "b" * 64,
+        signer_id="signer-a",
+        signature_hex="aa" * 64,
+        key_algorithm="ed448",
+    )
+    identities = {
+        base,
+        different_authorization,
+        different_signer,
+        different_signature,
+        different_algorithm,
+    }
+    assert len(identities) == 5
 
 
 def test_crypto_sign_and_verify_round_trip():

@@ -94,60 +94,80 @@ def test_every_value_maps_to_exactly_one_cell_binding_with_correct_source(
 
 
 def test_cell_bindings_use_view_coordinates_not_source_order(
-    ai_artifact_family, FakeAdapter
+    quality_family, FakeAdapter
 ):
-    """Regression for the external review's Blocker #1: a reordering layout
-    recipe must not leave cell_bindings pointing at source-order indexes.
+    """Regression for the external review's Blocker #1, strengthened per
+    Stage C section 13: the original version of this test used a fixture
+    whose source order already happened to match the sorted order, so
+    `view_row == source_row_index` held even with the bug the test claimed
+    to catch. This version uses a genuine permutation on both axes.
 
-    `ai_artifact_family` declares sentence-001 with generic_phrasing=0.9 and
-    sentence-002 with generic_phrasing=0.1 (source order: 001 then 002). A
-    descending sort on generic_phrasing must place sentence-001 at view_row
-    0 - the binding for view_row=0 must resolve back to sentence-001, not
-    whatever happens to be first in source order.
+    `quality_family` declares sentence-001 quality=0.4 (source row 0) and
+    sentence-002 quality=0.95 (source row 1). A descending sort on quality
+    must place sentence-002 at view_row 0 - a real row permutation, not a
+    coincidental identity. The column order is also explicitly reversed
+    (source declares quality, clarity; the recipe requests clarity,
+    quality) - a real column permutation.
     """
-    contract, adapted = ai_artifact_family
+    contract, adapted = quality_family
     adapter = FakeAdapter(contract, adapted)
-    descending_layout = LayoutRecipe(
+    permuted_layout = LayoutRecipe(
         {
             "version": "vpm-layout/0",
             "row_order": {
                 "kind": "lexicographic",
                 "tie_break": "row_id",
-                "keys": [{"metric_id": "generic_phrasing", "direction": "desc"}],
+                "keys": [{"metric_id": "quality", "direction": "desc"}],
             },
-            "column_order": {"kind": "source"},
+            "column_order": {"kind": "explicit", "metric_ids": ("clarity", "quality")},
             "normalization": {"kind": "per_metric_minmax", "clip": True},
         }
     )
     compiled = compile_report(
         adapter=adapter,
         report=object(),
-        layout_recipe=descending_layout,
+        layout_recipe=permuted_layout,
         store=InMemoryArtifactStore(),
     )
 
     by_view_coord = {
         (cell.view_row, cell.view_column): cell for cell in compiled.cell_bindings
     }
-    generic_phrasing_column = next(
-        index
-        for index, dimension in enumerate(adapted.dimensions)
-        if dimension.dimension_id == "generic_phrasing"
+
+    # Row permutation: sentence-002 (0.95) outranks sentence-001 (0.4), so
+    # it lands at view_row 0 even though it is source row 1.
+    top_row_cell = by_view_coord[(0, 0)]
+    assert top_row_cell.subject_id == "sentence-002"
+    assert top_row_cell.source_row_index == 1
+    assert top_row_cell.view_row != top_row_cell.source_row_index
+
+    second_row_cell = by_view_coord[(1, 0)]
+    assert second_row_cell.subject_id == "sentence-001"
+    assert second_row_cell.source_row_index == 0
+    assert second_row_cell.view_row != second_row_cell.source_row_index
+
+    # Column permutation: view_column 0 is "clarity" (declared second,
+    # source_metric_index 1), view_column 1 is "quality" (declared first,
+    # source_metric_index 0).
+    assert top_row_cell.dimension_id == "clarity"
+    assert top_row_cell.source_metric_index == 1
+    assert top_row_cell.view_column != top_row_cell.source_metric_index
+
+    quality_cell = by_view_coord[(0, 1)]
+    assert quality_cell.dimension_id == "quality"
+    assert quality_cell.source_metric_index == 0
+
+    # At least one cell has both a genuinely permuted row and a genuinely
+    # permuted column coordinate, proving the binding resolves through
+    # VPMArtifact.cell() rather than assuming source order on either axis.
+    assert any(
+        cell.view_row != cell.source_row_index
+        and cell.view_column != cell.source_metric_index
+        for cell in compiled.cell_bindings
     )
 
-    top_row_cell = by_view_coord[(0, generic_phrasing_column)]
-    assert top_row_cell.subject_id == "sentence-001"
-    assert top_row_cell.source_row_index == 0
-
-    second_row_cell = by_view_coord[(1, generic_phrasing_column)]
-    assert second_row_cell.subject_id == "sentence-002"
-    assert second_row_cell.source_row_index == 1
-
-    # view coordinates equal source coordinates only because this
-    # particular case happens to already be sorted that way; the important
-    # assertion is that subject_id/dimension_id at each view coordinate are
-    # independently verified below by the closure validator, not merely
-    # assumed from column position.
+    # The closure validator independently re-derives subject_id/dimension_id
+    # from source indices for every cell - not merely assumed from position.
     for cell in compiled.cell_bindings:
         assert cell.subject_id == adapted.subjects[cell.source_row_index].subject_id
         assert (

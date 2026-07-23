@@ -1,5 +1,7 @@
 # ZeroModel claims audit
 
+**Scope note:** this audit predates the nine-package split and covers only the legacy `zeromodel` root package's claims (VPM artifacts, policy lookup, visual addressing, learning/training traces, and related consumers). The newer `zeromodel-artifacts`/`zeromodel-trust`/`zeromodel-navigation` distributions carry their own claims-boundary sections in their package READMEs and stage completion reports (see [package-system-next.md](architecture/package-system-next.md) and, for the current compiled-report aggregate guarantee, [post-c203e7a7-aggregate-closure.md](reviews/post-c203e7a7-aggregate-closure.md)); they are not yet folded into this document's claim matrix below.
+
 This document compares the public ZeroModel claims against the current clean `zeromodel` package.
 
 Sources reviewed:

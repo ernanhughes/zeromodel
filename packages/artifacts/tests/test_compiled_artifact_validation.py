@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from zeromodel.artifacts import (
+    ADAPTED_REPORT_ARTIFACT_KIND,
     AdaptedDimensionDTO,
     AdaptedSubjectDTO,
     ArtifactRef,
@@ -22,17 +23,24 @@ from zeromodel.artifacts import (
     SourceBindingDTO,
     sha256_digest,
 )
-from zeromodel.artifacts.compatibility_schema import compute_compatibility_schema_id
+from zeromodel.artifacts.compatibility_schema import (
+    compute_compatibility_schema_id,
+    compute_report_semantics_id,
+)
 from zeromodel.artifacts.compiled_artifact import (
     COMPILED_REPORT_ARTIFACT_KIND,
     CompatibilityInfo,
     CoreArtifactRefs,
+    ReportSemanticsInfo,
     compute_compiled_report_artifact_id,
 )
 from zeromodel.artifacts.report_errors import ReportCompilationError
 
 _MISSING_VALUE_SEMANTICS = "error"
 
+_FAKE_ADAPTED_REPORT_REF = ArtifactRef(
+    artifact_kind=ADAPTED_REPORT_ARTIFACT_KIND, artifact_id=sha256_digest(b"w")
+)
 _FAKE_REF = ArtifactRef(
     artifact_kind="zeromodel.core.score-table/v1", artifact_id=sha256_digest(b"x")
 )
@@ -41,6 +49,19 @@ _FAKE_RECIPE_REF = ArtifactRef(
 )
 _FAKE_VPM_REF = ArtifactRef(
     artifact_kind="zeromodel.core.vpm-artifact/v1", artifact_id=sha256_digest(b"z")
+)
+_REPORT_SEMANTICS_ID = compute_report_semantics_id(
+    report_kind="test-report",
+    subject_kind="test-subject",
+    dimension_namespace="test",
+    duplicate_value_semantics="reject",
+)
+_REPORT_SEMANTICS = ReportSemanticsInfo(
+    report_kind="test-report",
+    subject_kind="test-subject",
+    dimension_namespace="test",
+    duplicate_value_semantics="reject",
+    report_semantics_id=_REPORT_SEMANTICS_ID,
 )
 
 _SUBJECTS = (
@@ -149,9 +170,10 @@ def _build(cell_bindings: tuple) -> CompiledReportArtifactDTO:
         missing_value_semantics=_MISSING_VALUE_SEMANTICS,
     )
     artifact_id = compute_compiled_report_artifact_id(
-        adapted_report_id="report-1",
+        adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
         adapter_contract_id="contract-1",
         compatibility=compatibility,
+        report_semantics=_REPORT_SEMANTICS,
         core_refs=core_refs,
         subjects=_SUBJECTS,
         dimensions=_DIMENSIONS,
@@ -161,11 +183,16 @@ def _build(cell_bindings: tuple) -> CompiledReportArtifactDTO:
         artifact_ref=ArtifactRef(
             artifact_kind=COMPILED_REPORT_ARTIFACT_KIND, artifact_id=artifact_id
         ),
-        adapted_report_id="report-1",
+        adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
         adapter_contract_id="contract-1",
         compatibility_id="test/v1",
         compatibility_schema_id=compatibility_schema_id,
         missing_value_semantics=_MISSING_VALUE_SEMANTICS,
+        report_kind=_REPORT_SEMANTICS.report_kind,
+        subject_kind=_REPORT_SEMANTICS.subject_kind,
+        dimension_namespace=_REPORT_SEMANTICS.dimension_namespace,
+        duplicate_value_semantics=_REPORT_SEMANTICS.duplicate_value_semantics,
+        report_semantics_id=_REPORT_SEMANTICS_ID,
         score_table_ref=_FAKE_REF,
         layout_recipe_ref=_FAKE_RECIPE_REF,
         vpm_artifact_ref=_FAKE_VPM_REF,
@@ -300,9 +327,10 @@ def test_duplicate_subject_id_is_rejected() -> None:
         missing_value_semantics=_MISSING_VALUE_SEMANTICS,
     )
     artifact_id = compute_compiled_report_artifact_id(
-        adapted_report_id="report-1",
+        adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
         adapter_contract_id="contract-1",
         compatibility=compatibility,
+        report_semantics=_REPORT_SEMANTICS,
         core_refs=core_refs,
         subjects=duplicate_subjects,
         dimensions=_DIMENSIONS,
@@ -313,11 +341,16 @@ def test_duplicate_subject_id_is_rejected() -> None:
             artifact_ref=ArtifactRef(
                 artifact_kind=COMPILED_REPORT_ARTIFACT_KIND, artifact_id=artifact_id
             ),
-            adapted_report_id="report-1",
+            adapted_report_ref=_FAKE_ADAPTED_REPORT_REF,
             adapter_contract_id="contract-1",
             compatibility_id="test/v1",
             compatibility_schema_id=compatibility_schema_id,
             missing_value_semantics=_MISSING_VALUE_SEMANTICS,
+            report_kind=_REPORT_SEMANTICS.report_kind,
+            subject_kind=_REPORT_SEMANTICS.subject_kind,
+            dimension_namespace=_REPORT_SEMANTICS.dimension_namespace,
+            duplicate_value_semantics=_REPORT_SEMANTICS.duplicate_value_semantics,
+            report_semantics_id=_REPORT_SEMANTICS_ID,
             score_table_ref=_FAKE_REF,
             layout_recipe_ref=_FAKE_RECIPE_REF,
             vpm_artifact_ref=_FAKE_VPM_REF,

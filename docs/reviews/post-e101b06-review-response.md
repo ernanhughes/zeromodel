@@ -1,6 +1,6 @@
 # Response to the external review of commit e101b06
 
-**Status:** Complete.
+**Status:** Complete. Superseded on aggregate-closure/report-semantics questions only by [post-c203e7a7-aggregate-closure.md](post-c203e7a7-aggregate-closure.md) (Stage C) — this document's own findings and fixes remain the historical record and are not rewritten.
 **Reviewed commit:** `e101b0631baa4a363e7d9d04c108025b0dd250bd` ("feat: add report artifacts and harden trust/navigation").
 **Scope:** All six findings from the second external review (2 blockers, 2 high, 2 medium), fixed in full per the user's authorized scope.
 

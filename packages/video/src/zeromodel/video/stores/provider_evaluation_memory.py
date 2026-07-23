@@ -65,11 +65,13 @@ class _ProviderEvaluationMemoryStoreMixin:
                 raise_unknown_observation_for_provider_evaluation()
             if case.policy_artifact_id != run.run.policy_artifact_id:
                 raise_provider_evaluation_policy_mismatch()
-            # A case belongs to exactly one run (unlike matrix blobs or provider
-            # configurations, which are legitimately content-addressed and shared).
-            # Since case_ordinal is part of case_id's digest, a collision here can
-            # only mean this case_id already belongs to a different, already-saved
-            # run - always a conflict, never a dedup opportunity.
+            # Evaluation cases are run-owned (unlike matrix blobs or provider
+            # configurations, which are legitimately content-addressed and
+            # shared). case_id does not itself encode run_id, so this is an
+            # enforced invariant, not a structural guarantee of the digest
+            # alone: reuse of an already-persisted case_id by another run is
+            # always rejected as a conflict, never treated as a dedup
+            # opportunity.
             if case.case_id in self._provider_evaluation_cases:
                 raise_provider_evaluation_case_conflict()
 

@@ -78,7 +78,7 @@ def sample_case(
     provider_configuration_id: str | None = None,
     outcome: str = "exact",
     provider_latency_us: int | None = 1000,
-    provider_confidence: float | None = 0.9,
+    provider_confidence_basis_points: int | None = 9000,
 ) -> ProviderEvaluationCaseDTO:
     configuration_id = (
         provider_configuration_id or sample_configuration().provider_configuration_id
@@ -99,7 +99,7 @@ def sample_case(
             accepted=False,
             evidence=ProviderResponseEvidence(
                 rejection_reason="confidence_below_threshold",
-                provider_confidence=0.1,
+                provider_confidence_basis_points=1000,
             ),
         )
     if outcome == CASE_OUTCOME_EXACT:
@@ -129,7 +129,7 @@ def sample_case(
         predicted_state=predicted_state,
         predicted_decision=predicted_decision,
         evidence=ProviderResponseEvidence(
-            provider_confidence=provider_confidence,
+            provider_confidence_basis_points=provider_confidence_basis_points,
             provider_latency_us=provider_latency_us,
         ),
     )
@@ -312,7 +312,55 @@ def test_case_rejects_invalid_policy_artifact_id() -> None:
 
 def test_case_rejects_invalid_confidence() -> None:
     with pytest.raises(VPMValidationError):
-        sample_case(provider_confidence=1.5)
+        sample_case(provider_confidence_basis_points=10_001)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [None, 0, 1, 9500, 10_000],
+)
+def test_confidence_basis_points_accepts_valid_values(value: int | None) -> None:
+    case = sample_case(provider_confidence_basis_points=value)
+    assert case.provider_confidence_basis_points == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [-1, 10_001, True, False, 0.95, "9500"],
+)
+def test_confidence_basis_points_rejects_invalid_values(value: object) -> None:
+    with pytest.raises(VPMValidationError):
+        sample_case(provider_confidence_basis_points=value)  # type: ignore[arg-type]
+
+
+def test_confidence_basis_points_derived_float_property() -> None:
+    assert (
+        sample_case(provider_confidence_basis_points=None).provider_confidence is None
+    )
+    assert sample_case(provider_confidence_basis_points=0).provider_confidence == 0.0
+    assert (
+        sample_case(provider_confidence_basis_points=10_000).provider_confidence == 1.0
+    )
+    assert (
+        sample_case(provider_confidence_basis_points=9500).provider_confidence == 0.95
+    )
+
+
+def test_confidence_basis_points_distinguishes_adjacent_values() -> None:
+    """9500 and 9501 basis points must produce different case identities -
+    the canonical integer, not a lossy float, is what participates in
+    identity."""
+    lower = sample_case(case_ordinal=0, provider_confidence_basis_points=9500)
+    upper = sample_case(case_ordinal=0, provider_confidence_basis_points=9501)
+    assert lower.case_id != upper.case_id
+
+
+def test_confidence_basis_points_round_trip_preserves_identity() -> None:
+    case = sample_case(provider_confidence_basis_points=3333)
+    reconstructed = ProviderEvaluationCaseDTO.from_dict(case.to_dict())
+    assert reconstructed == case
+    assert reconstructed.case_id == case.case_id
+    assert reconstructed.provider_confidence_basis_points == 3333
 
 
 def test_case_rejects_negative_latency() -> None:
@@ -411,7 +459,7 @@ def test_raw_response_digest_mismatch_rejected() -> None:
 def test_case_id_tamper_detected() -> None:
     case = sample_case(outcome=CASE_OUTCOME_EXACT)
     payload = case.to_dict()
-    payload["provider_confidence"] = 0.5
+    payload["provider_confidence_basis_points"] = 5000
     with pytest.raises(VPMValidationError, match="case id mismatch"):
         ProviderEvaluationCaseDTO.from_dict(payload | {"case_id": case.case_id})
 
@@ -799,12 +847,13 @@ def test_store_rejects_unknown_observation() -> None:
 
 
 def test_store_rejects_case_shared_across_two_runs() -> None:
-    """A case belongs to exactly one run. Since `case_ordinal` participates in
-    `case_id`'s digest, byte-identical cases under two different runs can only
-    happen if the same content is deliberately reused - the store must always
-    reject that as a conflict, never silently dedup it (unlike matrix blobs or
-    provider configurations, which are legitimately content-addressed and
-    shared)."""
+    """Evaluation cases are run-owned. `case_id` does not itself encode
+    `run_id`, so two different runs can legitimately produce a
+    byte-identical case and collide on the same `case_id` - the store must
+    always reject that as a conflict, never silently dedup it (unlike matrix
+    blobs or provider configurations, which are legitimately
+    content-addressed and shared). This is an enforced invariant, not a
+    structural guarantee of the digest scheme by itself."""
     store, frame_ids = store_with_observations(1)
     configuration = sample_configuration()
     shared_case = ProviderEvaluationCaseDTO.build(

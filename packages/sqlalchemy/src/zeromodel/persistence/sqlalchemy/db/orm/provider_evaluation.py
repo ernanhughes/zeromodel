@@ -3,7 +3,6 @@ from __future__ import annotations
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
-    Float,
     ForeignKey,
     String,
     Text,
@@ -79,6 +78,12 @@ class ProviderEvaluationCaseORM(Base):
             "accepted = (predicted_state_json IS NOT NULL)",
             name="ck_provider_evaluation_case_predicted_state_nullity",
         ),
+        CheckConstraint(
+            "provider_confidence_basis_points IS NULL"
+            " OR (provider_confidence_basis_points >= 0"
+            " AND provider_confidence_basis_points <= 10000)",
+            name="ck_provider_evaluation_case_confidence_basis_points_range",
+        ),
     )
 
     case_id: Mapped[str] = mapped_column(String, primary_key=True)
@@ -111,7 +116,7 @@ class ProviderEvaluationCaseORM(Base):
     predicted_row_id: Mapped[str | None] = mapped_column(String, nullable=True)
     predicted_action: Mapped[str | None] = mapped_column(String, nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(String, nullable=True)
-    provider_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    provider_confidence_basis_points: Mapped[int | None] = mapped_column(nullable=True)
     provider_latency_us: Mapped[int | None] = mapped_column(nullable=True)
     provider_raw_response_digest: Mapped[str | None] = mapped_column(
         String, nullable=True

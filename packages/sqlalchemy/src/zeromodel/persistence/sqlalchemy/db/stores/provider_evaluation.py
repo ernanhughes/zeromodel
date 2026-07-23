@@ -155,7 +155,7 @@ def to_case_orm(
         predicted_row_id=case.predicted_row_id,
         predicted_action=case.predicted_action,
         rejection_reason=case.rejection_reason,
-        provider_confidence=case.provider_confidence,
+        provider_confidence_basis_points=case.provider_confidence_basis_points,
         provider_latency_us=case.provider_latency_us,
         provider_raw_response_digest=case.provider_raw_response_digest,
         provider_raw_response_text=case.provider_raw_response_text,
@@ -207,7 +207,7 @@ def to_case_dto(row: ProviderEvaluationCaseORM) -> ProviderEvaluationCaseDTO:
             row.factor_matches_json, "case factor matches mismatch"
         ),
         "outcome": row.outcome,
-        "provider_confidence": row.provider_confidence,
+        "provider_confidence_basis_points": row.provider_confidence_basis_points,
         "provider_latency_us": row.provider_latency_us,
         "provider_raw_response_digest": row.provider_raw_response_digest,
         "provider_raw_response_text": row.provider_raw_response_text,
@@ -590,9 +590,10 @@ class ProviderEvaluationSqlStoreMixin:
         for case in run.cases:
             if case.policy_artifact_id != run.run.policy_artifact_id:
                 raise_provider_evaluation_policy_mismatch()
-            # A case belongs to exactly one run; since case_ordinal participates
-            # in case_id's digest, a pre-existing row here can only mean this
-            # case_id already belongs to a different, already-saved run.
+            # Evaluation cases are run-owned. case_id does not itself encode
+            # run_id, so this is an enforced invariant, not a structural
+            # guarantee of the digest alone: a pre-existing row here is
+            # always rejected as belonging to a different, already-saved run.
             if session.get(ProviderEvaluationCaseORM, case.case_id) is not None:
                 raise_provider_evaluation_case_conflict()
 

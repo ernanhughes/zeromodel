@@ -37,6 +37,8 @@ from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
     CASE_OUTCOME_EXACT,
     ProviderEvaluationCaseContext,
     ProviderEvaluationCaseDTO,
+    ProviderEvaluationSummaryDTO,
+    ProviderResponseEvidence,
     build_provider_evaluation_run,
 )
 from zeromodel.video.domains.video_action_set.store import (
@@ -240,7 +242,7 @@ def test_sqlite_foreign_keys_reject_orphan_provider_evaluation_case() -> None:
         predicted_row_id=None,
         predicted_action=None,
         rejection_reason="test",
-        provider_confidence=None,
+        provider_confidence_basis_points=None,
         provider_latency_us=None,
         provider_raw_response_digest=None,
         provider_raw_response_text=None,
@@ -336,6 +338,53 @@ def test_sql_read_rejects_tampered_case_outcome() -> None:
     read_store = SqlAlchemyVideoActionSetStore(session_factory)
     with pytest.raises(VPMValidationError, match="case outcome mismatch"):
         read_store.list_provider_evaluation_cases(run_id=materialized.run.run_id)
+
+
+def test_sql_confidence_basis_points_round_trip_through_fresh_store() -> None:
+    """Persist a nontrivial confidence value and reload it through a brand
+    new `SqlAlchemyVideoActionSetStore` instance (not the same Python object
+    that saved it) to prove the canonical integer survives an actual
+    database round trip, not merely in-process equality."""
+    store, session_factory, _engine = build_store()
+    frame_ids = _save_identity_plan_and_observations(store, 1)
+    configuration = sample_configuration()
+    case = ProviderEvaluationCaseDTO.build(
+        case_ordinal=0,
+        frame_id=frame_ids[0],
+        context=ProviderEvaluationCaseContext(
+            policy_artifact_id=POLICY_ARTIFACT_ID,
+            provider_configuration_id=configuration.provider_configuration_id,
+        ),
+        expected_state={"tank_column": 0},
+        expected_decision=sample_decision("r0", "STAY"),
+        accepted=True,
+        predicted_state={"tank_column": 0},
+        predicted_decision=sample_decision("r0", "STAY"),
+        evidence=ProviderResponseEvidence(provider_confidence_basis_points=3333),
+    )
+    materialized = build_provider_evaluation_run(
+        fixture_identity="sql-confidence-round-trip",
+        provider_configuration=configuration,
+        policy_artifact_id=POLICY_ARTIFACT_ID,
+        case_mode="smoke",
+        representation_mode="labelled",
+        cases=[case],
+    )
+    saved = store.save_provider_evaluation_run(materialized)
+    assert saved.cases[0].provider_confidence_basis_points == 3333
+
+    # A genuinely fresh Store instance, not the one that just saved the data.
+    fresh_store = SqlAlchemyVideoActionSetStore(session_factory)
+    reloaded = fresh_store.get_materialized_provider_evaluation_run(saved.run.run_id)
+    assert reloaded is not None
+    assert reloaded == materialized
+    assert reloaded.cases[0].case_id == case.case_id
+    assert reloaded.cases[0].provider_confidence_basis_points == 3333
+    assert reloaded.cases[0].provider_confidence == 0.3333
+    # `MaterializedProviderEvaluationRunDTO.__post_init__` already re-validates
+    # summary closure on construction; a second explicit reconciliation proves
+    # it wasn't merely reusing a cached, already-validated Python object.
+    assert reloaded.summary == ProviderEvaluationSummaryDTO.from_cases(reloaded.cases)
 
 
 def test_provider_evaluation_store_query_parity_between_memory_and_sql() -> None:

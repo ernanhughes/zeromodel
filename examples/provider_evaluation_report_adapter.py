@@ -56,9 +56,14 @@ COMPATIBILITY_ID = "provider-evaluation-report/v1"
 
 # Dimension identifiers whose value is read generically from a case's
 # `factor_matches` mapping rather than a dedicated DTO field. Declared here as
-# the adapter's known factor set; a factor absent from a given case's
-# `expected_state` is simply omitted for that subject (missing_value_semantics
-# = "absent"), not synthesized.
+# the adapter's known factor set. The report compiler requires a dense
+# subject x dimension matrix (`missing_value_semantics="error"` - its
+# `"absent"` sparse path is not implemented, see
+# `report_compiler._build_score_table`). So a factor key absent from a given
+# case's `expected_state` is NOT omitted: it is filled with an explicit
+# inapplicable placeholder (`raw_value=0.0, importance=0.0`, see `_values_for_case`).
+# That zero is not a synthesized "false" - it must never be interpreted as
+# measured negative evidence, only as "this cell does not apply here."
 FACTOR_DIMENSIONS = {
     "tank_column_match": "tank_column",
     "target_present_match": "target_present",
@@ -161,14 +166,24 @@ def _values_for_case(
 ) -> list[AdaptedValueDTO]:
     """Build every dimension's value for one case.
 
-    The compiler currently requires a dense subject x dimension matrix (its
-    ``missing_value_semantics="absent"`` sparse path is not implemented yet -
-    see ``report_compiler._build_score_table``). So every dimension always
-    gets a value here; for a dimension that does not apply to this case (a
-    predicted-state factor on a rejected case, or a factor key absent from
-    this case's ``expected_state``), the raw value is ``0.0`` with
-    ``importance=0.0`` - an explicit "do not weight this cell" flag rather
-    than a fabricated match/mismatch.
+    The compiler currently requires a dense subject x dimension matrix
+    (``missing_value_semantics="error"`` - its ``"absent"`` sparse path is
+    not implemented yet, see ``report_compiler._build_score_table``). So
+    every dimension always gets a value here; for a dimension that does not
+    apply to this case (a predicted-state factor on a rejected case, or a
+    factor key absent from this case's ``expected_state``), the cell is an
+    explicit inapplicable placeholder: ``raw_value=0.0`` with
+    ``importance=0.0``. That zero is never measured negative evidence and
+    must not be interpreted independently of ``importance`` - it must not be
+    described or read as "omitted". Applicable cells always carry
+    ``importance=1.0`` (``raw_value=1.0`` for a true match, ``0.0`` for a
+    measured false).
+
+    Each cell's ``source_binding.attributes`` also carries an explicit
+    ``("applicable", "true"|"false")`` tag (plus ``("placeholder", "true")``
+    when inapplicable), so a consumer inspecting the compiled report's
+    source bindings does not have to infer applicability from
+    ``raw_value``/``importance`` alone.
     """
     values: list[AdaptedValueDTO] = []
 
@@ -177,11 +192,17 @@ def _values_for_case(
         finding = ReportFindingRefDTO(
             report_id=run_id, finding_id=f"{case.case_id}:{dimension_id}"
         )
+        attributes = (
+            (("applicable", "true"),)
+            if applicable
+            else (("applicable", "false"), ("placeholder", "true"))
+        )
         binding = SourceBindingDTO(
             subject_id=case.case_id,
             dimension_id=dimension_id,
             finding_ref=finding,
             source_uri=case.frame_id,
+            attributes=attributes,
         )
         values.append(
             AdaptedValueDTO(
@@ -211,6 +232,10 @@ def _values_for_case(
             add(dimension_id, 1.0 if factor_matches[factor_key] else 0.0)
         else:
             add(dimension_id, None)
+    # `case.provider_confidence` is the DTO's derived 0.0..1.0 presentation
+    # property (recomputed from the canonical `provider_confidence_basis_points`
+    # integer on every access) - never expose the raw basis-points integer
+    # (0..10000) directly as a report score whose declared maximum is 1.0.
     add("confidence", case.provider_confidence)
     add(
         "latency",

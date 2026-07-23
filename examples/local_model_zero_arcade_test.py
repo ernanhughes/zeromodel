@@ -24,6 +24,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from io import BytesIO
@@ -71,6 +72,7 @@ try:
         ProviderEvaluationCaseDTO,
         ProviderResponseEvidence,
         build_provider_evaluation_run,
+        confidence_to_basis_points,
     )
     from zeromodel.video.domains.video_action_set.provider_observation_dto import (
         ProviderObservationDescriptorDTO,
@@ -191,24 +193,40 @@ class ProviderReply:
 
 
 class Provider(Protocol):
-    def predict(
-        self, image: bytes, render_mode: str, truth: ArcadeState
-    ) -> ProviderReply: ...
+    """The provider boundary. `predict()` receives only observable input -
+    the rendered image and the render mode - never ground truth. Expected
+    state, expected row, and expected action remain owned exclusively by the
+    evaluation harness that calls this protocol, never by the provider it
+    calls.
+    """
+
+    def predict(self, image: bytes, render_mode: str) -> ProviderReply: ...
 
 
-class FakeProvider:
-    def predict(
-        self, image: bytes, render_mode: str, truth: ArcadeState
-    ) -> ProviderReply:
-        del image, render_mode
-        payload = {
-            "tank_column": truth.tank_column,
-            "target_present": truth.target_present,
-            "target_column": -1 if truth.target_column is None else truth.target_column,
-            "cooldown": truth.cooldown,
-            "confidence": 1.0,
-        }
-        return ProviderReply(json.dumps(payload), payload, 0.0, {"backend": "fake"})
+class ScriptedProvider:
+    """A scripted wiring-test provider, not an oracle.
+
+    `predict()` itself sees only image bytes and render mode - exactly what
+    `Provider` declares - and looks up a pre-scripted reply by the image's
+    content digest. The mapping from image digest to reply is built once,
+    before any `predict()` call, by `_build_scripted_replies()`, which *does*
+    know the deterministic fixture's ground truth (that is what "scripting"
+    the replies means). This keeps the truth/prediction split real: fixture
+    construction knows the truth, the provider call boundary does not.
+    """
+
+    def __init__(self, replies_by_image_digest: Mapping[str, ProviderReply]) -> None:
+        self._replies_by_image_digest = dict(replies_by_image_digest)
+
+    def predict(self, image: bytes, render_mode: str) -> ProviderReply:
+        del render_mode
+        digest = _image_digest(image)
+        try:
+            return self._replies_by_image_digest[digest]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"no scripted provider reply for image digest {digest}"
+            ) from exc
 
 
 class OllamaProvider:
@@ -264,10 +282,7 @@ class OllamaProvider:
             + (", ".join(available) or "<none>")
         )
 
-    def predict(
-        self, image: bytes, render_mode: str, truth: ArcadeState
-    ) -> ProviderReply:
-        del truth  # not used in provider
+    def predict(self, image: bytes, render_mode: str) -> ProviderReply:
         prompt = prompt_for(render_mode)
         base64_image = base64.b64encode(image).decode("ascii")
         payload = {
@@ -595,6 +610,55 @@ def png_bytes(image: Image.Image) -> bytes:
     return stream.getvalue()
 
 
+def _image_digest(data: bytes) -> str:
+    """The one canonical content-digest convention for full-resolution PNG
+    bytes in this example - used for the scripted-provider reply key, the
+    per-case `image_sha256` record field, and the observation's
+    `full_resolution_image_sha256` metadata, so there is exactly one digest
+    convention for "this image's bytes," not several."""
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def _prerender_states(
+    states: Sequence[ArcadeState], render_mode: str
+) -> list[tuple[Image.Image, bytes]]:
+    """Render every state's frame once, up front. Reused both to avoid
+    re-rendering per case and so `_build_scripted_replies` can compute each
+    scripted reply's image-digest key from the exact bytes `predict()` will
+    later receive."""
+    rendered: list[tuple[Image.Image, bytes]] = []
+    for truth in states:
+        image = render(truth, render_mode)
+        rendered.append((image, png_bytes(image)))
+    return rendered
+
+
+def _build_scripted_replies(
+    states: Sequence[ArcadeState],
+    prerendered: Sequence[tuple[Image.Image, bytes]],
+) -> dict[str, ProviderReply]:
+    """Build the fake backend's scripted reply-by-image-digest mapping.
+
+    This function knows the ground truth (`states`) - that is what
+    "scripting" the replies means. `ScriptedProvider.predict()` itself never
+    sees `states` or any `ArcadeState`; it only ever sees the image bytes and
+    render mode, then looks up the reply this function already prepared.
+    """
+    replies: dict[str, ProviderReply] = {}
+    for truth, (_image, raw_image) in zip(states, prerendered, strict=True):
+        payload = {
+            "tank_column": truth.tank_column,
+            "target_present": truth.target_present,
+            "target_column": -1 if truth.target_column is None else truth.target_column,
+            "cooldown": truth.cooldown,
+            "confidence": 1.0,
+        }
+        replies[_image_digest(raw_image)] = ProviderReply(
+            json.dumps(payload), payload, 0.0, {"backend": "fake"}
+        )
+    return replies
+
+
 def safe_name(text: str) -> str:
     return text.replace("|", "__").replace("=", "-")
 
@@ -738,7 +802,7 @@ def _build_observation(
     descriptor = ProviderObservationDescriptorDTO.from_dict(
         ImageObservation(thumbnail, source_id=frame_id).to_descriptor()
     )
-    full_resolution_digest = "sha256:" + hashlib.sha256(raw_image).hexdigest()
+    full_resolution_digest = _image_digest(raw_image)
     operation_payload: dict[str, Any] = {
         "index": 0,
         "operation": "render_frame",
@@ -850,14 +914,19 @@ def run(args: argparse.Namespace) -> int:
 
     reader, artifact_id = policy_reader()
     policy_artifact_id = f"sha256:{artifact_id}"
-    provider: Provider = (
-        FakeProvider()
-        if args.backend == "fake"
-        else OllamaProvider(args.ollama_url, args.model, args.timeout, args.seed)
-    )
     states = smoke_states() if args.mode == "smoke" else all_states()
     if args.max_cases:
         states = states[: args.max_cases]
+    prerendered = _prerender_states(states, args.render)
+
+    provider: Provider
+    if args.backend == "fake":
+        # Fixture construction (this branch) knows the ground truth; the
+        # provider call boundary (`ScriptedProvider.predict`) does not - see
+        # `Provider`'s docstring.
+        provider = ScriptedProvider(_build_scripted_replies(states, prerendered))
+    else:
+        provider = OllamaProvider(args.ollama_url, args.model, args.timeout, args.seed)
 
     runtime = _build_runtime(args)
     facade = runtime.video_action_set
@@ -901,8 +970,7 @@ def run(args: argparse.Namespace) -> int:
         for index, truth in enumerate(states, 1):
             frame_index = index - 1
             print(f"\n[INFO] === Case {index}/{len(states)}: {truth.row_id} ===")
-            image = render(truth, args.render)
-            raw_image = png_bytes(image)
+            image, raw_image = prerendered[frame_index]
             image_path = images / f"{index:03d}-{safe_name(truth.row_id)}.png"
             image_path.write_bytes(raw_image)
             print(f"[INFO] Image saved to {image_path}")
@@ -929,7 +997,7 @@ def run(args: argparse.Namespace) -> int:
                 "index": index,
                 "frame_id": frame_id,
                 "image_path": image_path.as_posix(),
-                "image_sha256": "sha256:" + hashlib.sha256(raw_image).hexdigest(),
+                "image_sha256": _image_digest(raw_image),
                 "truth": truth.payload(),
                 "truth_action": truth_action,
                 "accepted": False,
@@ -955,7 +1023,7 @@ def run(args: argparse.Namespace) -> int:
             )
             try:
                 print("[INFO] Calling provider.predict()...")
-                reply = provider.predict(raw_image, args.render, truth)
+                reply = provider.predict(raw_image, args.render)
                 print(f"[INFO] Provider replied in {reply.duration_ms:.2f} ms")
                 print(f"[INFO] Parsed state text: {reply.parsed}")
                 prediction = Prediction.parse(reply.parsed)
@@ -968,6 +1036,9 @@ def run(args: argparse.Namespace) -> int:
                 }
                 record["prediction"] = prediction.payload()
                 latency_us = int(round(reply.duration_ms * 1000))
+                confidence_basis_points = confidence_to_basis_points(
+                    prediction.confidence
+                )
                 if prediction.confidence < args.confidence_threshold:
                     record["rejection_reason"] = "confidence_below_threshold"
                     print(
@@ -978,7 +1049,7 @@ def run(args: argparse.Namespace) -> int:
                         accepted=False,
                         evidence=ProviderResponseEvidence(
                             rejection_reason="confidence_below_threshold",
-                            provider_confidence=prediction.confidence,
+                            provider_confidence_basis_points=confidence_basis_points,
                             provider_latency_us=latency_us,
                             provider_raw_response_text=reply.raw_text,
                             provider_response_metadata=reply.metadata,
@@ -1004,7 +1075,7 @@ def run(args: argparse.Namespace) -> int:
                             decision, policy_artifact_id=policy_artifact_id
                         ),
                         evidence=ProviderResponseEvidence(
-                            provider_confidence=prediction.confidence,
+                            provider_confidence_basis_points=confidence_basis_points,
                             provider_latency_us=latency_us,
                             provider_raw_response_text=reply.raw_text,
                             provider_response_metadata=reply.metadata,
@@ -1025,6 +1096,13 @@ def run(args: argparse.Namespace) -> int:
                         rejection_reason=record["rejection_reason"]
                     ),
                 )
+            # provider_confidence_basis_points is the persisted case's source
+            # truth; provider_confidence is a derived presentation float and
+            # must not be treated as identity-bearing.
+            record["provider_confidence_basis_points"] = (
+                case.provider_confidence_basis_points
+            )
+            record["provider_confidence"] = case.provider_confidence
             cases.append(case)
             records.append(record)
             stream.write(json.dumps(record, sort_keys=True) + "\n")

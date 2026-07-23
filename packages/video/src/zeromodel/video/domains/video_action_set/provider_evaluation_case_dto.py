@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+import math
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
@@ -32,12 +33,12 @@ from zeromodel.video.domains.video_action_set.observation_common import (
     string,
 )
 from zeromodel.video.domains.video_action_set.provider_evaluation_common import (
+    basis_points,
     decision_payload,
-    finite_unit_float,
     nonempty_str,
     nonneg_int,
+    optional_basis_points,
     optional_canonical,
-    optional_confidence,
     optional_nonneg_int,
 )
 
@@ -89,7 +90,7 @@ CASE_KEYS = (
     "action_match",
     "factor_matches",
     "outcome",
-    "provider_confidence",
+    "provider_confidence_basis_points",
     "provider_latency_us",
     "provider_raw_response_digest",
     "provider_raw_response_text",
@@ -167,14 +168,28 @@ class ProviderEvaluationCaseContext:
 
 @dataclass(frozen=True, slots=True)
 class ProviderResponseEvidence:
-    """Secondary provider-response evidence for one `ProviderEvaluationCaseDTO.build` call."""
+    """Secondary provider-response evidence for one `ProviderEvaluationCaseDTO.build` call.
+
+    ``provider_confidence_basis_points`` is the canonical scaled-integer
+    confidence (``0..10000``, ten-thousandths). Convert a parsed model
+    confidence float via the single ``confidence_to_basis_points`` helper
+    below rather than scattering float-to-integer conversion across callers.
+    """
 
     rejection_reason: str | None = None
-    provider_confidence: float | None = None
+    provider_confidence_basis_points: int | None = None
     provider_latency_us: int | None = None
     provider_raw_response_text: str | None = None
     provider_response_metadata: Mapping[str, object] | None = None
     metadata: Mapping[str, object] | None = None
+
+
+def confidence_to_basis_points(value: float) -> int:
+    """The one explicit float-to-basis-points conversion helper for provider
+    confidence. ``value`` must be a finite fraction in ``[0.0, 1.0]``."""
+    if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+        raise ValueError("confidence must be finite and in [0, 1]")
+    return int(round(value * 10_000))
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,7 +223,7 @@ class ProviderEvaluationCaseDTO:
     action_match: bool
     factor_matches: CanonicalJsonDTO
     outcome: str
-    provider_confidence: float | None
+    provider_confidence_basis_points: int | None
     provider_latency_us: int | None
     provider_raw_response_digest: str | None
     provider_raw_response_text: str | None
@@ -245,9 +260,10 @@ class ProviderEvaluationCaseDTO:
 
         self._validate_derived_fields()
 
-        if self.provider_confidence is not None:
-            finite_unit_float(
-                self.provider_confidence, "case provider confidence mismatch"
+        if self.provider_confidence_basis_points is not None:
+            basis_points(
+                self.provider_confidence_basis_points,
+                "case provider confidence mismatch",
             )
         if self.provider_latency_us is not None:
             nonneg_int(self.provider_latency_us, "case provider latency mismatch")
@@ -294,6 +310,16 @@ class ProviderEvaluationCaseDTO:
             raise VPMValidationError("case factor matches mismatch")
         if self.outcome not in CASE_OUTCOMES or self.outcome != outcome:
             raise VPMValidationError("case outcome mismatch")
+
+    @property
+    def provider_confidence(self) -> float | None:
+        """Derived presentation convenience - not identity-bearing and not
+        persisted as source truth. ``provider_confidence_basis_points``
+        (an integer, ``0..10000``) remains authoritative; this float is
+        recomputed from it on every access."""
+        if self.provider_confidence_basis_points is None:
+            return None
+        return self.provider_confidence_basis_points / 10_000.0
 
     @classmethod
     def build(
@@ -373,7 +399,7 @@ class ProviderEvaluationCaseDTO:
             "action_match": action_match,
             "factor_matches": factor_matches,
             "outcome": outcome,
-            "provider_confidence": evidence.provider_confidence,
+            "provider_confidence_basis_points": evidence.provider_confidence_basis_points,
             "provider_latency_us": evidence.provider_latency_us,
             "provider_raw_response_digest": raw_response_digest,
             "provider_raw_response_text": evidence.provider_raw_response_text,
@@ -433,8 +459,8 @@ class ProviderEvaluationCaseDTO:
             action_match=boolean(payload, "action_match", "case action_match mismatch"),
             factor_matches=CanonicalJsonDTO.from_value(payload["factor_matches"]),
             outcome=string(payload, "outcome", "case outcome mismatch"),
-            provider_confidence=optional_confidence(
-                payload.get("provider_confidence"),
+            provider_confidence_basis_points=optional_basis_points(
+                payload.get("provider_confidence_basis_points"),
                 "case provider confidence mismatch",
             ),
             provider_latency_us=optional_nonneg_int(
@@ -486,7 +512,7 @@ class ProviderEvaluationCaseDTO:
             "action_match": self.action_match,
             "factor_matches": self.factor_matches.to_value(),
             "outcome": self.outcome,
-            "provider_confidence": self.provider_confidence,
+            "provider_confidence_basis_points": self.provider_confidence_basis_points,
             "provider_latency_us": self.provider_latency_us,
             "provider_raw_response_digest": self.provider_raw_response_digest,
             "provider_raw_response_text": self.provider_raw_response_text,
@@ -546,4 +572,5 @@ __all__ = [
     "ProviderEvaluationCaseContext",
     "ProviderEvaluationCaseDTO",
     "ProviderResponseEvidence",
+    "confidence_to_basis_points",
 ]

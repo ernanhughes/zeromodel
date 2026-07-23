@@ -17,6 +17,7 @@ from zeromodel.video.domains.video_action_set.provider_evaluation_case_dto impor
     ProviderEvaluationCaseContext,
     ProviderEvaluationCaseDTO,
     ProviderResponseEvidence,
+    confidence_to_basis_points,
 )
 from zeromodel.video.domains.video_action_set.provider_evaluation_configuration_dto import (
     ProviderConfigurationDTO,
@@ -45,4 +46,5 @@ __all__ = [
     "ProviderEvaluationSummaryDTO",
     "ProviderResponseEvidence",
     "build_provider_evaluation_run",
+    "confidence_to_basis_points",
 ]

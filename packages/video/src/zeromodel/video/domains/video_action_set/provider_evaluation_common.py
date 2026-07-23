@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import math
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.dto import CanonicalJsonDTO
@@ -33,23 +32,24 @@ def optional_nonneg_int(value: object, message: str) -> int | None:
     return nonneg_int(value, message)
 
 
-def finite_unit_float(value: object, message: str) -> float:
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, (int, float))
-        or not math.isfinite(value)
-    ):
+def basis_points(value: object, message: str) -> int:
+    """A deterministic scaled-integer representation of a `[0, 1]` fraction,
+    in ten-thousandths (`0..10000`). Used instead of an identity-bearing
+    float so provider confidence has a canonical, exactly-comparable
+    identity: `0.95` as a Python `float` is not guaranteed to compare or hash
+    identically across serialization round trips the way an integer is.
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
         raise VPMValidationError(message)
-    result = float(value)
-    if not (0.0 <= result <= 1.0):
+    if not 0 <= value <= 10_000:
         raise VPMValidationError(message)
-    return result
+    return value
 
 
-def optional_confidence(value: object, message: str) -> float | None:
+def optional_basis_points(value: object, message: str) -> int | None:
     if value is None:
         return None
-    return finite_unit_float(value, message)
+    return basis_points(value, message)
 
 
 def optional_canonical(value: object) -> CanonicalJsonDTO | None:
@@ -72,12 +72,12 @@ def decision_payload(decision: object) -> Mapping[str, object]:
 
 
 __all__ = [
+    "basis_points",
     "decision_payload",
-    "finite_unit_float",
     "nonempty_str",
     "nonneg_int",
+    "optional_basis_points",
     "optional_canonical",
-    "optional_confidence",
     "optional_nonempty_str",
     "optional_nonneg_int",
 ]

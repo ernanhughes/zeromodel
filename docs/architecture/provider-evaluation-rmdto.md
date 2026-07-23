@@ -29,6 +29,28 @@ and one case crossed a policy boundary entirely. That evidence used to live
 only in a JSON file this stage makes it a queryable, closure-validated
 database aggregate.
 
+## Provider isolation
+
+The external perception provider (`Provider.predict` in
+`examples/local_model_zero_arcade_test.py`) receives only observable input -
+`(image: bytes, render_mode: str)` - and returns a bare, unlabelled reply.
+Ground truth (`ArcadeState`, expected row, expected action) never crosses
+that call boundary; the harness computes `exact_state_match`/`action_match`/
+`outcome` afterward, entirely on its own side, by comparing the provider's
+reply against truth it already held.
+
+The test double reflects that boundary rather than working around it:
+`ScriptedProvider` looks up a pre-scripted reply by the image's content
+digest (`sha256:` of the PNG bytes) computed at `predict()` time - it does
+not see or accept a truth argument. The function that *builds* the
+digest-to-reply table (`_build_scripted_replies`) runs before any `predict()`
+call and is allowed to know truth (it is the fixture, not the provider under
+test); the provider call boundary itself is not. This is proven with a
+runtime-behavioral test (a spy subclass recording every argument an
+end-to-end `run()` actually passes to `predict()`) rather than relying on
+static signature inspection alone, though a lightweight signature assertion
+is kept as a secondary guard.
+
 ## Aggregate ownership and dependency direction
 
 Same layering as every other `video_action_set` aggregate:
@@ -111,7 +133,13 @@ silently report as `exact`.
 A rejected case carries no predicted anything (`predicted_state`,
 `predicted_row_id`, `predicted_action`, `predicted_decision_trace` are all
 `None`); an accepted case carries all of them. Latency is stored in integer
-microseconds, not float. `provider_raw_response_digest` is validated against
+microseconds, not float. Provider confidence is likewise stored as a
+canonical scaled integer, `provider_confidence_basis_points` (`None` or an
+`int` in `0..10000`) rather than an identity-bearing float - float
+non-determinism must never leak into a content digest. A derived, non-stored
+`provider_confidence` property (`float | None` in `0.0..1.0`) is recomputed
+from the integer on every access for display/reporting convenience; it never
+participates in `case_id`'s identity. `provider_raw_response_digest` is validated against
 `provider_raw_response_text` when the text is retained (recomputed via a
 domain-separated digest); when the text is intentionally discarded, only the
 digest is kept as evidence.
@@ -200,13 +228,19 @@ currently needs to address a configuration on its own, and the brief is
 explicit that speculative query methods should not be added without a
 demonstrated use.
 
-**A case belongs to exactly one run.** Unlike matrix blobs or provider
+**Evaluation cases are run-owned.** Unlike matrix blobs or provider
 configurations - genuinely content-addressed, shared, reusable identities - a
 `case_id` that already exists in the store (under any run) is always a
-conflict on save, never a dedup opportunity. This is safe because
-`case_ordinal` participates in `case_id`'s digest, so a legitimate save can
-never collide with itself; a collision can only mean the same case content is
-being claimed by a second run, which the aggregate model forbids.
+conflict on save, never a dedup opportunity. Note that `case_id` does not
+itself encode `run_id`: two different runs could, in principle, produce a
+byte-identical case (same ordinal, frame, policy, configuration, expected/
+predicted state) and collide on the same `case_id`. `case_ordinal`
+participating in the digest does not make ownership a structural guarantee
+of the identity scheme by itself - it is enforced. Aggregate validation
+(`MaterializedProviderEvaluationRunDTO.__post_init__`) binds the ordered
+`case_id`s to the run, and both Store implementations reject reuse of an
+already-persisted `case_id` by another run, treating any such collision as a
+conflict rather than a legitimate replay.
 
 `save_provider_evaluation_run` preflights, before any mutation: every case's
 `frame_id` resolves to an existing observation; the provider configuration
@@ -287,13 +321,21 @@ adapter outside `zeromodel.artifacts` for a different domain; concrete
 `ReportAdapter`s are meant to live in the external application, never inside
 the packages they bridge.
 
-Because `compile_report`'s current `missing_value_semantics="error"` path is
-the only implemented one (`"absent"` raises "no sparse VPM representation
-yet"), the adapter emits a dense subject x dimension matrix: a dimension that
-does not apply to a given case (a predicted-state factor on a rejected case,
-or a factor key absent from that case's `expected_state`) gets `raw_value=0.0`
-with `importance=0.0` - an explicit "do not weight this cell" flag, not a
-fabricated match or mismatch. Subjects (cases) are ordered by consequence:
+The current report compiler requires a dense matrix
+(`missing_value_semantics="error"` is the only implemented path; `"absent"`
+raises "no sparse VPM representation yet"). Inapplicable cells (a
+predicted-state factor on a rejected case, or a factor key absent from that
+case's `expected_state`) are represented by a placeholder `raw_value=0.0`
+with `importance=0.0`. The zero is not measured negative evidence and must
+not be interpreted independently of applicability or importance - these
+cells are never "omitted", they are explicit placeholders. Applicable cells
+always carry `importance=1.0` (`raw_value=1.0` for a measured true,
+`raw_value=0.0` for a measured false - the same raw value as a placeholder,
+distinguished only by `importance`). Each cell's `source_binding.attributes`
+additionally tags `("applicable", "true"|"false")` (plus
+`("placeholder", "true")` when inapplicable), so applicability can be read
+directly off the source binding rather than inferred from
+`raw_value`/`importance` alone. Subjects (cases) are ordered by consequence:
 action-changing first, then rejections, then accepted-non-exact cases, then
 exact cases, so the compiled report's row order concentrates the most
 consequential failures in the inspection region.

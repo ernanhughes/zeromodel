@@ -17,7 +17,6 @@ from zeromodel.artifacts.compiled_artifact import (
     CellBindingDTO,
     CompiledReportArtifactDTO,
 )
-from zeromodel.artifacts.core_artifact_persistence import load_vpm_artifact
 from zeromodel.artifacts.ref import ArtifactRef
 from zeromodel.artifacts.report_decode import (
     decode_dimension,
@@ -26,7 +25,6 @@ from zeromodel.artifacts.report_decode import (
 )
 from zeromodel.artifacts.report_errors import ReportCompilationError
 from zeromodel.artifacts.store import ArtifactResolver
-from zeromodel.core.artifact import VPMArtifact
 
 
 def _decode_cell_binding(payload: dict) -> CellBindingDTO:
@@ -94,16 +92,3 @@ def load_compiled_report_artifact(
         artifact_kind=payload["artifact_kind"],
         spec_version=payload["spec_version"],
     )
-
-
-def load_compiled_report_vpm(
-    compiled: CompiledReportArtifactDTO, *, resolver: ArtifactResolver
-) -> VPMArtifact:
-    """Resolve a compiled report's actual `VPMArtifact` for rendering.
-
-    This is the operation the persisted `vpm_artifact_ref` exists to make
-    possible: load a compiled report, resolve its VPM, and render it -
-    without ever having held on to the original in-memory `VPMArtifact`
-    from the process that compiled it.
-    """
-    return load_vpm_artifact(compiled.vpm_artifact_ref, resolver=resolver)

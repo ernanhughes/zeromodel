@@ -24,6 +24,7 @@ from zeromodel.artifacts import (
     canonical_json_bytes,
     compile_report,
     load_compiled_report_aggregate,
+    load_compiled_report_vpm,
     validate_compiled_report_aggregate,
 )
 from zeromodel.artifacts.adapted_report_persistence import store_adapted_report
@@ -226,6 +227,50 @@ def test_vpm_with_fabricated_row_order_is_rejected(
     variant = _persist_variant(compiled, store=store, vpm_artifact_ref=fabricated_ref)
     with pytest.raises(ReportCompilationError):
         load_compiled_report_aggregate(ref=variant.artifact_ref, resolver=store)
+
+
+def test_public_render_shortcut_also_rejects_fabricated_pixels(
+    ai_artifact_family, source_layout_recipe, FakeAdapter
+):
+    """External review round 2, finding 1 (BLOCKER): an earlier version of
+    `load_compiled_report_vpm` took an already-loaded `compiled` DTO and
+    called `load_vpm_artifact` directly - proving only that the VPM's own
+    digest was self-consistent, not that its pixels were deterministically
+    produced. That made the documented "resolve a compiled report's VPM
+    for rendering" function a bypass of the very guarantee
+    `test_vpm_with_fabricated_normalized_pixels_is_rejected` proves the
+    aggregate path enforces. This reproduces that exact fabrication and
+    exercises the public rendering shortcut specifically, not the
+    aggregate loader directly.
+    """
+    from zeromodel.artifacts.core_artifact_persistence import store_vpm_artifact
+    from zeromodel.core.artifact import VPMArtifact
+
+    contract, adapted = ai_artifact_family
+    adapter = FakeAdapter(contract, adapted)
+    store = InMemoryArtifactStore()
+    compiled = compile_report(
+        adapter=adapter,
+        report=object(),
+        layout_recipe=source_layout_recipe,
+        store=store,
+    )
+    real_vpm = load_compiled_report_vpm(ref=compiled.artifact_ref, resolver=store)
+
+    fabricated_matrix = np.zeros_like(real_vpm.normalized_values)
+    fabricated_vpm = VPMArtifact(
+        source=real_vpm.source,
+        recipe=real_vpm.recipe,
+        normalized_values=fabricated_matrix,
+        row_order=real_vpm.row_order,
+        column_order=real_vpm.column_order,
+        provenance=real_vpm.provenance,
+    )
+    fabricated_ref = store_vpm_artifact(fabricated_vpm, store=store)
+    variant = _persist_variant(compiled, store=store, vpm_artifact_ref=fabricated_ref)
+
+    with pytest.raises(ReportCompilationError, match="normalized_values"):
+        load_compiled_report_vpm(ref=variant.artifact_ref, resolver=store)
 
 
 # --- Adversarial: foreign artifact substitution -----------------------------

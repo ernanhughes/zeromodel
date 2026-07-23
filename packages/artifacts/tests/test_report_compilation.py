@@ -194,7 +194,7 @@ def test_compile_report_persists_resolvable_core_artifacts(
     )
 
     reloaded = load_compiled_report_artifact(ref=compiled.artifact_ref, resolver=store)
-    vpm_artifact = load_compiled_report_vpm(reloaded, resolver=store)
+    vpm_artifact = load_compiled_report_vpm(ref=reloaded.artifact_ref, resolver=store)
 
     assert vpm_artifact.shape == (len(adapted.subjects), len(adapted.dimensions))
     for cell_binding in compiled.cell_bindings:

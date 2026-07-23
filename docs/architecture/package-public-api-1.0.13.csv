@@ -176,7 +176,7 @@ zeromodel-artifacts,zeromodel.artifacts,is_sha256_digest,zeromodel.artifacts,Fun
 zeromodel-artifacts,zeromodel.artifacts,load_adapted_report,zeromodel.artifacts,Function,zeromodel.artifacts.adapted_report_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_aggregate,zeromodel.artifacts,Function,zeromodel.artifacts.aggregate,true
 zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_artifact,zeromodel.artifacts,Function,zeromodel.artifacts.report_loading,true
-zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_vpm,zeromodel.artifacts,Function,zeromodel.artifacts.report_loading,true
+zeromodel-artifacts,zeromodel.artifacts,load_compiled_report_vpm,zeromodel.artifacts,Function,zeromodel.artifacts.aggregate,true
 zeromodel-artifacts,zeromodel.artifacts,load_layout_recipe,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,load_report_adapter_contract,zeromodel.artifacts,Function,zeromodel.artifacts.report_adapter_contract_persistence,true
 zeromodel-artifacts,zeromodel.artifacts,load_score_table,zeromodel.artifacts,Function,zeromodel.artifacts.core_artifact_persistence,true

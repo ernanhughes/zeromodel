@@ -11,6 +11,7 @@ from zeromodel.artifacts.aggregate import (
     ResolvedCompiledReportAggregateDTO,
     build_compiled_report_closure_receipt,
     load_compiled_report_aggregate,
+    load_compiled_report_vpm,
     validate_compiled_report_aggregate,
 )
 from zeromodel.artifacts.canonicalization import canonical_json_bytes, sha256_digest
@@ -54,10 +55,7 @@ from zeromodel.artifacts.report_errors import (
     ReportAdaptationError,
     ReportCompilationError,
 )
-from zeromodel.artifacts.report_loading import (
-    load_compiled_report_artifact,
-    load_compiled_report_vpm,
-)
+from zeromodel.artifacts.report_loading import load_compiled_report_artifact
 from zeromodel.artifacts.score_semantics import ScoreSemantics
 from zeromodel.artifacts.store import (
     ArtifactIntegrityError,

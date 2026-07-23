@@ -25,12 +25,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import NamedTuple, Tuple
 
+from zeromodel.artifacts.adapted_report_persistence import ADAPTED_REPORT_ARTIFACT_KIND
 from zeromodel.artifacts.canonicalization import canonical_json_bytes, sha256_digest
 from zeromodel.artifacts.compatibility_schema import (
     compute_compatibility_schema_id,
     compute_report_semantics_id,
 )
+from zeromodel.artifacts.core_artifact_persistence import (
+    LAYOUT_RECIPE_ARTIFACT_KIND,
+    SCORE_TABLE_ARTIFACT_KIND,
+    VPM_ARTIFACT_ARTIFACT_KIND,
+)
 from zeromodel.artifacts.ref import ArtifactRef
+from zeromodel.artifacts.report_adapter_contract_persistence import (
+    REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
+)
 from zeromodel.artifacts.report_dto import (
     AdaptedDimensionDTO,
     AdaptedSubjectDTO,
@@ -45,6 +54,14 @@ COMPILED_REPORT_ARTIFACT_KIND = "zeromodel.artifacts.compiled-report/v1"
 def _require_nonempty_str(value: object, message: str) -> None:
     if not isinstance(value, str) or not value:
         raise ReportCompilationError(message)
+
+
+def _require_ref_kind(ref: ArtifactRef, expected_kind: str, field_name: str) -> None:
+    if ref.artifact_kind != expected_kind:
+        raise ReportCompilationError(
+            f"CompiledReportArtifactDTO.{field_name}.artifact_kind must be "
+            f"{expected_kind!r}, got {ref.artifact_kind!r}"
+        )
 
 
 class CoreArtifactRefs(NamedTuple):
@@ -252,6 +269,35 @@ class CompiledReportArtifactDTO:
             raise ReportCompilationError(
                 "CompiledReportArtifactDTO.cell_bindings must not be empty"
             )
+        self._validate_nested_ref_kinds()
+
+    def _validate_nested_ref_kinds(self) -> None:
+        """A reference is the pair (artifact_kind, artifact_id) - proving
+        only that a digest matches proves content, not the complete
+        declared reference. Without this, a caller could construct a ref
+        with the correct `artifact_id` but a wrong (or empty)
+        `artifact_kind`, which the digest-only checks elsewhere (here and
+        in `zeromodel.artifacts.aggregate`) would not catch on their own.
+        """
+        _require_ref_kind(
+            self.adapted_report_ref,
+            ADAPTED_REPORT_ARTIFACT_KIND,
+            "adapted_report_ref",
+        )
+        _require_ref_kind(
+            self.adapter_contract_ref,
+            REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
+            "adapter_contract_ref",
+        )
+        _require_ref_kind(
+            self.score_table_ref, SCORE_TABLE_ARTIFACT_KIND, "score_table_ref"
+        )
+        _require_ref_kind(
+            self.layout_recipe_ref, LAYOUT_RECIPE_ARTIFACT_KIND, "layout_recipe_ref"
+        )
+        _require_ref_kind(
+            self.vpm_artifact_ref, VPM_ARTIFACT_ARTIFACT_KIND, "vpm_artifact_ref"
+        )
 
     def _validate_compatibility_schema(self) -> None:
         """`compatibility_id` is an opaque, caller-chosen label - it does

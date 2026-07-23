@@ -59,6 +59,27 @@ kind, dimension namespace, and duplicate-value policy - the layer that
 distinguishes, for example, a report over sentences from a structurally
 identical report over claims).
 
+`load_compiled_report_vpm(*, ref, resolver)` is the one safe public path
+to a compiled report's rendered `VPMArtifact` - it is a thin wrapper
+around `load_compiled_report_aggregate(...).vpm_artifact`, so it always
+runs the full closure (including the deterministic-reconstruction check
+above) before returning anything. `core_artifact_persistence.load_vpm_artifact`
+remains available as an explicitly low-level Core loader (digest-only, no
+compiled-report context to close an aggregate against) for callers who
+genuinely have no compiled report to check against - it is not itself a
+safe rendering path for a compiled report's VPM.
+
+A reference is the pair `(artifact_kind, artifact_id)`, not the digest
+alone: `CompiledReportArtifactDTO` rejects a nested ref whose declared
+kind doesn't match its expected artifact kind even when the `artifact_id`
+genuinely matches stored content, and `validate_compiled_report_aggregate`
+re-asserts the same check as defense in depth.
+`CompiledReportClosureReceiptDTO` similarly cannot be constructed with an
+incomplete `checks` tuple or non-empty `failure_codes`, even with a
+`receipt_id` that correctly hashes that content - the type's promise that
+"every check passed" is enforced structurally, not left to its one
+legitimate builder.
+
 **Claims boundary:** ZeroModel can persist and reload a complete adapted
 report, its governing adapter contract, and its compiled `ScoreTable`,
 `LayoutRecipe`, and `VPMArtifact` as one content-addressed aggregate, and

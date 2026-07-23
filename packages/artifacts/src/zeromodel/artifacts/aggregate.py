@@ -57,16 +57,23 @@ from typing import Tuple
 
 import numpy as np
 
-from zeromodel.artifacts.adapted_report_persistence import load_adapted_report
+from zeromodel.artifacts.adapted_report_persistence import (
+    ADAPTED_REPORT_ARTIFACT_KIND,
+    load_adapted_report,
+)
 from zeromodel.artifacts.canonicalization import canonical_json_bytes, sha256_digest
 from zeromodel.artifacts.compiled_artifact import CompiledReportArtifactDTO
 from zeromodel.artifacts.core_artifact_persistence import (
+    LAYOUT_RECIPE_ARTIFACT_KIND,
+    SCORE_TABLE_ARTIFACT_KIND,
+    VPM_ARTIFACT_ARTIFACT_KIND,
     load_layout_recipe,
     load_score_table,
     load_vpm_artifact,
 )
 from zeromodel.artifacts.ref import ArtifactRef
 from zeromodel.artifacts.report_adapter_contract_persistence import (
+    REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
     load_report_adapter_contract,
 )
 from zeromodel.artifacts.report_dto import AdaptedReportDTO, ReportAdapterContractDTO
@@ -151,6 +158,37 @@ def load_compiled_report_aggregate(
     return aggregate
 
 
+def load_compiled_report_vpm(
+    *, ref: ArtifactRef, resolver: ArtifactResolver
+) -> VPMArtifact:
+    """Resolve a compiled report's actual `VPMArtifact` for rendering - the
+    one safe public path for doing so.
+
+    External review finding (0e56558 review round 2, #1 - BLOCKER): an
+    earlier version of this function took an already-loaded `compiled:
+    CompiledReportArtifactDTO` and called `load_vpm_artifact` directly,
+    which only proves the VPM's own digest is self-consistent - exactly
+    the property `_check_vpm_matches_deterministic_reconstruction` proved
+    is *not* enough (a VPM can embed the correct `ScoreTable`/
+    `LayoutRecipe` while its normalized pixels or ordering are
+    fabricated). That made this documented "resolve a compiled report's
+    VPM for rendering" function a bypass of the aggregate-closure
+    guarantee for every caller who used it instead of
+    `load_compiled_report_aggregate` directly.
+
+    This now takes the same `(ref, resolver)` shape as
+    `load_compiled_report_aggregate` and *is* a thin wrapper around it, so
+    every public path to a compiled report's `VPMArtifact` runs the full
+    aggregate closure - including the deterministic-reconstruction check -
+    before returning anything. Callers who need only the compiled report
+    record itself (not the VPM) should use `load_compiled_report_artifact`;
+    callers who need a Core VPM artifact with no compiled-report context
+    at all (no aggregate to close) should use the explicitly low-level
+    `core_artifact_persistence.load_vpm_artifact`.
+    """
+    return load_compiled_report_aggregate(ref=ref, resolver=resolver).vpm_artifact
+
+
 def validate_compiled_report_aggregate(
     aggregate: ResolvedCompiledReportAggregateDTO,
 ) -> None:
@@ -187,6 +225,44 @@ def _require_ref_matches_content(
         )
 
 
+def _require_ref_kind(ref: ArtifactRef, expected_kind: str, label: str) -> None:
+    if ref.artifact_kind != expected_kind:
+        raise ReportCompilationError(
+            f"compiled report's {label} has artifact_kind {ref.artifact_kind!r}, "
+            f"expected {expected_kind!r} - a reference is the pair (kind, id); a matching "
+            "digest under the wrong kind does not prove the complete declared reference"
+        )
+
+
+def _check_declared_ref_kinds(compiled: CompiledReportArtifactDTO) -> None:
+    """External review finding (0e56558 review round 2, #2 - high):
+    `CompiledReportArtifactDTO.__post_init__` now rejects a wrong-kind
+    nested ref at construction time (see `compiled_artifact.py`'s
+    `_validate_nested_ref_kinds`), so this is defense in depth for the
+    aggregate-closure path specifically, per the review's explicit request
+    to validate kinds "again at aggregate closure" - not merely trust that
+    every `CompiledReportArtifactDTO` a caller supplies here was actually
+    constructed through the normal path.
+    """
+    _require_ref_kind(
+        compiled.adapted_report_ref, ADAPTED_REPORT_ARTIFACT_KIND, "adapted_report_ref"
+    )
+    _require_ref_kind(
+        compiled.adapter_contract_ref,
+        REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
+        "adapter_contract_ref",
+    )
+    _require_ref_kind(
+        compiled.score_table_ref, SCORE_TABLE_ARTIFACT_KIND, "score_table_ref"
+    )
+    _require_ref_kind(
+        compiled.layout_recipe_ref, LAYOUT_RECIPE_ARTIFACT_KIND, "layout_recipe_ref"
+    )
+    _require_ref_kind(
+        compiled.vpm_artifact_ref, VPM_ARTIFACT_ARTIFACT_KIND, "vpm_artifact_ref"
+    )
+
+
 def _check_resolved_objects_match_declared_refs(
     aggregate: ResolvedCompiledReportAggregateDTO,
 ) -> None:
@@ -210,6 +286,7 @@ def _check_resolved_objects_match_declared_refs(
     `store_vpm_artifact` used to mint the ref in the first place.
     """
     compiled = aggregate.compiled_report
+    _check_declared_ref_kinds(compiled)
     if (
         compiled.adapted_report_ref.artifact_id
         != aggregate.adapted_report.adapted_report_id
@@ -565,6 +642,46 @@ class CompiledReportClosureReceiptDTO:
     spec_version: str = SPEC_VERSION
 
     def __post_init__(self) -> None:
+        """External review finding (0e56558 review round 2, #3 - medium):
+        a correct `receipt_id` only proves the record's bytes were not
+        altered relative to itself - it does not prove the record
+        represents an aggregate that actually passed every closure check.
+        Before this fix, `checks = (("compiled_report_valid", True),)` with
+        `failure_codes = ("vpm_not_checked",)` would construct cleanly as
+        long as `receipt_id` matched that (malformed) content. This DTO's
+        whole purpose is to promise "every check passed"; enforce that
+        promise structurally, not just leave it to the one caller
+        (`build_compiled_report_closure_receipt`) that currently happens to
+        uphold it.
+        """
+        if self.checks != tuple((name, True) for name in _CLOSURE_CHECK_NAMES):
+            raise ReportCompilationError(
+                "CompiledReportClosureReceiptDTO.checks must be exactly the expected closure "
+                f"check names, in order, each True: {_CLOSURE_CHECK_NAMES}"
+            )
+        if self.failure_codes:
+            raise ReportCompilationError(
+                "CompiledReportClosureReceiptDTO.failure_codes must be empty - a receipt "
+                "represents an aggregate that passed every check; a failed validation must "
+                "raise instead of producing a receipt with failure codes"
+            )
+        _require_ref_kind(
+            self.adapted_report_ref, ADAPTED_REPORT_ARTIFACT_KIND, "adapted_report_ref"
+        )
+        _require_ref_kind(
+            self.adapter_contract_ref,
+            REPORT_ADAPTER_CONTRACT_ARTIFACT_KIND,
+            "adapter_contract_ref",
+        )
+        _require_ref_kind(
+            self.score_table_ref, SCORE_TABLE_ARTIFACT_KIND, "score_table_ref"
+        )
+        _require_ref_kind(
+            self.layout_recipe_ref, LAYOUT_RECIPE_ARTIFACT_KIND, "layout_recipe_ref"
+        )
+        _require_ref_kind(
+            self.vpm_artifact_ref, VPM_ARTIFACT_ARTIFACT_KIND, "vpm_artifact_ref"
+        )
         expected_id = sha256_digest(canonical_json_bytes(closure_receipt_payload(self)))
         if self.receipt_id != expected_id:
             raise ReportCompilationError(

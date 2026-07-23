@@ -23,17 +23,20 @@ jobs:
               .github/pr71-patch.part02 > /tmp/pr71-fixes.patch
           git apply --check /tmp/pr71-fixes.patch
           git apply /tmp/pr71-fixes.patch
+          # Workflow-file changes are applied separately through the GitHub
+          # connector because this job's token has contents write permission
+          # but not workflow mutation authority.
+          git checkout -- .github/workflows/claims-audit.yml
       - name: Regenerate current architecture inventory
         env:
           ZEROMODEL_INVENTORY_BASELINE: ${{ github.event.pull_request.head.sha }}
           ZEROMODEL_INVENTORY_DIRTY: "true"
         run: python scripts/analyze_package_inventory.py --write
-      - name: Remove temporary repair machinery
+      - name: Remove temporary patch parts
         run: |
           rm -f .github/pr71-patch.part00
           rm -f .github/pr71-patch.part01
           rm -f .github/pr71-patch.part02
-          rm -f .github/workflows/pr71-workspace-export.yml
       - name: Commit consolidated review fixes
         run: |
           git config user.name "github-actions[bot]"

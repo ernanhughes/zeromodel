@@ -1,0 +1,24 @@
+name: PR 71 workspace export
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.event.pull_request.number == 71
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create source archive
+        run: |
+          tar --exclude=.git --exclude=build --exclude='**/__pycache__' -czf /tmp/pr71-workspace.tar.gz .
+      - name: Upload source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr71-workspace
+          path: /tmp/pr71-workspace.tar.gz
+          retention-days: 1

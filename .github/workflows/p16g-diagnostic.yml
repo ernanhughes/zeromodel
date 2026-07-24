@@ -1,0 +1,23 @@
+name: p16g-diagnostic
+
+on:
+  pull_request:
+    paths:
+      - "packages/perception/**"
+      - ".github/workflows/p16g-diagnostic.yml"
+
+jobs:
+  diagnose-p16g:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install quietly
+        run: |
+          python -m pip install --quiet --upgrade pip
+          python -m pip install --quiet pytest "numpy<2.0"
+          python -m pip install --quiet -e packages/core -e packages/observation -e packages/perception
+      - name: Run only P16G
+        run: python -m pytest -q packages/perception/tests/test_full_vertical_integration_p16g.py

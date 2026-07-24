@@ -15,6 +15,16 @@ from .dataset import (
     SplitAssignmentDTO,
     build_dataset_manifest,
 )
+from .evidence import (
+    EVIDENCE_RENDER_SEMANTICS,
+    EVIDENCE_VPM_VERSION,
+    FIELD_RELEVANCE_SEMANTICS,
+    FIELD_RELEVANCE_VERSION,
+    EvidenceVPMDTO,
+    FieldRelevanceDTO,
+    PerceptionEvidenceError,
+    estimate_field_relevance,
+)
 from .fields import (
     FIELD_SAMPLE_VERSION,
     FIELD_SCHEMA_VERSION,
@@ -59,7 +69,7 @@ from .representation import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P4A"
+PERCEPTION_STAGE = "P4B"
 
 __all__ = [
     "ACTION_SCHEMA_VERSION",
@@ -67,6 +77,10 @@ __all__ = [
     "CONFIDENCE_SEMANTICS",
     "DATASET_MANIFEST_VERSION",
     "DISTANCE_SEMANTICS",
+    "EVIDENCE_RENDER_SEMANTICS",
+    "EVIDENCE_VPM_VERSION",
+    "FIELD_RELEVANCE_SEMANTICS",
+    "FIELD_RELEVANCE_VERSION",
     "FIELD_SAMPLE_VERSION",
     "FIELD_SCHEMA_VERSION",
     "INTERACTION_VERSION",
@@ -83,12 +97,15 @@ __all__ = [
     "BaselineTrainingExampleDTO",
     "DatasetFindingDTO",
     "DiscreteActionSchemaDTO",
+    "EvidenceVPMDTO",
     "ExtractedFieldDTO",
+    "FieldRelevanceDTO",
     "InMemoryPerceptionDatasetStore",
     "NeighborEvidenceDTO",
     "PerceptionDatasetError",
     "PerceptionDatasetManifestDTO",
     "PerceptionDatasetStore",
+    "PerceptionEvidenceError",
     "PerceptionFieldError",
     "PerceptionInferenceError",
     "PerceptionRepresentationError",
@@ -105,6 +122,7 @@ __all__ = [
     "encode_discrete_action",
     "encode_source_array",
     "encode_source_image_bytes",
+    "estimate_field_relevance",
     "extract_source_fields",
     "fit_baseline_nearest_neighbor",
     "mask_source_fields",

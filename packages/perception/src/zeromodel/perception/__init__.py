@@ -15,6 +15,19 @@ from .dataset import (
     SplitAssignmentDTO,
     build_dataset_manifest,
 )
+from .fields import (
+    FIELD_SAMPLE_VERSION,
+    FIELD_SCHEMA_VERSION,
+    ExtractedFieldDTO,
+    PerceptionFieldError,
+    VPMFieldAddressDTO,
+    VPMFieldSchemaDTO,
+    build_grid_field_schema,
+    extract_source_fields,
+    mask_source_fields,
+    reconstruct_source_array,
+    validate_source_for_schema,
+)
 from .inference import (
     BASELINE_MODEL_VERSION,
     CONFIDENCE_SEMANTICS,
@@ -46,7 +59,7 @@ from .representation import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P3"
+PERCEPTION_STAGE = "P4A"
 
 __all__ = [
     "ACTION_SCHEMA_VERSION",
@@ -54,6 +67,8 @@ __all__ = [
     "CONFIDENCE_SEMANTICS",
     "DATASET_MANIFEST_VERSION",
     "DISTANCE_SEMANTICS",
+    "FIELD_SAMPLE_VERSION",
+    "FIELD_SCHEMA_VERSION",
     "INTERACTION_VERSION",
     "PERCEPTION_PACKAGE_VERSION",
     "PERCEPTION_STAGE",
@@ -68,11 +83,13 @@ __all__ = [
     "BaselineTrainingExampleDTO",
     "DatasetFindingDTO",
     "DiscreteActionSchemaDTO",
+    "ExtractedFieldDTO",
     "InMemoryPerceptionDatasetStore",
     "NeighborEvidenceDTO",
     "PerceptionDatasetError",
     "PerceptionDatasetManifestDTO",
     "PerceptionDatasetStore",
+    "PerceptionFieldError",
     "PerceptionInferenceError",
     "PerceptionRepresentationError",
     "RecordedInteractionDTO",
@@ -80,11 +97,18 @@ __all__ = [
     "SourceVPMDTO",
     "SplitAssignmentDTO",
     "TargetVPMDTO",
+    "VPMFieldAddressDTO",
+    "VPMFieldSchemaDTO",
     "build_dataset_manifest",
+    "build_grid_field_schema",
     "decode_discrete_action",
     "encode_discrete_action",
     "encode_source_array",
     "encode_source_image_bytes",
+    "extract_source_fields",
     "fit_baseline_nearest_neighbor",
+    "mask_source_fields",
     "predict_baseline_action",
+    "reconstruct_source_array",
+    "validate_source_for_schema",
 ]

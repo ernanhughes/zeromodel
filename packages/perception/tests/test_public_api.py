@@ -7,6 +7,8 @@ from zeromodel.perception import (
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
+    RECONSTRUCTION_ERROR_SEMANTICS,
+    REJECTION_SEMANTICS,
     TARGET_SCORE_SEMANTICS,
     WEIGHTED_DISTANCE_SEMANTICS,
     BaselineInferenceConfigDTO,
@@ -19,9 +21,9 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_five_a_public_contract() -> None:
+def test_phase_five_b_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P5A"
+    assert PERCEPTION_STAGE == "P5B"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"
@@ -30,6 +32,12 @@ def test_phase_five_a_public_contract() -> None:
         "ridge_linear_mapping_with_unregularized_intercept"
     )
     assert TARGET_SCORE_SEMANTICS == "clipped_ridge_predicted_one_hot_field_value"
+    assert RECONSTRUCTION_ERROR_SEMANTICS == (
+        "mean_absolute_error_against_one_hot_target"
+    )
+    assert REJECTION_SEMANTICS == (
+        "reject_when_top_two_margin_below_calibrated_threshold"
+    )
     assert TranslatorConfigDTO().ridge_alpha == 1e-6
     assert SourceImageEncoderSpecDTO().color_space == "RGB"
     assert DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT"]).labels == (

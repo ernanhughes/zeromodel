@@ -67,6 +67,23 @@ from .lifecycle import (
     register_promoted_model, resolve_active_promoted_model,
     rollback_active_model, supersede_active_model,
 )
+from .partitions import (
+    DATASET_PARTITION_SEMANTICS, DATASET_PARTITION_VERSION,
+    DatasetPartitionDTO, PerceptionDatasetPartitionError,
+    build_dataset_partition,
+)
+from .partitioned_governance import (
+    PARTITION_GOVERNANCE_SEMANTICS,
+    PARTITION_OWNED_COMPARISON_VERSION,
+    PARTITION_OWNED_TEST_VERSION,
+    PartitionOwnedComparisonReportDTO,
+    PartitionOwnedTestEvaluationReportDTO,
+    PerceptionPartitionGovernanceError,
+    bind_comparison_report_to_partition,
+    calibrate_partition_owned_candidates,
+    evaluate_partition_owned_model_on_test,
+    promote_partition_owned_model,
+)
 from .production import (
     PRODUCTION_INFERENCE_RECORD_VERSION, PRODUCTION_INFERENCE_SEMANTICS,
     PRODUCTION_METRICS_REPORT_VERSION, PRODUCTION_METRICS_SEMANTICS,

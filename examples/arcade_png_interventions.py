@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """Deterministic PNG intervention recipes for the controlled representation benchmark.
 
-Every recipe describes a declared, content-addressed sequence of *pure* pixel
-operations applied to one canonical arcade render (see
-`examples/local_model_zero_arcade_test.py:render`). Recipes never touch the
-provider, the policy, the fixture state universe, or the prompt - they only
-change what the rendered PNG looks like. See
-`docs/research/controlled-png-representation-benchmark.md` for the research
-question this supports.
+Every recipe is content-addressed and changes only the rendered PNG.  Provider,
+prompt, parser, fixture, and policy identity remain outside this module.
 
-Intervention functions are pure: `(image, canonical_parameters) -> image`.
-They never mutate their input `Image.Image` in place, and the cooldown
-operations *read* the ready/blocked state from the existing colour-coded
-indicator already baked into the base render's pixels rather than accepting
-it as a side-channel parameter - so a recipe's declared parameters stay
-identical across every fixture state, and recipe identity therefore depends
-only on the declared transformation, not on which state it will later be
-applied to.
+Stage 2F is a hierarchical ablation of the historical labelled renderer:
+
+* ``footer-only-v1`` keeps the historical labelled geometry while removing both
+  semantic annotation groups;
+* ``lane-numerals-v1`` keeps the historical labelled geometry and lane numerals
+  while removing cooldown text;
+* ``cooldown-text-v1`` adds the exact historical cooldown text to the historical
+  unlabelled geometry;
+* ``semantic-labelled-v1`` is byte-identical to ``labelled-v1`` while retaining
+  a distinct recipe identity.
+
+The erasure/overlay operations read state only from pixels already present in the
+image.  No fixture truth crosses the recipe boundary.
 """
 
 from __future__ import annotations
@@ -31,16 +31,13 @@ from zeromodel.video.domains.video_action_set.canonical_json import canonical_sh
 
 RECIPE_VERSION = "arcade-png-intervention-recipe/v1"
 
-# Geometry mirrors `local_model_zero_arcade_test.render()` exactly so overlays
-# align with the sprites and lane boundaries that function already drew. Kept
-# as local constants rather than imported from that module so this module has
-# no dependency on it - only pure PIL pixel operations live here.
 IMG_WIDTH = 896
 IMG_HEIGHT = 512
 LANES = 7
 LEFT_MARGIN = 42
 RIGHT_MARGIN = 42
 HUD_HEIGHT = 72
+LABELLED_BOTTOM = IMG_HEIGHT - 48
 UNLABELLED_BOTTOM = IMG_HEIGHT - 24
 
 BG_COLOR = (13, 18, 30)
@@ -51,16 +48,16 @@ RED = (242, 74, 74)
 
 PRIMARY_COOLDOWN_BOX = (20, 18, 56, 54)
 SECONDARY_COOLDOWN_BOX = (IMG_WIDTH - 56, 18, IMG_WIDTH - 20, 54)
+COOLDOWN_TEXT_POSITION = (68, 27)
+LANE_NUMERAL_TEXT_Y = IMG_HEIGHT - 32
 
-# The tank sprite's lowest point is `bottom - 45 + 33` = `488 - 45 + 33` = 476
-# for every lane and every fixture state (see `render()`'s wheel polygon) -
-# `FOOTER_TOP` stays below that with a 4px margin so the footer band never
-# occludes the sprite it sits under.
+# Retained for compatibility with the first Stage 2F implementation and its
+# evidence/debug helpers.  Corrected semantic recipes no longer use a painted
+# footer band; they use the historical labelled geometry directly.
 FOOTER_TOP = IMG_HEIGHT - 32
 FOOTER_BG = (19, 26, 42)
 FOOTER_BORDER = WHITE
 FOOTER_TEXT_Y = FOOTER_TOP + 4
-COOLDOWN_TEXT_POSITION = (68, 27)
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,14 +78,7 @@ class ArcadePngOperationSpec:
 
 @dataclass(frozen=True, slots=True)
 class ArcadePngInterventionRecipe:
-    """An immutable, content-addressed PNG representation recipe.
-
-    ``recipe_id`` is derived from ``canonical_sha256`` over every other field,
-    exactly like every other identity in the video action-set domain (see
-    ``ProviderConfigurationDTO.provider_configuration_id``). ``operations`` may
-    be empty for the two reference variants (``labelled-v1``/``unlabelled-v1``),
-    which declare no PNG intervention beyond the canonical base render itself.
-    """
+    """An immutable, content-addressed PNG representation recipe."""
 
     version: str
     variant_id: str
@@ -104,8 +94,7 @@ class ArcadePngInterventionRecipe:
             raise ValueError("recipe variant_id must be non-empty")
         if self.base_render_mode not in ("labelled", "unlabelled"):
             raise ValueError("recipe base_render_mode must be labelled or unlabelled")
-        expected_id = canonical_sha256(_recipe_payload_without_id(self))
-        if self.recipe_id != expected_id:
+        if self.recipe_id != canonical_sha256(_recipe_payload_without_id(self)):
             raise ValueError("recipe id mismatch")
 
     @classmethod
@@ -121,17 +110,16 @@ class ArcadePngInterventionRecipe:
             "version": RECIPE_VERSION,
             "variant_id": variant_id,
             "base_render_mode": base_render_mode,
-            "operations": [op.to_dict() for op in operations],
+            "operations": [operation.to_dict() for operation in operations],
             "metadata": dict(metadata or {}),
         }
-        recipe_id = canonical_sha256(payload)
         return cls(
             version=RECIPE_VERSION,
             variant_id=variant_id,
             base_render_mode=base_render_mode,
             operations=tuple(operations),
             metadata=dict(metadata or {}),
-            recipe_id=recipe_id,
+            recipe_id=canonical_sha256(payload),
         )
 
     def to_dict(self) -> dict[str, object]:
@@ -145,7 +133,7 @@ def _recipe_payload_without_id(
         "version": recipe.version,
         "variant_id": recipe.variant_id,
         "base_render_mode": recipe.base_render_mode,
-        "operations": [op.to_dict() for op in recipe.operations],
+        "operations": [operation.to_dict() for operation in recipe.operations],
         "metadata": dict(recipe.metadata),
     }
 
@@ -168,9 +156,8 @@ def _detect_cooldown_from_pixels(
     blocked_color: tuple[int, int, int],
     tolerance: float = 60.0,
 ) -> int:
-    """Read the ready/blocked state directly from the existing colour-coded
-    indicator pixels rather than being told it out-of-band. Keeps every
-    cooldown intervention a pure function of (image, declared parameters)."""
+    """Recover ready/blocked from the already-rendered indicator pixels."""
+
     cx, cy = (box[0] + box[2]) // 2, (box[1] + box[3]) // 2
     pixel = image.convert("RGB").getpixel((cx, cy))
     if _distance(pixel, ready_color) <= tolerance:
@@ -210,8 +197,6 @@ def _draw_blocked_shape(
 def _op_cooldown_shape_overlay(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Replace the coloured cooldown indicator with a shape (circle=ready,
-    cross=blocked) so the state is distinguishable in grayscale, without text."""
     box = tuple(parameters["position"])  # type: ignore[arg-type]
     ready_color = tuple(parameters["ready_color"])  # type: ignore[arg-type]
     blocked_color = tuple(parameters["blocked_color"])  # type: ignore[arg-type]
@@ -233,7 +218,6 @@ def _op_cooldown_shape_overlay(
 def _op_cooldown_dual_overlay(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Cooldown via shape AND colour (green circle=ready, red cross=blocked)."""
     box = tuple(parameters["position"])  # type: ignore[arg-type]
     ready_color = tuple(parameters["ready_color"])  # type: ignore[arg-type]
     blocked_color = tuple(parameters["blocked_color"])  # type: ignore[arg-type]
@@ -256,15 +240,10 @@ def _op_cooldown_dual_overlay(
 def _op_cooldown_marker_duplicate(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Duplicate an already-drawn cooldown marker at a second declared
-    location, by copying pixels rather than re-detecting state - this makes
-    the duplication itself the recorded operation, matching the source glyph
-    exactly regardless of detection tolerance."""
     source_box = tuple(parameters["source_position"])  # type: ignore[arg-type]
     target_box = tuple(parameters["target_position"])  # type: ignore[arg-type]
     result = image.copy()
-    glyph = image.crop(source_box)
-    result.paste(glyph, (target_box[0], target_box[1]))
+    result.paste(image.crop(source_box), (target_box[0], target_box[1]))
     return result
 
 
@@ -281,25 +260,21 @@ def _draw_marker(
             [(cx, cy - radius), (cx - radius, cy + radius), (cx + radius, cy + radius)],
             fill=color,
         )
-    else:
-        draw.polygon(
-            [
-                (cx, cy - radius),
-                (cx + radius, cy),
-                (cx, cy + radius),
-                (cx - radius, cy),
-            ],
-            fill=color,
-        )
+        return
+    draw.polygon(
+        [
+            (cx, cy - radius),
+            (cx + radius, cy),
+            (cx, cy + radius),
+            (cx - radius, cy),
+        ],
+        fill=color,
+    )
 
 
 def _op_lane_separator_enhance(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Strengthen lane-position evidence: brighter/thicker separators plus
-    alternating triangle/diamond markers repeated above and below the lane
-    band at every boundary. Never touches the cooldown indicator or draws
-    numeric lane labels."""
     left = int(parameters["left"])  # type: ignore[arg-type]
     right = int(parameters["right"])  # type: ignore[arg-type]
     hud = int(parameters["hud"])  # type: ignore[arg-type]
@@ -312,14 +287,11 @@ def _op_lane_separator_enhance(
 
     result = image.copy()
     draw = ImageDraw.Draw(result)
-    lane_w = (width - left - right) / lanes
+    lane_width = (width - left - right) / lanes
     for index in range(lanes + 1):
-        x = round(left + index * lane_w)
+        x = round(left + index * lane_width)
         draw.line((x, hud, x, bottom), fill=color, width=line_width)
         shape = "triangle" if index % 2 == 0 else "diamond"
-        # `- 4` (not the larger bottom-side offset) keeps the top marker
-        # below y=54 so it never overlaps `PRIMARY_COOLDOWN_BOX`
-        # (y in [18, 54]) even at the leftmost boundary (x == left margin).
         _draw_marker(draw, x, hud - marker_radius - 4, marker_radius, shape, color)
         _draw_marker(draw, x, bottom + marker_radius + 6, marker_radius, shape, color)
     return result
@@ -328,10 +300,8 @@ def _op_lane_separator_enhance(
 def _op_footer_reserved_area(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Introduce a single structured reserved footer band: a distinct fill
-    colour plus one top border line. Draws no numerals, no cooldown text, and
-    no per-lane boundary ticks - isolates whether reserved geometry alone
-    (with no semantic content in it) changes provider behaviour."""
+    """Legacy Stage 2F prototype retained for recipe replay compatibility."""
+
     top = int(parameters["top"])  # type: ignore[arg-type]
     width = int(parameters["width"])  # type: ignore[arg-type]
     height = int(parameters["height"])  # type: ignore[arg-type]
@@ -348,14 +318,6 @@ def _op_footer_reserved_area(
 def _op_lane_numerals_overlay(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Draw the numeral 0..6 centred under each of the seven lane *regions*.
-
-    Deliberately iterates ``range(lanes)`` (seven centres), never
-    ``range(lanes + 1)`` (eight boundaries) - the Stage 2E
-    ``lane-enhanced-v1`` real-provider result over-emphasized the eight
-    boundaries between lanes and regressed (one rejected response, more
-    action-changing errors); this operation encodes lane position directly
-    at each region's centre instead."""
     left = int(parameters["left"])  # type: ignore[arg-type]
     right = int(parameters["right"])  # type: ignore[arg-type]
     width = int(parameters["width"])  # type: ignore[arg-type]
@@ -364,19 +326,22 @@ def _op_lane_numerals_overlay(
     color = tuple(parameters["text_color"])  # type: ignore[arg-type]
     result = image.copy()
     draw = ImageDraw.Draw(result)
-    lane_w = (width - left - right) / lanes
+    lane_width = (width - left - right) / lanes
     for index in range(lanes):
-        cx = left + (index + 0.5) * lane_w
+        cx = left + (index + 0.5) * lane_width
         draw.text((cx - 4, text_y), str(index), fill=color)
     return result
+
+
+def _historical_cooldown_text(cooldown: int) -> str:
+    return "READY (cooldown 0)" if cooldown == 0 else "BLOCKED (cooldown 1)"
 
 
 def _op_cooldown_text_overlay(
     image: Image.Image, parameters: Mapping[str, object]
 ) -> Image.Image:
-    """Draw an explicit READY/BLOCKED text label next to the existing
-    colour-coded cooldown indicator, reading state from its pixels exactly
-    like the shape/dual cooldown operations do."""
+    """Add the exact text emitted by the historical labelled renderer."""
+
     box = tuple(parameters["position"])  # type: ignore[arg-type]
     ready_color = tuple(parameters["ready_color"])  # type: ignore[arg-type]
     blocked_color = tuple(parameters["blocked_color"])  # type: ignore[arg-type]
@@ -386,8 +351,52 @@ def _op_cooldown_text_overlay(
         image, box, ready_color=ready_color, blocked_color=blocked_color
     )
     result = image.copy()
+    ImageDraw.Draw(result).text(
+        text_position, _historical_cooldown_text(cooldown), fill=color
+    )
+    return result
+
+
+def _op_cooldown_text_erase(
+    image: Image.Image, parameters: Mapping[str, object]
+) -> Image.Image:
+    """Remove either historical cooldown label without touching the indicator."""
+
+    text_position = tuple(parameters["text_position"])  # type: ignore[arg-type]
+    background = tuple(parameters["background_color"])  # type: ignore[arg-type]
+    result = image.copy()
     draw = ImageDraw.Draw(result)
-    draw.text(text_position, "READY" if cooldown == 0 else "BLOCKED", fill=color)
+    boxes = [
+        draw.textbbox(text_position, _historical_cooldown_text(cooldown))
+        for cooldown in (0, 1)
+    ]
+    clear_box = (
+        min(box[0] for box in boxes),
+        min(box[1] for box in boxes),
+        max(box[2] for box in boxes),
+        max(box[3] for box in boxes),
+    )
+    draw.rectangle(clear_box, fill=background)
+    return result
+
+
+def _op_lane_numerals_erase(
+    image: Image.Image, parameters: Mapping[str, object]
+) -> Image.Image:
+    """Remove the seven historical lane-centre numerals from labelled geometry."""
+
+    left = int(parameters["left"])  # type: ignore[arg-type]
+    right = int(parameters["right"])  # type: ignore[arg-type]
+    width = int(parameters["width"])  # type: ignore[arg-type]
+    lanes = int(parameters["lanes"])  # type: ignore[arg-type]
+    text_y = int(parameters["text_y"])  # type: ignore[arg-type]
+    background = tuple(parameters["background_color"])  # type: ignore[arg-type]
+    result = image.copy()
+    draw = ImageDraw.Draw(result)
+    lane_width = (width - left - right) / lanes
+    for index in range(lanes):
+        position = (left + (index + 0.5) * lane_width - 4, text_y)
+        draw.rectangle(draw.textbbox(position, str(index)), fill=background)
     return result
 
 
@@ -401,8 +410,9 @@ OPERATION_FUNCTIONS: dict[
     "footer_reserved_area": _op_footer_reserved_area,
     "lane_numerals_overlay": _op_lane_numerals_overlay,
     "cooldown_text_overlay": _op_cooldown_text_overlay,
+    "cooldown_text_erase": _op_cooldown_text_erase,
+    "lane_numerals_erase": _op_lane_numerals_erase,
 }
-
 
 LABELLED_VARIANT = "labelled-v1"
 UNLABELLED_VARIANT = "unlabelled-v1"
@@ -432,7 +442,6 @@ SEMANTIC_VARIANTS = (
 )
 
 COMBINED_VARIANT = "combined-v1"
-
 ALL_VARIANTS = (
     REFERENCE_VARIANTS
     + COOLDOWN_VARIANTS
@@ -445,9 +454,9 @@ ALL_VARIANTS = (
 def _cooldown_shape_ops() -> tuple[ArcadePngOperationSpec, ...]:
     return (
         ArcadePngOperationSpec(
-            operation="cooldown_shape_overlay",
-            operation_version="v1",
-            parameters={
+            "cooldown_shape_overlay",
+            "v1",
+            {
                 "position": list(PRIMARY_COOLDOWN_BOX),
                 "ready_color": list(GREEN),
                 "blocked_color": list(RED),
@@ -461,9 +470,9 @@ def _cooldown_shape_ops() -> tuple[ArcadePngOperationSpec, ...]:
 def _cooldown_dual_ops() -> tuple[ArcadePngOperationSpec, ...]:
     return (
         ArcadePngOperationSpec(
-            operation="cooldown_dual_overlay",
-            operation_version="v1",
-            parameters={
+            "cooldown_dual_overlay",
+            "v1",
+            {
                 "position": list(PRIMARY_COOLDOWN_BOX),
                 "ready_color": list(GREEN),
                 "blocked_color": list(RED),
@@ -477,9 +486,9 @@ def _cooldown_dual_ops() -> tuple[ArcadePngOperationSpec, ...]:
 def _cooldown_redundant_ops() -> tuple[ArcadePngOperationSpec, ...]:
     return _cooldown_dual_ops() + (
         ArcadePngOperationSpec(
-            operation="cooldown_marker_duplicate",
-            operation_version="v1",
-            parameters={
+            "cooldown_marker_duplicate",
+            "v1",
+            {
                 "source_position": list(PRIMARY_COOLDOWN_BOX),
                 "target_position": list(SECONDARY_COOLDOWN_BOX),
             },
@@ -490,9 +499,9 @@ def _cooldown_redundant_ops() -> tuple[ArcadePngOperationSpec, ...]:
 def _lane_enhanced_ops() -> tuple[ArcadePngOperationSpec, ...]:
     return (
         ArcadePngOperationSpec(
-            operation="lane_separator_enhance",
-            operation_version="v1",
-            parameters={
+            "lane_separator_enhance",
+            "v1",
+            {
                 "left": LEFT_MARGIN,
                 "right": RIGHT_MARGIN,
                 "hud": HUD_HEIGHT,
@@ -507,37 +516,31 @@ def _lane_enhanced_ops() -> tuple[ArcadePngOperationSpec, ...]:
     )
 
 
-def _footer_reserved_area_ops() -> tuple[ArcadePngOperationSpec, ...]:
+def _erase_cooldown_text_ops() -> tuple[ArcadePngOperationSpec, ...]:
     return (
         ArcadePngOperationSpec(
-            operation="footer_reserved_area",
-            operation_version="v1",
-            parameters={
-                "top": FOOTER_TOP,
-                "width": IMG_WIDTH,
-                "height": IMG_HEIGHT,
-                "fill_color": list(FOOTER_BG),
-                "border_color": list(FOOTER_BORDER),
-                "border_width": 2,
+            "cooldown_text_erase",
+            "v1",
+            {
+                "text_position": list(COOLDOWN_TEXT_POSITION),
+                "background_color": list(BG_COLOR),
             },
         ),
     )
 
 
-def _lane_numerals_ops() -> tuple[ArcadePngOperationSpec, ...]:
-    # The footer must be applied first: lane numerals are drawn *within* the
-    # reserved footer band it introduces, not as a standalone overlay.
-    return _footer_reserved_area_ops() + (
+def _erase_lane_numerals_ops() -> tuple[ArcadePngOperationSpec, ...]:
+    return (
         ArcadePngOperationSpec(
-            operation="lane_numerals_overlay",
-            operation_version="v1",
-            parameters={
+            "lane_numerals_erase",
+            "v1",
+            {
                 "left": LEFT_MARGIN,
                 "right": RIGHT_MARGIN,
                 "width": IMG_WIDTH,
                 "lanes": LANES,
-                "text_y": FOOTER_TEXT_Y,
-                "text_color": list(WHITE),
+                "text_y": LANE_NUMERAL_TEXT_Y,
+                "background_color": list(BG_COLOR),
             },
         ),
     )
@@ -546,9 +549,9 @@ def _lane_numerals_ops() -> tuple[ArcadePngOperationSpec, ...]:
 def _cooldown_text_ops() -> tuple[ArcadePngOperationSpec, ...]:
     return (
         ArcadePngOperationSpec(
-            operation="cooldown_text_overlay",
-            operation_version="v1",
-            parameters={
+            "cooldown_text_overlay",
+            "v2",
+            {
                 "position": list(PRIMARY_COOLDOWN_BOX),
                 "ready_color": list(GREEN),
                 "blocked_color": list(RED),
@@ -559,8 +562,40 @@ def _cooldown_text_ops() -> tuple[ArcadePngOperationSpec, ...]:
     )
 
 
-def _semantic_labelled_ops() -> tuple[ArcadePngOperationSpec, ...]:
-    return _lane_numerals_ops() + _cooldown_text_ops()
+def _semantic_recipe(variant_id: str) -> ArcadePngInterventionRecipe:
+    metadata = {
+        "family": "semantic",
+        "design": "historical-labelled-hierarchical-ablation",
+    }
+    if variant_id == FOOTER_ONLY_VARIANT:
+        return ArcadePngInterventionRecipe.build(
+            variant_id=variant_id,
+            base_render_mode="labelled",
+            operations=_erase_cooldown_text_ops() + _erase_lane_numerals_ops(),
+            metadata=metadata,
+        )
+    if variant_id == LANE_NUMERALS_VARIANT:
+        return ArcadePngInterventionRecipe.build(
+            variant_id=variant_id,
+            base_render_mode="labelled",
+            operations=_erase_cooldown_text_ops(),
+            metadata=metadata,
+        )
+    if variant_id == COOLDOWN_TEXT_VARIANT:
+        return ArcadePngInterventionRecipe.build(
+            variant_id=variant_id,
+            base_render_mode="unlabelled",
+            operations=_cooldown_text_ops(),
+            metadata=metadata,
+        )
+    if variant_id == SEMANTIC_LABELLED_VARIANT:
+        return ArcadePngInterventionRecipe.build(
+            variant_id=variant_id,
+            base_render_mode="labelled",
+            operations=(),
+            metadata=metadata | {"pixel_equivalent_to": LABELLED_VARIANT},
+        )
+    raise ValueError(f"unknown semantic variant: {variant_id!r}")
 
 
 _VARIANT_OPERATION_BUILDERS: dict[
@@ -570,10 +605,6 @@ _VARIANT_OPERATION_BUILDERS: dict[
     COOLDOWN_DUAL_VARIANT: _cooldown_dual_ops,
     COOLDOWN_REDUNDANT_VARIANT: _cooldown_redundant_ops,
     LANE_ENHANCED_VARIANT: _lane_enhanced_ops,
-    FOOTER_ONLY_VARIANT: _footer_reserved_area_ops,
-    LANE_NUMERALS_VARIANT: _lane_numerals_ops,
-    COOLDOWN_TEXT_VARIANT: _cooldown_text_ops,
-    SEMANTIC_LABELLED_VARIANT: _semantic_labelled_ops,
 }
 
 
@@ -583,12 +614,8 @@ def build_recipe(
     combined_cooldown: str | None = None,
     combined_lane: str | None = None,
 ) -> ArcadePngInterventionRecipe:
-    """Build the declared, content-addressed recipe for one variant id.
+    """Build the declared recipe for one representation variant."""
 
-    ``combined_cooldown``/``combined_lane`` are required (and must each name a
-    variant from the matching family) only when ``variant_id == "combined-v1"``
-    - never hard-code a winner here.
-    """
     if variant_id not in ALL_VARIANTS:
         raise ValueError(f"unknown representation variant: {variant_id!r}")
     if variant_id == LABELLED_VARIANT:
@@ -605,13 +632,10 @@ def build_recipe(
             operations=(),
             metadata={"family": "reference"},
         )
+    if variant_id in SEMANTIC_VARIANTS:
+        return _semantic_recipe(variant_id)
     if variant_id in _VARIANT_OPERATION_BUILDERS:
-        if variant_id in COOLDOWN_VARIANTS:
-            family = "cooldown"
-        elif variant_id in LANE_VARIANTS:
-            family = "lane"
-        else:
-            family = "semantic"
+        family = "cooldown" if variant_id in COOLDOWN_VARIANTS else "lane"
         return ArcadePngInterventionRecipe.build(
             variant_id=variant_id,
             base_render_mode="unlabelled",
@@ -622,14 +646,13 @@ def build_recipe(
         raise ValueError("--combined-cooldown must name a cooldown-family variant")
     if combined_lane not in LANE_VARIANTS:
         raise ValueError("--combined-lane must name a lane-family variant")
-    ops = (
-        _VARIANT_OPERATION_BUILDERS[combined_cooldown]()
-        + _VARIANT_OPERATION_BUILDERS[combined_lane]()
-    )
     return ArcadePngInterventionRecipe.build(
         variant_id=variant_id,
         base_render_mode="unlabelled",
-        operations=ops,
+        operations=(
+            _VARIANT_OPERATION_BUILDERS[combined_cooldown]()
+            + _VARIANT_OPERATION_BUILDERS[combined_lane]()
+        ),
         metadata={
             "family": "combined",
             "combined_cooldown": combined_cooldown,
@@ -641,23 +664,21 @@ def build_recipe(
 def apply_recipe(
     recipe: ArcadePngInterventionRecipe, base_image: Image.Image
 ) -> list[tuple[Image.Image, bytes]]:
-    """Apply every declared operation in order, returning
-    ``[(base_image, base_bytes), (after_op_1, bytes_1), ...]``.
+    """Apply every operation and retain each image/PNG step for provenance."""
 
-    Raises ``ValueError`` if any declared operation produces byte-identical
-    PNG output to its input - a no-op transform is never accepted silently.
-    """
     steps: list[tuple[Image.Image, bytes]] = [(base_image, png_bytes(base_image))]
     current_image = base_image
-    for spec in recipe.operations:
-        fn = OPERATION_FUNCTIONS.get(spec.operation)
-        if fn is None:
-            raise ValueError(f"unknown intervention operation: {spec.operation!r}")
-        next_image = fn(current_image, spec.parameters)
+    for specification in recipe.operations:
+        function = OPERATION_FUNCTIONS.get(specification.operation)
+        if function is None:
+            raise ValueError(
+                f"unknown intervention operation: {specification.operation!r}"
+            )
+        next_image = function(current_image, specification.parameters)
         next_bytes = png_bytes(next_image)
         if next_bytes == steps[-1][1]:
             raise ValueError(
-                f"intervention operation {spec.operation!r} produced no pixel change"
+                f"intervention operation {specification.operation!r} produced no pixel change"
             )
         steps.append((next_image, next_bytes))
         current_image = next_image
@@ -677,6 +698,7 @@ __all__ = [
     "FOOTER_TOP",
     "IMG_HEIGHT",
     "IMG_WIDTH",
+    "LABELLED_BOTTOM",
     "LABELLED_VARIANT",
     "LANES",
     "LANE_ENHANCED_VARIANT",

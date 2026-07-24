@@ -198,14 +198,28 @@ def test_receipt_with_missing_lifecycle_transition_is_invalid(tmp_path) -> None:
 
 def test_undisposed_recommendation_is_informational_and_valid(tmp_path) -> None:
     lifecycle = InMemoryPerceptionModelLifecycleStore()
+    current = _promoted("current-only")
+    register_promoted_model(
+        lifecycle,
+        current,
+        registered_by="test",
+        registration_reason="candidate",
+    )
+    activate_promoted_model(
+        lifecycle,
+        current.promoted_model_id,
+        actor="test",
+        reason="activate",
+    )
+    pointer = lifecycle.get_active_pointer()
     governance = SqlitePerceptionGovernanceLedgerStore(tmp_path / "governance.sqlite3")
     recommendation = OperationalRecommendationDTO(
         recommendation_id="sha256:recommendation-only",
         health_report_id="sha256:health",
         lifecycle_snapshot_id="sha256:snapshot",
-        active_pointer_id=lifecycle.get_active_pointer().pointer_id,
-        active_pointer_revision=0,
-        active_promoted_model_id="promoted-current",
+        active_pointer_id=pointer.pointer_id,
+        active_pointer_revision=pointer.revision,
+        active_promoted_model_id=current.promoted_model_id,
         current_contract_id="sha256:contract",
         status="investigate",
         selected_target_promoted_model_id=None,

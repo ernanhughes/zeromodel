@@ -8,6 +8,14 @@ from .dataset import (
     PerceptionDatasetManifestDTO, PerceptionDatasetStore, RecordedInteractionDTO,
     SplitAssignmentDTO, build_dataset_manifest,
 )
+from .discovery import (
+    DIFFERENCE_SURFACE_SEMANTICS, DISCOVERY_VERSION,
+    DISCREPANCY_VPM_VERSION, EXPECTED_SURFACE_SEMANTICS,
+    OBSERVED_SURFACE_SEMANTICS, UNEXPLAINED_EVIDENCE_VERSION,
+    UNEXPLAINED_SURFACE_SEMANTICS, EvidenceDiscoveryReportDTO,
+    EvidenceDiscrepancyVPMDTO, PerceptionDiscoveryError,
+    UnexplainedEvidenceDTO, discover_unexpected_evidence,
+)
 from .evidence import (
     EVIDENCE_RENDER_SEMANTICS, EVIDENCE_VPM_VERSION, FIELD_RELEVANCE_SEMANTICS,
     FIELD_RELEVANCE_VERSION, EvidenceVPMDTO, FieldRelevanceDTO,
@@ -69,6 +77,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P6"
+PERCEPTION_STAGE = "P7"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

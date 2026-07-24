@@ -11,6 +11,7 @@ from typing import Final
 from .certification_audit import (
     CertificationIntegrityAuditReportDTO,
     CertificationIntegrityFindingDTO,
+    audit_certification_integrity,
 )
 from .certification_gate import (
     CertificationExecutionGateDTO,
@@ -47,7 +48,9 @@ class CertificationExecutionAdmissionBundleDTO:
         if self.gate.postflight_report_id != self.postflight.report_id:
             raise PerceptionSqlAdmissionError("gate does not reference supplied postflight report")
         if self.preflight.status != "valid" or self.postflight.status != "valid":
-            raise PerceptionSqlAdmissionError("admission bundle requires valid preflight and postflight")
+            raise PerceptionSqlAdmissionError(
+                "admission bundle requires valid preflight and postflight"
+            )
 
 
 def _decode_report(payload: dict[str, object]) -> CertificationIntegrityAuditReportDTO:
@@ -105,7 +108,9 @@ class SqliteCertificationExecutionAdmissionStore:
             )
             self._connection.commit()
         elif row["value"] != SQL_ADMISSION_SCHEMA_VERSION:
-            raise PerceptionSqlAdmissionError("unsupported execution-admission schema version")
+            raise PerceptionSqlAdmissionError(
+                "unsupported execution-admission schema version"
+            )
 
     def append_admission(self, bundle: CertificationExecutionAdmissionBundleDTO) -> None:
         gate = bundle.gate
@@ -134,7 +139,9 @@ class SqliteCertificationExecutionAdmissionStore:
         )
         self._connection.commit()
 
-    def get_admission(self, gate_id: str) -> CertificationExecutionAdmissionBundleDTO | None:
+    def get_admission(
+        self, gate_id: str
+    ) -> CertificationExecutionAdmissionBundleDTO | None:
         row = self._connection.execute(
             "SELECT gate_json, preflight_json, postflight_json "
             "FROM perception_execution_admissions WHERE gate_id=?",
@@ -176,6 +183,12 @@ def execute_and_persist_certification_admission(
     GovernedExecutionAttemptDTO,
     GovernanceExecutionReceiptDTO,
 ]:
+    preflight = audit_certification_integrity(
+        lifecycle_store,
+        governance_store,
+        attempt_store,
+        certification_store,
+    )
     gate, certification, attempt, receipt, postflight = (
         execute_certification_gated_approved_rollback(
             lifecycle_store,
@@ -188,16 +201,10 @@ def execute_and_persist_certification_admission(
             target_contract=target_contract,
         )
     )
-    preflight = CertificationIntegrityAuditReportDTO(
-        report_id=gate.preflight_report_id,
-        status="valid",
-        governance_audit_report_id=certification.pre_audit.report_id,
-        governance_audit_status=certification.pre_audit.status,
-        certification_count=max(postflight.certification_count - 1, 0),
-        successful_attempt_count=max(postflight.successful_attempt_count - 1, 0),
-        finding_count=0,
-        findings=(),
-    )
+    if gate.preflight_report_id != preflight.report_id:
+        raise PerceptionSqlAdmissionError(
+            "execution gate preflight differs from persisted admission preflight"
+        )
     bundle = CertificationExecutionAdmissionBundleDTO(
         gate=gate,
         preflight=preflight,
@@ -206,5 +213,7 @@ def execute_and_persist_certification_admission(
     admission_store.append_admission(bundle)
     restored = admission_store.get_admission(gate.gate_id)
     if restored != bundle:
-        raise PerceptionSqlAdmissionError("persisted admission differs from completed gate bundle")
+        raise PerceptionSqlAdmissionError(
+            "persisted admission differs from completed gate bundle"
+        )
     return bundle, certification, attempt, receipt

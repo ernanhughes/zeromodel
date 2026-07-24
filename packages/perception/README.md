@@ -3,65 +3,88 @@
 `zeromodel-perception` is the domain-neutral learning and inference runtime for
 ZeroModel visual evidence.
 
-The package turns arbitrary image/action observations into inspectable visual
-representations and, in later delivery stages, will use those representations to
-infer likely actions for unseen images while retaining evidence, alternatives,
-confidence, rejection, and provenance.
+## Phase P3 status
 
-## Phase P1 status
+P3 is the first complete prediction slice:
 
-Phase P1 implements the first deterministic representation slice:
+```text
+immutable image/action dataset
+        +
+unknown SourceVPMDTO
+        ↓
+ranked actions
++ confidence
++ nearest supporting observations
++ explicit rejection
+```
+
+The baseline deliberately uses the entire normalized VPM. Field relevance,
+evidence weighting, sparse translation, semantic annotation, and temporal models
+belong to later stages.
+
+## Representation
+
+P1 provides deterministic source-image and target-action artifacts:
 
 ```text
 bounded image bytes or uint8 array -> SourceVPMDTO
 bounded discrete action            -> TargetVPMDTO
 ```
 
-It does not yet learn mappings, search neighbours, infer actions, estimate
-confidence, produce evidence VPMs, or persist datasets.
+`SourceImageEncoderSpecDTO` declares colour space and hard width, height, pixel,
+and input-byte limits. P1 accepts `L`, `RGB`, and `RGBA` uint8 observations and
+performs no implicit crop, resize, augmentation, denoising, EXIF transpose,
+object detection, or learned embedding.
 
-The production dependencies remain deliberately small:
+`DiscreteActionSchemaDTO` owns a canonical sorted action vocabulary. Each action
+is encoded as a deterministic one-row one-hot grayscale PNG.
 
-- `numpy` for deterministic array operations;
-- `pillow` for bounded image decoding and canonical PNG serialization;
-- `zeromodel` for core VPM artifact contracts;
-- `zeromodel-observation` for observation-owned DTO and provider contracts.
+## Dataset ledger
 
-Pillow remains an input/output adapter. Perception internals operate on validated
-NumPy arrays and immutable DTOs rather than passing mutable Pillow objects across
-runtime boundaries.
+P2 records authoritative pairings in `RecordedInteractionDTO` and builds immutable
+`PerceptionDatasetManifestDTO` values. It detects conflicting actions for identical
+pixels, duplicate sequence steps, non-monotonic timestamps, mixed schemas, and
+missing identities. Dataset splits are deterministic from interaction identity and
+an explicit seed.
 
-## Source representation
+## Baseline model
 
-`SourceImageEncoderSpecDTO` declares the accepted colour space and hard limits for
-width, height, decoded pixels, and input bytes. P1 accepts `L`, `RGB`, and `RGBA`
-uint8 observations.
+`fit_baseline_nearest_neighbor` accepts:
 
-The encoder:
+- a P2 dataset manifest;
+- an explicit mapping of `source_vpm_id` to `SourceVPMDTO`;
+- a bounded `BaselineInferenceConfigDTO`;
+- a declared training split.
 
-1. rejects malformed, oversized, or incorrectly shaped inputs;
-2. performs only the declared colour-space conversion;
-3. preserves encoded pixel orientation and coordinates;
-4. emits deterministic PNG bytes;
-5. computes separate identities for the encoder contract, normalized pixels,
-   PNG bytes, and complete Source VPM.
+The fitter validates every source reference, requires one source shape and encoder
+contract, and materializes a self-contained immutable
+`BaselineNearestNeighborModelDTO`.
 
-No crop, resize, augmentation, denoising, histogram correction, EXIF transpose,
-object detection, or learned embedding is performed.
-
-## Target representation
-
-`DiscreteActionSchemaDTO` owns a canonical sorted action vocabulary. Each discrete
-action is represented as a one-row grayscale PNG with one stable field per action:
+The model uses normalized mean absolute pixel distance:
 
 ```text
-0   = inactive field
-255 = selected action field
+0.0 = pixel-identical
+1.0 = maximum possible uint8 difference
 ```
 
-`decode_discrete_action` validates schema identity, encoder version, dimensions,
-PNG digest, canonical one-hot values, and metadata agreement before returning an
-action. It rejects malformed or ambiguous target VPMs rather than guessing.
+The nearest observations vote with inverse-distance weights. Predictions preserve:
+
+- ranked `ActionCandidateDTO` values;
+- `NeighborEvidenceDTO` records with exact interaction identities;
+- winning weight share as confidence;
+- nearest distance;
+- top-two action margin;
+- deterministic prediction identity.
+
+Prediction statuses are:
+
+```text
+accepted
+rejected_out_of_distribution
+rejected_ambiguous
+```
+
+A rejected prediction still retains its candidates and neighbour evidence.
 
 ## Example
 
@@ -69,40 +92,68 @@ action. It rejects malformed or ambiguous target VPMs rather than guessing.
 import numpy as np
 
 from zeromodel.perception import (
+    BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
-    decode_discrete_action,
+    RecordedInteractionDTO,
+    SourceImageEncoderSpecDTO,
+    build_dataset_manifest,
     encode_discrete_action,
     encode_source_array,
+    fit_baseline_nearest_neighbor,
+    predict_baseline_action,
 )
 
-source = encode_source_array(np.zeros((8, 8, 3), dtype=np.uint8))
-schema = DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT", "FIRE"])
-target = encode_discrete_action("RIGHT", schema)
+spec = SourceImageEncoderSpecDTO(color_space="L")
+schema = DiscreteActionSchemaDTO.from_labels(["LEFT", "RIGHT"])
 
-assert source.width == 8
-assert decode_discrete_action(target, schema) == "RIGHT"
+left = encode_source_array(np.zeros((4, 4), dtype=np.uint8), spec)
+right = encode_source_array(np.full((4, 4), 255, dtype=np.uint8), spec)
+
+interactions = [
+    RecordedInteractionDTO.from_vpms(
+        sequence_id="example",
+        step_index=0,
+        source=left,
+        target=encode_discrete_action("LEFT", schema),
+    ),
+    RecordedInteractionDTO.from_vpms(
+        sequence_id="example",
+        step_index=1,
+        source=right,
+        target=encode_discrete_action("RIGHT", schema),
+    ),
+]
+manifest = build_dataset_manifest(
+    interactions,
+    source_encoder_spec_ids=[spec.encoder_spec_id],
+)
+model = fit_baseline_nearest_neighbor(
+    manifest,
+    {left.source_vpm_id: left, right.source_vpm_id: right},
+    training_split="all",
+    config=BaselineInferenceConfigDTO(neighbor_count=2),
+)
+unknown = encode_source_array(np.full((4, 4), 10, dtype=np.uint8), spec)
+prediction = predict_baseline_action(model, unknown)
+
+assert prediction.selected_action == "LEFT"
 ```
 
-## Ownership boundary
+## Dependencies and ownership
 
-`zeromodel-perception` owns or will own:
+The production dependencies remain deliberately small:
 
-- deterministic source-image and target-action visual representations;
-- immutable image/action dataset manifests;
-- similarity and sparse-translation inference for unseen observations;
-- evidence VPMs and prediction evidence;
-- expected-versus-observed evidence conformance;
-- unexplained evidence discovery;
-- temporal observation/action/next-observation learning.
+- `numpy` for deterministic array operations and distance calculation;
+- `pillow` for bounded image decoding and canonical PNG serialization;
+- `zeromodel` for core VPM artifact contracts;
+- `zeromodel-observation` for observation-owned contracts.
 
-It does not own:
+Pillow remains an input/output adapter. Perception internals operate on validated
+NumPy arrays and immutable DTOs.
 
-- the conservative artifact kernel (`zeromodel.core`);
-- closed-world deterministic visual codebook addressing (`zeromodel.vision`);
-- video capture or arcade-domain semantics (`zeromodel.video`);
-- SQLAlchemy persistence (`zeromodel-sqlalchemy`);
-- artifact storage, signatures, or navigation;
-- game-specific concepts such as players, aliens, bullets, or controls.
+The package does not own the conservative core artifact kernel, closed-world
+`zeromodel.vision` addressing, video capture, arcade semantics, SQLAlchemy
+persistence, artifact signatures, or game-specific concepts.
 
 See `docs/architecture/perception-runtime-design.md` for the comprehensive
 architecture and staged delivery plan.

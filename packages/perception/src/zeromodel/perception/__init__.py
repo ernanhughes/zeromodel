@@ -15,6 +15,21 @@ from .dataset import (
     SplitAssignmentDTO,
     build_dataset_manifest,
 )
+from .inference import (
+    BASELINE_MODEL_VERSION,
+    CONFIDENCE_SEMANTICS,
+    DISTANCE_SEMANTICS,
+    PREDICTION_VERSION,
+    ActionCandidateDTO,
+    BaselineInferenceConfigDTO,
+    BaselineNearestNeighborModelDTO,
+    BaselinePredictionDTO,
+    BaselineTrainingExampleDTO,
+    NeighborEvidenceDTO,
+    PerceptionInferenceError,
+    fit_baseline_nearest_neighbor,
+    predict_baseline_action,
+)
 from .representation import (
     ACTION_SCHEMA_VERSION,
     SOURCE_ENCODER_VERSION,
@@ -31,23 +46,34 @@ from .representation import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P2"
+PERCEPTION_STAGE = "P3"
 
 __all__ = [
     "ACTION_SCHEMA_VERSION",
+    "BASELINE_MODEL_VERSION",
+    "CONFIDENCE_SEMANTICS",
     "DATASET_MANIFEST_VERSION",
+    "DISTANCE_SEMANTICS",
     "INTERACTION_VERSION",
     "PERCEPTION_PACKAGE_VERSION",
     "PERCEPTION_STAGE",
+    "PREDICTION_VERSION",
     "SOURCE_ENCODER_VERSION",
     "SPLIT_ASSIGNMENT_VERSION",
     "TARGET_ENCODER_VERSION",
+    "ActionCandidateDTO",
+    "BaselineInferenceConfigDTO",
+    "BaselineNearestNeighborModelDTO",
+    "BaselinePredictionDTO",
+    "BaselineTrainingExampleDTO",
     "DatasetFindingDTO",
     "DiscreteActionSchemaDTO",
     "InMemoryPerceptionDatasetStore",
+    "NeighborEvidenceDTO",
     "PerceptionDatasetError",
     "PerceptionDatasetManifestDTO",
     "PerceptionDatasetStore",
+    "PerceptionInferenceError",
     "PerceptionRepresentationError",
     "RecordedInteractionDTO",
     "SourceImageEncoderSpecDTO",
@@ -59,4 +85,6 @@ __all__ = [
     "encode_discrete_action",
     "encode_source_array",
     "encode_source_image_bytes",
+    "fit_baseline_nearest_neighbor",
+    "predict_baseline_action",
 ]

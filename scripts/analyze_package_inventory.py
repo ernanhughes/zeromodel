@@ -23,7 +23,7 @@ for _name in dir(_implementation):
     if not _name.startswith("_"):
         globals()[_name] = getattr(_implementation, _name)
 
-CLASSIFICATIONS.add("perception")
+_implementation.CLASSIFICATIONS.add("perception")
 
 if __name__ == "__main__":
     _implementation.main()

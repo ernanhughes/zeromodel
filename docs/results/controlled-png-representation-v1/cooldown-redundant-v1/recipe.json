@@ -1,0 +1,61 @@
+{
+  "base_render_mode": "unlabelled",
+  "metadata": {
+    "family": "cooldown"
+  },
+  "operations": [
+    {
+      "operation": "cooldown_dual_overlay",
+      "operation_version": "v1",
+      "parameters": {
+        "background_color": [
+          13,
+          18,
+          30
+        ],
+        "blocked_color": [
+          242,
+          74,
+          74
+        ],
+        "outline_color": [
+          224,
+          232,
+          245
+        ],
+        "position": [
+          20,
+          18,
+          56,
+          54
+        ],
+        "ready_color": [
+          70,
+          225,
+          125
+        ]
+      }
+    },
+    {
+      "operation": "cooldown_marker_duplicate",
+      "operation_version": "v1",
+      "parameters": {
+        "source_position": [
+          20,
+          18,
+          56,
+          54
+        ],
+        "target_position": [
+          840,
+          18,
+          876,
+          54
+        ]
+      }
+    }
+  ],
+  "recipe_id": "sha256:2d9de1ead619b1184b4a9a59c832d215eeda51351560b31f40c5097e388d6ab3",
+  "variant_id": "cooldown-redundant-v1",
+  "version": "arcade-png-intervention-recipe/v1"
+}

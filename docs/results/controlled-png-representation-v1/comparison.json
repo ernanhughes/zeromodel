@@ -1,0 +1,135 @@
+{
+  "classifications": {
+    "cooldown-dual-v1": {
+      "label": "no_material_change",
+      "reasoning": "compatible run with no regression and no declared target metric improvement"
+    },
+    "cooldown-redundant-v1": {
+      "label": "regression",
+      "reasoning": "action_changing_count increased (1 -> 2)"
+    },
+    "cooldown-shape-v1": {
+      "label": "no_material_change",
+      "reasoning": "compatible run with no regression and no declared target metric improvement"
+    },
+    "labelled-v1": {
+      "label": "advance",
+      "reasoning": "declared target metric(s) improved: exact_count"
+    },
+    "lane-enhanced-v1": {
+      "label": "regression",
+      "reasoning": "action_changing_count increased (1 -> 2)"
+    }
+  },
+  "compatibility_statement": "All compared runs share provider_configuration_id=sha256:8f878520d89c432ff73073849150e1423b281cebbe4389de2ddd631738b8a4e0, model_digest=sha256:b8571dca341cc2f9ee4365b30ccaecae43617284b5e44630b8985a12cc1576a7, prompt_digest=sha256:356a657aecb1b3c7e3b5e13eb830ae24ceeb76acc2156dfd771ea8921375efda, policy_artifact_id=sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a, fixture_identity=arcade-png-representation-benchmark:smoke, case_mode=arcade-smoke-v1. Only representation_mode and recipe_id varied across the compared runs. Baseline variant: unlabelled-v1.",
+  "rows": [
+    {
+      "action_changing_count": 1,
+      "action_correct_count": 7,
+      "action_equivalent_count": 4,
+      "exact_count": 3,
+      "factor_counts": {
+        "cooldown": 4,
+        "tank_column": 5,
+        "target_column": 5,
+        "target_present": 6
+      },
+      "latency_median_us": 1946052,
+      "latency_p95_us": 2173042,
+      "recipe_id": "sha256:69f74cd8792f3f284cdfc8c5d95d49e25aaced68f42f0f1880eb8c290a0cf7f7",
+      "rejected_count": 0,
+      "run_id": "sha256:66b86fe62c6551339d3b28acf34398767fb08ed2dd6604adb99680c8f108fd38",
+      "variant_id": "cooldown-dual-v1"
+    },
+    {
+      "action_changing_count": 2,
+      "action_correct_count": 6,
+      "action_equivalent_count": 3,
+      "exact_count": 3,
+      "factor_counts": {
+        "cooldown": 4,
+        "tank_column": 5,
+        "target_column": 5,
+        "target_present": 5
+      },
+      "latency_median_us": 2008380,
+      "latency_p95_us": 2053426,
+      "recipe_id": "sha256:2d9de1ead619b1184b4a9a59c832d215eeda51351560b31f40c5097e388d6ab3",
+      "rejected_count": 0,
+      "run_id": "sha256:a81c09fa0b736f014ffda7fdb64d4cec2d0c4c5ce1d64a2dd704be0c400e8a84",
+      "variant_id": "cooldown-redundant-v1"
+    },
+    {
+      "action_changing_count": 1,
+      "action_correct_count": 7,
+      "action_equivalent_count": 3,
+      "exact_count": 4,
+      "factor_counts": {
+        "cooldown": 4,
+        "tank_column": 5,
+        "target_column": 7,
+        "target_present": 8
+      },
+      "latency_median_us": 1957883,
+      "latency_p95_us": 3164967,
+      "recipe_id": "sha256:3b7989211402a39e423b2c8bb6784ea9bb7fa8bbb5a6b51429bf12c3a9f02e70",
+      "rejected_count": 0,
+      "run_id": "sha256:bc5074d552d3039de1f738b3e03bdd35553ad92cbe9228c7a3a4d07f0458de87",
+      "variant_id": "cooldown-shape-v1"
+    },
+    {
+      "action_changing_count": 0,
+      "action_correct_count": 8,
+      "action_equivalent_count": 0,
+      "exact_count": 8,
+      "factor_counts": {
+        "cooldown": 8,
+        "tank_column": 8,
+        "target_column": 8,
+        "target_present": 8
+      },
+      "latency_median_us": 2080155,
+      "latency_p95_us": 6454331,
+      "recipe_id": "sha256:393c0e10adf416fc1f7f3305fe7db33d04776f063bf7c23be06501d036c147b0",
+      "rejected_count": 0,
+      "run_id": "sha256:c2b9d1e48aea9b2b442bd124e7867d17582f590e18bb76346cd37d7a77fe0022",
+      "variant_id": "labelled-v1"
+    },
+    {
+      "action_changing_count": 2,
+      "action_correct_count": 5,
+      "action_equivalent_count": 3,
+      "exact_count": 2,
+      "factor_counts": {
+        "cooldown": 4,
+        "tank_column": 4,
+        "target_column": 4,
+        "target_present": 7
+      },
+      "latency_median_us": 1997680,
+      "latency_p95_us": 2039776,
+      "recipe_id": "sha256:87420173e2c9e61006e27353edd061d18a09fd87c6465d55dcc8d12eedda71ca",
+      "rejected_count": 1,
+      "run_id": "sha256:c00fb4cdbe36d5092132e4171436549f61814b305ff0633f43c20bf58db74e76",
+      "variant_id": "lane-enhanced-v1"
+    },
+    {
+      "action_changing_count": 1,
+      "action_correct_count": 7,
+      "action_equivalent_count": 4,
+      "exact_count": 3,
+      "factor_counts": {
+        "cooldown": 4,
+        "tank_column": 5,
+        "target_column": 6,
+        "target_present": 8
+      },
+      "latency_median_us": 2047138,
+      "latency_p95_us": 2181562,
+      "recipe_id": "sha256:6785eea0347b07f400ed2f791c956a56579ef1f311e43260c4f027a768d5e72c",
+      "rejected_count": 0,
+      "run_id": "sha256:aeebada422bc228c26409a60cf1fb3f8d2688d2f373259617682fb6a75988ade",
+      "variant_id": "unlabelled-v1"
+    }
+  ]
+}

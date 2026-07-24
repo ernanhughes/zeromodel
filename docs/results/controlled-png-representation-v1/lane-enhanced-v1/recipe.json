@@ -1,0 +1,30 @@
+{
+  "base_render_mode": "unlabelled",
+  "metadata": {
+    "family": "lane"
+  },
+  "operations": [
+    {
+      "operation": "lane_separator_enhance",
+      "operation_version": "v1",
+      "parameters": {
+        "bottom": 488,
+        "hud": 72,
+        "lanes": 7,
+        "left": 42,
+        "marker_radius": 6,
+        "right": 42,
+        "separator_color": [
+          224,
+          232,
+          245
+        ],
+        "separator_width": 4,
+        "width": 896
+      }
+    }
+  ],
+  "recipe_id": "sha256:87420173e2c9e61006e27353edd061d18a09fd87c6465d55dcc8d12eedda71ca",
+  "variant_id": "lane-enhanced-v1",
+  "version": "arcade-png-intervention-recipe/v1"
+}

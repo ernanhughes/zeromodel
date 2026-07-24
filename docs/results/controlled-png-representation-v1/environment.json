@@ -1,0 +1,40 @@
+{
+  "case_mode": "arcade-smoke-v1",
+  "confidence_threshold": 0.0,
+  "evidence_notes": [
+    "Git identity, worktree cleanliness, and Ollama version were captured by the operator in the interactive execution transcript.",
+    "The exact Ollama model record and blob digest are also embedded in SQLite provider response metadata.",
+    "The provider-configuration model digest is an identity-bearing configuration digest and is not the Ollama model-blob digest."
+  ],
+  "execution_date_utc": "2026-07-23",
+  "fixture_identity": "arcade-png-representation-benchmark:smoke",
+  "git_branch": "main",
+  "git_commit": "3e3753a557bdd21030157f5f96c0a13ac7f56989",
+  "git_commit_message": "fix format on audit document",
+  "model_capabilities": [
+    "vision",
+    "completion",
+    "tools",
+    "thinking"
+  ],
+  "model_name": "qwen3.5:latest",
+  "model_parameter_size": "9.7B",
+  "model_quantization": "Q4_K_M",
+  "num_predict": 128,
+  "ollama_model_blob_digest": "6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7",
+  "ollama_version": "0.32.1",
+  "ollama_version_evidence": "operator-captured console output",
+  "operating_system": "Windows",
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "prompt_digest": "sha256:356a657aecb1b3c7e3b5e13eb830ae24ceeb76acc2156dfd771ea8921375efda",
+  "protocol_version": "zeromodel-local-model-arcade-text-state/v2",
+  "provider_configuration_id": "sha256:8f878520d89c432ff73073849150e1423b281cebbe4389de2ddd631738b8a4e0",
+  "provider_configuration_model_digest": "sha256:b8571dca341cc2f9ee4365b30ccaecae43617284b5e44630b8985a12cc1576a7",
+  "python": "3.11.4",
+  "remote_status_at_start": "up_to_date_with_origin_main",
+  "repository": "ernanhughes/zeromodel",
+  "seed": 0,
+  "temperature": 0.0,
+  "timeout_seconds": 180.0,
+  "worktree_status_at_start": "clean"
+}

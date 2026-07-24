@@ -1,0 +1,29 @@
+{
+  "accepted": 8,
+  "action_accuracy_over_attempted": 0.875,
+  "action_changing_count": 1,
+  "action_correct": 7,
+  "action_equivalent_count": 4,
+  "attempted": 8,
+  "base_render_mode": "unlabelled",
+  "exact_state_accuracy_over_attempted": 0.375,
+  "exact_state_correct": 3,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 0.5,
+    "tank_column": 0.625,
+    "target_column": 0.625,
+    "target_present": 0.75
+  },
+  "latency_us": {
+    "max": 2173042,
+    "median": 1946052,
+    "min": 1913320,
+    "p95": 2173042
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "recipe_id": "sha256:69f74cd8792f3f284cdfc8c5d95d49e25aaced68f42f0f1880eb8c290a0cf7f7",
+  "rejected": 0,
+  "rejection_reasons": {},
+  "run_id": "sha256:66b86fe62c6551339d3b28acf34398767fb08ed2dd6604adb99680c8f108fd38",
+  "variant_id": "cooldown-dual-v1"
+}

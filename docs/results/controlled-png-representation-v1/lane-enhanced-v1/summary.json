@@ -1,0 +1,31 @@
+{
+  "accepted": 7,
+  "action_accuracy_over_attempted": 0.625,
+  "action_changing_count": 2,
+  "action_correct": 5,
+  "action_equivalent_count": 3,
+  "attempted": 8,
+  "base_render_mode": "unlabelled",
+  "exact_state_accuracy_over_attempted": 0.25,
+  "exact_state_correct": 2,
+  "factor_accuracy_over_accepted": {
+    "cooldown": 0.5714285714285714,
+    "tank_column": 0.5714285714285714,
+    "target_column": 0.5714285714285714,
+    "target_present": 1.0
+  },
+  "latency_us": {
+    "max": 2039776,
+    "median": 1997680,
+    "min": 1900763,
+    "p95": 2039776
+  },
+  "policy_artifact_id": "sha256:c27d05243c6f960ba30b84fcfe0ddf67c03ee5de053821e29091694caf9d5d4a",
+  "recipe_id": "sha256:87420173e2c9e61006e27353edd061d18a09fd87c6465d55dcc8d12eedda71ca",
+  "rejected": 1,
+  "rejection_reasons": {
+    "ValueError: model text is missing tank column: 'TANK_COLUMN: 7\\nTARGET_COLUMN: NONE\\nCOOLDOWN: READY\\nCONFIDENCE: 100'": 1
+  },
+  "run_id": "sha256:c00fb4cdbe36d5092132e4171436549f61814b305ff0633f43c20bf58db74e76",
+  "variant_id": "lane-enhanced-v1"
+}

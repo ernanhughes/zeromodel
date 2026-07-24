@@ -85,10 +85,14 @@ class TestRecipeIdentity:
         first = ArcadePngOperationSpec("first", "v1", {"x": 1})
         second = ArcadePngOperationSpec("second", "v1", {"x": 2})
         forward = ArcadePngInterventionRecipe.build(
-            variant_id="order", base_render_mode="unlabelled", operations=(first, second)
+            variant_id="order",
+            base_render_mode="unlabelled",
+            operations=(first, second),
         )
         reverse = ArcadePngInterventionRecipe.build(
-            variant_id="order", base_render_mode="unlabelled", operations=(second, first)
+            variant_id="order",
+            base_render_mode="unlabelled",
+            operations=(second, first),
         )
         assert forward.recipe_id != reverse.recipe_id
 
@@ -123,9 +127,10 @@ class TestStage2EOperations:
         recipe = build_recipe(COOLDOWN_SHAPE_VARIANT)
         ready, _ = _final_image(recipe, READY_STATE)
         blocked, _ = _final_image(recipe, BLOCKED_STATE)
-        assert ready.crop(PRIMARY_COOLDOWN_BOX).tobytes() != blocked.crop(
-            PRIMARY_COOLDOWN_BOX
-        ).tobytes()
+        assert (
+            ready.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+            != blocked.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+        )
 
     def test_dual_encoding_contains_blocked_red(self) -> None:
         final, _ = _final_image(build_recipe(COOLDOWN_DUAL_VARIANT), BLOCKED_STATE)
@@ -139,17 +144,19 @@ class TestStage2EOperations:
 
     def test_redundant_encoding_duplicates_the_marker(self) -> None:
         final, _ = _final_image(build_recipe(COOLDOWN_REDUNDANT_VARIANT), BLOCKED_STATE)
-        assert final.crop(PRIMARY_COOLDOWN_BOX).tobytes() == final.crop(
-            SECONDARY_COOLDOWN_BOX
-        ).tobytes()
+        assert (
+            final.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+            == final.crop(SECONDARY_COOLDOWN_BOX).tobytes()
+        )
 
     def test_lane_enhancement_does_not_touch_cooldown(self) -> None:
         baseline, _ = _final_image(build_recipe(UNLABELLED_VARIANT), BLOCKED_STATE)
         enhanced, _ = _final_image(build_recipe(LANE_ENHANCED_VARIANT), BLOCKED_STATE)
         assert baseline.tobytes() != enhanced.tobytes()
-        assert baseline.crop(PRIMARY_COOLDOWN_BOX).tobytes() == enhanced.crop(
-            PRIMARY_COOLDOWN_BOX
-        ).tobytes()
+        assert (
+            baseline.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+            == enhanced.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+        )
 
     def test_operations_are_deterministic(self) -> None:
         recipe = build_recipe(COOLDOWN_DUAL_VARIANT)
@@ -195,8 +202,10 @@ class TestHierarchicalSemanticAblation:
         ]
         final, _ = _final_image(recipe, READY_STATE)
         # The historical labelled grid terminates at y=464 rather than the
-        # unlabelled y=488.  Its horizontal grid line must remain present.
-        assert np.any(np.asarray(final)[LABELLED_BOTTOM, :, :] != np.asarray(final)[0, 0, :])
+        # unlabelled y=488. Its horizontal grid line must remain present.
+        assert np.any(
+            np.asarray(final)[LABELLED_BOTTOM, :, :] != np.asarray(final)[0, 0, :]
+        )
 
     def test_lane_numerals_keeps_labelled_geometry_and_removes_only_cooldown_text(
         self,
@@ -208,12 +217,14 @@ class TestHierarchicalSemanticAblation:
         ]
         final, _ = _final_image(recipe, BLOCKED_STATE)
         labelled = arcade.render(BLOCKED_STATE, "labelled")
-        assert final.crop(LANE_TEXT_REGION).tobytes() == labelled.crop(
-            LANE_TEXT_REGION
-        ).tobytes()
-        assert final.crop(COOLDOWN_TEXT_REGION).tobytes() != labelled.crop(
-            COOLDOWN_TEXT_REGION
-        ).tobytes()
+        assert (
+            final.crop(LANE_TEXT_REGION).tobytes()
+            == labelled.crop(LANE_TEXT_REGION).tobytes()
+        )
+        assert (
+            final.crop(COOLDOWN_TEXT_REGION).tobytes()
+            != labelled.crop(COOLDOWN_TEXT_REGION).tobytes()
+        )
 
     def test_lane_numerals_encode_exactly_seven_region_centres(self) -> None:
         footer_only, _ = _final_image(build_recipe(FOOTER_ONLY_VARIANT), READY_STATE)
@@ -244,9 +255,7 @@ class TestHierarchicalSemanticAblation:
             draw = ImageDraw.Draw(expected)
             draw.text(
                 (68, 27),
-                "READY (cooldown 0)"
-                if state.cooldown == 0
-                else "BLOCKED (cooldown 1)",
+                "READY (cooldown 0)" if state.cooldown == 0 else "BLOCKED (cooldown 1)",
                 fill=(224, 232, 245),
             )
             assert final.tobytes() == expected.tobytes()

@@ -44,6 +44,19 @@ from .inference import (
     BaselineTrainingExampleDTO, NeighborEvidenceDTO, PerceptionInferenceError,
     fit_baseline_nearest_neighbor, predict_baseline_action,
 )
+from .lifecycle import (
+    ACTIVE_MODEL_POINTER_VERSION, ACTIVE_POINTER_SEMANTICS,
+    MODEL_LEDGER_ENTRY_VERSION, MODEL_LEDGER_SEMANTICS,
+    MODEL_LIFECYCLE_SNAPSHOT_VERSION, MODEL_TRANSITION_KINDS,
+    MODEL_TRANSITION_SEMANTICS, MODEL_TRANSITION_VERSION,
+    ActiveModelPointerDTO, InMemoryPerceptionModelLifecycleStore,
+    ModelLifecycleSnapshotDTO, ModelLifecycleTransitionDTO,
+    PerceptionModelLifecycleError, PerceptionModelLifecycleStore,
+    PromotedModelLedgerEntryDTO, activate_promoted_model,
+    build_model_lifecycle_snapshot, deactivate_active_model,
+    register_promoted_model, resolve_active_promoted_model,
+    rollback_active_model, supersede_active_model,
+)
 from .promoted_inference import (
     PROMOTED_INFERENCE_SEMANTICS, PROMOTED_INFERENCE_VERSION,
     PROMOTED_TEST_EVALUATION_SEMANTICS, PROMOTED_TEST_EVALUATION_VERSION,
@@ -109,6 +122,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P11"
+PERCEPTION_STAGE = "P12"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

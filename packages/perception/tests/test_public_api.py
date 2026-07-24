@@ -12,21 +12,24 @@ from zeromodel.perception import (
     REGISTRATION_SEMANTICS,
     REJECTION_SEMANTICS,
     TARGET_SCORE_SEMANTICS,
+    TEMPORAL_DIAGNOSIS_SEMANTICS,
+    TEMPORAL_LAYOUT_SEMANTICS,
     UNEXPLAINED_SURFACE_SEMANTICS,
     WEIGHTED_DISTANCE_SEMANTICS,
     BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
     InMemoryPerceptionDatasetStore,
     SourceImageEncoderSpecDTO,
+    TemporalWindowSpecDTO,
     TranslatorConfigDTO,
     build_grid_field_schema,
     encode_source_array,
 )
 
 
-def test_phase_seven_public_contract() -> None:
+def test_phase_eight_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P7"
+    assert PERCEPTION_STAGE == "P8"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"
@@ -50,6 +53,13 @@ def test_phase_seven_public_contract() -> None:
     assert UNEXPLAINED_SURFACE_SEMANTICS == (
         "observed_registration_outside_declared_expected_annotations"
     )
+    assert TEMPORAL_LAYOUT_SEMANTICS == (
+        "oldest_to_current_horizontal_frame_montage"
+    )
+    assert TEMPORAL_DIAGNOSIS_SEMANTICS == (
+        "exact_current_pixel_identity_conflict_resolved_by_exact_prior_context_identity"
+    )
+    assert TemporalWindowSpecDTO(frame_count=2).frame_count == 2
     assert TranslatorConfigDTO().ridge_alpha == 1e-6
     assert SourceImageEncoderSpecDTO().color_space == "RGB"
     assert DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT"]).labels == (

@@ -51,6 +51,15 @@ from .representation import (
     decode_discrete_action, encode_discrete_action, encode_source_array,
     encode_source_image_bytes,
 )
+from .temporal import (
+    TEMPORAL_DIAGNOSIS_SEMANTICS, TEMPORAL_DIAGNOSIS_STATUSES,
+    TEMPORAL_DIAGNOSIS_VERSION, TEMPORAL_LAYOUT_SEMANTICS,
+    TEMPORAL_SOURCE_VERSION, TEMPORAL_WINDOW_SPEC_VERSION,
+    PerceptionTemporalError, TemporalConflictGroupDTO,
+    TemporalSourceVPMDTO, TemporalStateDiagnosisReportDTO,
+    TemporalWindowSpecDTO, build_temporal_source_vpms,
+    diagnose_temporal_state_completeness,
+)
 from .translator import (
     COEFFICIENT_SEMANTICS, SOURCE_FEATURE_SEMANTICS, TARGET_SCORE_SEMANTICS,
     TRANSLATOR_PREDICTION_VERSION, TRANSLATOR_VERSION,
@@ -77,6 +86,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P7"
+PERCEPTION_STAGE = "P8"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

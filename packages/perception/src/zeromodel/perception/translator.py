@@ -124,8 +124,12 @@ class SourceTargetTranslatorDTO:
             raise PerceptionTranslatorError("unsupported target score semantics")
         if self.coefficient_semantics != COEFFICIENT_SEMANTICS:
             raise PerceptionTranslatorError("unsupported coefficient semantics")
-        values = np.asarray(self.coefficients + (self.intercepts,), dtype=np.float64)
-        if not np.all(np.isfinite(values)):
+        coefficient_values = np.asarray(self.coefficients, dtype=np.float64)
+        intercept_values = np.asarray(self.intercepts, dtype=np.float64)
+        if not (
+            np.all(np.isfinite(coefficient_values))
+            and np.all(np.isfinite(intercept_values))
+        ):
             raise PerceptionTranslatorError("translator parameters must be finite")
 
     def coefficient_for(self, action_label: str, field_id: str) -> float:

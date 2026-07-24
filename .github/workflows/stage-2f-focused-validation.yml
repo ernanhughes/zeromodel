@@ -28,15 +28,36 @@ jobs:
           python-version: "3.11"
       - name: Install repository test dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
-          python -m pip install -e packages/core -e packages/analysis -e packages/observation -e packages/vision -e packages/video -e packages/sqlalchemy -e packages/artifacts -e packages/trust -e packages/navigation
+          python -m pip install --upgrade pip >/dev/null
+          python -m pip install -r requirements-dev.txt >/dev/null
+          python -m pip install -e packages/core -e packages/analysis -e packages/observation -e packages/vision -e packages/video -e packages/sqlalchemy -e packages/artifacts -e packages/trust -e packages/navigation >/dev/null
       - name: Run Stage 2F focused tests
         run: |
           python -m pytest tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py --run-integration -q
       - name: Run touched-file Ruff lint
+        id: lint
+        continue-on-error: true
         run: |
-          python -m ruff check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py
+          python -m ruff check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py 2>&1 | tee stage-2f-ruff-lint.log
+          test ${PIPESTATUS[0]} -eq 0
+      - name: Upload Ruff lint result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-2f-ruff-lint
+          path: stage-2f-ruff-lint.log
       - name: Run touched-file Ruff format check
+        id: format
+        continue-on-error: true
         run: |
-          python -m ruff format --check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py
+          python -m ruff format --check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py 2>&1 | tee stage-2f-ruff-format.log
+          test ${PIPESTATUS[0]} -eq 0
+      - name: Upload Ruff format result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-2f-ruff-format
+          path: stage-2f-ruff-format.log
+      - name: Enforce focused quality result
+        if: steps.lint.outcome != 'success' || steps.format.outcome != 'success'
+        run: exit 1

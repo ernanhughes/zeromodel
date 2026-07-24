@@ -2,6 +2,9 @@
 
 The dataset layer records authoritative image/action pairings. It does not infer
 alignment from filenames or directory order, and it does not perform learning.
+
+P16B strengthens split ownership: every interaction in one sequence/episode is
+assigned to the same partition, and identical source pixels may not cross partitions.
 """
 
 from __future__ import annotations
@@ -13,9 +16,9 @@ from typing import Final, Iterable, Mapping, Protocol, Sequence
 
 from .representation import SourceVPMDTO, TargetVPMDTO
 
-DATASET_MANIFEST_VERSION: Final = "perception-dataset-manifest/1"
+DATASET_MANIFEST_VERSION: Final = "perception-dataset-manifest/2"
 INTERACTION_VERSION: Final = "perception-recorded-interaction/1"
-SPLIT_ASSIGNMENT_VERSION: Final = "perception-split-assignment/1"
+SPLIT_ASSIGNMENT_VERSION: Final = "perception-split-assignment/2"
 
 _ALLOWED_SPLITS: Final = ("train", "validation", "test")
 
@@ -163,6 +166,20 @@ class PerceptionDatasetManifestDTO:
             raise PerceptionDatasetError(
                 "split assignments must be ordered one-to-one with interactions"
             )
+        assignment_by_id = {
+            item.interaction_id: item.split for item in self.split_assignments
+        }
+        sequence_splits: dict[str, set[str]] = {}
+        for interaction in self.interactions:
+            sequence_splits.setdefault(interaction.sequence_id, set()).add(
+                assignment_by_id[interaction.interaction_id]
+            )
+        if any(len(splits) != 1 for splits in sequence_splits.values()):
+            raise PerceptionDatasetError(
+                "all interactions in one sequence must belong to one split"
+            )
+        if self.version != DATASET_MANIFEST_VERSION:
+            raise PerceptionDatasetError("unsupported dataset manifest version")
 
     def split_for(self, interaction_id: str) -> str:
         for assignment in self.split_assignments:
@@ -203,8 +220,11 @@ class InMemoryPerceptionDatasetStore:
         return tuple(sorted(self._manifests))
 
 
-def _split_name(interaction_id: str, *, seed: str) -> str:
-    value = int(hashlib.sha256(f"{seed}\0{interaction_id}".encode("utf-8")).hexdigest()[:16], 16)
+def _split_name(split_owner_id: str, *, seed: str) -> str:
+    value = int(
+        hashlib.sha256(f"{seed}\0{split_owner_id}".encode("utf-8")).hexdigest()[:16],
+        16,
+    )
     bucket = value % 10_000
     if bucket < 8_000:
         return "train"
@@ -213,10 +233,14 @@ def _split_name(interaction_id: str, *, seed: str) -> str:
     return "test"
 
 
-def _findings(interactions: Sequence[RecordedInteractionDTO]) -> tuple[DatasetFindingDTO, ...]:
+def _findings(
+    interactions: Sequence[RecordedInteractionDTO],
+    assignments: Sequence[SplitAssignmentDTO],
+) -> tuple[DatasetFindingDTO, ...]:
     findings: list[DatasetFindingDTO] = []
     by_pixel: dict[str, list[RecordedInteractionDTO]] = {}
     by_sequence: dict[str, list[RecordedInteractionDTO]] = {}
+    assignment_by_id = {item.interaction_id: item.split for item in assignments}
     for item in interactions:
         by_pixel.setdefault(item.source_pixel_digest, []).append(item)
         by_sequence.setdefault(item.sequence_id, []).append(item)
@@ -230,6 +254,19 @@ def _findings(interactions: Sequence[RecordedInteractionDTO]) -> tuple[DatasetFi
                     severity="error",
                     interaction_ids=tuple(sorted(item.interaction_id for item in group)),
                     detail=f"source pixel digest {pixel_digest} maps to actions {sorted(labels)}",
+                )
+            )
+        splits = {assignment_by_id[item.interaction_id] for item in group}
+        if len(splits) > 1:
+            findings.append(
+                DatasetFindingDTO(
+                    code="identical_source_across_splits",
+                    severity="error",
+                    interaction_ids=tuple(sorted(item.interaction_id for item in group)),
+                    detail=(
+                        f"source pixel digest {pixel_digest} appears in partitions "
+                        f"{sorted(splits)}"
+                    ),
                 )
             )
 
@@ -255,6 +292,16 @@ def _findings(interactions: Sequence[RecordedInteractionDTO]) -> tuple[DatasetFi
                     detail=f"sequence {sequence_id!r} timestamps are not monotonic",
                 )
             )
+        splits = {assignment_by_id[item.interaction_id] for item in group}
+        if len(splits) > 1:
+            findings.append(
+                DatasetFindingDTO(
+                    code="sequence_crosses_splits",
+                    severity="error",
+                    interaction_ids=tuple(sorted(item.interaction_id for item in group)),
+                    detail=f"sequence {sequence_id!r} spans partitions {sorted(splits)}",
+                )
+            )
     return tuple(findings)
 
 
@@ -262,10 +309,10 @@ def build_dataset_manifest(
     interactions: Iterable[RecordedInteractionDTO],
     *,
     source_encoder_spec_ids: Iterable[str],
-    split_seed: str = "zeromodel-perception/p2",
+    split_seed: str = "zeromodel-perception/p16b",
     reject_errors: bool = True,
 ) -> PerceptionDatasetManifestDTO:
-    """Validate exact pairings and build an immutable content-addressed manifest."""
+    """Validate pairings and build a sequence-owned content-addressed manifest."""
 
     ordered = tuple(sorted(interactions, key=lambda item: item.interaction_id))
     if not ordered:
@@ -279,16 +326,21 @@ def build_dataset_manifest(
     encoder_ids = tuple(sorted(set(source_encoder_spec_ids)))
     if not encoder_ids or any(not value for value in encoder_ids):
         raise PerceptionDatasetError("source_encoder_spec_ids must be non-empty")
+    if not split_seed:
+        raise PerceptionDatasetError("split_seed must be non-empty")
 
-    findings = _findings(ordered)
+    assignments = tuple(
+        SplitAssignmentDTO(
+            item.interaction_id,
+            _split_name(item.sequence_id, seed=split_seed),
+        )
+        for item in ordered
+    )
+    findings = _findings(ordered, assignments)
     if reject_errors and any(item.severity == "error" for item in findings):
         codes = sorted({item.code for item in findings if item.severity == "error"})
         raise PerceptionDatasetError(f"dataset validation failed: {codes}")
 
-    assignments = tuple(
-        SplitAssignmentDTO(item.interaction_id, _split_name(item.interaction_id, seed=split_seed))
-        for item in ordered
-    )
     payload: Mapping[str, object] = {
         "action_schema_id": next(iter(schema_ids)),
         "findings": [
@@ -306,6 +358,7 @@ def build_dataset_manifest(
             {"interaction_id": item.interaction_id, "split": item.split, "version": item.version}
             for item in assignments
         ],
+        "split_owner": "sequence_id",
         "split_seed": split_seed,
         "version": DATASET_MANIFEST_VERSION,
     }

@@ -34,18 +34,20 @@ from .representation import (
     encode_source_image_bytes,
 )
 from .translator import (
-    COEFFICIENT_SEMANTICS,
-    SOURCE_FEATURE_SEMANTICS,
-    TARGET_SCORE_SEMANTICS,
-    TRANSLATOR_PREDICTION_VERSION,
-    TRANSLATOR_VERSION,
-    PerceptionTranslatorError,
-    PredictedTargetVPMDTO,
-    SourceTargetTranslatorDTO,
-    TargetActionScoreDTO,
-    TranslatorConfigDTO,
-    fit_source_target_translator,
+    COEFFICIENT_SEMANTICS, SOURCE_FEATURE_SEMANTICS, TARGET_SCORE_SEMANTICS,
+    TRANSLATOR_PREDICTION_VERSION, TRANSLATOR_VERSION,
+    PerceptionTranslatorError, PredictedTargetVPMDTO, SourceTargetTranslatorDTO,
+    TargetActionScoreDTO, TranslatorConfigDTO, fit_source_target_translator,
     predict_target_vpm,
+)
+from .translator_evaluation import (
+    RECONSTRUCTION_ERROR_SEMANTICS, REJECTED_TRANSLATOR_PREDICTION_VERSION,
+    REJECTION_SEMANTICS, SPARSITY_SEMANTICS, TRANSLATOR_CALIBRATION_VERSION,
+    TRANSLATOR_EVALUATION_VERSION, CalibratedTranslatorPredictionDTO,
+    PerceptionTranslatorEvaluationError, TranslatorCalibrationDTO,
+    TranslatorEvaluationReportDTO, TranslatorExampleEvaluationDTO,
+    calibrate_translator_rejection, evaluate_source_target_translator,
+    predict_calibrated_target_vpm,
 )
 from .weighted import (
     INTERVENTION_REPORT_VERSION, WEIGHTED_DISTANCE_SEMANTICS,
@@ -57,6 +59,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P5A"
+PERCEPTION_STAGE = "P5B"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

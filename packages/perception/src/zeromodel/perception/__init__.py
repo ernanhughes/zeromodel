@@ -13,6 +13,16 @@ from .evidence import (
     FIELD_RELEVANCE_VERSION, EvidenceVPMDTO, FieldRelevanceDTO,
     PerceptionEvidenceError, estimate_field_relevance,
 )
+from .expectations import (
+    ANNOTATION_VERSION, CONFORMANCE_REPORT_VERSION, CONFORMANCE_STATUSES,
+    EXPECTATION_VERSION, OBSERVED_REGISTRATION_VERSION,
+    REGISTRATION_SEMANTICS, RELATION_ANNOTATION_VERSION,
+    UNEXPLAINED_REGISTRATION_SEMANTICS, EvidenceConformanceFindingDTO,
+    EvidenceConformanceReportDTO, EvidenceExpectationDTO,
+    ObservedAnnotationRegistrationDTO, PerceptionConformanceError,
+    PerceptionRegionAnnotationDTO, RelationAnnotationDTO,
+    evaluate_evidence_conformance,
+)
 from .fields import (
     FIELD_SAMPLE_VERSION, FIELD_SCHEMA_VERSION, ExtractedFieldDTO,
     PerceptionFieldError, VPMFieldAddressDTO, VPMFieldSchemaDTO,
@@ -59,6 +69,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P5B"
+PERCEPTION_STAGE = "P6"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

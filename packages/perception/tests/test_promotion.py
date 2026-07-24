@@ -73,13 +73,14 @@ def test_calibration_is_validation_owned_and_deterministic() -> None:
 
     assert first == second
     single, temporal = first
-    assert single.rejection_threshold == 0.05
-    assert single.accepted_accuracy == 0.5
+    assert single.rejection_threshold == 0.7
+    assert single.accepted_accuracy == 1.0
+    assert single.coverage == 0.5
     assert temporal.accepted_accuracy == 1.0
     assert temporal.coverage == 1.0
 
 
-def test_promotion_selects_temporal_when_it_improves_validation_accuracy() -> None:
+def test_promotion_selects_temporal_when_it_improves_validation_operating_point() -> None:
     decision, promoted = promote_perception_model(_report())
 
     assert decision.selected_model_kind == "temporal"

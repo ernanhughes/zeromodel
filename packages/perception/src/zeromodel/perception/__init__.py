@@ -55,6 +55,13 @@ from .gated_health import (
     OPERATIONAL_DRIFT_POLICY_VERSION, OPERATIONAL_EVIDENCE_SEMANTICS,
     OperationalDriftPolicyDTO, diagnose_operational_health,
 )
+from .governance_audit import (
+    GOVERNANCE_AUDIT_FINDING_VERSION, GOVERNANCE_AUDIT_SEMANTICS,
+    GOVERNANCE_AUDIT_SEVERITIES, GOVERNANCE_AUDIT_STATUSES,
+    GOVERNANCE_AUDIT_VERSION, GovernanceIntegrityAuditReportDTO,
+    GovernanceIntegrityFindingDTO, PerceptionGovernanceAuditError,
+    audit_governance_integrity,
+)
 from .governed_execution import (
     GOVERNED_EXECUTION_SEMANTICS, PerceptionGovernedExecutionError,
     execute_or_reconcile_approved_rollback,
@@ -200,6 +207,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P17E"
+PERCEPTION_STAGE = "P17F"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

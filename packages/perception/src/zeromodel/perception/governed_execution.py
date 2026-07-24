@@ -11,11 +11,7 @@ from __future__ import annotations
 from typing import Final
 
 from .compatibility import ModelCompatibilityContractDTO, RollbackCompatibilityAssessmentDTO
-from .disposition import (
-    OperationalRecommendationDispositionDTO,
-    PerceptionOperationalDispositionError,
-    execute_approved_rollback,
-)
+from .disposition import OperationalRecommendationDispositionDTO, execute_approved_rollback
 from .lifecycle import (
     ActiveModelPointerDTO,
     ModelLifecycleTransitionDTO,
@@ -63,20 +59,16 @@ def _selected_assessment(
     return selected
 
 
-def _persisted_chain_matches(
+def _require_persisted_chain(
     governance_store: SqlitePerceptionGovernanceLedgerStore,
     recommendation: OperationalRecommendationDTO,
     disposition: OperationalRecommendationDispositionDTO,
 ) -> None:
-    persisted_recommendation = governance_store.get_recommendation(
-        recommendation.recommendation_id
-    )
-    if persisted_recommendation != recommendation:
+    if governance_store.get_recommendation(recommendation.recommendation_id) != recommendation:
         raise PerceptionGovernedExecutionError(
             "execution requires the exact persisted recommendation"
         )
-    persisted_disposition = governance_store.get_disposition(disposition.disposition_id)
-    if persisted_disposition != disposition:
+    if governance_store.get_disposition(disposition.disposition_id) != disposition:
         raise PerceptionGovernedExecutionError(
             "execution requires the exact persisted disposition"
         )
@@ -90,12 +82,12 @@ def _persisted_chain_matches(
 
 def _existing_receipt(
     governance_store: SqlitePerceptionGovernanceLedgerStore,
-    disposition: OperationalRecommendationDispositionDTO,
+    disposition_id: str,
 ) -> GovernanceExecutionReceiptDTO | None:
     matches = tuple(
         item
         for item in governance_store.list_execution_receipts()
-        if item.disposition_id == disposition.disposition_id
+        if item.disposition_id == disposition_id
     )
     if len(matches) > 1:
         raise PerceptionGovernedExecutionError(
@@ -114,10 +106,6 @@ def _reconciled_transition(
     if target_id is None:
         raise PerceptionGovernedExecutionError("approved disposition lacks rollback target")
     expected_revision = recommendation.active_pointer_revision + 1
-    if pointer.pointer_id != recommendation.active_pointer_id:
-        raise PerceptionGovernedExecutionError(
-            "active pointer identity differs from reviewed execution state"
-        )
     if pointer.revision != expected_revision:
         raise PerceptionGovernedExecutionError(
             "active pointer is neither reviewed pre-state nor exact rollback post-state"
@@ -138,7 +126,7 @@ def _reconciled_transition(
         raise PerceptionGovernedExecutionError(
             "rollback post-state references an unknown lifecycle transition"
         )
-    if not all(
+    exact_match = all(
         (
             transition.transition_kind == "rollback",
             transition.sequence_number == expected_revision,
@@ -148,7 +136,8 @@ def _reconciled_transition(
             transition.actor == disposition.reviewed_by,
             transition.reason == disposition.reason,
         )
-    ):
+    )
+    if not exact_match:
         raise PerceptionGovernedExecutionError(
             "post-state transition does not exactly match the approved rollback"
         )
@@ -164,27 +153,24 @@ def execute_or_reconcile_approved_rollback(
     current_contract: ModelCompatibilityContractDTO,
     target_contract: ModelCompatibilityContractDTO,
 ) -> GovernanceExecutionReceiptDTO:
-    """Execute once, or recover the missing receipt for one exact committed rollback.
+    """Execute once, or recover a missing receipt for one exact committed rollback."""
 
-    The recommendation and disposition must already be persisted. Repeated calls are
-    idempotent after a receipt exists. If lifecycle mutation committed before a process crash,
-    the exact next pointer revision and rollback transition are reconciled into the receipt.
-    Any other lifecycle movement is treated as stale or conflicting evidence.
-    """
-
-    _persisted_chain_matches(governance_store, recommendation, disposition)
+    _require_persisted_chain(governance_store, recommendation, disposition)
     assessment = _selected_assessment(recommendation, disposition)
-    existing = _existing_receipt(governance_store, disposition)
+    existing = _existing_receipt(governance_store, disposition.disposition_id)
     if existing is not None:
         return existing
 
     pointer = lifecycle_store.get_active_pointer()
-    if (
-        pointer.pointer_id == recommendation.active_pointer_id
-        and pointer.revision == recommendation.active_pointer_revision
-        and pointer.active_promoted_model_id
-        == recommendation.active_promoted_model_id
-    ):
+    reviewed_pre_state = all(
+        (
+            pointer.pointer_id == recommendation.active_pointer_id,
+            pointer.revision == recommendation.active_pointer_revision,
+            pointer.active_promoted_model_id
+            == recommendation.active_promoted_model_id,
+        )
+    )
+    if reviewed_pre_state:
         try:
             executed_assessment, transition, resulting_pointer = execute_approved_rollback(
                 lifecycle_store,
@@ -193,7 +179,7 @@ def execute_or_reconcile_approved_rollback(
                 current_contract=current_contract,
                 target_contract=target_contract,
             )
-        except (PerceptionOperationalDispositionError, ValueError) as error:
+        except ValueError as error:
             raise PerceptionGovernedExecutionError(str(error)) from error
         if executed_assessment.assessment_id != assessment.assessment_id:
             raise PerceptionGovernedExecutionError(

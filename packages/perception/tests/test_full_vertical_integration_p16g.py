@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
-
 import numpy as np
 
 from zeromodel.perception import (
@@ -145,7 +143,6 @@ def _pipeline_fixture():
     )
     return (
         action_schema,
-        source_spec,
         window_spec,
         manifest,
         partitions,
@@ -162,7 +159,6 @@ def _pipeline_fixture():
 def test_full_pipeline_survives_sqlite_restart_and_preserves_lineage(tmp_path) -> None:
     (
         action_schema,
-        source_spec,
         window_spec,
         manifest,
         partitions,
@@ -202,7 +198,7 @@ def test_full_pipeline_survives_sqlite_restart_and_preserves_lineage(tmp_path) -
     lifecycle_path = tmp_path / "p16g-lifecycle.sqlite3"
     production_path = tmp_path / "p16g-production.sqlite3"
     with SqlitePerceptionModelLifecycleStore(lifecycle_path) as lifecycle:
-        earlier_entry = register_promoted_model(
+        register_promoted_model(
             lifecycle,
             earlier,
             registered_by="p16g",
@@ -262,27 +258,25 @@ def test_full_pipeline_survives_sqlite_restart_and_preserves_lineage(tmp_path) -
             "supersede",
         )
 
+        current_schema = (
+            temporal_schema if current.model_kind == "temporal" else single_schema
+        )
+        earlier_schema = (
+            temporal_schema if earlier.model_kind == "temporal" else single_schema
+        )
         current_contract = build_model_compatibility_contract(
             current,
             action_schema_id=action_schema.action_schema_id,
-            source_encoder_spec_id=source_spec.encoder_spec_id,
-            field_schema_id=(
-                temporal_schema.field_schema_id
-                if current.model_kind == "temporal"
-                else single_schema.field_schema_id
-            ),
+            source_encoder_spec_id=current_schema.source_encoder_spec_id,
+            field_schema_id=current_schema.field_schema_id,
             inference_semantics_version="p16g-runtime/1",
             deployment_slot="primary",
         )
         earlier_contract = build_model_compatibility_contract(
             earlier,
             action_schema_id=action_schema.action_schema_id,
-            source_encoder_spec_id=source_spec.encoder_spec_id,
-            field_schema_id=(
-                temporal_schema.field_schema_id
-                if earlier.model_kind == "temporal"
-                else single_schema.field_schema_id
-            ),
+            source_encoder_spec_id=earlier_schema.source_encoder_spec_id,
+            field_schema_id=earlier_schema.field_schema_id,
             inference_semantics_version="p16g-runtime/1",
             deployment_slot="primary",
         )

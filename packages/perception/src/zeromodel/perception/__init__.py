@@ -44,6 +44,13 @@ from .inference import (
     BaselineTrainingExampleDTO, NeighborEvidenceDTO, PerceptionInferenceError,
     fit_baseline_nearest_neighbor, predict_baseline_action,
 )
+from .promoted_inference import (
+    PROMOTED_INFERENCE_SEMANTICS, PROMOTED_INFERENCE_VERSION,
+    PROMOTED_TEST_EVALUATION_SEMANTICS, PROMOTED_TEST_EVALUATION_VERSION,
+    PerceptionPromotedInferenceError, PromotedInferenceResultDTO,
+    PromotedTestEvaluationReportDTO, PromotedTestExampleDTO,
+    evaluate_promoted_model_on_test, run_promoted_inference,
+)
 from .promotion import (
     CALIBRATION_SEMANTICS, MODEL_CALIBRATION_VERSION, MODEL_PROMOTION_VERSION,
     PROMOTED_MODEL_KINDS, PROMOTION_DECISION_VERSION, PROMOTION_POLICY_VERSION,
@@ -102,6 +109,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P10"
+PERCEPTION_STAGE = "P11"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

@@ -8,6 +8,8 @@ from zeromodel.perception import (
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
+    PROMOTED_INFERENCE_SEMANTICS,
+    PROMOTED_TEST_EVALUATION_SEMANTICS,
     PROMOTION_SEMANTICS,
     RECONSTRUCTION_ERROR_SEMANTICS,
     REGISTRATION_SEMANTICS,
@@ -32,9 +34,9 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_ten_public_contract() -> None:
+def test_phase_eleven_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P10"
+    assert PERCEPTION_STAGE == "P11"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"
@@ -68,6 +70,12 @@ def test_phase_ten_public_contract() -> None:
     )
     assert PROMOTION_SEMANTICS == (
         "validation_candidate_selection_by_accepted_accuracy_accuracy_coverage_then_simplicity"
+    )
+    assert PROMOTED_INFERENCE_SEMANTICS == (
+        "dispatch_promoted_model_and_apply_frozen_validation_rejection_threshold"
+    )
+    assert PROMOTED_TEST_EVALUATION_SEMANTICS == (
+        "untouched_test_evaluation_of_exact_promoted_operating_point"
     )
     assert PromotionPolicyDTO().minimum_coverage == 0.5
     assert TemporalWindowSpecDTO(frame_count=2).frame_count == 2

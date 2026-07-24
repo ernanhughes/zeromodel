@@ -16,6 +16,12 @@ from .discovery import (
     EvidenceDiscrepancyVPMDTO, PerceptionDiscoveryError,
     UnexplainedEvidenceDTO, discover_unexpected_evidence,
 )
+from .disposition import (
+    OPERATIONAL_DISPOSITION_SEMANTICS, OPERATIONAL_DISPOSITION_STATUSES,
+    OPERATIONAL_DISPOSITION_VERSION, OperationalRecommendationDispositionDTO,
+    PerceptionOperationalDispositionError, disposition_operational_recommendation,
+    execute_approved_rollback,
+)
 from .evidence import (
     EVIDENCE_RENDER_SEMANTICS, EVIDENCE_VPM_VERSION, FIELD_RELEVANCE_SEMANTICS,
     FIELD_RELEVANCE_VERSION, EvidenceVPMDTO, FieldRelevanceDTO,
@@ -111,6 +117,11 @@ from .promotion import (
     PromotedPerceptionModelDTO, PromotionDecisionDTO, PromotionPolicyDTO,
     calibrate_comparison_candidates, promote_perception_model,
 )
+from .recommendation import (
+    OPERATIONAL_RECOMMENDATION_SEMANTICS, OPERATIONAL_RECOMMENDATION_STATUSES,
+    OPERATIONAL_RECOMMENDATION_VERSION, OperationalRecommendationDTO,
+    PerceptionOperationalRecommendationError, recommend_operational_response,
+)
 from .representation import (
     ACTION_SCHEMA_VERSION, SOURCE_ENCODER_VERSION, TARGET_ENCODER_VERSION,
     DiscreteActionSchemaDTO, PerceptionRepresentationError,
@@ -172,6 +183,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P16"
+PERCEPTION_STAGE = "P17B"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

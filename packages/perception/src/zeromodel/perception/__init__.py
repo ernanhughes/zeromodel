@@ -27,6 +27,14 @@ from .evidence import (
     FIELD_RELEVANCE_VERSION, EvidenceVPMDTO, FieldRelevanceDTO,
     PerceptionEvidenceError, estimate_field_relevance,
 )
+from .execution_journal import (
+    EXECUTION_ATTEMPT_EVENT_KINDS, EXECUTION_ATTEMPT_EVENT_VERSION,
+    EXECUTION_ATTEMPT_TERMINAL_KINDS, EXECUTION_ATTEMPT_VERSION,
+    SQL_EXECUTION_JOURNAL_SCHEMA_VERSION, GovernedExecutionAttemptDTO,
+    GovernedExecutionAttemptEventDTO, PerceptionExecutionJournalError,
+    SqliteGovernedExecutionAttemptStore, build_governed_execution_attempt,
+    execute_journaled_approved_rollback,
+)
 from .expectations import (
     ANNOTATION_VERSION, CONFORMANCE_REPORT_VERSION, CONFORMANCE_STATUSES,
     EXPECTATION_VERSION, OBSERVED_REGISTRATION_VERSION,
@@ -43,6 +51,14 @@ from .fields import (
     build_grid_field_schema, extract_source_fields, mask_source_fields,
     reconstruct_source_array, validate_source_for_schema,
 )
+from .gated_health import (
+    OPERATIONAL_DRIFT_POLICY_VERSION, OPERATIONAL_EVIDENCE_SEMANTICS,
+    OperationalDriftPolicyDTO, diagnose_operational_health,
+)
+from .governed_execution import (
+    GOVERNED_EXECUTION_SEMANTICS, PerceptionGovernedExecutionError,
+    execute_or_reconcile_approved_rollback,
+)
 from .health import (
     OPERATIONAL_HEALTH_FINDING_VERSION, OPERATIONAL_HEALTH_METRICS,
     OPERATIONAL_HEALTH_REPORT_VERSION, OPERATIONAL_HEALTH_SEMANTICS,
@@ -51,10 +67,6 @@ from .health import (
     OperationalHealthFindingDTO, OperationalHealthReportDTO,
     OperationalReferenceProfileDTO, PerceptionOperationalHealthError,
     build_operational_reference_profile,
-)
-from .gated_health import (
-    OPERATIONAL_DRIFT_POLICY_VERSION, OPERATIONAL_EVIDENCE_SEMANTICS,
-    OperationalDriftPolicyDTO, diagnose_operational_health,
 )
 from .inference import (
     BASELINE_MODEL_VERSION, CONFIDENCE_SEMANTICS, DISTANCE_SEMANTICS,
@@ -76,11 +88,6 @@ from .lifecycle import (
     register_promoted_model, resolve_active_promoted_model,
     rollback_active_model, supersede_active_model,
 )
-from .partitions import (
-    DATASET_PARTITION_SEMANTICS, DATASET_PARTITION_VERSION,
-    DatasetPartitionDTO, PerceptionDatasetPartitionError,
-    build_dataset_partition,
-)
 from .partitioned_governance import (
     PARTITION_GOVERNANCE_SEMANTICS,
     PARTITION_OWNED_COMPARISON_VERSION,
@@ -92,6 +99,11 @@ from .partitioned_governance import (
     calibrate_partition_owned_candidates,
     evaluate_partition_owned_model_on_test,
     promote_partition_owned_model,
+)
+from .partitions import (
+    DATASET_PARTITION_SEMANTICS, DATASET_PARTITION_VERSION,
+    DatasetPartitionDTO, PerceptionDatasetPartitionError,
+    build_dataset_partition,
 )
 from .production import (
     PRODUCTION_INFERENCE_RECORD_VERSION, PRODUCTION_INFERENCE_SEMANTICS,
@@ -128,6 +140,11 @@ from .representation import (
     SourceImageEncoderSpecDTO, SourceVPMDTO, TargetVPMDTO,
     decode_discrete_action, encode_discrete_action, encode_source_array,
     encode_source_image_bytes,
+)
+from .sql_governance import (
+    GOVERNANCE_EXECUTION_RECEIPT_VERSION, SQL_GOVERNANCE_SCHEMA_VERSION,
+    SQL_GOVERNANCE_STORE_VERSION, GovernanceExecutionReceiptDTO,
+    PerceptionSqlGovernanceError, SqlitePerceptionGovernanceLedgerStore,
 )
 from .sql_lifecycle import (
     SQL_LIFECYCLE_SCHEMA_VERSION, SQL_LIFECYCLE_SEMANTICS,
@@ -183,6 +200,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P17B"
+PERCEPTION_STAGE = "P17E"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

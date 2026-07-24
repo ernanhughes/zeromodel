@@ -57,6 +57,16 @@ from .lifecycle import (
     register_promoted_model, resolve_active_promoted_model,
     rollback_active_model, supersede_active_model,
 )
+from .production import (
+    PRODUCTION_INFERENCE_RECORD_VERSION, PRODUCTION_INFERENCE_SEMANTICS,
+    PRODUCTION_METRICS_REPORT_VERSION, PRODUCTION_METRICS_SEMANTICS,
+    PRODUCTION_OUTCOME_RECORD_VERSION, PRODUCTION_OUTCOME_SEMANTICS,
+    InMemoryPerceptionProductionLedgerStore, PerceptionProductionLedgerError,
+    PerceptionProductionLedgerStore, ProductionInferenceRecordDTO,
+    ProductionMetricsReportDTO, ProductionOutcomeRecordDTO,
+    build_production_metrics_report, record_production_inference,
+    record_production_outcome,
+)
 from .promoted_inference import (
     PROMOTED_INFERENCE_SEMANTICS, PROMOTED_INFERENCE_VERSION,
     PROMOTED_TEST_EVALUATION_SEMANTICS, PROMOTED_TEST_EVALUATION_VERSION,
@@ -127,6 +137,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P13"
+PERCEPTION_STAGE = "P14"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

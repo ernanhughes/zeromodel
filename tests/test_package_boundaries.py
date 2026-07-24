@@ -13,7 +13,7 @@ sys.modules[SPEC.name] = checker
 SPEC.loader.exec_module(checker)
 
 
-def test_boundary_manifest_defines_all_nine_packages() -> None:
+def test_boundary_manifest_defines_all_ten_packages() -> None:
     manifest = checker.load_manifest()
 
     assert set(manifest["packages"]) == {
@@ -21,6 +21,7 @@ def test_boundary_manifest_defines_all_nine_packages() -> None:
         "analysis",
         "observation",
         "vision",
+        "perception",
         "video",
         "sqlalchemy",
         "artifacts",
@@ -34,6 +35,7 @@ def test_production_modules_are_discovered_from_package_roots() -> None:
     modules = checker.discover_modules(checker.load_manifest())
 
     assert "zeromodel.core.artifact" in modules
+    assert "zeromodel.perception" in modules
     assert "zeromodel.video.domains.video_action_set.dto" in modules
     assert "zeromodel.persistence.sqlalchemy.db.session" in modules
     assert all(not record.path.as_posix().startswith("zeromodel/") for record in modules.values())

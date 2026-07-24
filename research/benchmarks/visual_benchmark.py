@@ -1,4 +1,5 @@
 """Result contracts for rejection-sensitive visual-address benchmarks."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -46,9 +47,7 @@ def wilson_score_interval(
     probability = float(count) / float(total)
     z_squared = z_value * z_value
     denominator = 1.0 + z_squared / float(total)
-    centre = (
-        probability + z_squared / (2.0 * float(total))
-    ) / denominator
+    centre = (probability + z_squared / (2.0 * float(total))) / denominator
     half_width = (
         z_value
         * sqrt(
@@ -107,17 +106,13 @@ class VisualBenchmarkMetrics:
             "conflicting_action_error_count",
         ):
             if values[name] > self.false_reject_opportunities:
-                raise VPMValidationError(
-                    "%s cannot exceed benign opportunities" % name
-                )
+                raise VPMValidationError("%s cannot exceed benign opportunities" % name)
         for name in (
             "top1_correct_row_count",
             "top1_correct_action_count",
         ):
             if values[name] > self.false_reject_opportunities:
-                raise VPMValidationError(
-                    "%s cannot exceed benign opportunities" % name
-                )
+                raise VPMValidationError("%s cannot exceed benign opportunities" % name)
         if self.false_accept_count > self.false_accept_opportunities:
             raise VPMValidationError(
                 "false_accept_count cannot exceed its opportunities"
@@ -230,17 +225,11 @@ class VisualBenchmarkMetrics:
             "rejected_count": int(self.rejected_count),
             "correct_row_count": int(self.correct_row_count),
             "correct_action_count": int(self.correct_action_count),
-            "conflicting_action_error_count": int(
-                self.conflicting_action_error_count
-            ),
+            "conflicting_action_error_count": int(self.conflicting_action_error_count),
             "false_accept_count": int(self.false_accept_count),
-            "false_accept_opportunities": int(
-                self.false_accept_opportunities
-            ),
+            "false_accept_opportunities": int(self.false_accept_opportunities),
             "false_reject_count": int(self.false_reject_count),
-            "false_reject_opportunities": int(
-                self.false_reject_opportunities
-            ),
+            "false_reject_opportunities": int(self.false_reject_opportunities),
             "top1_correct_row_count": int(self.top1_correct_row_count),
             "top1_correct_action_count": int(self.top1_correct_action_count),
         }
@@ -317,9 +306,7 @@ class VisualBenchmarkMetrics:
                 "correct_disposition_rate": self.correct_disposition_rate,
                 "confidence_intervals_95": {
                     name: (
-                        None
-                        if bounds is None
-                        else [float(bounds[0]), float(bounds[1])]
+                        None if bounds is None else [float(bounds[0]), float(bounds[1])]
                     )
                     for name, bounds in self.confidence_intervals_95().items()
                 },
@@ -340,17 +327,11 @@ class VisualBenchmarkMetrics:
             rejected_count=int(data["rejected_count"]),
             correct_row_count=int(data["correct_row_count"]),
             correct_action_count=int(data["correct_action_count"]),
-            conflicting_action_error_count=int(
-                data["conflicting_action_error_count"]
-            ),
+            conflicting_action_error_count=int(data["conflicting_action_error_count"]),
             false_accept_count=int(data["false_accept_count"]),
-            false_accept_opportunities=int(
-                data["false_accept_opportunities"]
-            ),
+            false_accept_opportunities=int(data["false_accept_opportunities"]),
             false_reject_count=int(data["false_reject_count"]),
-            false_reject_opportunities=int(
-                data["false_reject_opportunities"]
-            ),
+            false_reject_opportunities=int(data["false_reject_opportunities"]),
             # Legacy reports did not preserve pre-rejection top-1 outcomes.
             # The accepted-correct counts are the only defensible lower-bound
             # fallback during deserialization.
@@ -514,9 +495,7 @@ class VisualBenchmarkReport:
             )
         system_ids = [result.system_id for result in self.systems]
         if len(set(system_ids)) != len(system_ids):
-            raise VPMValidationError(
-                "benchmark report system ids must be unique"
-            )
+            raise VPMValidationError("benchmark report system ids must be unique")
         for result in self.systems:
             result.validate()
         known = set(system_ids)
@@ -551,12 +530,8 @@ class VisualBenchmarkReport:
             "version": self.version,
             "dataset_manifest_digest": self.dataset_manifest_digest,
             "systems": [result.to_dict() for result in self.systems],
-            "governance_audit": [
-                result.to_dict() for result in self.governance_audit
-            ],
-            "declared_false_acceptance_target": (
-                self.declared_false_acceptance_target
-            ),
+            "governance_audit": [result.to_dict() for result in self.governance_audit],
+            "declared_false_acceptance_target": (self.declared_false_acceptance_target),
             "validation_status": self.validation_status,
             "deployment_permitted": self.deployment_permitted,
             "metadata": _thaw_json(self.metadata),

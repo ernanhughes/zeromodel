@@ -191,7 +191,12 @@ def test_removed_root_benchmark_module_is_not_a_compatibility_surface(
 
 def test_research_cli_module_exposes_operational_help() -> None:
     result = subprocess.run(
-        [sys.executable, "-m", "research.video_action_set.video_action_set_cli", "--help"],
+        [
+            sys.executable,
+            "-m",
+            "research.video_action_set.video_action_set_cli",
+            "--help",
+        ],
         cwd=REPO_ROOT,
         env=_source_env(),
         check=False,

@@ -1,4 +1,5 @@
 """Efficient CI runner for the pinned Phase 1 frozen-address smoke benchmark."""
+
 from __future__ import annotations
 
 import argparse

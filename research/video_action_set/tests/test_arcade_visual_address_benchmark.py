@@ -40,20 +40,22 @@ def test_arcade_dataset_has_family_holdout_controls_and_rejection_sets() -> None
         "rejection_calibration",
         "final_evaluation",
     }
-    assert any(
-        family.critical_evidence_removed for family in dataset.manifest.families
-    )
+    assert any(family.critical_evidence_removed for family in dataset.manifest.families)
     target_controls = tuple(
-        record
-        for record in records
-        if record.family_id == "final-information-target"
+        record for record in records if record.family_id == "final-information-target"
     )
     assert len(target_controls) == 98
     assert all(
         record.evaluation_role == demo.IMPOSSIBILITY_CONTROL
         for record in target_controls
     )
-    assert sum(record.split == "final_evaluation" and record.row_id is None for record in records) == 6
+    assert (
+        sum(
+            record.split == "final_evaluation" and record.row_id is None
+            for record in records
+        )
+        == 6
+    )
     assert len(dataset.observations) == len(records)
 
     impossible = dataset.observations["final-ood-impossible-state:00"].pixels

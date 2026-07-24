@@ -59,7 +59,15 @@ def test_installed_core_wheel_excludes_research_and_examples(tmp_path: Path) -> 
     # them at all.
     dist_dir = tmp_path / "dist"
     subprocess.run(
-        [sys.executable, "-m", "build", "--wheel", "--outdir", str(dist_dir), str(REPO_ROOT / "packages" / "core")],
+        [
+            sys.executable,
+            "-m",
+            "build",
+            "--wheel",
+            "--outdir",
+            str(dist_dir),
+            str(REPO_ROOT / "packages" / "core"),
+        ],
         cwd=REPO_ROOT,
         check=True,
     )

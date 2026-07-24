@@ -1,4 +1,5 @@
 """Deterministic local-correlation visual addressing for bounded video research."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -14,14 +15,27 @@ from zeromodel.observation.visual_address import (
     VisualAddressContract,
     VisualAddressDecision,
 )
-from research.visual.visual_registration import RegistrationConfig, register_integer_translation
+from research.visual.visual_registration import (
+    RegistrationConfig,
+    register_integer_translation,
+)
 
 
-VIDEO_LOCAL_CORRELATION_PROVIDER_VERSION = "zeromodel-video-local-correlation-provider/v1"
-VIDEO_LOCAL_CORRELATION_CALIBRATION_VERSION = "zeromodel-video-local-correlation-calibration/v1"
-VIDEO_LOCAL_CORRELATION_REGION_SPEC_VERSION = "zeromodel-video-local-correlation-region-spec/v1"
-VIDEO_LOCAL_CORRELATION_EVIDENCE_VERSION = "zeromodel-video-local-correlation-evidence/v1"
-VIDEO_LOCAL_CORRELATION_SELECTION_VERSION = "zeromodel-video-local-correlation-selection/v1"
+VIDEO_LOCAL_CORRELATION_PROVIDER_VERSION = (
+    "zeromodel-video-local-correlation-provider/v1"
+)
+VIDEO_LOCAL_CORRELATION_CALIBRATION_VERSION = (
+    "zeromodel-video-local-correlation-calibration/v1"
+)
+VIDEO_LOCAL_CORRELATION_REGION_SPEC_VERSION = (
+    "zeromodel-video-local-correlation-region-spec/v1"
+)
+VIDEO_LOCAL_CORRELATION_EVIDENCE_VERSION = (
+    "zeromodel-video-local-correlation-evidence/v1"
+)
+VIDEO_LOCAL_CORRELATION_SELECTION_VERSION = (
+    "zeromodel-video-local-correlation-selection/v1"
+)
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -34,7 +48,9 @@ def _json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("local-correlation values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "local-correlation values must be JSON-serializable"
+        ) from exc
 
 
 def _json_digest(value: Any) -> str:
@@ -51,8 +67,12 @@ def _freeze(value: Any) -> Any:
     return value
 
 
-def _crop(array: np.ndarray, *, top: int, left: int, height: int, width: int) -> np.ndarray:
-    return np.ascontiguousarray(array[top : top + height, left : left + width], dtype=np.uint8)
+def _crop(
+    array: np.ndarray, *, top: int, left: int, height: int, width: int
+) -> np.ndarray:
+    return np.ascontiguousarray(
+        array[top : top + height, left : left + width], dtype=np.uint8
+    )
 
 
 @dataclass(frozen=True)
@@ -70,7 +90,9 @@ class LocalRegionSpec:
 
     def __post_init__(self) -> None:
         if self.version != VIDEO_LOCAL_CORRELATION_REGION_SPEC_VERSION:
-            raise VPMValidationError("unsupported local-correlation region spec version")
+            raise VPMValidationError(
+                "unsupported local-correlation region spec version"
+            )
         if not str(self.region_id):
             raise VPMValidationError("region_id cannot be empty")
         for name in ("top", "left", "height", "width"):
@@ -121,8 +143,15 @@ class LocalCorrelationCalibration:
 
     def __post_init__(self) -> None:
         if self.version != VIDEO_LOCAL_CORRELATION_CALIBRATION_VERSION:
-            raise VPMValidationError("unsupported local-correlation calibration version")
-        for name in ("winner_threshold", "runner_up_margin", "conflicting_action_margin", "minimum_visible_fraction"):
+            raise VPMValidationError(
+                "unsupported local-correlation calibration version"
+            )
+        for name in (
+            "winner_threshold",
+            "runner_up_margin",
+            "conflicting_action_margin",
+            "minimum_visible_fraction",
+        ):
             value = float(getattr(self, name))
             if not np.isfinite(value):
                 raise VPMValidationError("%s must be finite" % name)
@@ -245,16 +274,25 @@ class LocalCorrelationCandidateEvaluation:
             "infeasible_reasons": list(self.infeasible_reasons),
             "accepted_benign_count": int(benign_metrics.accepted_benign_count),
             "accepted_exact_row_precision": (
-                None if benign_metrics.accepted_benign_count == 0 else float(benign_metrics.accepted_benign_row_correctness)
+                None
+                if benign_metrics.accepted_benign_count == 0
+                else float(benign_metrics.accepted_benign_row_correctness)
             ),
             "accepted_action_precision": (
-                None if benign_metrics.accepted_benign_count == 0 else float(benign_metrics.accepted_benign_action_correctness)
+                None
+                if benign_metrics.accepted_benign_count == 0
+                else float(benign_metrics.accepted_benign_action_correctness)
             ),
-            "benign_coverage": float(benign_metrics.accepted_benign_count / float(benign_metrics.false_reject_opportunities or 1)),
+            "benign_coverage": float(
+                benign_metrics.accepted_benign_count
+                / float(benign_metrics.false_reject_opportunities or 1)
+            ),
             "accepted_exact_row_recall": float(benign_metrics.benign_row_accuracy),
             "raw_exact_row_accuracy": float(benign_metrics.top1_benign_row_accuracy),
             "false_accepts": int(rejection_metrics.false_accept_count),
-            "conflicting_action_accepts": int(benign_metrics.conflicting_action_error_count),
+            "conflicting_action_accepts": int(
+                benign_metrics.conflicting_action_error_count
+            ),
             "false_rejects": int(benign_metrics.false_reject_count),
             "calibration_artifact_id": self.calibration.digest,
             "benign_result": self.benign_result.to_dict(),
@@ -310,8 +348,18 @@ class LocalCorrelationVideoAddressProvider:
     ) -> None:
         items = []
         for observation_id in sorted(prototypes):
-            row_id, action_id, observation_digest, observation = prototypes[observation_id]
-            items.append((str(row_id), str(action_id), str(observation_id), str(observation_digest), observation))
+            row_id, action_id, observation_digest, observation = prototypes[
+                observation_id
+            ]
+            items.append(
+                (
+                    str(row_id),
+                    str(action_id),
+                    str(observation_id),
+                    str(observation_digest),
+                    observation,
+                )
+            )
         if not items:
             raise VPMValidationError("local-correlation provider requires prototypes")
         self._items = tuple(items)
@@ -327,13 +375,18 @@ class LocalCorrelationVideoAddressProvider:
         )
         first_shape = items[0][4].pixels.shape
         if len(first_shape) != 2:
-            raise VPMValidationError("local-correlation provider currently requires grayscale observations")
+            raise VPMValidationError(
+                "local-correlation provider currently requires grayscale observations"
+            )
         for _row_id, _action_id, _observation_id, _digest, observation in self._items:
             if observation.pixels.shape != first_shape:
                 raise VPMValidationError("prototype geometry must remain constant")
         self._shape = first_shape
         for region in self._regions:
-            if region.top + region.height > self._shape[0] or region.left + region.width > self._shape[1]:
+            if (
+                region.top + region.height > self._shape[0]
+                or region.left + region.width > self._shape[1]
+            ):
                 raise VPMValidationError("region extends beyond prototype geometry")
         self._cache: Dict[str, Tuple[LocalCorrelationCandidate, ...]] = {}
 
@@ -352,8 +405,12 @@ class LocalCorrelationVideoAddressProvider:
             metadata={
                 "winner_threshold": float(self._calibration.winner_threshold),
                 "runner_up_margin": float(self._calibration.runner_up_margin),
-                "conflicting_action_margin": float(self._calibration.conflicting_action_margin),
-                "minimum_visible_fraction": float(self._calibration.minimum_visible_fraction),
+                "conflicting_action_margin": float(
+                    self._calibration.conflicting_action_margin
+                ),
+                "minimum_visible_fraction": float(
+                    self._calibration.minimum_visible_fraction
+                ),
                 "region_ids": [region.region_id for region in self._regions],
             },
         )
@@ -412,15 +469,25 @@ class LocalCorrelationVideoAddressProvider:
             critical=bool(region.critical),
         )
 
-    def _rank(self, observation: ImageObservation) -> Tuple[LocalCorrelationCandidate, ...]:
+    def _rank(
+        self, observation: ImageObservation
+    ) -> Tuple[LocalCorrelationCandidate, ...]:
         if observation.pixels.shape != self._shape:
-            raise VPMValidationError("local-correlation observation geometry does not match prototypes")
+            raise VPMValidationError(
+                "local-correlation observation geometry does not match prototypes"
+            )
         key = self._cache_key(observation)
         cached = self._cache.get(key)
         if cached is not None:
             return cached
         candidates = []
-        for row_id, action_id, prototype_observation_id, observation_digest, prototype_observation in self._items:
+        for (
+            row_id,
+            action_id,
+            prototype_observation_id,
+            observation_digest,
+            prototype_observation,
+        ) in self._items:
             region_evidence = tuple(
                 self._region_evidence(
                     prototype_pixels=prototype_observation.pixels,
@@ -430,10 +497,14 @@ class LocalCorrelationVideoAddressProvider:
                 for region in self._regions
             )
             total_weight = sum(item.weight for item in region_evidence)
-            total_distance = sum(item.weight * item.distance for item in region_evidence) / float(total_weight or 1.0)
+            total_distance = sum(
+                item.weight * item.distance for item in region_evidence
+            ) / float(total_weight or 1.0)
             visible_fraction = min(item.visible_fraction for item in region_evidence)
             critical_evidence_present = all(
-                (not item.critical) or item.visible_fraction + 1e-12 >= self._region_by_id[item.region_id].minimum_visible_fraction
+                (not item.critical)
+                or item.visible_fraction + 1e-12
+                >= self._region_by_id[item.region_id].minimum_visible_fraction
                 for item in region_evidence
             )
             candidates.append(
@@ -467,10 +538,18 @@ class LocalCorrelationVideoAddressProvider:
         best = ranked[0]
         second = ranked[1] if len(ranked) > 1 else None
         nearest_conflicting = next(
-            (candidate for candidate in ranked[1:] if candidate.action_id != best.action_id),
+            (
+                candidate
+                for candidate in ranked[1:]
+                if candidate.action_id != best.action_id
+            ),
             None,
         )
-        margin = float("inf") if second is None else float(second.total_distance - best.total_distance)
+        margin = (
+            float("inf")
+            if second is None
+            else float(second.total_distance - best.total_distance)
+        )
         conflicting_margin = (
             float("inf")
             if nearest_conflicting is None
@@ -506,15 +585,21 @@ class LocalCorrelationVideoAddressProvider:
             "region_spec_digest": self._calibration.region_spec_digest,
             "winner_threshold": float(self._calibration.winner_threshold),
             "runner_up_margin_threshold": float(self._calibration.runner_up_margin),
-            "conflicting_action_margin_threshold": float(self._calibration.conflicting_action_margin),
-            "minimum_visible_fraction_threshold": float(self._calibration.minimum_visible_fraction),
+            "conflicting_action_margin_threshold": float(
+                self._calibration.conflicting_action_margin
+            ),
+            "minimum_visible_fraction_threshold": float(
+                self._calibration.minimum_visible_fraction
+            ),
             "best_candidate": best.to_dict(),
             "second_candidate": None if second is None else second.to_dict(),
             "nearest_conflicting_action_candidate": (
                 None if nearest_conflicting is None else nearest_conflicting.to_dict()
             ),
             "winner_margin": None if second is None else float(margin),
-            "conflicting_action_margin": None if nearest_conflicting is None else float(conflicting_margin),
+            "conflicting_action_margin": None
+            if nearest_conflicting is None
+            else float(conflicting_margin),
             "rejection_reasons": list(reasons),
             "raw_top1_row_id": best.row_id,
             "raw_top1_action_id": best.action_id,
@@ -524,7 +609,9 @@ class LocalCorrelationVideoAddressProvider:
             accepted=accepted,
             reason=reason,
             observation_digest=observation.raw_digest,
-            representation_digest=key if (key := self._cache_key(observation)) else self._cache_key(observation),
+            representation_digest=key
+            if (key := self._cache_key(observation))
+            else self._cache_key(observation),
             provider_kind="deterministic_local_correlation",
             provider_version=VIDEO_LOCAL_CORRELATION_PROVIDER_VERSION,
             score_semantics="distance",
@@ -597,7 +684,9 @@ def build_local_correlation_candidates(
 ) -> Tuple[LocalCorrelationCandidateEvaluation, ...]:
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     prototypes = build_local_correlation_prototypes(
         dataset_manifest=dataset_manifest,
         observations=observations,
@@ -609,8 +698,12 @@ def build_local_correlation_candidates(
     provisional = LocalCorrelationCalibration(
         winner_threshold=max(float(value) for value in winner_thresholds),
         runner_up_margin=min(float(value) for value in runner_up_margins),
-        conflicting_action_margin=min(float(value) for value in conflicting_action_margins),
-        minimum_visible_fraction=min(float(value) for value in minimum_visible_fractions),
+        conflicting_action_margin=min(
+            float(value) for value in conflicting_action_margins
+        ),
+        minimum_visible_fraction=min(
+            float(value) for value in minimum_visible_fractions
+        ),
         region_spec_digest=region_digest,
         prototype_digest=_records_digest(prototype_records),
         benign_calibration_digest=_records_digest(benign_records),
@@ -627,7 +720,14 @@ def build_local_correlation_candidates(
         ranked = ranking_provider._rank(observations[record.observation_id])
         best = ranked[0]
         second = ranked[1] if len(ranked) > 1 else None
-        nearest_conflicting = next((candidate for candidate in ranked[1:] if candidate.action_id != best.action_id), None)
+        nearest_conflicting = next(
+            (
+                candidate
+                for candidate in ranked[1:]
+                if candidate.action_id != best.action_id
+            ),
+            None,
+        )
         benign_rankings.append(
             LocalCorrelationEvaluation(
                 observation_id=record.observation_id,
@@ -636,14 +736,24 @@ def build_local_correlation_candidates(
                 nearest_conflicting_action=nearest_conflicting,
                 expected_row_id=record.row_id,
                 expected_action_id=record.action_id,
-                expected_disposition=str(record.evaluation_role or record.metadata.get("expected_disposition")),
+                expected_disposition=str(
+                    record.evaluation_role
+                    or record.metadata.get("expected_disposition")
+                ),
             )
         )
     for record in rejection_records:
         ranked = ranking_provider._rank(observations[record.observation_id])
         best = ranked[0]
         second = ranked[1] if len(ranked) > 1 else None
-        nearest_conflicting = next((candidate for candidate in ranked[1:] if candidate.action_id != best.action_id), None)
+        nearest_conflicting = next(
+            (
+                candidate
+                for candidate in ranked[1:]
+                if candidate.action_id != best.action_id
+            ),
+            None,
+        )
         rejection_rankings.append(
             LocalCorrelationEvaluation(
                 observation_id=record.observation_id,
@@ -652,14 +762,21 @@ def build_local_correlation_candidates(
                 nearest_conflicting_action=nearest_conflicting,
                 expected_row_id=record.row_id,
                 expected_action_id=record.action_id,
-                expected_disposition=str(record.evaluation_role or record.metadata.get("expected_disposition")),
+                expected_disposition=str(
+                    record.evaluation_role
+                    or record.metadata.get("expected_disposition")
+                ),
             )
         )
     evaluations = []
     for winner_threshold in tuple(float(value) for value in winner_thresholds):
         for runner_up_margin in tuple(float(value) for value in runner_up_margins):
-            for conflicting_action_margin in tuple(float(value) for value in conflicting_action_margins):
-                for minimum_visible_fraction in tuple(float(value) for value in minimum_visible_fractions):
+            for conflicting_action_margin in tuple(
+                float(value) for value in conflicting_action_margins
+            ):
+                for minimum_visible_fraction in tuple(
+                    float(value) for value in minimum_visible_fractions
+                ):
                     calibration = LocalCorrelationCalibration(
                         winner_threshold=winner_threshold,
                         runner_up_margin=runner_up_margin,
@@ -719,7 +836,10 @@ def _evaluate_rankings(
     provider: LocalCorrelationVideoAddressProvider,
     split_name: str,
 ) -> Any:
-    from research.benchmarks.visual_benchmark import BenchmarkSystemResult, VisualBenchmarkMetrics
+    from research.benchmarks.visual_benchmark import (
+        BenchmarkSystemResult,
+        VisualBenchmarkMetrics,
+    )
 
     accepted_count = 0
     rejected_count = 0
@@ -734,19 +854,33 @@ def _evaluate_rankings(
     top1_correct_action_count = 0
     for ranking in rankings:
         expected_accept = ranking.expected_disposition == "expected_accept"
-        top1_correct_row_count += int(expected_accept and ranking.best.row_id == ranking.expected_row_id)
-        top1_correct_action_count += int(expected_accept and ranking.best.action_id == ranking.expected_action_id)
-        second_margin = float("inf") if ranking.second is None else float(ranking.second.total_distance - ranking.best.total_distance)
+        top1_correct_row_count += int(
+            expected_accept and ranking.best.row_id == ranking.expected_row_id
+        )
+        top1_correct_action_count += int(
+            expected_accept and ranking.best.action_id == ranking.expected_action_id
+        )
+        second_margin = (
+            float("inf")
+            if ranking.second is None
+            else float(ranking.second.total_distance - ranking.best.total_distance)
+        )
         conflicting_margin = (
             float("inf")
             if ranking.nearest_conflicting_action is None
-            else float(ranking.nearest_conflicting_action.total_distance - ranking.best.total_distance)
+            else float(
+                ranking.nearest_conflicting_action.total_distance
+                - ranking.best.total_distance
+            )
         )
         accepted = (
-            ranking.best.total_distance <= provider._calibration.winner_threshold + 1e-12
+            ranking.best.total_distance
+            <= provider._calibration.winner_threshold + 1e-12
             and second_margin + 1e-12 >= provider._calibration.runner_up_margin
-            and conflicting_margin + 1e-12 >= provider._calibration.conflicting_action_margin
-            and ranking.best.visible_fraction + 1e-12 >= provider._calibration.minimum_visible_fraction
+            and conflicting_margin + 1e-12
+            >= provider._calibration.conflicting_action_margin
+            and ranking.best.visible_fraction + 1e-12
+            >= provider._calibration.minimum_visible_fraction
             and ranking.best.critical_evidence_present
         )
         if expected_accept:
@@ -754,8 +888,12 @@ def _evaluate_rankings(
             if accepted:
                 accepted_count += 1
                 correct_row_count += int(ranking.best.row_id == ranking.expected_row_id)
-                correct_action_count += int(ranking.best.action_id == ranking.expected_action_id)
-                conflicting_action_error_count += int(ranking.best.action_id != ranking.expected_action_id)
+                correct_action_count += int(
+                    ranking.best.action_id == ranking.expected_action_id
+                )
+                conflicting_action_error_count += int(
+                    ranking.best.action_id != ranking.expected_action_id
+                )
             else:
                 rejected_count += 1
                 false_reject_count += 1
@@ -798,15 +936,25 @@ def select_local_correlation_candidate(
     candidate_items = tuple(candidates)
     feasible = tuple(candidate for candidate in candidate_items if candidate.feasible)
 
-    def key(candidate: LocalCorrelationCandidateEvaluation) -> Tuple[float, float, float, float, float, float, float]:
+    def key(
+        candidate: LocalCorrelationCandidateEvaluation,
+    ) -> Tuple[float, float, float, float, float, float, float]:
         benign = candidate.benign_result.metrics
         accepted_precision = (
-            -1.0 if benign.accepted_benign_row_correctness is None else float(benign.accepted_benign_row_correctness)
+            -1.0
+            if benign.accepted_benign_row_correctness is None
+            else float(benign.accepted_benign_row_correctness)
         )
-        coverage = float(benign.accepted_benign_count) / float(benign.false_reject_opportunities or 1)
-        recall = float(benign.correct_row_count) / float(benign.false_reject_opportunities or 1)
+        coverage = float(benign.accepted_benign_count) / float(
+            benign.false_reject_opportunities or 1
+        )
+        recall = float(benign.correct_row_count) / float(
+            benign.false_reject_opportunities or 1
+        )
         accepted_action_precision = (
-            -1.0 if benign.accepted_benign_action_correctness is None else float(benign.accepted_benign_action_correctness)
+            -1.0
+            if benign.accepted_benign_action_correctness is None
+            else float(benign.accepted_benign_action_correctness)
         )
         raw_rank = float(benign.top1_benign_row_accuracy)
         return (
@@ -816,23 +964,41 @@ def select_local_correlation_candidate(
             accepted_action_precision,
             raw_rank,
             -float(candidate.winner_threshold),
-            float(candidate.runner_up_margin + candidate.conflicting_action_margin + candidate.minimum_visible_fraction),
+            float(
+                candidate.runner_up_margin
+                + candidate.conflicting_action_margin
+                + candidate.minimum_visible_fraction
+            ),
         )
 
     selected = max(feasible, key=key) if feasible else None
     return LocalCorrelationSelectionArtifact(
-        selection_status="selected_operating_point" if selected is not None else "no_feasible_operating_point",
-        selected_calibration_digest=None if selected is None else selected.calibration.digest,
-        selected_winner_threshold=None if selected is None else float(selected.winner_threshold),
-        selected_runner_up_margin=None if selected is None else float(selected.runner_up_margin),
-        selected_conflicting_action_margin=None if selected is None else float(selected.conflicting_action_margin),
-        selected_minimum_visible_fraction=None if selected is None else float(selected.minimum_visible_fraction),
+        selection_status="selected_operating_point"
+        if selected is not None
+        else "no_feasible_operating_point",
+        selected_calibration_digest=None
+        if selected is None
+        else selected.calibration.digest,
+        selected_winner_threshold=None
+        if selected is None
+        else float(selected.winner_threshold),
+        selected_runner_up_margin=None
+        if selected is None
+        else float(selected.runner_up_margin),
+        selected_conflicting_action_margin=None
+        if selected is None
+        else float(selected.conflicting_action_margin),
+        selected_minimum_visible_fraction=None
+        if selected is None
+        else float(selected.minimum_visible_fraction),
         selection_rule=(
             "Among feasible candidates maximize accepted exact-row precision, then benign accepted coverage, "
             "then accepted exact-row recall, then accepted action precision, then raw benign exact-row ranking accuracy, "
             "then prefer the stricter winner threshold, then the stricter combined margin and visibility thresholds."
         ),
-        candidate_grid_digest=_json_digest([candidate.to_dict() for candidate in candidate_items]),
+        candidate_grid_digest=_json_digest(
+            [candidate.to_dict() for candidate in candidate_items]
+        ),
         policy_artifact_id=dataset_manifest.policy_artifact_id,
         source_scope=source_scope,
         candidates=candidate_items,

@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from research.video_action_set.arcade_visual_action_equivalence_audit import run_audit_evidence_closure
+from research.video_action_set.arcade_visual_action_equivalence_audit import (
+    run_audit_evidence_closure,
+)
 
 import pytest
 
@@ -18,8 +20,12 @@ def test_inventory_generation_is_deterministic(tmp_path: Path) -> None:
 
 def test_stage3_v1_replay_is_removed_from_corrected_inventory(tmp_path: Path) -> None:
     run_audit_evidence_closure(tmp_path)
-    inventory = json.loads((tmp_path / "evidence-inventory-v2.json").read_text(encoding="utf-8"))
-    provider = next(item for item in inventory["providers"] if item["provider_id"] == "stage3-v1")
+    inventory = json.loads(
+        (tmp_path / "evidence-inventory-v2.json").read_text(encoding="utf-8")
+    )
+    provider = next(
+        item for item in inventory["providers"] if item["provider_id"] == "stage3-v1"
+    )
     assert provider["reachability_replay_eligible"] is False
 
 

@@ -78,10 +78,15 @@ for frame in summary.frames:
 summary_path = OUT / "decision_manifold_summary.json"
 summary_path.write_text(json.dumps(summary.to_dict(), indent=2), encoding="utf-8")
 
-print(json.dumps({
-    "frame_count": len(summary.frames),
-    "inflection_indices": list(summary.inflection_indices),
-    "mass_series": list(summary.mass_series),
-    "curvature_series": list(summary.curvature_series),
-    "summary": str(summary_path),
-}, indent=2))
+print(
+    json.dumps(
+        {
+            "frame_count": len(summary.frames),
+            "inflection_indices": list(summary.inflection_indices),
+            "mass_series": list(summary.mass_series),
+            "curvature_series": list(summary.curvature_series),
+            "summary": str(summary_path),
+        },
+        indent=2,
+    )
+)

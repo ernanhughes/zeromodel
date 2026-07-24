@@ -36,7 +36,10 @@ def test_production_modules_are_discovered_from_package_roots() -> None:
     assert "zeromodel.core.artifact" in modules
     assert "zeromodel.video.domains.video_action_set.dto" in modules
     assert "zeromodel.persistence.sqlalchemy.db.session" in modules
-    assert all(not record.path.as_posix().startswith("zeromodel/") for record in modules.values())
+    assert all(
+        not record.path.as_posix().startswith("zeromodel/")
+        for record in modules.values()
+    )
 
 
 def test_old_root_initializer_is_absent() -> None:

@@ -7,14 +7,18 @@ import pytest
 from sqlalchemy import inspect
 
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.persistence.sqlalchemy.db.orm.video_action_set import BenchmarkIdentityORM
+from zeromodel.persistence.sqlalchemy.db.orm.video_action_set import (
+    BenchmarkIdentityORM,
+)
 from zeromodel.persistence.sqlalchemy.db.runtime import build_sqlite_runtime
 from zeromodel.persistence.sqlalchemy.db.session import (
     create_database_engine,
     create_schema,
     create_session_factory,
 )
-from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
+from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import (
+    SqlAlchemyVideoActionSetStore,
+)
 from zeromodel.video.domains.video_action_set.dto import BenchmarkIdentityDTO
 from zeromodel.video.domains.video_action_set.store import (
     BENCHMARK_IDENTITY_CONFLICT_MESSAGE,

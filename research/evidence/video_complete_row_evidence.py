@@ -52,7 +52,9 @@ def _canonical_policy_row_ids(
     return tuple(sorted(actual))
 
 
-def _policy_row_universe_digest(*, policy_artifact_id: str, row_ids: Sequence[str]) -> str:
+def _policy_row_universe_digest(
+    *, policy_artifact_id: str, row_ids: Sequence[str]
+) -> str:
     return sha256_digest(
         {
             "version": VIDEO_POLICY_ROW_ORDER_VERSION,
@@ -77,7 +79,11 @@ class RowScore:
             raise VPMValidationError("quantized_score out of range")
 
     def to_dict(self) -> dict[str, Any]:
-        return {"row_id": self.row_id, "raw_score": float(self.raw_score), "quantized_score": int(self.quantized_score)}
+        return {
+            "row_id": self.row_id,
+            "raw_score": float(self.raw_score),
+            "quantized_score": int(self.quantized_score),
+        }
 
 
 @dataclass(frozen=True)
@@ -95,7 +101,11 @@ class TieGroup:
             raise VPMValidationError("tie group row_ids must be unique")
 
     def to_dict(self) -> dict[str, Any]:
-        return {"tie_group_index": int(self.tie_group_index), "quantized_score": int(self.quantized_score), "row_ids": list(self.row_ids)}
+        return {
+            "tie_group_index": int(self.tie_group_index),
+            "quantized_score": int(self.quantized_score),
+            "row_ids": list(self.row_ids),
+        }
 
 
 def _ranking_digest_payload(
@@ -105,7 +115,10 @@ def _ranking_digest_payload(
 ) -> dict[str, Any]:
     return {
         "version": VIDEO_COMPLETE_RANKING_VERSION,
-        "ranked_rows": [{"row_id": row_id, "quantized_score": quantized} for row_id, quantized in ranked_rows],
+        "ranked_rows": [
+            {"row_id": row_id, "quantized_score": quantized}
+            for row_id, quantized in ranked_rows
+        ],
         "tie_groups": [item.to_dict() for item in tie_groups],
     }
 
@@ -145,7 +158,9 @@ class CompleteRowEvidence:
         row_by_id = {item.row_id: item for item in self.row_scores}
         if len(row_by_id) != 112:
             raise VPMValidationError("row ids must be unique and complete")
-        if tuple(self.canonical_row_ids) != _canonical_policy_row_ids(row_by_id.keys(), policy_row_ids=self.canonical_row_ids):
+        if tuple(self.canonical_row_ids) != _canonical_policy_row_ids(
+            row_by_id.keys(), policy_row_ids=self.canonical_row_ids
+        ):
             raise VPMValidationError("canonical row ids must be unique and stable")
         if self.policy_row_universe_digest != _policy_row_universe_digest(
             policy_artifact_id=self.policy_artifact_id,
@@ -158,16 +173,24 @@ class CompleteRowEvidence:
             policy_row_universe_digest=self.policy_row_universe_digest,
             row_scores=canonical_scores,
         ):
-            raise VPMValidationError("stored quantized digest does not match recomputed digest")
-        if self.raw_score_diagnostic_digest != _raw_score_diagnostic_digest(canonical_scores):
-            raise VPMValidationError("stored raw diagnostic digest does not match recomputed digest")
-        expected_ranking = build_complete_ranking(canonical_scores)
-        if self.ranking.ranked_row_ids != expected_ranking.ranked_row_ids or tuple(group.to_dict() for group in self.ranking.tie_groups) != tuple(
-            group.to_dict() for group in expected_ranking.tie_groups
+            raise VPMValidationError(
+                "stored quantized digest does not match recomputed digest"
+            )
+        if self.raw_score_diagnostic_digest != _raw_score_diagnostic_digest(
+            canonical_scores
         ):
+            raise VPMValidationError(
+                "stored raw diagnostic digest does not match recomputed digest"
+            )
+        expected_ranking = build_complete_ranking(canonical_scores)
+        if self.ranking.ranked_row_ids != expected_ranking.ranked_row_ids or tuple(
+            group.to_dict() for group in self.ranking.tie_groups
+        ) != tuple(group.to_dict() for group in expected_ranking.tie_groups):
             raise VPMValidationError("ranking must reconstruct from quantized scores")
         if self.ranking.ranking_digest != expected_ranking.ranking_digest:
-            raise VPMValidationError("stored ranking digest does not match recomputed digest")
+            raise VPMValidationError(
+                "stored ranking digest does not match recomputed digest"
+            )
 
     @property
     def score_vector_digest(self) -> str:
@@ -216,7 +239,10 @@ def _semantic_outcome_digest_payload(
         "quantized_score_vector_digest": quantized_score_vector_digest,
         "top_quantized_score": top_quantized_score,
         "top_row_ids": list(top_row_ids),
-        "top_row_actions": [{"row_id": row_id, "action_id": action_id} for row_id, action_id in top_row_actions],
+        "top_row_actions": [
+            {"row_id": row_id, "action_id": action_id}
+            for row_id, action_id in top_row_actions
+        ],
         "top_action_ids": list(top_action_ids),
         "status": status,
         "resolved_row_id": resolved_row_id,
@@ -275,51 +301,98 @@ class SemanticTopSetOutcome:
                 action_id = str(item[1])
             action_pairs.append((row_id, action_id))
         top_row_actions = tuple(sorted(action_pairs))
-        if tuple(row_id for row_id, _action in top_row_actions) != tuple(sorted(top_row_ids)):
-            raise VPMValidationError("top row/action mapping must exactly cover the top set")
-        top_action_ids = tuple(sorted(set(str(action_id) for _row_id, action_id in top_row_actions)))
+        if tuple(row_id for row_id, _action in top_row_actions) != tuple(
+            sorted(top_row_ids)
+        ):
+            raise VPMValidationError(
+                "top row/action mapping must exactly cover the top set"
+            )
+        top_action_ids = tuple(
+            sorted(set(str(action_id) for _row_id, action_id in top_row_actions))
+        )
         if tuple(str(action_id) for action_id in self.top_action_ids) != top_action_ids:
-            raise VPMValidationError("top action set is inconsistent with top row/action mapping")
+            raise VPMValidationError(
+                "top action set is inconsistent with top row/action mapping"
+            )
 
         status = str(self.status)
         if status not in SEMANTIC_TOP_SET_STATUSES:
             raise VPMValidationError("unsupported semantic top-set status")
-        if self.top_quantized_score is not None and not (0 <= int(self.top_quantized_score) <= QUANTIZATION_SCALE):
+        if self.top_quantized_score is not None and not (
+            0 <= int(self.top_quantized_score) <= QUANTIZATION_SCALE
+        ):
             raise VPMValidationError("top quantized score out of range")
-        top_quantized_score = None if self.top_quantized_score is None else int(self.top_quantized_score)
-        resolved_row_id = None if self.resolved_row_id is None else str(self.resolved_row_id)
-        resolved_action_id = None if self.resolved_action_id is None else str(self.resolved_action_id)
-        rejection_reason = None if self.rejection_reason is None else str(self.rejection_reason)
-        unresolved_reason = None if self.unresolved_reason is None else str(self.unresolved_reason)
+        top_quantized_score = (
+            None if self.top_quantized_score is None else int(self.top_quantized_score)
+        )
+        resolved_row_id = (
+            None if self.resolved_row_id is None else str(self.resolved_row_id)
+        )
+        resolved_action_id = (
+            None if self.resolved_action_id is None else str(self.resolved_action_id)
+        )
+        rejection_reason = (
+            None if self.rejection_reason is None else str(self.rejection_reason)
+        )
+        unresolved_reason = (
+            None if self.unresolved_reason is None else str(self.unresolved_reason)
+        )
 
         if status == "unique_row":
             if len(top_row_ids) != 1 or len(top_action_ids) != 1:
-                raise VPMValidationError("unique_row status requires exactly one top row and action")
-            if resolved_row_id != top_row_ids[0] or resolved_action_id != top_action_ids[0]:
-                raise VPMValidationError("unique_row status must resolve the top row and action")
+                raise VPMValidationError(
+                    "unique_row status requires exactly one top row and action"
+                )
+            if (
+                resolved_row_id != top_row_ids[0]
+                or resolved_action_id != top_action_ids[0]
+            ):
+                raise VPMValidationError(
+                    "unique_row status must resolve the top row and action"
+                )
             if rejection_reason is not None or unresolved_reason is not None:
-                raise VPMValidationError("unique_row status must not carry rejection or unresolved reasons")
+                raise VPMValidationError(
+                    "unique_row status must not carry rejection or unresolved reasons"
+                )
         elif status == "action_unanimous_tie":
             if len(top_row_ids) <= 1 or len(top_action_ids) != 1:
-                raise VPMValidationError("action_unanimous_tie status requires multiple top rows with one action")
+                raise VPMValidationError(
+                    "action_unanimous_tie status requires multiple top rows with one action"
+                )
             if resolved_row_id is not None or resolved_action_id != top_action_ids[0]:
-                raise VPMValidationError("action_unanimous_tie must resolve only the action")
+                raise VPMValidationError(
+                    "action_unanimous_tie must resolve only the action"
+                )
             if rejection_reason is not None or unresolved_reason is not None:
-                raise VPMValidationError("action_unanimous_tie must not carry rejection or unresolved reasons")
+                raise VPMValidationError(
+                    "action_unanimous_tie must not carry rejection or unresolved reasons"
+                )
         elif status == "conflicting_action_tie":
             if len(top_row_ids) <= 1 or len(top_action_ids) <= 1:
-                raise VPMValidationError("conflicting_action_tie status requires multiple top rows and actions")
+                raise VPMValidationError(
+                    "conflicting_action_tie status requires multiple top rows and actions"
+                )
             if resolved_row_id is not None or resolved_action_id is not None:
-                raise VPMValidationError("conflicting_action_tie must not resolve a row or action")
+                raise VPMValidationError(
+                    "conflicting_action_tie must not resolve a row or action"
+                )
             if not rejection_reason:
-                raise VPMValidationError("conflicting_action_tie requires a rejection reason")
+                raise VPMValidationError(
+                    "conflicting_action_tie requires a rejection reason"
+                )
         else:
             if top_row_ids:
-                raise VPMValidationError("unresolved status must not carry a manufactured top row")
+                raise VPMValidationError(
+                    "unresolved status must not carry a manufactured top row"
+                )
             if resolved_row_id is not None or resolved_action_id is not None:
-                raise VPMValidationError("unresolved status must not resolve a row or action")
+                raise VPMValidationError(
+                    "unresolved status must not resolve a row or action"
+                )
             if not unresolved_reason:
-                raise VPMValidationError("unresolved status requires an unresolved reason")
+                raise VPMValidationError(
+                    "unresolved status requires an unresolved reason"
+                )
 
         object.__setattr__(self, "policy_row_ids", policy_row_ids)
         object.__setattr__(self, "top_quantized_score", top_quantized_score)
@@ -365,7 +438,10 @@ class SemanticTopSetOutcome:
             "quantized_score_vector_digest": self.quantized_score_vector_digest,
             "top_quantized_score": self.top_quantized_score,
             "top_row_ids": list(self.top_row_ids),
-            "top_row_actions": [{"row_id": row_id, "action_id": action_id} for row_id, action_id in self.top_row_actions],
+            "top_row_actions": [
+                {"row_id": row_id, "action_id": action_id}
+                for row_id, action_id in self.top_row_actions
+            ],
             "top_action_ids": list(self.top_action_ids),
             "status": self.status,
             "resolved_row_id": self.resolved_row_id,
@@ -381,9 +457,13 @@ def build_semantic_top_set_outcome(
     evidence: CompleteRowEvidence,
     row_action: Mapping[str, str],
 ) -> SemanticTopSetOutcome:
-    action_by_row = {str(row_id): str(action_id) for row_id, action_id in row_action.items()}
+    action_by_row = {
+        str(row_id): str(action_id) for row_id, action_id in row_action.items()
+    }
     if set(action_by_row) != set(evidence.canonical_row_ids):
-        raise VPMValidationError("row/action mapping must cover exactly the policy universe")
+        raise VPMValidationError(
+            "row/action mapping must cover exactly the policy universe"
+        )
     if not evidence.ranking.tie_groups:
         return SemanticTopSetOutcome(
             policy_artifact_id=evidence.policy_artifact_id,
@@ -405,7 +485,9 @@ def build_semantic_top_set_outcome(
     top_group = evidence.ranking.tie_groups[0]
     top_rows = tuple(sorted(str(row_id) for row_id in top_group.row_ids))
     top_row_actions = tuple((row_id, action_by_row[row_id]) for row_id in top_rows)
-    top_action_ids = tuple(sorted(set(action_id for _row_id, action_id in top_row_actions)))
+    top_action_ids = tuple(
+        sorted(set(action_id for _row_id, action_id in top_row_actions))
+    )
     if len(top_rows) == 1:
         status = "unique_row"
         resolved_row_id = top_rows[0]
@@ -420,7 +502,9 @@ def build_semantic_top_set_outcome(
         status = "conflicting_action_tie"
         resolved_row_id = None
         resolved_action_id = None
-        rejection_reason = "top quantized score is shared by rows governed by multiple actions"
+        rejection_reason = (
+            "top quantized score is shared by rows governed by multiple actions"
+        )
     return SemanticTopSetOutcome(
         policy_artifact_id=evidence.policy_artifact_id,
         provider_id=evidence.provider_id,
@@ -467,7 +551,9 @@ def semantic_top_set_outcome_from_dict(
         version=str(payload.get("version", VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION)),
     )
     if outcome.to_dict() != expected.to_dict():
-        raise VPMValidationError("semantic top-set outcome is inconsistent with evidence or policy mapping")
+        raise VPMValidationError(
+            "semantic top-set outcome is inconsistent with evidence or policy mapping"
+        )
     return outcome
 
 
@@ -482,8 +568,14 @@ def _quantized_score_vector_digest(
             "version": VIDEO_QUANTIZED_SCORE_VECTOR_VERSION,
             "policy_artifact_id": policy_artifact_id,
             "policy_row_universe_digest": policy_row_universe_digest,
-            "quantizer_identity": {"version": VIDEO_SCORE_QUANTIZER_VERSION, "scale": QUANTIZATION_SCALE},
-            "rows": [{"row_id": item.row_id, "quantized_score": int(item.quantized_score)} for item in row_scores],
+            "quantizer_identity": {
+                "version": VIDEO_SCORE_QUANTIZER_VERSION,
+                "scale": QUANTIZATION_SCALE,
+            },
+            "rows": [
+                {"row_id": item.row_id, "quantized_score": int(item.quantized_score)}
+                for item in row_scores
+            ],
         }
     )
 
@@ -492,7 +584,13 @@ def _raw_score_diagnostic_digest(row_scores: Sequence[RowScore]) -> str:
     return sha256_digest(
         {
             "version": VIDEO_RAW_SCORE_DIAGNOSTIC_VERSION,
-            "rows": [{"row_id": item.row_id, "raw_score_binary64": canonical_float64_bytes(item.raw_score).hex()} for item in row_scores],
+            "rows": [
+                {
+                    "row_id": item.row_id,
+                    "raw_score_binary64": canonical_float64_bytes(item.raw_score).hex(),
+                }
+                for item in row_scores
+            ],
         }
     )
 
@@ -506,7 +604,9 @@ def build_complete_ranking(row_scores: Sequence[RowScore]) -> CompleteRanking:
     for item in ranked:
         if current_score != item.quantized_score:
             if current_rows:
-                tie_groups.append(TieGroup(index, int(current_score), tuple(current_rows)))
+                tie_groups.append(
+                    TieGroup(index, int(current_score), tuple(current_rows))
+                )
             index += 1
             current_score = item.quantized_score
             current_rows = [item.row_id]
@@ -514,8 +614,17 @@ def build_complete_ranking(row_scores: Sequence[RowScore]) -> CompleteRanking:
             current_rows.append(item.row_id)
     if current_rows:
         tie_groups.append(TieGroup(index, int(current_score), tuple(current_rows)))
-    digest = sha256_digest(_ranking_digest_payload(ranked_rows=[(item.row_id, item.quantized_score) for item in ranked], tie_groups=tie_groups))
-    return CompleteRanking(ranked_row_ids=tuple(item.row_id for item in ranked), tie_groups=tuple(tie_groups), ranking_digest=digest)
+    digest = sha256_digest(
+        _ranking_digest_payload(
+            ranked_rows=[(item.row_id, item.quantized_score) for item in ranked],
+            tie_groups=tie_groups,
+        )
+    )
+    return CompleteRanking(
+        ranked_row_ids=tuple(item.row_id for item in ranked),
+        tie_groups=tuple(tie_groups),
+        ranking_digest=digest,
+    )
 
 
 def build_complete_row_evidence(
@@ -531,13 +640,21 @@ def build_complete_row_evidence(
     raw_by_id = {str(row_id): float(score) for row_id, score in row_scores}
     if len(raw_by_id) != len(row_scores):
         raise VPMValidationError("row ids must be unique")
-    canonical_row_ids = _canonical_policy_row_ids(raw_by_id.keys(), policy_row_ids=policy_row_ids)
+    canonical_row_ids = _canonical_policy_row_ids(
+        raw_by_id.keys(), policy_row_ids=policy_row_ids
+    )
     scores = tuple(
-        RowScore(row_id=row_id, raw_score=raw_by_id[row_id], quantized_score=quantize_similarity(raw_by_id[row_id]))
+        RowScore(
+            row_id=row_id,
+            raw_score=raw_by_id[row_id],
+            quantized_score=quantize_similarity(raw_by_id[row_id]),
+        )
         for row_id in canonical_row_ids
     )
     ranking = build_complete_ranking(scores)
-    policy_row_universe_digest = _policy_row_universe_digest(policy_artifact_id=policy_artifact_id, row_ids=canonical_row_ids)
+    policy_row_universe_digest = _policy_row_universe_digest(
+        policy_artifact_id=policy_artifact_id, row_ids=canonical_row_ids
+    )
     return CompleteRowEvidence(
         row_scores=scores,
         ranking=ranking,

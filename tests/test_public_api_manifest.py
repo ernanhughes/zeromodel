@@ -11,7 +11,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = REPO_ROOT / "docs" / "architecture" / "package-public-api-1.0.13.csv"
 
 SPEC = importlib.util.spec_from_file_location(
-    "validate_release_candidate", REPO_ROOT / "scripts" / "validate_release_candidate.py"
+    "validate_release_candidate",
+    REPO_ROOT / "scripts" / "validate_release_candidate.py",
 )
 assert SPEC is not None
 validator = importlib.util.module_from_spec(SPEC)
@@ -110,14 +111,18 @@ def test_no_undeclared_export_appears() -> None:
         )
 
 
-def test_optional_packages_are_not_imported_through_another_packages_public_api() -> None:
+def test_optional_packages_are_not_imported_through_another_packages_public_api() -> (
+    None
+):
     # Every row's source_module must belong to that row's own distribution or
     # one of its declared dependencies (packages/*/pyproject.toml), never an
     # undeclared sibling package.
     allowed_prefixes: dict[str, tuple[str, ...]] = {}
     for key, expected in validator.PACKAGES.items():
         own = (expected["namespace"],)
-        deps = tuple(validator.PACKAGES[dep]["namespace"] for dep in expected["depends_on"])
+        deps = tuple(
+            validator.PACKAGES[dep]["namespace"] for dep in expected["depends_on"]
+        )
         allowed_prefixes[expected["distribution"]] = own + deps
 
     for row in _read_manifest_rows():

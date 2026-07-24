@@ -49,7 +49,9 @@ def _read_summary() -> dict | None:
         return None
 
 
-def evaluate_summary(summary: dict | None, subprocess_returncode: int) -> tuple[int, str]:
+def evaluate_summary(
+    summary: dict | None, subprocess_returncode: int
+) -> tuple[int, str]:
     """Decide the fast suite's final exit code from its structured summary.
 
     Kept separate from subprocess/IO handling so this decision (fail on
@@ -57,7 +59,10 @@ def evaluate_summary(summary: dict | None, subprocess_returncode: int) -> tuple[
     pytest's own return code) is directly unit-testable.
     """
     if summary is None:
-        return (subprocess_returncode or 1, "No fast-suite summary report was produced - treating as a failure.")
+        return (
+            subprocess_returncode or 1,
+            "No fast-suite summary report was produced - treating as a failure.",
+        )
     if summary.get("collection_errors"):
         return (1, "Collection errors were detected during collection - failing.")
     if summary.get("collected", 0) == 0:
@@ -142,7 +147,9 @@ def main() -> int:
         return 124
 
     elapsed = time.monotonic() - started
-    print(f"\nFast-suite runtime: {elapsed:.2f}s (budget: {FAST_SUITE_BUDGET_SECONDS}s)")
+    print(
+        f"\nFast-suite runtime: {elapsed:.2f}s (budget: {FAST_SUITE_BUDGET_SECONDS}s)"
+    )
 
     summary = _read_summary()
     if summary is not None:

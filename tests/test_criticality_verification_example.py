@@ -8,7 +8,9 @@ from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 
 def _load_demo():
-    path = Path(__file__).resolve().parents[1] / "examples" / "criticality_verification.py"
+    path = (
+        Path(__file__).resolve().parents[1] / "examples" / "criticality_verification.py"
+    )
     spec = importlib.util.spec_from_file_location("criticality_verification", path)
     assert spec is not None
     assert spec.loader is not None
@@ -37,9 +39,7 @@ def test_q_policy_preserves_actions_and_adds_diagnostics() -> None:
                     range(len(demo.ACTIONS)),
                     key=lambda index: (values[index], -index),
                 )
-                decision = reader.read(
-                    demo.state_row_id(tank_x, target_x, cooldown)
-                )
+                decision = reader.read(demo.state_row_id(tank_x, target_x, cooldown))
                 assert decision.action == demo.ACTIONS[expected_index]
                 assert set(decision.evidence) == set(demo.EVIDENCE_METRICS)
                 checked += 1

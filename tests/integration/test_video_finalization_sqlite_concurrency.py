@@ -9,9 +9,13 @@ import pytest
 
 from video_final_test_support import approved_protocol, authorization
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.runtime import (
+    build_finalization_sqlite_runtime,
+)
 from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 
 
 pytestmark = pytest.mark.integration

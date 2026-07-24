@@ -5,6 +5,7 @@ enforce it on pull requests, but branch protection must separately require pull
 requests and passing checks; a workflow alone cannot prevent authorized direct
 pushes.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -78,7 +79,9 @@ def evaluate_changed_files(changed_files: Sequence[str]) -> EvidenceImpactResult
         )
 
     claims_changed = CLAIMS_AUDIT_PATH in changed
-    research_changed = any(path.startswith(RELEVANT_RESEARCH_PREFIXES) for path in changed)
+    research_changed = any(
+        path.startswith(RELEVANT_RESEARCH_PREFIXES) for path in changed
+    )
     results_changed = any(path.startswith(RELEVANT_RESULTS_PREFIX) for path in changed)
     exemption_changed = EXEMPTION_PATH in changed
 
@@ -122,7 +125,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.changed_file:
         changed = _normalize(args.changed_file)
     elif args.base and args.head:
-        changed = _git_changed_files(base=args.base, head=args.head, repo_root=args.repo_root)
+        changed = _git_changed_files(
+            base=args.base, head=args.head, repo_root=args.repo_root
+        )
     else:
         parser.error("provide either --changed-file entries or both --base and --head")
 

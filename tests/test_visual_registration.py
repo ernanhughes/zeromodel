@@ -4,7 +4,10 @@ import numpy as np
 import pytest
 
 from zeromodel.core.artifact import VPMValidationError
-from research.visual.visual_registration import RegistrationConfig, register_integer_translation
+from research.visual.visual_registration import (
+    RegistrationConfig,
+    register_integer_translation,
+)
 
 
 def _frame() -> np.ndarray:
@@ -72,7 +75,9 @@ def test_no_wraparound_from_left_edge() -> None:
 
 def test_minimum_overlap_constraint_keeps_overlap_fraction_explicit() -> None:
     config = RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.95)
-    result = register_integer_translation(_frame(), _shift(_frame(), dx=3), config=config)
+    result = register_integer_translation(
+        _frame(), _shift(_frame(), dx=3), config=config
+    )
     assert result.overlap_fraction >= 0.95
 
 
@@ -87,7 +92,11 @@ def test_constant_value_images_stay_finite() -> None:
 def test_shape_mismatch_is_rejected() -> None:
     config = RegistrationConfig(max_dx=1, max_dy=1, minimum_overlap_fraction=0.5)
     with pytest.raises(VPMValidationError, match="identical shape"):
-        register_integer_translation(np.zeros((4, 4), dtype=np.uint8), np.zeros((4, 5), dtype=np.uint8), config=config)
+        register_integer_translation(
+            np.zeros((4, 4), dtype=np.uint8),
+            np.zeros((4, 5), dtype=np.uint8),
+            config=config,
+        )
 
 
 def test_input_arrays_remain_immutable_to_caller() -> None:

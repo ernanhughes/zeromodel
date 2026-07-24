@@ -673,9 +673,7 @@ def make_inventory(
     }
 
 
-def write_outputs(
-    data: dict[str, object], output_dir: Path | None = None
-) -> None:
+def write_outputs(data: dict[str, object], output_dir: Path | None = None) -> None:
     arch = output_dir or REPO_ROOT / "docs" / "architecture"
     arch.mkdir(parents=True, exist_ok=True)
     csv_path = arch / "package-module-map-1.0.13.csv"

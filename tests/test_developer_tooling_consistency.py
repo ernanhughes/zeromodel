@@ -34,7 +34,10 @@ def test_vscode_settings_uses_workspace_folder_variable() -> None:
 
 def test_vscode_analysis_paths_point_at_all_six_package_src_roots() -> None:
     settings = json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
-    extra_paths = {path.replace("${workspaceFolder}/", "") for path in settings["python.analysis.extraPaths"]}
+    extra_paths = {
+        path.replace("${workspaceFolder}/", "")
+        for path in settings["python.analysis.extraPaths"]
+    }
     for package in ("core", "analysis", "observation", "vision", "video", "sqlalchemy"):
         assert f"packages/{package}/src" in extra_paths
 

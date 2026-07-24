@@ -13,7 +13,10 @@ from research.video.video_prospective_providers import (
     score_registered_local_correlation,
 )
 from zeromodel.observation.visual_address import ImageObservation
-from zeromodel.video.domains.video_action_set.contracts import GENERATOR_VERSION, REACHABILITY_TILE_DIGEST
+from zeromodel.video.domains.video_action_set.contracts import (
+    GENERATOR_VERSION,
+    REACHABILITY_TILE_DIGEST,
+)
 from zeromodel.video.domains.video_action_set.provider_observation_boundary import (
     provider_observation_digest,
     provider_observation_for_record,

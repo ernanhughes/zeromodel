@@ -8,12 +8,17 @@ import pytest
 pytestmark = pytest.mark.research
 
 
-
 def test_stage3_benchmark_descriptors_are_deterministic() -> None:
     left = bench._build_stage3_benchmark(materialize_final=False)
     right = bench._build_stage3_benchmark(materialize_final=False)
-    assert bench._benchmark_manifest(left)["benchmark_digest"] == bench._benchmark_manifest(right)["benchmark_digest"]
-    assert bench._split_manifest(left)["split_digest"] == bench._split_manifest(right)["split_digest"]
+    assert (
+        bench._benchmark_manifest(left)["benchmark_digest"]
+        == bench._benchmark_manifest(right)["benchmark_digest"]
+    )
+    assert (
+        bench._split_manifest(left)["split_digest"]
+        == bench._split_manifest(right)["split_digest"]
+    )
 
 
 def test_stage3_split_membership_is_disjoint() -> None:

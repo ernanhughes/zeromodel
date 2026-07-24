@@ -1,4 +1,5 @@
 """Stage 3 discriminative current-frame evidence contracts and mechanics."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -10,20 +11,39 @@ import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.visual_address import ImageObservation
-from zeromodel.observation.visual_address import VisualAddressContract, VisualAddressDecision
+from zeromodel.observation.visual_address import (
+    VisualAddressContract,
+    VisualAddressDecision,
+)
 from research.visual.visual_registration import RegistrationConfig
 
 
-VIDEO_DISCRIMINATIVE_REGION_SPEC_VERSION = "zeromodel-video-discriminative-region-spec/v1"
+VIDEO_DISCRIMINATIVE_REGION_SPEC_VERSION = (
+    "zeromodel-video-discriminative-region-spec/v1"
+)
 VIDEO_DISCRIMINATIVE_MASK_SPEC_VERSION = "zeromodel-video-discriminative-mask-spec/v1"
-VIDEO_DISCRIMINATIVE_CALIBRATION_VERSION = "zeromodel-video-discriminative-calibration/v1"
-VIDEO_DISCRIMINATIVE_CANDIDATE_SET_VERSION = "zeromodel-video-discriminative-candidate-set/v2"
+VIDEO_DISCRIMINATIVE_CALIBRATION_VERSION = (
+    "zeromodel-video-discriminative-calibration/v1"
+)
+VIDEO_DISCRIMINATIVE_CANDIDATE_SET_VERSION = (
+    "zeromodel-video-discriminative-candidate-set/v2"
+)
 VIDEO_DISCRIMINATIVE_PROVIDER_VERSION = "zeromodel-video-discriminative-provider/v2"
-VIDEO_DISCRIMINATIVE_ARCHITECTURE_SELECTION_VERSION = "zeromodel-video-discriminative-architecture-selection/v1"
-VIDEO_DISCRIMINATIVE_OPERATING_POINT_SELECTION_VERSION = "zeromodel-video-discriminative-operating-point-selection/v1"
-VIDEO_DISCRIMINATIVE_MASK_PAYLOAD_VERSION = "zeromodel-video-discriminative-mask-payload/v1"
-VIDEO_DISCRIMINATIVE_REGISTRATION_VERSION = "zeromodel-video-discriminative-registration/v1"
-VIDEO_DISCRIMINATIVE_EVIDENCE_MECHANICS_VERSION = "zeromodel-video-discriminative-evidence-mechanics/v1"
+VIDEO_DISCRIMINATIVE_ARCHITECTURE_SELECTION_VERSION = (
+    "zeromodel-video-discriminative-architecture-selection/v1"
+)
+VIDEO_DISCRIMINATIVE_OPERATING_POINT_SELECTION_VERSION = (
+    "zeromodel-video-discriminative-operating-point-selection/v1"
+)
+VIDEO_DISCRIMINATIVE_MASK_PAYLOAD_VERSION = (
+    "zeromodel-video-discriminative-mask-payload/v1"
+)
+VIDEO_DISCRIMINATIVE_REGISTRATION_VERSION = (
+    "zeromodel-video-discriminative-registration/v1"
+)
+VIDEO_DISCRIMINATIVE_EVIDENCE_MECHANICS_VERSION = (
+    "zeromodel-video-discriminative-evidence-mechanics/v1"
+)
 VIDEO_DISCRIMINATIVE_DECISION_VERSION = "zeromodel-video-discriminative-decision/v1"
 
 REGISTRATION_DISTANCE_TIE_EPSILON = 1e-12
@@ -34,9 +54,17 @@ _OUTCOMES = {"exact_row_accepted", "candidate_set_available", "no_sufficient_evi
 
 def _json_bytes(value: Any) -> bytes:
     try:
-        return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")
+        return json.dumps(
+            value,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("discriminative-evidence values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "discriminative-evidence values must be JSON-serializable"
+        ) from exc
 
 
 def _json_digest(value: Any) -> str:
@@ -74,12 +102,16 @@ def _coerce_observation_pixels(value: Any) -> np.ndarray:
         return np.ascontiguousarray(array)
     if array.ndim == 3 and array.shape[2] in {3, 4}:
         rgb = array[:, :, :3].astype(np.float32)
-        gray = np.round(0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]).astype(np.uint8)
+        gray = np.round(
+            0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]
+        ).astype(np.uint8)
         return np.ascontiguousarray(gray)
     raise VPMValidationError("discriminative evidence inputs must be HxW or HxWx3/4")
 
 
-def _immutable_weight_array(array: Any, *, shape: Tuple[int, int], name: str, clip: bool = False) -> np.ndarray:
+def _immutable_weight_array(
+    array: Any, *, shape: Tuple[int, int], name: str, clip: bool = False
+) -> np.ndarray:
     owned = np.ascontiguousarray(np.asarray(array, dtype=np.float32))
     if owned.shape != shape:
         raise VPMValidationError(f"{name} must match mask shape")
@@ -102,11 +134,15 @@ def _normalized_gray(image: Any) -> np.ndarray:
     return array
 
 
-def _crop(array: np.ndarray, *, top: int, left: int, height: int, width: int) -> np.ndarray:
+def _crop(
+    array: np.ndarray, *, top: int, left: int, height: int, width: int
+) -> np.ndarray:
     return np.ascontiguousarray(array[top : top + height, left : left + width])
 
 
-def _aligned_bounds(shape: Tuple[int, int], *, dx: int, dy: int) -> Tuple[int, int, int, int]:
+def _aligned_bounds(
+    shape: Tuple[int, int], *, dx: int, dy: int
+) -> Tuple[int, int, int, int]:
     height, width = shape
     x0 = max(0, dx)
     x1 = min(width, width + dx)
@@ -115,14 +151,18 @@ def _aligned_bounds(shape: Tuple[int, int], *, dx: int, dy: int) -> Tuple[int, i
     return (x0, x1, y0, y1)
 
 
-def _aligned_slices(array: np.ndarray, *, dx: int, dy: int, observation: bool) -> np.ndarray:
+def _aligned_slices(
+    array: np.ndarray, *, dx: int, dy: int, observation: bool
+) -> np.ndarray:
     x0, x1, y0, y1 = _aligned_bounds(array.shape, dx=dx, dy=dy)
     if observation:
         return array[y0 - dy : y1 - dy, x0 - dx : x1 - dx]
     return array[y0:y1, x0:x1]
 
 
-def _normalized_overlap_distance(prototype: np.ndarray, observation: np.ndarray, *, dx: int, dy: int) -> Tuple[float, float, int]:
+def _normalized_overlap_distance(
+    prototype: np.ndarray, observation: np.ndarray, *, dx: int, dy: int
+) -> Tuple[float, float, int]:
     x0, x1, y0, y1 = _aligned_bounds(prototype.shape, dx=dx, dy=dy)
     valid_width = x1 - x0
     valid_height = y1 - y0
@@ -131,24 +171,48 @@ def _normalized_overlap_distance(prototype: np.ndarray, observation: np.ndarray,
     prototype_region = prototype[y0:y1, x0:x1]
     observation_region = observation[y0 - dy : y1 - dy, x0 - dx : x1 - dx]
     valid_count = int(valid_width * valid_height)
-    overlap_fraction = float(valid_count) / float(prototype.shape[0] * prototype.shape[1])
+    overlap_fraction = float(valid_count) / float(
+        prototype.shape[0] * prototype.shape[1]
+    )
 
     pixel_count = float(valid_count)
     left_sum = float(prototype_region.sum(dtype=np.float64))
     right_sum = float(observation_region.sum(dtype=np.float64))
-    left_sum_sq = float(np.multiply(prototype_region, prototype_region, dtype=np.float32).sum(dtype=np.float64))
-    right_sum_sq = float(np.multiply(observation_region, observation_region, dtype=np.float32).sum(dtype=np.float64))
-    cross_sum = float(np.multiply(prototype_region, observation_region, dtype=np.float32).sum(dtype=np.float64))
+    left_sum_sq = float(
+        np.multiply(prototype_region, prototype_region, dtype=np.float32).sum(
+            dtype=np.float64
+        )
+    )
+    right_sum_sq = float(
+        np.multiply(observation_region, observation_region, dtype=np.float32).sum(
+            dtype=np.float64
+        )
+    )
+    cross_sum = float(
+        np.multiply(prototype_region, observation_region, dtype=np.float32).sum(
+            dtype=np.float64
+        )
+    )
 
     left_centered_sum_sq = max(0.0, left_sum_sq - (left_sum * left_sum) / pixel_count)
-    right_centered_sum_sq = max(0.0, right_sum_sq - (right_sum * right_sum) / pixel_count)
-    if left_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON and right_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON:
+    right_centered_sum_sq = max(
+        0.0, right_sum_sq - (right_sum * right_sum) / pixel_count
+    )
+    if (
+        left_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON
+        and right_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON
+    ):
         distance = 0.0
-    elif left_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON or right_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON:
+    elif (
+        left_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON
+        or right_centered_sum_sq <= REGISTRATION_DISTANCE_TIE_EPSILON
+    ):
         distance = 1.0
     else:
         centered_cross_sum = cross_sum - (left_sum * right_sum) / pixel_count
-        cosine = centered_cross_sum / np.sqrt(left_centered_sum_sq * right_centered_sum_sq)
+        cosine = centered_cross_sum / np.sqrt(
+            left_centered_sum_sq * right_centered_sum_sq
+        )
         cosine = float(np.clip(cosine, -1.0, 1.0))
         distance = float(np.sqrt(max(0.0, 2.0 - (2.0 * cosine))))
     return (distance, overlap_fraction, valid_count)
@@ -174,9 +238,13 @@ def _difference_uint8(left: np.ndarray, right: np.ndarray) -> np.ndarray:
     return delta.astype(np.int16, copy=False)
 
 
-def _prototype_payload_digest(prototypes: Mapping[str, Tuple[str, str, str, Any]]) -> str:
+def _prototype_payload_digest(
+    prototypes: Mapping[str, Tuple[str, str, str, Any]],
+) -> str:
     entries = []
-    for observation_id, (row_id, action_id, digest, observation) in sorted(prototypes.items()):
+    for observation_id, (row_id, action_id, digest, observation) in sorted(
+        prototypes.items()
+    ):
         pixels = _coerce_observation_pixels(observation)
         entries.append(
             {
@@ -190,7 +258,9 @@ def _prototype_payload_digest(prototypes: Mapping[str, Tuple[str, str, str, Any]
     return _json_digest(entries)
 
 
-def _development_payload_digest(development_observations: Mapping[str, Sequence[Any]]) -> str:
+def _development_payload_digest(
+    development_observations: Mapping[str, Sequence[Any]],
+) -> str:
     entries = []
     for row_id, observations in sorted(development_observations.items()):
         payloads = []
@@ -266,14 +336,26 @@ class DiscriminativeMaskSpec:
     def __post_init__(self) -> None:
         if self.version != VIDEO_DISCRIMINATIVE_MASK_SPEC_VERSION:
             raise VPMValidationError("unsupported discriminative mask spec version")
-        for name in ("mask_id", "row_id", "action_id", "prototype_digest", "development_digest", "derivation_contract"):
+        for name in (
+            "mask_id",
+            "row_id",
+            "action_id",
+            "prototype_digest",
+            "development_digest",
+            "derivation_contract",
+        ):
             if not str(getattr(self, name)):
                 raise VPMValidationError(f"{name} cannot be empty")
         if len(tuple(self.shape)) != 2:
             raise VPMValidationError("mask shape must be two-dimensional")
         if any(int(item) <= 0 for item in self.shape):
             raise VPMValidationError("mask shape dimensions must be positive")
-        for name in ("informative_pixel_count", "action_conflict_pixel_count", "stable_pixel_count", "intensity_tolerance"):
+        for name in (
+            "informative_pixel_count",
+            "action_conflict_pixel_count",
+            "stable_pixel_count",
+            "intensity_tolerance",
+        ):
             if int(getattr(self, name)) < 0:
                 raise VPMValidationError(f"{name} must be non-negative")
         object.__setattr__(self, "shape", (int(self.shape[0]), int(self.shape[1])))
@@ -316,13 +398,25 @@ class DiscriminativeMask:
         if self.version != VIDEO_DISCRIMINATIVE_MASK_PAYLOAD_VERSION:
             raise VPMValidationError("unsupported discriminative mask payload version")
         shape = tuple(self.spec.shape)
-        row_informative = _immutable_weight_array(self.row_informative_weights, shape=shape, name="row_informative_weights")
-        action_conflict = _immutable_weight_array(self.action_conflict_weights, shape=shape, name="action_conflict_weights")
-        stable = _immutable_weight_array(self.stable_weights, shape=shape, name="stable_weights")
-        separation = _immutable_weight_array(self.separation_weights, shape=shape, name="separation_weights", clip=True)
-        if int(np.count_nonzero(row_informative > 0.0)) != int(self.spec.informative_pixel_count):
+        row_informative = _immutable_weight_array(
+            self.row_informative_weights, shape=shape, name="row_informative_weights"
+        )
+        action_conflict = _immutable_weight_array(
+            self.action_conflict_weights, shape=shape, name="action_conflict_weights"
+        )
+        stable = _immutable_weight_array(
+            self.stable_weights, shape=shape, name="stable_weights"
+        )
+        separation = _immutable_weight_array(
+            self.separation_weights, shape=shape, name="separation_weights", clip=True
+        )
+        if int(np.count_nonzero(row_informative > 0.0)) != int(
+            self.spec.informative_pixel_count
+        ):
             raise VPMValidationError("row_informative_weights count must match spec")
-        if int(np.count_nonzero(action_conflict > 0.0)) != int(self.spec.action_conflict_pixel_count):
+        if int(np.count_nonzero(action_conflict > 0.0)) != int(
+            self.spec.action_conflict_pixel_count
+        ):
             raise VPMValidationError("action_conflict_weights count must match spec")
         if int(np.count_nonzero(stable > 0.0)) != int(self.spec.stable_pixel_count):
             raise VPMValidationError("stable_weights count must match spec")
@@ -403,7 +497,13 @@ class DiscriminativeEvidenceCalibration:
             raise VPMValidationError("minimum_supporting_regions must be non-negative")
         if int(self.maximum_candidate_set_size) < 1:
             raise VPMValidationError("maximum_candidate_set_size must be positive")
-        for name in ("prototype_digest", "region_spec_digest", "mask_spec_digest", "policy_artifact_id", "source_scope"):
+        for name in (
+            "prototype_digest",
+            "region_spec_digest",
+            "mask_spec_digest",
+            "policy_artifact_id",
+            "source_scope",
+        ):
             if not str(getattr(self, name)):
                 raise VPMValidationError(f"{name} cannot be empty")
         object.__setattr__(self, "metadata", _freeze(self.metadata))
@@ -421,7 +521,9 @@ class DiscriminativeEvidenceCalibration:
             "minimum_available_fraction": float(self.minimum_available_fraction),
             "minimum_support": float(self.minimum_support),
             "maximum_contradiction": float(self.maximum_contradiction),
-            "maximum_critical_contradiction": float(self.maximum_critical_contradiction),
+            "maximum_critical_contradiction": float(
+                self.maximum_critical_contradiction
+            ),
             "exact_winner_threshold": float(self.exact_winner_threshold),
             "exact_winner_margin": float(self.exact_winner_margin),
             "candidate_relative_margin": float(self.candidate_relative_margin),
@@ -483,21 +585,31 @@ class RegionDiscriminativeEvidence:
             raise VPMValidationError("available_informative_fraction must be in [0, 1]")
         if not (0.0 <= float(self.geometric_overlap) <= 1.0):
             raise VPMValidationError("geometric_overlap must be in [0, 1]")
-        object.__setattr__(self, "rejection_reasons", tuple(str(item) for item in self.rejection_reasons))
+        object.__setattr__(
+            self,
+            "rejection_reasons",
+            tuple(str(item) for item in self.rejection_reasons),
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "region_id": self.region_id,
             "expected_informative_mass": float(self.expected_informative_mass),
             "available_informative_mass": float(self.available_informative_mass),
-            "available_informative_fraction": float(self.available_informative_fraction),
+            "available_informative_fraction": float(
+                self.available_informative_fraction
+            ),
             "geometric_overlap": float(self.geometric_overlap),
             "valid_pixel_count": int(self.valid_pixel_count),
             "support_mass": float(self.support_mass),
             "contradiction_mass": float(self.contradiction_mass),
             "critical_contradiction_mass": float(self.critical_contradiction_mass),
-            "conflicting_action_support_mass": float(self.conflicting_action_support_mass),
-            "conflicting_action_contradiction_mass": float(self.conflicting_action_contradiction_mass),
+            "conflicting_action_support_mass": float(
+                self.conflicting_action_support_mass
+            ),
+            "conflicting_action_contradiction_mass": float(
+                self.conflicting_action_contradiction_mass
+            ),
             "registration_succeeded": bool(self.registration_succeeded),
             "registration_dx": int(self.registration_dx),
             "registration_dy": int(self.registration_dy),
@@ -534,7 +646,14 @@ class InformativeRegistrationResult:
     def __post_init__(self) -> None:
         if self.version != VIDEO_DISCRIMINATIVE_REGISTRATION_VERSION:
             raise VPMValidationError("unsupported informative registration version")
-        for name in ("distance", "score", "geometric_overlap", "expected_informative_mass", "available_informative_mass", "available_informative_fraction"):
+        for name in (
+            "distance",
+            "score",
+            "geometric_overlap",
+            "expected_informative_mass",
+            "available_informative_mass",
+            "available_informative_fraction",
+        ):
             value = float(getattr(self, name))
             if not np.isfinite(value):
                 raise VPMValidationError(f"{name} must be finite")
@@ -565,7 +684,9 @@ class InformativeRegistrationResult:
             "geometric_overlap": float(self.geometric_overlap),
             "expected_informative_mass": float(self.expected_informative_mass),
             "available_informative_mass": float(self.available_informative_mass),
-            "available_informative_fraction": float(self.available_informative_fraction),
+            "available_informative_fraction": float(
+                self.available_informative_fraction
+            ),
             "registration_succeeded": bool(self.registration_succeeded),
             "rejection_reason": self.rejection_reason,
             "tie_break_reason": self.tie_break_reason,
@@ -612,12 +733,18 @@ class PixelEvidenceTotals:
         return {
             "expected_informative_mass": float(self.expected_informative_mass),
             "available_informative_mass": float(self.available_informative_mass),
-            "available_informative_fraction": float(self.available_informative_fraction),
+            "available_informative_fraction": float(
+                self.available_informative_fraction
+            ),
             "support_mass": float(self.support_mass),
             "contradiction_mass": float(self.contradiction_mass),
             "critical_contradiction_mass": float(self.critical_contradiction_mass),
-            "conflicting_action_support_mass": float(self.conflicting_action_support_mass),
-            "conflicting_action_contradiction_mass": float(self.conflicting_action_contradiction_mass),
+            "conflicting_action_support_mass": float(
+                self.conflicting_action_support_mass
+            ),
+            "conflicting_action_contradiction_mass": float(
+                self.conflicting_action_contradiction_mass
+            ),
         }
 
 
@@ -659,13 +786,27 @@ class DiscriminativeRowCandidate:
     regional_evidence: Tuple[RegionDiscriminativeEvidence, ...]
 
     def __post_init__(self) -> None:
-        for name in ("row_id", "action_id", "prototype_observation_id", "prototype_digest", "observation_digest", "architecture_id", "mask_digest", "region_spec_digest", "provider_digest", "score_semantics", "raw_score_kind"):
+        for name in (
+            "row_id",
+            "action_id",
+            "prototype_observation_id",
+            "prototype_digest",
+            "observation_digest",
+            "architecture_id",
+            "mask_digest",
+            "region_spec_digest",
+            "provider_digest",
+            "score_semantics",
+            "raw_score_kind",
+        ):
             if not str(getattr(self, name)):
                 raise VPMValidationError(f"{name} cannot be empty")
         if self.architecture_id not in _ARCHITECTURES:
             raise VPMValidationError("unsupported architecture_id")
         if self.score_semantics != "similarity":
-            raise VPMValidationError("discriminative candidates must use similarity score semantics")
+            raise VPMValidationError(
+                "discriminative candidates must use similarity score semantics"
+            )
         for name in (
             "candidate_strength",
             "raw_score",
@@ -688,7 +829,11 @@ class DiscriminativeRowCandidate:
             raise VPMValidationError("supporting_region_count must be non-negative")
         if len(self.regional_evidence) == 0:
             raise VPMValidationError("regional_evidence cannot be empty")
-        object.__setattr__(self, "ineligibility_reasons", tuple(str(item) for item in self.ineligibility_reasons))
+        object.__setattr__(
+            self,
+            "ineligibility_reasons",
+            tuple(str(item) for item in self.ineligibility_reasons),
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -707,11 +852,19 @@ class DiscriminativeRowCandidate:
             "raw_score_kind": self.raw_score_kind,
             "aggregate_support": float(self.aggregate_support),
             "aggregate_contradiction": float(self.aggregate_contradiction),
-            "aggregate_critical_contradiction": float(self.aggregate_critical_contradiction),
-            "aggregate_conflicting_action_support": float(self.aggregate_conflicting_action_support),
-            "aggregate_conflicting_action_contradiction": float(self.aggregate_conflicting_action_contradiction),
+            "aggregate_critical_contradiction": float(
+                self.aggregate_critical_contradiction
+            ),
+            "aggregate_conflicting_action_support": float(
+                self.aggregate_conflicting_action_support
+            ),
+            "aggregate_conflicting_action_contradiction": float(
+                self.aggregate_conflicting_action_contradiction
+            ),
             "available_informative_mass": float(self.available_informative_mass),
-            "available_informative_fraction": float(self.available_informative_fraction),
+            "available_informative_fraction": float(
+                self.available_informative_fraction
+            ),
             "supporting_region_count": int(self.supporting_region_count),
             "nearest_competitor_row_id": self.nearest_competitor_row_id,
             "nearest_competitor_strength": self.nearest_competitor_strength,
@@ -720,8 +873,12 @@ class DiscriminativeRowCandidate:
             "nearest_conflicting_action_row_id": self.nearest_conflicting_action_row_id,
             "nearest_conflicting_action_strength": self.nearest_conflicting_action_strength,
             "candidate_relative_margin": self.candidate_relative_margin,
-            "exact_winner_margin": None if self.exact_winner_margin is None else float(self.exact_winner_margin),
-            "conflicting_action_separation": None if self.conflicting_action_separation is None else float(self.conflicting_action_separation),
+            "exact_winner_margin": None
+            if self.exact_winner_margin is None
+            else float(self.exact_winner_margin),
+            "conflicting_action_separation": None
+            if self.conflicting_action_separation is None
+            else float(self.conflicting_action_separation),
             "eligible_for_exact": bool(self.eligible_for_exact),
             "eligible_for_candidate_set": bool(self.eligible_for_candidate_set),
             "ineligibility_reasons": list(self.ineligibility_reasons),
@@ -752,7 +909,12 @@ class DiscriminativeCandidateSet:
             raise VPMValidationError("unsupported discriminative candidate set version")
         if self.outcome not in _OUTCOMES:
             raise VPMValidationError("unsupported discriminative outcome")
-        for name in ("observation_digest", "provider_digest", "architecture_id", "candidate_digest"):
+        for name in (
+            "observation_digest",
+            "provider_digest",
+            "architecture_id",
+            "candidate_digest",
+        ):
             if not str(getattr(self, name)):
                 raise VPMValidationError(f"{name} cannot be empty")
         if self.architecture_id not in _ARCHITECTURES:
@@ -768,7 +930,11 @@ class DiscriminativeCandidateSet:
             raise VPMValidationError("only exact_row_accepted may carry exact_row_id")
         object.__setattr__(self, "rows", tuple(str(item) for item in self.rows))
         object.__setattr__(self, "actions", tuple(str(item) for item in self.actions))
-        object.__setattr__(self, "excluded_nearby_rows", tuple(str(item) for item in self.excluded_nearby_rows))
+        object.__setattr__(
+            self,
+            "excluded_nearby_rows",
+            tuple(str(item) for item in self.excluded_nearby_rows),
+        )
 
     @property
     def digest(self) -> str:
@@ -819,12 +985,20 @@ class RawCandidateAggregate:
             "raw_score": float(self.raw_score),
             "raw_score_kind": self.raw_score_kind,
             "available_informative_mass": float(self.available_informative_mass),
-            "available_informative_fraction": float(self.available_informative_fraction),
+            "available_informative_fraction": float(
+                self.available_informative_fraction
+            ),
             "aggregate_support": float(self.aggregate_support),
             "aggregate_contradiction": float(self.aggregate_contradiction),
-            "aggregate_critical_contradiction": float(self.aggregate_critical_contradiction),
-            "aggregate_conflicting_action_support": float(self.aggregate_conflicting_action_support),
-            "aggregate_conflicting_action_contradiction": float(self.aggregate_conflicting_action_contradiction),
+            "aggregate_critical_contradiction": float(
+                self.aggregate_critical_contradiction
+            ),
+            "aggregate_conflicting_action_support": float(
+                self.aggregate_conflicting_action_support
+            ),
+            "aggregate_conflicting_action_contradiction": float(
+                self.aggregate_conflicting_action_contradiction
+            ),
             "supporting_region_count": int(self.supporting_region_count),
             "expected_informative_mass": float(self.expected_informative_mass),
         }
@@ -859,7 +1033,9 @@ class DiscriminativeEvidenceDecision:
             "provider_digest": self.provider_digest,
             "evidence_state": self.evidence_state,
             "candidate_set": self.candidate_set.to_dict(),
-            "ranked_candidates": [candidate.to_dict() for candidate in self.ranked_candidates],
+            "ranked_candidates": [
+                candidate.to_dict() for candidate in self.ranked_candidates
+            ],
             "exact_address_decision": self.exact_address_decision.to_dict(),
             "trace": _freeze(self.trace),
         }
@@ -876,7 +1052,12 @@ def discriminative_region_digest(regions: Sequence[DiscriminativeRegionSpec]) ->
 
 
 def discriminative_mask_digest(masks: Sequence[DiscriminativeMaskSpec]) -> str:
-    values = [mask.to_dict() for mask in sorted(masks, key=lambda item: (item.row_id, item.action_id, item.mask_id))]
+    values = [
+        mask.to_dict()
+        for mask in sorted(
+            masks, key=lambda item: (item.row_id, item.action_id, item.mask_id)
+        )
+    ]
     ids = [mask["mask_id"] for mask in values]
     if len(set(ids)) != len(ids):
         raise VPMValidationError("duplicate discriminative mask IDs are not allowed")
@@ -893,8 +1074,14 @@ def _registration_candidate(
     dx: int,
     dy: int,
 ) -> Dict[str, Any]:
-    distance, overlap_fraction, valid_count = _normalized_overlap_distance(prototype, observation, dx=dx, dy=dy)
-    available_mass = float(_aligned_slices(informative_weights, dx=dx, dy=dy, observation=False).sum(dtype=np.float64))
+    distance, overlap_fraction, valid_count = _normalized_overlap_distance(
+        prototype, observation, dx=dx, dy=dy
+    )
+    available_mass = float(
+        _aligned_slices(informative_weights, dx=dx, dy=dy, observation=False).sum(
+            dtype=np.float64
+        )
+    )
     return {
         "distance": float(distance),
         "available_informative_mass": available_mass,
@@ -905,7 +1092,9 @@ def _registration_candidate(
     }
 
 
-def _compare_registration_candidates(left: Dict[str, Any], right: Dict[str, Any]) -> Tuple[int, str]:
+def _compare_registration_candidates(
+    left: Dict[str, Any], right: Dict[str, Any]
+) -> Tuple[int, str]:
     if left["distance"] + REGISTRATION_DISTANCE_TIE_EPSILON < right["distance"]:
         return (-1, "distance")
     if right["distance"] + REGISTRATION_DISTANCE_TIE_EPSILON < left["distance"]:
@@ -958,8 +1147,12 @@ def register_informative_translation(
     left = _normalized_gray(prototype)
     right = _normalized_gray(observation)
     if left.shape != right.shape:
-        raise VPMValidationError("informative registration inputs must have identical shape")
-    weights = _immutable_weight_array(informative_weights, shape=left.shape, name="informative_weights")
+        raise VPMValidationError(
+            "informative registration inputs must have identical shape"
+        )
+    weights = _immutable_weight_array(
+        informative_weights, shape=left.shape, name="informative_weights"
+    )
     expected_mass = float(weights.sum(dtype=np.float64))
     evaluated = 0
     best: Optional[Dict[str, Any]] = None
@@ -973,7 +1166,11 @@ def register_informative_translation(
                 dx=dx,
                 dy=dy,
             )
-            if candidate["geometric_overlap"] + REGISTRATION_DISTANCE_TIE_EPSILON < float(config.minimum_overlap_fraction):
+            if candidate[
+                "geometric_overlap"
+            ] + REGISTRATION_DISTANCE_TIE_EPSILON < float(
+                config.minimum_overlap_fraction
+            ):
                 continue
             evaluated += 1
             if best is None:
@@ -987,7 +1184,9 @@ def register_informative_translation(
                 if runner_up is None:
                     runner_up = candidate
                 else:
-                    runner_comparison, _runner_reason = _compare_registration_candidates(candidate, runner_up)
+                    runner_comparison, _runner_reason = (
+                        _compare_registration_candidates(candidate, runner_up)
+                    )
                     if runner_comparison < 0:
                         runner_up = candidate
     contract_digest = _registration_contract_digest(config)
@@ -1014,7 +1213,11 @@ def register_informative_translation(
     tie_break_reason = "distance"
     if runner_up is not None:
         _cmp, tie_break_reason = _compare_registration_candidates(best, runner_up)
-    available_fraction = 0.0 if expected_mass <= 0.0 else float(best["available_informative_mass"] / expected_mass)
+    available_fraction = (
+        0.0
+        if expected_mass <= 0.0
+        else float(best["available_informative_mass"] / expected_mass)
+    )
     return InformativeRegistrationResult(
         prototype_shape=tuple(int(item) for item in left.shape),
         observation_shape=tuple(int(item) for item in right.shape),
@@ -1035,8 +1238,12 @@ def register_informative_translation(
         registration_contract_digest=contract_digest,
         runner_up_dx=None if runner_up is None else int(runner_up["dx"]),
         runner_up_dy=None if runner_up is None else int(runner_up["dy"]),
-        runner_up_available_informative_mass=None if runner_up is None else float(runner_up["available_informative_mass"]),
-        runner_up_valid_pixel_count=None if runner_up is None else int(runner_up["valid_pixel_count"]),
+        runner_up_available_informative_mass=None
+        if runner_up is None
+        else float(runner_up["available_informative_mass"]),
+        runner_up_valid_pixel_count=None
+        if runner_up is None
+        else int(runner_up["valid_pixel_count"]),
     )
 
 
@@ -1058,7 +1265,9 @@ def build_discriminative_masks(
     prototype_rows: Dict[str, Dict[str, Any]] = {}
     prototype_ids = set()
     shape: Optional[Tuple[int, int]] = None
-    for observation_id, (row_id, action_id, prototype_digest, observation) in sorted(prototypes.items()):
+    for observation_id, (row_id, action_id, prototype_digest, observation) in sorted(
+        prototypes.items()
+    ):
         if observation_id in prototype_ids:
             raise VPMValidationError("duplicate observation IDs are not allowed")
         prototype_ids.add(observation_id)
@@ -1098,30 +1307,58 @@ def build_discriminative_masks(
     results: Dict[str, DiscriminativeMask] = {}
     for row_id, entry in prototype_rows.items():
         candidate = entry["pixels"]
-        competitors = [other for other_id, other in prototype_rows.items() if other_id != row_id]
+        competitors = [
+            other for other_id, other in prototype_rows.items() if other_id != row_id
+        ]
         row_info = np.zeros(shape, dtype=np.float32)
         action_conflict = np.zeros(shape, dtype=np.float32)
         separation = np.zeros(shape, dtype=np.float32)
 
         if competitors:
-            diff_stack = np.stack([_difference_uint8(candidate, other["pixels"]) for other in competitors], axis=0)
-            row_info = (diff_stack.max(axis=0) > int(intensity_tolerance)).astype(np.float32)
+            diff_stack = np.stack(
+                [
+                    _difference_uint8(candidate, other["pixels"])
+                    for other in competitors
+                ],
+                axis=0,
+            )
+            row_info = (diff_stack.max(axis=0) > int(intensity_tolerance)).astype(
+                np.float32
+            )
             nearest_relevant = diff_stack.min(axis=0).astype(np.float32)
-            separation = np.clip(nearest_relevant / float(int(separation_cap)), 0.0, 1.0)
-            conflict_competitors = [other for other in competitors if other["action_id"] != entry["action_id"]]
+            separation = np.clip(
+                nearest_relevant / float(int(separation_cap)), 0.0, 1.0
+            )
+            conflict_competitors = [
+                other
+                for other in competitors
+                if other["action_id"] != entry["action_id"]
+            ]
             if conflict_competitors:
-                conflict_stack = np.stack([_difference_uint8(candidate, other["pixels"]) for other in conflict_competitors], axis=0)
-                action_conflict = (conflict_stack.max(axis=0) > int(intensity_tolerance)).astype(np.float32)
+                conflict_stack = np.stack(
+                    [
+                        _difference_uint8(candidate, other["pixels"])
+                        for other in conflict_competitors
+                    ],
+                    axis=0,
+                )
+                action_conflict = (
+                    conflict_stack.max(axis=0) > int(intensity_tolerance)
+                ).astype(np.float32)
         development = tuple(development_observations.get(row_id, ()))
         if development:
             variations = []
             for observation in development:
                 observed_pixels = _coerce_observation_pixels(observation)
                 if observed_pixels.shape != shape:
-                    raise VPMValidationError("development observations must match prototype geometry")
+                    raise VPMValidationError(
+                        "development observations must match prototype geometry"
+                    )
                 variations.append(_difference_uint8(candidate, observed_pixels))
             variation_stack = np.stack(variations, axis=0)
-            stable = (variation_stack.max(axis=0) <= int(stability_tolerance)).astype(np.float32)
+            stable = (variation_stack.max(axis=0) <= int(stability_tolerance)).astype(
+                np.float32
+            )
         else:
             stable = np.zeros(shape, dtype=np.float32)
 
@@ -1140,7 +1377,9 @@ def build_discriminative_masks(
             metadata={
                 "prototype_observation_id": entry["observation_id"],
                 "prototype_payload_digest": prototype_digest,
-                "stability_fallback": "zero_stable_mass_without_development" if not development else "development_bounded",
+                "stability_fallback": "zero_stable_mass_without_development"
+                if not development
+                else "development_bounded",
             },
         )
         results[row_id] = DiscriminativeMask(
@@ -1168,16 +1407,36 @@ def extract_candidate_region_evidence(
     candidate_pixels = _coerce_observation_pixels(candidate_prototype)
     observation_pixels = _coerce_observation_pixels(observation)
     if candidate_pixels.shape != observation_pixels.shape:
-        raise VPMValidationError("candidate and observation must share identical geometry")
+        raise VPMValidationError(
+            "candidate and observation must share identical geometry"
+        )
     top = int(region.top)
     left = int(region.left)
     height = int(region.height)
     width = int(region.width)
-    candidate_region = _crop(candidate_pixels, top=top, left=left, height=height, width=width)
-    observation_region = _crop(observation_pixels, top=top, left=left, height=height, width=width)
-    informative_region = _crop(mask.row_informative_weights * mask.stable_weights, top=top, left=left, height=height, width=width)
-    action_conflict_region = _crop(mask.action_conflict_weights * mask.stable_weights, top=top, left=left, height=height, width=width)
-    separation_region = _crop(mask.separation_weights, top=top, left=left, height=height, width=width)
+    candidate_region = _crop(
+        candidate_pixels, top=top, left=left, height=height, width=width
+    )
+    observation_region = _crop(
+        observation_pixels, top=top, left=left, height=height, width=width
+    )
+    informative_region = _crop(
+        mask.row_informative_weights * mask.stable_weights,
+        top=top,
+        left=left,
+        height=height,
+        width=width,
+    )
+    action_conflict_region = _crop(
+        mask.action_conflict_weights * mask.stable_weights,
+        top=top,
+        left=left,
+        height=height,
+        width=width,
+    )
+    separation_region = _crop(
+        mask.separation_weights, top=top, left=left, height=height, width=width
+    )
 
     registration = register_informative_translation(
         candidate_region,
@@ -1203,27 +1462,56 @@ def extract_candidate_region_evidence(
             registration_dx=registration.dx,
             registration_dy=registration.dy,
             registration_tie_break_reason=registration.tie_break_reason,
-            rejection_reasons=(str(registration.rejection_reason),) if registration.rejection_reason else (),
+            rejection_reasons=(str(registration.rejection_reason),)
+            if registration.rejection_reason
+            else (),
         )
 
     dx = int(registration.dx)
     dy = int(registration.dy)
-    candidate_aligned = _aligned_slices(candidate_region, dx=dx, dy=dy, observation=False).astype(np.float32) / 255.0
-    observation_aligned = _aligned_slices(observation_region, dx=dx, dy=dy, observation=True).astype(np.float32) / 255.0
-    informative_aligned = _aligned_slices(informative_region, dx=dx, dy=dy, observation=False).astype(np.float32)
-    conflict_aligned = _aligned_slices(action_conflict_region, dx=dx, dy=dy, observation=False).astype(np.float32)
-    separation_aligned = _aligned_slices(separation_region, dx=dx, dy=dy, observation=False).astype(np.float32)
+    candidate_aligned = (
+        _aligned_slices(candidate_region, dx=dx, dy=dy, observation=False).astype(
+            np.float32
+        )
+        / 255.0
+    )
+    observation_aligned = (
+        _aligned_slices(observation_region, dx=dx, dy=dy, observation=True).astype(
+            np.float32
+        )
+        / 255.0
+    )
+    informative_aligned = _aligned_slices(
+        informative_region, dx=dx, dy=dy, observation=False
+    ).astype(np.float32)
+    conflict_aligned = _aligned_slices(
+        action_conflict_region, dx=dx, dy=dy, observation=False
+    ).astype(np.float32)
+    separation_aligned = _aligned_slices(
+        separation_region, dx=dx, dy=dy, observation=False
+    ).astype(np.float32)
     weighted_informative = informative_aligned * separation_aligned
     weighted_conflict = conflict_aligned * separation_aligned
 
     other_distances = []
     conflicting_distances = []
-    for _observation_id, (row_id, action_id, _digest, prototype) in sorted(competing_prototypes.items()):
+    for _observation_id, (row_id, action_id, _digest, prototype) in sorted(
+        competing_prototypes.items()
+    ):
         prototype_pixels = _coerce_observation_pixels(prototype)
         if prototype_pixels.shape != candidate_pixels.shape:
-            raise VPMValidationError("competing prototypes must match candidate geometry")
-        prototype_region_other = _crop(prototype_pixels, top=top, left=left, height=height, width=width)
-        aligned = _aligned_slices(prototype_region_other, dx=dx, dy=dy, observation=False).astype(np.float32) / 255.0
+            raise VPMValidationError(
+                "competing prototypes must match candidate geometry"
+            )
+        prototype_region_other = _crop(
+            prototype_pixels, top=top, left=left, height=height, width=width
+        )
+        aligned = (
+            _aligned_slices(
+                prototype_region_other, dx=dx, dy=dy, observation=False
+            ).astype(np.float32)
+            / 255.0
+        )
         distances = np.abs(observation_aligned - aligned)
         other_distances.append(distances)
         if action_id != candidate_action_id:
@@ -1240,10 +1528,16 @@ def extract_candidate_region_evidence(
 
     candidate_distance = np.abs(observation_aligned - candidate_aligned)
     support_mask = weighted_informative > 0.0
-    support = support_mask & (candidate_distance + REGISTRATION_DISTANCE_TIE_EPSILON < nearest_other)
-    contradiction = support_mask & (nearest_other + REGISTRATION_DISTANCE_TIE_EPSILON < candidate_distance)
+    support = support_mask & (
+        candidate_distance + REGISTRATION_DISTANCE_TIE_EPSILON < nearest_other
+    )
+    contradiction = support_mask & (
+        nearest_other + REGISTRATION_DISTANCE_TIE_EPSILON < candidate_distance
+    )
     conflict_support_mask = weighted_conflict > 0.0
-    conflict_support = conflict_support_mask & (candidate_distance + REGISTRATION_DISTANCE_TIE_EPSILON < nearest_conflicting)
+    conflict_support = conflict_support_mask & (
+        candidate_distance + REGISTRATION_DISTANCE_TIE_EPSILON < nearest_conflicting
+    )
     conflict_contradiction = conflict_support_mask & (
         nearest_conflicting + REGISTRATION_DISTANCE_TIE_EPSILON < candidate_distance
     )
@@ -1253,10 +1547,18 @@ def extract_candidate_region_evidence(
         available_informative_mass=registration.available_informative_mass,
         available_informative_fraction=registration.available_informative_fraction,
         support_mass=float(weighted_informative[support].sum(dtype=np.float64)),
-        contradiction_mass=float(weighted_informative[contradiction].sum(dtype=np.float64)),
-        critical_contradiction_mass=float(weighted_conflict[conflict_contradiction].sum(dtype=np.float64)),
-        conflicting_action_support_mass=float(weighted_conflict[conflict_support].sum(dtype=np.float64)),
-        conflicting_action_contradiction_mass=float(weighted_conflict[conflict_contradiction].sum(dtype=np.float64)),
+        contradiction_mass=float(
+            weighted_informative[contradiction].sum(dtype=np.float64)
+        ),
+        critical_contradiction_mass=float(
+            weighted_conflict[conflict_contradiction].sum(dtype=np.float64)
+        ),
+        conflicting_action_support_mass=float(
+            weighted_conflict[conflict_support].sum(dtype=np.float64)
+        ),
+        conflicting_action_contradiction_mass=float(
+            weighted_conflict[conflict_contradiction].sum(dtype=np.float64)
+        ),
     )
     rejection_reasons = ()
     if totals.expected_informative_mass <= 0.0:
@@ -1283,7 +1585,9 @@ def extract_candidate_region_evidence(
     )
 
 
-def _architecture_active_gates(architecture_id: str) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
+def _architecture_active_gates(
+    architecture_id: str,
+) -> Tuple[Tuple[str, ...], Tuple[str, ...]]:
     common = (
         "minimum_available_mass",
         "minimum_available_fraction",
@@ -1300,7 +1604,11 @@ def _architecture_active_gates(architecture_id: str) -> Tuple[Tuple[str, ...], T
             "minimum_supporting_regions",
         )
     elif architecture_id == "B":
-        active = common + ("minimum_support", "exact_winner_threshold", "exact_winner_margin")
+        active = common + (
+            "minimum_support",
+            "exact_winner_threshold",
+            "exact_winner_margin",
+        )
         inactive = (
             "maximum_contradiction",
             "maximum_critical_contradiction",
@@ -1338,9 +1646,17 @@ def _aggregate_candidate(
     regions: Sequence[DiscriminativeRegionSpec],
 ) -> RawCandidateAggregate:
     region_by_id = {region.region_id: region for region in regions}
-    total_expected_mass = float(sum(item.expected_informative_mass for item in regional_evidence))
-    total_available_mass = float(sum(item.available_informative_mass for item in regional_evidence))
-    available_fraction = 0.0 if total_expected_mass <= 0.0 else total_available_mass / total_expected_mass
+    total_expected_mass = float(
+        sum(item.expected_informative_mass for item in regional_evidence)
+    )
+    total_available_mass = float(
+        sum(item.available_informative_mass for item in regional_evidence)
+    )
+    available_fraction = (
+        0.0
+        if total_expected_mass <= 0.0
+        else total_available_mass / total_expected_mass
+    )
     weighted_distance_numerator = 0.0
     weighted_distance_denominator = 0.0
     total_support = 0.0
@@ -1356,22 +1672,40 @@ def _aggregate_candidate(
         total_contradiction += float(item.contradiction_mass)
         total_critical_contradiction += float(item.critical_contradiction_mass)
         total_conflict_support += float(item.conflicting_action_support_mass)
-        total_conflict_contradiction += float(item.conflicting_action_contradiction_mass)
+        total_conflict_contradiction += float(
+            item.conflicting_action_contradiction_mass
+        )
         if item.support_mass > 0.0:
             supporting_region_count += 1
         # Stage 2-style regional distance reconstructed from support/contradiction evidence:
         evidence_total = float(item.support_mass + item.contradiction_mass)
         if evidence_total > 0.0:
-            region_distance = min(1.0, max(0.0, float(item.contradiction_mass / evidence_total)))
+            region_distance = min(
+                1.0, max(0.0, float(item.contradiction_mass / evidence_total))
+            )
         else:
             region_distance = 1.0
         weighted_distance_numerator += float(region.weight) * region_distance
         weighted_distance_denominator += float(region.weight)
-    support_ratio = 0.0 if total_available_mass <= 0.0 else total_support / total_available_mass
-    contradiction_ratio = 0.0 if total_available_mass <= 0.0 else total_contradiction / total_available_mass
-    critical_ratio = 0.0 if total_available_mass <= 0.0 else total_critical_contradiction / total_available_mass
+    support_ratio = (
+        0.0 if total_available_mass <= 0.0 else total_support / total_available_mass
+    )
+    contradiction_ratio = (
+        0.0
+        if total_available_mass <= 0.0
+        else total_contradiction / total_available_mass
+    )
+    critical_ratio = (
+        0.0
+        if total_available_mass <= 0.0
+        else total_critical_contradiction / total_available_mass
+    )
     if architecture_id == "A":
-        raw_distance = 1.0 if weighted_distance_denominator <= 0.0 else weighted_distance_numerator / weighted_distance_denominator
+        raw_distance = (
+            1.0
+            if weighted_distance_denominator <= 0.0
+            else weighted_distance_numerator / weighted_distance_denominator
+        )
         candidate_strength = max(0.0, 1.0 - raw_distance) * available_fraction
         return RawCandidateAggregate(
             architecture_id=architecture_id,
@@ -1384,8 +1718,16 @@ def _aggregate_candidate(
             aggregate_support=float(candidate_strength),
             aggregate_contradiction=0.0,
             aggregate_critical_contradiction=0.0,
-            aggregate_conflicting_action_support=float(total_conflict_support / total_available_mass) if total_available_mass > 0.0 else 0.0,
-            aggregate_conflicting_action_contradiction=float(total_conflict_contradiction / total_available_mass) if total_available_mass > 0.0 else 0.0,
+            aggregate_conflicting_action_support=float(
+                total_conflict_support / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
+            aggregate_conflicting_action_contradiction=float(
+                total_conflict_contradiction / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
             supporting_region_count=int(supporting_region_count),
             expected_informative_mass=float(total_expected_mass),
         )
@@ -1402,13 +1744,23 @@ def _aggregate_candidate(
             aggregate_support=float(support_ratio),
             aggregate_contradiction=float(contradiction_ratio),
             aggregate_critical_contradiction=float(critical_ratio),
-            aggregate_conflicting_action_support=float(total_conflict_support / total_available_mass) if total_available_mass > 0.0 else 0.0,
-            aggregate_conflicting_action_contradiction=float(total_conflict_contradiction / total_available_mass) if total_available_mass > 0.0 else 0.0,
+            aggregate_conflicting_action_support=float(
+                total_conflict_support / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
+            aggregate_conflicting_action_contradiction=float(
+                total_conflict_contradiction / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
             supporting_region_count=int(supporting_region_count),
             expected_informative_mass=float(total_expected_mass),
         )
     if architecture_id == "C":
-        candidate_strength = max(0.0, support_ratio - contradiction_ratio - critical_ratio)
+        candidate_strength = max(
+            0.0, support_ratio - contradiction_ratio - critical_ratio
+        )
         return RawCandidateAggregate(
             architecture_id=architecture_id,
             score_semantics="similarity",
@@ -1420,13 +1772,23 @@ def _aggregate_candidate(
             aggregate_support=float(support_ratio),
             aggregate_contradiction=float(contradiction_ratio),
             aggregate_critical_contradiction=float(critical_ratio),
-            aggregate_conflicting_action_support=float(total_conflict_support / total_available_mass) if total_available_mass > 0.0 else 0.0,
-            aggregate_conflicting_action_contradiction=float(total_conflict_contradiction / total_available_mass) if total_available_mass > 0.0 else 0.0,
+            aggregate_conflicting_action_support=float(
+                total_conflict_support / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
+            aggregate_conflicting_action_contradiction=float(
+                total_conflict_contradiction / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
             supporting_region_count=int(supporting_region_count),
             expected_informative_mass=float(total_expected_mass),
         )
     if architecture_id == "D":
-        candidate_strength = max(0.0, support_ratio - contradiction_ratio - critical_ratio)
+        candidate_strength = max(
+            0.0, support_ratio - contradiction_ratio - critical_ratio
+        )
         return RawCandidateAggregate(
             architecture_id=architecture_id,
             score_semantics="similarity",
@@ -1438,8 +1800,16 @@ def _aggregate_candidate(
             aggregate_support=float(support_ratio),
             aggregate_contradiction=float(contradiction_ratio),
             aggregate_critical_contradiction=float(critical_ratio),
-            aggregate_conflicting_action_support=float(total_conflict_support / total_available_mass) if total_available_mass > 0.0 else 0.0,
-            aggregate_conflicting_action_contradiction=float(total_conflict_contradiction / total_available_mass) if total_available_mass > 0.0 else 0.0,
+            aggregate_conflicting_action_support=float(
+                total_conflict_support / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
+            aggregate_conflicting_action_contradiction=float(
+                total_conflict_contradiction / total_available_mass
+            )
+            if total_available_mass > 0.0
+            else 0.0,
             supporting_region_count=int(supporting_region_count),
             expected_informative_mass=float(total_expected_mass),
         )
@@ -1471,15 +1841,24 @@ def build_raw_discriminative_candidates(
 ) -> Tuple[DiscriminativeRowCandidate, ...]:
     rows_seen = set()
     candidates = []
-    for observation_id, (row_id, action_id, prototype_digest, prototype_observation) in sorted(prototypes.items(), key=lambda item: (item[1][0], item[0])):
+    for observation_id, (
+        row_id,
+        action_id,
+        prototype_digest,
+        prototype_observation,
+    ) in sorted(prototypes.items(), key=lambda item: (item[1][0], item[0])):
         if row_id in rows_seen:
-            raise VPMValidationError("discriminative provider requires exactly one prototype per row")
+            raise VPMValidationError(
+                "discriminative provider requires exactly one prototype per row"
+            )
         rows_seen.add(row_id)
         mask = masks.get(row_id)
         if mask is None:
             raise VPMValidationError("missing discriminative mask for row_id")
         if mask.spec.row_id != row_id or mask.spec.action_id != action_id:
-            raise VPMValidationError("mask identity does not match prototype row/action")
+            raise VPMValidationError(
+                "mask identity does not match prototype row/action"
+            )
         regional = tuple(
             extract_candidate_region_evidence(
                 candidate_row_id=row_id,
@@ -1487,7 +1866,11 @@ def build_raw_discriminative_candidates(
                 candidate_prototype=prototype_observation,
                 observation=observation,
                 mask=mask,
-                competing_prototypes={key: value for key, value in prototypes.items() if value[0] != row_id},
+                competing_prototypes={
+                    key: value
+                    for key, value in prototypes.items()
+                    if value[0] != row_id
+                },
                 region=region,
             )
             for region in regions
@@ -1538,7 +1921,9 @@ def build_raw_discriminative_candidates(
     return tuple(candidates)
 
 
-def rank_discriminative_candidates(candidates: Sequence[DiscriminativeRowCandidate]) -> Tuple[DiscriminativeRowCandidate, ...]:
+def rank_discriminative_candidates(
+    candidates: Sequence[DiscriminativeRowCandidate],
+) -> Tuple[DiscriminativeRowCandidate, ...]:
     ranked = list(sorted(candidates, key=_candidate_rank_key))
     if not ranked:
         raise VPMValidationError("rank_discriminative_candidates requires candidates")
@@ -1549,22 +1934,60 @@ def rank_discriminative_candidates(candidates: Sequence[DiscriminativeRowCandida
         strongest_conflicting_by_action.setdefault(candidate.action_id, candidate)
     enriched = []
     for candidate in ranked:
-        nearest_same = next((other for other in ranked if other.row_id != candidate.row_id and other.action_id == candidate.action_id), None)
-        nearest_conflicting = next((other for other in ranked if other.action_id != candidate.action_id), None)
-        nearest_competitor = next((other for other in ranked if other.row_id != candidate.row_id), None)
-        exact_margin = None if candidate.row_id != winner.row_id or runner_up is None else float(candidate.candidate_strength - runner_up.candidate_strength)
-        relative_margin = None if candidate.row_id == winner.row_id else float(winner.candidate_strength - candidate.candidate_strength)
-        conflicting_separation = None if nearest_conflicting is None else float(candidate.candidate_strength - nearest_conflicting.candidate_strength)
+        nearest_same = next(
+            (
+                other
+                for other in ranked
+                if other.row_id != candidate.row_id
+                and other.action_id == candidate.action_id
+            ),
+            None,
+        )
+        nearest_conflicting = next(
+            (other for other in ranked if other.action_id != candidate.action_id), None
+        )
+        nearest_competitor = next(
+            (other for other in ranked if other.row_id != candidate.row_id), None
+        )
+        exact_margin = (
+            None
+            if candidate.row_id != winner.row_id or runner_up is None
+            else float(candidate.candidate_strength - runner_up.candidate_strength)
+        )
+        relative_margin = (
+            None
+            if candidate.row_id == winner.row_id
+            else float(winner.candidate_strength - candidate.candidate_strength)
+        )
+        conflicting_separation = (
+            None
+            if nearest_conflicting is None
+            else float(
+                candidate.candidate_strength - nearest_conflicting.candidate_strength
+            )
+        )
         enriched.append(
             DiscriminativeRowCandidate(
                 **{
                     **candidate.__dict__,
-                    "nearest_competitor_row_id": None if nearest_competitor is None else nearest_competitor.row_id,
-                    "nearest_competitor_strength": None if nearest_competitor is None else float(nearest_competitor.candidate_strength),
-                    "nearest_same_action_row_id": None if nearest_same is None else nearest_same.row_id,
-                    "nearest_same_action_strength": None if nearest_same is None else float(nearest_same.candidate_strength),
-                    "nearest_conflicting_action_row_id": None if nearest_conflicting is None else nearest_conflicting.row_id,
-                    "nearest_conflicting_action_strength": None if nearest_conflicting is None else float(nearest_conflicting.candidate_strength),
+                    "nearest_competitor_row_id": None
+                    if nearest_competitor is None
+                    else nearest_competitor.row_id,
+                    "nearest_competitor_strength": None
+                    if nearest_competitor is None
+                    else float(nearest_competitor.candidate_strength),
+                    "nearest_same_action_row_id": None
+                    if nearest_same is None
+                    else nearest_same.row_id,
+                    "nearest_same_action_strength": None
+                    if nearest_same is None
+                    else float(nearest_same.candidate_strength),
+                    "nearest_conflicting_action_row_id": None
+                    if nearest_conflicting is None
+                    else nearest_conflicting.row_id,
+                    "nearest_conflicting_action_strength": None
+                    if nearest_conflicting is None
+                    else float(nearest_conflicting.candidate_strength),
                     "candidate_relative_margin": relative_margin,
                     "exact_winner_margin": exact_margin,
                     "conflicting_action_separation": conflicting_separation,
@@ -1580,32 +2003,74 @@ def evaluate_candidate_eligibility(
     ranked_candidates: Sequence[DiscriminativeRowCandidate],
     calibration: DiscriminativeEvidenceCalibration,
 ) -> DiscriminativeRowCandidate:
-    active_gates, inactive_gates = _architecture_active_gates(calibration.architecture_id)
+    active_gates, inactive_gates = _architecture_active_gates(
+        calibration.architecture_id
+    )
     reasons = []
-    if candidate.available_informative_mass + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_available_mass:
+    if (
+        candidate.available_informative_mass + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_available_mass
+    ):
         reasons.append("minimum_available_mass")
-    if candidate.available_informative_fraction + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_available_fraction:
+    if (
+        candidate.available_informative_fraction + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_available_fraction
+    ):
         reasons.append("minimum_available_fraction")
-    if "minimum_support" in active_gates and candidate.aggregate_support + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_support:
+    if (
+        "minimum_support" in active_gates
+        and candidate.aggregate_support + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_support
+    ):
         reasons.append("minimum_support")
-    if "maximum_contradiction" in active_gates and candidate.aggregate_contradiction > calibration.maximum_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON:
+    if (
+        "maximum_contradiction" in active_gates
+        and candidate.aggregate_contradiction
+        > calibration.maximum_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON
+    ):
         reasons.append("maximum_contradiction")
-    if "maximum_critical_contradiction" in active_gates and candidate.aggregate_critical_contradiction > calibration.maximum_critical_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON:
+    if (
+        "maximum_critical_contradiction" in active_gates
+        and candidate.aggregate_critical_contradiction
+        > calibration.maximum_critical_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON
+    ):
         reasons.append("maximum_critical_contradiction")
-    if candidate.candidate_relative_margin is not None and candidate.candidate_relative_margin + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.candidate_relative_margin:
+    if (
+        candidate.candidate_relative_margin is not None
+        and candidate.candidate_relative_margin + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.candidate_relative_margin
+    ):
         reasons.append("candidate_relative_margin")
-    if candidate.conflicting_action_separation is not None and candidate.conflicting_action_separation + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.conflicting_action_separation:
+    if (
+        candidate.conflicting_action_separation is not None
+        and candidate.conflicting_action_separation + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.conflicting_action_separation
+    ):
         reasons.append("conflicting_action_separation")
-    if "minimum_supporting_regions" in active_gates and candidate.supporting_region_count < calibration.minimum_supporting_regions:
+    if (
+        "minimum_supporting_regions" in active_gates
+        and candidate.supporting_region_count < calibration.minimum_supporting_regions
+    ):
         reasons.append("minimum_supporting_regions")
     eligible_for_candidate_set = len(reasons) == 0
     exact_reasons = list(reasons)
-    if "exact_winner_threshold" in active_gates and candidate.candidate_strength + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.exact_winner_threshold:
+    if (
+        "exact_winner_threshold" in active_gates
+        and candidate.candidate_strength + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.exact_winner_threshold
+    ):
         exact_reasons.append("exact_winner_threshold")
     if "exact_winner_margin" in active_gates:
-        if candidate.exact_winner_margin is None or candidate.exact_winner_margin + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.exact_winner_margin:
+        if (
+            candidate.exact_winner_margin is None
+            or candidate.exact_winner_margin + REGISTRATION_DISTANCE_TIE_EPSILON
+            < calibration.exact_winner_margin
+        ):
             exact_reasons.append("exact_winner_margin")
-    if candidate.aggregate_critical_contradiction > calibration.maximum_critical_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON:
+    if (
+        candidate.aggregate_critical_contradiction
+        > calibration.maximum_critical_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON
+    ):
         if "maximum_critical_contradiction" not in exact_reasons:
             exact_reasons.append("maximum_critical_contradiction")
     exact_reasons.extend(f"inactive:{name}" for name in inactive_gates)
@@ -1613,7 +2078,10 @@ def evaluate_candidate_eligibility(
         **{
             **candidate.__dict__,
             "eligible_for_candidate_set": eligible_for_candidate_set,
-            "eligible_for_exact": len([item for item in exact_reasons if not item.startswith("inactive:")]) == 0,
+            "eligible_for_exact": len(
+                [item for item in exact_reasons if not item.startswith("inactive:")]
+            )
+            == 0,
             "ineligibility_reasons": tuple(exact_reasons),
         }
     )
@@ -1626,9 +2094,18 @@ def build_discriminative_candidate_set(
     provider_digest: str,
     observation_digest: str,
 ) -> DiscriminativeCandidateSet:
-    eligible = [candidate for candidate in ranked_candidates if candidate.eligible_for_candidate_set]
-    eligible_exact = [candidate for candidate in ranked_candidates if candidate.eligible_for_exact]
-    if len(eligible_exact) == 1 and ranked_candidates[0].row_id == eligible_exact[0].row_id:
+    eligible = [
+        candidate
+        for candidate in ranked_candidates
+        if candidate.eligible_for_candidate_set
+    ]
+    eligible_exact = [
+        candidate for candidate in ranked_candidates if candidate.eligible_for_exact
+    ]
+    if (
+        len(eligible_exact) == 1
+        and ranked_candidates[0].row_id == eligible_exact[0].row_id
+    ):
         winner = eligible_exact[0]
         return DiscriminativeCandidateSet(
             observation_digest=observation_digest,
@@ -1642,7 +2119,9 @@ def build_discriminative_candidate_set(
             strongest_candidate_row_id=winner.row_id,
             weakest_included_row_id=winner.row_id,
             unique_action_candidate_set=True,
-            excluded_nearby_rows=tuple(candidate.row_id for candidate in ranked_candidates[1:4]),
+            excluded_nearby_rows=tuple(
+                candidate.row_id for candidate in ranked_candidates[1:4]
+            ),
             exact_row_id=winner.row_id,
             rejection_reason=None,
         )
@@ -1656,7 +2135,9 @@ def build_discriminative_candidate_set(
                 candidate_set_limit=int(calibration.maximum_candidate_set_size),
                 rows=(),
                 actions=(),
-                candidate_digest=_json_digest([candidate.to_dict() for candidate in eligible]),
+                candidate_digest=_json_digest(
+                    [candidate.to_dict() for candidate in eligible]
+                ),
                 strongest_candidate_row_id=eligible[0].row_id,
                 weakest_included_row_id=eligible[-1].row_id,
                 unique_action_candidate_set=None,
@@ -1674,11 +2155,17 @@ def build_discriminative_candidate_set(
             candidate_set_limit=int(calibration.maximum_candidate_set_size),
             rows=rows,
             actions=actions,
-            candidate_digest=_json_digest([candidate.to_dict() for candidate in eligible]),
+            candidate_digest=_json_digest(
+                [candidate.to_dict() for candidate in eligible]
+            ),
             strongest_candidate_row_id=eligible[0].row_id,
             weakest_included_row_id=eligible[-1].row_id,
             unique_action_candidate_set=len(set(actions)) == 1,
-            excluded_nearby_rows=tuple(candidate.row_id for candidate in ranked_candidates if candidate.row_id not in rows)[:4],
+            excluded_nearby_rows=tuple(
+                candidate.row_id
+                for candidate in ranked_candidates
+                if candidate.row_id not in rows
+            )[:4],
             exact_row_id=None,
             rejection_reason=None,
         )
@@ -1694,7 +2181,9 @@ def build_discriminative_candidate_set(
         strongest_candidate_row_id=None,
         weakest_included_row_id=None,
         unique_action_candidate_set=None,
-        excluded_nearby_rows=tuple(candidate.row_id for candidate in ranked_candidates[:4]),
+        excluded_nearby_rows=tuple(
+            candidate.row_id for candidate in ranked_candidates[:4]
+        ),
         exact_row_id=None,
         rejection_reason="no_candidate_passed",
     )
@@ -1712,7 +2201,9 @@ class DiscriminativeEvidenceProvider:
         source_scope: str,
     ) -> None:
         if calibration.architecture_id not in {"A", "B", "C"}:
-            raise VPMValidationError("V4 provider supports architectures A, B, and C only")
+            raise VPMValidationError(
+                "V4 provider supports architectures A, B, and C only"
+            )
         self._prototypes = dict(sorted(prototypes.items()))
         self._masks = dict(sorted(masks.items()))
         self._regions = tuple(regions)
@@ -1723,20 +2214,36 @@ class DiscriminativeEvidenceProvider:
             raise VPMValidationError("discriminative provider requires prototypes")
         self._shape = next(iter(self._prototypes.values()))[3].pixels.shape
         self._prototype_collection_digest = _prototype_payload_digest(self._prototypes)
-        self._mask_spec_digest = discriminative_mask_digest(tuple(mask.spec for mask in self._masks.values()))
-        self._mask_payload_digest = _json_digest([mask.to_dict() for _row_id, mask in sorted(self._masks.items())])
+        self._mask_spec_digest = discriminative_mask_digest(
+            tuple(mask.spec for mask in self._masks.values())
+        )
+        self._mask_payload_digest = _json_digest(
+            [mask.to_dict() for _row_id, mask in sorted(self._masks.items())]
+        )
         self._region_spec_digest = discriminative_region_digest(self._regions)
         if calibration.prototype_digest != self._prototype_collection_digest:
-            raise VPMValidationError("calibration prototype_digest does not match provider prototypes")
+            raise VPMValidationError(
+                "calibration prototype_digest does not match provider prototypes"
+            )
         if calibration.mask_spec_digest != self._mask_spec_digest:
-            raise VPMValidationError("calibration mask_spec_digest does not match provider masks")
+            raise VPMValidationError(
+                "calibration mask_spec_digest does not match provider masks"
+            )
         if calibration.region_spec_digest != self._region_spec_digest:
-            raise VPMValidationError("calibration region_spec_digest does not match provider regions")
+            raise VPMValidationError(
+                "calibration region_spec_digest does not match provider regions"
+            )
         if calibration.policy_artifact_id != self._policy_artifact_id:
-            raise VPMValidationError("calibration policy_artifact_id does not match provider input")
+            raise VPMValidationError(
+                "calibration policy_artifact_id does not match provider input"
+            )
         if calibration.source_scope != self._source_scope:
-            raise VPMValidationError("calibration source_scope does not match provider input")
-        registration_contracts = sorted({region.registration_config.digest for region in self._regions})
+            raise VPMValidationError(
+                "calibration source_scope does not match provider input"
+            )
+        registration_contracts = sorted(
+            {region.registration_config.digest for region in self._regions}
+        )
         self._provider_digest = _json_digest(
             {
                 "provider_version": VIDEO_DISCRIMINATIVE_PROVIDER_VERSION,
@@ -1773,12 +2280,16 @@ class DiscriminativeEvidenceProvider:
                 "mask_spec_digest": self._mask_spec_digest,
                 "mask_payload_digest": self._mask_payload_digest,
                 "prototype_collection_digest": self._prototype_collection_digest,
-                "maximum_candidate_set_size": int(self._calibration.maximum_candidate_set_size),
+                "maximum_candidate_set_size": int(
+                    self._calibration.maximum_candidate_set_size
+                ),
             },
         )
 
     def _raw_cache_key(self, observation: ImageObservation) -> str:
-        registration_contracts = sorted({region.registration_config.digest for region in self._regions})
+        registration_contracts = sorted(
+            {region.registration_config.digest for region in self._regions}
+        )
         return _json_digest(
             {
                 "observation_digest": observation.raw_digest,
@@ -1796,11 +2307,20 @@ class DiscriminativeEvidenceProvider:
         )
 
     def _decision_cache_key(self, observation: ImageObservation) -> str:
-        return _json_digest({"raw_cache_key": self._raw_cache_key(observation), "calibration_digest": self._calibration.digest})
+        return _json_digest(
+            {
+                "raw_cache_key": self._raw_cache_key(observation),
+                "calibration_digest": self._calibration.digest,
+            }
+        )
 
-    def _rank(self, observation: ImageObservation) -> Tuple[DiscriminativeRowCandidate, ...]:
+    def _rank(
+        self, observation: ImageObservation
+    ) -> Tuple[DiscriminativeRowCandidate, ...]:
         if observation.pixels.shape != self._shape:
-            raise VPMValidationError("discriminative provider observation geometry does not match prototypes")
+            raise VPMValidationError(
+                "discriminative provider observation geometry does not match prototypes"
+            )
         raw_key = self._raw_cache_key(observation)
         cached = self._raw_cache.get(raw_key)
         if cached is not None:
@@ -1818,7 +2338,11 @@ class DiscriminativeEvidenceProvider:
         )
         ranked = rank_discriminative_candidates(raw)
         evaluated = tuple(
-            evaluate_candidate_eligibility(candidate=candidate, ranked_candidates=ranked, calibration=self._calibration)
+            evaluate_candidate_eligibility(
+                candidate=candidate,
+                ranked_candidates=ranked,
+                calibration=self._calibration,
+            )
             for candidate in ranked
         )
         evaluated = tuple(sorted(evaluated, key=_candidate_rank_key))
@@ -1839,10 +2363,16 @@ class DiscriminativeEvidenceProvider:
         )
         best = ranked[0]
         second = ranked[1] if len(ranked) > 1 else None
-        visual_reason = candidate_set.outcome if candidate_set.outcome != "exact_row_accepted" else "accepted"
+        visual_reason = (
+            candidate_set.outcome
+            if candidate_set.outcome != "exact_row_accepted"
+            else "accepted"
+        )
         visual = VisualAddressDecision(
             accepted=candidate_set.outcome == "exact_row_accepted",
-            reason=visual_reason if candidate_set.rejection_reason is None else candidate_set.rejection_reason,
+            reason=visual_reason
+            if candidate_set.rejection_reason is None
+            else candidate_set.rejection_reason,
             observation_digest=observation.raw_digest,
             representation_digest=decision_key,
             provider_kind="deterministic_discriminative_evidence",
@@ -1855,10 +2385,16 @@ class DiscriminativeEvidenceProvider:
             nearest_score=float(best.candidate_strength),
             second_row_id=None if second is None else second.row_id,
             second_score=None if second is None else float(second.candidate_strength),
-            ambiguity_measure=None if best.exact_winner_margin is None else float(best.exact_winner_margin),
+            ambiguity_measure=None
+            if best.exact_winner_margin is None
+            else float(best.exact_winner_margin),
             local_evidence_score=float(best.candidate_strength),
             visible_evidence_fraction=float(best.available_informative_fraction),
-            critical_evidence_present=bool(best.aggregate_critical_contradiction <= self._calibration.maximum_critical_contradiction + REGISTRATION_DISTANCE_TIE_EPSILON),
+            critical_evidence_present=bool(
+                best.aggregate_critical_contradiction
+                <= self._calibration.maximum_critical_contradiction
+                + REGISTRATION_DISTANCE_TIE_EPSILON
+            ),
             matched_row_id=candidate_set.exact_row_id,
             exact_match=candidate_set.outcome == "exact_row_accepted",
             accepted_by=(
@@ -1889,16 +2425,30 @@ class DiscriminativeEvidenceProvider:
             "candidate_set_rows": list(candidate_set.rows),
             "candidate_set_actions": list(candidate_set.actions),
             "unique_action_status": candidate_set.unique_action_candidate_set,
-            "raw_eligible_rows": [candidate.row_id for candidate in ranked if candidate.eligible_for_candidate_set],
-            "exclusion_reasons": {candidate.row_id: list(candidate.ineligibility_reasons) for candidate in ranked if not candidate.eligible_for_candidate_set},
+            "raw_eligible_rows": [
+                candidate.row_id
+                for candidate in ranked
+                if candidate.eligible_for_candidate_set
+            ],
+            "exclusion_reasons": {
+                candidate.row_id: list(candidate.ineligibility_reasons)
+                for candidate in ranked
+                if not candidate.eligible_for_candidate_set
+            },
             "ranked_candidate_summaries": [candidate.to_dict() for candidate in ranked],
             "winner": best.to_dict(),
             "runner_up": None if second is None else second.to_dict(),
             "winner_margin": best.exact_winner_margin,
-            "nearest_conflicting_action_candidate": None if best.nearest_conflicting_action_row_id is None else best.nearest_conflicting_action_row_id,
+            "nearest_conflicting_action_candidate": None
+            if best.nearest_conflicting_action_row_id is None
+            else best.nearest_conflicting_action_row_id,
             "conflicting_action_separation": best.conflicting_action_separation,
-            "active_gates": list(_architecture_active_gates(self._calibration.architecture_id)[0]),
-            "inactive_gates": list(_architecture_active_gates(self._calibration.architecture_id)[1]),
+            "active_gates": list(
+                _architecture_active_gates(self._calibration.architecture_id)[0]
+            ),
+            "inactive_gates": list(
+                _architecture_active_gates(self._calibration.architecture_id)[1]
+            ),
             "registration_summary": {
                 candidate.row_id: [
                     {
@@ -1931,11 +2481,20 @@ class DiscriminativeEvidenceProvider:
         return self.evaluate(observation).exact_address_decision
 
 
-def discriminative_provider_contract(*, calibration: DiscriminativeEvidenceCalibration, region_spec_digest: str, mask_spec_digest: str) -> VisualAddressContract:
+def discriminative_provider_contract(
+    *,
+    calibration: DiscriminativeEvidenceCalibration,
+    region_spec_digest: str,
+    mask_spec_digest: str,
+) -> VisualAddressContract:
     if calibration.region_spec_digest != region_spec_digest:
-        raise VPMValidationError("calibration region_spec_digest does not match provider input")
+        raise VPMValidationError(
+            "calibration region_spec_digest does not match provider input"
+        )
     if calibration.mask_spec_digest != mask_spec_digest:
-        raise VPMValidationError("calibration mask_spec_digest does not match provider input")
+        raise VPMValidationError(
+            "calibration mask_spec_digest does not match provider input"
+        )
     provider_id = _json_digest(
         {
             "provider_version": VIDEO_DISCRIMINATIVE_PROVIDER_VERSION,

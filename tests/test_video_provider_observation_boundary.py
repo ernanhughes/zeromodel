@@ -7,7 +7,9 @@ import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.video.domains.video_action_set import provider_observation_boundary as boundary
+from zeromodel.video.domains.video_action_set import (
+    provider_observation_boundary as boundary,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

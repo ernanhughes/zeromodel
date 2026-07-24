@@ -6,8 +6,14 @@ import sys
 
 
 def _load_guard_module():
-    path = Path(__file__).resolve().parents[1] / "scripts" / "check_visual_evidence_impact.py"
-    spec = importlib.util.spec_from_file_location("check_visual_evidence_impact_test", path)
+    path = (
+        Path(__file__).resolve().parents[1]
+        / "scripts"
+        / "check_visual_evidence_impact.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "check_visual_evidence_impact_test", path
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -65,6 +71,9 @@ def test_guard_accepts_results_evidence_change() -> None:
 
 def test_guard_accepts_machine_readable_exemption() -> None:
     result = evaluate_changed_files(
-        ["zeromodel/visual_benchmark.py", "docs/results/visual-evidence-impact-exemption.json"]
+        [
+            "zeromodel/visual_benchmark.py",
+            "docs/results/visual-evidence-impact-exemption.json",
+        ]
     )
     assert result.requirement_satisfied is True

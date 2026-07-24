@@ -20,7 +20,11 @@ from research.evidence.video_discriminative_evidence import (
     _immutable_weight_array,
     register_informative_translation,
 )
-from zeromodel.observation.visual_address import ImageObservation, VisualAddressContract, VisualAddressDecision
+from zeromodel.observation.visual_address import (
+    ImageObservation,
+    VisualAddressContract,
+    VisualAddressDecision,
+)
 from research.visual.visual_registration import RegistrationConfig
 
 
@@ -30,7 +34,9 @@ VIDEO_JOINT_DECISION_VERSION = "zeromodel-video-joint-evidence-decision/v1"
 VIDEO_JOINT_PROVIDER_VERSION = "zeromodel-video-discriminative-provider/v3"
 VIDEO_JOINT_REGION_SPEC_VERSION = "zeromodel-video-joint-region-spec/v1"
 VIDEO_JOINT_CANDIDATE_MASK_SPEC_VERSION = "zeromodel-video-joint-candidate-mask-spec/v1"
-VIDEO_JOINT_CANDIDATE_MASK_PAYLOAD_VERSION = "zeromodel-video-joint-candidate-mask-payload/v1"
+VIDEO_JOINT_CANDIDATE_MASK_PAYLOAD_VERSION = (
+    "zeromodel-video-joint-candidate-mask-payload/v1"
+)
 VIDEO_JOINT_PAIRWISE_MASK_SPEC_VERSION = "zeromodel-video-pairwise-mask-spec/v1"
 VIDEO_JOINT_PAIRWISE_MASK_PAYLOAD_VERSION = "zeromodel-video-pairwise-mask-payload/v1"
 VIDEO_JOINT_CALIBRATION_VERSION = "zeromodel-video-joint-calibration/v1"
@@ -47,7 +53,9 @@ class _BoundedBaseCandidateCache:
         if capacity < 1:
             raise VPMValidationError("base candidate cache capacity must be positive")
         self._capacity = int(capacity)
-        self._data: OrderedDict[_BaseCandidateCacheKey, _BaseCandidateCacheValue] = OrderedDict()
+        self._data: OrderedDict[_BaseCandidateCacheKey, _BaseCandidateCacheValue] = (
+            OrderedDict()
+        )
         self._hits = 0
         self._misses = 0
         self._lock = RLock()
@@ -62,7 +70,9 @@ class _BoundedBaseCandidateCache:
             self._data[key] = cached
             return cached
 
-    def put(self, key: _BaseCandidateCacheKey, value: _BaseCandidateCacheValue) -> _BaseCandidateCacheValue:
+    def put(
+        self, key: _BaseCandidateCacheKey, value: _BaseCandidateCacheValue
+    ) -> _BaseCandidateCacheValue:
         with self._lock:
             self._data.pop(key, None)
             self._data[key] = value
@@ -105,7 +115,9 @@ def _freeze(value: Any) -> Any:
     if isinstance(value, np.generic):
         raise VPMValidationError("joint-evidence JSON must use plain scalars")
     if isinstance(value, Mapping):
-        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+        return MappingProxyType(
+            {str(key): _freeze(item) for key, item in value.items()}
+        )
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     return value
@@ -121,9 +133,17 @@ def _thaw(value: Any) -> Any:
 
 def _json_bytes(value: Any) -> bytes:
     try:
-        return json.dumps(_thaw(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")
+        return json.dumps(
+            _thaw(value),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+            allow_nan=False,
+        ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("joint-evidence values must be JSON serializable") from exc
+        raise VPMValidationError(
+            "joint-evidence values must be JSON serializable"
+        ) from exc
 
 
 def _digest(value: Any) -> str:
@@ -163,8 +183,15 @@ class JointEvidenceRegionSpec:
             raise VPMValidationError("unsupported joint region spec version")
         for name in ("region_id",):
             _nonempty(name, getattr(self, name))
-        if int(self.top) < 0 or int(self.left) < 0 or int(self.height) <= 0 or int(self.width) <= 0:
-            raise VPMValidationError("joint region geometry must be positive and non-negative")
+        if (
+            int(self.top) < 0
+            or int(self.left) < 0
+            or int(self.height) <= 0
+            or int(self.width) <= 0
+        ):
+            raise VPMValidationError(
+                "joint region geometry must be positive and non-negative"
+            )
         _finite("weight", float(self.weight))
         if float(self.weight) <= 0.0:
             raise VPMValidationError("joint region weight must be positive")
@@ -224,7 +251,13 @@ class JointCandidateMaskSpec:
             _nonempty(name, getattr(self, name))
         if len(tuple(self.shape)) != 2 or any(int(item) <= 0 for item in self.shape):
             raise VPMValidationError("candidate mask shape must be positive HxW")
-        for name in ("row_informative_pixel_count", "stable_pixel_count", "candidate_fit_pixel_count", "action_conflict_pixel_count", "intensity_tolerance"):
+        for name in (
+            "row_informative_pixel_count",
+            "stable_pixel_count",
+            "candidate_fit_pixel_count",
+            "action_conflict_pixel_count",
+            "intensity_tolerance",
+        ):
             if int(getattr(self, name)) < 0:
                 raise VPMValidationError(f"{name} must be non-negative")
 
@@ -266,17 +299,35 @@ class JointCandidateMask:
         if self.version != VIDEO_JOINT_CANDIDATE_MASK_PAYLOAD_VERSION:
             raise VPMValidationError("unsupported joint candidate mask payload version")
         shape = tuple(self.spec.shape)
-        row_info = _immutable_weight_array(self.row_informative_weights, shape=shape, name="row_informative_weights")
-        stable = _immutable_weight_array(self.stable_weights, shape=shape, name="stable_weights")
-        fit = _immutable_weight_array(self.candidate_fit_weights, shape=shape, name="candidate_fit_weights", clip=True)
-        conflict = _immutable_weight_array(self.action_conflict_weights, shape=shape, name="action_conflict_weights", clip=True)
-        if int(np.count_nonzero(row_info > 0.0)) != int(self.spec.row_informative_pixel_count):
+        row_info = _immutable_weight_array(
+            self.row_informative_weights, shape=shape, name="row_informative_weights"
+        )
+        stable = _immutable_weight_array(
+            self.stable_weights, shape=shape, name="stable_weights"
+        )
+        fit = _immutable_weight_array(
+            self.candidate_fit_weights,
+            shape=shape,
+            name="candidate_fit_weights",
+            clip=True,
+        )
+        conflict = _immutable_weight_array(
+            self.action_conflict_weights,
+            shape=shape,
+            name="action_conflict_weights",
+            clip=True,
+        )
+        if int(np.count_nonzero(row_info > 0.0)) != int(
+            self.spec.row_informative_pixel_count
+        ):
             raise VPMValidationError("row_informative_weights count mismatch")
         if int(np.count_nonzero(stable > 0.0)) != int(self.spec.stable_pixel_count):
             raise VPMValidationError("stable_weights count mismatch")
         if int(np.count_nonzero(fit > 0.0)) != int(self.spec.candidate_fit_pixel_count):
             raise VPMValidationError("candidate_fit_weights count mismatch")
-        if int(np.count_nonzero(conflict > 0.0)) != int(self.spec.action_conflict_pixel_count):
+        if int(np.count_nonzero(conflict > 0.0)) != int(
+            self.spec.action_conflict_pixel_count
+        ):
             raise VPMValidationError("action_conflict_weights count mismatch")
         object.__setattr__(self, "row_informative_weights", row_info)
         object.__setattr__(self, "stable_weights", stable)
@@ -340,7 +391,9 @@ class PairwiseDiscriminativeMaskSpec:
         ):
             _nonempty(name, getattr(self, name))
         if self.row_a >= self.row_b:
-            raise VPMValidationError("pairwise row identity must be canonical sorted order")
+            raise VPMValidationError(
+                "pairwise row identity must be canonical sorted order"
+            )
         if len(tuple(self.shape)) != 2 or any(int(item) <= 0 for item in self.shape):
             raise VPMValidationError("pairwise mask shape must be positive HxW")
         if int(self.pairwise_pixel_count) < 0 or int(self.intensity_tolerance) < 0:
@@ -379,7 +432,12 @@ class PairwiseDiscriminativeMask:
     def __post_init__(self) -> None:
         if self.version != VIDEO_JOINT_PAIRWISE_MASK_PAYLOAD_VERSION:
             raise VPMValidationError("unsupported pairwise mask payload version")
-        weights = _immutable_weight_array(self.pairwise_weights, shape=tuple(self.spec.shape), name="pairwise_weights", clip=True)
+        weights = _immutable_weight_array(
+            self.pairwise_weights,
+            shape=tuple(self.spec.shape),
+            name="pairwise_weights",
+            clip=True,
+        )
         if int(np.count_nonzero(weights > 0.0)) != int(self.spec.pairwise_pixel_count):
             raise VPMValidationError("pairwise mask count mismatch")
         object.__setattr__(self, "pairwise_weights", weights)
@@ -441,11 +499,15 @@ class JointEvidenceCalibration:
         ):
             _finite(name, float(getattr(self, name)))
         if not (0.0 <= float(self.minimum_available_candidate_fit_fraction) <= 1.0):
-            raise VPMValidationError("minimum_available_candidate_fit_fraction must be in [0, 1]")
+            raise VPMValidationError(
+                "minimum_available_candidate_fit_fraction must be in [0, 1]"
+            )
         if not (-1.0 <= float(self.minimum_pairwise_margin) <= 1.0):
             raise VPMValidationError("minimum_pairwise_margin must be in [-1, 1]")
         if not (-1.0 <= float(self.minimum_conflicting_action_margin) <= 1.0):
-            raise VPMValidationError("minimum_conflicting_action_margin must be in [-1, 1]")
+            raise VPMValidationError(
+                "minimum_conflicting_action_margin must be in [-1, 1]"
+            )
         if int(self.maximum_candidate_set_size) < 1:
             raise VPMValidationError("maximum_candidate_set_size must be positive")
         for name in (
@@ -470,10 +532,14 @@ class JointEvidenceCalibration:
             "provider_version": self.provider_version,
             "architecture_id": self.architecture_id,
             "minimum_actual_scored_mass": float(self.minimum_actual_scored_mass),
-            "minimum_available_candidate_fit_fraction": float(self.minimum_available_candidate_fit_fraction),
+            "minimum_available_candidate_fit_fraction": float(
+                self.minimum_available_candidate_fit_fraction
+            ),
             "minimum_candidate_joint_fit": float(self.minimum_candidate_joint_fit),
             "minimum_pairwise_margin": float(self.minimum_pairwise_margin),
-            "minimum_conflicting_action_margin": float(self.minimum_conflicting_action_margin),
+            "minimum_conflicting_action_margin": float(
+                self.minimum_conflicting_action_margin
+            ),
             "exact_winner_threshold": float(self.exact_winner_threshold),
             "exact_winner_margin": float(self.exact_winner_margin),
             "candidate_relative_margin": float(self.candidate_relative_margin),
@@ -517,7 +583,10 @@ class JointRegionFitEvidence:
             "joint_fit",
         ):
             _finite(name, float(getattr(self, name)))
-        if float(self.available_candidate_fit_mass) < 0.0 or float(self.actual_scored_mass) < 0.0:
+        if (
+            float(self.available_candidate_fit_mass) < 0.0
+            or float(self.actual_scored_mass) < 0.0
+        ):
             raise VPMValidationError("region masses must be non-negative")
         _nonempty("region_id", self.region_id)
         _nonempty("registration_contract_digest", self.registration_contract_digest)
@@ -598,15 +667,28 @@ class JointRowCandidate:
             "pairwise_discriminative_mass",
         ):
             _finite(name, float(getattr(self, name)))
-        for name in ("minimum_pairwise_margin", "minimum_conflicting_action_margin", "candidate_superiority_margin", "exact_winner_margin", "candidate_relative_margin"):
+        for name in (
+            "minimum_pairwise_margin",
+            "minimum_conflicting_action_margin",
+            "candidate_superiority_margin",
+            "exact_winner_margin",
+            "candidate_relative_margin",
+        ):
             _finite_optional(name, getattr(self, name))
-        for name in ("row_id", "action_id", "prototype_observation_id", "architecture_id"):
+        for name in (
+            "row_id",
+            "action_id",
+            "prototype_observation_id",
+            "architecture_id",
+        ):
             _nonempty(name, getattr(self, name))
 
     def to_dict(self) -> Dict[str, Any]:
         payload = self.__dict__.copy()
         payload["region_evidence"] = [item.to_dict() for item in self.region_evidence]
-        payload["pairwise_evidence"] = [item.to_dict() for item in self.pairwise_evidence]
+        payload["pairwise_evidence"] = [
+            item.to_dict() for item in self.pairwise_evidence
+        ]
         payload["semantic_tie_group_rows"] = list(self.semantic_tie_group_rows)
         payload["ineligibility_reasons"] = list(self.ineligibility_reasons)
         return payload
@@ -624,7 +706,11 @@ class JointCandidateSet:
     def __post_init__(self) -> None:
         if self.version != VIDEO_JOINT_CANDIDATE_SET_VERSION:
             raise VPMValidationError("unsupported joint candidate set version")
-        if self.outcome not in {"exact_row_accepted", "candidate_set_available", "no_sufficient_evidence"}:
+        if self.outcome not in {
+            "exact_row_accepted",
+            "candidate_set_available",
+            "no_sufficient_evidence",
+        }:
             raise VPMValidationError("unsupported joint candidate set outcome")
         _nonempty("architecture_id", self.architecture_id)
 
@@ -674,7 +760,10 @@ def joint_region_digest(regions: Sequence[JointEvidenceRegionSpec]) -> str:
 
 
 def _crop(array: np.ndarray, region: JointEvidenceRegionSpec) -> np.ndarray:
-    return array[int(region.top) : int(region.top) + int(region.height), int(region.left) : int(region.left) + int(region.width)]
+    return array[
+        int(region.top) : int(region.top) + int(region.height),
+        int(region.left) : int(region.left) + int(region.width),
+    ]
 
 
 def build_joint_candidate_masks(
@@ -689,7 +778,12 @@ def build_joint_candidate_masks(
 ) -> Mapping[str, JointCandidateMask]:
     shape = None
     rows = {}
-    for row_id, (prototype_observation_id, action_id, prototype_digest, observation) in sorted(prototypes.items()):
+    for row_id, (
+        prototype_observation_id,
+        action_id,
+        prototype_digest,
+        observation,
+    ) in sorted(prototypes.items()):
         pixels = _coerce_observation_pixels(observation)
         shape = shape or pixels.shape
         if pixels.shape != shape:
@@ -700,23 +794,54 @@ def build_joint_candidate_masks(
             "prototype_digest": prototype_digest,
             "pixels": pixels,
         }
-    development_digest = _digest({row_id: [item.raw_digest for item in values] for row_id, values in sorted(development_observations.items())})
+    development_digest = _digest(
+        {
+            row_id: [item.raw_digest for item in values]
+            for row_id, values in sorted(development_observations.items())
+        }
+    )
     results = {}
     for row_id, entry in rows.items():
         candidate = entry["pixels"]
         competitors = [other for other_id, other in rows.items() if other_id != row_id]
-        diff_stack = np.stack([_difference_uint8(candidate, other["pixels"]) for other in competitors], axis=0)
-        row_informative = (diff_stack.max(axis=0) > int(intensity_tolerance)).astype(np.float32)
-        conflict_competitors = [other for other in competitors if other["action_id"] != entry["action_id"]]
+        diff_stack = np.stack(
+            [_difference_uint8(candidate, other["pixels"]) for other in competitors],
+            axis=0,
+        )
+        row_informative = (diff_stack.max(axis=0) > int(intensity_tolerance)).astype(
+            np.float32
+        )
+        conflict_competitors = [
+            other for other in competitors if other["action_id"] != entry["action_id"]
+        ]
         if conflict_competitors:
-            action_conflict = (np.stack([_difference_uint8(candidate, other["pixels"]) for other in conflict_competitors], axis=0).max(axis=0) > int(intensity_tolerance)).astype(np.float32)
+            action_conflict = (
+                np.stack(
+                    [
+                        _difference_uint8(candidate, other["pixels"])
+                        for other in conflict_competitors
+                    ],
+                    axis=0,
+                ).max(axis=0)
+                > int(intensity_tolerance)
+            ).astype(np.float32)
         else:
             action_conflict = np.zeros(shape, dtype=np.float32)
         development = tuple(development_observations.get(row_id, ()))
         if not development:
-            raise VPMValidationError("joint candidate masks require development observations for every row")
-        variation_stack = np.stack([_difference_uint8(candidate, _coerce_observation_pixels(item)) for item in development], axis=0)
-        stable = (variation_stack.max(axis=0) <= int(stability_tolerance)).astype(np.float32)
+            raise VPMValidationError(
+                "joint candidate masks require development observations for every row"
+            )
+        variation_stack = np.stack(
+            [
+                _difference_uint8(candidate, _coerce_observation_pixels(item))
+                for item in development
+            ],
+            axis=0,
+        )
+        stable = (variation_stack.max(axis=0) <= int(stability_tolerance)).astype(
+            np.float32
+        )
         candidate_fit = row_informative * stable
         spec = JointCandidateMaskSpec(
             mask_id=f"{row_id}|joint-mask",
@@ -753,8 +878,15 @@ def build_pairwise_discriminative_masks(
     operational_contract_digest: str,
     source_scope: str,
 ) -> Mapping[Tuple[str, str], PairwiseDiscriminativeMask]:
-    prototype_digest = _digest({row_id: value[2] for row_id, value in sorted(prototypes.items())})
-    development_digest = _digest({row_id: candidate_masks[row_id].spec.development_digest for row_id in sorted(candidate_masks)})
+    prototype_digest = _digest(
+        {row_id: value[2] for row_id, value in sorted(prototypes.items())}
+    )
+    development_digest = _digest(
+        {
+            row_id: candidate_masks[row_id].spec.development_digest
+            for row_id in sorted(candidate_masks)
+        }
+    )
     results = {}
     row_ids = sorted(prototypes)
     for index, row_a in enumerate(row_ids):
@@ -764,7 +896,10 @@ def build_pairwise_discriminative_masks(
             pixels_b = _coerce_observation_pixels(prototypes[row_b][3])
             mask_b = candidate_masks[row_b]
             pairwise_stable = np.minimum(mask_a.stable_weights, mask_b.stable_weights)
-            pairwise_difference = (np.abs(pixels_a.astype(np.int16) - pixels_b.astype(np.int16)) > int(intensity_tolerance)).astype(np.float32)
+            pairwise_difference = (
+                np.abs(pixels_a.astype(np.int16) - pixels_b.astype(np.int16))
+                > int(intensity_tolerance)
+            ).astype(np.float32)
             weights = pairwise_stable * pairwise_difference
             spec = PairwiseDiscriminativeMaskSpec(
                 pair_id=f"{row_a}|{row_b}|pairwise-mask",
@@ -781,15 +916,21 @@ def build_pairwise_discriminative_masks(
                 operational_contract_digest=operational_contract_digest,
                 source_scope=source_scope,
             )
-            results[(row_a, row_b)] = PairwiseDiscriminativeMask(spec=spec, pairwise_weights=weights)
+            results[(row_a, row_b)] = PairwiseDiscriminativeMask(
+                spec=spec, pairwise_weights=weights
+            )
     return results
 
 
-def _weighted_similarity(candidate: np.ndarray, observation: np.ndarray, weights: np.ndarray) -> Tuple[float, float]:
+def _weighted_similarity(
+    candidate: np.ndarray, observation: np.ndarray, weights: np.ndarray
+) -> Tuple[float, float]:
     total = float(weights.sum(dtype=np.float64))
     if total <= 0.0:
         return (0.0, 0.0)
-    error = np.abs(observation.astype(np.float32) - candidate.astype(np.float32)) / 255.0
+    error = (
+        np.abs(observation.astype(np.float32) - candidate.astype(np.float32)) / 255.0
+    )
     weighted_error = float((error * weights).sum(dtype=np.float64))
     return (max(0.0, min(1.0, 1.0 - weighted_error / total)), total)
 
@@ -831,14 +972,23 @@ def _build_candidate_base(
     observation_pixels = _coerce_observation_pixels(observation)
     pair_alignment_cache: Dict[Tuple[Tuple[str, str], str], Dict[str, Any]] = {}
     for row_id in sorted(prototypes):
-        prototype_observation_id, action_id, _prototype_digest, prototype_observation = prototypes[row_id]
+        (
+            prototype_observation_id,
+            action_id,
+            _prototype_digest,
+            prototype_observation,
+        ) = prototypes[row_id]
         candidate_pixels = _coerce_observation_pixels(prototype_observation)
         mask = candidate_masks[row_id]
         region_evidence = []
         aligned_by_region: Dict[str, Dict[str, Any]] = {}
-        candidate_regions = {region.region_id: _crop(candidate_pixels, region) for region in regions}
+        candidate_regions = {
+            region.region_id: _crop(candidate_pixels, region) for region in regions
+        }
         total_declared = float(mask.row_informative_weights.sum(dtype=np.float64))
-        total_stable = float((mask.row_informative_weights * mask.stable_weights).sum(dtype=np.float64))
+        total_stable = float(
+            (mask.row_informative_weights * mask.stable_weights).sum(dtype=np.float64)
+        )
         total_available_geom = 0.0
         total_candidate_fit = 0.0
         weighted_b3_num = 0.0
@@ -859,18 +1009,30 @@ def _build_candidate_base(
             if registration.registration_succeeded:
                 dx = int(registration.dx)
                 dy = int(registration.dy)
-                aligned_candidate = _aligned_slices(candidate_region, dx=dx, dy=dy, observation=False)
-                aligned_observation = _aligned_slices(observation_region, dx=dx, dy=dy, observation=True)
-                aligned_mask = _aligned_slices(candidate_fit_region, dx=dx, dy=dy, observation=False).astype(np.float32)
-                joint_fit, scored_mass = _weighted_similarity(aligned_candidate, aligned_observation, aligned_mask)
+                aligned_candidate = _aligned_slices(
+                    candidate_region, dx=dx, dy=dy, observation=False
+                )
+                aligned_observation = _aligned_slices(
+                    observation_region, dx=dx, dy=dy, observation=True
+                )
+                aligned_mask = _aligned_slices(
+                    candidate_fit_region, dx=dx, dy=dy, observation=False
+                ).astype(np.float32)
+                joint_fit, scored_mass = _weighted_similarity(
+                    aligned_candidate, aligned_observation, aligned_mask
+                )
                 direct_similarity = max(0.0, 1.0 - float(registration.distance) / 2.0)
                 available_fraction = float(registration.available_informative_fraction)
                 available_mass = float(registration.available_informative_mass)
                 total_available_geom += available_mass
                 total_candidate_fit += scored_mass
-                weighted_b3_num += float(region.weight) * (1.0 - joint_fit) * scored_mass
+                weighted_b3_num += (
+                    float(region.weight) * (1.0 - joint_fit) * scored_mass
+                )
                 weighted_b3_den += float(region.weight) * scored_mass
-                weighted_a3_num += float(region.weight) * available_fraction * direct_similarity
+                weighted_a3_num += (
+                    float(region.weight) * available_fraction * direct_similarity
+                )
                 weighted_a3_den += float(region.weight) * available_fraction
                 aligned_by_region[region.region_id] = {
                     "dx": dx,
@@ -908,8 +1070,12 @@ def _build_candidate_base(
                         registration_distance=2.0,
                         registration_score=0.0,
                         geometric_overlap=float(registration.geometric_overlap),
-                        available_candidate_fit_mass=float(registration.available_informative_mass),
-                        available_candidate_fit_fraction=float(registration.available_informative_fraction),
+                        available_candidate_fit_mass=float(
+                            registration.available_informative_mass
+                        ),
+                        available_candidate_fit_fraction=float(
+                            registration.available_informative_fraction
+                        ),
                         actual_scored_mass=0.0,
                         direct_similarity=0.0,
                         joint_fit=0.0,
@@ -919,13 +1085,26 @@ def _build_candidate_base(
                         registration_contract_digest=region.registration_config.digest,
                     )
                 )
-        candidate_joint_fit = 0.0 if weighted_b3_den <= 0.0 else max(0.0, min(1.0, 1.0 - weighted_b3_num / weighted_b3_den))
-        a3_strength = 0.0 if weighted_a3_den <= 0.0 else max(0.0, min(1.0, weighted_a3_num / weighted_a3_den))
+        candidate_joint_fit = (
+            0.0
+            if weighted_b3_den <= 0.0
+            else max(0.0, min(1.0, 1.0 - weighted_b3_num / weighted_b3_den))
+        )
+        a3_strength = (
+            0.0
+            if weighted_a3_den <= 0.0
+            else max(0.0, min(1.0, weighted_a3_num / weighted_a3_den))
+        )
         pairwise_entries = []
         pairwise_masses = []
         pairwise_margins = []
         conflicting_margins = []
-        for competitor_row, (_obs_id, competitor_action, _digest, competitor_observation) in sorted(prototypes.items()):
+        for competitor_row, (
+            _obs_id,
+            competitor_action,
+            _digest,
+            competitor_observation,
+        ) in sorted(prototypes.items()):
             if competitor_row == row_id:
                 continue
             pair_key = _candidate_pair_key(row_id, competitor_row)
@@ -940,10 +1119,14 @@ def _build_candidate_base(
                 pair_aligned = pair_alignment_cache.get(cache_id)
                 if pair_aligned is None:
                     anchor_row = pair_key[0]
-                    anchor_pixels = _coerce_observation_pixels(prototypes[anchor_row][3])
+                    anchor_pixels = _coerce_observation_pixels(
+                        prototypes[anchor_row][3]
+                    )
                     anchor_region = _crop(anchor_pixels, region)
                     observation_region = _crop(observation_pixels, region)
-                    anchor_mask = _crop(candidate_masks[anchor_row].candidate_fit_weights, region)
+                    anchor_mask = _crop(
+                        candidate_masks[anchor_row].candidate_fit_weights, region
+                    )
                     registration = register_informative_translation(
                         anchor_region,
                         observation_region,
@@ -955,7 +1138,12 @@ def _build_candidate_base(
                         pair_aligned = {
                             "dx": int(registration.dx),
                             "dy": int(registration.dy),
-                            "aligned_observation": _aligned_slices(observation_region, dx=int(registration.dx), dy=int(registration.dy), observation=True),
+                            "aligned_observation": _aligned_slices(
+                                observation_region,
+                                dx=int(registration.dx),
+                                dy=int(registration.dy),
+                                observation=True,
+                            ),
                         }
                     else:
                         pair_aligned = {
@@ -967,12 +1155,25 @@ def _build_candidate_base(
                 if pair_aligned["aligned_observation"] is not None:
                     dx = int(pair_aligned["dx"])
                     dy = int(pair_aligned["dy"])
-                    aligned_weights = _aligned_slices(weights, dx=dx, dy=dy, observation=False).astype(np.float32)
-                    aligned_candidate = _aligned_slices(candidate_regions[region.region_id], dx=dx, dy=dy, observation=False)
-                    aligned_competitor = _aligned_slices(competitor_region, dx=dx, dy=dy, observation=False)
+                    aligned_weights = _aligned_slices(
+                        weights, dx=dx, dy=dy, observation=False
+                    ).astype(np.float32)
+                    aligned_candidate = _aligned_slices(
+                        candidate_regions[region.region_id],
+                        dx=dx,
+                        dy=dy,
+                        observation=False,
+                    )
+                    aligned_competitor = _aligned_slices(
+                        competitor_region, dx=dx, dy=dy, observation=False
+                    )
                     aligned_observation = pair_aligned["aligned_observation"]
-                    fit_c, mass = _weighted_similarity(aligned_candidate, aligned_observation, aligned_weights)
-                    fit_j, _ = _weighted_similarity(aligned_competitor, aligned_observation, aligned_weights)
+                    fit_c, mass = _weighted_similarity(
+                        aligned_candidate, aligned_observation, aligned_weights
+                    )
+                    fit_j, _ = _weighted_similarity(
+                        aligned_competitor, aligned_observation, aligned_weights
+                    )
                     neutral_reason = None if mass > 0.0 else "zero_pairwise_mass"
                     margin = fit_c - fit_j if mass > 0.0 else 0.0
                 else:
@@ -1001,13 +1202,19 @@ def _build_candidate_base(
                 )
                 competitor_mass += float(mass)
                 competitor_margin_numerator += float(margin) * float(mass)
-            mean_margin = float(competitor_margin_numerator / competitor_mass) if competitor_mass > 0.0 else 0.0
+            mean_margin = (
+                float(competitor_margin_numerator / competitor_mass)
+                if competitor_mass > 0.0
+                else 0.0
+            )
             pairwise_masses.append(float(competitor_mass))
             pairwise_margins.append(mean_margin)
             if competitor_action != action_id:
                 conflicting_margins.append(mean_margin)
         min_pairwise_margin = min(pairwise_margins) if pairwise_margins else None
-        min_conflicting_margin = min(conflicting_margins) if conflicting_margins else None
+        min_conflicting_margin = (
+            min(conflicting_margins) if conflicting_margins else None
+        )
         bases.append(
             {
                 "row_id": row_id,
@@ -1015,10 +1222,16 @@ def _build_candidate_base(
                 "prototype_observation_id": prototype_observation_id,
                 "candidate_joint_fit": float(candidate_joint_fit),
                 "a3_strength": float(a3_strength),
-                "minimum_pairwise_margin": None if min_pairwise_margin is None else float(min_pairwise_margin),
-                "minimum_conflicting_action_margin": None if min_conflicting_margin is None else float(min_conflicting_margin),
+                "minimum_pairwise_margin": None
+                if min_pairwise_margin is None
+                else float(min_pairwise_margin),
+                "minimum_conflicting_action_margin": None
+                if min_conflicting_margin is None
+                else float(min_conflicting_margin),
                 "available_candidate_fit_mass": float(total_candidate_fit),
-                "available_candidate_fit_fraction": 0.0 if total_stable <= 0.0 else float(total_candidate_fit / total_stable),
+                "available_candidate_fit_fraction": 0.0
+                if total_stable <= 0.0
+                else float(total_candidate_fit / total_stable),
                 "declared_informative_mass": float(total_declared),
                 "stable_informative_mass": float(total_stable),
                 "available_geometric_mass": float(total_available_geom),
@@ -1030,9 +1243,17 @@ def _build_candidate_base(
     return tuple(bases)
 
 
-def _materialize_candidate(base: Mapping[str, Any], architecture_id: str) -> JointRowCandidate:
-    c3_component = 0.5 + 0.5 * (0.0 if base["minimum_pairwise_margin"] is None else float(base["minimum_pairwise_margin"]))
-    d3_component = min(float(base["candidate_joint_fit"]), max(0.0, min(1.0, c3_component)))
+def _materialize_candidate(
+    base: Mapping[str, Any], architecture_id: str
+) -> JointRowCandidate:
+    c3_component = 0.5 + 0.5 * (
+        0.0
+        if base["minimum_pairwise_margin"] is None
+        else float(base["minimum_pairwise_margin"])
+    )
+    d3_component = min(
+        float(base["candidate_joint_fit"]), max(0.0, min(1.0, c3_component))
+    )
     strength = {
         "A3": float(base["a3_strength"]),
         "B3": float(base["candidate_joint_fit"]),
@@ -1048,9 +1269,15 @@ def _materialize_candidate(base: Mapping[str, Any], architecture_id: str) -> Joi
         candidate_joint_fit=float(base["candidate_joint_fit"]),
         minimum_pairwise_margin=base["minimum_pairwise_margin"],
         minimum_conflicting_action_margin=base["minimum_conflicting_action_margin"],
-        actual_scored_mass=float(base["available_candidate_fit_mass"] if architecture_id in {"A3", "B3", "D3"} else base["pairwise_discriminative_mass"]),
+        actual_scored_mass=float(
+            base["available_candidate_fit_mass"]
+            if architecture_id in {"A3", "B3", "D3"}
+            else base["pairwise_discriminative_mass"]
+        ),
         available_candidate_fit_mass=float(base["available_candidate_fit_mass"]),
-        available_candidate_fit_fraction=float(base["available_candidate_fit_fraction"]),
+        available_candidate_fit_fraction=float(
+            base["available_candidate_fit_fraction"]
+        ),
         declared_informative_mass=float(base["declared_informative_mass"]),
         stable_informative_mass=float(base["stable_informative_mass"]),
         available_geometric_mass=float(base["available_geometric_mass"]),
@@ -1080,7 +1307,17 @@ def _build_candidate(
     pairwise_masks: Mapping[Tuple[str, str], PairwiseDiscriminativeMask],
     regions: Sequence[JointEvidenceRegionSpec],
 ) -> JointRowCandidate:
-    base = next(item for item in _build_candidate_base(observation=observation, prototypes=prototypes, candidate_masks=candidate_masks, pairwise_masks=pairwise_masks, regions=regions) if item["row_id"] == row_id)
+    base = next(
+        item
+        for item in _build_candidate_base(
+            observation=observation,
+            prototypes=prototypes,
+            candidate_masks=candidate_masks,
+            pairwise_masks=pairwise_masks,
+            regions=regions,
+        )
+        if item["row_id"] == row_id
+    )
     return _materialize_candidate(base, architecture_id)
 
 
@@ -1098,8 +1335,18 @@ def build_joint_row_candidates(
     cache_key = (
         observation.raw_digest,
         _prototype_cache_digest(prototypes),
-        _digest({row_id: mask.payload_digest for row_id, mask in sorted(candidate_masks.items())}),
-        _digest({f"{row_a}|{row_b}": mask.payload_digest for (row_a, row_b), mask in sorted(pairwise_masks.items())}),
+        _digest(
+            {
+                row_id: mask.payload_digest
+                for row_id, mask in sorted(candidate_masks.items())
+            }
+        ),
+        _digest(
+            {
+                f"{row_a}|{row_b}": mask.payload_digest
+                for (row_a, row_b), mask in sorted(pairwise_masks.items())
+            }
+        ),
         _digest([region.digest for region in regions]),
     )
     bases = _BASE_CANDIDATE_CACHE.get(cache_key)
@@ -1115,7 +1362,9 @@ def build_joint_row_candidates(
     return tuple(_materialize_candidate(base, architecture_id) for base in bases)
 
 
-def rank_joint_row_candidates(candidates: Sequence[JointRowCandidate]) -> Tuple[JointRowCandidate, ...]:
+def rank_joint_row_candidates(
+    candidates: Sequence[JointRowCandidate],
+) -> Tuple[JointRowCandidate, ...]:
     if not candidates:
         raise VPMValidationError("rank_joint_row_candidates requires candidates")
     ranked = sorted(
@@ -1124,29 +1373,62 @@ def rank_joint_row_candidates(candidates: Sequence[JointRowCandidate]) -> Tuple[
             -float(item.candidate_strength),
             -float(item.actual_scored_mass),
             -float(item.available_candidate_fit_mass),
-            -(-1.0 if item.minimum_pairwise_margin is None else float(item.minimum_pairwise_margin)),
-            -(-1.0 if item.minimum_conflicting_action_margin is None else float(item.minimum_conflicting_action_margin)),
+            -(
+                -1.0
+                if item.minimum_pairwise_margin is None
+                else float(item.minimum_pairwise_margin)
+            ),
+            -(
+                -1.0
+                if item.minimum_conflicting_action_margin is None
+                else float(item.minimum_conflicting_action_margin)
+            ),
             item.row_id,
             item.prototype_observation_id,
         ),
     )
     top_strength = ranked[0].candidate_strength
-    tie_rows = tuple(item.row_id for item in ranked if abs(item.candidate_strength - top_strength) <= REGISTRATION_DISTANCE_TIE_EPSILON)
+    tie_rows = tuple(
+        item.row_id
+        for item in ranked
+        if abs(item.candidate_strength - top_strength)
+        <= REGISTRATION_DISTANCE_TIE_EPSILON
+    )
     winner = ranked[0]
     runner_up = ranked[1] if len(ranked) > 1 else None
     enriched = []
     for index, candidate in enumerate(ranked):
-        superiority = None if candidate.row_id != winner.row_id or runner_up is None else float(candidate.candidate_strength - runner_up.candidate_strength)
-        relative_margin = None if candidate.row_id == winner.row_id else float(winner.candidate_strength - candidate.candidate_strength)
-        exact_margin = superiority if candidate.row_id == winner.row_id else relative_margin
+        superiority = (
+            None
+            if candidate.row_id != winner.row_id or runner_up is None
+            else float(candidate.candidate_strength - runner_up.candidate_strength)
+        )
+        relative_margin = (
+            None
+            if candidate.row_id == winner.row_id
+            else float(winner.candidate_strength - candidate.candidate_strength)
+        )
+        exact_margin = (
+            superiority if candidate.row_id == winner.row_id else relative_margin
+        )
         enriched.append(
             JointRowCandidate(
                 **{
                     **candidate.__dict__,
-                    "candidate_superiority_margin": superiority if candidate.row_id == winner.row_id else relative_margin,
-                    "semantic_tie_group_size": len(tie_rows) if abs(candidate.candidate_strength - top_strength) <= REGISTRATION_DISTANCE_TIE_EPSILON else 1,
-                    "semantic_tie_group_rows": tie_rows if abs(candidate.candidate_strength - top_strength) <= REGISTRATION_DISTANCE_TIE_EPSILON else (candidate.row_id,),
-                    "winner_selected_by_semantic_strength": bool(candidate.row_id == winner.row_id and len(tie_rows) == 1),
+                    "candidate_superiority_margin": superiority
+                    if candidate.row_id == winner.row_id
+                    else relative_margin,
+                    "semantic_tie_group_size": len(tie_rows)
+                    if abs(candidate.candidate_strength - top_strength)
+                    <= REGISTRATION_DISTANCE_TIE_EPSILON
+                    else 1,
+                    "semantic_tie_group_rows": tie_rows
+                    if abs(candidate.candidate_strength - top_strength)
+                    <= REGISTRATION_DISTANCE_TIE_EPSILON
+                    else (candidate.row_id,),
+                    "winner_selected_by_semantic_strength": bool(
+                        candidate.row_id == winner.row_id and len(tie_rows) == 1
+                    ),
                     "trace_order": index,
                     "exact_winner_margin": exact_margin,
                     "candidate_relative_margin": relative_margin,
@@ -1163,17 +1445,39 @@ def evaluate_joint_candidate_eligibility(
     calibration: JointEvidenceCalibration,
 ) -> JointRowCandidate:
     reasons = []
-    if candidate.actual_scored_mass + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_actual_scored_mass:
+    if (
+        candidate.actual_scored_mass + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_actual_scored_mass
+    ):
         reasons.append("minimum_actual_scored_mass")
-    if candidate.available_candidate_fit_fraction + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_available_candidate_fit_fraction:
+    if (
+        candidate.available_candidate_fit_fraction + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_available_candidate_fit_fraction
+    ):
         reasons.append("minimum_available_candidate_fit_fraction")
-    if candidate.candidate_joint_fit + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_candidate_joint_fit:
+    if (
+        candidate.candidate_joint_fit + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_candidate_joint_fit
+    ):
         reasons.append("minimum_candidate_joint_fit")
-    if candidate.minimum_pairwise_margin is not None and candidate.minimum_pairwise_margin + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_pairwise_margin:
+    if (
+        candidate.minimum_pairwise_margin is not None
+        and candidate.minimum_pairwise_margin + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_pairwise_margin
+    ):
         reasons.append("minimum_pairwise_margin")
-    if candidate.minimum_conflicting_action_margin is not None and candidate.minimum_conflicting_action_margin + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.minimum_conflicting_action_margin:
+    if (
+        candidate.minimum_conflicting_action_margin is not None
+        and candidate.minimum_conflicting_action_margin
+        + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.minimum_conflicting_action_margin
+    ):
         reasons.append("minimum_conflicting_action_margin")
-    if candidate.candidate_relative_margin is not None and candidate.candidate_relative_margin + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.candidate_relative_margin:
+    if (
+        candidate.candidate_relative_margin is not None
+        and candidate.candidate_relative_margin + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.candidate_relative_margin
+    ):
         reasons.append("candidate_relative_margin")
     eligible_for_candidate_set = len(reasons) == 0
     exact_reasons = list(reasons)
@@ -1182,13 +1486,21 @@ def evaluate_joint_candidate_eligibility(
     strict_superiority = bool(
         candidate.row_id == winner.row_id
         and runner_up is not None
-        and candidate.candidate_strength > runner_up.candidate_strength + REGISTRATION_DISTANCE_TIE_EPSILON
+        and candidate.candidate_strength
+        > runner_up.candidate_strength + REGISTRATION_DISTANCE_TIE_EPSILON
     )
-    if candidate.candidate_strength + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.exact_winner_threshold:
+    if (
+        candidate.candidate_strength + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.exact_winner_threshold
+    ):
         exact_reasons.append("exact_winner_threshold")
     if not strict_superiority:
         exact_reasons.append("strict_superiority")
-    if candidate.candidate_superiority_margin is None or candidate.candidate_superiority_margin + REGISTRATION_DISTANCE_TIE_EPSILON < calibration.exact_winner_margin:
+    if (
+        candidate.candidate_superiority_margin is None
+        or candidate.candidate_superiority_margin + REGISTRATION_DISTANCE_TIE_EPSILON
+        < calibration.exact_winner_margin
+    ):
         exact_reasons.append("exact_winner_margin")
     return JointRowCandidate(
         **{
@@ -1205,20 +1517,66 @@ def build_joint_candidate_set(
     ranked_candidates: Sequence[JointRowCandidate],
     calibration: JointEvidenceCalibration,
 ) -> JointCandidateSet:
-    qualifying = tuple(candidate.row_id for candidate in ranked_candidates if candidate.eligible_for_candidate_set)
-    exact = next((candidate for candidate in ranked_candidates if candidate.eligible_for_exact), None)
+    qualifying = tuple(
+        candidate.row_id
+        for candidate in ranked_candidates
+        if candidate.eligible_for_candidate_set
+    )
+    exact = next(
+        (candidate for candidate in ranked_candidates if candidate.eligible_for_exact),
+        None,
+    )
     if exact is not None:
-        return JointCandidateSet(architecture_id=calibration.architecture_id, outcome="exact_row_accepted", rows=(exact.row_id,), rejection_reason=None, qualifying_rows=qualifying)
+        return JointCandidateSet(
+            architecture_id=calibration.architecture_id,
+            outcome="exact_row_accepted",
+            rows=(exact.row_id,),
+            rejection_reason=None,
+            qualifying_rows=qualifying,
+        )
     if len(qualifying) == 0:
-        return JointCandidateSet(architecture_id=calibration.architecture_id, outcome="no_sufficient_evidence", rows=(), rejection_reason="no_qualifying_candidates", qualifying_rows=qualifying)
-    top_strength = max(candidate.candidate_strength for candidate in ranked_candidates if candidate.row_id in qualifying)
-    top_rows = tuple(candidate.row_id for candidate in ranked_candidates if candidate.row_id in qualifying and abs(candidate.candidate_strength - top_strength) <= REGISTRATION_DISTANCE_TIE_EPSILON)
-    if len(top_rows) > calibration.maximum_candidate_set_size or len(qualifying) > calibration.maximum_candidate_set_size:
-        return JointCandidateSet(architecture_id=calibration.architecture_id, outcome="no_sufficient_evidence", rows=(), rejection_reason="candidate_set_too_large", qualifying_rows=qualifying)
-    return JointCandidateSet(architecture_id=calibration.architecture_id, outcome="candidate_set_available", rows=tuple(qualifying), rejection_reason=None, qualifying_rows=qualifying)
+        return JointCandidateSet(
+            architecture_id=calibration.architecture_id,
+            outcome="no_sufficient_evidence",
+            rows=(),
+            rejection_reason="no_qualifying_candidates",
+            qualifying_rows=qualifying,
+        )
+    top_strength = max(
+        candidate.candidate_strength
+        for candidate in ranked_candidates
+        if candidate.row_id in qualifying
+    )
+    top_rows = tuple(
+        candidate.row_id
+        for candidate in ranked_candidates
+        if candidate.row_id in qualifying
+        and abs(candidate.candidate_strength - top_strength)
+        <= REGISTRATION_DISTANCE_TIE_EPSILON
+    )
+    if (
+        len(top_rows) > calibration.maximum_candidate_set_size
+        or len(qualifying) > calibration.maximum_candidate_set_size
+    ):
+        return JointCandidateSet(
+            architecture_id=calibration.architecture_id,
+            outcome="no_sufficient_evidence",
+            rows=(),
+            rejection_reason="candidate_set_too_large",
+            qualifying_rows=qualifying,
+        )
+    return JointCandidateSet(
+        architecture_id=calibration.architecture_id,
+        outcome="candidate_set_available",
+        rows=tuple(qualifying),
+        rejection_reason=None,
+        qualifying_rows=qualifying,
+    )
 
 
-def joint_evidence_provider_contract(*, calibration: JointEvidenceCalibration) -> VisualAddressContract:
+def joint_evidence_provider_contract(
+    *, calibration: JointEvidenceCalibration
+) -> VisualAddressContract:
     representation_digest = _digest(
         {
             "provider_version": VIDEO_JOINT_PROVIDER_VERSION,
@@ -1235,7 +1593,10 @@ def joint_evidence_provider_contract(*, calibration: JointEvidenceCalibration) -
         calibration_artifact_id=calibration.digest,
         policy_artifact_id=calibration.policy_artifact_id,
         source_scope=calibration.source_scope,
-        metadata={"architecture_id": calibration.architecture_id, "mechanics_version": VIDEO_JOINT_EVIDENCE_MECHANICS_VERSION},
+        metadata={
+            "architecture_id": calibration.architecture_id,
+            "mechanics_version": VIDEO_JOINT_EVIDENCE_MECHANICS_VERSION,
+        },
     )
 
 
@@ -1277,11 +1638,18 @@ class JointEvidenceProvider:
             architecture_id=self._calibration.architecture_id,
         )
         ranked = rank_joint_row_candidates(raw)
-        return tuple(evaluate_joint_candidate_eligibility(candidate=item, ranked_candidates=ranked, calibration=self._calibration) for item in ranked)
+        return tuple(
+            evaluate_joint_candidate_eligibility(
+                candidate=item, ranked_candidates=ranked, calibration=self._calibration
+            )
+            for item in ranked
+        )
 
     def read(self, observation: ImageObservation) -> VisualAddressDecision:
         ranked = self._rank(observation)
-        candidate_set = build_joint_candidate_set(ranked_candidates=ranked, calibration=self._calibration)
+        candidate_set = build_joint_candidate_set(
+            ranked_candidates=ranked, calibration=self._calibration
+        )
         best = ranked[0]
         second = ranked[1] if len(ranked) > 1 else None
         accepted = candidate_set.outcome == "exact_row_accepted"
@@ -1305,7 +1673,11 @@ class JointEvidenceProvider:
             ambiguity_measure=best.candidate_superiority_margin,
             local_evidence_score=float(best.candidate_strength),
             visible_evidence_fraction=float(best.available_candidate_fit_fraction),
-            critical_evidence_present=bool((best.minimum_conflicting_action_margin or 0.0) >= self._calibration.minimum_conflicting_action_margin - REGISTRATION_DISTANCE_TIE_EPSILON),
+            critical_evidence_present=bool(
+                (best.minimum_conflicting_action_margin or 0.0)
+                >= self._calibration.minimum_conflicting_action_margin
+                - REGISTRATION_DISTANCE_TIE_EPSILON
+            ),
             matched_row_id=matched,
         )
 

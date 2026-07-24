@@ -18,6 +18,7 @@ The image formats are presentation outputs. The canonical reproducibility target
 are the VPM artifact identity and JSON trace; raster output can vary slightly with
 font and matplotlib versions.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -48,8 +49,8 @@ from examples.arcade_shooter_policy import (  # noqa: E402
     compile_policy_artifact,
     random_baseline_average,
 )
-from zeromodel.core.bundle import to_bundle # noqa: E402
-from zeromodel.core.policy_lookup import VPMPolicyLookup # noqa: E402
+from zeromodel.core.bundle import to_bundle  # noqa: E402
+from zeromodel.core.policy_lookup import VPMPolicyLookup  # noqa: E402
 
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "assets" / "signs-demo"
 MOVEMENT_ACTIONS = frozenset({"LEFT", "RIGHT", "STAY"})
@@ -61,7 +62,9 @@ ACTION_MARKERS = {
 }
 
 
-def _run_trace(config: ShooterConfig) -> tuple[Any, list[dict[str, Any]], dict[str, Any]]:
+def _run_trace(
+    config: ShooterConfig,
+) -> tuple[Any, list[dict[str, Any]], dict[str, Any]]:
     artifact = compile_policy_artifact(config)
     reader = VPMPolicyLookup(artifact, action_metric_ids=ACTIONS)
     game = TinyArcadeShooter(config)
@@ -138,7 +141,9 @@ def _draw_state(ax: Any, frame: dict[str, Any], width: int) -> None:
 
 def _draw_vpm(ax: Any, artifact: Any, frame: dict[str, Any]) -> None:
     ax.set_title("2  ADDRESS THE VPM", loc="left", fontweight="bold", pad=12)
-    ax.imshow(artifact.normalized_values, aspect="auto", interpolation="nearest", cmap="gray")
+    ax.imshow(
+        artifact.normalized_values, aspect="auto", interpolation="nearest", cmap="gray"
+    )
     ax.set_xticks(range(len(ACTIONS)), ACTIONS, rotation=35, ha="right")
     ax.set_ylabel(f"{len(artifact.source.row_ids)} state rows")
     ax.axhline(frame["view_row"], linewidth=2.5)
@@ -189,7 +194,9 @@ def _draw_proof(ax: Any, frame: dict[str, Any]) -> None:
 
 
 def _draw_trace(ax: Any, trace: Sequence[dict[str, Any]], current_step: int) -> None:
-    ax.set_title("THE SAME ARTIFACT DRIVES THE COMPLETE TRACE", loc="left", fontweight="bold")
+    ax.set_title(
+        "THE SAME ARTIFACT DRIVES THE COMPLETE TRACE", loc="left", fontweight="bold"
+    )
     ax.set_xlim(-0.6, len(trace) - 0.4)
     ax.set_ylim(-0.7, 0.7)
     ax.set_yticks([])
@@ -226,7 +233,9 @@ def _render_frame(
         height_ratios=(5.2, 1.0),
         width_ratios=(1.35, 0.68, 1.0, 0.88),
     )
-    fig.subplots_adjust(left=0.045, right=0.975, bottom=0.12, top=0.79, wspace=0.42, hspace=0.5)
+    fig.subplots_adjust(
+        left=0.045, right=0.975, bottom=0.12, top=0.79, wspace=0.42, hspace=0.5
+    )
     fig.suptitle("SIGNS, NOT DIRECTIONS", fontsize=25, fontweight="bold", y=0.97)
     fig.text(
         0.5,
@@ -272,14 +281,22 @@ def _render_frame(
 
 def _write_vpm_image(artifact: Any, path: Path, *, dpi: int) -> None:
     fig, ax = plt.subplots(figsize=(5, 13), constrained_layout=True)
-    ax.imshow(artifact.normalized_values, aspect="auto", interpolation="nearest", cmap="gray")
+    ax.imshow(
+        artifact.normalized_values, aspect="auto", interpolation="nearest", cmap="gray"
+    )
     ax.set_title(
         "ZeroModel Arcade-Shooter VPM\n"
         f"{len(artifact.source.row_ids)} states x {len(artifact.source.metric_ids)} actions"
     )
     ax.set_xticks(range(len(ACTIONS)), ACTIONS, rotation=35, ha="right")
     ax.set_ylabel("discretized state row")
-    fig.text(0.5, 0.01, f"artifact {artifact.artifact_id[:24]}...", ha="center", family="monospace")
+    fig.text(
+        0.5,
+        0.01,
+        f"artifact {artifact.artifact_id[:24]}...",
+        ha="center",
+        family="monospace",
+    )
     fig.savefig(path, dpi=dpi, bbox_inches="tight")
     plt.close(fig)
 
@@ -329,14 +346,18 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     bundle_path = to_bundle(artifact, output_dir / "zero_policy.vpm")
     results_path = output_dir / "zero_policy_results.json"
-    results_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    results_path.write_text(
+        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     vpm_path = output_dir / "zero_policy_vpm.png"
     _write_vpm_image(artifact, vpm_path, dpi=args.dpi)
 
     fire_frame = next((frame for frame in trace if frame["action"] == "FIRE"), trace[0])
     money_path = output_dir / "zero_money_shot.png"
-    _render_frame(artifact, trace, fire_frame, width=config.width, dpi=args.dpi).save(money_path)
+    _render_frame(artifact, trace, fire_frame, width=config.width, dpi=args.dpi).save(
+        money_path
+    )
 
     replay_path = output_dir / "zero_replay.gif"
     _write_gif(

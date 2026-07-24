@@ -51,10 +51,7 @@ def run_benchmark(*, lookups: int = 200_000, repeat: int = 5) -> dict[str, objec
         row_id: tuple(float(value) for value in artifact.source.values[row_index])
         for row_index, row_id in enumerate(artifact.source.row_ids)
     }
-    action_map = {
-        row_id: reader.choose(row_id)
-        for row_id in artifact.source.row_ids
-    }
+    action_map = {row_id: reader.choose(row_id) for row_id in artifact.source.row_ids}
 
     def dict_values_argmax(row_id: str) -> str:
         values = value_map[row_id]
@@ -65,14 +62,15 @@ def run_benchmark(*, lookups: int = 200_000, repeat: int = 5) -> dict[str, objec
         return ACTIONS[winner]
 
     timings = {
-        "dict_precompiled_action": _time(action_map.__getitem__, row_ids, repeat=repeat),
+        "dict_precompiled_action": _time(
+            action_map.__getitem__, row_ids, repeat=repeat
+        ),
         "dict_values_argmax": _time(dict_values_argmax, row_ids, repeat=repeat),
         "vpm_choose_action_only": _time(reader.choose, row_ids, repeat=repeat),
         "vpm_read_full_trace": _time(reader.read, row_ids, repeat=repeat),
     }
     per_lookup_ns = {
-        name: seconds * 1_000_000_000.0 / lookups
-        for name, seconds in timings.items()
+        name: seconds * 1_000_000_000.0 / lookups for name, seconds in timings.items()
     }
     return {
         "artifact_id": artifact.artifact_id,

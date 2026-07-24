@@ -378,12 +378,14 @@ def test_base_candidate_cache_identity_includes_prototype_metadata() -> None:
     assert {candidate.prototype_observation_id for candidate in first} == set(
         prototypes
     )
-    assert {
-        candidate.prototype_observation_id for candidate in second
-    } == {f"renamed-{row_id}" for row_id in prototypes}
+    assert {candidate.prototype_observation_id for candidate in second} == {
+        f"renamed-{row_id}" for row_id in prototypes
+    }
 
 
-def test_base_candidate_cache_values_are_immutable_and_materialization_is_pure() -> None:
+def test_base_candidate_cache_values_are_immutable_and_materialization_is_pure() -> (
+    None
+):
     prototypes, development, regions = _joint_inputs()
     candidate_masks, pairwise_masks = _masks(prototypes, development)
     observation = _tiny_observation(0, source_id="observation-0")

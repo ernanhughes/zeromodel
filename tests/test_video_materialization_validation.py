@@ -9,7 +9,9 @@ import pytest
 import research.benchmarks.video_action_set_benchmark as benchmark
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set import episode_materialization
-from zeromodel.video.domains.video_action_set import materialization_validation as validation
+from zeromodel.video.domains.video_action_set import (
+    materialization_validation as validation,
+)
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
 
 

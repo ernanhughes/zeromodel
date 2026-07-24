@@ -29,9 +29,15 @@ from zeromodel.video.domains.video_action_set.final_access_dto import (
     event_chain_digest,
 )
 import zeromodel.video.domains.video_action_set.final_access_service as final_access_service_module
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
-from zeromodel.video.domains.video_action_set.final_evaluation import evaluate_final_protocol
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
+from zeromodel.video.domains.video_action_set.final_claims import (
+    build_final_claim_registry,
+)
+from zeromodel.video.domains.video_action_set.final_evaluation import (
+    evaluate_final_protocol,
+)
 from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
     FINAL_RECEIPT_NAME,
@@ -42,7 +48,9 @@ from zeromodel.video.domains.video_action_set.final_reconciler import (
 from zeromodel.video.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
 )
-from zeromodel.video.domains.video_action_set.final_reporting import generate_final_report
+from zeromodel.video.domains.video_action_set.final_reporting import (
+    generate_final_report,
+)
 from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
 )
@@ -615,7 +623,9 @@ def test_execute_final_once_reads_authorization_and_protocol_files_exactly_once(
 
     authorization_reads: list[Path] = []
     protocol_reads: list[Path] = []
-    original_load_authorization = final_access_service_module.load_final_authorization_file
+    original_load_authorization = (
+        final_access_service_module.load_final_authorization_file
+    )
     original_load_protocol = final_access_service_module.load_final_protocol_file
 
     def counting_load_authorization(path: Path) -> FinalExecutionAuthorizationDTO:

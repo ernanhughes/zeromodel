@@ -28,7 +28,9 @@ from zeromodel.persistence.sqlalchemy.db.session import (
     create_schema,
     create_session_factory,
 )
-from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import SqlAlchemyVideoActionSetStore
+from zeromodel.persistence.sqlalchemy.db.stores.video_action_set import (
+    SqlAlchemyVideoActionSetStore,
+)
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
 from zeromodel.video.domains.video_action_set.contracts import (
     OBSERVATION_OPERATION_CHAIN_VERSION,

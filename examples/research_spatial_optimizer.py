@@ -58,4 +58,8 @@ summary_path.write_text(
     encoding="utf-8",
 )
 
-print(json.dumps(json.loads(summary_path.read_text(encoding="utf-8")), indent=2, sort_keys=True))
+print(
+    json.dumps(
+        json.loads(summary_path.read_text(encoding="utf-8")), indent=2, sort_keys=True
+    )
+)

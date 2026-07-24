@@ -35,13 +35,17 @@ def _load_demo():
 @pytest.mark.slow
 def test_registered_pixel_selection_excludes_final_evaluation_ids() -> None:
     demo = _load_demo()
-    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    dataset = demo.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
+    )
     seen_ids: set[str] = set()
     _ = build_registered_pixel_candidates(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
         policy_lookup=dataset.policy_lookup,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         quantiles=(0.0, 1.0),
         source_scope=demo.SOURCE_SCOPE,
         capture_ids=seen_ids,
@@ -55,20 +59,28 @@ def test_registered_pixel_selection_excludes_final_evaluation_ids() -> None:
 
 
 @pytest.mark.slow
-def test_registered_pixel_provider_emits_registration_trace_and_raw_top1_when_rejected() -> None:
+def test_registered_pixel_provider_emits_registration_trace_and_raw_top1_when_rejected() -> (
+    None
+):
     demo = _load_demo()
-    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    dataset = demo.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
+    )
     candidates = build_registered_pixel_candidates(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
         policy_lookup=dataset.policy_lookup,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         quantiles=(1.0,),
         source_scope=demo.SOURCE_SCOPE,
     )
     selection = select_registered_pixel_candidate(
         dataset_manifest=dataset.manifest,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         candidates=candidates,
         source_scope=demo.SOURCE_SCOPE,
     )
@@ -84,13 +96,16 @@ def test_registered_pixel_provider_emits_registration_trace_and_raw_top1_when_re
     provider = build_registered_pixel_provider(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         calibration=calibration,
     )
     record = next(
         record
         for record in dataset.manifest.records
-        if record.split == "final_evaluation" and record.evaluation_role == EXPECTED_ACCEPT
+        if record.split == "final_evaluation"
+        and record.evaluation_role == EXPECTED_ACCEPT
     )
     decision = provider.read(dataset.observations[record.observation_id])
     assert "registration" in decision.trace

@@ -1,4 +1,5 @@
 """Executable evaluation helpers for held-out visual-address benchmarks."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,7 +9,11 @@ import numpy as np
 
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.core.policy_lookup import VPMPolicyLookup
-from zeromodel.observation.visual_address import ImageObservation, VisualAddressDecision, VisualAddressProvider
+from zeromodel.observation.visual_address import (
+    ImageObservation,
+    VisualAddressDecision,
+    VisualAddressProvider,
+)
 from research.benchmarks.visual_benchmark import (
     BenchmarkSystemResult,
     VisualBenchmarkMetrics,
@@ -140,7 +145,9 @@ def vectors_for_records(
             "vector selection is missing observations: %s" % ", ".join(missing)
         )
     if any(record.row_id is None or record.action_id is None for record in items):
-        raise VPMValidationError("prototype/calibration vector records require row and action")
+        raise VPMValidationError(
+            "prototype/calibration vector records require row and action"
+        )
     matrix = np.ascontiguousarray(
         [vectors_by_observation_id[record.observation_id] for record in items],
         dtype=np.float32,
@@ -269,7 +276,9 @@ def evaluate_visual_provider(
 
     contract = provider.contract()
     if contract.policy_artifact_id != dataset_manifest.policy_artifact_id:
-        raise VPMValidationError("provider and dataset target different policy artifacts")
+        raise VPMValidationError(
+            "provider and dataset target different policy artifacts"
+        )
     if policy_lookup.artifact.artifact_id != dataset_manifest.policy_artifact_id:
         raise VPMValidationError("policy lookup and dataset target different artifacts")
 
@@ -294,7 +303,9 @@ def evaluate_visual_provider(
         expected_accept = (
             True
             if disposition == EXPECTED_ACCEPT
-            else False if disposition == EXPECTED_REJECT else None
+            else False
+            if disposition == EXPECTED_REJECT
+            else None
         )
         decision = provider.read(observations[record.observation_id])
 
@@ -304,7 +315,9 @@ def evaluate_visual_provider(
         )
         predicted_row = decision.matched_row_id if decision.accepted else None
         predicted_action = (
-            policy_lookup.choose(str(predicted_row)) if predicted_row is not None else None
+            policy_lookup.choose(str(predicted_row))
+            if predicted_row is not None
+            else None
         )
 
         correct_row = bool(
@@ -393,9 +406,7 @@ def evaluate_visual_provider(
         "benign_action_accuracy": metrics.benign_action_accuracy,
         "top1_benign_row_accuracy": metrics.top1_benign_row_accuracy,
         "top1_benign_action_accuracy": metrics.top1_benign_action_accuracy,
-        "accepted_benign_row_correctness": (
-            metrics.accepted_benign_row_correctness
-        ),
+        "accepted_benign_row_correctness": (metrics.accepted_benign_row_correctness),
         "accepted_benign_action_correctness": (
             metrics.accepted_benign_action_correctness
         ),

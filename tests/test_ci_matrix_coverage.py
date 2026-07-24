@@ -14,7 +14,9 @@ def test_package_integration_runs_the_full_python_version_matrix() -> None:
         assert version in source
 
 
-def test_package_integration_demonstrates_workspace_install_fast_suite_quality_and_release() -> None:
+def test_package_integration_demonstrates_workspace_install_fast_suite_quality_and_release() -> (
+    None
+):
     source = PACKAGE_INTEGRATION_WORKFLOW.read_text(encoding="utf-8")
     assert "pip install -r requirements-dev.txt" in source
     assert "scripts/run_fast_tests.py" in source

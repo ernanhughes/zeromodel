@@ -15,8 +15,12 @@ from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalEvaluationResultDTO,
     access_id_for_authorization,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.video.domains.video_action_set.final_claims import build_final_claim_registry
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
+from zeromodel.video.domains.video_action_set.final_claims import (
+    build_final_claim_registry,
+)
 from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_EVALUATION_NAME,
     FINAL_RECEIPT_NAME,
@@ -25,7 +29,9 @@ from zeromodel.video.domains.video_action_set.final_publication import (
 from zeromodel.video.domains.video_action_set.final_reconstruction import (
     reconstruct_final_access_ledger,
 )
-from zeromodel.video.domains.video_action_set.final_reporting import generate_final_report
+from zeromodel.video.domains.video_action_set.final_reporting import (
+    generate_final_report,
+)
 from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 

@@ -1,4 +1,5 @@
 """Run the corrected System B adjudication and preserve machine-readable evidence."""
+
 from __future__ import annotations
 
 import argparse
@@ -39,6 +40,7 @@ from research.visual.visual_system_b import (  # noqa: E402
 
 GENERATOR_VERSION = "arcade_visual_system_b_adjudication/v2"
 
+
 def _git_ref() -> str:
     branch = _git_output("branch", "--show-current")
     if branch:
@@ -53,6 +55,7 @@ def _git_ref() -> str:
         return github_ref_name
 
     return "detached"
+
 
 def _json_bytes(value: Any) -> bytes:
     return json.dumps(
@@ -115,14 +118,23 @@ def _row_confusion_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
                 "expected_action_id": trace.get("expected_action_id"),
                 "predicted_action_id": trace.get("top1_action_id"),
                 "count": 0,
-                "same_action": trace.get("expected_action_id") == trace.get("top1_action_id"),
-                "conflicting_action": trace.get("expected_action_id") != trace.get("top1_action_id"),
+                "same_action": trace.get("expected_action_id")
+                == trace.get("top1_action_id"),
+                "conflicting_action": trace.get("expected_action_id")
+                != trace.get("top1_action_id"),
             },
         )
         item["count"] += 1
     return {
         "atlas_type": "observed_benign_row_confusion",
-        "pairs": sorted(counts.values(), key=lambda item: (-item["count"], item["expected_row_id"], item["predicted_row_id"])),
+        "pairs": sorted(
+            counts.values(),
+            key=lambda item: (
+                -item["count"],
+                item["expected_row_id"],
+                item["predicted_row_id"],
+            ),
+        ),
     }
 
 
@@ -145,8 +157,12 @@ def _translation_family_atlas(traces: list[dict[str, Any]]) -> Dict[str, Any]:
         item["count"] += 1
         item["accepted"] += int(trace["decision"]["accepted"])
         item["rejected"] += int(not trace["decision"]["accepted"])
-        item["top1_row_correct"] += int(trace.get("top1_row_id") == trace.get("expected_row_id"))
-        item["top1_action_correct"] += int(trace.get("top1_action_id") == trace.get("expected_action_id"))
+        item["top1_row_correct"] += int(
+            trace.get("top1_row_id") == trace.get("expected_row_id")
+        )
+        item["top1_action_correct"] += int(
+            trace.get("top1_action_id") == trace.get("expected_action_id")
+        )
         item["conflicting_action"] += int(
             trace["decision"]["accepted"]
             and trace.get("top1_action_id") is not None
@@ -192,8 +208,14 @@ def _classify_outcome(
     metrics: Any,
 ) -> tuple[str, str, str]:
     if selection_status != "selected_operating_point":
-        return ("C", "no_useful_operating_point", "registration_required_local_baseline_showdown")
-    coverage = float(metrics.accepted_benign_count) / float(metrics.false_reject_opportunities or 1)
+        return (
+            "C",
+            "no_useful_operating_point",
+            "registration_required_local_baseline_showdown",
+        )
+    coverage = float(metrics.accepted_benign_count) / float(
+        metrics.false_reject_opportunities or 1
+    )
     transfers_all_gates = (
         metrics.false_accept_count == 0
         and metrics.conflicting_action_error_count == 0
@@ -201,10 +223,22 @@ def _classify_outcome(
         and metrics.accepted_benign_row_correctness >= 0.95
     )
     if transfers_all_gates and coverage >= 0.5:
-        return ("A", "useful_operating_point_high_coverage", "fixed_camera_and_governance_path")
+        return (
+            "A",
+            "useful_operating_point_high_coverage",
+            "fixed_camera_and_governance_path",
+        )
     if transfers_all_gates and coverage >= 0.1:
-        return ("B", "useful_operating_point_low_coverage", "registration_required_local_baseline_showdown")
-    return ("C", "no_useful_operating_point", "registration_required_local_baseline_showdown")
+        return (
+            "B",
+            "useful_operating_point_low_coverage",
+            "registration_required_local_baseline_showdown",
+        )
+    return (
+        "C",
+        "no_useful_operating_point",
+        "registration_required_local_baseline_showdown",
+    )
 
 
 def run(
@@ -216,7 +250,9 @@ def run(
 ) -> Dict[str, Any]:
     started_utc = datetime.now(timezone.utc).isoformat()
     dataset = build_arcade_benchmark_dataset(variants_per_family=variants_per_family)
-    historical_v1_dataset_digest = "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"
+    historical_v1_dataset_digest = (
+        "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"
+    )
     candidates = build_system_b_candidates(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -279,7 +315,10 @@ def run(
         encoding="utf-8",
     )
     (output_dir / "candidate-operating-points.json").write_text(
-        json.dumps([candidate.to_dict() for candidate in candidates], indent=2, sort_keys=True) + "\n",
+        json.dumps(
+            [candidate.to_dict() for candidate in candidates], indent=2, sort_keys=True
+        )
+        + "\n",
         encoding="utf-8",
     )
     (output_dir / "per-row-calibration-candidate-grid.json").write_text(
@@ -308,8 +347,19 @@ def run(
             "when selected entirely on calibration data?"
         ),
         "selection_rule": selection.selection_rule,
-        "candidate_quantiles": [candidate["quantile"] for candidate in json.loads((output_dir / "candidate-operating-points.json").read_text(encoding="utf-8"))],
-        "permitted_partitions": ["prototype", "benign_calibration", "rejection_calibration"],
+        "candidate_quantiles": [
+            candidate["quantile"]
+            for candidate in json.loads(
+                (output_dir / "candidate-operating-points.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+        ],
+        "permitted_partitions": [
+            "prototype",
+            "benign_calibration",
+            "rejection_calibration",
+        ],
         "forbidden_partitions_for_selection": ["final_evaluation"],
         "final_evaluation_partition": "final_evaluation",
         "dataset_identity": SOURCE_SCOPE,
@@ -377,7 +427,9 @@ def run(
     with (output_dir / "traces.jsonl").open("w", encoding="utf-8") as handle:
         for trace in traces:
             handle.write(json.dumps(trace.to_dict(), sort_keys=True) + "\n")
-    trace_digest = hashlib.sha256((output_dir / "traces.jsonl").read_bytes()).hexdigest()
+    trace_digest = hashlib.sha256(
+        (output_dir / "traces.jsonl").read_bytes()
+    ).hexdigest()
 
     metrics = final_result.metrics
     trace_payload = [trace.to_dict() for trace in traces]
@@ -393,12 +445,18 @@ def run(
         if trace["expected_disposition"] == IMPOSSIBILITY_CONTROL
     )
     if benign_count != metrics.false_reject_opportunities:
-        raise RuntimeError("trace benign denominator does not match final-report benign denominator")
+        raise RuntimeError(
+            "trace benign denominator does not match final-report benign denominator"
+        )
     if reject_count != metrics.false_accept_opportunities:
-        raise RuntimeError("trace reject denominator does not match final-report reject denominator")
+        raise RuntimeError(
+            "trace reject denominator does not match final-report reject denominator"
+        )
     metrics_control_count = int(final_result.notes["impossibility_control_count"])
     if control_count != metrics_control_count:
-        raise RuntimeError("trace control denominator does not match final-report control denominator")
+        raise RuntimeError(
+            "trace control denominator does not match final-report control denominator"
+        )
     operating_atlas = analyze_trace_sets({"B": trace_payload})
     (output_dir / "global-threshold-diagnostic.json").write_text(
         json.dumps(operating_atlas, indent=2, sort_keys=True) + "\n",
@@ -408,7 +466,9 @@ def run(
         json.dumps(operating_atlas, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    with (output_dir / "global-threshold-diagnostic.csv").open("w", encoding="utf-8", newline="") as handle:
+    with (output_dir / "global-threshold-diagnostic.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as handle:
         writer = csv.DictWriter(
             handle,
             fieldnames=[
@@ -436,7 +496,9 @@ def run(
                     "false_rejection_rate": row["false_rejection_rate"],
                 }
             )
-    with (output_dir / "operating-atlas.csv").open("w", encoding="utf-8", newline="") as handle:
+    with (output_dir / "operating-atlas.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as handle:
         writer = csv.DictWriter(
             handle,
             fieldnames=[

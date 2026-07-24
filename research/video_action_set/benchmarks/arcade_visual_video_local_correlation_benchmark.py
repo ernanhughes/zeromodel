@@ -23,7 +23,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact
+from examples.arcade_shooter_policy import (
+    ACTIONS,
+    ShooterConfig,
+    compile_policy_artifact,
+)
 from examples.arcade_visual_local_evidence_benchmark import (
     SOURCE_SCOPE as FRAME_SOURCE_SCOPE,
     build_arcade_local_evidence_dataset,
@@ -104,7 +108,10 @@ def _sha256(value: Any) -> str:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    path.write_text(json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _write_csv(path: Path, rows: Sequence[Mapping[str, Any]]) -> None:
@@ -143,7 +150,11 @@ def _clip_frame(
     occlude: bool = False,
     critical_remove: bool = False,
 ) -> np.ndarray:
-    from research.visual.visual_corruptions import mask_box, scale_intensity, translate_frame
+    from research.visual.visual_corruptions import (
+        mask_box,
+        scale_intensity,
+        translate_frame,
+    )
 
     result = translate_frame(frame, dx=dx, fill=0) if dx else np.array(frame, copy=True)
     if brightness_numerator != 100 or offset:
@@ -151,7 +162,9 @@ def _clip_frame(
     if occlude:
         result = mask_box(result, top=0, left=0, height=2, width=3, value=90)
     if critical_remove:
-        result = mask_box(result, top=7, left=result.shape[1] - 3, height=2, width=2, value=0)
+        result = mask_box(
+            result, top=7, left=result.shape[1] - 3, height=2, width=2, value=0
+        )
     result.flags.writeable = False
     return result
 
@@ -159,9 +172,36 @@ def _clip_frame(
 def _regions() -> Tuple[LocalRegionSpec, ...]:
     registration = RegistrationConfig(max_dx=2, max_dy=2, minimum_overlap_fraction=0.5)
     return (
-        LocalRegionSpec("target_band", top=0, left=0, height=6, width=28, weight=2.0, registration_config=registration, critical=True),
-        LocalRegionSpec("cooldown_indicator", top=7, left=25, height=2, width=2, weight=1.5, registration_config=registration, critical=True),
-        LocalRegionSpec("tank_band", top=10, left=0, height=4, width=28, weight=2.0, registration_config=registration, critical=True),
+        LocalRegionSpec(
+            "target_band",
+            top=0,
+            left=0,
+            height=6,
+            width=28,
+            weight=2.0,
+            registration_config=registration,
+            critical=True,
+        ),
+        LocalRegionSpec(
+            "cooldown_indicator",
+            top=7,
+            left=25,
+            height=2,
+            width=2,
+            weight=1.5,
+            registration_config=registration,
+            critical=True,
+        ),
+        LocalRegionSpec(
+            "tank_band",
+            top=10,
+            left=0,
+            height=4,
+            width=28,
+            weight=2.0,
+            registration_config=registration,
+            critical=True,
+        ),
     )
 
 
@@ -176,7 +216,9 @@ class VideoClipCase:
     temporal_classification: str
 
 
-def build_video_cases(config: ShooterConfig = ShooterConfig()) -> Tuple[VideoClipCase, ...]:
+def build_video_cases(
+    config: ShooterConfig = ShooterConfig(),
+) -> Tuple[VideoClipCase, ...]:
     source, expected_rows, expected_actions = build_canonical_arcade_clip(config)
     canonical_frames = tuple(source.frames())
 
@@ -198,13 +240,17 @@ def build_video_cases(config: ShooterConfig = ShooterConfig()) -> Tuple[VideoCli
                     clip_id=case_id,
                     frame_index=index,
                     decoding_order=index,
-                    timestamp_seconds=frame.timestamp_seconds if index != 3 else frame.timestamp_seconds + 0.03,
+                    timestamp_seconds=frame.timestamp_seconds
+                    if index != 3
+                    else frame.timestamp_seconds + 0.03,
                     pixels=transformed,
                     source_digest=f"sha256:{case_id}",
                     metadata={"family": family, "source_frame_id": frame.frame_id},
                 )
             )
-        case_source = InMemoryVideoFrameSource(frames, nominal_fps=10.0, metadata={"family": family})
+        case_source = InMemoryVideoFrameSource(
+            frames, nominal_fps=10.0, metadata={"family": family}
+        )
         return VideoClipCase(
             case_id=case_id,
             family=family,
@@ -227,14 +273,21 @@ def build_video_cases(config: ShooterConfig = ShooterConfig()) -> Tuple[VideoCli
             case_id="video-final-benign-shift",
             family="bounded_translation_photometric",
             temporal_classification="benign_shift",
-            transform=lambda i, frame: _clip_frame(frame.pixels, dx=(1 if i % 2 == 0 else -1), brightness_numerator=92, offset=3),
+            transform=lambda i, frame: _clip_frame(
+                frame.pixels,
+                dx=(1 if i % 2 == 0 else -1),
+                brightness_numerator=92,
+                offset=3,
+            ),
             dispositions=[EXPECTED_ACCEPT] * len(canonical_frames),
         ),
         build_case(
             case_id="video-final-benign-occlusion",
             family="bounded_translation_occlusion",
             temporal_classification="benign_occlusion",
-            transform=lambda i, frame: _clip_frame(frame.pixels, dx=(1 if i % 3 == 0 else 0), occlude=True),
+            transform=lambda i, frame: _clip_frame(
+                frame.pixels, dx=(1 if i % 3 == 0 else 0), occlude=True
+            ),
             dispositions=[EXPECTED_ACCEPT] * len(canonical_frames),
         ),
     )
@@ -262,7 +315,9 @@ def build_video_cases(config: ShooterConfig = ShooterConfig()) -> Tuple[VideoCli
             case_id="video-final-negative-stale",
             family="stale_repeated_pixels",
             temporal_classification="stale_repeated_pixels",
-            transform=lambda i, frame: canonical_frames[0].pixels if i >= 2 else frame.pixels,
+            transform=lambda i, frame: (
+                canonical_frames[0].pixels if i >= 2 else frame.pixels
+            ),
             dispositions=negative_dispositions,
             rows=[None] * len(canonical_frames),
             actions=[None] * len(canonical_frames),
@@ -289,7 +344,11 @@ def _build_v2_selection(dataset: Any, policy_lookup: VPMPolicyLookup) -> Dict[st
         source_scope=FRAME_SOURCE_SCOPE,
     )
     if selection.selection_status == "selected_operating_point":
-        selected = next(candidate for candidate in candidates if candidate.calibration.digest == selection.selected_calibration_digest)
+        selected = next(
+            candidate
+            for candidate in candidates
+            if candidate.calibration.digest == selection.selected_calibration_digest
+        )
     else:
         selected = min(
             candidates,
@@ -307,11 +366,14 @@ def _build_v2_selection(dataset: Any, policy_lookup: VPMPolicyLookup) -> Dict[st
         "selection": selection.to_dict(),
         "selection_digest": selection.digest,
         "candidate_grid": [candidate.to_dict() for candidate in candidates],
-        "candidate_grid_digest": _sha256([candidate.to_dict() for candidate in candidates]),
+        "candidate_grid_digest": _sha256(
+            [candidate.to_dict() for candidate in candidates]
+        ),
         "selected_candidate": selected.to_dict(),
         "selected_calibration": selected.calibration.to_dict(),
         "selected_calibration_digest": selected.calibration.digest,
-        "safe_nonzero_operating_point_exists": selection.selection_status == "selected_operating_point",
+        "safe_nonzero_operating_point_exists": selection.selection_status
+        == "selected_operating_point",
         "calibration_rule": [
             "Zero distinguishable false accepts on rejection-calibration examples.",
             "Zero accepted conflicting-action errors on benign-calibration examples.",
@@ -324,19 +386,27 @@ def _build_v2_selection(dataset: Any, policy_lookup: VPMPolicyLookup) -> Dict[st
     }
 
 
-def _build_v2_provider(dataset: Any, calibration_dict: Mapping[str, Any]) -> LocalCorrelationVideoAddressProvider:
+def _build_v2_provider(
+    dataset: Any, calibration_dict: Mapping[str, Any]
+) -> LocalCorrelationVideoAddressProvider:
     from research.video.video_local_correlation import LocalCorrelationCalibration
 
     calibration = LocalCorrelationCalibration(**dict(calibration_dict))
     return LocalCorrelationVideoAddressProvider(
-        prototypes=build_local_correlation_prototypes(dataset_manifest=dataset.manifest, observations=dataset.observations),
+        prototypes=build_local_correlation_prototypes(
+            dataset_manifest=dataset.manifest, observations=dataset.observations
+        ),
         calibration=calibration,
         regions=_regions(),
     )
 
 
-def _build_v1_provider(dataset: Any, policy_lookup: VPMPolicyLookup) -> Tuple[Any, Dict[str, Any]]:
-    registration_config = RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6)
+def _build_v1_provider(
+    dataset: Any, policy_lookup: VPMPolicyLookup
+) -> Tuple[Any, Dict[str, Any]]:
+    registration_config = RegistrationConfig(
+        max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+    )
     candidates = build_registered_pixel_candidates_v2(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -353,8 +423,14 @@ def _build_v1_provider(dataset: Any, policy_lookup: VPMPolicyLookup) -> Tuple[An
         source_scope=FRAME_SOURCE_SCOPE,
     )
     if selection.selection_status != "selected_operating_point":
-        raise RuntimeError("V1 produced no feasible operating point on the frozen frame split")
-    chosen = next(candidate for candidate in candidates if candidate.calibration.digest == selection.selected_calibration_digest)
+        raise RuntimeError(
+            "V1 produced no feasible operating point on the frozen frame split"
+        )
+    chosen = next(
+        candidate
+        for candidate in candidates
+        if candidate.calibration.digest == selection.selected_calibration_digest
+    )
     provider = build_registered_pixel_provider(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -365,7 +441,9 @@ def _build_v1_provider(dataset: Any, policy_lookup: VPMPolicyLookup) -> Tuple[An
         "selection": selection.to_dict(),
         "selection_digest": selection.digest,
         "candidate_grid": [candidate.to_dict() for candidate in candidates],
-        "candidate_grid_digest": _sha256([candidate.to_dict() for candidate in candidates]),
+        "candidate_grid_digest": _sha256(
+            [candidate.to_dict() for candidate in candidates]
+        ),
         "selected_calibration": chosen.calibration.to_dict(),
         "selected_calibration_digest": chosen.calibration.digest,
         "registration_config": registration_config.to_dict(),
@@ -394,42 +472,82 @@ def _base_metrics() -> Dict[str, Any]:
     }
 
 
-def _finalize_metrics(metrics: Dict[str, Any], rejection_histogram: Counter[str]) -> Dict[str, Any]:
+def _finalize_metrics(
+    metrics: Dict[str, Any], rejection_histogram: Counter[str]
+) -> Dict[str, Any]:
     total = metrics["total_frames"]
     benign_total = metrics["benign_total_frames"]
     benign_accepted = metrics["benign_accepted_frames"]
     distinguishable_total = metrics["distinguishable_negative_frames"]
     metrics["rejected_frames"] = total - metrics["accepted_frames"]
-    metrics["benign_exact_row_coverage"] = 0.0 if benign_total == 0 else benign_accepted / float(benign_total)
-    metrics["accepted_exact_row_accuracy"] = None if benign_accepted == 0 else metrics["benign_correct_row_frames"] / float(benign_accepted)
-    metrics["overall_exact_row_recovery"] = 0.0 if benign_total == 0 else metrics["benign_correct_row_frames"] / float(benign_total)
-    metrics["accepted_exact_action_accuracy"] = None if benign_accepted == 0 else metrics["benign_correct_action_frames"] / float(benign_accepted)
-    metrics["distinguishable_false_accept_rate"] = 0.0 if distinguishable_total == 0 else metrics["distinguishable_false_accepts"] / float(distinguishable_total)
+    metrics["benign_exact_row_coverage"] = (
+        0.0 if benign_total == 0 else benign_accepted / float(benign_total)
+    )
+    metrics["accepted_exact_row_accuracy"] = (
+        None
+        if benign_accepted == 0
+        else metrics["benign_correct_row_frames"] / float(benign_accepted)
+    )
+    metrics["overall_exact_row_recovery"] = (
+        0.0
+        if benign_total == 0
+        else metrics["benign_correct_row_frames"] / float(benign_total)
+    )
+    metrics["accepted_exact_action_accuracy"] = (
+        None
+        if benign_accepted == 0
+        else metrics["benign_correct_action_frames"] / float(benign_accepted)
+    )
+    metrics["distinguishable_false_accept_rate"] = (
+        0.0
+        if distinguishable_total == 0
+        else metrics["distinguishable_false_accepts"] / float(distinguishable_total)
+    )
     metrics["rejection_reason_histogram"] = dict(sorted(rejection_histogram.items()))
     return metrics
 
 
-def _evaluate_frame_provider(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: VPMPolicyLookup, system_id: str) -> Dict[str, Any]:
+def _evaluate_frame_provider(
+    provider: Any,
+    cases: Sequence[VideoClipCase],
+    policy_lookup: VPMPolicyLookup,
+    system_id: str,
+) -> Dict[str, Any]:
     metrics = _base_metrics()
     rejection_histogram: Counter[str] = Counter()
     traces = []
     sequences = []
     for case in cases:
         case_trace = []
-        for frame, expected_row, expected_action, disposition in zip(case.source.frames(), case.expected_rows, case.expected_actions, case.expected_dispositions):
+        for frame, expected_row, expected_action, disposition in zip(
+            case.source.frames(),
+            case.expected_rows,
+            case.expected_actions,
+            case.expected_dispositions,
+        ):
             metrics["total_frames"] += 1
-            observation = ImageObservation(frame.pixels, source_id=frame.frame_id, metadata=frame.metadata)
+            observation = ImageObservation(
+                frame.pixels, source_id=frame.frame_id, metadata=frame.metadata
+            )
             decision = provider.read(observation)
             predicted_row = decision.matched_row_id
-            predicted_action = None if predicted_row is None else policy_lookup.choose(str(predicted_row))
+            predicted_action = (
+                None
+                if predicted_row is None
+                else policy_lookup.choose(str(predicted_row))
+            )
             is_correct = decision.accepted and predicted_row == expected_row
             if disposition == EXPECTED_ACCEPT:
                 metrics["benign_total_frames"] += 1
                 if decision.accepted:
                     metrics["accepted_frames"] += 1
                     metrics["benign_accepted_frames"] += 1
-                    metrics["benign_correct_row_frames"] += int(predicted_row == expected_row)
-                    metrics["benign_correct_action_frames"] += int(predicted_action == expected_action)
+                    metrics["benign_correct_row_frames"] += int(
+                        predicted_row == expected_row
+                    )
+                    metrics["benign_correct_action_frames"] += int(
+                        predicted_action == expected_action
+                    )
                 else:
                     rejection_histogram[decision.reason] += 1
             elif disposition == EXPECTED_REJECT:
@@ -437,8 +555,16 @@ def _evaluate_frame_provider(provider: Any, cases: Sequence[VideoClipCase], poli
                 if decision.accepted:
                     metrics["accepted_frames"] += 1
                     metrics["distinguishable_false_accepts"] += 1
-                    metrics["conflicting_action_accepts"] += int(expected_action is not None and predicted_action is not None and predicted_action != expected_action)
-                    metrics["same_action_wrong_row_accepts"] += int(expected_action is not None and predicted_action == expected_action and predicted_row != expected_row)
+                    metrics["conflicting_action_accepts"] += int(
+                        expected_action is not None
+                        and predicted_action is not None
+                        and predicted_action != expected_action
+                    )
+                    metrics["same_action_wrong_row_accepts"] += int(
+                        expected_action is not None
+                        and predicted_action == expected_action
+                        and predicted_row != expected_row
+                    )
                 else:
                     rejection_histogram[decision.reason] += 1
             else:
@@ -460,14 +586,20 @@ def _evaluate_frame_provider(provider: Any, cases: Sequence[VideoClipCase], poli
                 "predicted_row_id": predicted_row,
                 "predicted_action_id": predicted_action,
                 "top1_row_id": decision.nearest_row_id,
-                "top1_action_id": None if decision.nearest_row_id is None else policy_lookup.choose(str(decision.nearest_row_id)),
+                "top1_action_id": None
+                if decision.nearest_row_id is None
+                else policy_lookup.choose(str(decision.nearest_row_id)),
                 "reason": decision.reason,
                 "correct": is_correct,
                 "trace": decision.trace,
             }
             traces.append(trace_row)
             case_trace.append(trace_row)
-        sequences.append(_sequence_summary(case.case_id, case.family, case.expected_dispositions, case_trace))
+        sequences.append(
+            _sequence_summary(
+                case.case_id, case.family, case.expected_dispositions, case_trace
+            )
+        )
     return {
         "system_id": system_id,
         "provider_contract_digest": provider.contract().digest,
@@ -493,7 +625,9 @@ def _reordered_source(case: VideoClipCase) -> Any:
     return ReorderedSource()
 
 
-def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: VPMPolicyLookup) -> Dict[str, Any]:
+def _evaluate_v3(
+    provider: Any, cases: Sequence[VideoClipCase], policy_lookup: VPMPolicyLookup
+) -> Dict[str, Any]:
     reader = VideoPolicyReader(
         provider,
         policy_lookup,
@@ -517,7 +651,12 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
             error_reason = str(exc)
         manifest_frames = tuple(case.source.frames())
         if error_reason is not None:
-            for frame, expected_row, expected_action, disposition in zip(manifest_frames, case.expected_rows, case.expected_actions, case.expected_dispositions):
+            for frame, expected_row, expected_action, disposition in zip(
+                manifest_frames,
+                case.expected_rows,
+                case.expected_actions,
+                case.expected_dispositions,
+            ):
                 metrics["total_frames"] += 1
                 if disposition == EXPECTED_ACCEPT:
                     metrics["benign_total_frames"] += 1
@@ -526,7 +665,9 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
                 else:
                     metrics["information_theoretic_control_count"] += 1
                 metrics["ordering_related_outcomes"] += int("order" in error_reason)
-                metrics["identity_related_outcomes"] += int("manifest" in error_reason or "digest" in error_reason)
+                metrics["identity_related_outcomes"] += int(
+                    "manifest" in error_reason or "digest" in error_reason
+                )
                 rejection_histogram[error_reason] += 1
                 trace_row = {
                     "system_id": "V3",
@@ -551,10 +692,19 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
                 }
                 traces.append(trace_row)
                 case_trace.append(trace_row)
-            sequences.append(_sequence_summary(case.case_id, case.family, case.expected_dispositions, case_trace))
+            sequences.append(
+                _sequence_summary(
+                    case.case_id, case.family, case.expected_dispositions, case_trace
+                )
+            )
             continue
 
-        for decision, expected_row, expected_action, disposition in zip(decisions, case.expected_rows, case.expected_actions, case.expected_dispositions):
+        for decision, expected_row, expected_action, disposition in zip(
+            decisions,
+            case.expected_rows,
+            case.expected_actions,
+            case.expected_dispositions,
+        ):
             metrics["total_frames"] += 1
             predicted_row = decision.accepted_row_id
             predicted_action = decision.accepted_action_id
@@ -563,8 +713,12 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
                 if decision.accepted:
                     metrics["accepted_frames"] += 1
                     metrics["benign_accepted_frames"] += 1
-                    metrics["benign_correct_row_frames"] += int(predicted_row == expected_row)
-                    metrics["benign_correct_action_frames"] += int(predicted_action == expected_action)
+                    metrics["benign_correct_row_frames"] += int(
+                        predicted_row == expected_row
+                    )
+                    metrics["benign_correct_action_frames"] += int(
+                        predicted_action == expected_action
+                    )
                 else:
                     rejection_histogram[decision.reason] += 1
             elif disposition == EXPECTED_REJECT:
@@ -572,19 +726,37 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
                 if decision.accepted:
                     metrics["accepted_frames"] += 1
                     metrics["distinguishable_false_accepts"] += 1
-                    metrics["conflicting_action_accepts"] += int(expected_action is not None and predicted_action != expected_action)
-                    metrics["same_action_wrong_row_accepts"] += int(expected_action is not None and predicted_action == expected_action and predicted_row != expected_row)
-                    metrics["impossible_transition_accepts"] += int("transition_impossible" in decision.rejection_reasons)
-                    metrics["stale_state_accepts"] += int(not decision.temporal.current_frame_independently_supported)
+                    metrics["conflicting_action_accepts"] += int(
+                        expected_action is not None
+                        and predicted_action != expected_action
+                    )
+                    metrics["same_action_wrong_row_accepts"] += int(
+                        expected_action is not None
+                        and predicted_action == expected_action
+                        and predicted_row != expected_row
+                    )
+                    metrics["impossible_transition_accepts"] += int(
+                        "transition_impossible" in decision.rejection_reasons
+                    )
+                    metrics["stale_state_accepts"] += int(
+                        not decision.temporal.current_frame_independently_supported
+                    )
                 else:
                     rejection_histogram[decision.reason] += 1
             else:
                 metrics["information_theoretic_control_count"] += 1
                 if not decision.accepted:
                     rejection_histogram[decision.reason] += 1
-            metrics["gap_related_outcomes"] += int(decision.temporal.transition.status in {"possible_with_gap", "unknown_due_to_gap"})
-            metrics["ordering_related_outcomes"] += int(decision.reason == "frame order does not match manifest")
-            metrics["identity_related_outcomes"] += int("manifest" in decision.reason or "digest" in decision.reason)
+            metrics["gap_related_outcomes"] += int(
+                decision.temporal.transition.status
+                in {"possible_with_gap", "unknown_due_to_gap"}
+            )
+            metrics["ordering_related_outcomes"] += int(
+                decision.reason == "frame order does not match manifest"
+            )
+            metrics["identity_related_outcomes"] += int(
+                "manifest" in decision.reason or "digest" in decision.reason
+            )
             trace_row = {
                 "system_id": "V3",
                 "case_id": case.case_id,
@@ -608,7 +780,11 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
             }
             traces.append(trace_row)
             case_trace.append(trace_row)
-        sequences.append(_sequence_summary(case.case_id, case.family, case.expected_dispositions, case_trace))
+        sequences.append(
+            _sequence_summary(
+                case.case_id, case.family, case.expected_dispositions, case_trace
+            )
+        )
     return {
         "system_id": "V3",
         "provider_contract_digest": provider.contract().digest,
@@ -619,11 +795,21 @@ def _evaluate_v3(provider: Any, cases: Sequence[VideoClipCase], policy_lookup: V
     }
 
 
-def _sequence_summary(case_id: str, family: str, expected_dispositions: Sequence[str], traces: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+def _sequence_summary(
+    case_id: str,
+    family: str,
+    expected_dispositions: Sequence[str],
+    traces: Sequence[Mapping[str, Any]],
+) -> Dict[str, Any]:
     correct_or_rejected = []
     for disposition, trace in zip(expected_dispositions, traces):
         if disposition == EXPECTED_ACCEPT:
-            correct_or_rejected.append(bool(trace["accepted"] and trace["predicted_row_id"] == trace["expected_row_id"]))
+            correct_or_rejected.append(
+                bool(
+                    trace["accepted"]
+                    and trace["predicted_row_id"] == trace["expected_row_id"]
+                )
+            )
         else:
             correct_or_rejected.append(not bool(trace["accepted"]))
     longest = 0
@@ -631,7 +817,10 @@ def _sequence_summary(case_id: str, family: str, expected_dispositions: Sequence
     for item in correct_or_rejected:
         current = current + 1 if item else 0
         longest = max(longest, current)
-    first_break = next((trace["frame_id"] for trace, ok in zip(traces, correct_or_rejected) if not ok), None)
+    first_break = next(
+        (trace["frame_id"] for trace, ok in zip(traces, correct_or_rejected) if not ok),
+        None,
+    )
     return {
         "case_id": case_id,
         "family": family,
@@ -642,11 +831,15 @@ def _sequence_summary(case_id: str, family: str, expected_dispositions: Sequence
         "first_rejected_or_incorrect_frame": first_break,
         "recovery_after_declared_gaps": None,
         "recovery_after_impossible_transitions": None,
-        "accepted_relied_on_stale_state": any(not trace.get("accepted", False) and False for trace in traces),
+        "accepted_relied_on_stale_state": any(
+            not trace.get("accepted", False) and False for trace in traces
+        ),
     }
 
 
-def _paired_v2_v3(v2: Mapping[str, Any], v3: Mapping[str, Any]) -> Tuple[Dict[str, int], Sequence[Dict[str, Any]]]:
+def _paired_v2_v3(
+    v2: Mapping[str, Any], v3: Mapping[str, Any]
+) -> Tuple[Dict[str, int], Sequence[Dict[str, Any]]]:
     paired = Counter()
     rows = []
     by_frame_v2 = {item["frame_id"]: item for item in v2["traces"]}
@@ -667,7 +860,9 @@ def _paired_v2_v3(v2: Mapping[str, Any], v3: Mapping[str, Any]) -> Tuple[Dict[st
             category = "V2_incorrect_V3_rejected"
         elif (not left["accepted"]) and right_correct:
             category = "V2_rejected_V3_correct"
-        elif (left["accepted"] and not left_correct) and (right["accepted"] and not right_correct):
+        elif (left["accepted"] and not left_correct) and (
+            right["accepted"] and not right_correct
+        ):
             category = "V2_incorrect_V3_incorrect"
         elif left_correct and (right["accepted"] and not right_correct):
             category = "V2_correct_V3_incorrect"
@@ -697,12 +892,21 @@ def _paired_v2_v3(v2: Mapping[str, Any], v3: Mapping[str, Any]) -> Tuple[Dict[st
     return dict(sorted(paired.items())), rows
 
 
-def _material_improvement(v2_metrics: Mapping[str, Any], v3_metrics: Mapping[str, Any], paired: Mapping[str, int]) -> bool:
+def _material_improvement(
+    v2_metrics: Mapping[str, Any],
+    v3_metrics: Mapping[str, Any],
+    paired: Mapping[str, int],
+) -> bool:
     return (
-        v3_metrics["distinguishable_false_accepts"] <= v2_metrics["distinguishable_false_accepts"]
-        and v3_metrics["conflicting_action_accepts"] <= v2_metrics["conflicting_action_accepts"]
+        v3_metrics["distinguishable_false_accepts"]
+        <= v2_metrics["distinguishable_false_accepts"]
+        and v3_metrics["conflicting_action_accepts"]
+        <= v2_metrics["conflicting_action_accepts"]
         and paired.get("V2_correct_V3_incorrect", 0) == 0
-        and (paired.get("V2_incorrect_V3_rejected", 0) > 0 or paired.get("V2_rejected_V3_correct", 0) > 0)
+        and (
+            paired.get("V2_incorrect_V3_rejected", 0) > 0
+            or paired.get("V2_rejected_V3_correct", 0) > 0
+        )
         and v3_metrics["stale_state_accepts"] == 0
     )
 
@@ -713,12 +917,30 @@ def _benchmark_manifest(dataset: Any, cases: Sequence[VideoClipCase]) -> Dict[st
         "seed": BENCHMARK_SEED,
         "frame_dataset_digest": dataset.manifest.digest,
         "policy_artifact_id": dataset.manifest.policy_artifact_id,
-        "prototype_ids": [record.observation_id for record in dataset.manifest.records if record.split == "prototype"],
-        "benign_calibration_ids": [record.observation_id for record in dataset.manifest.records if record.split == "benign_calibration"],
-        "rejection_calibration_ids": [record.observation_id for record in dataset.manifest.records if record.split == "rejection_calibration"],
-        "final_frame_ids": [record.observation_id for record in dataset.manifest.records if record.split == "final_evaluation"],
+        "prototype_ids": [
+            record.observation_id
+            for record in dataset.manifest.records
+            if record.split == "prototype"
+        ],
+        "benign_calibration_ids": [
+            record.observation_id
+            for record in dataset.manifest.records
+            if record.split == "benign_calibration"
+        ],
+        "rejection_calibration_ids": [
+            record.observation_id
+            for record in dataset.manifest.records
+            if record.split == "rejection_calibration"
+        ],
+        "final_frame_ids": [
+            record.observation_id
+            for record in dataset.manifest.records
+            if record.split == "final_evaluation"
+        ],
         "video_case_ids": [case.case_id for case in cases],
-        "video_case_manifest_ids": {case.case_id: case.source.manifest().manifest_id for case in cases},
+        "video_case_manifest_ids": {
+            case.case_id: case.source.manifest().manifest_id for case in cases
+        },
         "families": sorted({case.family for case in cases}),
     }
 
@@ -727,8 +949,15 @@ def _split_manifest(dataset: Any, cases: Sequence[VideoClipCase]) -> Dict[str, A
     return {
         "benchmark_version": BENCHMARK_VERSION,
         "frame_split_counts": {
-            split: sum(1 for record in dataset.manifest.records if record.split == split)
-            for split in ("prototype", "benign_calibration", "rejection_calibration", "final_evaluation")
+            split: sum(
+                1 for record in dataset.manifest.records if record.split == split
+            )
+            for split in (
+                "prototype",
+                "benign_calibration",
+                "rejection_calibration",
+                "final_evaluation",
+            )
         },
         "case_summaries": [
             {
@@ -743,7 +972,13 @@ def _split_manifest(dataset: Any, cases: Sequence[VideoClipCase]) -> Dict[str, A
     }
 
 
-def _claim_adjudication(v2_selection: Mapping[str, Any], v2_metrics: Mapping[str, Any], v3_metrics: Mapping[str, Any], paired: Mapping[str, int], materially_improved: bool) -> Dict[str, Any]:
+def _claim_adjudication(
+    v2_selection: Mapping[str, Any],
+    v2_metrics: Mapping[str, Any],
+    v3_metrics: Mapping[str, Any],
+    paired: Mapping[str, int],
+    materially_improved: bool,
+) -> Dict[str, Any]:
     if not v2_selection["safe_nonzero_operating_point_exists"]:
         category = "No feasible V2"
         kill = KILL_NO_FEASIBLE_V2
@@ -780,7 +1015,9 @@ def _claim_adjudication(v2_selection: Mapping[str, Any], v2_metrics: Mapping[str
     }
 
 
-def _sequence_payload(v1: Mapping[str, Any], v2: Mapping[str, Any], v3: Mapping[str, Any]) -> Dict[str, Any]:
+def _sequence_payload(
+    v1: Mapping[str, Any], v2: Mapping[str, Any], v3: Mapping[str, Any]
+) -> Dict[str, Any]:
     return {
         "V1": v1["sequence_results"],
         "V2": v2["sequence_results"],
@@ -788,7 +1025,9 @@ def _sequence_payload(v1: Mapping[str, Any], v2: Mapping[str, Any], v3: Mapping[
     }
 
 
-def _rejection_histograms(v1: Mapping[str, Any], v2: Mapping[str, Any], v3: Mapping[str, Any]) -> Dict[str, Any]:
+def _rejection_histograms(
+    v1: Mapping[str, Any], v2: Mapping[str, Any], v3: Mapping[str, Any]
+) -> Dict[str, Any]:
     return {
         "V1": v1["metrics"]["rejection_reason_histogram"],
         "V2": v2["metrics"]["rejection_reason_histogram"],
@@ -796,7 +1035,16 @@ def _rejection_histograms(v1: Mapping[str, Any], v2: Mapping[str, Any], v3: Mapp
     }
 
 
-def _digest_manifest(output_dir: Path, selected_op: Mapping[str, Any], final_metrics: Mapping[str, Any], paired_rows: Sequence[Mapping[str, Any]], sequence_results: Mapping[str, Any], benchmark_manifest: Mapping[str, Any], split_manifest: Mapping[str, Any], v2_provider: Any) -> Dict[str, Any]:
+def _digest_manifest(
+    output_dir: Path,
+    selected_op: Mapping[str, Any],
+    final_metrics: Mapping[str, Any],
+    paired_rows: Sequence[Mapping[str, Any]],
+    sequence_results: Mapping[str, Any],
+    benchmark_manifest: Mapping[str, Any],
+    split_manifest: Mapping[str, Any],
+    v2_provider: Any,
+) -> Dict[str, Any]:
     return {
         "benchmark_manifest_digest": _sha256(benchmark_manifest),
         "split_manifest_digest": _sha256(split_manifest),
@@ -810,7 +1058,13 @@ def _digest_manifest(output_dir: Path, selected_op: Mapping[str, Any], final_met
     }
 
 
-def _write_calibration_outputs(output_dir: Path, benchmark_manifest: Mapping[str, Any], split_manifest: Mapping[str, Any], v1_selection: Mapping[str, Any], v2_selection: Mapping[str, Any]) -> None:
+def _write_calibration_outputs(
+    output_dir: Path,
+    benchmark_manifest: Mapping[str, Any],
+    split_manifest: Mapping[str, Any],
+    v1_selection: Mapping[str, Any],
+    v2_selection: Mapping[str, Any],
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     _write_json(output_dir / "benchmark-manifest.json", benchmark_manifest)
     _write_json(output_dir / "split-manifest.json", split_manifest)
@@ -822,17 +1076,23 @@ def _write_calibration_outputs(output_dir: Path, benchmark_manifest: Mapping[str
             "V1": {
                 "selection_status": v1_selection["selection"]["selection_status"],
                 "selection_digest": v1_selection["selection_digest"],
-                "selected_calibration_digest": v1_selection["selected_calibration_digest"],
+                "selected_calibration_digest": v1_selection[
+                    "selected_calibration_digest"
+                ],
                 "selected_calibration": v1_selection["selected_calibration"],
                 "candidate_grid_digest": v1_selection["candidate_grid_digest"],
             },
             "V2": {
                 "selection_status": v2_selection["selection"]["selection_status"],
                 "selection_digest": v2_selection["selection_digest"],
-                "selected_calibration_digest": v2_selection["selected_calibration_digest"],
+                "selected_calibration_digest": v2_selection[
+                    "selected_calibration_digest"
+                ],
                 "selected_calibration": v2_selection["selected_calibration"],
                 "candidate_grid_digest": v2_selection["candidate_grid_digest"],
-                "safe_nonzero_operating_point_exists": v2_selection["safe_nonzero_operating_point_exists"],
+                "safe_nonzero_operating_point_exists": v2_selection[
+                    "safe_nonzero_operating_point_exists"
+                ],
             },
         },
     )
@@ -842,7 +1102,18 @@ def _write_calibration_outputs(output_dir: Path, benchmark_manifest: Mapping[str
     _write_csv(output_dir / "calibration-grid.csv", v1_rows + v2_rows)
 
 
-def _write_evaluation_outputs(output_dir: Path, benchmark_manifest: Mapping[str, Any], split_manifest: Mapping[str, Any], final_metrics: Mapping[str, Any], paired_counts: Mapping[str, Any], paired_rows: Sequence[Mapping[str, Any]], rejection_histograms: Mapping[str, Any], sequence_results: Mapping[str, Any], adjudication: Mapping[str, Any], digest_manifest: Mapping[str, Any]) -> None:
+def _write_evaluation_outputs(
+    output_dir: Path,
+    benchmark_manifest: Mapping[str, Any],
+    split_manifest: Mapping[str, Any],
+    final_metrics: Mapping[str, Any],
+    paired_counts: Mapping[str, Any],
+    paired_rows: Sequence[Mapping[str, Any]],
+    rejection_histograms: Mapping[str, Any],
+    sequence_results: Mapping[str, Any],
+    adjudication: Mapping[str, Any],
+    digest_manifest: Mapping[str, Any],
+) -> None:
     _write_json(output_dir / "benchmark-manifest.json", benchmark_manifest)
     _write_json(output_dir / "split-manifest.json", split_manifest)
     _write_json(output_dir / "final-metrics.json", final_metrics)
@@ -867,7 +1138,10 @@ def _write_evaluation_outputs(output_dir: Path, benchmark_manifest: Mapping[str,
                 "",
                 "## Paired Counts",
                 "",
-                *[f"- `{key}`: {value}" for key, value in sorted(paired_counts.items())],
+                *[
+                    f"- `{key}`: {value}"
+                    for key, value in sorted(paired_counts.items())
+                ],
             ]
         ),
     )
@@ -924,7 +1198,9 @@ def run_calibrate(*, output_dir: Path) -> Dict[str, Any]:
     v2_selection = _build_v2_selection(dataset, policy_lookup)
     benchmark_manifest = _benchmark_manifest(dataset, cases)
     split_manifest = _split_manifest(dataset, cases)
-    _write_calibration_outputs(output_dir, benchmark_manifest, split_manifest, v1_selection, v2_selection)
+    _write_calibration_outputs(
+        output_dir, benchmark_manifest, split_manifest, v1_selection, v2_selection
+    )
     return {
         "mode": "calibrate",
         "benchmark_manifest_digest": _sha256(benchmark_manifest),
@@ -932,7 +1208,9 @@ def run_calibrate(*, output_dir: Path) -> Dict[str, Any]:
         "v1_candidate_grid_size": len(v1_selection["candidate_grid"]),
         "v2_candidate_grid_size": len(v2_selection["candidate_grid"]),
         "v2_selection_status": v2_selection["selection"]["selection_status"],
-        "v2_safe_nonzero_operating_point_exists": v2_selection["safe_nonzero_operating_point_exists"],
+        "v2_safe_nonzero_operating_point_exists": v2_selection[
+            "safe_nonzero_operating_point_exists"
+        ],
     }
 
 
@@ -951,8 +1229,16 @@ def run_evaluate(*, output_dir: Path) -> Dict[str, Any]:
     v2 = _evaluate_frame_provider(v2_provider, cases, policy_lookup, "V2")
     v3 = _evaluate_v3(v2_provider, cases, policy_lookup)
     paired_counts, paired_rows = _paired_v2_v3(v2, v3)
-    materially_improved = _material_improvement(v2["metrics"], v3["metrics"], paired_counts)
-    adjudication = _claim_adjudication(selected_op["V2"], v2["metrics"], v3["metrics"], paired_counts, materially_improved)
+    materially_improved = _material_improvement(
+        v2["metrics"], v3["metrics"], paired_counts
+    )
+    adjudication = _claim_adjudication(
+        selected_op["V2"],
+        v2["metrics"],
+        v3["metrics"],
+        paired_counts,
+        materially_improved,
+    )
     final_metrics = {
         "benchmark_version": BENCHMARK_VERSION,
         "V0": {
@@ -971,7 +1257,16 @@ def run_evaluate(*, output_dir: Path) -> Dict[str, Any]:
     }
     sequence_results = _sequence_payload(v1, v2, v3)
     rejection_histograms = _rejection_histograms(v1, v2, v3)
-    digest_manifest = _digest_manifest(output_dir, selected_op, final_metrics, paired_rows, sequence_results, benchmark_manifest, split_manifest, v2_provider)
+    digest_manifest = _digest_manifest(
+        output_dir,
+        selected_op,
+        final_metrics,
+        paired_rows,
+        sequence_results,
+        benchmark_manifest,
+        split_manifest,
+        v2_provider,
+    )
     _write_evaluation_outputs(
         output_dir,
         benchmark_manifest,
@@ -1012,10 +1307,27 @@ def run_verify(*, output_dir: Path) -> Dict[str, Any]:
     v3 = _evaluate_v3(v2_provider, cases, policy_lookup)
     paired_counts, paired_rows = _paired_v2_v3(v2, v3)
     sequence_results = _sequence_payload(v1, v2, v3)
-    actual = _digest_manifest(output_dir, selected_op, final_metrics, paired_rows, sequence_results, benchmark_manifest, split_manifest, v2_provider)
-    mismatches = {key: {"expected": expected.get(key), "actual": actual.get(key)} for key in sorted(set(expected) | set(actual)) if expected.get(key) != actual.get(key)}
+    actual = _digest_manifest(
+        output_dir,
+        selected_op,
+        final_metrics,
+        paired_rows,
+        sequence_results,
+        benchmark_manifest,
+        split_manifest,
+        v2_provider,
+    )
+    mismatches = {
+        key: {"expected": expected.get(key), "actual": actual.get(key)}
+        for key in sorted(set(expected) | set(actual))
+        if expected.get(key) != actual.get(key)
+    }
     if mismatches:
-        raise SystemExit(json.dumps({"verified": False, "mismatches": mismatches}, indent=2, sort_keys=True))
+        raise SystemExit(
+            json.dumps(
+                {"verified": False, "mismatches": mismatches}, indent=2, sort_keys=True
+            )
+        )
     return {"mode": "verify", "verified": True, **actual}
 
 
@@ -1026,9 +1338,13 @@ def main() -> None:
     parser.add_argument("--evaluate", action="store_true")
     parser.add_argument("--verify", action="store_true")
     args = parser.parse_args()
-    selected_modes = sum(int(flag) for flag in (args.calibrate, args.evaluate, args.verify))
+    selected_modes = sum(
+        int(flag) for flag in (args.calibrate, args.evaluate, args.verify)
+    )
     if selected_modes != 1:
-        raise SystemExit("exactly one of --calibrate, --evaluate, or --verify is required")
+        raise SystemExit(
+            "exactly one of --calibrate, --evaluate, or --verify is required"
+        )
     if args.calibrate:
         payload = run_calibrate(output_dir=args.output_dir)
     elif args.evaluate:

@@ -5,7 +5,9 @@ import sys
 from pathlib import Path
 
 SCRIPT = Path("scripts/validate_release_candidate.py")
-SPEC = importlib.util.spec_from_file_location("validate_release_candidate_skipped", SCRIPT)
+SPEC = importlib.util.spec_from_file_location(
+    "validate_release_candidate_skipped", SCRIPT
+)
 assert SPEC is not None
 validator = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None

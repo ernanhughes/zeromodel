@@ -49,7 +49,9 @@ def test_same_artifact_and_seed_produce_identical_action_trace() -> None:
     second = demo.run_policy_episode(config)
 
     assert first["artifact_id"] == second["artifact_id"]
-    assert [step["action"] for step in first["trace"]] == [step["action"] for step in second["trace"]]
-    assert [(step["row_id"], step["source_metric_index"]) for step in first["trace"]] == [
-        (step["row_id"], step["source_metric_index"]) for step in second["trace"]
+    assert [step["action"] for step in first["trace"]] == [
+        step["action"] for step in second["trace"]
     ]
+    assert [
+        (step["row_id"], step["source_metric_index"]) for step in first["trace"]
+    ] == [(step["row_id"], step["source_metric_index"]) for step in second["trace"]]

@@ -18,13 +18,17 @@ from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
     access_id_for_authorization,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 from zeromodel.video.domains.video_action_set.final_historical_authority import (
     HistoricalEvidenceManifestDTO,
     VerifiedHistoricalAuthorityDTO,
     verify_historical_authority,
 )
-from zeromodel.video.domains.video_action_set.final_publication import FINAL_RECEIPT_NAME
+from zeromodel.video.domains.video_action_set.final_publication import (
+    FINAL_RECEIPT_NAME,
+)
 from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 

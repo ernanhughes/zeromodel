@@ -13,6 +13,7 @@ Run:
     python examples/bertin_pattern_detection.py
     python examples/bertin_pattern_detection.py --output-dir build/patterns
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,7 +32,9 @@ from zeromodel.core.render import write_png
 from zeromodel.analysis.patterns import MatrixPatternDetector, PatternAnalysisSpec
 
 
-def planted_block_matrix(*, seed: int = 7, noise: float = 0.08) -> tuple[np.ndarray, np.ndarray]:
+def planted_block_matrix(
+    *, seed: int = 7, noise: float = 0.08
+) -> tuple[np.ndarray, np.ndarray]:
     """Return a shuffled three-block matrix and its hidden row labels."""
 
     rng = np.random.default_rng(seed)
@@ -68,10 +71,14 @@ def source_artifact(matrix: np.ndarray):
     return build_vpm(table, recipe, provenance={"kind": "pattern-source"})
 
 
-def block_adjacency(row_order: tuple[str, ...], row_ids: tuple[str, ...], labels: np.ndarray) -> float:
+def block_adjacency(
+    row_order: tuple[str, ...], row_ids: tuple[str, ...], labels: np.ndarray
+) -> float:
     label_by_row = dict(zip(row_ids, labels))
     ordered = [label_by_row[row_id] for row_id in row_order]
-    return sum(left == right for left, right in zip(ordered, ordered[1:])) / float(len(ordered) - 1)
+    return sum(left == right for left, right in zip(ordered, ordered[1:])) / float(
+        len(ordered) - 1
+    )
 
 
 def main() -> None:

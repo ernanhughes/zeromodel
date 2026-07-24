@@ -25,7 +25,9 @@ def _load_module():
 
 
 @pytest.mark.slow
-def test_registered_calibration_v2_generates_required_artifacts(tmp_path: Path, monkeypatch) -> None:
+def test_registered_calibration_v2_generates_required_artifacts(
+    tmp_path: Path, monkeypatch
+) -> None:
     module = _load_module()
 
     def fake_git_output(*args: str) -> str:

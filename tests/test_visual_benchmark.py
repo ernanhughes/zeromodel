@@ -172,7 +172,9 @@ def test_wilson_interval_is_bounded_and_handles_empty_denominator() -> None:
         wilson_score_interval(11, 10)
 
 
-def test_accepted_precision_interval_is_null_when_no_benign_observations_are_accepted() -> None:
+def test_accepted_precision_interval_is_null_when_no_benign_observations_are_accepted() -> (
+    None
+):
     metrics = VisualBenchmarkMetrics(
         evaluation_count=10,
         accepted_count=0,
@@ -191,7 +193,9 @@ def test_accepted_precision_interval_is_null_when_no_benign_observations_are_acc
     assert payload["accepted_benign_row_correctness"] is None
     assert payload["accepted_benign_action_correctness"] is None
     assert payload["confidence_intervals_95"]["accepted_benign_row_correctness"] is None
-    assert payload["confidence_intervals_95"]["accepted_benign_action_correctness"] is None
+    assert (
+        payload["confidence_intervals_95"]["accepted_benign_action_correctness"] is None
+    )
 
 
 def test_benchmark_metrics_reject_inconsistent_counts() -> None:

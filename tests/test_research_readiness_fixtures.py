@@ -42,7 +42,9 @@ def _assert_training_fixture_progress(checkpoints) -> None:
 
 
 def test_tensorboard_fixture_reaches_expected_progress() -> None:
-    checkpoints = checkpoints_from_tensorboard_scalars(FIXTURE_DIR / "tensorboard_scalars.csv")
+    checkpoints = checkpoints_from_tensorboard_scalars(
+        FIXTURE_DIR / "tensorboard_scalars.csv"
+    )
     _assert_training_fixture_progress(checkpoints)
 
 
@@ -62,7 +64,9 @@ def test_generic_jsonl_fixture_reaches_expected_progress() -> None:
 
 
 def test_training_fixture_round_trips_and_renders(tmp_path: Path) -> None:
-    checkpoints = checkpoints_from_tensorboard_scalars(FIXTURE_DIR / "tensorboard_scalars.csv")
+    checkpoints = checkpoints_from_tensorboard_scalars(
+        FIXTURE_DIR / "tensorboard_scalars.csv"
+    )
     assessment = build_training_progress_vpm(
         checkpoints,
         stability_metric="stability",

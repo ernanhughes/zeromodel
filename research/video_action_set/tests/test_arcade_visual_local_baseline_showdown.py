@@ -34,13 +34,19 @@ def test_showdown_generates_required_artifacts(tmp_path: Path, monkeypatch) -> N
             ("status", "--short"): "",
             ("rev-parse", "HEAD"): "stage1-test-sha",
             ("branch", "--show-current"): "research/visual-local-baseline-showdown",
-            ("merge-base", "HEAD", "origin/main"): "832bca74fa05a6222ed02c65419bc2f551dfc7c0",
+            (
+                "merge-base",
+                "HEAD",
+                "origin/main",
+            ): "832bca74fa05a6222ed02c65419bc2f551dfc7c0",
         }
         return mapping[args]
 
     monkeypatch.setattr(module, "_git_output", fake_git_output)
     monkeypatch.setattr(module, "QUANTILES", (0.0, 1.0))
-    monkeypatch.setitem(module.FROZEN_SYSTEM_B_IDENTITIES, "dataset_digest", dataset.manifest.digest)
+    monkeypatch.setitem(
+        module.FROZEN_SYSTEM_B_IDENTITIES, "dataset_digest", dataset.manifest.digest
+    )
     monkeypatch.setattr(
         module,
         "_frozen_system_b_reference",
@@ -60,7 +66,11 @@ def test_showdown_generates_required_artifacts(tmp_path: Path, monkeypatch) -> N
             },
         },
     )
-    monkeypatch.setattr(module, "_paired_comparison", lambda frozen_b, r1: {"observation_count": len(r1), "row": {}, "action": {}})
+    monkeypatch.setattr(
+        module,
+        "_paired_comparison",
+        lambda frozen_b, r1: {"observation_count": len(r1), "row": {}, "action": {}},
+    )
     monkeypatch.setattr(module, "_load_jsonl", lambda path: ())
     output_dir = tmp_path / "showdown"
     summary = module.run_showdown(

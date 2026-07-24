@@ -38,7 +38,9 @@ from research.evidence.evidence_audit import (
 from zeromodel.video.domains.video_action_set.materialization_validation import (
     family_closure_report as _family_closure_report,
 )
-from zeromodel.video.domains.video_action_set.observation_universe import canonical_prototypes
+from zeromodel.video.domains.video_action_set.observation_universe import (
+    canonical_prototypes,
+)
 from research.video_action_set.provider_measurement import (
     SplitBuildProgressObserver,
     measure_record_collection,
@@ -48,7 +50,9 @@ from research.video_action_set.runtime_profiling import (
     runtime_profile_payload,
     select_profiling_records,
 )
-from zeromodel.video.domains.video_action_set.transformations import _transformation_contract
+from zeromodel.video.domains.video_action_set.transformations import (
+    _transformation_contract,
+)
 from zeromodel.core.policy_lookup import VPMPolicyLookup
 from zeromodel.video.runtime import build_runtime
 from research.evidence.video_complete_row_evidence import (

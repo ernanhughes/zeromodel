@@ -15,16 +15,32 @@ from research.visual.visual_registration import RegistrationConfig
 
 
 def _provider_fixture():
-    exact = ImageObservation(np.array([[0, 255], [255, 0]], dtype=np.uint8), source_id="exact")
-    rival = ImageObservation(np.array([[0, 255], [255, 0]], dtype=np.uint8), source_id="rival")
-    tie = ImageObservation(np.array([[0, 255], [255, 0]], dtype=np.uint8), source_id="tie")
+    exact = ImageObservation(
+        np.array([[0, 255], [255, 0]], dtype=np.uint8), source_id="exact"
+    )
+    rival = ImageObservation(
+        np.array([[0, 255], [255, 0]], dtype=np.uint8), source_id="rival"
+    )
+    tie = ImageObservation(
+        np.array([[0, 255], [255, 0]], dtype=np.uint8), source_id="tie"
+    )
     prototypes = {
         "row-a": ("row-a", "LEFT", exact.raw_digest, exact),
         "row-b": ("row-b", "RIGHT", rival.raw_digest, rival),
     }
     development = {
-        "row-a": (exact, ImageObservation(np.array([[0, 255], [255, 1]], dtype=np.uint8), source_id="a-dev")),
-        "row-b": (rival, ImageObservation(np.array([[255, 0], [254, 0]], dtype=np.uint8), source_id="b-dev")),
+        "row-a": (
+            exact,
+            ImageObservation(
+                np.array([[0, 255], [255, 1]], dtype=np.uint8), source_id="a-dev"
+            ),
+        ),
+        "row-b": (
+            rival,
+            ImageObservation(
+                np.array([[255, 0], [254, 0]], dtype=np.uint8), source_id="b-dev"
+            ),
+        ),
     }
     regions = (
         JointEvidenceRegionSpec(
@@ -35,7 +51,9 @@ def _provider_fixture():
             width=2,
             weight=1.0,
             critical=True,
-            registration_config=RegistrationConfig(max_dx=0, max_dy=0, minimum_overlap_fraction=1.0),
+            registration_config=RegistrationConfig(
+                max_dx=0, max_dy=0, minimum_overlap_fraction=1.0
+            ),
         ),
     )
     masks = build_joint_candidate_masks(
@@ -90,7 +108,9 @@ def _provider_fixture():
 def test_exact_tie_safety_rejects_equal_strength_rows() -> None:
     provider, observation = _provider_fixture()
     ranked = provider._rank(observation)
-    candidate_set = build_joint_candidate_set(ranked_candidates=ranked, calibration=provider._calibration)
+    candidate_set = build_joint_candidate_set(
+        ranked_candidates=ranked, calibration=provider._calibration
+    )
     assert candidate_set.outcome != "exact_row_accepted"
     assert ranked[0].eligible_for_exact is False
 

@@ -47,7 +47,9 @@ def main() -> None:
         ViewProfile(
             name="safe-open-space",
             metric_weights={"grass": 1.0, "risk": -0.8, "cars": -0.4},
-            metadata={"description": "Prefer grass/open space while suppressing risk and cars."},
+            metadata={
+                "description": "Prefer grass/open space while suppressing risk and cars."
+            },
         ),
     ]
 
@@ -73,7 +75,9 @@ def main() -> None:
             "source_digest": artifact.source.digest,
         }
 
-    (OUT_DIR / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    (OUT_DIR / "summary.json").write_text(
+        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
+    )
     print(json.dumps(summary, indent=2, sort_keys=True))
 
 

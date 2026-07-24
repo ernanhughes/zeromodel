@@ -23,7 +23,9 @@ from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 def _load_demo():
     path = Path(__file__).resolve().parents[1] / "examples" / "arcade_shooter_policy.py"
-    spec = importlib.util.spec_from_file_location("arcade_shooter_policy_exhaustive", path)
+    spec = importlib.util.spec_from_file_location(
+        "arcade_shooter_policy_exhaustive", path
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -201,7 +203,9 @@ def test_exhaustive_policy_fidelity() -> None:
                 expected_action = _expected_action(demo.ACTIONS, expected_values)
                 row_id = demo.state_row_id(tank_x, target_x, cooldown)
                 decision = reader.read(row_id)
-                actual_values = tuple(decision.candidates[action] for action in demo.ACTIONS)
+                actual_values = tuple(
+                    decision.candidates[action] for action in demo.ACTIONS
+                )
 
                 assert actual_values == pytest.approx(expected_values), row_id
                 assert decision.action == expected_action, row_id
@@ -301,7 +305,9 @@ def test_identity_mutation_localization_and_behaviour() -> None:
 
     behavioural_state = demo.state_row_id(3, 3, 0)
 
-    def behavioural_values(tank_x: int, target_x: Optional[int], cooldown: int) -> tuple[float, ...]:
+    def behavioural_values(
+        tank_x: int, target_x: Optional[int], cooldown: int
+    ) -> tuple[float, ...]:
         values = list(demo._action_values(tank_x, target_x, cooldown))
         if demo.state_row_id(tank_x, target_x, cooldown) == behavioural_state:
             values[demo.ACTIONS.index("STAY")] = 1.0
@@ -310,8 +316,12 @@ def test_identity_mutation_localization_and_behaviour() -> None:
     behavioural = _compile_with_value_function(demo, behavioural_values)
     assert behavioural.artifact_id != original.artifact_id
 
-    before = VPMPolicyLookup(original, action_metric_ids=demo.ACTIONS).read(behavioural_state)
-    after = VPMPolicyLookup(behavioural, action_metric_ids=demo.ACTIONS).read(behavioural_state)
+    before = VPMPolicyLookup(original, action_metric_ids=demo.ACTIONS).read(
+        behavioural_state
+    )
+    after = VPMPolicyLookup(behavioural, action_metric_ids=demo.ACTIONS).read(
+        behavioural_state
+    )
     assert before.action == "FIRE"
     assert after.action == "STAY"
 
@@ -321,7 +331,9 @@ def test_identity_mutation_localization_and_behaviour() -> None:
             before_value = float(original.source.values[row_index, metric_index])
             after_value = float(behavioural.source.values[row_index, metric_index])
             if before_value != after_value:
-                changed_cells.append((row_index, metric_index, before_value, after_value))
+                changed_cells.append(
+                    (row_index, metric_index, before_value, after_value)
+                )
 
     assert changed_cells == [(56, demo.ACTIONS.index("STAY"), 0.0, 1.0)]
 
@@ -340,9 +352,9 @@ def test_identity_mutation_localization_and_behaviour() -> None:
     non_behavioural = _compile_with_value_function(demo, non_behavioural_values)
     assert non_behavioural.artifact_id != original.artifact_id
 
-    non_behavioural_before = VPMPolicyLookup(original, action_metric_ids=demo.ACTIONS).read(
-        non_behavioural_state
-    )
+    non_behavioural_before = VPMPolicyLookup(
+        original, action_metric_ids=demo.ACTIONS
+    ).read(non_behavioural_state)
     non_behavioural_after = VPMPolicyLookup(
         non_behavioural,
         action_metric_ids=demo.ACTIONS,
@@ -421,7 +433,9 @@ def test_every_runtime_decision_has_complete_resolvable_trace() -> None:
         assert decision["metric_id"] == decision["action"]
         assert isinstance(decision["value"], float)
         assert set(decision["candidates"]) == set(demo.ACTIONS)
-        assert decision["value"] == decision["candidates"][decision["action"]], step_number
+        assert decision["value"] == decision["candidates"][decision["action"]], (
+            step_number
+        )
         assert decision["source_row_index"] >= 0
         assert decision["source_metric_index"] >= 0
         assert decision["view_row"] >= 0

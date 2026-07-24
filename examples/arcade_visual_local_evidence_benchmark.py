@@ -1,4 +1,5 @@
 """Fresh v3 local-evidence benchmark for bounded visual-address research."""
+
 # ruff: noqa: E402
 from __future__ import annotations
 
@@ -13,7 +14,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_shooter_policy import ACTIONS, ShooterConfig, compile_policy_artifact  # noqa: E402
+from examples.arcade_shooter_policy import (
+    ACTIONS,
+    ShooterConfig,
+    compile_policy_artifact,
+)  # noqa: E402
 from examples.arcade_visual_address_benchmark import ArcadeBenchmarkDataset  # noqa: E402
 from examples.arcade_visual_sign_reader import (  # noqa: E402
     CELL_PIXELS,
@@ -39,7 +44,11 @@ from research.visual.visual_corruptions import (  # noqa: E402
     scale_intensity,
     translate_frame,
 )
-from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL  # noqa: E402
+from research.visual.visual_experiment import (
+    EXPECTED_ACCEPT,
+    EXPECTED_REJECT,
+    IMPOSSIBILITY_CONTROL,
+)  # noqa: E402
 
 
 SOURCE_SCOPE = "arcade-visual-local-evidence-v3"
@@ -119,7 +128,10 @@ def _choose_same_action_competitor(
         for candidate in canonical
         if candidate != row_id and lookup.choose(candidate) == action
     )
-    return min(candidates, key=lambda candidate: (_state_distance(row_id, candidate), candidate))
+    return min(
+        candidates,
+        key=lambda candidate: (_state_distance(row_id, candidate), candidate),
+    )
 
 
 def _choose_conflicting_action_competitor(
@@ -130,11 +142,12 @@ def _choose_conflicting_action_competitor(
 ) -> str:
     action = lookup.choose(row_id)
     candidates = tuple(
-        candidate
-        for candidate in canonical
-        if lookup.choose(candidate) != action
+        candidate for candidate in canonical if lookup.choose(candidate) != action
     )
-    return min(candidates, key=lambda candidate: (_state_distance(row_id, candidate), candidate))
+    return min(
+        candidates,
+        key=lambda candidate: (_state_distance(row_id, candidate), candidate),
+    )
 
 
 def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
@@ -143,9 +156,15 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
         CorruptionFamilySpec(family_id="prototype-palette-v3", kind="palette"),
         CorruptionFamilySpec(family_id="prototype-shift-right-v3", kind="translation"),
         CorruptionFamilySpec(family_id="prototype-brightness-v3", kind="brightness"),
-        CorruptionFamilySpec(family_id="benign-calibration-contrast-v3", kind="contrast"),
-        CorruptionFamilySpec(family_id="benign-calibration-translation-x-v3", kind="translation"),
-        CorruptionFamilySpec(family_id="benign-calibration-photometric-v3", kind="brightness"),
+        CorruptionFamilySpec(
+            family_id="benign-calibration-contrast-v3", kind="contrast"
+        ),
+        CorruptionFamilySpec(
+            family_id="benign-calibration-translation-x-v3", kind="translation"
+        ),
+        CorruptionFamilySpec(
+            family_id="benign-calibration-photometric-v3", kind="brightness"
+        ),
         CorruptionFamilySpec(family_id="benign-calibration-noise-v3", kind="noise"),
         CorruptionFamilySpec(
             family_id="rejection-calibration-same-action-v3",
@@ -202,7 +221,10 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
             family_id="final-information-impossible-v3",
             kind="information_theoretic_control",
             critical_evidence_removed=True,
-            parameters={"distinguishable": False, "information_theoretic_impossible": True},
+            parameters={
+                "distinguishable": False,
+                "information_theoretic_impossible": True,
+            },
         ),
         CorruptionFamilySpec(
             family_id="final-beyond-bounds-translation-v3",
@@ -246,7 +268,9 @@ def _benign_variant(frame: np.ndarray, family_id: str, index: int) -> np.ndarray
     raise ValueError("unknown benign family")
 
 
-def _accepted_final_variant(frame: np.ndarray, state: Mapping[str, Any], family_id: str, index: int) -> np.ndarray:
+def _accepted_final_variant(
+    frame: np.ndarray, state: Mapping[str, Any], family_id: str, index: int
+) -> np.ndarray:
     if family_id == "final-translation-heldout-v3":
         offsets = ((2, 0), (-2, 0), (0, -2))
         dx, dy = offsets[index % len(offsets)]
@@ -260,7 +284,14 @@ def _accepted_final_variant(frame: np.ndarray, state: Mapping[str, Any], family_
         offsets = ((2, 0), (-2, 0), (0, -2))
         dx, dy = offsets[index % len(offsets)]
         translated = translate_frame(frame, dx=dx, dy=dy, fill=6)
-        return mask_box(translated, top=0, left=0, height=2 + (index % 2), width=3, value=90 + 10 * index)
+        return mask_box(
+            translated,
+            top=0,
+            left=0,
+            height=2 + (index % 2),
+            width=3,
+            value=90 + 10 * index,
+        )
     if family_id == "final-translation-critical-v3":
         offsets = ((2, 1), (-2, 1), (1, -2))
         dx, dy = offsets[index % len(offsets)]
@@ -341,11 +372,15 @@ def build_arcade_local_evidence_dataset(
     }
 
     same_action_cache = {
-        row_id: _choose_same_action_competitor(row_id, lookup=lookup, canonical=canonical)
+        row_id: _choose_same_action_competitor(
+            row_id, lookup=lookup, canonical=canonical
+        )
         for row_id in canonical
     }
     conflicting_cache = {
-        row_id: _choose_conflicting_action_competitor(row_id, lookup=lookup, canonical=canonical)
+        row_id: _choose_conflicting_action_competitor(
+            row_id, lookup=lookup, canonical=canonical
+        )
         for row_id in canonical
     }
 
@@ -371,7 +406,9 @@ def build_arcade_local_evidence_dataset(
                     "information_theoretic_impossible": False,
                     "contains_conflicting_action_evidence": False,
                 }
-                observation = ImageObservation(pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata)
+                observation = ImageObservation(
+                    pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata
+                )
                 observations[observation_id] = observation
                 records.append(
                     VisualExampleRecord(
@@ -401,7 +438,9 @@ def build_arcade_local_evidence_dataset(
                     "information_theoretic_impossible": False,
                     "contains_conflicting_action_evidence": False,
                 }
-                observation = ImageObservation(pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata)
+                observation = ImageObservation(
+                    pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata
+                )
                 observations[observation_id] = observation
                 records.append(
                     VisualExampleRecord(
@@ -430,7 +469,9 @@ def build_arcade_local_evidence_dataset(
                     critical_region = "cooldown_indicator"
                     competitor_row = conflicting_row
                 else:
-                    varied = _target_band(_tank_band(frame, same_action_frame), conflicting_frame)
+                    varied = _target_band(
+                        _tank_band(frame, same_action_frame), conflicting_frame
+                    )
                     critical_region = "composed_target_and_tank"
                     competitor_row = conflicting_row
                 metadata = {
@@ -440,7 +481,8 @@ def build_arcade_local_evidence_dataset(
                     "expected_action_id": action,
                     "distinguishable": True,
                     "information_theoretic_impossible": False,
-                    "contains_conflicting_action_evidence": family_id != "rejection-calibration-same-action-v3",
+                    "contains_conflicting_action_evidence": family_id
+                    != "rejection-calibration-same-action-v3",
                     "source_row_id": row_id,
                     "competing_row_id": competitor_row,
                     "source_action_id": action,
@@ -448,7 +490,9 @@ def build_arcade_local_evidence_dataset(
                     "critical_changed_region": critical_region,
                     "transformation_parameters": {"variant_index": index},
                 }
-                observation = ImageObservation(pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata)
+                observation = ImageObservation(
+                    pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata
+                )
                 observations[observation_id] = observation
                 records.append(
                     VisualExampleRecord(
@@ -485,10 +529,14 @@ def build_arcade_local_evidence_dataset(
                     "distinguishable": False,
                     "information_theoretic_impossible": False,
                     "contains_conflicting_action_evidence": False,
-                    "known_synthetic_displacement": known_displacements[family_id][index % 3],
+                    "known_synthetic_displacement": known_displacements[family_id][
+                        index % 3
+                    ],
                     "transformation_parameters": {"variant_index": index},
                 }
-                observation = ImageObservation(pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata)
+                observation = ImageObservation(
+                    pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata
+                )
                 observations[observation_id] = observation
                 records.append(
                     VisualExampleRecord(
@@ -505,15 +553,24 @@ def build_arcade_local_evidence_dataset(
                 )
 
         for family_id in split_families["final_evaluation_reject"]:
-            if family_id == "final-information-impossible-v3" and state["target"] is None:
+            if (
+                family_id == "final-information-impossible-v3"
+                and state["target"] is None
+            ):
                 continue
             for index in range(variants_per_family):
                 observation_id = f"{family_id}:{row_id}:{index:02d}"
                 if family_id == "final-translation-critical-v3":
                     varied = _accepted_final_variant(frame, state, family_id, index)
-                    critical_region = "target_region" if state["target"] is not None else "cooldown_indicator"
+                    critical_region = (
+                        "target_region"
+                        if state["target"] is not None
+                        else "cooldown_indicator"
+                    )
                     metadata = {
-                        "known_synthetic_displacement": ((2, 1), (-2, 1), (1, -2))[index % 3],
+                        "known_synthetic_displacement": ((2, 1), (-2, 1), (1, -2))[
+                            index % 3
+                        ],
                         "critical_changed_region": critical_region,
                     }
                 elif family_id == "final-same-action-wrong-row-v3":
@@ -535,7 +592,9 @@ def build_arcade_local_evidence_dataset(
                         "critical_changed_region": "cooldown_indicator",
                     }
                 elif family_id == "final-compositional-invalid-v3":
-                    varied = _target_band(_tank_band(frame, same_action_frame), conflicting_frame)
+                    varied = _target_band(
+                        _tank_band(frame, same_action_frame), conflicting_frame
+                    )
                     metadata = {
                         "source_row_id": row_id,
                         "same_action_row_id": same_action_row,
@@ -551,7 +610,9 @@ def build_arcade_local_evidence_dataset(
                 else:
                     varied = _accepted_final_variant(frame, state, family_id, index)
                     metadata = {
-                        "known_synthetic_displacement": ((4, 0), (-4, 0), (0, 4))[index % 3],
+                        "known_synthetic_displacement": ((4, 0), (-4, 0), (0, 4))[
+                            index % 3
+                        ],
                         "critical_changed_region": "out_of_declared_domain_translation",
                     }
                 varied = _fresh_finalize(varied, family_id=family_id)
@@ -565,16 +626,21 @@ def build_arcade_local_evidence_dataset(
                             else EXPECTED_REJECT
                         ),
                         "expected_action_id": action,
-                        "distinguishable": family_id != "final-information-impossible-v3",
-                        "information_theoretic_impossible": family_id == "final-information-impossible-v3",
-                        "contains_conflicting_action_evidence": family_id in {
+                        "distinguishable": family_id
+                        != "final-information-impossible-v3",
+                        "information_theoretic_impossible": family_id
+                        == "final-information-impossible-v3",
+                        "contains_conflicting_action_evidence": family_id
+                        in {
                             "final-conflicting-action-near-v3",
                             "final-compositional-invalid-v3",
                         },
                         "transformation_parameters": {"variant_index": index},
                     }
                 )
-                observation = ImageObservation(pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata)
+                observation = ImageObservation(
+                    pixels=varied, source_id=SOURCE_SCOPE, metadata=metadata
+                )
                 observations[observation_id] = observation
                 records.append(
                     VisualExampleRecord(
@@ -623,7 +689,12 @@ def main() -> None:
         "observation_count": len(dataset.manifest.records),
         "split_counts": {
             split: sum(record.split == split for record in dataset.manifest.records)
-            for split in ("prototype", "benign_calibration", "rejection_calibration", "final_evaluation")
+            for split in (
+                "prototype",
+                "benign_calibration",
+                "rejection_calibration",
+                "final_evaluation",
+            )
         },
     }
     print(json.dumps(payload, indent=2, sort_keys=True))

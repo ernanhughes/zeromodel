@@ -34,7 +34,9 @@ def main() -> None:
     png_path = write_png(artifact, OUT_DIR / "training_progress.png")
     svg_path = write_svg(artifact, OUT_DIR / "training_progress.svg")
     summary_path = OUT_DIR / "training_progress_summary.json"
-    summary_path.write_text(json.dumps(assessment.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+    summary_path.write_text(
+        json.dumps(assessment.to_dict(), indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     loaded = from_bundle(bundle_path)
     print("best_checkpoint_id:", assessment.best_checkpoint_id)

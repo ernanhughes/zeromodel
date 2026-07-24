@@ -1,4 +1,5 @@
 """Complete independent registered-pixel calibration on a fresh v3 fixture."""
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_visual_local_evidence_benchmark import SOURCE_SCOPE, build_arcade_local_evidence_dataset  # noqa: E402
+from examples.arcade_visual_local_evidence_benchmark import (
+    SOURCE_SCOPE,
+    build_arcade_local_evidence_dataset,
+)  # noqa: E402
 from research.visual.visual_experiment import evaluate_visual_provider  # noqa: E402
 from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_candidates_v2,
@@ -56,11 +60,15 @@ def _sha256_file(path: Path) -> str:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def _git_output(*args: str) -> str:
-    return subprocess.check_output(["git", *args], cwd=str(REPO_ROOT), text=True).strip()
+    return subprocess.check_output(
+        ["git", *args], cwd=str(REPO_ROOT), text=True
+    ).strip()
 
 
 def _environment() -> Dict[str, Any]:
@@ -73,7 +81,10 @@ def _environment() -> Dict[str, Any]:
 
 
 def _runtime() -> Dict[str, Any]:
-    return {"started_utc": datetime.now(timezone.utc).isoformat(), "cwd": str(REPO_ROOT)}
+    return {
+        "started_utc": datetime.now(timezone.utc).isoformat(),
+        "cwd": str(REPO_ROOT),
+    }
 
 
 def _calendar_date_label(moment: datetime) -> str:
@@ -82,11 +93,19 @@ def _calendar_date_label(moment: datetime) -> str:
 
 def _frozen_reference(path: Path) -> Dict[str, Any]:
     summary = json.loads((path / "final-summary.json").read_text(encoding="utf-8"))
-    selected = json.loads((path / "selected-calibration.json").read_text(encoding="utf-8"))
-    run_manifest = json.loads((path / "run-manifest.json").read_text(encoding="utf-8")) if (path / "run-manifest.json").exists() else {}
+    selected = json.loads(
+        (path / "selected-calibration.json").read_text(encoding="utf-8")
+    )
+    run_manifest = (
+        json.loads((path / "run-manifest.json").read_text(encoding="utf-8"))
+        if (path / "run-manifest.json").exists()
+        else {}
+    )
     return {
         "result_directory": str(path.relative_to(REPO_ROOT)).replace("\\", "/"),
-        "selection_digest": summary.get("selection_digest", run_manifest.get("selection_digest")),
+        "selection_digest": summary.get(
+            "selection_digest", run_manifest.get("selection_digest")
+        ),
         "calibration_digest": summary["calibration_digest"],
         "selected_quantile": summary.get("selected_quantile"),
         "outcome": summary["outcome"],
@@ -99,16 +118,34 @@ def _frozen_reference(path: Path) -> Dict[str, Any]:
 def _classify_outcome(metrics: Mapping[str, Any]) -> Tuple[str, str, str]:
     false_accepts = int(metrics["false_accept_count"])
     conflicting = int(metrics["conflicting_action_error_count"])
-    coverage = float(metrics["accepted_benign_count"]) / float(metrics["false_reject_opportunities"] or 1)
+    coverage = float(metrics["accepted_benign_count"]) / float(
+        metrics["false_reject_opportunities"] or 1
+    )
     if false_accepts == 0 and conflicting == 0 and coverage >= 0.5:
-        return ("A", "registered_pixels_useful_after_complete_calibration", "broader_registered_baseline_validation")
+        return (
+            "A",
+            "registered_pixels_useful_after_complete_calibration",
+            "broader_registered_baseline_validation",
+        )
     if false_accepts == 0 and conflicting == 0 and coverage >= 0.1:
-        return ("B", "registered_pixels_partially_useful_after_complete_calibration", "translation_equivariant_local_correlation")
-    return ("C", "registered_global_pixel_evidence_still_insufficient", "translation_equivariant_local_correlation")
+        return (
+            "B",
+            "registered_pixels_partially_useful_after_complete_calibration",
+            "translation_equivariant_local_correlation",
+        )
+    return (
+        "C",
+        "registered_global_pixel_evidence_still_insufficient",
+        "translation_equivariant_local_correlation",
+    )
 
 
 def _load_jsonl(path: Path) -> Tuple[Dict[str, Any], ...]:
-    return tuple(json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+    return tuple(
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    )
 
 
 def _risk_coverage_curve(candidates: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
@@ -122,7 +159,9 @@ def _risk_coverage_curve(candidates: Sequence[Mapping[str, Any]]) -> Dict[str, A
                 "benign_coverage": candidate["benign_coverage"],
                 "false_accepts": candidate["false_accepts"],
                 "conflicting_action_accepts": candidate["conflicting_action_accepts"],
-                "accepted_exact_row_precision": candidate["accepted_exact_row_precision"],
+                "accepted_exact_row_precision": candidate[
+                    "accepted_exact_row_precision"
+                ],
                 "accepted_action_precision": candidate["accepted_action_precision"],
             }
             for candidate in candidates
@@ -148,7 +187,9 @@ def _bundle_manifest(output_dir: Path) -> Dict[str, Any]:
 def _verify_required_files(output_dir: Path, expected: Iterable[str]) -> None:
     missing = [name for name in expected if not (output_dir / name).exists()]
     if missing:
-        raise RuntimeError("required evidence output is incomplete: %s" % ", ".join(missing))
+        raise RuntimeError(
+            "required evidence output is incomplete: %s" % ", ".join(missing)
+        )
 
 
 def run_registered_calibration_v2(
@@ -162,7 +203,9 @@ def run_registered_calibration_v2(
     command: str,
 ) -> Dict[str, Any]:
     if output_dir.exists() and any(output_dir.iterdir()):
-        raise RuntimeError("output directory already exists and is non-empty: %s" % output_dir)
+        raise RuntimeError(
+            "output directory already exists and is non-empty: %s" % output_dir
+        )
     output_dir.mkdir(parents=True, exist_ok=False)
     if _git_output("rev-parse", "HEAD") != EXPECTED_STARTING_MAIN_SHA:
         raise RuntimeError("unexpected starting main sha")
@@ -173,9 +216,13 @@ def run_registered_calibration_v2(
 
     frozen_r1_v1 = _frozen_reference(FROZEN_R1_V1_DIR)
     _frozen_reference(FROZEN_SYSTEM_B_DIR)
-    dataset = build_arcade_local_evidence_dataset(variants_per_family=variants_per_family)
+    dataset = build_arcade_local_evidence_dataset(
+        variants_per_family=variants_per_family
+    )
     environment = _environment()
-    registration_config = RegistrationConfig(max_dx=max_dx, max_dy=max_dy, minimum_overlap_fraction=minimum_overlap_fraction)
+    registration_config = RegistrationConfig(
+        max_dx=max_dx, max_dy=max_dy, minimum_overlap_fraction=minimum_overlap_fraction
+    )
     selection_capture_ids: set[str] = set()
     candidates = build_registered_pixel_candidates_v2(
         dataset_manifest=dataset.manifest,
@@ -187,7 +234,11 @@ def run_registered_calibration_v2(
         source_scope=SOURCE_SCOPE,
         capture_ids=selection_capture_ids,
     )
-    final_ids = {record.observation_id for record in dataset.manifest.records if record.split == "final_evaluation"}
+    final_ids = {
+        record.observation_id
+        for record in dataset.manifest.records
+        if record.split == "final_evaluation"
+    }
     if final_ids.intersection(selection_capture_ids):
         raise RuntimeError("calibration leakage detected before selection freeze")
     selection = select_registered_pixel_candidate_v2(
@@ -198,7 +249,11 @@ def run_registered_calibration_v2(
     )
     if selection.selection_status != "selected_operating_point":
         raise RuntimeError("R1-v2 produced no feasible calibration candidate")
-    selected = next(candidate for candidate in candidates if candidate.calibration.digest == selection.selected_calibration_digest)
+    selected = next(
+        candidate
+        for candidate in candidates
+        if candidate.calibration.digest == selection.selected_calibration_digest
+    )
     provider = build_registered_pixel_provider(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -236,8 +291,14 @@ def run_registered_calibration_v2(
     runtime["completed_utc"] = datetime.now(timezone.utc).isoformat()
     runtime["dirty_at_start"] = False
     runtime["dirty_after_run"] = False
-    distance_grid = {"version": SHOWDOWN_PROTOCOL_VERSION, "distance_quantiles": list(QUANTILES)}
-    margin_grid = {"version": SHOWDOWN_PROTOCOL_VERSION, "ambiguity_margin_quantiles": list(QUANTILES)}
+    distance_grid = {
+        "version": SHOWDOWN_PROTOCOL_VERSION,
+        "distance_quantiles": list(QUANTILES),
+    }
+    margin_grid = {
+        "version": SHOWDOWN_PROTOCOL_VERSION,
+        "ambiguity_margin_quantiles": list(QUANTILES),
+    }
     candidate_grid = {
         "version": SHOWDOWN_PROTOCOL_VERSION,
         "registration_config_digest": registration_config.digest,
@@ -261,9 +322,16 @@ def run_registered_calibration_v2(
         "fresh_r1_v2_trace_digest": trace_digest,
         "notes": "The compared runs use different final splits, so this file records headline deltas rather than per-observation pairing.",
         "headline_deltas": {
-            "raw_top1_exact_row_accuracy_delta": float(final_metrics["top1_benign_row_accuracy"]) - float(frozen_r1_v1["final_metrics"]["top1_benign_row_accuracy"]),
-            "raw_top1_action_accuracy_delta": float(final_metrics["top1_benign_action_accuracy"]) - float(frozen_r1_v1["final_metrics"]["top1_benign_action_accuracy"]),
-            "accepted_benign_count_delta": int(final_metrics["accepted_benign_count"]) - int(frozen_r1_v1["final_metrics"]["accepted_benign_count"]),
+            "raw_top1_exact_row_accuracy_delta": float(
+                final_metrics["top1_benign_row_accuracy"]
+            )
+            - float(frozen_r1_v1["final_metrics"]["top1_benign_row_accuracy"]),
+            "raw_top1_action_accuracy_delta": float(
+                final_metrics["top1_benign_action_accuracy"]
+            )
+            - float(frozen_r1_v1["final_metrics"]["top1_benign_action_accuracy"]),
+            "accepted_benign_count_delta": int(final_metrics["accepted_benign_count"])
+            - int(frozen_r1_v1["final_metrics"]["accepted_benign_count"]),
         },
     }
     final_report = {
@@ -303,31 +371,37 @@ def run_registered_calibration_v2(
     _write_json(output_dir / "argv.json", {"argv": list(argv)})
     (output_dir / "command.txt").write_text(command + "\n", encoding="utf-8")
     _write_json(output_dir / "runtime.json", runtime)
-    _write_json(output_dir / "run-manifest.json", {
-        "version": SHOWDOWN_PROTOCOL_VERSION,
-        "generator_version": GENERATOR_VERSION,
-        "started_utc": runtime["started_utc"],
-        "completed_utc": runtime["completed_utc"],
-        "exact_command": command,
-        "argv": list(argv),
-        "git_commit": _git_output("rev-parse", "HEAD"),
-        "branch_or_ref": _git_output("branch", "--show-current") or os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME") or "detached",
-        "base_main_sha": EXPECTED_STARTING_MAIN_SHA,
-        "dirty_at_start": False,
-        "dirty_after_run": False,
-        "python_version": sys.version.split()[0],
-        "platform": platform.platform(),
-        "dependency_versions": {},
-        "dataset_digest": dataset.manifest.digest,
-        "config_digest": registration_config.digest,
-        "candidate_grid_digest": _json_digest(candidate_grid),
-        "selection_digest": selection.digest,
-        "calibration_digest": selected.calibration.digest,
-        "trace_digest": trace_digest,
-        "final_report_payload_digest": _json_digest(final_report),
-        "generated_paths": [],
-        "bundle_manifest_path": "bundle-manifest.json",
-    })
+    _write_json(
+        output_dir / "run-manifest.json",
+        {
+            "version": SHOWDOWN_PROTOCOL_VERSION,
+            "generator_version": GENERATOR_VERSION,
+            "started_utc": runtime["started_utc"],
+            "completed_utc": runtime["completed_utc"],
+            "exact_command": command,
+            "argv": list(argv),
+            "git_commit": _git_output("rev-parse", "HEAD"),
+            "branch_or_ref": _git_output("branch", "--show-current")
+            or os.environ.get("GITHUB_HEAD_REF")
+            or os.environ.get("GITHUB_REF_NAME")
+            or "detached",
+            "base_main_sha": EXPECTED_STARTING_MAIN_SHA,
+            "dirty_at_start": False,
+            "dirty_after_run": False,
+            "python_version": sys.version.split()[0],
+            "platform": platform.platform(),
+            "dependency_versions": {},
+            "dataset_digest": dataset.manifest.digest,
+            "config_digest": registration_config.digest,
+            "candidate_grid_digest": _json_digest(candidate_grid),
+            "selection_digest": selection.digest,
+            "calibration_digest": selected.calibration.digest,
+            "trace_digest": trace_digest,
+            "final_report_payload_digest": _json_digest(final_report),
+            "generated_paths": [],
+            "bundle_manifest_path": "bundle-manifest.json",
+        },
+    )
     _write_json(output_dir / "dataset-manifest.json", dataset.manifest.to_dict())
     _write_json(output_dir / "frozen-r1-v1-reference.json", frozen_r1_v1)
     _write_json(output_dir / "registration-config.json", registration_config.to_dict())
@@ -343,7 +417,9 @@ def run_registered_calibration_v2(
     (output_dir / "README.md").write_text(readme, encoding="utf-8")
     bundle_manifest = _bundle_manifest(output_dir)
     _write_json(output_dir / "bundle-manifest.json", bundle_manifest)
-    run_manifest = json.loads((output_dir / "run-manifest.json").read_text(encoding="utf-8"))
+    run_manifest = json.loads(
+        (output_dir / "run-manifest.json").read_text(encoding="utf-8")
+    )
     run_manifest["generated_paths"] = sorted(
         str(path.relative_to(output_dir)).replace("\\", "/")
         for path in output_dir.rglob("*")
@@ -352,11 +428,27 @@ def run_registered_calibration_v2(
     _write_json(output_dir / "run-manifest.json", run_manifest)
 
     required = [
-        "README.md", "protocol.json", "environment.json", "argv.json", "command.txt", "runtime.json",
-        "run-manifest.json", "dataset-manifest.json", "frozen-r1-v1-reference.json", "registration-config.json",
-        "distance-quantile-grid.json", "ambiguity-margin-quantile-grid.json", "candidate-grid.json",
-        "selected-calibration.json", "final-report.json", "final-summary.json", "adjudication.json",
-        "traces.jsonl", "paired-r1-v1-v2-comparison.json", "risk-coverage-curve.json", "bundle-manifest.json",
+        "README.md",
+        "protocol.json",
+        "environment.json",
+        "argv.json",
+        "command.txt",
+        "runtime.json",
+        "run-manifest.json",
+        "dataset-manifest.json",
+        "frozen-r1-v1-reference.json",
+        "registration-config.json",
+        "distance-quantile-grid.json",
+        "ambiguity-margin-quantile-grid.json",
+        "candidate-grid.json",
+        "selected-calibration.json",
+        "final-report.json",
+        "final-summary.json",
+        "adjudication.json",
+        "traces.jsonl",
+        "paired-r1-v1-v2-comparison.json",
+        "risk-coverage-curve.json",
+        "bundle-manifest.json",
     ]
     _verify_required_files(output_dir, required)
     return {

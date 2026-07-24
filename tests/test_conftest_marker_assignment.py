@@ -30,7 +30,9 @@ def test_research_directory_files_are_recognized_as_research() -> None:
     assert filename not in conftest.INTEGRATION_TEST_FILES
 
 
-def test_package_local_test_filenames_are_not_pre_tagged_integration_or_research() -> None:
+def test_package_local_test_filenames_are_not_pre_tagged_integration_or_research() -> (
+    None
+):
     package_local_filenames = {
         "test_artifact_kernel.py",
         "test_critic.py",

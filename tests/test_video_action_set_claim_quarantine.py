@@ -67,9 +67,18 @@ def test_claim_quarantine_status_files() -> None:
     assert claims["runtime equivalence verified"]["status"] == "withdrawn"
     assert claims["runtime speedup measured"]["status"] == "invalid_measurement"
     assert claims["prospective instrument complete"]["status"] == "unsupported"
-    assert claims["B3 canonical self-retrieval 112/112"]["status"] == "supported_within_narrow_scope"
-    assert claims["historical System B row/action gap"]["status"] == "supported_within_narrow_scope"
-    assert claims["historical R1 row/action gap"]["status"] == "supported_within_narrow_scope"
+    assert (
+        claims["B3 canonical self-retrieval 112/112"]["status"]
+        == "supported_within_narrow_scope"
+    )
+    assert (
+        claims["historical System B row/action gap"]["status"]
+        == "supported_within_narrow_scope"
+    )
+    assert (
+        claims["historical R1 row/action gap"]["status"]
+        == "supported_within_narrow_scope"
+    )
 
     readme_text = readme_path.read_text(encoding="utf-8")
     assert readme_text.startswith("# INVALID PROSPECTIVE INSTRUMENT")

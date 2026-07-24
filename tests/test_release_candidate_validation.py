@@ -94,9 +94,7 @@ def test_a_layer_reporting_failed_tests_fails_the_verdict() -> None:
     }
     verdicts = validator.evaluate_release_test_layers(report)
     assert not validator.release_verdict_passed(verdicts)
-    layer = next(
-        v for v in verdicts if v.name == "package_local_source_tests:core"
-    )
+    layer = next(v for v in verdicts if v.name == "package_local_source_tests:core")
     assert layer.status == "failed"
     assert any("failed=1" in reason for reason in layer.reasons)
 
@@ -121,9 +119,7 @@ def test_a_layer_with_zero_meaningful_tests_fails_the_verdict() -> None:
     }
     verdicts = validator.evaluate_release_test_layers(report)
     assert not validator.release_verdict_passed(verdicts)
-    layer = next(
-        v for v in verdicts if v.name == "package_local_source_tests:trust"
-    )
+    layer = next(v for v in verdicts if v.name == "package_local_source_tests:trust")
     assert layer.status == "failed"
     assert any("zero relevant tests" in reason for reason in layer.reasons)
 
@@ -222,9 +218,7 @@ def test_internal_dependency_edge_mismatch_is_rejected() -> None:
     catch: PACKAGES declaring an extra internal edge package-boundaries.toml
     does not (sqlalchemy -> observation)."""
     boundaries = _boundaries_from(validator.PACKAGES)
-    packages = {
-        key: dict(expected) for key, expected in validator.PACKAGES.items()
-    }
+    packages = {key: dict(expected) for key, expected in validator.PACKAGES.items()}
     packages["sqlalchemy"] = dict(packages["sqlalchemy"])
     packages["sqlalchemy"]["depends_on"] = ("core", "video", "observation")
     with pytest.raises(SystemExit, match="depends_on mismatch"):

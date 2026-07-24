@@ -25,7 +25,9 @@ def test_v3_dataset_is_deterministic_and_fresh_against_v2() -> None:
         "arcade_visual_local_evidence_benchmark_v3_test",
         root / "examples" / "arcade_visual_local_evidence_benchmark.py",
     )
-    dataset_v2 = v2.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    dataset_v2 = v2.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
+    )
     dataset_a = v3.build_arcade_local_evidence_dataset(variants_per_family=1)
     dataset_b = v3.build_arcade_local_evidence_dataset(variants_per_family=1)
 
@@ -73,8 +75,14 @@ def test_v3_dataset_declares_required_families_and_metadata() -> None:
         for record in dataset.manifest.records
         if record.split == "final_evaluation"
     ]
-    assert any(record.evaluation_role == module.IMPOSSIBILITY_CONTROL for record in final_records)
-    assert any(record.family_id == "final-conflicting-action-near-v3" for record in final_records)
+    assert any(
+        record.evaluation_role == module.IMPOSSIBILITY_CONTROL
+        for record in final_records
+    )
+    assert any(
+        record.family_id == "final-conflicting-action-near-v3"
+        for record in final_records
+    )
     for record in final_records[:25]:
         assert "distinguishable" in record.metadata
         assert "information_theoretic_impossible" in record.metadata

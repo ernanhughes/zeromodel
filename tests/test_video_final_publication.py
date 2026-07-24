@@ -15,7 +15,9 @@ from zeromodel.video.domains.video_action_set.canonical_json import canonical_sh
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     access_id_for_authorization,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 from zeromodel.video.domains.video_action_set.final_publication import (
     FINAL_RECEIPT_NAME,
     load_published_receipt,

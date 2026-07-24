@@ -23,7 +23,9 @@ def _region() -> DiscriminativeRegionSpec:
         width=2,
         weight=1.0,
         critical=True,
-        registration_config=RegistrationConfig(max_dx=1, max_dy=0, minimum_overlap_fraction=0.5),
+        registration_config=RegistrationConfig(
+            max_dx=1, max_dy=0, minimum_overlap_fraction=0.5
+        ),
     )
 
 
@@ -78,7 +80,9 @@ def _provider(
         maximum_candidate_set_size=maximum_candidate_set_size,
         prototype_digest=zde._prototype_payload_digest(prototypes),
         region_spec_digest=zde.discriminative_region_digest(regions),
-        mask_spec_digest=zde.discriminative_mask_digest(tuple(mask.spec for mask in masks.values())),
+        mask_spec_digest=zde.discriminative_mask_digest(
+            tuple(mask.spec for mask in masks.values())
+        ),
         policy_artifact_id="sha256:policy",
         source_scope="stage3-test",
     )
@@ -92,18 +96,36 @@ def _provider(
     )
 
 
-def test_v4_exact_accepts_tiny_region_pattern_without_stage2_global_visibility_veto() -> None:
+def test_v4_exact_accepts_tiny_region_pattern_without_stage2_global_visibility_veto() -> (
+    None
+):
     observation_pixels = np.array([[0, 255]], dtype=np.uint8)
     prototypes = {
-        "obs-a": ("row-a", "LEFT", "sha256:row-a", ImageObservation(observation_pixels, source_id="row-a")),
-        "obs-b": ("row-b", "RIGHT", "sha256:row-b", ImageObservation(np.array([[0, 0]], dtype=np.uint8), source_id="row-b")),
+        "obs-a": (
+            "row-a",
+            "LEFT",
+            "sha256:row-a",
+            ImageObservation(observation_pixels, source_id="row-a"),
+        ),
+        "obs-b": (
+            "row-b",
+            "RIGHT",
+            "sha256:row-b",
+            ImageObservation(np.array([[0, 0]], dtype=np.uint8), source_id="row-b"),
+        ),
     }
     masks = {
         "row-a": _mask(row_id="row-a", action_id="LEFT", pixels=observation_pixels),
-        "row-b": _mask(row_id="row-b", action_id="RIGHT", pixels=np.array([[255, 255]], dtype=np.uint8)),
+        "row-b": _mask(
+            row_id="row-b",
+            action_id="RIGHT",
+            pixels=np.array([[255, 255]], dtype=np.uint8),
+        ),
     }
     provider = _provider(prototypes=prototypes, masks=masks)
-    decision = provider.evaluate(ImageObservation(observation_pixels, source_id="frame-0"))
+    decision = provider.evaluate(
+        ImageObservation(observation_pixels, source_id="frame-0")
+    )
     assert decision.evidence_state == "exact_row_accepted"
     assert decision.candidate_set.exact_row_id == "row-a"
     assert decision.exact_address_decision.accepted is True
@@ -113,8 +135,18 @@ def test_v4_exact_accepts_tiny_region_pattern_without_stage2_global_visibility_v
 def test_v4_same_action_ambiguity_produces_candidate_set_not_exact() -> None:
     shared = np.array([[0, 255]], dtype=np.uint8)
     prototypes = {
-        "obs-a": ("row-a", "LEFT", "sha256:row-a", ImageObservation(shared, source_id="row-a")),
-        "obs-b": ("row-b", "LEFT", "sha256:row-b", ImageObservation(shared, source_id="row-b")),
+        "obs-a": (
+            "row-a",
+            "LEFT",
+            "sha256:row-a",
+            ImageObservation(shared, source_id="row-a"),
+        ),
+        "obs-b": (
+            "row-b",
+            "LEFT",
+            "sha256:row-b",
+            ImageObservation(shared, source_id="row-b"),
+        ),
     }
     masks = {
         "row-a": _mask(row_id="row-a", action_id="LEFT", pixels=shared),
@@ -139,8 +171,18 @@ def test_v4_same_action_ambiguity_produces_candidate_set_not_exact() -> None:
 def test_v4_conflicting_action_ambiguity_produces_candidate_set_not_exact() -> None:
     shared = np.array([[0, 255]], dtype=np.uint8)
     prototypes = {
-        "obs-a": ("row-a", "LEFT", "sha256:row-a", ImageObservation(shared, source_id="row-a")),
-        "obs-b": ("row-b", "RIGHT", "sha256:row-b", ImageObservation(shared, source_id="row-b")),
+        "obs-a": (
+            "row-a",
+            "LEFT",
+            "sha256:row-a",
+            ImageObservation(shared, source_id="row-a"),
+        ),
+        "obs-b": (
+            "row-b",
+            "RIGHT",
+            "sha256:row-b",
+            ImageObservation(shared, source_id="row-b"),
+        ),
     }
     masks = {
         "row-a": _mask(row_id="row-a", action_id="LEFT", pixels=shared),
@@ -164,7 +206,12 @@ def test_v4_conflicting_action_ambiguity_produces_candidate_set_not_exact() -> N
 def test_v4_oversized_candidate_set_is_rejected_without_truncation() -> None:
     shared = np.array([[0, 255]], dtype=np.uint8)
     prototypes = {
-        f"obs-{index}": (f"row-{index}", "LEFT", f"sha256:row-{index}", ImageObservation(shared, source_id=f"row-{index}"))
+        f"obs-{index}": (
+            f"row-{index}",
+            "LEFT",
+            f"sha256:row-{index}",
+            ImageObservation(shared, source_id=f"row-{index}"),
+        )
         for index in range(4)
     }
     masks = {
@@ -190,12 +237,26 @@ def test_v4_oversized_candidate_set_is_rejected_without_truncation() -> None:
 def test_v4_cache_identity_separates_identical_pixels_across_source_ids() -> None:
     pixels = np.array([[0, 255]], dtype=np.uint8)
     prototypes = {
-        "obs-a": ("row-a", "LEFT", "sha256:row-a", ImageObservation(pixels, source_id="row-a")),
-        "obs-b": ("row-b", "RIGHT", "sha256:row-b", ImageObservation(np.array([[255, 0]], dtype=np.uint8), source_id="row-b")),
+        "obs-a": (
+            "row-a",
+            "LEFT",
+            "sha256:row-a",
+            ImageObservation(pixels, source_id="row-a"),
+        ),
+        "obs-b": (
+            "row-b",
+            "RIGHT",
+            "sha256:row-b",
+            ImageObservation(np.array([[255, 0]], dtype=np.uint8), source_id="row-b"),
+        ),
     }
     masks = {
         "row-a": _mask(row_id="row-a", action_id="LEFT", pixels=pixels),
-        "row-b": _mask(row_id="row-b", action_id="RIGHT", pixels=np.array([[255, 0]], dtype=np.uint8)),
+        "row-b": _mask(
+            row_id="row-b",
+            action_id="RIGHT",
+            pixels=np.array([[255, 0]], dtype=np.uint8),
+        ),
     }
     provider = _provider(prototypes=prototypes, masks=masks)
     left = provider.read(ImageObservation(pixels, source_id="clip-a:frame-0"))

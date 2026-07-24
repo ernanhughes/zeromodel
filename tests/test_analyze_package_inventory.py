@@ -57,7 +57,6 @@ def test_all_nine_production_source_roots_are_discovered() -> None:
     assert discovered == PRODUCTION_PACKAGE_KEYS
 
 
-
 def test_all_nine_package_test_roots_are_discovered() -> None:
     boundaries = inventory.load_package_boundaries()
     data = inventory.make_inventory("2026-01-01T00:00:00Z")

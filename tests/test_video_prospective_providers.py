@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from research.benchmarks.video_action_set_benchmark import SOURCE_SCOPE, canonical_prototypes
-from research.evidence.video_complete_row_evidence import VIDEO_COMPLETE_ROW_EVIDENCE_VERSION
+from research.benchmarks.video_action_set_benchmark import (
+    SOURCE_SCOPE,
+    canonical_prototypes,
+)
+from research.evidence.video_complete_row_evidence import (
+    VIDEO_COMPLETE_ROW_EVIDENCE_VERSION,
+)
 from research.video.video_prospective_providers import (
     clear_prospective_provider_caches,
     prospective_provider_cache_info,
@@ -16,7 +21,9 @@ from research.video.video_prospective_providers import (
 def test_prospective_providers_emit_complete_112_row_evidence() -> None:
     clear_prospective_provider_caches()
     prototypes = canonical_prototypes()
-    observation_id, (row_id, action_id, _digest, observation) = next(iter(prototypes.items()))
+    observation_id, (row_id, action_id, _digest, observation) = next(
+        iter(prototypes.items())
+    )
     policy_artifact_id = "policy-artifact"
     p1 = score_normalized_pixel(
         observation=observation,
@@ -40,9 +47,16 @@ def test_prospective_providers_emit_complete_112_row_evidence() -> None:
         assert result.evidence.version == VIDEO_COMPLETE_ROW_EVIDENCE_VERSION
         assert len(result.evidence.row_scores) == 112
         assert len(result.evidence.ranking.ranked_row_ids) == 112
-        assert result.semantic_top_set_outcome.status in {"unique_row", "action_unanimous_tie", "conflicting_action_tie", "unresolved"}
+        assert result.semantic_top_set_outcome.status in {
+            "unique_row",
+            "action_unanimous_tie",
+            "conflicting_action_tie",
+            "unresolved",
+        }
         if result.winner_row_id is not None:
-            assert result.winner_row_id in {item.row_id for item in result.evidence.row_scores}
+            assert result.winner_row_id in {
+                item.row_id for item in result.evidence.row_scores
+            }
     assert p3.winner_row_id == row_id
     assert p3.winner_action_id == action_id
 
@@ -50,7 +64,9 @@ def test_prospective_providers_emit_complete_112_row_evidence() -> None:
 def test_reversing_prototype_insertion_order_preserves_semantic_outcome() -> None:
     prototypes = canonical_prototypes()
     reversed_prototypes = dict(reversed(list(prototypes.items())))
-    _observation_id, (_row_id, _action_id, _digest, observation) = next(iter(prototypes.items()))
+    _observation_id, (_row_id, _action_id, _digest, observation) = next(
+        iter(prototypes.items())
+    )
     original = score_normalized_pixel(
         observation=observation,
         prototypes=prototypes,
@@ -94,4 +110,3 @@ def test_prospective_provider_caches_are_bounded_and_clearable() -> None:
     cleared = prospective_provider_cache_info()
     assert cleared["P2"]["size"] == 0
     assert cleared["P3"]["size"] == 0
-

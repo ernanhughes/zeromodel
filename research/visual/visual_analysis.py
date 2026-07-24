@@ -6,6 +6,7 @@ those traces are not validated deployment thresholds. A promoted operating
 point requires an independent rejection-calibration split and an untouched
 final evaluation split.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -151,11 +152,13 @@ def global_score_threshold_curve(
     rows = []
     for threshold in selected_thresholds:
         accepted_benign = tuple(
-            point for point in benign
+            point
+            for point in benign
             if point.score is not None and point.score >= threshold
         )
         false_accepts = tuple(
-            point for point in rejected
+            point
+            for point in rejected
             if point.score is not None and point.score >= threshold
         )
         correct_rows = sum(point.row_correct for point in accepted_benign)
@@ -197,7 +200,9 @@ def operating_curve(
     return global_score_threshold_curve(points, thresholds)
 
 
-def family_summary(points: Sequence[VisualTracePoint]) -> Mapping[str, Mapping[str, Any]]:
+def family_summary(
+    points: Sequence[VisualTracePoint],
+) -> Mapping[str, Mapping[str, Any]]:
     result: Dict[str, Mapping[str, Any]] = {}
     for family_id in sorted({point.family_id for point in points}):
         family = tuple(point for point in points if point.family_id == family_id)
@@ -231,8 +236,12 @@ def paired_top1_outcomes(
     left: Sequence[VisualTracePoint],
     right: Sequence[VisualTracePoint],
 ) -> Mapping[str, Any]:
-    left_by_id = {point.observation_id: point for point in left if point.expected_accept}
-    right_by_id = {point.observation_id: point for point in right if point.expected_accept}
+    left_by_id = {
+        point.observation_id: point for point in left if point.expected_accept
+    }
+    right_by_id = {
+        point.observation_id: point for point in right if point.expected_accept
+    }
     if set(left_by_id) != set(right_by_id):
         raise VPMValidationError("paired visual traces must cover identical benign ids")
 
@@ -247,9 +256,12 @@ def paired_top1_outcomes(
         ):
             target = row_counts if name == "row" else action_counts
             key = (
-                "both_correct" if left_correct and right_correct
-                else "left_only" if left_correct
-                else "right_only" if right_correct
+                "both_correct"
+                if left_correct and right_correct
+                else "left_only"
+                if left_correct
+                else "right_only"
+                if right_correct
                 else "neither"
             )
             target[key] += 1
@@ -273,9 +285,7 @@ def analyze_trace_sets(
     }
     systems = {
         system_id: {
-            "global_score_threshold_curve": list(
-                global_score_threshold_curve(points)
-            ),
+            "global_score_threshold_curve": list(global_score_threshold_curve(points)),
             "family_summary": family_summary(points),
         }
         for system_id, points in parsed.items()

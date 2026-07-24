@@ -89,10 +89,7 @@ def test_progress_observer_receives_monotonic_counts_and_gap_semantics(
     assert {event.total_frame_count for event in events} == {3}
     assert [event.scoreable_frame_count_processed for event in events] == [1, 1, 2]
     assert [event.typed_gap_count_processed for event in events] == [0, 1, 1]
-    assert [
-        event.provider_scoring_calls_completed
-        for event in events
-    ] == [
+    assert [event.provider_scoring_calls_completed for event in events] == [
         event.scoreable_frame_count_processed * len(PROSPECTIVE_PROVIDER_IDS)
         for event in events
     ]

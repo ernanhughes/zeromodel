@@ -3,6 +3,7 @@
 This does not select a deployment threshold. It reuses evaluation traces and is
 therefore diagnostic only.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,11 +24,9 @@ def _trace_sets(payload: Mapping[str, Any]) -> Mapping[str, Any]:
     result: Dict[str, Any] = {}
     for key, value in artifacts.items():
         if str(key).startswith("traces_"):
-            result[str(key)[len("traces_"):]] = value
+            result[str(key)[len("traces_") :]] = value
     if not result:
-        raise ValueError(
-            "report contains no traces; rerun with --include-traces"
-        )
+        raise ValueError("report contains no traces; rerun with --include-traces")
     return result
 
 

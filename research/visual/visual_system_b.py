@@ -1,4 +1,5 @@
 """Deterministic System B adjudication over calibration-only operating points."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -12,7 +13,10 @@ from zeromodel.core.artifact import VPMValidationError
 from zeromodel.observation.visual_address import ImageObservation
 from research.benchmarks.visual_benchmark import BenchmarkSystemResult
 from research.visual.visual_dataset import VisualDatasetManifest, VisualExampleRecord
-from research.visual.visual_experiment import evaluate_visual_provider, records_for_split
+from research.visual.visual_experiment import (
+    evaluate_visual_provider,
+    records_for_split,
+)
 from research.visual.visual_retrieval import (
     FrozenVectorAddressProvider,
     NormalizedPixelEncoder,
@@ -65,7 +69,9 @@ def system_b_candidate_quantiles() -> Tuple[float, ...]:
     return (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 
 
-def _require_split(records: Sequence[VisualExampleRecord], split: str) -> Tuple[VisualExampleRecord, ...]:
+def _require_split(
+    records: Sequence[VisualExampleRecord], split: str
+) -> Tuple[VisualExampleRecord, ...]:
     items = tuple(record for record in records if record.split == split)
     if not items:
         raise VPMValidationError("required split is empty: %s" % split)
@@ -76,7 +82,13 @@ def validate_selection_records(records: Sequence[VisualExampleRecord]) -> None:
     items = tuple(records)
     if not items:
         raise VPMValidationError("selection requires records")
-    forbidden = sorted({record.observation_id for record in items if record.split == "final_evaluation"})
+    forbidden = sorted(
+        {
+            record.observation_id
+            for record in items
+            if record.split == "final_evaluation"
+        }
+    )
     if forbidden:
         raise VPMValidationError(
             "final_evaluation records cannot enter System B calibration selection: %s"
@@ -151,17 +163,22 @@ def _records_digest(records: Sequence[VisualExampleRecord]) -> str:
     return _sha256_json(payload)
 
 
-def _candidate_sort_key(candidate: SystemBCandidateResult) -> Tuple[float, float, float, float]:
+def _candidate_sort_key(
+    candidate: SystemBCandidateResult,
+) -> Tuple[float, float, float, float]:
     benign = candidate.benign_result.metrics
     return (
         benign.accepted_benign_row_correctness,
-        float(benign.accepted_benign_count) / float(benign.false_reject_opportunities or 1),
+        float(benign.accepted_benign_count)
+        / float(benign.false_reject_opportunities or 1),
         benign.benign_row_accuracy,
         -float(candidate.quantile),
     )
 
 
-def _candidate_feasibility(candidate: SystemBCandidateResult) -> Tuple[bool, Tuple[str, ...]]:
+def _candidate_feasibility(
+    candidate: SystemBCandidateResult,
+) -> Tuple[bool, Tuple[str, ...]]:
     reasons = []
     if candidate.rejection_result.metrics.false_accept_count > 0:
         reasons.append("distinguishable_false_acceptance")
@@ -181,7 +198,9 @@ def build_system_b_candidates(
 ) -> Tuple[SystemBCandidateResult, ...]:
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     validate_selection_records(benign_records + rejection_records)
 
     selected_ids = tuple(
@@ -192,12 +211,19 @@ def build_system_b_candidates(
         height=next(iter(observations.values())).pixels.shape[0],
         width=next(iter(observations.values())).pixels.shape[1],
     )
-    from research.visual.visual_experiment import encode_observations, vectors_for_records
+    from research.visual.visual_experiment import (
+        encode_observations,
+        vectors_for_records,
+    )
 
-    vectors = encode_observations(frozen_encoder, selected_ids, observations, batch_size=128)
+    vectors = encode_observations(
+        frozen_encoder, selected_ids, observations, batch_size=128
+    )
     prototype = vectors_for_records(prototype_records, vectors)
     benign = vectors_for_records(benign_records, vectors)
-    quantile_values = tuple(float(value) for value in (quantiles or system_b_candidate_quantiles()))
+    quantile_values = tuple(
+        float(value) for value in (quantiles or system_b_candidate_quantiles())
+    )
     results = []
     for quantile in quantile_values:
         build = build_vector_address(
@@ -217,7 +243,9 @@ def build_system_b_candidates(
             calibration_quantile=quantile,
             deployment_status="research",
         )
-        provider = FrozenVectorAddressProvider(frozen_encoder, VectorAddressIndex(build))
+        provider = FrozenVectorAddressProvider(
+            frozen_encoder, VectorAddressIndex(build)
+        )
         benign_result, _ = evaluate_visual_provider(
             provider=provider,
             dataset_manifest=dataset_manifest,
@@ -268,7 +296,9 @@ def select_system_b_operating_point(
 ) -> SystemBSelectionArtifact:
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     validate_selection_records(benign_records + rejection_records)
     candidate_items = tuple(candidates)
     if not candidate_items:
@@ -277,14 +307,17 @@ def select_system_b_operating_point(
     selected = max(feasible, key=_candidate_sort_key) if feasible else None
     meta = dict(metadata or {})
     meta.setdefault("quantiles", list(system_b_candidate_quantiles()))
-    meta.setdefault("selection_order", [
-        "zero distinguishable false accepts",
-        "zero conflicting-action accepts",
-        "maximize accepted exact-row precision",
-        "maximize benign coverage",
-        "maximize exact-row recall",
-        "deterministic quantile ordering",
-    ])
+    meta.setdefault(
+        "selection_order",
+        [
+            "zero distinguishable false accepts",
+            "zero conflicting-action accepts",
+            "maximize accepted exact-row precision",
+            "maximize benign coverage",
+            "maximize exact-row recall",
+            "deterministic quantile ordering",
+        ],
+    )
     return SystemBSelectionArtifact(
         protocol_version=SYSTEM_B_PROTOCOL_VERSION,
         system_id="B",
@@ -293,7 +326,9 @@ def select_system_b_operating_point(
         prototype_dataset_digest=_records_digest(prototype_records),
         benign_calibration_digest=_records_digest(benign_records),
         rejection_calibration_digest=_records_digest(rejection_records),
-        candidate_grid_digest=_sha256_json([candidate.to_dict() for candidate in candidate_items]),
+        candidate_grid_digest=_sha256_json(
+            [candidate.to_dict() for candidate in candidate_items]
+        ),
         selection_rule=(
             "Reject candidates with any distinguishable false acceptance or any "
             "conflicting-action acceptance; among remaining candidates maximize "
@@ -324,12 +359,19 @@ def build_system_b_provider(
         height=next(iter(observations.values())).pixels.shape[0],
         width=next(iter(observations.values())).pixels.shape[1],
     )
-    from research.visual.visual_experiment import encode_observations, vectors_for_records
+    from research.visual.visual_experiment import (
+        encode_observations,
+        vectors_for_records,
+    )
 
     all_ids = tuple(record.observation_id for record in dataset_manifest.records)
     vectors = encode_observations(encoder, all_ids, observations, batch_size=128)
-    prototype = vectors_for_records(records_for_split(dataset_manifest, "prototype"), vectors)
-    benign = vectors_for_records(records_for_split(dataset_manifest, "benign_calibration"), vectors)
+    prototype = vectors_for_records(
+        records_for_split(dataset_manifest, "prototype"), vectors
+    )
+    benign = vectors_for_records(
+        records_for_split(dataset_manifest, "benign_calibration"), vectors
+    )
     build = build_vector_address(
         prototype_vectors=prototype[0],
         prototype_row_ids=prototype[1],
@@ -347,4 +389,8 @@ def build_system_b_provider(
         calibration_quantile=float(quantile),
         deployment_status="research",
     )
-    return build, FrozenVectorAddressProvider(encoder, VectorAddressIndex(build)), encoder
+    return (
+        build,
+        FrozenVectorAddressProvider(encoder, VectorAddressIndex(build)),
+        encoder,
+    )

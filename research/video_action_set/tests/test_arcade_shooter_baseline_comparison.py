@@ -20,7 +20,9 @@ from zeromodel.core.policy_lookup import VPMPolicyLookup
 # ---------------------------------------------------------------------------
 def _load_demo():
     path = Path(__file__).resolve().parents[1] / "examples" / "arcade_shooter_policy.py"
-    spec = importlib.util.spec_from_file_location("arcade_shooter_policy_baseline", path)
+    spec = importlib.util.spec_from_file_location(
+        "arcade_shooter_policy_baseline", path
+    )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -43,7 +45,11 @@ class DictPolicyDecision:
 class DictPolicy:
     """A minimal policy table stored as a dict, with SHA‑256 identity."""
 
-    def __init__(self, state_action_map: Dict[str, Tuple[float, ...]], action_names: Tuple[str, ...]):
+    def __init__(
+        self,
+        state_action_map: Dict[str, Tuple[float, ...]],
+        action_names: Tuple[str, ...],
+    ):
         self._map = state_action_map
         self.action_names = action_names
         self.artifact_id = self._compute_artifact_id()
@@ -56,8 +62,7 @@ class DictPolicy:
 
     def read(self, row_id: str) -> DictPolicyDecision:
         values = self._map[row_id]
-        winner_idx = max(range(len(self.action_names)),
-                         key=lambda i: (values[i], -i))
+        winner_idx = max(range(len(self.action_names)), key=lambda i: (values[i], -i))
         return DictPolicyDecision(
             action=self.action_names[winner_idx],
             candidates=dict(zip(self.action_names, values)),
@@ -98,10 +103,15 @@ def test_dict_policy_exhaustive_fidelity() -> None:
                 decision = dict_policy.read(row_id)
                 actual_values = tuple(decision.candidates[a] for a in demo.ACTIONS)
                 assert actual_values == pytest.approx(expected_values)
-                assert decision.action == demo.ACTIONS[
-                    max(range(len(demo.ACTIONS)),
-                        key=lambda i: (expected_values[i], -i))
-                ]
+                assert (
+                    decision.action
+                    == demo.ACTIONS[
+                        max(
+                            range(len(demo.ACTIONS)),
+                            key=lambda i: (expected_values[i], -i),
+                        )
+                    ]
+                )
                 checked_states += 1
     assert checked_states == 112
 

@@ -1,4 +1,5 @@
 """Deterministic local visual baselines built on bounded integer registration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -15,7 +16,10 @@ from zeromodel.observation.visual_address import (
     VisualAddressDecision,
 )
 from research.visual.visual_dataset import VisualDatasetManifest, VisualExampleRecord
-from research.benchmarks.visual_benchmark import BenchmarkSystemResult, VisualBenchmarkMetrics
+from research.benchmarks.visual_benchmark import (
+    BenchmarkSystemResult,
+    VisualBenchmarkMetrics,
+)
 from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT
 from research.visual.visual_registration import (
     RegistrationConfig,
@@ -40,7 +44,9 @@ def _json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("local-baseline values must be JSON-serializable") from exc
+        raise VPMValidationError(
+            "local-baseline values must be JSON-serializable"
+        ) from exc
 
 
 def _sha256_json(value: Any) -> str:
@@ -57,7 +63,9 @@ def _freeze(value: Any) -> Any:
     return value
 
 
-def _require_split(records: Sequence[VisualExampleRecord], split: str) -> Tuple[VisualExampleRecord, ...]:
+def _require_split(
+    records: Sequence[VisualExampleRecord], split: str
+) -> Tuple[VisualExampleRecord, ...]:
     selected = tuple(record for record in records if record.split == split)
     if not selected:
         raise VPMValidationError("required split is empty: %s" % split)
@@ -152,7 +160,9 @@ class RegisteredPixelCalibration:
             raise VPMValidationError("threshold must be finite")
         if not np.isfinite(float(self.ambiguity_margin)):
             raise VPMValidationError("ambiguity_margin must be finite")
-        if not np.isfinite(float(self.quantile)) or not (0.0 <= float(self.quantile) <= 1.0):
+        if not np.isfinite(float(self.quantile)) or not (
+            0.0 <= float(self.quantile) <= 1.0
+        ):
             raise VPMValidationError("quantile must be in [0, 1]")
 
     @property
@@ -211,9 +221,13 @@ class RegisteredPixelCandidateEvaluation:
                 / float(benign_metrics.false_reject_opportunities or 1)
             ),
             "accepted_exact_row_recall": float(benign_metrics.benign_row_accuracy),
-            "raw_benign_exact_row_accuracy": float(benign_metrics.top1_benign_row_accuracy),
+            "raw_benign_exact_row_accuracy": float(
+                benign_metrics.top1_benign_row_accuracy
+            ),
             "false_accepts": int(rejection_metrics.false_accept_count),
-            "conflicting_action_accepts": int(benign_metrics.conflicting_action_error_count),
+            "conflicting_action_accepts": int(
+                benign_metrics.conflicting_action_error_count
+            ),
             "false_rejects": int(benign_metrics.false_reject_count),
             "calibration_artifact_id": self.calibration.digest,
             "benign_result": self.benign_result.to_dict(),
@@ -305,7 +319,9 @@ class RegisteredPixelCandidateEvaluationV2:
             "accepted_exact_row_recall": float(benign_metrics.benign_row_accuracy),
             "raw_exact_row_accuracy": float(benign_metrics.top1_benign_row_accuracy),
             "false_accepts": int(rejection_metrics.false_accept_count),
-            "conflicting_action_accepts": int(benign_metrics.conflicting_action_error_count),
+            "conflicting_action_accepts": int(
+                benign_metrics.conflicting_action_error_count
+            ),
             "false_rejects": int(benign_metrics.false_reject_count),
             "calibration_artifact_id": self.calibration.digest,
             "benign_result": self.benign_result.to_dict(),
@@ -375,19 +391,33 @@ class RegisteredPixelAddressProvider:
         if not items:
             raise VPMValidationError("registered local baseline requires prototypes")
         self._items = tuple(items)
-        self._prototype_pixels = np.stack([gray for _prototype, _observation, gray in self._items], axis=0)
+        self._prototype_pixels = np.stack(
+            [gray for _prototype, _observation, gray in self._items], axis=0
+        )
         self._prototype_rows = tuple(item[0].row_id for item in self._items)
         self._prototype_actions = tuple(item[0].action_id for item in self._items)
-        self._prototype_observation_ids = tuple(item[0].prototype_observation_id for item in self._items)
-        self._prototype_digests = tuple(item[0].observation_digest for item in self._items)
+        self._prototype_observation_ids = tuple(
+            item[0].prototype_observation_id for item in self._items
+        )
+        self._prototype_digests = tuple(
+            item[0].observation_digest for item in self._items
+        )
         self._shift_grid = tuple(
             sorted(
                 (
                     (dx, dy)
-                    for dy in range(-int(registration_config.max_dy), int(registration_config.max_dy) + 1)
-                    for dx in range(-int(registration_config.max_dx), int(registration_config.max_dx) + 1)
+                    for dy in range(
+                        -int(registration_config.max_dy),
+                        int(registration_config.max_dy) + 1,
+                    )
+                    for dx in range(
+                        -int(registration_config.max_dx),
+                        int(registration_config.max_dx) + 1,
+                    )
                 ),
-                key=lambda displacement: _displacement_order(displacement[0], displacement[1]),
+                key=lambda displacement: _displacement_order(
+                    displacement[0], displacement[1]
+                ),
             )
         )
         self._calibration = calibration
@@ -436,7 +466,11 @@ class RegisteredPixelAddressProvider:
     def _rank(
         self,
         observation: ImageObservation,
-    ) -> Tuple[RegisteredPixelCandidate, Optional[RegisteredPixelCandidate], RegisteredPixelCandidate]:
+    ) -> Tuple[
+        RegisteredPixelCandidate,
+        Optional[RegisteredPixelCandidate],
+        RegisteredPixelCandidate,
+    ]:
         observation_pixels = _grayscale(observation.pixels)
         prototype_pixels = self._prototype_pixels
         prototype_count, height, width = prototype_pixels.shape
@@ -458,31 +492,53 @@ class RegisteredPixelAddressProvider:
                 continue
             valid_count = int(valid_width * valid_height)
             overlap_fraction = float(valid_count) / float(height * width)
-            if overlap_fraction + 1e-12 < float(self._registration_config.minimum_overlap_fraction):
+            if overlap_fraction + 1e-12 < float(
+                self._registration_config.minimum_overlap_fraction
+            ):
                 continue
 
             prototype_region = prototype_pixels[:, y0:y1, x0:x1]
-            observation_region = observation_pixels[y0 - dy : y1 - dy, x0 - dx : x1 - dx]
+            observation_region = observation_pixels[
+                y0 - dy : y1 - dy, x0 - dx : x1 - dx
+            ]
             observation_sum = float(observation_region.sum(dtype=np.float64))
-            observation_sum_sq = float(np.square(observation_region, dtype=np.float32).sum(dtype=np.float64))
+            observation_sum_sq = float(
+                np.square(observation_region, dtype=np.float32).sum(dtype=np.float64)
+            )
             prototype_sum = prototype_region.sum(axis=(1, 2), dtype=np.float64)
-            prototype_sum_sq = np.square(prototype_region, dtype=np.float32).sum(axis=(1, 2), dtype=np.float64)
-            cross_sum = np.multiply(prototype_region, observation_region, dtype=np.float32).sum(
+            prototype_sum_sq = np.square(prototype_region, dtype=np.float32).sum(
+                axis=(1, 2), dtype=np.float64
+            )
+            cross_sum = np.multiply(
+                prototype_region, observation_region, dtype=np.float32
+            ).sum(
                 axis=(1, 2),
                 dtype=np.float64,
             )
 
             pixel_count = float(valid_count)
-            prototype_centered_sum_sq = np.maximum(0.0, prototype_sum_sq - np.square(prototype_sum) / pixel_count)
-            observation_centered_sum_sq = max(0.0, observation_sum_sq - (observation_sum * observation_sum) / pixel_count)
+            prototype_centered_sum_sq = np.maximum(
+                0.0, prototype_sum_sq - np.square(prototype_sum) / pixel_count
+            )
+            observation_centered_sum_sq = max(
+                0.0,
+                observation_sum_sq - (observation_sum * observation_sum) / pixel_count,
+            )
             distances = np.empty(prototype_count, dtype=np.float64)
-            both_constant = (prototype_centered_sum_sq <= 1e-12) & (observation_centered_sum_sq <= 1e-12)
-            one_constant = (prototype_centered_sum_sq <= 1e-12) ^ (observation_centered_sum_sq <= 1e-12)
+            both_constant = (prototype_centered_sum_sq <= 1e-12) & (
+                observation_centered_sum_sq <= 1e-12
+            )
+            one_constant = (prototype_centered_sum_sq <= 1e-12) ^ (
+                observation_centered_sum_sq <= 1e-12
+            )
             regular = ~(both_constant | one_constant)
             distances[both_constant] = 0.0
             distances[one_constant] = 1.0
             if np.any(regular):
-                centered_cross_sum = cross_sum[regular] - (prototype_sum[regular] * observation_sum) / pixel_count
+                centered_cross_sum = (
+                    cross_sum[regular]
+                    - (prototype_sum[regular] * observation_sum) / pixel_count
+                )
                 cosine = centered_cross_sum / np.sqrt(
                     prototype_centered_sum_sq[regular] * observation_centered_sum_sq
                 )
@@ -509,7 +565,9 @@ class RegisteredPixelAddressProvider:
                 dy=int(best_dy[index]),
                 distance_before=float(raw_distances[index]),
                 distance_after=float(best_distances[index]),
-                distance_improvement=float(raw_distances[index] - best_distances[index]),
+                distance_improvement=float(
+                    raw_distances[index] - best_distances[index]
+                ),
                 overlap_fraction=float(best_overlap[index]),
                 valid_pixel_count=int(best_valid[index]),
                 score_before=-float(raw_distances[index]),
@@ -526,8 +584,18 @@ class RegisteredPixelAddressProvider:
                     registration=registration,
                 )
             )
-        ranking = sorted(candidates, key=lambda candidate: self._sort_key(candidate, use_registered_distance=True))
-        raw_ranking = sorted(candidates, key=lambda candidate: self._sort_key(candidate, use_registered_distance=False))
+        ranking = sorted(
+            candidates,
+            key=lambda candidate: self._sort_key(
+                candidate, use_registered_distance=True
+            ),
+        )
+        raw_ranking = sorted(
+            candidates,
+            key=lambda candidate: self._sort_key(
+                candidate, use_registered_distance=False
+            ),
+        )
         best = ranking[0]
         raw_best = raw_ranking[0]
         second = next(
@@ -593,13 +661,17 @@ class RegisteredPixelAddressProvider:
                 "raw_top1_action_id": raw_best.action_id,
                 "raw_top1_prototype_observation_id": raw_best.prototype_observation_id,
                 "raw_top1_distance": float(raw_best.registration.distance_before),
-                "raw_top1_overlap_fraction": float(raw_best.registration.overlap_fraction),
+                "raw_top1_overlap_fraction": float(
+                    raw_best.registration.overlap_fraction
+                ),
                 "registration": best.registration.to_dict(),
                 "candidate_row_id": best.row_id,
                 "candidate_action_id": best.action_id,
                 "prototype_observation_id": best.prototype_observation_id,
                 "distance_threshold": float(self._calibration.threshold),
-                "required_conflicting_action_margin": float(self._calibration.ambiguity_margin),
+                "required_conflicting_action_margin": float(
+                    self._calibration.ambiguity_margin
+                ),
                 "distance_before": float(best.registration.distance_before),
                 "distance_after": float(best.registration.distance_after),
                 "distance_improvement": float(best.registration.distance_improvement),
@@ -607,11 +679,17 @@ class RegisteredPixelAddressProvider:
                 "valid_pixel_count": int(best.registration.valid_pixel_count),
                 "dx": int(best.registration.dx),
                 "dy": int(best.registration.dy),
-                "registration_succeeded": bool(best.registration.registration_succeeded),
+                "registration_succeeded": bool(
+                    best.registration.registration_succeeded
+                ),
                 "rejection_reason": best.registration.rejection_reason,
                 "second_candidate_row_id": (None if second is None else second.row_id),
-                "second_candidate_action_id": (None if second is None else second.action_id),
-                "second_candidate_distance": (None if second is None else float(second.distance)),
+                "second_candidate_action_id": (
+                    None if second is None else second.action_id
+                ),
+                "second_candidate_distance": (
+                    None if second is None else float(second.distance)
+                ),
             },
         )
 
@@ -665,7 +743,9 @@ def build_registered_pixel_candidates(
 ) -> Tuple[RegisteredPixelCandidateEvaluation, ...]:
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     prototype_map = build_registered_pixel_prototypes(
         dataset_manifest=dataset_manifest,
         observations=observations,
@@ -685,7 +765,9 @@ def build_registered_pixel_candidates(
         prototypes=prototype_map,
         calibration=provisional,
         registration_config=registration_config,
-        provider_id=_provider_id(registration_config=registration_config, calibration=provisional),
+        provider_id=_provider_id(
+            registration_config=registration_config, calibration=provisional
+        ),
     )
 
     benign_distances = []
@@ -694,7 +776,9 @@ def build_registered_pixel_candidates(
     for record in benign_records:
         if capture_ids is not None:
             capture_ids.add(record.observation_id)
-        best, second, raw_best = rank_provider._rank(observations[record.observation_id])
+        best, second, raw_best = rank_provider._rank(
+            observations[record.observation_id]
+        )
         benign_rankings.append(
             RegisteredPixelObservationRanking(
                 observation_id=record.observation_id,
@@ -709,13 +793,17 @@ def build_registered_pixel_candidates(
         if best.row_id == str(record.row_id):
             benign_distances.append(float(best.distance))
             benign_margins.append(
-                float("inf") if second is None else float(second.distance - best.distance)
+                float("inf")
+                if second is None
+                else float(second.distance - best.distance)
             )
     rejection_rankings = []
     for record in rejection_records:
         if capture_ids is not None:
             capture_ids.add(record.observation_id)
-        best, second, raw_best = rank_provider._rank(observations[record.observation_id])
+        best, second, raw_best = rank_provider._rank(
+            observations[record.observation_id]
+        )
         rejection_rankings.append(
             RegisteredPixelObservationRanking(
                 observation_id=record.observation_id,
@@ -728,7 +816,9 @@ def build_registered_pixel_candidates(
             )
         )
     if not benign_distances:
-        raise VPMValidationError("registered local baseline calibration found no correct benign rankings")
+        raise VPMValidationError(
+            "registered local baseline calibration found no correct benign rankings"
+        )
 
     evaluations = []
     for quantile in tuple(float(value) for value in quantiles):
@@ -754,7 +844,9 @@ def build_registered_pixel_candidates(
             prototypes=prototype_map,
             calibration=calibration,
             registration_config=registration_config,
-            provider_id=_provider_id(registration_config=registration_config, calibration=calibration),
+            provider_id=_provider_id(
+                registration_config=registration_config, calibration=calibration
+            ),
         )
         benign_result = _evaluate_cached_rankings(
             rankings=benign_rankings,
@@ -807,7 +899,9 @@ def _build_rankings(
 ]:
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     prototype_map = build_registered_pixel_prototypes(
         dataset_manifest=dataset_manifest,
         observations=observations,
@@ -827,7 +921,9 @@ def _build_rankings(
         prototypes=prototype_map,
         calibration=provisional,
         registration_config=registration_config,
-        provider_id=_provider_id(registration_config=registration_config, calibration=provisional),
+        provider_id=_provider_id(
+            registration_config=registration_config, calibration=provisional
+        ),
     )
     benign_distances = []
     benign_margins = []
@@ -835,7 +931,9 @@ def _build_rankings(
     for record in benign_records:
         if capture_ids is not None:
             capture_ids.add(record.observation_id)
-        best, second, raw_best = rank_provider._rank(observations[record.observation_id])
+        best, second, raw_best = rank_provider._rank(
+            observations[record.observation_id]
+        )
         benign_rankings.append(
             RegisteredPixelObservationRanking(
                 observation_id=record.observation_id,
@@ -849,12 +947,18 @@ def _build_rankings(
         )
         if best.row_id == str(record.row_id):
             benign_distances.append(float(best.distance))
-            benign_margins.append(float("inf") if second is None else float(second.distance - best.distance))
+            benign_margins.append(
+                float("inf")
+                if second is None
+                else float(second.distance - best.distance)
+            )
     rejection_rankings = []
     for record in rejection_records:
         if capture_ids is not None:
             capture_ids.add(record.observation_id)
-        best, second, raw_best = rank_provider._rank(observations[record.observation_id])
+        best, second, raw_best = rank_provider._rank(
+            observations[record.observation_id]
+        )
         rejection_rankings.append(
             RegisteredPixelObservationRanking(
                 observation_id=record.observation_id,
@@ -867,7 +971,9 @@ def _build_rankings(
             )
         )
     if not benign_distances:
-        raise VPMValidationError("registered local baseline calibration found no correct benign rankings")
+        raise VPMValidationError(
+            "registered local baseline calibration found no correct benign rankings"
+        )
     return (
         prototype_map,
         prototype_records,
@@ -911,9 +1017,13 @@ def build_registered_pixel_candidates_v2(
     evaluations = []
     for distance_quantile in tuple(float(value) for value in distance_quantiles):
         threshold = _conservative_distance_quantile(benign_distances, distance_quantile)
-        for ambiguity_margin_quantile in tuple(float(value) for value in ambiguity_margin_quantiles):
+        for ambiguity_margin_quantile in tuple(
+            float(value) for value in ambiguity_margin_quantiles
+        ):
             ambiguity_margin = (
-                _conservative_distance_quantile(finite_margins, ambiguity_margin_quantile)
+                _conservative_distance_quantile(
+                    finite_margins, ambiguity_margin_quantile
+                )
                 if finite_margins
                 else 0.0
             )
@@ -937,7 +1047,9 @@ def build_registered_pixel_candidates_v2(
                 prototypes=prototype_map,
                 calibration=calibration,
                 registration_config=registration_config,
-                provider_id=_provider_id(registration_config=registration_config, calibration=calibration),
+                provider_id=_provider_id(
+                    registration_config=registration_config, calibration=calibration
+                ),
             )
             benign_result = _evaluate_cached_rankings(
                 rankings=benign_rankings,
@@ -981,17 +1093,26 @@ def select_registered_pixel_candidate(
 ) -> RegisteredPixelSelectionArtifact:
     candidate_items = tuple(candidates)
     if not candidate_items:
-        raise VPMValidationError("registered local baseline selection requires candidates")
+        raise VPMValidationError(
+            "registered local baseline selection requires candidates"
+        )
     feasible = tuple(candidate for candidate in candidate_items if candidate.feasible)
-    def key(candidate: RegisteredPixelCandidateEvaluation) -> Tuple[float, float, float, float, float, float]:
+
+    def key(
+        candidate: RegisteredPixelCandidateEvaluation,
+    ) -> Tuple[float, float, float, float, float, float]:
         benign = candidate.benign_result.metrics
         accepted_precision = (
             -1.0
             if benign.accepted_benign_row_correctness is None
             else float(benign.accepted_benign_row_correctness)
         )
-        coverage = float(benign.accepted_benign_count) / float(benign.false_reject_opportunities or 1)
-        recall = float(benign.correct_row_count) / float(benign.false_reject_opportunities or 1)
+        coverage = float(benign.accepted_benign_count) / float(
+            benign.false_reject_opportunities or 1
+        )
+        recall = float(benign.correct_row_count) / float(
+            benign.false_reject_opportunities or 1
+        )
         raw_rank = float(benign.top1_benign_row_accuracy)
         return (
             accepted_precision,
@@ -1001,21 +1122,34 @@ def select_registered_pixel_candidate(
             -float(candidate.threshold),
             -float(candidate.quantile),
         )
+
     selected = max(feasible, key=key) if feasible else None
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     return RegisteredPixelSelectionArtifact(
         registration_config_digest=registration_config.digest,
         prototype_digest=_records_digest(prototype_records),
         benign_calibration_digest=_records_digest(benign_records),
         rejection_calibration_digest=_records_digest(rejection_records),
-        candidate_grid_digest=_sha256_json([candidate.to_dict() for candidate in candidate_items]),
-        selection_status=("selected_operating_point" if selected is not None else "no_feasible_operating_point"),
+        candidate_grid_digest=_sha256_json(
+            [candidate.to_dict() for candidate in candidate_items]
+        ),
+        selection_status=(
+            "selected_operating_point"
+            if selected is not None
+            else "no_feasible_operating_point"
+        ),
         selected_quantile=(None if selected is None else float(selected.quantile)),
         selected_threshold=(None if selected is None else float(selected.threshold)),
-        selected_ambiguity_margin=(None if selected is None else float(selected.ambiguity_margin)),
-        selected_calibration_digest=(None if selected is None else selected.calibration.digest),
+        selected_ambiguity_margin=(
+            None if selected is None else float(selected.ambiguity_margin)
+        ),
+        selected_calibration_digest=(
+            None if selected is None else selected.calibration.digest
+        ),
         selection_rule=(
             "Among feasible candidates maximize accepted exact-row precision, "
             "then benign accepted coverage, then accepted exact-row recall, "
@@ -1026,7 +1160,9 @@ def select_registered_pixel_candidate(
         policy_artifact_id=dataset_manifest.policy_artifact_id,
         candidates=candidate_items,
         metadata={
-            "candidate_quantiles": [float(candidate.quantile) for candidate in candidate_items],
+            "candidate_quantiles": [
+                float(candidate.quantile) for candidate in candidate_items
+            ],
         },
     )
 
@@ -1040,10 +1176,14 @@ def select_registered_pixel_candidate_v2(
 ) -> RegisteredPixelSelectionArtifactV2:
     candidate_items = tuple(candidates)
     if not candidate_items:
-        raise VPMValidationError("registered local baseline selection v2 requires candidates")
+        raise VPMValidationError(
+            "registered local baseline selection v2 requires candidates"
+        )
     feasible = tuple(candidate for candidate in candidate_items if candidate.feasible)
 
-    def key(candidate: RegisteredPixelCandidateEvaluationV2) -> Tuple[float, float, float, float, float, float, float, float]:
+    def key(
+        candidate: RegisteredPixelCandidateEvaluationV2,
+    ) -> Tuple[float, float, float, float, float, float, float, float]:
         benign = candidate.benign_result.metrics
         accepted_precision = (
             -1.0
@@ -1055,8 +1195,12 @@ def select_registered_pixel_candidate_v2(
             if benign.accepted_benign_action_correctness is None
             else float(benign.accepted_benign_action_correctness)
         )
-        coverage = float(benign.accepted_benign_count) / float(benign.false_reject_opportunities or 1)
-        recall = float(benign.correct_row_count) / float(benign.false_reject_opportunities or 1)
+        coverage = float(benign.accepted_benign_count) / float(
+            benign.false_reject_opportunities or 1
+        )
+        recall = float(benign.correct_row_count) / float(
+            benign.false_reject_opportunities or 1
+        )
         raw_rank = float(benign.top1_benign_row_accuracy)
         return (
             accepted_precision,
@@ -1072,19 +1216,35 @@ def select_registered_pixel_candidate_v2(
     selected = max(feasible, key=key) if feasible else None
     prototype_records = _require_split(dataset_manifest.records, "prototype")
     benign_records = _require_split(dataset_manifest.records, "benign_calibration")
-    rejection_records = _require_split(dataset_manifest.records, "rejection_calibration")
+    rejection_records = _require_split(
+        dataset_manifest.records, "rejection_calibration"
+    )
     return RegisteredPixelSelectionArtifactV2(
         registration_config_digest=registration_config.digest,
         prototype_digest=_records_digest(prototype_records),
         benign_calibration_digest=_records_digest(benign_records),
         rejection_calibration_digest=_records_digest(rejection_records),
-        candidate_grid_digest=_sha256_json([candidate.to_dict() for candidate in candidate_items]),
-        selection_status=("selected_operating_point" if selected is not None else "no_feasible_operating_point"),
-        selected_distance_quantile=(None if selected is None else float(selected.distance_quantile)),
-        selected_ambiguity_margin_quantile=(None if selected is None else float(selected.ambiguity_margin_quantile)),
+        candidate_grid_digest=_sha256_json(
+            [candidate.to_dict() for candidate in candidate_items]
+        ),
+        selection_status=(
+            "selected_operating_point"
+            if selected is not None
+            else "no_feasible_operating_point"
+        ),
+        selected_distance_quantile=(
+            None if selected is None else float(selected.distance_quantile)
+        ),
+        selected_ambiguity_margin_quantile=(
+            None if selected is None else float(selected.ambiguity_margin_quantile)
+        ),
         selected_threshold=(None if selected is None else float(selected.threshold)),
-        selected_ambiguity_margin=(None if selected is None else float(selected.ambiguity_margin)),
-        selected_calibration_digest=(None if selected is None else selected.calibration.digest),
+        selected_ambiguity_margin=(
+            None if selected is None else float(selected.ambiguity_margin)
+        ),
+        selected_calibration_digest=(
+            None if selected is None else selected.calibration.digest
+        ),
         selection_rule=(
             "Among feasible candidates maximize accepted exact-row precision, "
             "then benign accepted coverage, then accepted exact-row recall, "
@@ -1097,8 +1257,13 @@ def select_registered_pixel_candidate_v2(
         policy_artifact_id=dataset_manifest.policy_artifact_id,
         candidates=candidate_items,
         metadata={
-            "distance_quantiles": [float(candidate.distance_quantile) for candidate in candidate_items],
-            "ambiguity_margin_quantiles": [float(candidate.ambiguity_margin_quantile) for candidate in candidate_items],
+            "distance_quantiles": [
+                float(candidate.distance_quantile) for candidate in candidate_items
+            ],
+            "ambiguity_margin_quantiles": [
+                float(candidate.ambiguity_margin_quantile)
+                for candidate in candidate_items
+            ],
         },
     )
 
@@ -1118,7 +1283,9 @@ def build_registered_pixel_provider(
         prototypes=prototype_map,
         calibration=calibration,
         registration_config=registration_config,
-        provider_id=_provider_id(registration_config=registration_config, calibration=calibration),
+        provider_id=_provider_id(
+            registration_config=registration_config, calibration=calibration
+        ),
     )
 
 
@@ -1146,19 +1313,26 @@ def _evaluate_cached_rankings(
             if ranking.second is None
             else float(ranking.second.distance - ranking.best.distance)
         )
-        accepted = (
-            float(ranking.best.distance) <= float(calibration.threshold) + 1e-12
-            and margin + 1e-12 >= float(calibration.ambiguity_margin)
-        )
+        accepted = float(ranking.best.distance) <= float(
+            calibration.threshold
+        ) + 1e-12 and margin + 1e-12 >= float(calibration.ambiguity_margin)
         if ranking.expected_disposition == EXPECTED_ACCEPT:
             false_reject_opportunities += 1
-            top1_correct_row_count += int(ranking.best.row_id == ranking.expected_row_id)
-            top1_correct_action_count += int(ranking.best.action_id == ranking.expected_action_id)
+            top1_correct_row_count += int(
+                ranking.best.row_id == ranking.expected_row_id
+            )
+            top1_correct_action_count += int(
+                ranking.best.action_id == ranking.expected_action_id
+            )
             if accepted:
                 accepted_count += 1
                 correct_row_count += int(ranking.best.row_id == ranking.expected_row_id)
-                correct_action_count += int(ranking.best.action_id == ranking.expected_action_id)
-                conflicting_action_error_count += int(ranking.best.action_id != ranking.expected_action_id)
+                correct_action_count += int(
+                    ranking.best.action_id == ranking.expected_action_id
+                )
+                conflicting_action_error_count += int(
+                    ranking.best.action_id != ranking.expected_action_id
+                )
             else:
                 rejected_count += 1
                 false_reject_count += 1

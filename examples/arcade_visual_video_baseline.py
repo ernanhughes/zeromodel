@@ -3,6 +3,7 @@
 This is a positive transport, temporal-governance, and lineage baseline. It does
 not measure tolerance to approximate world observations.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -11,6 +12,7 @@ from pathlib import Path
 import sys
 from typing import Any, Optional, Tuple
 from zeromodel.core.policy_lookup import VPMPolicyLookup
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -102,13 +104,17 @@ def run_exact_video_baseline(
     source, expected_rows, expected_actions = build_canonical_arcade_clip(config)
     trace = reader.read(source)
     observed_rows = tuple(decision.accepted_row_id for decision in trace.decisions)
-    observed_actions = tuple(decision.accepted_action_id for decision in trace.decisions)
+    observed_actions = tuple(
+        decision.accepted_action_id for decision in trace.decisions
+    )
     if trace.accepted_count != trace.manifest.frame_count:
         raise RuntimeError("canonical video baseline rejected a frame")
     if observed_rows != expected_rows:
         raise RuntimeError("canonical video row sequence differs from symbolic policy")
     if observed_actions != expected_actions:
-        raise RuntimeError("canonical video action sequence differs from symbolic policy")
+        raise RuntimeError(
+            "canonical video action sequence differs from symbolic policy"
+        )
     return {
         "system": "V0_exact_canonical_video_reader",
         "policy_artifact_id": policy.artifact_id,

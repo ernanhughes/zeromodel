@@ -100,16 +100,27 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
         CorruptionFamilySpec(family_id="prototype-shift-up", kind="translation"),
         CorruptionFamilySpec(family_id="prototype-palette-a", kind="palette"),
         CorruptionFamilySpec(family_id="benign-calibration-contrast", kind="contrast"),
-        CorruptionFamilySpec(family_id="benign-calibration-shift-down", kind="translation"),
+        CorruptionFamilySpec(
+            family_id="benign-calibration-shift-down", kind="translation"
+        ),
         CorruptionFamilySpec(family_id="benign-calibration-palette-b", kind="palette"),
         CorruptionFamilySpec(family_id="benign-calibration-noise", kind="noise"),
-        CorruptionFamilySpec(family_id="rejection-calibration-blank-band", kind="invalid_geometry"),
-        CorruptionFamilySpec(family_id="rejection-calibration-checker", kind="structured_non_state"),
-        CorruptionFamilySpec(family_id="rejection-calibration-double-tank-left", kind="impossible_object_count"),
+        CorruptionFamilySpec(
+            family_id="rejection-calibration-blank-band", kind="invalid_geometry"
+        ),
+        CorruptionFamilySpec(
+            family_id="rejection-calibration-checker", kind="structured_non_state"
+        ),
+        CorruptionFamilySpec(
+            family_id="rejection-calibration-double-tank-left",
+            kind="impossible_object_count",
+        ),
         CorruptionFamilySpec(family_id="final-brightness-unseen", kind="brightness"),
         CorruptionFamilySpec(family_id="final-shift-two", kind="translation"),
         CorruptionFamilySpec(family_id="final-palette-c", kind="palette"),
-        CorruptionFamilySpec(family_id="final-noncritical-patch", kind="structured_occlusion"),
+        CorruptionFamilySpec(
+            family_id="final-noncritical-patch", kind="structured_occlusion"
+        ),
         CorruptionFamilySpec(
             family_id="final-information-target",
             kind="information_theoretic_control",
@@ -135,7 +146,9 @@ def _family_specs() -> Tuple[CorruptionFamilySpec, ...]:
         ),
         CorruptionFamilySpec(family_id="final-ood-blank", kind="out_of_domain"),
         CorruptionFamilySpec(family_id="final-ood-checkerboard", kind="out_of_domain"),
-        CorruptionFamilySpec(family_id="final-ood-impossible-state", kind="out_of_domain"),
+        CorruptionFamilySpec(
+            family_id="final-ood-impossible-state", kind="out_of_domain"
+        ),
     )
 
 
@@ -300,7 +313,11 @@ def build_arcade_benchmark_dataset(
             for family_id in family_ids:
                 if family_id == "final-information-target" and state["target"] is None:
                     continue
-                count = 1 if family_id.startswith("final-critical-") else variants_per_family
+                count = (
+                    1
+                    if family_id.startswith("final-critical-")
+                    else variants_per_family
+                )
                 for index in range(count):
                     observation_id = "%s:%s:%02d" % (family_id, row_id, index)
                     varied = _variant(frame, state, family_id, index)
@@ -383,7 +400,11 @@ def build_arcade_benchmark_dataset(
     height = FRAME_HEIGHT
     width = config.width * CELL_PIXELS
     first_canonical = next(iter(canonical.values()))
-    for family_id in ("final-ood-blank", "final-ood-checkerboard", "final-ood-impossible-state"):
+    for family_id in (
+        "final-ood-blank",
+        "final-ood-checkerboard",
+        "final-ood-impossible-state",
+    ):
         for index in range(ood_examples_per_family):
             if family_id == "final-ood-blank":
                 frame = np.full((height, width), index % 3, dtype=np.uint8)
@@ -449,7 +470,9 @@ class _LinearProbeProvider:
 
     def read(self, observation: ImageObservation):
         vector = self.encoder.encode_batch((observation,))[0]
-        return self.index.match_vector(vector, observation_digest=observation.raw_digest)
+        return self.index.match_vector(
+            vector, observation_digest=observation.raw_digest
+        )
 
 
 def _build_vector_system(
@@ -459,7 +482,9 @@ def _build_vector_system(
     *,
     strategy: str,
 ):
-    prototype = vectors_for_records(records_for_split(dataset.manifest, "prototype"), vectors)
+    prototype = vectors_for_records(
+        records_for_split(dataset.manifest, "prototype"), vectors
+    )
     calibration = vectors_for_records(
         records_for_split(dataset.manifest, "benign_calibration"),
         vectors,

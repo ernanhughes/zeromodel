@@ -86,7 +86,9 @@ def main() -> None:
         "svg": str(svg_path.relative_to(ROOT)),
     }
     summary_path = OUT_DIR / "critic_evidence_summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    summary_path.write_text(
+        json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8"
+    )
 
     print("highest_risk_item_id:", assessment.highest_risk_item_id)
     print("highest_risk_score:", round(assessment.highest_risk_score, 3))

@@ -10,6 +10,7 @@ Run:
     python examples/arcade_visual_sign_reader.py
     python examples/arcade_visual_sign_reader.py --output-dir build/visual-reader
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,7 +44,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-def arcade_visual_feature_spec(config: ShooterConfig = ShooterConfig()) -> VisualFeatureSpec:
+
+def arcade_visual_feature_spec(
+    config: ShooterConfig = ShooterConfig(),
+) -> VisualFeatureSpec:
     return VisualFeatureSpec(
         input_height=FRAME_HEIGHT,
         input_width=config.width * CELL_PIXELS,
@@ -114,7 +118,9 @@ def run_visual_policy_episode(
         )
         decision = reader.read(frame)
         if not decision.accepted or decision.action is None:
-            raise RuntimeError("canonical arcade frame was rejected: %s" % decision.to_dict())
+            raise RuntimeError(
+                "canonical arcade frame was rejected: %s" % decision.to_dict()
+            )
         game.step(decision.action)
         trace.append(
             {
@@ -191,8 +197,7 @@ def main() -> None:
     )
     summary = {key: value for key, value in result.items() if key != "trace"}
     summary["exact_decisions"] = sum(
-        int(step["visual_decision"]["exact_feature_match"])
-        for step in result["trace"]
+        int(step["visual_decision"]["exact_feature_match"]) for step in result["trace"]
     )
     if args.exhaustive:
         summary["exhaustive"] = exhaustive_visual_equivalence(config)

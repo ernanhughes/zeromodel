@@ -9,7 +9,9 @@ from research.video.video_prospective_providers import (
 )
 from zeromodel.observation.visual_address import ImageObservation
 from research.video_action_set.provider_measurement import SOURCE_SCOPE
-from zeromodel.video.domains.video_action_set.provider_observation_boundary import provider_observation_for_record
+from zeromodel.video.domains.video_action_set.provider_observation_boundary import (
+    provider_observation_for_record,
+)
 
 
 def select_profiling_records(

@@ -1,4 +1,5 @@
 """Measure the bounded registered-pixel local baseline against frozen System B."""
+
 from __future__ import annotations
 
 import argparse
@@ -17,8 +18,16 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_visual_address_benchmark import SOURCE_SCOPE, build_arcade_benchmark_dataset  # noqa: E402
-from research.visual.visual_experiment import EXPECTED_ACCEPT, EXPECTED_REJECT, IMPOSSIBILITY_CONTROL, evaluate_visual_provider  # noqa: E402
+from examples.arcade_visual_address_benchmark import (
+    SOURCE_SCOPE,
+    build_arcade_benchmark_dataset,
+)  # noqa: E402
+from research.visual.visual_experiment import (
+    EXPECTED_ACCEPT,
+    EXPECTED_REJECT,
+    IMPOSSIBILITY_CONTROL,
+    evaluate_visual_provider,
+)  # noqa: E402
 from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_candidates,
     build_registered_pixel_provider,
@@ -32,7 +41,9 @@ SYSTEM_ID = "R1"
 SYSTEM_NAME = "registered_local_normalized_pixels"
 GENERATOR_VERSION = "arcade_visual_local_baseline_showdown/v1"
 FROZEN_SYSTEM_B_DIR = REPO_ROOT / "docs" / "results" / "visual-address-system-b-v2"
-DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "visual-local-baseline-showdown-v1"
+DEFAULT_OUTPUT_DIR = (
+    REPO_ROOT / "docs" / "results" / "visual-local-baseline-showdown-v1"
+)
 EXPECTED_STARTING_MAIN_SHA = "832bca74fa05a6222ed02c65419bc2f551dfc7c0"
 FROZEN_SYSTEM_B_IDENTITIES = {
     "dataset_digest": "b7c0fb2f0c3aaf40862eabf16937ca476ad3266baa682ef9ffad8db93c6cb30b",
@@ -61,11 +72,15 @@ def _sha256_file(path: Path) -> str:
 
 
 def _write_json(path: Path, payload: Any) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 
 def _git_output(*args: str) -> str:
-    return subprocess.check_output(["git", *args], cwd=str(REPO_ROOT), text=True).strip()
+    return subprocess.check_output(
+        ["git", *args], cwd=str(REPO_ROOT), text=True
+    ).strip()
 
 
 def _environment() -> Dict[str, Any]:
@@ -90,15 +105,25 @@ def _calendar_date_label(moment: datetime) -> str:
 
 
 def _frozen_system_b_reference() -> Dict[str, Any]:
-    summary = json.loads((FROZEN_SYSTEM_B_DIR / "final-summary.json").read_text(encoding="utf-8"))
-    run_manifest = json.loads((FROZEN_SYSTEM_B_DIR / "run-manifest.json").read_text(encoding="utf-8"))
-    final_report = json.loads((FROZEN_SYSTEM_B_DIR / "final-report.json").read_text(encoding="utf-8"))
+    summary = json.loads(
+        (FROZEN_SYSTEM_B_DIR / "final-summary.json").read_text(encoding="utf-8")
+    )
+    run_manifest = json.loads(
+        (FROZEN_SYSTEM_B_DIR / "run-manifest.json").read_text(encoding="utf-8")
+    )
+    final_report = json.loads(
+        (FROZEN_SYSTEM_B_DIR / "final-report.json").read_text(encoding="utf-8")
+    )
     traces_path = FROZEN_SYSTEM_B_DIR / "traces.jsonl"
     trace_digest = _sha256_file(traces_path)
-    selection = json.loads((FROZEN_SYSTEM_B_DIR / "selected-calibration.json").read_text(encoding="utf-8"))
+    selection = json.loads(
+        (FROZEN_SYSTEM_B_DIR / "selected-calibration.json").read_text(encoding="utf-8")
+    )
     reference = {
         "version": SHOWDOWN_PROTOCOL_VERSION,
-        "result_directory": str(FROZEN_SYSTEM_B_DIR.relative_to(REPO_ROOT)).replace("\\", "/"),
+        "result_directory": str(FROZEN_SYSTEM_B_DIR.relative_to(REPO_ROOT)).replace(
+            "\\", "/"
+        ),
         "dataset_digest": run_manifest["dataset_digest"],
         "selection_digest": run_manifest["selection_digest"],
         "calibration_digest": summary["calibration_digest"],
@@ -106,9 +131,15 @@ def _frozen_system_b_reference() -> Dict[str, Any]:
         "trace_digest": trace_digest,
         "outcome": summary["outcome"],
         "headline_metrics": {
-            "raw_top1_exact_row_accuracy": float(summary["final_metrics"]["top1_benign_row_accuracy"]),
-            "raw_top1_action_accuracy": float(summary["final_metrics"]["top1_benign_action_accuracy"]),
-            "accepted_benign_count": int(summary["final_metrics"]["accepted_benign_count"]),
+            "raw_top1_exact_row_accuracy": float(
+                summary["final_metrics"]["top1_benign_row_accuracy"]
+            ),
+            "raw_top1_action_accuracy": float(
+                summary["final_metrics"]["top1_benign_action_accuracy"]
+            ),
+            "accepted_benign_count": int(
+                summary["final_metrics"]["accepted_benign_count"]
+            ),
             "false_accept_count": int(summary["final_metrics"]["false_accept_count"]),
             "false_reject_count": int(summary["final_metrics"]["false_reject_count"]),
         },
@@ -117,19 +148,35 @@ def _frozen_system_b_reference() -> Dict[str, Any]:
     }
     for key, expected in FROZEN_SYSTEM_B_IDENTITIES.items():
         if reference[key] != expected:
-            raise RuntimeError("frozen System B comparator identity mismatch for %s" % key)
+            raise RuntimeError(
+                "frozen System B comparator identity mismatch for %s" % key
+            )
     return reference
 
 
 def _classify_outcome(summary_metrics: Mapping[str, Any]) -> Tuple[str, str, str]:
     false_accepts = int(summary_metrics["false_accept_count"])
     conflicting = int(summary_metrics["conflicting_action_error_count"])
-    coverage = float(summary_metrics["accepted_benign_count"]) / float(summary_metrics["false_reject_opportunities"] or 1)
+    coverage = float(summary_metrics["accepted_benign_count"]) / float(
+        summary_metrics["false_reject_opportunities"] or 1
+    )
     if false_accepts == 0 and conflicting == 0 and coverage >= 0.5:
-        return ("A", "useful_operating_point_high_coverage", "broader_registered_baseline_validation")
+        return (
+            "A",
+            "useful_operating_point_high_coverage",
+            "broader_registered_baseline_validation",
+        )
     if false_accepts == 0 and conflicting == 0 and coverage >= 0.1:
-        return ("B", "useful_operating_point_low_coverage", "translation_equivariant_template_correlation")
-    return ("C", "bounded_registration_insufficient", "translation_equivariant_template_correlation")
+        return (
+            "B",
+            "useful_operating_point_low_coverage",
+            "translation_equivariant_template_correlation",
+        )
+    return (
+        "C",
+        "bounded_registration_insufficient",
+        "translation_equivariant_template_correlation",
+    )
 
 
 def _trace_digest(path: Path) -> str:
@@ -137,15 +184,27 @@ def _trace_digest(path: Path) -> str:
 
 
 def _load_jsonl(path: Path) -> Tuple[Dict[str, Any], ...]:
-    return tuple(json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+    return tuple(
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    )
 
 
 def _paired_comparison(
     frozen_b_traces: Sequence[Mapping[str, Any]],
     r1_traces: Sequence[Mapping[str, Any]],
 ) -> Dict[str, Any]:
-    b_by_id = {item["observation_id"]: item for item in frozen_b_traces if item["expected_disposition"] == EXPECTED_ACCEPT}
-    r_by_id = {item["observation_id"]: item for item in r1_traces if item["expected_disposition"] == EXPECTED_ACCEPT}
+    b_by_id = {
+        item["observation_id"]: item
+        for item in frozen_b_traces
+        if item["expected_disposition"] == EXPECTED_ACCEPT
+    }
+    r_by_id = {
+        item["observation_id"]: item
+        for item in r1_traces
+        if item["expected_disposition"] == EXPECTED_ACCEPT
+    }
     if set(b_by_id) != set(r_by_id):
         raise RuntimeError("paired comparison benign ids do not match")
     row = {"both_correct": 0, "b_only": 0, "r1_only": 0, "neither": 0}
@@ -166,9 +225,12 @@ def _paired_comparison(
             ),
         ):
             key = (
-                "both_correct" if left_correct and right_correct
-                else "b_only" if left_correct
-                else "r1_only" if right_correct
+                "both_correct"
+                if left_correct and right_correct
+                else "b_only"
+                if left_correct
+                else "r1_only"
+                if right_correct
                 else "neither"
             )
             target[key] += 1
@@ -199,8 +261,12 @@ def _translation_family_atlas(traces: Sequence[Mapping[str, Any]]) -> Dict[str, 
                 "selected_displacements": {},
             },
         )
-        raw_row = trace["decision"]["trace"].get("raw_top1_row_id") == trace.get("expected_row_id")
-        raw_action = trace["decision"]["trace"].get("raw_top1_action_id") == trace.get("expected_action_id")
+        raw_row = trace["decision"]["trace"].get("raw_top1_row_id") == trace.get(
+            "expected_row_id"
+        )
+        raw_action = trace["decision"]["trace"].get("raw_top1_action_id") == trace.get(
+            "expected_action_id"
+        )
         reg_row = trace.get("top1_row_id") == trace.get("expected_row_id")
         reg_action = trace.get("top1_action_id") == trace.get("expected_action_id")
         accepted = bool(trace["decision"]["accepted"])
@@ -213,12 +279,18 @@ def _translation_family_atlas(traces: Sequence[Mapping[str, Any]]) -> Dict[str, 
         item["raw_action_correct"] += int(raw_action)
         item["registered_action_correct"] += int(reg_action)
         item["accepted_count"] += int(accepted)
-        item["false_rejects"] += int(trace["expected_disposition"] == EXPECTED_ACCEPT and not accepted)
-        item["selected_displacements"][key] = item["selected_displacements"].get(key, 0) + 1
+        item["false_rejects"] += int(
+            trace["expected_disposition"] == EXPECTED_ACCEPT and not accepted
+        )
+        item["selected_displacements"][key] = (
+            item["selected_displacements"].get(key, 0) + 1
+        )
     return {"families": families}
 
 
-def _registration_displacement_atlas(traces: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+def _registration_displacement_atlas(
+    traces: Sequence[Mapping[str, Any]],
+) -> Dict[str, Any]:
     by_family: Dict[str, Dict[str, Any]] = {}
     for trace in traces:
         if trace["expected_disposition"] != EXPECTED_ACCEPT:
@@ -239,13 +311,19 @@ def _registration_displacement_atlas(traces: Sequence[Mapping[str, Any]]) -> Dic
         dx = int(trace["decision"]["trace"]["dx"])
         dy = int(trace["decision"]["trace"]["dy"])
         key = f"{dx},{dy}"
-        raw_row = trace["decision"]["trace"].get("raw_top1_row_id") == trace.get("expected_row_id")
-        raw_action = trace["decision"]["trace"].get("raw_top1_action_id") == trace.get("expected_action_id")
+        raw_row = trace["decision"]["trace"].get("raw_top1_row_id") == trace.get(
+            "expected_row_id"
+        )
+        raw_action = trace["decision"]["trace"].get("raw_top1_action_id") == trace.get(
+            "expected_action_id"
+        )
         reg_row = trace.get("top1_row_id") == trace.get("expected_row_id")
         reg_action = trace.get("top1_action_id") == trace.get("expected_action_id")
         item["count"] += 1
         item["displacements"][key] = item["displacements"].get(key, 0) + 1
-        item["distance_improvement_total"] += float(trace["decision"]["trace"]["distance_improvement"])
+        item["distance_improvement_total"] += float(
+            trace["decision"]["trace"]["distance_improvement"]
+        )
         item["row_correct_before"] += int(raw_row)
         item["row_correct_after"] += int(reg_row)
         item["action_correct_before"] += int(raw_action)
@@ -271,13 +349,22 @@ def _residual_error_atlas(traces: Sequence[Mapping[str, Any]]) -> Dict[str, Any]
         if trace["expected_disposition"] == EXPECTED_REJECT:
             counts["ood_or_distinguishable_rejection"] += 1
             continue
-        if disp.get("rejection_reason") == "insufficient_overlap" or trace["decision"]["reason"] == "registered_distance_above_threshold":
+        if (
+            disp.get("rejection_reason") == "insufficient_overlap"
+            or trace["decision"]["reason"] == "registered_distance_above_threshold"
+        ):
             counts["insufficient_overlap"] += 1
         raw_row = disp.get("raw_top1_row_id")
         disp.get("raw_top1_action_id")
-        if raw_row == trace.get("expected_row_id") and not trace["decision"]["accepted"]:
+        if (
+            raw_row == trace.get("expected_row_id")
+            and not trace["decision"]["accepted"]
+        ):
             counts["rejected_despite_correct_raw_candidate"] += 1
-        if trace["top1_action_id"] == trace["expected_action_id"] and trace["top1_row_id"] != trace["expected_row_id"]:
+        if (
+            trace["top1_action_id"] == trace["expected_action_id"]
+            and trace["top1_row_id"] != trace["expected_row_id"]
+        ):
             counts["correct_action_but_wrong_row"] += 1
         if trace["top1_action_id"] not in {None, trace["expected_action_id"]}:
             counts["conflicting_action"] += 1
@@ -287,7 +374,9 @@ def _residual_error_atlas(traces: Sequence[Mapping[str, Any]]) -> Dict[str, Any]
 def _verify_required_files(output_dir: Path, expected: Iterable[str]) -> None:
     missing = [name for name in expected if not (output_dir / name).exists()]
     if missing:
-        raise RuntimeError("required evidence output is incomplete: %s" % ", ".join(missing))
+        raise RuntimeError(
+            "required evidence output is incomplete: %s" % ", ".join(missing)
+        )
 
 
 def _bundle_manifest(output_dir: Path) -> Dict[str, Any]:
@@ -323,7 +412,9 @@ def run_showdown(
     command: str,
 ) -> Dict[str, Any]:
     if output_dir.exists() and any(output_dir.iterdir()):
-        raise RuntimeError("output directory already exists and is non-empty: %s" % output_dir)
+        raise RuntimeError(
+            "output directory already exists and is non-empty: %s" % output_dir
+        )
     output_dir.mkdir(parents=True, exist_ok=False)
 
     dirty_at_start = bool(_git_output("status", "--short"))
@@ -373,7 +464,11 @@ def run_showdown(
     )
     if selection.selection_status != "selected_operating_point":
         raise RuntimeError("R1 produced no feasible calibration candidate")
-    selected = next(candidate for candidate in candidates if candidate.calibration.digest == selection.selected_calibration_digest)
+    selected = next(
+        candidate
+        for candidate in candidates
+        if candidate.calibration.digest == selection.selected_calibration_digest
+    )
     provider = build_registered_pixel_provider(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -399,7 +494,9 @@ def run_showdown(
     frozen_b_traces = _load_jsonl(FROZEN_SYSTEM_B_DIR / "traces.jsonl")
     r1_traces = _load_jsonl(traces_path)
 
-    outcome, usefulness_status, next_action = _classify_outcome(final_result.metrics.to_dict())
+    outcome, usefulness_status, next_action = _classify_outcome(
+        final_result.metrics.to_dict()
+    )
     protocol = {
         "version": SHOWDOWN_PROTOCOL_VERSION,
         "research_question": (
@@ -410,7 +507,12 @@ def run_showdown(
         ),
         "system_identity": {"system_id": SYSTEM_ID, "system_name": SYSTEM_NAME},
         "frozen_comparator_identities": frozen_reference,
-        "allowed_data_splits": ["prototype", "benign_calibration", "rejection_calibration", "final_evaluation"],
+        "allowed_data_splits": [
+            "prototype",
+            "benign_calibration",
+            "rejection_calibration",
+            "final_evaluation",
+        ],
         "forbidden_data_splits_during_selection": ["final_evaluation"],
         "registration_bounds": {"max_dx": max_dx, "max_dy": max_dy},
         "overlap_rule": {"minimum_overlap_fraction": minimum_overlap_fraction},
@@ -491,8 +593,12 @@ def run_showdown(
         },
         "accepted_metrics": {
             "accepted_benign_count": final_metrics["accepted_benign_count"],
-            "accepted_benign_row_correctness": final_metrics["accepted_benign_row_correctness"],
-            "accepted_benign_action_correctness": final_metrics["accepted_benign_action_correctness"],
+            "accepted_benign_row_correctness": final_metrics[
+                "accepted_benign_row_correctness"
+            ],
+            "accepted_benign_action_correctness": final_metrics[
+                "accepted_benign_action_correctness"
+            ],
         },
         "rejection_metrics": {
             "false_accept_count": final_metrics["false_accept_count"],
@@ -532,7 +638,9 @@ def run_showdown(
     _write_json(output_dir / "dataset-manifest.json", dataset.manifest.to_dict())
     _write_json(output_dir / "system-b-frozen-reference.json", frozen_reference)
     _write_json(output_dir / "registration-config.json", registration_config.to_dict())
-    _write_json(output_dir / "registration-candidate-grid.json", registration_candidate_grid)
+    _write_json(
+        output_dir / "registration-candidate-grid.json", registration_candidate_grid
+    )
     _write_json(output_dir / "selected-calibration.json", selected_calibration)
     _write_json(output_dir / "final-report.json", final_report)
     _write_json(output_dir / "final-summary.json", final_summary)
@@ -551,14 +659,28 @@ def run_showdown(
     )
     (output_dir / "README.md").write_text(readme, encoding="utf-8")
 
-    with (output_dir / "registration-displacement-atlas.csv").open("w", encoding="utf-8", newline="") as handle:
+    with (output_dir / "registration-displacement-atlas.csv").open(
+        "w", encoding="utf-8", newline=""
+    ) as handle:
         writer = csv.DictWriter(
             handle,
-            fieldnames=["family_id", "count", "row_correct_before", "row_correct_after", "action_correct_before", "action_correct_after"],
+            fieldnames=[
+                "family_id",
+                "count",
+                "row_correct_before",
+                "row_correct_after",
+                "action_correct_before",
+                "action_correct_after",
+            ],
         )
         writer.writeheader()
         for family_id, payload in displacement_atlas["families"].items():
-            writer.writerow({"family_id": family_id, **{k: payload[k] for k in writer.fieldnames if k != "family_id"}})
+            writer.writerow(
+                {
+                    "family_id": family_id,
+                    **{k: payload[k] for k in writer.fieldnames if k != "family_id"},
+                }
+            )
 
     final_report_payload_digest = _json_digest(final_report)
     dirty_after_run = bool(_git_output("status", "--short"))
@@ -572,10 +694,17 @@ def run_showdown(
         "exact_command": command,
         "argv": list(argv),
         "git_commit": _git_output("rev-parse", "HEAD"),
-        "branch_or_ref": _git_output("branch", "--show-current") or os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME") or "detached",
+        "branch_or_ref": _git_output("branch", "--show-current")
+        or os.environ.get("GITHUB_HEAD_REF")
+        or os.environ.get("GITHUB_REF_NAME")
+        or "detached",
         "dirty_at_start": False,
         "dirty_after_run": dirty_after_run,
-        "generated_paths": sorted(str(path.relative_to(output_dir)).replace("\\", "/") for path in output_dir.rglob("*") if path.is_file()),
+        "generated_paths": sorted(
+            str(path.relative_to(output_dir)).replace("\\", "/")
+            for path in output_dir.rglob("*")
+            if path.is_file()
+        ),
         "python_version": sys.version.split()[0],
         "platform": platform.platform(),
         "dependency_versions": {},

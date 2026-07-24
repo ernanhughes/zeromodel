@@ -22,9 +22,24 @@ def _toy_inputs() -> tuple[dict, dict, tuple[JointEvidenceRegionSpec, ...]]:
         "row-c": ("row-c", "RIGHT", c.raw_digest, c),
     }
     development = {
-        "row-a": (a, ImageObservation(np.array([[0, 255], [255, 1]], dtype=np.uint8), source_id="a-dev")),
-        "row-b": (b, ImageObservation(np.array([[255, 0], [254, 0]], dtype=np.uint8), source_id="b-dev")),
-        "row-c": (c, ImageObservation(np.array([[1, 255], [0, 255]], dtype=np.uint8), source_id="c-dev")),
+        "row-a": (
+            a,
+            ImageObservation(
+                np.array([[0, 255], [255, 1]], dtype=np.uint8), source_id="a-dev"
+            ),
+        ),
+        "row-b": (
+            b,
+            ImageObservation(
+                np.array([[255, 0], [254, 0]], dtype=np.uint8), source_id="b-dev"
+            ),
+        ),
+        "row-c": (
+            c,
+            ImageObservation(
+                np.array([[1, 255], [0, 255]], dtype=np.uint8), source_id="c-dev"
+            ),
+        ),
     }
     regions = (
         JointEvidenceRegionSpec(
@@ -35,7 +50,9 @@ def _toy_inputs() -> tuple[dict, dict, tuple[JointEvidenceRegionSpec, ...]]:
             width=2,
             weight=1.0,
             critical=True,
-            registration_config=RegistrationConfig(max_dx=0, max_dy=0, minimum_overlap_fraction=1.0),
+            registration_config=RegistrationConfig(
+                max_dx=0, max_dy=0, minimum_overlap_fraction=1.0
+            ),
         ),
     )
     return prototypes, development, regions
@@ -77,4 +94,8 @@ def test_candidate_fit_mask_drops_v2_zeroing_rule() -> None:
         source_scope="toy",
     )
     assert any(float(mask.candidate_fit_weights.sum()) > 0.0 for mask in masks.values())
-    assert all(float(mask.row_informative_weights.sum()) >= float(mask.candidate_fit_weights.sum()) for mask in masks.values())
+    assert all(
+        float(mask.row_informative_weights.sum())
+        >= float(mask.candidate_fit_weights.sum())
+        for mask in masks.values()
+    )

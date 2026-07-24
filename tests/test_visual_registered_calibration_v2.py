@@ -27,7 +27,9 @@ def _load_module(name: str, relative: str):
 
 
 @pytest.mark.slow
-def test_registered_pixel_v2_generates_full_independent_grid_and_excludes_final_ids() -> None:
+def test_registered_pixel_v2_generates_full_independent_grid_and_excludes_final_ids() -> (
+    None
+):
     demo = _load_module(
         "arcade_visual_local_evidence_benchmark_v3_grid_test",
         "examples/arcade_visual_local_evidence_benchmark.py",
@@ -38,14 +40,24 @@ def test_registered_pixel_v2_generates_full_independent_grid_and_excludes_final_
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
         policy_lookup=dataset.policy_lookup,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         distance_quantiles=(0.0, 0.5, 1.0),
         ambiguity_margin_quantiles=(0.0, 0.5, 1.0),
         source_scope=demo.SOURCE_SCOPE,
         capture_ids=seen_ids,
     )
     assert len(candidates) == 9
-    assert len({(candidate.distance_quantile, candidate.ambiguity_margin_quantile) for candidate in candidates}) == 9
+    assert (
+        len(
+            {
+                (candidate.distance_quantile, candidate.ambiguity_margin_quantile)
+                for candidate in candidates
+            }
+        )
+        == 9
+    )
     final_ids = {
         record.observation_id
         for record in dataset.manifest.records
@@ -65,14 +77,18 @@ def test_registered_pixel_v2_selection_uses_declared_strictness_directions() -> 
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
         policy_lookup=dataset.policy_lookup,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         distance_quantiles=(0.0, 0.5),
         ambiguity_margin_quantiles=(0.0,),
         source_scope=demo.SOURCE_SCOPE,
     )
     selection = select_registered_pixel_candidate_v2(
         dataset_manifest=dataset.manifest,
-        registration_config=RegistrationConfig(max_dx=3, max_dy=3, minimum_overlap_fraction=0.6),
+        registration_config=RegistrationConfig(
+            max_dx=3, max_dy=3, minimum_overlap_fraction=0.6
+        ),
         candidates=candidates,
         source_scope=demo.SOURCE_SCOPE,
     )
@@ -120,7 +136,17 @@ def test_registered_pixel_raw_tie_break_ignores_registered_metadata() -> None:
             rejection_reason=None,
         ),
     )
-    ordered = sorted((second, first), key=lambda candidate: provider._sort_key(candidate, use_registered_distance=False))
+    ordered = sorted(
+        (second, first),
+        key=lambda candidate: provider._sort_key(
+            candidate, use_registered_distance=False
+        ),
+    )
     assert [candidate.row_id for candidate in ordered] == ["row-a", "row-b"]
-    registered = sorted((second, first), key=lambda candidate: provider._sort_key(candidate, use_registered_distance=True))
+    registered = sorted(
+        (second, first),
+        key=lambda candidate: provider._sort_key(
+            candidate, use_registered_distance=True
+        ),
+    )
     assert registered[0].row_id == "row-b"

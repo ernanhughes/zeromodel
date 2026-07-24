@@ -9,9 +9,13 @@ import pytest
 
 from video_final_test_support import approved_protocol, authorization
 from zeromodel.core.artifact import VPMValidationError
-from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.runtime import (
+    build_finalization_sqlite_runtime,
+)
 from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 from zeromodel.video.stores.video_action_set_memory import InMemoryVideoActionSetStore
 
 
@@ -84,10 +88,13 @@ def test_two_stale_reservations_have_one_winner(
         utc="2026-07-21T01:00:01Z",
         event_payload={"kind": "reserved"},
     )
-    assert _compete(
-        lambda: service.store.reserve_final_access(*first),
-        lambda: service.store.reserve_final_access(*second),
-    ) == 1
+    assert (
+        _compete(
+            lambda: service.store.reserve_final_access(*first),
+            lambda: service.store.reserve_final_access(*second),
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize("store_factory", [_memory_store, _sqlite_store])
@@ -110,10 +117,13 @@ def test_two_stale_running_transitions_have_one_winner(
         utc="2026-07-21T01:00:01Z",
         event_payload={"kind": "running"},
     )
-    assert _compete(
-        lambda: service.store.mark_final_access_running(*first),
-        lambda: service.store.mark_final_access_running(*second),
-    ) == 1
+    assert (
+        _compete(
+            lambda: service.store.mark_final_access_running(*first),
+            lambda: service.store.mark_final_access_running(*second),
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize("store_factory", [_memory_store, _sqlite_store])
@@ -138,14 +148,17 @@ def test_running_versus_failure_has_one_winner(
         process_identity="failure",
         utc="2026-07-21T01:00:01Z",
     )
-    assert _compete(
-        lambda: service.store.mark_final_access_running(*running),
-        lambda: service.store.fail_final_access(
-            failed_record,
-            failed_event,
-            failure,
-        ),
-    ) == 1
+    assert (
+        _compete(
+            lambda: service.store.mark_final_access_running(*running),
+            lambda: service.store.fail_final_access(
+                failed_record,
+                failed_event,
+                failure,
+            ),
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize("store_factory", [_memory_store, _sqlite_store])
@@ -170,14 +183,17 @@ def test_completion_versus_interruption_has_one_winner(
         process_identity="interruption",
         utc="2026-07-21T01:00:01Z",
     )
-    assert _compete(
-        lambda: service.store.complete_final_access(*completed),
-        lambda: service.store.interrupt_final_access(
-            interrupted_record,
-            interrupted_event,
-            failure,
-        ),
-    ) == 1
+    assert (
+        _compete(
+            lambda: service.store.complete_final_access(*completed),
+            lambda: service.store.interrupt_final_access(
+                interrupted_record,
+                interrupted_event,
+                failure,
+            ),
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize("store_factory", [_memory_store, _sqlite_store])
@@ -204,14 +220,17 @@ def test_two_terminal_transitions_have_one_winner(
         process_identity="two",
         utc="2026-07-21T01:00:01Z",
     )
-    assert _compete(
-        lambda: service.store.fail_final_access(first[1], first[2], first[0]),
-        lambda: service.store.interrupt_final_access(
-            second[1],
-            second[2],
-            second[0],
-        ),
-    ) == 1
+    assert (
+        _compete(
+            lambda: service.store.fail_final_access(first[1], first[2], first[0]),
+            lambda: service.store.interrupt_final_access(
+                second[1],
+                second[2],
+                second[0],
+            ),
+        )
+        == 1
+    )
 
 
 @pytest.mark.parametrize(
@@ -245,7 +264,9 @@ def test_every_event_chain_mutation_blocks_terminal_transition(
     elif mutation == "previous_digest_changed":
         object.__setattr__(events[2], "previous_event_digest", "sha256:" + "9" * 64)
     elif mutation == "payload_changed":
-        from zeromodel.video.domains.video_action_set.final_access_dto import FinalJsonDTO
+        from zeromodel.video.domains.video_action_set.final_access_dto import (
+            FinalJsonDTO,
+        )
 
         object.__setattr__(
             events[1],

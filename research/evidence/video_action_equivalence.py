@@ -12,8 +12,12 @@ from zeromodel.core.artifact import VPMValidationError
 VIDEO_ACTION_EQUIVALENCE_AUDIT_VERSION = "zeromodel-video-action-equivalence-audit/v1"
 VIDEO_ACTION_SET_DECISION_VERSION = "zeromodel-video-action-set-decision/v1"
 VIDEO_REACHABILITY_REPLAY_VERSION = "zeromodel-video-reachability-replay/v1"
-VIDEO_RETROSPECTIVE_EVIDENCE_CLOSURE_VERSION = "zeromodel-video-retrospective-evidence-closure/v1"
-VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION = "zeromodel-video-retrospective-evidence-inventory/v2"
+VIDEO_RETROSPECTIVE_EVIDENCE_CLOSURE_VERSION = (
+    "zeromodel-video-retrospective-evidence-closure/v1"
+)
+VIDEO_RETROSPECTIVE_EVIDENCE_INVENTORY_VERSION = (
+    "zeromodel-video-retrospective-evidence-inventory/v2"
+)
 VIDEO_POLICY_REACHABILITY_TILE_VERSION = "zeromodel-video-policy-reachability-tile/v1"
 VIDEO_ROW_SET_CONFORMAL_VERSION = "zeromodel-video-row-set-conformal/v1"
 VIDEO_TILE_COMPOSITION_TRACE_VERSION = "zeromodel-video-tile-composition-trace/v1"
@@ -37,7 +41,9 @@ def _json_bytes(value: Any) -> bytes:
             allow_nan=False,
         ).encode("utf-8")
     except (TypeError, ValueError) as exc:
-        raise VPMValidationError("action-equivalence values must be JSON serializable") from exc
+        raise VPMValidationError(
+            "action-equivalence values must be JSON serializable"
+        ) from exc
 
 
 def _sha256(value: Any) -> str:
@@ -68,7 +74,10 @@ def _load_csv(path: Path) -> list[dict[str, str]]:
 
 def _write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(_json_ready(payload), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _csv_cell(value: Any) -> str:
@@ -94,13 +103,17 @@ def _write_markdown(path: Path, text: str) -> None:
     path.write_text(text.rstrip() + "\n", encoding="utf-8")
 
 
-def build_policy_row_action_map(*, policy_artifact_id: str) -> tuple[dict[str, str], ...]:
+def build_policy_row_action_map(
+    *, policy_artifact_id: str
+) -> tuple[dict[str, str], ...]:
     from zeromodel.video.arcade_policy import ACTIONS, compile_policy_artifact
     from zeromodel.core.policy_lookup import VPMPolicyLookup
 
     artifact = compile_policy_artifact()
     if artifact.artifact_id != policy_artifact_id:
-        raise VPMValidationError("provider cannot be rescored with a mismatched policy version")
+        raise VPMValidationError(
+            "provider cannot be rescored with a mismatched policy version"
+        )
     lookup = VPMPolicyLookup(artifact, action_metric_ids=ACTIONS)
     source_digest = _sha256(
         {
@@ -120,9 +133,15 @@ def build_policy_row_action_map(*, policy_artifact_id: str) -> tuple[dict[str, s
                 "row_id": str(row_id),
                 "action_id": str(action_id),
                 "source_mapping_digest": _sha256(
-                    {"row_id": str(row_id), "action_id": str(action_id), "policy_artifact_id": artifact.artifact_id}
+                    {
+                        "row_id": str(row_id),
+                        "action_id": str(action_id),
+                        "policy_artifact_id": artifact.artifact_id,
+                    }
                 ),
-                "lookup_digest": _sha256({"row_id": str(row_id), "winner": str(action_id)}),
+                "lookup_digest": _sha256(
+                    {"row_id": str(row_id), "winner": str(action_id)}
+                ),
             }
         )
     return tuple(rows)
@@ -135,7 +154,10 @@ def policy_action_for_row(
     policy_artifact_id: str,
 ) -> str:
     for entry in row_action_map:
-        if entry["policy_artifact_id"] == policy_artifact_id and entry["row_id"] == row_id:
+        if (
+            entry["policy_artifact_id"] == policy_artifact_id
+            and entry["row_id"] == row_id
+        ):
             return entry["action_id"]
     raise VPMValidationError(f"unknown policy row: {row_id}")
 
@@ -149,12 +171,16 @@ def collect_v3_preservation_manifest(repo_root: Path) -> dict[str, str]:
     return rows
 
 
-def verify_v3_preservation(repo_root: Path, manifest: Mapping[str, str]) -> dict[str, Any]:
+def verify_v3_preservation(
+    repo_root: Path, manifest: Mapping[str, str]
+) -> dict[str, Any]:
     current = collect_v3_preservation_manifest(repo_root)
     mismatches = []
     for path, digest in sorted(manifest.items()):
         if current.get(path) != digest:
-            mismatches.append({"path": path, "expected": digest, "actual": current.get(path)})
+            mismatches.append(
+                {"path": path, "expected": digest, "actual": current.get(path)}
+            )
     extra = sorted(set(current) - set(manifest))
     return {
         "verified": not mismatches and not extra,
@@ -181,7 +207,12 @@ def summarize_top1_records(
         predicted_row = row.get(predicted_row_field)
         expected_action = row.get(expected_action_field)
         predicted_action = row.get(predicted_action_field)
-        if not expected_row or not predicted_row or not expected_action or not predicted_action:
+        if (
+            not expected_row
+            or not predicted_row
+            or not expected_action
+            or not predicted_action
+        ):
             continue
         total += 1
         row_ok = predicted_row == expected_row
@@ -194,7 +225,9 @@ def summarize_top1_records(
         "row_top1_accuracy": None if total == 0 else row_correct / float(total),
         "action_top1_accuracy": None if total == 0 else action_correct / float(total),
         "same_action_wrong_row_count": same_action_wrong_row,
-        "raw_action_gap": None if total == 0 else (action_correct - row_correct) / float(total),
+        "raw_action_gap": None
+        if total == 0
+        else (action_correct - row_correct) / float(total),
     }
 
 
@@ -208,7 +241,11 @@ def classify_score_evidence(
     reproducible: bool,
 ) -> tuple[str, str, str]:
     if full_vector:
-        return ("stored_original_scores", "stored_original_scores", "stored_original_scores")
+        return (
+            "stored_original_scores",
+            "stored_original_scores",
+            "stored_original_scores",
+        )
     if full_ranking:
         return ("missing", "stored_original_scores", "stored_original_scores")
     if top_k:

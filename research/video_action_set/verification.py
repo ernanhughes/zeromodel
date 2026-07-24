@@ -3,7 +3,10 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
-from research.video_action_set.mutation_audit import MUTATION_AUDIT_VERSION, _MUTATION_CASES
+from research.video_action_set.mutation_audit import (
+    MUTATION_AUDIT_VERSION,
+    _MUTATION_CASES,
+)
 from research.video_action_set.mutation_matrix import MUTATION_MATRIX_VERSION
 
 CLOSURE_REPORT_VERSION = "zeromodel-video-action-set-reference-closure/v1"

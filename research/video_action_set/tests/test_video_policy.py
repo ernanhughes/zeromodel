@@ -15,6 +15,7 @@ properties of the arcade shooter action space (full symbolic row/action/trace
 reproduction across the entire canonical clip) and would not generalize to
 an arbitrary policy. See docs/reviews/post-split-stage-a2-test-ownership-changes.csv.
 """
+
 from __future__ import annotations
 
 import json
@@ -27,7 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_visual_video_baseline import run_exact_video_baseline # noqa: E402
+from examples.arcade_visual_video_baseline import run_exact_video_baseline  # noqa: E402
 
 pytestmark = pytest.mark.research
 

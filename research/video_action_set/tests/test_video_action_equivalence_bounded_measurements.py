@@ -14,17 +14,26 @@ import pytest
 
 pytestmark = pytest.mark.research
 
+
 def test_unsupported_methods_produce_status_artifacts(tmp_path: Path) -> None:
     run_audit_evidence_closure(tmp_path)
-    fixed = json.loads((tmp_path / "fixed-top-k-status.json").read_text(encoding="utf-8"))
-    score_gap = json.loads((tmp_path / "score-gap-status.json").read_text(encoding="utf-8"))
-    conformal = json.loads((tmp_path / "conformal-viability.json").read_text(encoding="utf-8"))
+    fixed = json.loads(
+        (tmp_path / "fixed-top-k-status.json").read_text(encoding="utf-8")
+    )
+    score_gap = json.loads(
+        (tmp_path / "score-gap-status.json").read_text(encoding="utf-8")
+    )
+    conformal = json.loads(
+        (tmp_path / "conformal-viability.json").read_text(encoding="utf-8")
+    )
     assert fixed["status"] == "fixed_top_k_not_supported"
     assert score_gap["status"] == "score_gap_not_supported"
     assert conformal["status"] == "conformal_not_supported"
 
 
-def test_bounded_measurement_verification_keeps_forbidden_access_counts_zero(tmp_path: Path) -> None:
+def test_bounded_measurement_verification_keeps_forbidden_access_counts_zero(
+    tmp_path: Path,
+) -> None:
     run_audit_evidence_closure(tmp_path)
     run_rescore_supported_top1(tmp_path)
     run_build_reachability_tile(tmp_path / "reachability")
@@ -35,7 +44,9 @@ def test_bounded_measurement_verification_keeps_forbidden_access_counts_zero(tmp
     assert payload["pr_42_grid_execution_count"] == 0
 
 
-def test_bounded_measurement_verification_succeeds_when_outputs_exist(tmp_path: Path) -> None:
+def test_bounded_measurement_verification_succeeds_when_outputs_exist(
+    tmp_path: Path,
+) -> None:
     run_audit_evidence_closure(tmp_path)
     run_rescore_supported_top1(tmp_path)
     run_build_reachability_tile(tmp_path / "reachability")

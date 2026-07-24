@@ -90,9 +90,7 @@ def _real_measurement_context() -> tuple[dict[str, Any], list[dict[str, Any]]]:
         row_ids,
         row_actions,
     )
-    valid_plan = next(
-        plan for plan in plans if str(plan["family_label"]) == "valid"
-    )
+    valid_plan = next(plan for plan in plans if str(plan["family_label"]) == "valid")
     record = deepcopy(benchmark._materialize_plan(valid_plan, identity, tile)[0])
     rows = measurement.score_record(
         record,

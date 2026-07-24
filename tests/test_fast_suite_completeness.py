@@ -30,7 +30,9 @@ NINE_PACKAGE_TEST_ROOTS = [
 
 def test_every_nine_package_test_root_is_passed_to_pytest() -> None:
     for root in NINE_PACKAGE_TEST_ROOTS:
-        assert root in runner.TEST_ROOTS, f"{root} is missing from the canonical fast suite"
+        assert root in runner.TEST_ROOTS, (
+            f"{root} is missing from the canonical fast suite"
+        )
 
 
 def test_repository_wide_roots_are_also_included() -> None:

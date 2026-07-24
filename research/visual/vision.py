@@ -4,6 +4,7 @@ The root package remains conservative. Experimental frozen-vision components are
 collected here so importing :mod:`zeromodel` does not load model runtimes or
 suggest that the learned path is already validated.
 """
+
 from __future__ import annotations
 
 from research.visual.visual_corruptions import (

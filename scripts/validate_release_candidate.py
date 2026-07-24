@@ -776,9 +776,7 @@ def _evaluate_required_layer(
     if collected == 0:
         reasons.append("collected zero relevant tests")
     elif executed == 0:
-        reasons.append(
-            "executed zero required tests; all collected tests were skipped"
-        )
+        reasons.append("executed zero required tests; all collected tests were skipped")
     if reasons:
         return ReleaseLayerVerdict(name, _LAYER_STATUS_FAILED, tuple(reasons))
     return ReleaseLayerVerdict(name, _LAYER_STATUS_PASSED)
@@ -820,9 +818,7 @@ def evaluate_release_test_layers(
         )
     )
     research = report.get("research")
-    research_status = (
-        research.get("status") if isinstance(research, Mapping) else None
-    )
+    research_status = research.get("status") if isinstance(research, Mapping) else None
     if research_status == _LAYER_STATUS_EXCLUDED:
         verdicts.append(ReleaseLayerVerdict("research", _LAYER_STATUS_EXCLUDED))
     else:
@@ -830,8 +826,10 @@ def evaluate_release_test_layers(
             ReleaseLayerVerdict(
                 "research",
                 _LAYER_STATUS_NOT_EXECUTED,
-                (f"expected research.status={_LAYER_STATUS_EXCLUDED!r}, got "
-                 f"{research_status!r}",),
+                (
+                    f"expected research.status={_LAYER_STATUS_EXCLUDED!r}, got "
+                    f"{research_status!r}",
+                ),
             )
         )
     return tuple(verdicts)

@@ -9,7 +9,9 @@ import research.benchmarks.video_action_set_benchmark as benchmark
 from test_video_observation_rmdto import _pixels, sample_record
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
-from zeromodel.video.domains.video_action_set.contracts import TRANSFORMATION_FAMILY_VERSION
+from zeromodel.video.domains.video_action_set.contracts import (
+    TRANSFORMATION_FAMILY_VERSION,
+)
 from zeromodel.video.domains.video_action_set.observation_dto import (
     MaterializedObservationDTO,
 )

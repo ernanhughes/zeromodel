@@ -79,9 +79,7 @@ def _source_table(
         for target_x in targets:
             for cooldown in (0, 1):
                 row_id = state_row_id(tank_x, target_x, cooldown)
-                q_values = list(
-                    teacher_q_values(tank_x, target_x, cooldown)
-                )
+                q_values = list(teacher_q_values(tank_x, target_x, cooldown))
                 if row_id == unsafe_fire_row:
                     q_values[ACTIONS.index("FIRE")] = max(q_values) + 1.0
                 row_ids.append(row_id)

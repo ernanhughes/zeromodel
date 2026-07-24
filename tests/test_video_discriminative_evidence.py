@@ -153,7 +153,9 @@ def test_region_discriminative_evidence_requires_bounded_fractions() -> None:
         )
 
 
-def test_discriminative_candidate_set_requires_exact_row_only_for_exact_outcome() -> None:
+def test_discriminative_candidate_set_requires_exact_row_only_for_exact_outcome() -> (
+    None
+):
     candidate_set = DiscriminativeCandidateSet(
         observation_digest="sha256:obs",
         provider_digest="sha256:provider",
@@ -165,7 +167,9 @@ def test_discriminative_candidate_set_requires_exact_row_only_for_exact_outcome(
         candidate_digest="sha256:candidates",
     )
     assert candidate_set.digest.startswith("sha256:")
-    with pytest.raises(VPMValidationError, match="exact_row_accepted requires exact_row_id"):
+    with pytest.raises(
+        VPMValidationError, match="exact_row_accepted requires exact_row_id"
+    ):
         DiscriminativeCandidateSet(
             observation_digest="sha256:obs",
             provider_digest="sha256:provider",
@@ -178,7 +182,9 @@ def test_discriminative_candidate_set_requires_exact_row_only_for_exact_outcome(
         )
 
 
-def test_register_informative_translation_prefers_higher_available_mass_under_distance_tie() -> None:
+def test_register_informative_translation_prefers_higher_available_mass_under_distance_tie() -> (
+    None
+):
     prototype = np.array(
         [
             [255, 0, 255],
@@ -211,10 +217,22 @@ def test_register_informative_translation_prefers_higher_available_mass_under_di
     assert result.runner_up_dx == 1
 
 
-def test_build_discriminative_masks_uses_conservative_zero_stability_without_development() -> None:
+def test_build_discriminative_masks_uses_conservative_zero_stability_without_development() -> (
+    None
+):
     prototypes = {
-        "obs-a": ("row-a", "LEFT", "sha256:a", np.array([[0, 255], [0, 0]], dtype=np.uint8)),
-        "obs-b": ("row-b", "RIGHT", "sha256:b", np.array([[255, 255], [0, 0]], dtype=np.uint8)),
+        "obs-a": (
+            "row-a",
+            "LEFT",
+            "sha256:a",
+            np.array([[0, 255], [0, 0]], dtype=np.uint8),
+        ),
+        "obs-b": (
+            "row-b",
+            "RIGHT",
+            "sha256:b",
+            np.array([[255, 255], [0, 0]], dtype=np.uint8),
+        ),
     }
     masks = build_discriminative_masks(
         prototypes=prototypes,
@@ -227,11 +245,14 @@ def test_build_discriminative_masks_uses_conservative_zero_stability_without_dev
     assert masks["row-a"].spec.stable_pixel_count == 0
     assert float(masks["row-a"].stable_weights.sum()) == pytest.approx(0.0)
 
+
 # Temporarily excluded from the default suite after exhibiting pathological
 # runtime on the identity-foundations branch. The fixture is tiny, so this
 # should ultimately return to the fast suite after root-cause repair.
 @pytest.mark.slow
-def test_extract_candidate_region_evidence_tracks_support_and_conflicting_contradiction() -> None:
+def test_extract_candidate_region_evidence_tracks_support_and_conflicting_contradiction() -> (
+    None
+):
     candidate = np.array(
         [
             [0, 255],
@@ -298,7 +319,9 @@ def test_extract_candidate_region_evidence_tracks_support_and_conflicting_contra
             width=2,
             weight=1.0,
             critical=True,
-            registration_config=RegistrationConfig(max_dx=0, max_dy=0, minimum_overlap_fraction=1.0),
+            registration_config=RegistrationConfig(
+                max_dx=0, max_dy=0, minimum_overlap_fraction=1.0
+            ),
         ),
     )
     assert evidence.available_informative_mass == pytest.approx(2.0)

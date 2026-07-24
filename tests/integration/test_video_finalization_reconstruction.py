@@ -13,13 +13,19 @@ from video_final_test_support import (
     authorization,
     request,
 )
-from zeromodel.persistence.sqlalchemy.db.runtime import build_finalization_sqlite_runtime
+from zeromodel.persistence.sqlalchemy.db.runtime import (
+    build_finalization_sqlite_runtime,
+)
 from zeromodel.persistence.sqlalchemy.db.session import sqlite_database_url
 from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
-from zeromodel.video.domains.video_action_set.final_publication import FINAL_RECEIPT_NAME
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
+from zeromodel.video.domains.video_action_set.final_publication import (
+    FINAL_RECEIPT_NAME,
+)
 
 
 pytestmark = pytest.mark.integration

@@ -6,7 +6,10 @@ from pathlib import Path
 import pytest
 
 import research.benchmarks.video_action_set_benchmark as benchmark
-from research.evidence.video_complete_row_evidence import build_complete_row_evidence, build_semantic_top_set_outcome
+from research.evidence.video_complete_row_evidence import (
+    build_complete_row_evidence,
+    build_semantic_top_set_outcome,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -32,7 +35,9 @@ def reference_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
     tile = benchmark._load_reachability_tile(REPO_ROOT)
     evidence_cache: dict[tuple[str, tuple[str, ...]], object] = {}
 
-    def semantic_payload(provider_id: str, top_rows: list[str]) -> tuple[object, object]:
+    def semantic_payload(
+        provider_id: str, top_rows: list[str]
+    ) -> tuple[object, object]:
         key = (provider_id, tuple(top_rows))
         if key not in evidence_cache:
             scores = {row_id: 0.1 for row_id in row_ids}
@@ -45,14 +50,22 @@ def reference_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
                 provider_version=benchmark._provider_version(provider_id),
                 policy_row_ids=row_ids,
             )
-            outcome = build_semantic_top_set_outcome(evidence=evidence, row_action=row_actions)
+            outcome = build_semantic_top_set_outcome(
+                evidence=evidence, row_action=row_actions
+            )
             evidence_cache[key] = (evidence, outcome)
         return evidence_cache[key]  # type: ignore[return-value]
 
-    def provider_row(frame: dict[str, object], provider_id: str, state: dict[str, object]) -> dict[str, object]:
+    def provider_row(
+        frame: dict[str, object], provider_id: str, state: dict[str, object]
+    ) -> dict[str, object]:
         action_id = str(frame.get("expected_action") or row_actions[row_ids[0]])
         if provider_id == "P1":
-            top_rows = [str(frame.get("expected_row")) if frame.get("expected_row") in row_actions else row_ids[0]]
+            top_rows = [
+                str(frame.get("expected_row"))
+                if frame.get("expected_row") in row_actions
+                else row_ids[0]
+            ]
         elif provider_id == "P2":
             top_rows = rows_by_action[action_id][:2]
         else:
@@ -91,9 +104,13 @@ def reference_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
             "reachability_composition_trace": trace,
             "winner_row": outcome.resolved_row_id,
             "winner_action": outcome.resolved_action_id,
-            "winner_quantized_score": outcome.top_quantized_score if outcome.resolved_row_id else None,
+            "winner_quantized_score": outcome.top_quantized_score
+            if outcome.resolved_row_id
+            else None,
             "runner_up_row": runner_up,
-            "runner_up_quantized_score": evidence.row_scores[runner_up_index].quantized_score,
+            "runner_up_quantized_score": evidence.row_scores[
+                runner_up_index
+            ].quantized_score,
             "policy_row_universe_digest": evidence.policy_row_universe_digest,
             "quantized_score_vector_digest": evidence.quantized_score_vector_digest,
             "raw_score_diagnostic_digest": evidence.raw_score_diagnostic_digest,
@@ -109,18 +126,30 @@ def reference_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
         }
 
     for split in ("development", "calibration", "selection"):
-        frame_rows = [{key: value for key, value in row.items() if key != "pixels"} for row in benchmark._materialize_records(split, REPO_ROOT)]
+        frame_rows = [
+            {key: value for key, value in row.items() if key != "pixels"}
+            for row in benchmark._materialize_records(split, REPO_ROOT)
+        ]
         provider_rows = []
         reachability_state: dict[str, object] = {"P1": None, "P2": None, "P3": None}
         for frame in frame_rows:
-            if frame.get("event_type") == "gap_unknown" or frame.get("observation_pixel_digest") is None:
+            if (
+                frame.get("event_type") == "gap_unknown"
+                or frame.get("observation_pixel_digest") is None
+            ):
                 for provider_id in reachability_state:
-                    reachability_state[provider_id] = benchmark._gap_reachability_state(frame)
+                    reachability_state[provider_id] = benchmark._gap_reachability_state(
+                        frame
+                    )
                 continue
             for provider_id in ("P1", "P2", "P3"):
-                provider_rows.append(provider_row(frame, provider_id, reachability_state))
+                provider_rows.append(
+                    provider_row(frame, provider_id, reachability_state)
+                )
         benchmark._write_jsonl(output_dir / split / "frame-metadata.jsonl", frame_rows)
-        benchmark._write_jsonl(output_dir / split / "provider-evidence.jsonl", provider_rows)
+        benchmark._write_jsonl(
+            output_dir / split / "provider-evidence.jsonl", provider_rows
+        )
         benchmark._write_json(
             output_dir / f"{split}-manifest.json",
             {
@@ -133,7 +162,10 @@ def reference_fixture(tmp_path_factory: pytest.TempPathFactory) -> Path:
         )
     benchmark._write_observation_identity_manifest(output_dir)
     benchmark._write_split_overlap_audit(output_dir)
-    benchmark._write_json(output_dir / "phase-access-audits.json", benchmark._measured_phase_access_counts(output_dir))
+    benchmark._write_json(
+        output_dir / "phase-access-audits.json",
+        benchmark._measured_phase_access_counts(output_dir),
+    )
     return output_dir
 
 
@@ -141,17 +173,34 @@ def test_reference_verifier_schema_gates_and_counts(reference_fixture: Path) -> 
     report = benchmark.verify_reference_instrument(reference_fixture, REPO_ROOT)
     assert report["version"] == benchmark.REFERENCE_VERIFICATION_VERSION
     assert report["verified"] is True
-    assert {gate["gate"] for gate in report["gates"]} >= set(benchmark._REQUIRED_VERIFICATION_GATES)
+    assert {gate["gate"] for gate in report["gates"]} >= set(
+        benchmark._REQUIRED_VERIFICATION_GATES
+    )
     assert all(gate["status"] == "passed" for gate in report["gates"])
-    assert report["final_access_measurements"]["final_observation_materialization_count"] == 0
+    assert (
+        report["final_access_measurements"]["final_observation_materialization_count"]
+        == 0
+    )
     assert report["final_access_measurements"]["final_provider_score_access_count"] == 0
-    assert report["final_access_measurements"]["final_reachability_execution_count"] == 0
+    assert (
+        report["final_access_measurements"]["final_reachability_execution_count"] == 0
+    )
 
 
-def test_reference_verifier_read_only_and_deterministic(reference_fixture: Path) -> None:
+def test_reference_verifier_read_only_and_deterministic(
+    reference_fixture: Path,
+) -> None:
     before = benchmark._directory_snapshot(reference_fixture)
-    first = benchmark.verify_reference_instrument(reference_fixture, REPO_ROOT, enabled_gates=("structural_identity", "access_prohibition"))
-    second = benchmark.verify_reference_instrument(reference_fixture, REPO_ROOT, enabled_gates=("structural_identity", "access_prohibition"))
+    first = benchmark.verify_reference_instrument(
+        reference_fixture,
+        REPO_ROOT,
+        enabled_gates=("structural_identity", "access_prohibition"),
+    )
+    second = benchmark.verify_reference_instrument(
+        reference_fixture,
+        REPO_ROOT,
+        enabled_gates=("structural_identity", "access_prohibition"),
+    )
     after = benchmark._directory_snapshot(reference_fixture)
     assert before == after
     assert first == second
@@ -161,17 +210,61 @@ def test_reference_verifier_read_only_and_deterministic(reference_fixture: Path)
 @pytest.mark.parametrize(
     ("mutation_name", "expected_code", "gate_scope"),
     [
-        ("evidence_quantized_score_changed", "quantized_score_vector_mismatch", ("structural_identity", "semantic_outcome")),
-        ("semantic_resolved_row_for_action_unanimous_tie", "resolved_row_not_permitted", ("structural_identity", "semantic_outcome")),
-        ("seed_alter_final_sealed_identity", "sealed_episode_identity_mismatch", ("structural_identity", "seed_and_plan")),
-        ("seed_final_observation_provenance_materialized", "final_observation_provenance_mismatch", ("structural_identity", "seed_and_plan")),
-        ("family_splice_valid_state_collision", "invalid_family_valid_state_collision", ("structural_identity", "family_contract")),
-        ("family_splice_target_evidence_count_removed", "family_contract_violation", ("structural_identity", "family_contract")),
-        ("family_control_hidden_history_collapse", "control_hidden_history_not_ambiguous", ("structural_identity", "family_contract")),
-        ("family_control_visible_source_leak", "control_provider_visible_leak", ("structural_identity", "family_contract")),
-        ("family_episode_disposition_mismatch", "family_disposition_mismatch", ("structural_identity", "family_contract")),
-        ("access_add_final_observation_artifact", "forbidden_final_materialization", ("structural_identity", "access_prohibition")),
-        ("semantic_lexically_reorder_tied_rows", None, ("structural_identity", "semantic_outcome")),
+        (
+            "evidence_quantized_score_changed",
+            "quantized_score_vector_mismatch",
+            ("structural_identity", "semantic_outcome"),
+        ),
+        (
+            "semantic_resolved_row_for_action_unanimous_tie",
+            "resolved_row_not_permitted",
+            ("structural_identity", "semantic_outcome"),
+        ),
+        (
+            "seed_alter_final_sealed_identity",
+            "sealed_episode_identity_mismatch",
+            ("structural_identity", "seed_and_plan"),
+        ),
+        (
+            "seed_final_observation_provenance_materialized",
+            "final_observation_provenance_mismatch",
+            ("structural_identity", "seed_and_plan"),
+        ),
+        (
+            "family_splice_valid_state_collision",
+            "invalid_family_valid_state_collision",
+            ("structural_identity", "family_contract"),
+        ),
+        (
+            "family_splice_target_evidence_count_removed",
+            "family_contract_violation",
+            ("structural_identity", "family_contract"),
+        ),
+        (
+            "family_control_hidden_history_collapse",
+            "control_hidden_history_not_ambiguous",
+            ("structural_identity", "family_contract"),
+        ),
+        (
+            "family_control_visible_source_leak",
+            "control_provider_visible_leak",
+            ("structural_identity", "family_contract"),
+        ),
+        (
+            "family_episode_disposition_mismatch",
+            "family_disposition_mismatch",
+            ("structural_identity", "family_contract"),
+        ),
+        (
+            "access_add_final_observation_artifact",
+            "forbidden_final_materialization",
+            ("structural_identity", "access_prohibition"),
+        ),
+        (
+            "semantic_lexically_reorder_tied_rows",
+            None,
+            ("structural_identity", "semantic_outcome"),
+        ),
     ],
 )
 def test_selected_adversarial_mutations_have_expected_primary_codes(
@@ -184,18 +277,32 @@ def test_selected_adversarial_mutations_have_expected_primary_codes(
     case_dir = tmp_path / mutation_name
     shutil.copytree(reference_fixture, case_dir)
     benchmark._apply_reference_mutation(case_dir, mutation_name)
-    report = benchmark.verify_reference_instrument(case_dir, REPO_ROOT, enabled_gates=gate_scope)
+    report = benchmark.verify_reference_instrument(
+        case_dir, REPO_ROOT, enabled_gates=gate_scope
+    )
     assert report["primary_failure_code"] == expected_code
 
 
 def test_mutation_audit_schema_declares_required_matrix() -> None:
-    assert benchmark.MUTATION_MATRIX_VERSION == "zeromodel-video-action-set-reference-mutation-matrix/v3"
+    assert (
+        benchmark.MUTATION_MATRIX_VERSION
+        == "zeromodel-video-action-set-reference-mutation-matrix/v3"
+    )
     catalogue_findings = benchmark.validate_mutation_catalogue()
     assert catalogue_findings == []
     catalogue = benchmark.mutation_catalogue()
     assert len(catalogue) == 93
-    assert sum(1 for case in catalogue if case["expected_result_type"] == "detected") == 91
-    assert sum(1 for case in catalogue if case["expected_result_type"] == "semantic_invariant") == 2
+    assert (
+        sum(1 for case in catalogue if case["expected_result_type"] == "detected") == 91
+    )
+    assert (
+        sum(
+            1
+            for case in catalogue
+            if case["expected_result_type"] == "semantic_invariant"
+        )
+        == 2
+    )
     cases = {case["name"]: case for case in benchmark._MUTATION_CASES}
     for required in (
         "evidence_quantized_score_changed",
@@ -213,13 +320,29 @@ def test_mutation_audit_schema_declares_required_matrix() -> None:
         "access_increment_forbidden_access_counter",
     ):
         assert required in cases
-    laundering_classes = {case["artifact_class"] for case in cases.values() if case.get("digest_laundering")}
-    assert {"evidence", "semantic", "episode_plan", "observation", "family_output", "reachability_trace", "access_status"} <= laundering_classes
+    laundering_classes = {
+        case["artifact_class"]
+        for case in cases.values()
+        if case.get("digest_laundering")
+    }
+    assert {
+        "evidence",
+        "semantic",
+        "episode_plan",
+        "observation",
+        "family_output",
+        "reachability_trace",
+        "access_status",
+    } <= laundering_classes
 
 
 @pytest.mark.slow
-def test_complete_adversarial_mutation_audit_executes_all_cases(reference_fixture: Path) -> None:
-    repeated = benchmark.run_repeated_reference_mutation_audit(reference_fixture, REPO_ROOT)
+def test_complete_adversarial_mutation_audit_executes_all_cases(
+    reference_fixture: Path,
+) -> None:
+    repeated = benchmark.run_repeated_reference_mutation_audit(
+        reference_fixture, REPO_ROOT
+    )
     audit = repeated["audit"]
     assert repeated["deterministic"] is True
     assert repeated["first_audit_digest"] == repeated["second_audit_digest"]
@@ -246,4 +369,10 @@ def test_complete_adversarial_mutation_audit_executes_all_cases(reference_fixtur
         "reachability_trace",
         "access_status",
     }
-    assert all(item["declared"] == item["executed"] == item["detected"] == item["expected_code_matches"] for item in audit["digest_laundering_class_closure"].values())
+    assert all(
+        item["declared"]
+        == item["executed"]
+        == item["detected"]
+        == item["expected_code_matches"]
+        for item in audit["digest_laundering_class_closure"].values()
+    )

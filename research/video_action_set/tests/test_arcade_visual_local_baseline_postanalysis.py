@@ -94,4 +94,6 @@ def test_decoupled_selection_prefers_conservative_threshold_after_coverage() -> 
         "ambiguity_margin": 0.67,
         "distance_quantile": 0.5,
     }
-    assert module._decoupled_selection_key(candidate_b) > module._decoupled_selection_key(candidate_a)
+    assert module._decoupled_selection_key(
+        candidate_b
+    ) > module._decoupled_selection_key(candidate_a)

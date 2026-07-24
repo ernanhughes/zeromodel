@@ -77,9 +77,18 @@ def test_integration_tests_are_covered_by_ruff() -> None:
 
 def test_quality_gate_stages_run_in_the_required_order() -> None:
     source = SCRIPT.read_text(encoding="utf-8")
-    stage_labels = ["Ruff format check", "Ruff lint check", "mypy", "Package boundaries", "Architecture rules", "Code-quality limits"]
+    stage_labels = [
+        "Ruff format check",
+        "Ruff lint check",
+        "mypy",
+        "Package boundaries",
+        "Architecture rules",
+        "Code-quality limits",
+    ]
     positions = [source.index(f'"{label}"') for label in stage_labels]
-    assert positions == sorted(positions), "quality-gate stages are out of the required order"
+    assert positions == sorted(positions), (
+        "quality-gate stages are out of the required order"
+    )
 
 
 def test_a_failing_stage_stops_the_gate() -> None:

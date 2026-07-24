@@ -34,7 +34,9 @@ SEARCH_ROOTS = (
 def _registered_markers() -> set[str]:
     pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     match = re.search(r"markers\s*=\s*\[(.*?)\]", pyproject, re.DOTALL)
-    assert match is not None, "pyproject.toml has no [tool.pytest.ini_options] markers list"
+    assert match is not None, (
+        "pyproject.toml has no [tool.pytest.ini_options] markers list"
+    )
     names = re.findall(r'"([a-zA-Z_][a-zA-Z0-9_]*):', match.group(1))
     return set(names)
 
@@ -58,7 +60,9 @@ def test_registered_markers_are_exactly_the_canonical_five_with_no_duplicates() 
     match = re.search(r"markers\s*=\s*\[(.*?)\]", pyproject, re.DOTALL)
     assert match is not None
     names = re.findall(r'"([a-zA-Z_][a-zA-Z0-9_]*):', match.group(1))
-    assert names == sorted(set(names), key=names.index), "duplicate marker registration found"
+    assert names == sorted(set(names), key=names.index), (
+        "duplicate marker registration found"
+    )
     assert set(names) == CANONICAL_MARKERS
 
 

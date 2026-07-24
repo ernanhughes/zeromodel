@@ -38,17 +38,25 @@ def _load_demo():
 
 def test_selection_records_reject_final_evaluation_records() -> None:
     demo = _load_demo()
-    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
-    final_records = tuple(
-        record for record in dataset.manifest.records if record.split == "final_evaluation"
+    dataset = demo.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
     )
-    with pytest.raises(VPMValidationError, match="final_evaluation records cannot enter"):
+    final_records = tuple(
+        record
+        for record in dataset.manifest.records
+        if record.split == "final_evaluation"
+    )
+    with pytest.raises(
+        VPMValidationError, match="final_evaluation records cannot enter"
+    ):
         validate_selection_records(final_records)
 
 
 def test_system_b_candidate_enumeration_and_selection_are_deterministic() -> None:
     demo = _load_demo()
-    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    dataset = demo.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
+    )
     candidates_a = build_system_b_candidates(
         dataset_manifest=dataset.manifest,
         observations=dataset.observations,
@@ -63,7 +71,9 @@ def test_system_b_candidate_enumeration_and_selection_are_deterministic() -> Non
         source_scope=demo.SOURCE_SCOPE,
         quantiles=(0.0, 0.5, 1.0),
     )
-    assert [item.to_dict() for item in candidates_a] == [item.to_dict() for item in candidates_b]
+    assert [item.to_dict() for item in candidates_a] == [
+        item.to_dict() for item in candidates_b
+    ]
 
     selection_a = select_system_b_operating_point(
         dataset_manifest=dataset.manifest,
@@ -79,9 +89,14 @@ def test_system_b_candidate_enumeration_and_selection_are_deterministic() -> Non
 
 def test_system_b_v2_dataset_digest_differs_from_historical_v1() -> None:
     demo = _load_demo()
-    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    dataset = demo.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
+    )
     assert dataset.manifest.source_scope == "arcade-visual-system-b-adjudication/v2"
-    assert dataset.manifest.digest != "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"
+    assert (
+        dataset.manifest.digest
+        != "91b1b422482eeeef20eb182162eb2a745f9b50524cc7f94ec95a0aba5f2fa37e"
+    )
 
 
 class _SpyEncoder:
@@ -113,13 +128,21 @@ class _SpyEncoder:
         self.seen_batches.append(batch)
         rows = []
         for index, _observation in enumerate(batch, start=1):
-            rows.append(np.full((self._manifest.output_dimension,), float(index), dtype=np.float32))
+            rows.append(
+                np.full(
+                    (self._manifest.output_dimension,), float(index), dtype=np.float32
+                )
+            )
         return np.vstack(rows)
 
 
-def test_system_b_candidate_builder_never_encodes_final_evaluation_observations() -> None:
+def test_system_b_candidate_builder_never_encodes_final_evaluation_observations() -> (
+    None
+):
     demo = _load_demo()
-    dataset = demo.build_arcade_benchmark_dataset(variants_per_family=1, ood_examples_per_family=1)
+    dataset = demo.build_arcade_benchmark_dataset(
+        variants_per_family=1, ood_examples_per_family=1
+    )
     final_observations = {
         id(dataset.observations[record.observation_id])
         for record in dataset.manifest.records

@@ -29,19 +29,30 @@ from research.evidence.video_action_equivalence import (  # noqa: E402
     summarize_top1_records,
     verify_v3_preservation,
 )
-from zeromodel.video.video_policy_reachability import compile_reachability_tile, verify_reachability_tile  # noqa: E402
+from zeromodel.video.video_policy_reachability import (
+    compile_reachability_tile,
+    verify_reachability_tile,
+)  # noqa: E402
 
 
 OUTPUT_DIR = REPO_ROOT / "docs" / "results" / "video-policy-action-equivalence-audit-v1"
 REACHABILITY_DIR = REPO_ROOT / "docs" / "results" / "video-policy-reachability-tile-v1"
-PRELIM_DIGEST = "sha256:9a7fe1a38c5685519e877e80fe7c66cb3bcbfbd5d1ec36c0cd474b14a7608cb0"
-AMENDMENT_PATH = "docs/research/video-action-equivalence-evidence-closure-amendment-v1.md"
-CLAIMS_AMENDMENT_PATH = "docs/research/video-stage-three-action-equivalence-claims-amendment.md"
+PRELIM_DIGEST = (
+    "sha256:9a7fe1a38c5685519e877e80fe7c66cb3bcbfbd5d1ec36c0cd474b14a7608cb0"
+)
+AMENDMENT_PATH = (
+    "docs/research/video-action-equivalence-evidence-closure-amendment-v1.md"
+)
+CLAIMS_AMENDMENT_PATH = (
+    "docs/research/video-stage-three-action-equivalence-claims-amendment.md"
+)
 AUDIT_CONTRACT_PATH = "docs/research/video-action-equivalence-protocol-audit-v1.md"
 FROZEN_V3_SHA = "4790165de78557fce63d64e5f2b7ddfde04f1e98"
 PRIMARY_STATUS = "insufficient_historical_artifacts"
 VISUAL_BRANCH_RECOMMENDATION = "undetermined_due_to_missing_artifacts"
-NEXT_EXPERIMENT = "prospective_evidence_preserving_action_set_and_reachability_benchmark"
+NEXT_EXPERIMENT = (
+    "prospective_evidence_preserving_action_set_and_reachability_benchmark"
+)
 
 
 def _provider_specs() -> tuple[dict[str, Any], ...]:
@@ -202,7 +213,9 @@ def _provider_evidence_files() -> list[dict[str, Any]]:
             if suffix == ".json":
                 payload = _load_json(path)
                 record_count = len(payload) if isinstance(payload, list) else 1
-                fields_present = sorted(payload.keys()) if isinstance(payload, dict) else []
+                fields_present = (
+                    sorted(payload.keys()) if isinstance(payload, dict) else []
+                )
             elif suffix == ".jsonl":
                 payload = _load_jsonl(path)
                 record_count = len(payload)
@@ -221,12 +234,24 @@ def _provider_evidence_files() -> list[dict[str, Any]]:
                     "path": rel,
                     "file_digest": _file_sha256(path),
                     "record_count": record_count,
-                    "record_granularity": "observation" if "traces" in rel or "sanity" in rel or "retrieval" in rel or "paired" in rel else "artifact",
+                    "record_granularity": "observation"
+                    if "traces" in rel
+                    or "sanity" in rel
+                    or "retrieval" in rel
+                    or "paired" in rel
+                    else "artifact",
                     "fields_present": fields_present,
                     "fields_absent": [],
-                    "split_identity": "final_evaluation" if "traces" in rel or "paired" in rel else "mixed_or_artifact",
-                    "historical_final_status": "historical_final" if provider_id in {"system-b-v2", "r1-local-correlation", "stage3-v1"} else "diagnostic_or_generator",
-                    "usable_measurement_types": _usable_measurements(provider_id, rel, fields_present),
+                    "split_identity": "final_evaluation"
+                    if "traces" in rel or "paired" in rel
+                    else "mixed_or_artifact",
+                    "historical_final_status": "historical_final"
+                    if provider_id
+                    in {"system-b-v2", "r1-local-correlation", "stage3-v1"}
+                    else "diagnostic_or_generator",
+                    "usable_measurement_types": _usable_measurements(
+                        provider_id, rel, fields_present
+                    ),
                 }
             )
     return rows
@@ -235,7 +260,9 @@ def _provider_evidence_files() -> list[dict[str, Any]]:
 def _usable_measurements(provider_id: str, rel: str, fields: list[str]) -> list[str]:
     usable = []
     field_set = set(fields)
-    if {"observation_id", "expected_row_id", "top1_row_id", "split"}.issubset(field_set):
+    if {"observation_id", "expected_row_id", "top1_row_id", "split"}.issubset(
+        field_set
+    ):
         usable.append("per_observation_top1_rescore")
     if {"observation_id", "expected_row", "winner_row"}.issubset(field_set):
         usable.append("canonical_diagnostic_rescore")
@@ -248,7 +275,9 @@ def _usable_measurements(provider_id: str, rel: str, fields: list[str]) -> list[
     return usable
 
 
-def _evidence_closure(row_action_map: tuple[dict[str, str], ...]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def _evidence_closure(
+    row_action_map: tuple[dict[str, str], ...],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     files = _provider_evidence_files()
     closure_rows = []
     inventory_rows = []
@@ -257,14 +286,21 @@ def _evidence_closure(row_action_map: tuple[dict[str, str], ...]) -> tuple[list[
     for spec in _provider_specs():
         provider_id = spec["provider_id"]
         aggregate_only = provider_id == "stage3-v1"
-        has_top1 = provider_id in {"system-b-v2", "r1-local-correlation", "stage3-v2", "stage3-v3-b3"}
+        has_top1 = provider_id in {
+            "system-b-v2",
+            "r1-local-correlation",
+            "stage3-v2",
+            "stage3-v3-b3",
+        }
         sequence_metadata = provider_id == "stage3-v1"
         visual_beliefs = False
         replay_classification = "reachability_replay_unavailable"
         replay_reasons = ["missing_frame_level_visual_beliefs"]
         if provider_id == "stage3-v1":
             replay_classification = "sequence_metadata_without_visual_beliefs"
-            replay_reasons = ["sequence summaries and paired frame outcomes do not preserve visual candidate rows or executed actions"]
+            replay_reasons = [
+                "sequence summaries and paired frame outcomes do not preserve visual candidate rows or executed actions"
+            ]
         closure_rows.append(
             {
                 "provider_id": provider_id,
@@ -299,15 +335,27 @@ def _evidence_closure(row_action_map: tuple[dict[str, str], ...]) -> tuple[list[
                 "reproducibility_status": spec["reproducibility_status"],
                 "reproduction_command": spec["reproduction_command"],
                 "reproduction_source_commit": spec["source_commit"],
-                "input_closure_status": "not_tested" if spec["reproducibility_status"] == "not_tested" else "partial_or_missing",
+                "input_closure_status": "not_tested"
+                if spec["reproducibility_status"] == "not_tested"
+                else "partial_or_missing",
                 "temporary_output_directory": None,
                 "artifact_comparison_status": "not_run",
                 "per_observation_output_available": has_top1,
-                "reproduction_failure_reason": None if spec["reproducibility_status"] == "not_tested" else "historical package not re-run in this audit block",
-                "historical_package_reproducible": spec["historical_package_reproducible"],
-                "temporary_corrected_generator_reproducible": spec["temporary_corrected_generator_reproducible"],
-                "canonical_instrument_reproducible": spec["canonical_instrument_reproducible"],
-                "evaluation_observation_scores_available": spec["evaluation_observation_scores_available"],
+                "reproduction_failure_reason": None
+                if spec["reproducibility_status"] == "not_tested"
+                else "historical package not re-run in this audit block",
+                "historical_package_reproducible": spec[
+                    "historical_package_reproducible"
+                ],
+                "temporary_corrected_generator_reproducible": spec[
+                    "temporary_corrected_generator_reproducible"
+                ],
+                "canonical_instrument_reproducible": spec[
+                    "canonical_instrument_reproducible"
+                ],
+                "evaluation_observation_scores_available": spec[
+                    "evaluation_observation_scores_available"
+                ],
                 "aggregate_metric_only": aggregate_only,
                 "per_observation_top1_available": has_top1,
                 "ordered_rankings_available": False,
@@ -318,7 +366,9 @@ def _evidence_closure(row_action_map: tuple[dict[str, str], ...]) -> tuple[list[
                 "reachability_replay_eligible": False,
                 "reachability_replay_classification": replay_classification,
                 "reachability_replay_reasons": replay_reasons,
-                "inspected_file_count": sum(1 for row in files if row["provider_id"] == provider_id),
+                "inspected_file_count": sum(
+                    1 for row in files if row["provider_id"] == provider_id
+                ),
                 "final_status": spec["final_status"],
             }
         )
@@ -329,7 +379,13 @@ def _provider_contract_digest(spec: Mapping[str, Any]) -> str | None:
     path = REPO_ROOT / spec["aggregate_metrics_file"]
     payload = _load_json(path)
     if isinstance(payload, dict):
-        for key in ("provider_contract_digest", "transition_contract_digest", "selection_digest", "calibration_digest", "run_manifest_digest"):
+        for key in (
+            "provider_contract_digest",
+            "transition_contract_digest",
+            "selection_digest",
+            "calibration_digest",
+            "run_manifest_digest",
+        ):
             if key in payload:
                 return str(payload[key])
     return None
@@ -338,10 +394,30 @@ def _provider_contract_digest(spec: Mapping[str, Any]) -> str | None:
 def _reported_metric_verifications() -> list[dict[str, Any]]:
     rows = []
     claims = [
-        ("system-b-v2", "top1_benign_row_accuracy", 0.75, "docs/results/visual-address-system-b-v2/final-summary.json"),
-        ("system-b-v2", "top1_benign_action_accuracy", 0.96875, "docs/results/visual-address-system-b-v2/final-summary.json"),
-        ("r1-local-correlation", "top1_benign_row_accuracy", 0.875, "docs/results/visual-local-baseline-showdown-v1/final-summary.json"),
-        ("r1-local-correlation", "top1_benign_action_accuracy", 0.984375, "docs/results/visual-local-baseline-showdown-v1/final-summary.json"),
+        (
+            "system-b-v2",
+            "top1_benign_row_accuracy",
+            0.75,
+            "docs/results/visual-address-system-b-v2/final-summary.json",
+        ),
+        (
+            "system-b-v2",
+            "top1_benign_action_accuracy",
+            0.96875,
+            "docs/results/visual-address-system-b-v2/final-summary.json",
+        ),
+        (
+            "r1-local-correlation",
+            "top1_benign_row_accuracy",
+            0.875,
+            "docs/results/visual-local-baseline-showdown-v1/final-summary.json",
+        ),
+        (
+            "r1-local-correlation",
+            "top1_benign_action_accuracy",
+            0.984375,
+            "docs/results/visual-local-baseline-showdown-v1/final-summary.json",
+        ),
     ]
     for provider_id, metric_name, reported_value, rel in claims:
         payload = _load_json(REPO_ROOT / rel)["final_metrics"]
@@ -352,7 +428,9 @@ def _reported_metric_verifications() -> list[dict[str, Any]]:
                 "metric_name": metric_name,
                 "reported_value": reported_value,
                 "repository_derived_value": derived,
-                "match_status": "exact_match" if derived == reported_value else "mismatch",
+                "match_status": "exact_match"
+                if derived == reported_value
+                else "mismatch",
                 "difference": float(derived) - float(reported_value),
                 "source_artifact": rel,
             }
@@ -362,7 +440,9 @@ def _reported_metric_verifications() -> list[dict[str, Any]]:
 
 def run_audit_evidence_closure(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
     _write_unsupported_statuses(output_dir)
-    row_action_map = build_policy_row_action_map(policy_artifact_id=compile_policy_artifact().artifact_id)
+    row_action_map = build_policy_row_action_map(
+        policy_artifact_id=compile_policy_artifact().artifact_id
+    )
     files = _provider_evidence_files()
     verifications = _reported_metric_verifications()
     closure_rows, inventory_rows = _evidence_closure(row_action_map)
@@ -487,7 +567,9 @@ def _audit_metadata() -> dict[str, str]:
         "evidence_closure_amendment_path": AMENDMENT_PATH,
         "evidence_closure_amendment_commit": _git_commit_for_path(AMENDMENT_PATH),
         "claims_amendment_path": CLAIMS_AMENDMENT_PATH,
-        "claims_amendment_commit": _git_commit_for_path(CLAIMS_AMENDMENT_PATH) if (REPO_ROOT / CLAIMS_AMENDMENT_PATH).exists() else "",
+        "claims_amendment_commit": _git_commit_for_path(CLAIMS_AMENDMENT_PATH)
+        if (REPO_ROOT / CLAIMS_AMENDMENT_PATH).exists()
+        else "",
     }
 
 
@@ -568,12 +650,18 @@ def _write_reachability_docs(output_dir: Path) -> None:
 
 def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
     _write_unsupported_statuses(output_dir)
-    row_action_map = build_policy_row_action_map(policy_artifact_id=compile_policy_artifact().artifact_id)
+    row_action_map = build_policy_row_action_map(
+        policy_artifact_id=compile_policy_artifact().artifact_id
+    )
     policy_artifact_id = row_action_map[0]["policy_artifact_id"]
     results = []
     summaries = []
-    system_b_summary = _load_json(REPO_ROOT / "docs/results/visual-address-system-b-v2/final-summary.json")["final_metrics"]
-    r1_summary = _load_json(REPO_ROOT / "docs/results/visual-local-baseline-showdown-v1/final-summary.json")["final_metrics"]
+    system_b_summary = _load_json(
+        REPO_ROOT / "docs/results/visual-address-system-b-v2/final-summary.json"
+    )["final_metrics"]
+    r1_summary = _load_json(
+        REPO_ROOT / "docs/results/visual-local-baseline-showdown-v1/final-summary.json"
+    )["final_metrics"]
     for spec in _provider_specs():
         provider_id = spec["provider_id"]
         mode = spec["measurement_mode"]
@@ -594,9 +682,14 @@ def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
             row.update(
                 {
                     "row_top1_accuracy": system_b_summary["top1_benign_row_accuracy"],
-                    "action_top1_accuracy": system_b_summary["top1_benign_action_accuracy"],
-                    "raw_action_gap": system_b_summary["top1_benign_action_accuracy"] - system_b_summary["top1_benign_row_accuracy"],
-                    "same_action_wrong_row_count": metrics["same_action_wrong_row_count"],
+                    "action_top1_accuracy": system_b_summary[
+                        "top1_benign_action_accuracy"
+                    ],
+                    "raw_action_gap": system_b_summary["top1_benign_action_accuracy"]
+                    - system_b_summary["top1_benign_row_accuracy"],
+                    "same_action_wrong_row_count": metrics[
+                        "same_action_wrong_row_count"
+                    ],
                     "observation_count": metrics["observation_count"],
                 }
             )
@@ -612,8 +705,11 @@ def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
                 {
                     "row_top1_accuracy": r1_summary["top1_benign_row_accuracy"],
                     "action_top1_accuracy": r1_summary["top1_benign_action_accuracy"],
-                    "raw_action_gap": r1_summary["top1_benign_action_accuracy"] - r1_summary["top1_benign_row_accuracy"],
-                    "same_action_wrong_row_count": metrics["same_action_wrong_row_count"],
+                    "raw_action_gap": r1_summary["top1_benign_action_accuracy"]
+                    - r1_summary["top1_benign_row_accuracy"],
+                    "same_action_wrong_row_count": metrics[
+                        "same_action_wrong_row_count"
+                    ],
                     "observation_count": metrics["observation_count"],
                 }
             )
@@ -631,7 +727,9 @@ def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
                     "row_top1_accuracy": metrics["row_top1_accuracy"],
                     "action_top1_accuracy": metrics["action_top1_accuracy"],
                     "raw_action_gap": metrics["raw_action_gap"],
-                    "same_action_wrong_row_count": metrics["same_action_wrong_row_count"],
+                    "same_action_wrong_row_count": metrics[
+                        "same_action_wrong_row_count"
+                    ],
                     "observation_count": metrics["observation_count"],
                     "invalid_boundary": True,
                 }
@@ -650,7 +748,9 @@ def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
                     "row_top1_accuracy": metrics["row_top1_accuracy"],
                     "action_top1_accuracy": metrics["action_top1_accuracy"],
                     "raw_action_gap": metrics["raw_action_gap"],
-                    "same_action_wrong_row_count": metrics["same_action_wrong_row_count"],
+                    "same_action_wrong_row_count": metrics[
+                        "same_action_wrong_row_count"
+                    ],
                     "observation_count": metrics["observation_count"],
                     "invalid_boundary": False,
                 }
@@ -658,7 +758,9 @@ def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
         else:
             row.update({"reason": "aggregate sequence evidence only"})
         results.append(row)
-        summaries.append({"provider_id": provider_id, "mode": row["mode"], "status": row["status"]})
+        summaries.append(
+            {"provider_id": provider_id, "mode": row["mode"], "status": row["status"]}
+        )
     _write_json(output_dir / "top1-action-results.json", results)
     _write_csv(output_dir / "top1-action-results.csv", results)
     _write_json(
@@ -675,7 +777,9 @@ def run_rescore_supported_top1(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
 def run_build_reachability_tile(output_dir: Path = REACHABILITY_DIR) -> dict[str, Any]:
     artifact = compile_policy_artifact()
     spec = arcade_transition_spec()
-    tile = compile_reachability_tile(policy_artifact_id=artifact.artifact_id, transition_spec=spec)
+    tile = compile_reachability_tile(
+        policy_artifact_id=artifact.artifact_id, transition_spec=spec
+    )
     verification = verify_reachability_tile(tile)
     edge_rows = []
     counts = Counter(edge["status"] for edge in tile["edges"])
@@ -706,7 +810,9 @@ def run_build_reachability_tile(output_dir: Path = REACHABILITY_DIR) -> dict[str
             "tile_version": tile["tile_version"],
             "policy_artifact_id": artifact.artifact_id,
             "transition_source_path": "examples/arcade_visual_video_baseline.py",
-            "transition_source_digest": _file_sha256(REPO_ROOT / "examples/arcade_visual_video_baseline.py"),
+            "transition_source_digest": _file_sha256(
+                REPO_ROOT / "examples/arcade_visual_video_baseline.py"
+            ),
             "transition_semantics_version": spec.spec_id,
             "state_factor_schema": ["tank", "target", "cooldown"],
             "gap_semantics": tile["gap_semantics"],
@@ -753,7 +859,9 @@ def run_replay_reachability(output_dir: Path = OUTPUT_DIR) -> dict[str, Any]:
     return payload
 
 
-def run_verify_bounded_measurements(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REACHABILITY_DIR) -> dict[str, Any]:
+def run_verify_bounded_measurements(
+    output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REACHABILITY_DIR
+) -> dict[str, Any]:
     manifest = collect_v3_preservation_manifest(REPO_ROOT)
     v3 = verify_v3_preservation(REPO_ROOT, manifest)
     required = [
@@ -767,7 +875,11 @@ def run_verify_bounded_measurements(output_dir: Path = OUTPUT_DIR, reachability_
         output_dir / "reachability-replay-summary.json",
         reachability_dir / "reachability-tile.json",
     ]
-    missing = [str(path.relative_to(REPO_ROOT)).replace("\\", "/") for path in required if not path.exists()]
+    missing = [
+        str(path.relative_to(REPO_ROOT)).replace("\\", "/")
+        for path in required
+        if not path.exists()
+    ]
     payload = {
         "verified": not missing and v3["verified"],
         "missing_outputs": missing,
@@ -866,7 +978,9 @@ def run_finalize_audit(
     summary = {
         "audit_version": VIDEO_ACTION_EQUIVALENCE_AUDIT_VERSION,
         "audit_contract_commit": metadata["audit_contract_commit"],
-        "evidence_closure_amendment_commit": metadata["evidence_closure_amendment_commit"],
+        "evidence_closure_amendment_commit": metadata[
+            "evidence_closure_amendment_commit"
+        ],
         "preliminary_inventory_digest": PRELIM_DIGEST,
         "corrected_inventory_digest": inventory["inventory_digest"],
         "corrected_inventory_version": inventory["inventory_version"],
@@ -880,7 +994,9 @@ def run_finalize_audit(
                 for item in inventory["providers"]
             ]
         ),
-        "row_action_map_digest": _sha256(_load_json(output_dir / "policy-row-action-map.json")),
+        "row_action_map_digest": _sha256(
+            _load_json(output_dir / "policy-row-action-map.json")
+        ),
         "top1_result_digest": _sha256(top1),
         "unsupported_method_status_digests": {
             "fixed_top_k": _sha256(_load_json(output_dir / "fixed-top-k-status.json")),
@@ -948,7 +1064,9 @@ def run_finalize_audit(
     return summary
 
 
-def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REACHABILITY_DIR) -> dict[str, Any]:
+def run_verify_audit(
+    output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REACHABILITY_DIR
+) -> dict[str, Any]:
     import filecmp
     import tempfile
 
@@ -956,7 +1074,12 @@ def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REA
         tmp_root = Path(tmp)
         tmp_audit = tmp_root / "video-policy-action-equivalence-audit-v1"
         tmp_reach = tmp_root / "video-policy-reachability-tile-v1"
-        generated = run_finalize_audit(tmp_audit, tmp_reach, claims_amendment_path=tmp_root / "video-stage-three-action-equivalence-claims-amendment.md")
+        generated = run_finalize_audit(
+            tmp_audit,
+            tmp_reach,
+            claims_amendment_path=tmp_root
+            / "video-stage-three-action-equivalence-claims-amendment.md",
+        )
         files_to_compare = [
             "evidence-closure.json",
             "evidence-inventory-v2.json",
@@ -978,7 +1101,11 @@ def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REA
         for name in files_to_compare:
             left = output_dir / name
             right = tmp_audit / name
-            if not left.exists() or not right.exists() or not filecmp.cmp(left, right, shallow=False):
+            if (
+                not left.exists()
+                or not right.exists()
+                or not filecmp.cmp(left, right, shallow=False)
+            ):
                 mismatches.append(name)
         reach_files = [
             "reachability-tile.json",
@@ -990,7 +1117,11 @@ def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REA
         for name in reach_files:
             left = reachability_dir / name
             right = tmp_reach / name
-            if not left.exists() or not right.exists() or not filecmp.cmp(left, right, shallow=False):
+            if (
+                not left.exists()
+                or not right.exists()
+                or not filecmp.cmp(left, right, shallow=False)
+            ):
                 mismatches.append(f"reachability:{name}")
         payload = {
             "verified": not mismatches,
@@ -1010,15 +1141,24 @@ def run_verify_audit(output_dir: Path = OUTPUT_DIR, reachability_dir: Path = REA
 def _write_unsupported_statuses(output_dir: Path) -> None:
     _write_json(
         output_dir / "fixed-top-k-status.json",
-        {"status": "fixed_top_k_not_supported", "reason": "no_per_observation_ordered_rankings"},
+        {
+            "status": "fixed_top_k_not_supported",
+            "reason": "no_per_observation_ordered_rankings",
+        },
     )
     _write_json(
         output_dir / "score-gap-status.json",
-        {"status": "score_gap_not_supported", "reason": "no_complete_per_observation_score_vectors"},
+        {
+            "status": "score_gap_not_supported",
+            "reason": "no_complete_per_observation_score_vectors",
+        },
     )
     _write_json(
         output_dir / "conformal-viability.json",
-        {"status": "conformal_not_supported", "reason": "no_complete_per_observation_score_vectors"},
+        {
+            "status": "conformal_not_supported",
+            "reason": "no_complete_per_observation_score_vectors",
+        },
     )
 
 

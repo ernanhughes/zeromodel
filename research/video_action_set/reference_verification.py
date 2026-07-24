@@ -17,10 +17,17 @@ from research.video.video_prospective_providers import (
     PROSPECTIVE_P3_VERSION,
     PROSPECTIVE_PROVIDER_IDS,
 )
-from zeromodel.video.domains.video_action_set.canonical_json import canonical_json_value, canonical_sha256
+from zeromodel.video.domains.video_action_set.canonical_json import (
+    canonical_json_value,
+    canonical_sha256,
+)
 from zeromodel.video.domains.video_action_set.contracts import EPISODE_PLAN_VERSION
-from zeromodel.video.domains.video_action_set.episode_families import episode_family_registry as _episode_family_registry
-from zeromodel.video.domains.video_action_set.reachability_composition import REACHABILITY_TRACE_VERSION
+from zeromodel.video.domains.video_action_set.episode_families import (
+    episode_family_registry as _episode_family_registry,
+)
+from zeromodel.video.domains.video_action_set.reachability_composition import (
+    REACHABILITY_TRACE_VERSION,
+)
 
 REFERENCE_VERIFICATION_VERSION = "zeromodel-video-action-set-reference-verification/v1"
 SEMANTIC_OUTCOME_VERSION = VIDEO_SEMANTIC_TOP_SET_OUTCOME_VERSION

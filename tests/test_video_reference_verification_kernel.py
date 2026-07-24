@@ -199,9 +199,9 @@ def test_valid_complete_row_reconstruction_has_frozen_identities(
     assert evidence.ranking.ranking_digest == (
         "sha256:b28cc4bbfeda234d128e7110c3395c19c99bb318e7df52f5ef7440ceb185be8b"
     )
-    assert canonical_sha256([group.to_dict() for group in evidence.ranking.tie_groups]) == (
-        "sha256:4b8c500d6ea5469e5f46749580871b1ffe9151c6fbae45adc46bc706a173471d"
-    )
+    assert canonical_sha256(
+        [group.to_dict() for group in evidence.ranking.tie_groups]
+    ) == ("sha256:4b8c500d6ea5469e5f46749580871b1ffe9151c6fbae45adc46bc706a173471d")
     assert outcome.semantic_outcome_digest == (
         "sha256:8630af8ec49a3209472ee7178d5fc23a45550055d4a74e6eb01dae9ac9455229"
     )
@@ -260,13 +260,9 @@ def test_malformed_evidence_boundaries_and_unrelated_exceptions_escape(
 ) -> None:
     non_finite = deepcopy(complete_row_fixture[0])
     non_finite["all_112_raw_scores"][0] = float("nan")  # type: ignore[index]
-    evidence, findings = verification._stored_quantized_evidence(
-        non_finite, _row_ids()
-    )
+    evidence, findings = verification._stored_quantized_evidence(non_finite, _row_ids())
     assert evidence is None
-    assert [list(finding) for finding in findings] == [
-        ["code", "message", "frame_id"]
-    ]
+    assert [list(finding) for finding in findings] == [["code", "message", "frame_id"]]
     assert findings[0]["code"] == "raw_diagnostic_digest_mismatch"
 
     missing_identity = deepcopy(complete_row_fixture[0])

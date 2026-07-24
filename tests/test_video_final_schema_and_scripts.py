@@ -31,7 +31,9 @@ from zeromodel.video.domains.video_action_set.final_access_dto import (
     FinalExecutionReceiptDTO,
     validate_final_identifier,
 )
-from zeromodel.video.domains.video_action_set.final_access_service import FinalAccessService
+from zeromodel.video.domains.video_action_set.final_access_service import (
+    FinalAccessService,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +55,7 @@ def _source_env() -> dict[str, str]:
 
 def _database_url(path: Path) -> str:
     return sqlite_database_url(path)
+
 
 def test_fresh_finalization_authority_is_reopenable(tmp_path: Path) -> None:
     path = tmp_path / "fresh-finalization.sqlite3"

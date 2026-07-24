@@ -27,7 +27,13 @@ def _load_adjudication_module():
 
 def test_phase_one_recovery_manifest_matches_attached_files() -> None:
     repo_root = Path(__file__).resolve().parents[1]
-    manifest_path = repo_root / "docs" / "results" / "visual-address-phase-one-v1" / "recovery-manifest.json"
+    manifest_path = (
+        repo_root
+        / "docs"
+        / "results"
+        / "visual-address-phase-one-v1"
+        / "recovery-manifest.json"
+    )
     recovered_root = manifest_path.parent / "recovered-originals"
     payload = json.loads(manifest_path.read_text(encoding="utf-8"))
 
@@ -37,22 +43,37 @@ def test_phase_one_recovery_manifest_matches_attached_files() -> None:
         assert path.stat().st_size == item["size"], item["name"]
         import hashlib
 
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"], item["name"]
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"], item[
+            "name"
+        ]
 
 
 @pytest.mark.slow
-def test_system_b_adjudication_writes_run_manifest_and_row_confusion_atlas(tmp_path: Path) -> None:
+def test_system_b_adjudication_writes_run_manifest_and_row_confusion_atlas(
+    tmp_path: Path,
+) -> None:
     module = _load_adjudication_module()
     summary = module.run(
         output_dir=tmp_path,
         variants_per_family=1,
-        argv=["python", "examples/arcade_visual_system_b_adjudication.py", "--variants-per-family", "1"],
+        argv=[
+            "python",
+            "examples/arcade_visual_system_b_adjudication.py",
+            "--variants-per-family",
+            "1",
+        ],
         command="python examples/arcade_visual_system_b_adjudication.py --variants-per-family 1",
     )
 
-    final_report = json.loads((tmp_path / "final-report.json").read_text(encoding="utf-8"))
-    run_manifest = json.loads((tmp_path / "run-manifest.json").read_text(encoding="utf-8"))
-    row_confusion = json.loads((tmp_path / "row-confusion-atlas.json").read_text(encoding="utf-8"))
+    final_report = json.loads(
+        (tmp_path / "final-report.json").read_text(encoding="utf-8")
+    )
+    run_manifest = json.loads(
+        (tmp_path / "run-manifest.json").read_text(encoding="utf-8")
+    )
+    row_confusion = json.loads(
+        (tmp_path / "row-confusion-atlas.json").read_text(encoding="utf-8")
+    )
 
     assert summary["run_manifest_digest"] == run_manifest["run_manifest_digest"]
     assert final_report["run_manifest_digest"] == run_manifest["run_manifest_digest"]

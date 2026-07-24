@@ -9,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_fast_runner_blocks_opt_in_test_tiers() -> None:
     runner = (REPO_ROOT / "scripts" / "run_fast_tests.py").read_text(encoding="utf-8")
 
-    assert 'FAST_SUITE_BUDGET_SECONDS = 120' in runner
+    assert "FAST_SUITE_BUDGET_SECONDS = 120" in runner
     assert 'FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}' in runner
     assert "Run integration or slow tests explicitly with pytest instead." in runner
 
@@ -34,7 +34,10 @@ def test_pytest_markers_keep_slow_distinct_from_integration() -> None:
     pyproject = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     conftest = (REPO_ROOT / "tests" / "conftest.py").read_text(encoding="utf-8")
 
-    assert "slow: supported production tests that exceed the fast-suite time budget" in pyproject
+    assert (
+        "slow: supported production tests that exceed the fast-suite time budget"
+        in pyproject
+    )
     assert "deprecated compatibility alias" not in pyproject
     assert 'run_integration = bool(config.getoption("--run-integration"))' in conftest
     assert 'run_slow = bool(config.getoption("--run-slow"))' in conftest
@@ -45,11 +48,11 @@ def test_pytest_markers_keep_slow_distinct_from_integration() -> None:
 
 
 def test_integration_workflow_supplies_both_opt_in_flags_for_combined_marker() -> None:
-    workflow = (
-        REPO_ROOT / ".github" / "workflows" / "integration.yml"
-    ).read_text(encoding="utf-8")
+    workflow = (REPO_ROOT / ".github" / "workflows" / "integration.yml").read_text(
+        encoding="utf-8"
+    )
     command = workflow.split("python -m pytest -q", 1)[1].split("--durations=50", 1)[0]
 
-    assert '--run-integration' in command
-    assert '--run-slow' in command
+    assert "--run-integration" in command
+    assert "--run-slow" in command
     assert '-m "integration or slow"' in command

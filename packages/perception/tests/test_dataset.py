@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 
 from zeromodel.perception import (
+    DATASET_MANIFEST_VERSION,
+    SPLIT_ASSIGNMENT_VERSION,
     DiscreteActionSchemaDTO,
     InMemoryPerceptionDatasetStore,
     PerceptionDatasetError,
@@ -63,11 +65,36 @@ def test_manifest_identity_and_splits_are_order_independent() -> None:
 
     assert forward == reverse
     assert forward.dataset_id == reverse.dataset_id
+    assert forward.version == DATASET_MANIFEST_VERSION
+    assert {item.version for item in forward.split_assignments} == {
+        SPLIT_ASSIGNMENT_VERSION
+    }
     assert {item.split for item in forward.split_assignments} <= {
         "train",
         "validation",
         "test",
     }
+
+
+def test_all_interactions_in_one_sequence_share_one_split() -> None:
+    interactions = []
+    encoder_id = ""
+    for step_index in range(20):
+        interaction, encoder_id = _interaction(
+            step_index,
+            "LEFT" if step_index % 2 == 0 else "RIGHT",
+            sequence_id="episode-owned-as-one-unit",
+            step_index=step_index,
+        )
+        interactions.append(interaction)
+
+    manifest = build_dataset_manifest(
+        interactions,
+        source_encoder_spec_ids=[encoder_id],
+    )
+
+    assert len({item.split for item in manifest.split_assignments}) == 1
+    assert not any(item.code == "sequence_crosses_splits" for item in manifest.findings)
 
 
 def test_identical_pixels_with_conflicting_actions_are_rejected() -> None:
@@ -83,6 +110,40 @@ def test_identical_pixels_with_conflicting_actions_are_rejected() -> None:
         reject_errors=False,
     )
     assert manifest.findings[0].code == "conflicting_actions_for_identical_source"
+
+
+def test_identical_pixels_with_same_action_cannot_cross_splits() -> None:
+    interactions = []
+    encoder_id = ""
+    for index in range(64):
+        interaction, encoder_id = _interaction(
+            7,
+            "LEFT",
+            sequence_id=f"independent-episode-{index}",
+            step_index=0,
+        )
+        interactions.append(interaction)
+
+    manifest = build_dataset_manifest(
+        interactions,
+        source_encoder_spec_ids=[encoder_id],
+        reject_errors=False,
+    )
+
+    assert len({item.split for item in manifest.split_assignments}) > 1
+    finding = next(
+        item for item in manifest.findings if item.code == "identical_source_across_splits"
+    )
+    assert finding.severity == "error"
+    assert set(finding.interaction_ids) == {
+        item.interaction_id for item in interactions
+    }
+
+    with pytest.raises(PerceptionDatasetError, match="identical_source_across_splits"):
+        build_dataset_manifest(
+            interactions,
+            source_encoder_spec_ids=[encoder_id],
+        )
 
 
 def test_duplicate_sequence_steps_are_rejected() -> None:
@@ -136,10 +197,16 @@ def test_in_memory_store_is_idempotent_and_rejects_identity_collision() -> None:
         store.put(conflicting)
 
 
-def test_manifest_requires_interactions_and_encoder_identity() -> None:
+def test_manifest_requires_interactions_encoder_identity_and_seed() -> None:
     with pytest.raises(PerceptionDatasetError, match="at least one interaction"):
         build_dataset_manifest([], source_encoder_spec_ids=["sha256:x"])
 
     interaction, _ = _interaction(1, "LEFT")
     with pytest.raises(PerceptionDatasetError, match="source_encoder_spec_ids"):
         build_dataset_manifest([interaction], source_encoder_spec_ids=[])
+    with pytest.raises(PerceptionDatasetError, match="split_seed"):
+        build_dataset_manifest(
+            [interaction],
+            source_encoder_spec_ids=["sha256:x"],
+            split_seed="",
+        )

@@ -94,12 +94,8 @@ def test_duplicate_sequence_steps_are_rejected() -> None:
 
 
 def test_non_monotonic_timestamps_are_rejected() -> None:
-    first, encoder_id = _interaction(
-        1, "LEFT", step_index=0, observed_at_ns=20
-    )
-    second, _ = _interaction(
-        2, "RIGHT", step_index=1, observed_at_ns=10
-    )
+    first, encoder_id = _interaction(1, "LEFT", step_index=0, observed_at_ns=20)
+    second, _ = _interaction(2, "RIGHT", step_index=1, observed_at_ns=10)
 
     with pytest.raises(PerceptionDatasetError, match="non_monotonic_sequence_time"):
         build_dataset_manifest([first, second], source_encoder_spec_ids=[encoder_id])
@@ -107,7 +103,11 @@ def test_non_monotonic_timestamps_are_rejected() -> None:
 
 def test_manifest_rejects_mixed_action_schemas() -> None:
     interaction, encoder_id = _interaction(1, "LEFT")
-    changed = replace(interaction, action_schema_id="sha256:other")
+    changed = replace(
+        interaction,
+        interaction_id="sha256:changed-interaction",
+        action_schema_id="sha256:other",
+    )
 
     with pytest.raises(PerceptionDatasetError, match="one action schema"):
         build_dataset_manifest(
@@ -128,11 +128,7 @@ def test_in_memory_store_is_idempotent_and_rejects_identity_collision() -> None:
     assert store.get(manifest.dataset_id) == manifest
     assert store.list_ids() == (manifest.dataset_id,)
 
-    conflicting = replace(manifest, findings=(
-        replace(
-            manifest.findings[0], detail="changed"
-        ),
-    )) if manifest.findings else replace(
+    conflicting = replace(
         manifest,
         source_encoder_spec_ids=("sha256:different",),
     )

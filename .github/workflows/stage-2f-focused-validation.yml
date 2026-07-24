@@ -1,0 +1,42 @@
+name: Stage 2F focused validation
+
+on:
+  push:
+    branches:
+      - stage-2f-semantic-annotation-ablation
+  pull_request:
+    branches:
+      - main
+    paths:
+      - examples/arcade_png_interventions.py
+      - examples/arcade_png_representation_benchmark.py
+      - examples/arcade_png_representation_comparison.py
+      - tests/test_arcade_png_interventions.py
+      - tests/test_arcade_png_representation_benchmark.py
+      - .github/workflows/stage-2f-focused-validation.yml
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+          python -m pip install -e packages/core -e packages/analysis -e packages/observation -e packages/vision -e packages/video -e packages/sqlalchemy -e packages/artifacts -e packages/trust -e packages/navigation
+      - name: Run Stage 2F focused tests
+        run: |
+          python -m pytest tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py --run-integration -q
+      - name: Run touched-file Ruff lint
+        run: |
+          python -m ruff check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py
+      - name: Run touched-file Ruff format check
+        run: |
+          python -m ruff format --check examples/arcade_png_interventions.py examples/arcade_png_representation_benchmark.py examples/arcade_png_representation_comparison.py tests/test_arcade_png_interventions.py tests/test_arcade_png_representation_benchmark.py

@@ -44,6 +44,13 @@ from .inference import (
     BaselineTrainingExampleDTO, NeighborEvidenceDTO, PerceptionInferenceError,
     fit_baseline_nearest_neighbor, predict_baseline_action,
 )
+from .promotion import (
+    CALIBRATION_SEMANTICS, MODEL_CALIBRATION_VERSION, MODEL_PROMOTION_VERSION,
+    PROMOTED_MODEL_KINDS, PROMOTION_DECISION_VERSION, PROMOTION_POLICY_VERSION,
+    PROMOTION_SEMANTICS, ModelCalibrationDTO, PerceptionPromotionError,
+    PromotedPerceptionModelDTO, PromotionDecisionDTO, PromotionPolicyDTO,
+    calibrate_comparison_candidates, promote_perception_model,
+)
 from .representation import (
     ACTION_SCHEMA_VERSION, SOURCE_ENCODER_VERSION, TARGET_ENCODER_VERSION,
     DiscreteActionSchemaDTO, PerceptionRepresentationError,
@@ -95,6 +102,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P9"
+PERCEPTION_STAGE = "P10"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from zeromodel.perception import (
+    FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
     BaselineInferenceConfigDTO,
@@ -14,9 +15,10 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_four_a_public_contract() -> None:
+def test_phase_four_b_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P4A"
+    assert PERCEPTION_STAGE == "P4B"
+    assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert SourceImageEncoderSpecDTO().color_space == "RGB"
     assert DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT"]).labels == (
         "LEFT",

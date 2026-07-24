@@ -1,9 +1,7 @@
-"""Learned temporal inference and held-out single-frame comparison for Stage P9.
+"""Learned temporal inference and held-out single-frame comparison.
 
-P9 fits the same deterministic ridge family used by P5 over P8 temporal montage
-fields. Comparison is performed on aligned held-out interactions so any measured
-change is attributable to the declared temporal representation rather than a
-change of solver family. Metrics remain empirical and split-owned.
+P16C canonicalizes temporal training examples before every numerical operation. Caller
+order therefore cannot change fitted coefficients or content-addressed model identity.
 """
 
 from __future__ import annotations
@@ -29,7 +27,7 @@ from .translator import (
     predict_target_vpm,
 )
 
-TEMPORAL_TRANSLATOR_VERSION: Final = "perception-temporal-translator/1"
+TEMPORAL_TRANSLATOR_VERSION: Final = "perception-temporal-translator/2"
 TEMPORAL_PREDICTION_VERSION: Final = "perception-temporal-prediction/1"
 TEMPORAL_COMPARISON_VERSION: Final = "perception-temporal-comparison/1"
 TEMPORAL_FEATURE_SEMANTICS: Final = (
@@ -41,10 +39,11 @@ TEMPORAL_COMPARISON_SEMANTICS: Final = (
 TEMPORAL_REJECTION_SEMANTICS: Final = (
     "reject_when_top_two_margin_below_declared_comparison_threshold"
 )
+TEMPORAL_FIT_ORDER_SEMANTICS: Final = "canonical_temporal_source_id_order_before_numerical_fit"
 
 
 class PerceptionTemporalInferenceError(ValueError):
-    """Raised when P9 temporal fitting or comparison contracts are violated."""
+    """Raised when temporal fitting or comparison contracts are violated."""
 
 
 def _canonical_json(payload: Mapping[str, object]) -> bytes:
@@ -95,6 +94,7 @@ class TemporalTranslatorDTO:
     target_score_semantics: str
     coefficient_semantics: str
     config: TranslatorConfigDTO
+    fit_order_semantics: str = TEMPORAL_FIT_ORDER_SEMANTICS
     version: str = TEMPORAL_TRANSLATOR_VERSION
 
     def __post_init__(self) -> None:
@@ -132,6 +132,8 @@ class TemporalTranslatorDTO:
             raise PerceptionTemporalInferenceError("unsupported target score semantics")
         if self.coefficient_semantics != COEFFICIENT_SEMANTICS:
             raise PerceptionTemporalInferenceError("unsupported coefficient semantics")
+        if self.fit_order_semantics != TEMPORAL_FIT_ORDER_SEMANTICS:
+            raise PerceptionTemporalInferenceError("unsupported temporal fit-order semantics")
         values = np.asarray(self.coefficients, dtype=np.float64)
         intercepts = np.asarray(self.intercepts, dtype=np.float64)
         if not np.all(np.isfinite(values)) or not np.all(np.isfinite(intercepts)):
@@ -253,14 +255,18 @@ def fit_temporal_translator(
     training_split: str = "train",
     config: TranslatorConfigDTO | None = None,
 ) -> TemporalTranslatorDTO:
-    """Fit an inspectable ridge translator over deterministic temporal montage fields."""
+    """Fit a ridge translator after canonicalizing source order."""
 
     if training_split not in {"train", "validation", "test", "all"}:
         raise PerceptionTemporalInferenceError("unsupported temporal training split")
     if not temporal_sources:
         raise PerceptionTemporalInferenceError("temporal fitting requires examples")
+    ordered_sources = tuple(sorted(temporal_sources, key=lambda item: item.temporal_source_id))
+    source_ids = tuple(item.temporal_source_id for item in ordered_sources)
+    if len(source_ids) != len(set(source_ids)):
+        raise PerceptionTemporalInferenceError("temporal source identities must be unique")
     resolved = config or TranslatorConfigDTO()
-    for item in temporal_sources:
+    for item in ordered_sources:
         if item.temporal_window_spec_id != temporal_window_spec.temporal_window_spec_id:
             raise PerceptionTemporalInferenceError("temporal source window spec mismatch")
         if item.action_label not in action_schema.labels:
@@ -271,11 +277,11 @@ def fit_temporal_translator(
     x = np.vstack(
         [
             _feature_vector(item.montage_source_vpm, temporal_field_schema, field_ids)
-            for item in temporal_sources
+            for item in ordered_sources
         ]
     )
-    y = np.zeros((len(temporal_sources), len(action_schema.labels)), dtype=np.float64)
-    for row_index, item in enumerate(temporal_sources):
+    y = np.zeros((len(ordered_sources), len(action_schema.labels)), dtype=np.float64)
+    for row_index, item in enumerate(ordered_sources):
         y[row_index, action_schema.index_of(item.action_label)] = 1.0
     design = np.column_stack((np.ones(x.shape[0], dtype=np.float64), x))
     regularizer = np.eye(design.shape[1], dtype=np.float64) * resolved.ridge_alpha
@@ -286,13 +292,13 @@ def fit_temporal_translator(
         tuple(float(value) for value in parameters[1:, action_index])
         for action_index in range(len(action_schema.labels))
     )
-    source_ids = tuple(sorted(item.temporal_source_id for item in temporal_sources))
     payload: Mapping[str, object] = {
         "action_labels": list(action_schema.labels),
         "action_schema_id": action_schema.action_schema_id,
         "coefficient_semantics": COEFFICIENT_SEMANTICS,
         "coefficients": [list(row) for row in coefficients],
         "config": resolved.canonical_payload(),
+        "fit_order_semantics": TEMPORAL_FIT_ORDER_SEMANTICS,
         "intercepts": list(intercepts),
         "source_feature_semantics": TEMPORAL_FEATURE_SEMANTICS,
         "target_score_semantics": TARGET_SCORE_SEMANTICS,
@@ -345,10 +351,7 @@ def predict_temporal_action(
         np.asarray(translator.coefficients, dtype=np.float64) @ vector
     )
     clipped = np.clip(raw, 0.0, 1.0)
-    ranked = sorted(
-        zip(translator.action_labels, clipped.tolist()),
-        key=lambda item: (-item[1], item[0]),
-    )
+    ranked = sorted(zip(translator.action_labels, clipped.tolist()), key=lambda item: (-item[1], item[0]))
     scores = tuple(
         TargetActionScoreDTO(action_label=label, score=float(score), rank=index + 1)
         for index, (label, score) in enumerate(ranked)
@@ -440,9 +443,7 @@ def compare_single_and_temporal_inference(
             rejection_threshold=rejection_threshold,
         )
         single_status = (
-            "accepted"
-            if single_prediction.margin >= rejection_threshold
-            else "rejected_ambiguous"
+            "accepted" if single_prediction.margin >= rejection_threshold else "rejected_ambiguous"
         )
         expected = temporal_source.action_label
         single_is_correct = single_prediction.selected_action == expected
@@ -471,14 +472,10 @@ def compare_single_and_temporal_inference(
 
     conflict_rows = [item for item in rows if item.conflict_group]
     conflict_single_accuracy = (
-        None
-        if not conflict_rows
-        else sum(item.single_correct for item in conflict_rows) / len(conflict_rows)
+        None if not conflict_rows else sum(item.single_correct for item in conflict_rows) / len(conflict_rows)
     )
     conflict_temporal_accuracy = (
-        None
-        if not conflict_rows
-        else sum(item.temporal_correct for item in conflict_rows) / len(conflict_rows)
+        None if not conflict_rows else sum(item.temporal_correct for item in conflict_rows) / len(conflict_rows)
     )
     conflict_improvement = (
         None

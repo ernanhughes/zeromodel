@@ -12,6 +12,7 @@ import json
 from dataclasses import dataclass
 from typing import Final, Mapping
 
+from .fields import VPMFieldSchemaDTO
 from .partitions import DatasetPartitionDTO
 from .promoted_inference import (
     PromotedTestEvaluationReportDTO,
@@ -26,7 +27,6 @@ from .promotion import (
     promote_perception_model,
 )
 from .representation import DiscreteActionSchemaDTO, SourceVPMDTO
-from .fields import VPMFieldSchemaDTO
 from .temporal import TemporalSourceVPMDTO
 from .temporal_inference import (
     TemporalInferenceComparisonReportDTO,
@@ -79,15 +79,25 @@ class PartitionOwnedComparisonReportDTO:
                 self.action_schema_id,
             )
         ):
-            raise PerceptionPartitionGovernanceError("owned comparison identities must be non-empty")
+            raise PerceptionPartitionGovernanceError(
+                "owned comparison identities must be non-empty"
+            )
         if self.split not in {"validation", "test"}:
-            raise PerceptionPartitionGovernanceError("owned comparison split must be validation or test")
+            raise PerceptionPartitionGovernanceError(
+                "owned comparison split must be validation or test"
+            )
         if self.comparison_report.split != self.split:
-            raise PerceptionPartitionGovernanceError("comparison split does not match partition ownership")
+            raise PerceptionPartitionGovernanceError(
+                "comparison split does not match partition ownership"
+            )
         if self.semantics != PARTITION_GOVERNANCE_SEMANTICS:
-            raise PerceptionPartitionGovernanceError("unsupported partition governance semantics")
+            raise PerceptionPartitionGovernanceError(
+                "unsupported partition governance semantics"
+            )
         if self.version != PARTITION_OWNED_COMPARISON_VERSION:
-            raise PerceptionPartitionGovernanceError("unsupported owned comparison version")
+            raise PerceptionPartitionGovernanceError(
+                "unsupported owned comparison version"
+            )
 
 
 @dataclass(frozen=True)
@@ -109,13 +119,21 @@ class PartitionOwnedTestEvaluationReportDTO:
                 self.action_schema_id,
             )
         ):
-            raise PerceptionPartitionGovernanceError("owned test identities must be non-empty")
+            raise PerceptionPartitionGovernanceError(
+                "owned test identities must be non-empty"
+            )
         if self.test_report.split != "test":
-            raise PerceptionPartitionGovernanceError("owned final evaluation must be test-owned")
+            raise PerceptionPartitionGovernanceError(
+                "owned final evaluation must be test-owned"
+            )
         if self.semantics != PARTITION_GOVERNANCE_SEMANTICS:
-            raise PerceptionPartitionGovernanceError("unsupported partition governance semantics")
+            raise PerceptionPartitionGovernanceError(
+                "unsupported partition governance semantics"
+            )
         if self.version != PARTITION_OWNED_TEST_VERSION:
-            raise PerceptionPartitionGovernanceError("unsupported owned test version")
+            raise PerceptionPartitionGovernanceError(
+                "unsupported owned test version"
+            )
 
 
 def bind_comparison_report_to_partition(
@@ -129,9 +147,13 @@ def bind_comparison_report_to_partition(
             "comparison ownership requires a validation or test partition"
         )
     if report.split != partition.split:
-        raise PerceptionPartitionGovernanceError("comparison report split does not match partition")
+        raise PerceptionPartitionGovernanceError(
+            "comparison report split does not match partition"
+        )
     report_ids = tuple(sorted(item.interaction_id for item in report.examples))
-    unowned = tuple(value for value in report_ids if not partition.owns_interaction(value))
+    unowned = tuple(
+        value for value in report_ids if not partition.owns_interaction(value)
+    )
     if unowned:
         raise PerceptionPartitionGovernanceError(
             f"comparison contains interactions outside partition: {list(unowned)}"
@@ -164,7 +186,9 @@ def calibrate_partition_owned_candidates(
     """Calibrate only from a manifest-owned validation partition."""
 
     if owned_report.split != "validation":
-        raise PerceptionPartitionGovernanceError("calibration requires validation partition ownership")
+        raise PerceptionPartitionGovernanceError(
+            "calibration requires validation partition ownership"
+        )
     return calibrate_comparison_candidates(owned_report.comparison_report, policy=policy)
 
 
@@ -176,7 +200,9 @@ def promote_partition_owned_model(
     """Promote only from a manifest-owned validation partition."""
 
     if owned_report.split != "validation":
-        raise PerceptionPartitionGovernanceError("promotion requires validation partition ownership")
+        raise PerceptionPartitionGovernanceError(
+            "promotion requires validation partition ownership"
+        )
     return promote_perception_model(owned_report.comparison_report, policy=policy)
 
 
@@ -192,14 +218,22 @@ def evaluate_partition_owned_model_on_test(
     single_field_schema: VPMFieldSchemaDTO | None = None,
     temporal_field_schema: VPMFieldSchemaDTO | None = None,
 ) -> PartitionOwnedTestEvaluationReportDTO:
-    """Evaluate the frozen model only against an exact manifest-owned test partition."""
+    """Evaluate the frozen model against an exact manifest-owned test partition."""
 
     if partition.split != "test":
-        raise PerceptionPartitionGovernanceError("final evaluation requires test partition ownership")
+        raise PerceptionPartitionGovernanceError(
+            "final evaluation requires test partition ownership"
+        )
     if partition.action_schema_id != action_schema.action_schema_id:
-        raise PerceptionPartitionGovernanceError("test partition action schema mismatch")
-    target_ids = tuple(sorted(item.target_interaction_id for item in test_temporal_sources))
-    unowned = tuple(value for value in target_ids if not partition.owns_interaction(value))
+        raise PerceptionPartitionGovernanceError(
+            "test partition action schema mismatch"
+        )
+    target_ids = tuple(
+        sorted(item.target_interaction_id for item in test_temporal_sources)
+    )
+    unowned = tuple(
+        value for value in target_ids if not partition.owns_interaction(value)
+    )
     if unowned:
         raise PerceptionPartitionGovernanceError(
             f"test evaluation contains interactions outside partition: {list(unowned)}"

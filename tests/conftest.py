@@ -106,6 +106,45 @@ def cache_stage6_materialization_plans(request: pytest.FixtureRequest):
         benchmark._episode_plans_for_split = original
 
 
+@pytest.fixture(autouse=True)
+def isolate_video_action_set_manifest_test(
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Keep the manifest unit test outside the durable SQL ownership boundary."""
+    if request.node.name != "test_build_split_writes_overlap_and_observation_manifests":
+        yield
+        return
+
+    import research.benchmarks.video_action_set_benchmark as benchmark
+
+    stored_records: list[dict[str, Any]] = []
+
+    class FakeVideoActionSetRuntime:
+        def load_identity(self, repo_root: Any) -> Any:
+            return benchmark.load_identity(repo_root)
+
+        def save_episode_plans(self, plans: Any) -> Any:
+            return plans
+
+        def save_observation_records(self, records: Any) -> Any:
+            stored_records[:] = list(records)
+            return tuple(records)
+
+        def list_observation_records(self, **_kwargs: Any) -> tuple[dict[str, Any], ...]:
+            return tuple(stored_records)
+
+    class FakeRuntime:
+        video_action_set = FakeVideoActionSetRuntime()
+
+    monkeypatch.setattr(
+        benchmark._build_orchestration,
+        "_build_durable_runtime",
+        lambda _output_dir: FakeRuntime(),
+    )
+    yield
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     group = parser.getgroup("zeromodel test tiers")
     group.addoption(

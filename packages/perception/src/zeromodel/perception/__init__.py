@@ -38,14 +38,17 @@ from .fields import (
     reconstruct_source_array, validate_source_for_schema,
 )
 from .health import (
-    OPERATIONAL_DRIFT_POLICY_VERSION, OPERATIONAL_HEALTH_FINDING_VERSION,
-    OPERATIONAL_HEALTH_METRICS, OPERATIONAL_HEALTH_REPORT_VERSION,
-    OPERATIONAL_HEALTH_SEMANTICS, OPERATIONAL_HEALTH_STATUSES,
-    OPERATIONAL_REFERENCE_PROFILE_VERSION, OPERATIONAL_REFERENCE_SEMANTICS,
-    ActionFrequencyDTO, OperationalDriftPolicyDTO,
+    OPERATIONAL_HEALTH_FINDING_VERSION, OPERATIONAL_HEALTH_METRICS,
+    OPERATIONAL_HEALTH_REPORT_VERSION, OPERATIONAL_HEALTH_SEMANTICS,
+    OPERATIONAL_HEALTH_STATUSES, OPERATIONAL_REFERENCE_PROFILE_VERSION,
+    OPERATIONAL_REFERENCE_SEMANTICS, ActionFrequencyDTO,
     OperationalHealthFindingDTO, OperationalHealthReportDTO,
     OperationalReferenceProfileDTO, PerceptionOperationalHealthError,
-    build_operational_reference_profile, diagnose_operational_health,
+    build_operational_reference_profile,
+)
+from .gated_health import (
+    OPERATIONAL_DRIFT_POLICY_VERSION, OPERATIONAL_EVIDENCE_SEMANTICS,
+    OperationalDriftPolicyDTO, diagnose_operational_health,
 )
 from .inference import (
     BASELINE_MODEL_VERSION, CONFIDENCE_SEMANTICS, DISTANCE_SEMANTICS,

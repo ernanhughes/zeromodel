@@ -37,6 +37,16 @@ from .fields import (
     build_grid_field_schema, extract_source_fields, mask_source_fields,
     reconstruct_source_array, validate_source_for_schema,
 )
+from .health import (
+    OPERATIONAL_DRIFT_POLICY_VERSION, OPERATIONAL_HEALTH_FINDING_VERSION,
+    OPERATIONAL_HEALTH_METRICS, OPERATIONAL_HEALTH_REPORT_VERSION,
+    OPERATIONAL_HEALTH_SEMANTICS, OPERATIONAL_HEALTH_STATUSES,
+    OPERATIONAL_REFERENCE_PROFILE_VERSION, OPERATIONAL_REFERENCE_SEMANTICS,
+    ActionFrequencyDTO, OperationalDriftPolicyDTO,
+    OperationalHealthFindingDTO, OperationalHealthReportDTO,
+    OperationalReferenceProfileDTO, PerceptionOperationalHealthError,
+    build_operational_reference_profile, diagnose_operational_health,
+)
 from .inference import (
     BASELINE_MODEL_VERSION, CONFIDENCE_SEMANTICS, DISTANCE_SEMANTICS,
     PREDICTION_VERSION, ActionCandidateDTO, BaselineInferenceConfigDTO,
@@ -142,6 +152,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P15"
+PERCEPTION_STAGE = "P16"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

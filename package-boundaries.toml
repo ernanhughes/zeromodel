@@ -37,6 +37,14 @@ depends_on = ["core", "observation"]
 publishable = true
 owned_prefixes = ["zeromodel.vision"]
 
+[packages.perception]
+distribution = "zeromodel-perception"
+namespace = "zeromodel.perception"
+source_root = "packages/perception/src"
+depends_on = ["core", "observation"]
+publishable = true
+owned_prefixes = ["zeromodel.perception"]
+
 [packages.video]
 distribution = "zeromodel-video"
 namespace = "zeromodel.video"

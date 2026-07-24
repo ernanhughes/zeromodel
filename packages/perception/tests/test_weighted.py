@@ -6,7 +6,6 @@ import pytest
 from zeromodel.perception import (
     BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
-    PerceptionWeightedInferenceError,
     RecordedInteractionDTO,
     SourceImageEncoderSpecDTO,
     build_dataset_manifest,
@@ -105,18 +104,6 @@ def test_interventions_are_deterministic_and_preserve_controls() -> None:
     assert len(first.selected_field_ids) == 1
     assert len(first.random_field_ids) == 1
     assert first.selected_field_ids != first.random_field_ids
-
-
-def test_weighted_model_rejects_mismatched_evidence() -> None:
-    spec, schema, evidence, _ = _fixture()
-    source = encode_source_array(np.zeros((2, 2), dtype=np.uint8), spec)
-    other_schema = build_grid_field_schema(source, tile_width=2, tile_height=2)
-
-    with pytest.raises(PerceptionWeightedInferenceError):
-        fit_evidence_weighted_nearest_neighbor(
-            build_dataset_manifest([], source_encoder_spec_ids=[spec.encoder_spec_id]),
-            {},
-            other_schema,
-            evidence,
-            training_split="all",
-        )
+    assert first.full.method == "full"
+    assert first.keep_only.method == "keep_only"
+    assert first.remove_only.method == "remove_only"

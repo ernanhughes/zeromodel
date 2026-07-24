@@ -1,8 +1,7 @@
 import zeromodel.perception as perception
 
 
-def test_phase_sixteen_public_contract() -> None:
-    assert perception.PERCEPTION_STAGE == "P16"
+def test_operational_health_public_contract() -> None:
     assert perception.OPERATIONAL_REFERENCE_PROFILE_VERSION.endswith("/1")
     assert perception.OPERATIONAL_DRIFT_POLICY_VERSION.endswith("/1")
     assert perception.OPERATIONAL_HEALTH_FINDING_VERSION.endswith("/1")

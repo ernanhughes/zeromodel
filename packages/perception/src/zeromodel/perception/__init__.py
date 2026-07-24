@@ -60,6 +60,15 @@ from .temporal import (
     TemporalWindowSpecDTO, build_temporal_source_vpms,
     diagnose_temporal_state_completeness,
 )
+from .temporal_inference import (
+    TEMPORAL_COMPARISON_SEMANTICS, TEMPORAL_COMPARISON_VERSION,
+    TEMPORAL_FEATURE_SEMANTICS, TEMPORAL_PREDICTION_VERSION,
+    TEMPORAL_REJECTION_SEMANTICS, TEMPORAL_TRANSLATOR_VERSION,
+    PerceptionTemporalInferenceError, TemporalComparisonExampleDTO,
+    TemporalInferenceComparisonReportDTO, TemporalPredictionDTO,
+    TemporalTranslatorDTO, compare_single_and_temporal_inference,
+    fit_temporal_translator, predict_temporal_action,
+)
 from .translator import (
     COEFFICIENT_SEMANTICS, SOURCE_FEATURE_SEMANTICS, TARGET_SCORE_SEMANTICS,
     TRANSLATOR_PREDICTION_VERSION, TRANSLATOR_VERSION,
@@ -86,6 +95,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P8"
+PERCEPTION_STAGE = "P9"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

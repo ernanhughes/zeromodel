@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import numpy as np
 from zeromodel.perception import (
+    CALIBRATION_SEMANTICS,
     COEFFICIENT_SEMANTICS,
     DIFFERENCE_SURFACE_SEMANTICS,
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
+    PROMOTION_SEMANTICS,
     RECONSTRUCTION_ERROR_SEMANTICS,
     REGISTRATION_SEMANTICS,
     REJECTION_SEMANTICS,
@@ -21,6 +23,7 @@ from zeromodel.perception import (
     BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
     InMemoryPerceptionDatasetStore,
+    PromotionPolicyDTO,
     SourceImageEncoderSpecDTO,
     TemporalWindowSpecDTO,
     TranslatorConfigDTO,
@@ -29,9 +32,9 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_nine_public_contract() -> None:
+def test_phase_ten_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P9"
+    assert PERCEPTION_STAGE == "P10"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"
@@ -60,6 +63,13 @@ def test_phase_nine_public_contract() -> None:
     assert TEMPORAL_REJECTION_SEMANTICS == (
         "reject_when_top_two_margin_below_declared_comparison_threshold"
     )
+    assert CALIBRATION_SEMANTICS == (
+        "validation_margin_threshold_maximizing_accepted_accuracy_then_coverage"
+    )
+    assert PROMOTION_SEMANTICS == (
+        "validation_candidate_selection_by_accepted_accuracy_accuracy_coverage_then_simplicity"
+    )
+    assert PromotionPolicyDTO().minimum_coverage == 0.5
     assert TemporalWindowSpecDTO(frame_count=2).frame_count == 2
     assert TranslatorConfigDTO().ridge_alpha == 1e-6
     assert SourceImageEncoderSpecDTO().color_space == "RGB"

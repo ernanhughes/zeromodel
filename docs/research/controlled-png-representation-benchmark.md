@@ -81,6 +81,10 @@ All recipes are deterministic and content-addressed
 | `cooldown-dual-v1` | unlabelled | cooldown via shape **and** colour, no text |
 | `cooldown-redundant-v1` | unlabelled | the dual encoding, duplicated at a second declared location (an explicit `cooldown_marker_duplicate` operation) |
 | `lane-enhanced-v1` | unlabelled | cooldown unchanged from `unlabelled-v1`; stronger lane separators plus alternating triangle/diamond markers repeated above and below the lane band; no numeric lane labels |
+| `footer-only-v1` | unlabelled | a single structured reserved footer band (distinct fill + one top border line); no numerals, no cooldown text |
+| `lane-numerals-v1` | unlabelled | the footer band plus the numeral `0`..`6` centred under each of the seven lane *regions* (never at the eight boundary lines - see Stage 2F below); no cooldown text |
+| `cooldown-text-v1` | unlabelled | explicit `READY`/`BLOCKED` text next to the cooldown indicator; no footer, no numerals |
+| `semantic-labelled-v1` | unlabelled | footer band + lane numerals + cooldown text together - the explicitly factored replacement for `labelled-v1` (Stage 2F) |
 | `combined-v1` | unlabelled | the operations of one cooldown-family variant plus one lane-family variant, named explicitly via `--combined-cooldown`/`--combined-lane` - never hard-coded |
 
 Every cooldown operation is a **pure** function of `(image, declared parameters)`:
@@ -184,6 +188,11 @@ Declared target metrics per family:
   improving is the required signal (checked in addition to the generic set).
 - lane family (`lane-enhanced-v1`): `tank_column` or `target_column` factor
   correctness improving is the required signal.
+- semantic family (`footer-only-v1`, `lane-numerals-v1`, `cooldown-text-v1`,
+  `semantic-labelled-v1`, Stage 2F): `exact_count` alone -
+  `SEMANTIC_TARGET_METRICS` in `arcade_png_representation_comparison.py`,
+  narrower than the generic set. See
+  `docs/reviews/stage-2f-semantic-annotation-ablation.md`.
 
 `combined-v1` must never be selected before its isolated cooldown and lane
 family variants have been evaluated in the same experiment (or already
@@ -212,6 +221,44 @@ local-results/<experiment-name>/
 results. A curated real-provider result belongs under
 `docs/results/controlled-png-representation-v1/` as **future work**, after a
 real run has been executed and reviewed - not part of this change.
+
+## Running the Stage 2F factorial ablation locally
+
+`docs/reviews/stage-2f-semantic-annotation-ablation.md` covers the design
+rationale in full. To execute the five required variants against a real
+local Ollama model:
+
+```powershell
+python .\examples\arcade_png_representation_benchmark.py `
+  --backend ollama `
+  --model qwen3.5:latest `
+  --fixture smoke `
+  --variants unlabelled-v1,footer-only-v1,lane-numerals-v1,cooldown-text-v1,semantic-labelled-v1 `
+  --store sqlite `
+  --sqlite-path <path> `
+  --output-dir <path> `
+  --compile-reports `
+  --seed 0 `
+  --timeout 20 `
+  --confidence-threshold 0.0 `
+  --write-pngs
+```
+
+Or, to verify the wiring first with the fake backend (no Ollama required):
+
+```powershell
+python .\examples\arcade_png_representation_benchmark.py `
+  --backend fake `
+  --fixture smoke `
+  --variants unlabelled-v1,footer-only-v1,lane-numerals-v1,cooldown-text-v1,semantic-labelled-v1 `
+  --store memory `
+  --output-dir local-results\stage-2f-fake-smoke
+```
+
+Direct script invocation (`python .\examples\...`) works because the script
+inserts the repository root onto `sys.path` itself; `python -m
+examples.arcade_png_representation_benchmark` from the repository root also
+works.
 
 ## Reproduction gate
 
@@ -263,3 +310,6 @@ compiler; Store-wide concurrency redesign.
   provider, and policy machinery this benchmark reuses verbatim.
 - `docs/claims-audit.md` - the bounded claim and required limitation for this
   capability.
+- `docs/reviews/stage-2f-semantic-annotation-ablation.md` - the factorial
+  ablation of `labelled-v1`'s bundled footer/numerals/cooldown-text
+  components, built on this harness.

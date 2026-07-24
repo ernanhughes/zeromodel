@@ -5,6 +5,7 @@ variants. No network, no Ollama - pure PIL pixel operations only.
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 import examples.local_model_zero_arcade_test as arcade
@@ -14,10 +15,21 @@ from examples.arcade_png_interventions import (
     COOLDOWN_DUAL_VARIANT,
     COOLDOWN_REDUNDANT_VARIANT,
     COOLDOWN_SHAPE_VARIANT,
+    COOLDOWN_TEXT_VARIANT,
+    FOOTER_ONLY_VARIANT,
+    FOOTER_TOP,
+    IMG_HEIGHT,
+    IMG_WIDTH,
     LABELLED_VARIANT,
     LANE_ENHANCED_VARIANT,
+    LANE_NUMERALS_VARIANT,
+    LANES,
+    LEFT_MARGIN,
     PRIMARY_COOLDOWN_BOX,
+    RIGHT_MARGIN,
     SECONDARY_COOLDOWN_BOX,
+    SEMANTIC_LABELLED_VARIANT,
+    SEMANTIC_VARIANTS,
     UNLABELLED_VARIANT,
     ArcadePngInterventionRecipe,
     ArcadePngOperationSpec,
@@ -225,3 +237,166 @@ class TestPixelDistinction:
         base_image = arcade.render(READY_STATE, "labelled")
         steps = apply_recipe(build_recipe(LABELLED_VARIANT), base_image)
         assert len(steps) == 1
+
+
+def _lane_center_x_positions() -> list[float]:
+    lane_w = (IMG_WIDTH - LEFT_MARGIN - RIGHT_MARGIN) / LANES
+    return [LEFT_MARGIN + (index + 0.5) * lane_w for index in range(LANES)]
+
+
+def _lane_boundary_x_positions() -> list[float]:
+    lane_w = (IMG_WIDTH - LEFT_MARGIN - RIGHT_MARGIN) / LANES
+    return [LEFT_MARGIN + index * lane_w for index in range(LANES + 1)]
+
+
+def _footer_band_diff_mask(base, candidate) -> np.ndarray:
+    base_arr = np.asarray(base.convert("L"))[FOOTER_TOP:IMG_HEIGHT, :]
+    candidate_arr = np.asarray(candidate.convert("L"))[FOOTER_TOP:IMG_HEIGHT, :]
+    return np.any(base_arr != candidate_arr, axis=0)
+
+
+def _count_column_clusters(diff_mask: np.ndarray) -> int:
+    clusters = 0
+    previous = False
+    for value in diff_mask:
+        if value and not previous:
+            clusters += 1
+        previous = bool(value)
+    return clusters
+
+
+COOLDOWN_TEXT_REGION = (60, 20, 300, 40)
+
+
+class TestSemanticAnnotationVariants:
+    """Stage 2F: footer geometry / lane numerals / cooldown text isolation.
+
+    See `docs/reviews/stage-2f-semantic-annotation-ablation.md` for why these
+    three factors were isolated from the previously bundled `labelled-v1`
+    representation.
+    """
+
+    def test_all_semantic_variants_are_declared(self) -> None:
+        for variant_id in SEMANTIC_VARIANTS:
+            assert variant_id in ALL_VARIANTS
+            recipe = build_recipe(variant_id)
+            assert recipe.variant_id == variant_id
+            assert recipe.recipe_id.startswith("sha256:")
+
+    def test_each_semantic_variant_recipe_is_deterministic(self) -> None:
+        for variant_id in SEMANTIC_VARIANTS:
+            assert (
+                build_recipe(variant_id).recipe_id == build_recipe(variant_id).recipe_id
+            )
+
+    def test_footer_only_declares_only_the_footer_operation(self) -> None:
+        recipe = build_recipe(FOOTER_ONLY_VARIANT)
+        assert {op.operation for op in recipe.operations} == {"footer_reserved_area"}
+
+    def test_lane_numerals_declares_footer_and_numeral_operations_only(self) -> None:
+        recipe = build_recipe(LANE_NUMERALS_VARIANT)
+        assert {op.operation for op in recipe.operations} == {
+            "footer_reserved_area",
+            "lane_numerals_overlay",
+        }
+
+    def test_cooldown_text_declares_only_the_cooldown_text_operation(self) -> None:
+        recipe = build_recipe(COOLDOWN_TEXT_VARIANT)
+        assert {op.operation for op in recipe.operations} == {"cooldown_text_overlay"}
+
+    def test_semantic_labelled_declares_all_three_operations(self) -> None:
+        recipe = build_recipe(SEMANTIC_LABELLED_VARIANT)
+        assert {op.operation for op in recipe.operations} == {
+            "footer_reserved_area",
+            "lane_numerals_overlay",
+            "cooldown_text_overlay",
+        }
+
+    def test_footer_only_touches_nothing_above_the_footer_band(self) -> None:
+        baseline, _ = _final_image(build_recipe(UNLABELLED_VARIANT), READY_STATE)
+        footer_only, _ = _final_image(build_recipe(FOOTER_ONLY_VARIANT), READY_STATE)
+        assert baseline.tobytes() != footer_only.tobytes()
+        above_baseline = baseline.crop((0, 0, IMG_WIDTH, FOOTER_TOP)).tobytes()
+        above_footer = footer_only.crop((0, 0, IMG_WIDTH, FOOTER_TOP)).tobytes()
+        assert above_baseline == above_footer
+        cooldown_baseline = baseline.crop(COOLDOWN_TEXT_REGION).tobytes()
+        cooldown_footer = footer_only.crop(COOLDOWN_TEXT_REGION).tobytes()
+        assert cooldown_baseline == cooldown_footer
+
+    def test_footer_does_not_occlude_the_tank_sprite(self) -> None:
+        """The tank sprite's lowest point (`bottom - 45 + 33` = 476 for every
+        lane and state) must stay clear of the footer band - a regression
+        guard for `FOOTER_TOP`'s geometry."""
+        baseline, _ = _final_image(build_recipe(UNLABELLED_VARIANT), READY_STATE)
+        footer_only, _ = _final_image(build_recipe(FOOTER_ONLY_VARIANT), READY_STATE)
+        tank_region = (0, 400, IMG_WIDTH, 478)
+        assert (
+            baseline.crop(tank_region).tobytes()
+            == footer_only.crop(tank_region).tobytes()
+        )
+
+    def test_lane_numerals_draws_exactly_seven_glyph_clusters_not_eight(self) -> None:
+        """Guards the Stage 2E lesson directly: the real-provider
+        `lane-enhanced-v1` result emphasized the eight boundary lines between
+        lanes and regressed (one rejected `TANK_COLUMN: 7` response, more
+        action-changing errors - see
+        `docs/results/controlled-png-representation-v1/`). Lane semantics
+        here must be drawn at the seven lane *centres* only."""
+        centres = _lane_center_x_positions()
+        boundaries = _lane_boundary_x_positions()
+        assert len(centres) == LANES == 7
+        assert len(boundaries) == LANES + 1 == 8
+
+        footer_only, _ = _final_image(build_recipe(FOOTER_ONLY_VARIANT), READY_STATE)
+        lane_numerals, _ = _final_image(
+            build_recipe(LANE_NUMERALS_VARIANT), READY_STATE
+        )
+        diff_mask = _footer_band_diff_mask(footer_only, lane_numerals)
+
+        assert _count_column_clusters(diff_mask) == 7
+
+        for x in centres:
+            lo, hi = max(0, round(x) - 6), min(diff_mask.shape[0], round(x) + 6)
+            assert np.any(diff_mask[lo:hi]), (
+                f"expected numeral content near centre x={x}"
+            )
+
+    def test_cooldown_text_has_no_lane_numerals(self) -> None:
+        baseline, _ = _final_image(build_recipe(UNLABELLED_VARIANT), BLOCKED_STATE)
+        cooldown_text, _ = _final_image(
+            build_recipe(COOLDOWN_TEXT_VARIANT), BLOCKED_STATE
+        )
+        assert not np.any(_footer_band_diff_mask(baseline, cooldown_text))
+        cooldown_baseline = baseline.crop(COOLDOWN_TEXT_REGION).tobytes()
+        cooldown_text_crop = cooldown_text.crop(COOLDOWN_TEXT_REGION).tobytes()
+        assert cooldown_baseline != cooldown_text_crop
+
+    def test_cooldown_text_reflects_ready_and_blocked_states(self) -> None:
+        recipe = build_recipe(COOLDOWN_TEXT_VARIANT)
+        ready_final, _ = _final_image(recipe, READY_STATE)
+        blocked_final, _ = _final_image(recipe, BLOCKED_STATE)
+        ready_crop = ready_final.crop(COOLDOWN_TEXT_REGION).tobytes()
+        blocked_crop = blocked_final.crop(COOLDOWN_TEXT_REGION).tobytes()
+        assert ready_crop != blocked_crop
+
+    def test_semantic_labelled_contains_all_three_components(self) -> None:
+        baseline, _ = _final_image(build_recipe(UNLABELLED_VARIANT), BLOCKED_STATE)
+        semantic, _ = _final_image(
+            build_recipe(SEMANTIC_LABELLED_VARIANT), BLOCKED_STATE
+        )
+        diff_mask = _footer_band_diff_mask(baseline, semantic)
+        assert np.any(diff_mask)
+        for x in _lane_center_x_positions():
+            lo, hi = max(0, round(x) - 6), min(diff_mask.shape[0], round(x) + 6)
+            assert np.any(diff_mask[lo:hi])
+        cooldown_baseline = baseline.crop(COOLDOWN_TEXT_REGION).tobytes()
+        cooldown_semantic = semantic.crop(COOLDOWN_TEXT_REGION).tobytes()
+        assert cooldown_baseline != cooldown_semantic
+
+    def test_semantic_variants_never_mutate_the_input_image(self) -> None:
+        for variant_id in SEMANTIC_VARIANTS:
+            recipe = build_recipe(variant_id)
+            base_image = arcade.render(READY_STATE, recipe.base_render_mode)
+            original_bytes = base_image.tobytes()
+            apply_recipe(recipe, base_image)
+            assert base_image.tobytes() == original_bytes

@@ -52,6 +52,16 @@ RED = (242, 74, 74)
 PRIMARY_COOLDOWN_BOX = (20, 18, 56, 54)
 SECONDARY_COOLDOWN_BOX = (IMG_WIDTH - 56, 18, IMG_WIDTH - 20, 54)
 
+# The tank sprite's lowest point is `bottom - 45 + 33` = `488 - 45 + 33` = 476
+# for every lane and every fixture state (see `render()`'s wheel polygon) -
+# `FOOTER_TOP` stays below that with a 4px margin so the footer band never
+# occludes the sprite it sits under.
+FOOTER_TOP = IMG_HEIGHT - 32
+FOOTER_BG = (19, 26, 42)
+FOOTER_BORDER = WHITE
+FOOTER_TEXT_Y = FOOTER_TOP + 4
+COOLDOWN_TEXT_POSITION = (68, 27)
+
 
 @dataclass(frozen=True, slots=True)
 class ArcadePngOperationSpec:
@@ -315,6 +325,72 @@ def _op_lane_separator_enhance(
     return result
 
 
+def _op_footer_reserved_area(
+    image: Image.Image, parameters: Mapping[str, object]
+) -> Image.Image:
+    """Introduce a single structured reserved footer band: a distinct fill
+    colour plus one top border line. Draws no numerals, no cooldown text, and
+    no per-lane boundary ticks - isolates whether reserved geometry alone
+    (with no semantic content in it) changes provider behaviour."""
+    top = int(parameters["top"])  # type: ignore[arg-type]
+    width = int(parameters["width"])  # type: ignore[arg-type]
+    height = int(parameters["height"])  # type: ignore[arg-type]
+    fill = tuple(parameters["fill_color"])  # type: ignore[arg-type]
+    border = tuple(parameters["border_color"])  # type: ignore[arg-type]
+    border_width = int(parameters["border_width"])  # type: ignore[arg-type]
+    result = image.copy()
+    draw = ImageDraw.Draw(result)
+    draw.rectangle((0, top, width, height), fill=fill)
+    draw.line((0, top, width, top), fill=border, width=border_width)
+    return result
+
+
+def _op_lane_numerals_overlay(
+    image: Image.Image, parameters: Mapping[str, object]
+) -> Image.Image:
+    """Draw the numeral 0..6 centred under each of the seven lane *regions*.
+
+    Deliberately iterates ``range(lanes)`` (seven centres), never
+    ``range(lanes + 1)`` (eight boundaries) - the Stage 2E
+    ``lane-enhanced-v1`` real-provider result over-emphasized the eight
+    boundaries between lanes and regressed (one rejected response, more
+    action-changing errors); this operation encodes lane position directly
+    at each region's centre instead."""
+    left = int(parameters["left"])  # type: ignore[arg-type]
+    right = int(parameters["right"])  # type: ignore[arg-type]
+    width = int(parameters["width"])  # type: ignore[arg-type]
+    lanes = int(parameters["lanes"])  # type: ignore[arg-type]
+    text_y = int(parameters["text_y"])  # type: ignore[arg-type]
+    color = tuple(parameters["text_color"])  # type: ignore[arg-type]
+    result = image.copy()
+    draw = ImageDraw.Draw(result)
+    lane_w = (width - left - right) / lanes
+    for index in range(lanes):
+        cx = left + (index + 0.5) * lane_w
+        draw.text((cx - 4, text_y), str(index), fill=color)
+    return result
+
+
+def _op_cooldown_text_overlay(
+    image: Image.Image, parameters: Mapping[str, object]
+) -> Image.Image:
+    """Draw an explicit READY/BLOCKED text label next to the existing
+    colour-coded cooldown indicator, reading state from its pixels exactly
+    like the shape/dual cooldown operations do."""
+    box = tuple(parameters["position"])  # type: ignore[arg-type]
+    ready_color = tuple(parameters["ready_color"])  # type: ignore[arg-type]
+    blocked_color = tuple(parameters["blocked_color"])  # type: ignore[arg-type]
+    text_position = tuple(parameters["text_position"])  # type: ignore[arg-type]
+    color = tuple(parameters["text_color"])  # type: ignore[arg-type]
+    cooldown = _detect_cooldown_from_pixels(
+        image, box, ready_color=ready_color, blocked_color=blocked_color
+    )
+    result = image.copy()
+    draw = ImageDraw.Draw(result)
+    draw.text(text_position, "READY" if cooldown == 0 else "BLOCKED", fill=color)
+    return result
+
+
 OPERATION_FUNCTIONS: dict[
     str, Callable[[Image.Image, Mapping[str, object]], Image.Image]
 ] = {
@@ -322,6 +398,9 @@ OPERATION_FUNCTIONS: dict[
     "cooldown_dual_overlay": _op_cooldown_dual_overlay,
     "cooldown_marker_duplicate": _op_cooldown_marker_duplicate,
     "lane_separator_enhance": _op_lane_separator_enhance,
+    "footer_reserved_area": _op_footer_reserved_area,
+    "lane_numerals_overlay": _op_lane_numerals_overlay,
+    "cooldown_text_overlay": _op_cooldown_text_overlay,
 }
 
 
@@ -341,10 +420,25 @@ COOLDOWN_VARIANTS = (
 LANE_ENHANCED_VARIANT = "lane-enhanced-v1"
 LANE_VARIANTS = (LANE_ENHANCED_VARIANT,)
 
+FOOTER_ONLY_VARIANT = "footer-only-v1"
+LANE_NUMERALS_VARIANT = "lane-numerals-v1"
+COOLDOWN_TEXT_VARIANT = "cooldown-text-v1"
+SEMANTIC_LABELLED_VARIANT = "semantic-labelled-v1"
+SEMANTIC_VARIANTS = (
+    FOOTER_ONLY_VARIANT,
+    LANE_NUMERALS_VARIANT,
+    COOLDOWN_TEXT_VARIANT,
+    SEMANTIC_LABELLED_VARIANT,
+)
+
 COMBINED_VARIANT = "combined-v1"
 
 ALL_VARIANTS = (
-    REFERENCE_VARIANTS + COOLDOWN_VARIANTS + LANE_VARIANTS + (COMBINED_VARIANT,)
+    REFERENCE_VARIANTS
+    + COOLDOWN_VARIANTS
+    + LANE_VARIANTS
+    + SEMANTIC_VARIANTS
+    + (COMBINED_VARIANT,)
 )
 
 
@@ -413,6 +507,62 @@ def _lane_enhanced_ops() -> tuple[ArcadePngOperationSpec, ...]:
     )
 
 
+def _footer_reserved_area_ops() -> tuple[ArcadePngOperationSpec, ...]:
+    return (
+        ArcadePngOperationSpec(
+            operation="footer_reserved_area",
+            operation_version="v1",
+            parameters={
+                "top": FOOTER_TOP,
+                "width": IMG_WIDTH,
+                "height": IMG_HEIGHT,
+                "fill_color": list(FOOTER_BG),
+                "border_color": list(FOOTER_BORDER),
+                "border_width": 2,
+            },
+        ),
+    )
+
+
+def _lane_numerals_ops() -> tuple[ArcadePngOperationSpec, ...]:
+    # The footer must be applied first: lane numerals are drawn *within* the
+    # reserved footer band it introduces, not as a standalone overlay.
+    return _footer_reserved_area_ops() + (
+        ArcadePngOperationSpec(
+            operation="lane_numerals_overlay",
+            operation_version="v1",
+            parameters={
+                "left": LEFT_MARGIN,
+                "right": RIGHT_MARGIN,
+                "width": IMG_WIDTH,
+                "lanes": LANES,
+                "text_y": FOOTER_TEXT_Y,
+                "text_color": list(WHITE),
+            },
+        ),
+    )
+
+
+def _cooldown_text_ops() -> tuple[ArcadePngOperationSpec, ...]:
+    return (
+        ArcadePngOperationSpec(
+            operation="cooldown_text_overlay",
+            operation_version="v1",
+            parameters={
+                "position": list(PRIMARY_COOLDOWN_BOX),
+                "ready_color": list(GREEN),
+                "blocked_color": list(RED),
+                "text_position": list(COOLDOWN_TEXT_POSITION),
+                "text_color": list(WHITE),
+            },
+        ),
+    )
+
+
+def _semantic_labelled_ops() -> tuple[ArcadePngOperationSpec, ...]:
+    return _lane_numerals_ops() + _cooldown_text_ops()
+
+
 _VARIANT_OPERATION_BUILDERS: dict[
     str, Callable[[], tuple[ArcadePngOperationSpec, ...]]
 ] = {
@@ -420,6 +570,10 @@ _VARIANT_OPERATION_BUILDERS: dict[
     COOLDOWN_DUAL_VARIANT: _cooldown_dual_ops,
     COOLDOWN_REDUNDANT_VARIANT: _cooldown_redundant_ops,
     LANE_ENHANCED_VARIANT: _lane_enhanced_ops,
+    FOOTER_ONLY_VARIANT: _footer_reserved_area_ops,
+    LANE_NUMERALS_VARIANT: _lane_numerals_ops,
+    COOLDOWN_TEXT_VARIANT: _cooldown_text_ops,
+    SEMANTIC_LABELLED_VARIANT: _semantic_labelled_ops,
 }
 
 
@@ -452,7 +606,12 @@ def build_recipe(
             metadata={"family": "reference"},
         )
     if variant_id in _VARIANT_OPERATION_BUILDERS:
-        family = "cooldown" if variant_id in COOLDOWN_VARIANTS else "lane"
+        if variant_id in COOLDOWN_VARIANTS:
+            family = "cooldown"
+        elif variant_id in LANE_VARIANTS:
+            family = "lane"
+        else:
+            family = "semantic"
         return ArcadePngInterventionRecipe.build(
             variant_id=variant_id,
             base_render_mode="unlabelled",
@@ -511,15 +670,27 @@ __all__ = [
     "COOLDOWN_DUAL_VARIANT",
     "COOLDOWN_REDUNDANT_VARIANT",
     "COOLDOWN_SHAPE_VARIANT",
+    "COOLDOWN_TEXT_POSITION",
+    "COOLDOWN_TEXT_VARIANT",
     "COOLDOWN_VARIANTS",
+    "FOOTER_ONLY_VARIANT",
+    "FOOTER_TOP",
+    "IMG_HEIGHT",
+    "IMG_WIDTH",
     "LABELLED_VARIANT",
+    "LANES",
     "LANE_ENHANCED_VARIANT",
+    "LANE_NUMERALS_VARIANT",
     "LANE_VARIANTS",
+    "LEFT_MARGIN",
     "OPERATION_FUNCTIONS",
     "PRIMARY_COOLDOWN_BOX",
     "RECIPE_VERSION",
     "REFERENCE_VARIANTS",
+    "RIGHT_MARGIN",
     "SECONDARY_COOLDOWN_BOX",
+    "SEMANTIC_LABELLED_VARIANT",
+    "SEMANTIC_VARIANTS",
     "UNLABELLED_VARIANT",
     "ArcadePngInterventionRecipe",
     "ArcadePngOperationSpec",

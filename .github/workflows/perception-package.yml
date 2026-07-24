@@ -1,0 +1,52 @@
+name: perception-package
+
+on:
+  push:
+    paths:
+      - "packages/core/**"
+      - "packages/observation/**"
+      - "packages/perception/**"
+      - "pyproject.toml"
+      - ".github/workflows/perception-package.yml"
+  pull_request:
+    paths:
+      - "packages/core/**"
+      - "packages/observation/**"
+      - "packages/perception/**"
+      - "pyproject.toml"
+      - ".github/workflows/perception-package.yml"
+
+jobs:
+  validate-perception:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build and test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine pytest "numpy<2.0"
+      - name: Build dependency and perception wheels
+        run: |
+          python -m build packages/core
+          python -m twine check packages/core/dist/*
+          python -m build packages/observation
+          python -m twine check packages/observation/dist/*
+          python -m build packages/perception
+          python -m twine check packages/perception/dist/*
+      - name: Install wheels in a clean environment
+        run: |
+          python -m venv build/perception-ci-venv
+          build/perception-ci-venv/bin/python -m pip install --upgrade pip
+          build/perception-ci-venv/bin/python -m pip install pytest
+          build/perception-ci-venv/bin/python -m pip install packages/core/dist/*.whl
+          build/perception-ci-venv/bin/python -m pip install packages/observation/dist/*.whl
+          build/perception-ci-venv/bin/python -m pip install packages/perception/dist/*.whl
+          build/perception-ci-venv/bin/python -m pip check
+      - name: Run perception package tests
+        run: build/perception-ci-venv/bin/python -m pytest -q packages/perception/tests
+      - name: Verify installed import locations
+        run: |
+          build/perception-ci-venv/bin/python -c "import inspect, zeromodel, zeromodel.observation, zeromodel.perception; print(inspect.getfile(zeromodel)); print(inspect.getfile(zeromodel.observation)); print(inspect.getfile(zeromodel.perception))"

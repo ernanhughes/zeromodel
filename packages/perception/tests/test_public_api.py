@@ -6,6 +6,7 @@ from zeromodel.perception import (
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
+    WEIGHTED_DISTANCE_SEMANTICS,
     BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
     InMemoryPerceptionDatasetStore,
@@ -15,10 +16,13 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_four_b_public_contract() -> None:
+def test_phase_four_c_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P4B"
+    assert PERCEPTION_STAGE == "P4C"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
+    assert WEIGHTED_DISTANCE_SEMANTICS == (
+        "field_relevance_weighted_normalized_mean_absolute_distance"
+    )
     assert SourceImageEncoderSpecDTO().color_space == "RGB"
     assert DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT"]).labels == (
         "LEFT",

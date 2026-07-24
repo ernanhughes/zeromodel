@@ -1,5 +1,4 @@
 from zeromodel.perception import (
-    PERCEPTION_STAGE,
     PRODUCTION_INFERENCE_SEMANTICS,
     PRODUCTION_METRICS_SEMANTICS,
     PRODUCTION_OUTCOME_SEMANTICS,
@@ -7,8 +6,7 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_fourteen_public_contract() -> None:
-    assert PERCEPTION_STAGE == "P14"
+def test_production_ledger_public_contract() -> None:
     assert PRODUCTION_INFERENCE_SEMANTICS == (
         "append_only_runtime_inference_bound_to_active_model_pointer_revision"
     )

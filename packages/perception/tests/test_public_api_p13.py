@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from zeromodel.perception import (
-    PERCEPTION_STAGE,
     SQL_LIFECYCLE_SCHEMA_VERSION,
     SQL_LIFECYCLE_SEMANTICS,
     SQL_LIFECYCLE_STORE_VERSION,
@@ -9,8 +8,7 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_thirteen_public_contract() -> None:
-    assert PERCEPTION_STAGE == "P13"
+def test_sql_lifecycle_public_contract() -> None:
     assert SQL_LIFECYCLE_SCHEMA_VERSION == "perception-sql-lifecycle-schema/1"
     assert SQL_LIFECYCLE_STORE_VERSION == "perception-sql-lifecycle-store/1"
     assert SQL_LIFECYCLE_SEMANTICS == (

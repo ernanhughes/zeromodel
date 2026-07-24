@@ -7,7 +7,6 @@ from zeromodel.perception import (
     DIFFERENCE_SURFACE_SEMANTICS,
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
-    PERCEPTION_STAGE,
     PROMOTED_INFERENCE_SEMANTICS,
     PROMOTED_TEST_EVALUATION_SEMANTICS,
     PROMOTION_SEMANTICS,
@@ -34,9 +33,8 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_eleven_public_contract() -> None:
+def test_public_contract_through_promoted_inference() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P11"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"

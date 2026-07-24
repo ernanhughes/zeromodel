@@ -33,6 +33,20 @@ from .representation import (
     decode_discrete_action, encode_discrete_action, encode_source_array,
     encode_source_image_bytes,
 )
+from .translator import (
+    COEFFICIENT_SEMANTICS,
+    SOURCE_FEATURE_SEMANTICS,
+    TARGET_SCORE_SEMANTICS,
+    TRANSLATOR_PREDICTION_VERSION,
+    TRANSLATOR_VERSION,
+    PerceptionTranslatorError,
+    PredictedTargetVPMDTO,
+    SourceTargetTranslatorDTO,
+    TargetActionScoreDTO,
+    TranslatorConfigDTO,
+    fit_source_target_translator,
+    predict_target_vpm,
+)
 from .weighted import (
     INTERVENTION_REPORT_VERSION, WEIGHTED_DISTANCE_SEMANTICS,
     WEIGHTED_MODEL_VERSION, WEIGHTED_PREDICTION_VERSION,
@@ -43,6 +57,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P4C"
+PERCEPTION_STAGE = "P5A"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

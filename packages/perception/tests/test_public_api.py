@@ -4,6 +4,7 @@ import numpy as np
 
 from zeromodel.perception import (
     COEFFICIENT_SEMANTICS,
+    DIFFERENCE_SURFACE_SEMANTICS,
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
@@ -11,6 +12,7 @@ from zeromodel.perception import (
     REGISTRATION_SEMANTICS,
     REJECTION_SEMANTICS,
     TARGET_SCORE_SEMANTICS,
+    UNEXPLAINED_SURFACE_SEMANTICS,
     WEIGHTED_DISTANCE_SEMANTICS,
     BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
@@ -22,9 +24,9 @@ from zeromodel.perception import (
 )
 
 
-def test_phase_six_public_contract() -> None:
+def test_phase_seven_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P6"
+    assert PERCEPTION_STAGE == "P7"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"
@@ -41,6 +43,12 @@ def test_phase_six_public_contract() -> None:
     )
     assert REGISTRATION_SEMANTICS == (
         "share_of_absolute_translator_coefficient_mass_in_declared_source_fields"
+    )
+    assert DIFFERENCE_SURFACE_SEMANTICS == (
+        "signed_observed_minus_expected_registration"
+    )
+    assert UNEXPLAINED_SURFACE_SEMANTICS == (
+        "observed_registration_outside_declared_expected_annotations"
     )
     assert TranslatorConfigDTO().ridge_alpha == 1e-6
     assert SourceImageEncoderSpecDTO().color_space == "RGB"

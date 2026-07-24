@@ -4,13 +4,11 @@ from zeromodel.perception import (
     ACTIVE_POINTER_SEMANTICS,
     MODEL_LEDGER_SEMANTICS,
     MODEL_TRANSITION_SEMANTICS,
-    PERCEPTION_STAGE,
     InMemoryPerceptionModelLifecycleStore,
 )
 
 
-def test_phase_twelve_public_contract() -> None:
-    assert PERCEPTION_STAGE == "P12"
+def test_model_lifecycle_public_contract() -> None:
     assert MODEL_LEDGER_SEMANTICS == "append_only_promoted_model_registration"
     assert MODEL_TRANSITION_SEMANTICS == (
         "append_only_model_activation_supersession_and_rollback"

@@ -78,6 +78,11 @@ from .representation import (
     decode_discrete_action, encode_discrete_action, encode_source_array,
     encode_source_image_bytes,
 )
+from .sql_lifecycle import (
+    SQL_LIFECYCLE_SCHEMA_VERSION, SQL_LIFECYCLE_SEMANTICS,
+    SQL_LIFECYCLE_STORE_VERSION, PerceptionSqlLifecycleError,
+    SqlitePerceptionModelLifecycleStore,
+)
 from .temporal import (
     TEMPORAL_DIAGNOSIS_SEMANTICS, TEMPORAL_DIAGNOSIS_STATUSES,
     TEMPORAL_DIAGNOSIS_VERSION, TEMPORAL_LAYOUT_SEMANTICS,
@@ -122,6 +127,6 @@ from .weighted import (
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P12"
+PERCEPTION_STAGE = "P13"
 
 __all__ = [name for name in globals() if not name.startswith("_") and name not in {"annotations"}]

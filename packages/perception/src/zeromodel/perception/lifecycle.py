@@ -21,8 +21,12 @@ MODEL_TRANSITION_VERSION: Final = "perception-model-transition/1"
 ACTIVE_MODEL_POINTER_VERSION: Final = "perception-active-model-pointer/1"
 MODEL_LIFECYCLE_SNAPSHOT_VERSION: Final = "perception-model-lifecycle-snapshot/1"
 MODEL_LEDGER_SEMANTICS: Final = "append_only_promoted_model_registration"
-MODEL_TRANSITION_SEMANTICS: Final = "append_only_model_activation_supersession_and_rollback"
-ACTIVE_POINTER_SEMANTICS: Final = "revisioned_active_model_pointer_with_optimistic_concurrency"
+MODEL_TRANSITION_SEMANTICS: Final = (
+    "append_only_model_activation_supersession_and_rollback"
+)
+ACTIVE_POINTER_SEMANTICS: Final = (
+    "revisioned_active_model_pointer_with_optimistic_concurrency"
+)
 MODEL_TRANSITION_KINDS: Final = {"activate", "supersede", "rollback", "deactivate"}
 
 
@@ -59,8 +63,12 @@ class PromotedModelLedgerEntryDTO:
     version: str = MODEL_LEDGER_ENTRY_VERSION
 
     def __post_init__(self) -> None:
-        if not all((self.ledger_entry_id, self.registered_by, self.registration_reason)):
-            raise PerceptionModelLifecycleError("ledger entry identities and rationale must be non-empty")
+        if not all(
+            (self.ledger_entry_id, self.registered_by, self.registration_reason)
+        ):
+            raise PerceptionModelLifecycleError(
+                "ledger entry identities and rationale must be non-empty"
+            )
         if self.semantics != MODEL_LEDGER_SEMANTICS:
             raise PerceptionModelLifecycleError("unsupported model ledger semantics")
 
@@ -82,26 +90,42 @@ class ModelLifecycleTransitionDTO:
         if self.transition_kind not in MODEL_TRANSITION_KINDS:
             raise PerceptionModelLifecycleError("unsupported model transition kind")
         if self.sequence_number <= 0:
-            raise PerceptionModelLifecycleError("transition sequence_number must be positive")
+            raise PerceptionModelLifecycleError(
+                "transition sequence_number must be positive"
+            )
         if not all((self.transition_id, self.actor, self.reason)):
-            raise PerceptionModelLifecycleError("transition identity, actor, and reason must be non-empty")
+            raise PerceptionModelLifecycleError(
+                "transition identity, actor, and reason must be non-empty"
+            )
         if self.transition_kind == "activate":
-            if self.previous_promoted_model_id is not None or self.next_promoted_model_id is None:
-                raise PerceptionModelLifecycleError("activation requires no previous model and one next model")
+            if (
+                self.previous_promoted_model_id is not None
+                or self.next_promoted_model_id is None
+            ):
+                raise PerceptionModelLifecycleError(
+                    "activation requires no previous model and one next model"
+                )
         elif self.transition_kind in {"supersede", "rollback"}:
             if not self.previous_promoted_model_id or not self.next_promoted_model_id:
                 raise PerceptionModelLifecycleError(
                     "supersession and rollback require previous and next model identities"
                 )
             if self.previous_promoted_model_id == self.next_promoted_model_id:
-                raise PerceptionModelLifecycleError("transition cannot replace a model with itself")
+                raise PerceptionModelLifecycleError(
+                    "transition cannot replace a model with itself"
+                )
         elif self.transition_kind == "deactivate":
-            if self.previous_promoted_model_id is None or self.next_promoted_model_id is not None:
+            if (
+                self.previous_promoted_model_id is None
+                or self.next_promoted_model_id is not None
+            ):
                 raise PerceptionModelLifecycleError(
                     "deactivation requires one previous model and no next model"
                 )
         if self.semantics != MODEL_TRANSITION_SEMANTICS:
-            raise PerceptionModelLifecycleError("unsupported model transition semantics")
+            raise PerceptionModelLifecycleError(
+                "unsupported model transition semantics"
+            )
 
 
 @dataclass(frozen=True)
@@ -115,15 +139,22 @@ class ActiveModelPointerDTO:
 
     def __post_init__(self) -> None:
         if not self.pointer_id:
-            raise PerceptionModelLifecycleError("active pointer identity must be non-empty")
+            raise PerceptionModelLifecycleError(
+                "active pointer identity must be non-empty"
+            )
         if self.revision < 0:
-            raise PerceptionModelLifecycleError("active pointer revision cannot be negative")
+            raise PerceptionModelLifecycleError(
+                "active pointer revision cannot be negative"
+            )
         if self.revision == 0 and (
-            self.active_promoted_model_id is not None or self.last_transition_id is not None
+            self.active_promoted_model_id is not None
+            or self.last_transition_id is not None
         ):
             raise PerceptionModelLifecycleError("revision zero pointer must be empty")
         if self.revision > 0 and not self.last_transition_id:
-            raise PerceptionModelLifecycleError("non-zero pointer revision requires transition identity")
+            raise PerceptionModelLifecycleError(
+                "non-zero pointer revision requires transition identity"
+            )
         if self.semantics != ACTIVE_POINTER_SEMANTICS:
             raise PerceptionModelLifecycleError("unsupported active pointer semantics")
 
@@ -138,18 +169,33 @@ class ModelLifecycleSnapshotDTO:
 
     def __post_init__(self) -> None:
         if not self.snapshot_id:
-            raise PerceptionModelLifecycleError("lifecycle snapshot identity must be non-empty")
+            raise PerceptionModelLifecycleError(
+                "lifecycle snapshot identity must be non-empty"
+            )
         if self.ledger_entries != tuple(
-            sorted(self.ledger_entries, key=lambda item: item.promoted_model.promoted_model_id)
+            sorted(
+                self.ledger_entries,
+                key=lambda item: item.promoted_model.promoted_model_id,
+            )
         ):
-            raise PerceptionModelLifecycleError("ledger entries must be sorted by promoted model identity")
-        if self.transitions != tuple(sorted(self.transitions, key=lambda item: item.sequence_number)):
-            raise PerceptionModelLifecycleError("transitions must be sorted by sequence number")
+            raise PerceptionModelLifecycleError(
+                "ledger entries must be sorted by promoted model identity"
+            )
+        if self.transitions != tuple(
+            sorted(self.transitions, key=lambda item: item.sequence_number)
+        ):
+            raise PerceptionModelLifecycleError(
+                "transitions must be sorted by sequence number"
+            )
         sequences = tuple(item.sequence_number for item in self.transitions)
         if sequences != tuple(range(1, len(sequences) + 1)):
-            raise PerceptionModelLifecycleError("transition sequence must be contiguous from one")
+            raise PerceptionModelLifecycleError(
+                "transition sequence must be contiguous from one"
+            )
         if self.active_pointer.revision != len(self.transitions):
-            raise PerceptionModelLifecycleError("pointer revision must equal transition count")
+            raise PerceptionModelLifecycleError(
+                "pointer revision must equal transition count"
+            )
 
 
 class PerceptionModelLifecycleStore(Protocol):
@@ -157,7 +203,9 @@ class PerceptionModelLifecycleStore(Protocol):
 
     def put_ledger_entry(self, entry: PromotedModelLedgerEntryDTO) -> None: ...
 
-    def get_ledger_entry(self, promoted_model_id: str) -> PromotedModelLedgerEntryDTO: ...
+    def get_ledger_entry(
+        self, promoted_model_id: str
+    ) -> PromotedModelLedgerEntryDTO: ...
 
     def list_ledger_entries(self) -> tuple[PromotedModelLedgerEntryDTO, ...]: ...
 
@@ -187,7 +235,9 @@ class InMemoryPerceptionModelLifecycleStore:
         key = entry.promoted_model.promoted_model_id
         existing = self._entries.get(key)
         if existing is not None and existing != entry:
-            raise PerceptionModelLifecycleError("promoted model identity already has different ledger entry")
+            raise PerceptionModelLifecycleError(
+                "promoted model identity already has different ledger entry"
+            )
         self._entries[key] = entry
 
     def get_ledger_entry(self, promoted_model_id: str) -> PromotedModelLedgerEntryDTO:
@@ -199,13 +249,22 @@ class InMemoryPerceptionModelLifecycleStore:
             ) from exc
 
     def list_ledger_entries(self) -> tuple[PromotedModelLedgerEntryDTO, ...]:
-        return tuple(sorted(self._entries.values(), key=lambda item: item.promoted_model.promoted_model_id))
+        return tuple(
+            sorted(
+                self._entries.values(),
+                key=lambda item: item.promoted_model.promoted_model_id,
+            )
+        )
 
     def append_transition(self, transition: ModelLifecycleTransitionDTO) -> None:
         expected_sequence = len(self._transitions) + 1
         if transition.sequence_number != expected_sequence:
-            raise PerceptionModelLifecycleError("transition sequence does not follow ledger history")
-        if any(item.transition_id == transition.transition_id for item in self._transitions):
+            raise PerceptionModelLifecycleError(
+                "transition sequence does not follow ledger history"
+            )
+        if any(
+            item.transition_id == transition.transition_id for item in self._transitions
+        ):
             raise PerceptionModelLifecycleError("transition identity already exists")
         self._transitions.append(transition)
 
@@ -226,7 +285,9 @@ class InMemoryPerceptionModelLifecycleStore:
                 "active model pointer revision changed during lifecycle update"
             )
         if pointer.revision != expected_revision + 1:
-            raise PerceptionModelLifecycleError("replacement pointer must advance revision by one")
+            raise PerceptionModelLifecycleError(
+                "replacement pointer must advance revision by one"
+            )
         self._pointer = pointer
 
 
@@ -257,10 +318,14 @@ def register_promoted_model(
     """Register one immutable promoted model and optional P11 test report identity."""
 
     if not registered_by or not registration_reason:
-        raise PerceptionModelLifecycleError("registration actor and reason must be non-empty")
+        raise PerceptionModelLifecycleError(
+            "registration actor and reason must be non-empty"
+        )
     if test_evaluation is not None:
         if test_evaluation.promoted_model_id != promoted_model.promoted_model_id:
-            raise PerceptionModelLifecycleError("test evaluation does not belong to promoted model")
+            raise PerceptionModelLifecycleError(
+                "test evaluation does not belong to promoted model"
+            )
         test_report_id = test_evaluation.report_id
     else:
         test_report_id = None
@@ -293,7 +358,9 @@ def _transition(
     related_transition_id: str | None = None,
 ) -> tuple[ModelLifecycleTransitionDTO, ActiveModelPointerDTO]:
     if not actor or not reason:
-        raise PerceptionModelLifecycleError("transition actor and reason must be non-empty")
+        raise PerceptionModelLifecycleError(
+            "transition actor and reason must be non-empty"
+        )
     pointer = store.get_active_pointer()
     previous = pointer.active_promoted_model_id
     if next_promoted_model_id is not None:
@@ -353,7 +420,9 @@ def activate_promoted_model(
     """Activate the first registered model when no active model exists."""
 
     if store.get_active_pointer().active_promoted_model_id is not None:
-        raise PerceptionModelLifecycleError("activation requires no active promoted model")
+        raise PerceptionModelLifecycleError(
+            "activation requires no active promoted model"
+        )
     return _transition(
         store,
         transition_kind="activate",
@@ -374,7 +443,9 @@ def supersede_active_model(
 
     current = store.get_active_pointer().active_promoted_model_id
     if current is None:
-        raise PerceptionModelLifecycleError("supersession requires an active promoted model")
+        raise PerceptionModelLifecycleError(
+            "supersession requires an active promoted model"
+        )
     if current == promoted_model_id:
         raise PerceptionModelLifecycleError("cannot supersede active model with itself")
     return _transition(
@@ -397,7 +468,9 @@ def rollback_active_model(
 
     current = store.get_active_pointer().active_promoted_model_id
     if current is None:
-        raise PerceptionModelLifecycleError("rollback requires an active promoted model")
+        raise PerceptionModelLifecycleError(
+            "rollback requires an active promoted model"
+        )
     if current == target_promoted_model_id:
         raise PerceptionModelLifecycleError("rollback target is already active")
     transitions = store.list_transitions()
@@ -410,7 +483,9 @@ def rollback_active_model(
         None,
     )
     if target_prior_transition is None:
-        raise PerceptionModelLifecycleError("rollback target was never previously active")
+        raise PerceptionModelLifecycleError(
+            "rollback target was never previously active"
+        )
     return _transition(
         store,
         transition_kind="rollback",
@@ -430,7 +505,9 @@ def deactivate_active_model(
     """Clear operational selection without deleting any promoted model artifact."""
 
     if store.get_active_pointer().active_promoted_model_id is None:
-        raise PerceptionModelLifecycleError("deactivation requires an active promoted model")
+        raise PerceptionModelLifecycleError(
+            "deactivation requires an active promoted model"
+        )
     return _transition(
         store,
         transition_kind="deactivate",

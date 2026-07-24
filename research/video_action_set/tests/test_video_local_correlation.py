@@ -14,7 +14,7 @@ from research.video_action_set.benchmarks.arcade_visual_video_local_correlation_
     run_evaluate,
     run_verify,
 )
-from examples.arcade_shooter_policy import ( # noqa: E402
+from examples.arcade_shooter_policy import (  # noqa: E402
     ACTIONS,
     ShooterConfig,
     compile_policy_artifact,

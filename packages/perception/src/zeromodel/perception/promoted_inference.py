@@ -81,7 +81,9 @@ class PromotedInferenceResultDTO:
         if self.model_kind not in {"single_frame", "temporal"}:
             raise PerceptionPromotedInferenceError("unsupported promoted model kind")
         if self.status not in {"accepted", "rejected_ambiguous"}:
-            raise PerceptionPromotedInferenceError("unsupported promoted inference status")
+            raise PerceptionPromotedInferenceError(
+                "unsupported promoted inference status"
+            )
         if not all(
             (
                 self.result_id,
@@ -93,15 +95,23 @@ class PromotedInferenceResultDTO:
                 self.promotion_decision_id,
             )
         ):
-            raise PerceptionPromotedInferenceError("promoted inference identities must be non-empty")
+            raise PerceptionPromotedInferenceError(
+                "promoted inference identities must be non-empty"
+            )
         if not self.scores or self.scores[0].action_label != self.selected_action:
-            raise PerceptionPromotedInferenceError("selected action must match top-ranked score")
+            raise PerceptionPromotedInferenceError(
+                "selected action must match top-ranked score"
+            )
         if not 0.0 <= self.margin <= 1.0:
             raise PerceptionPromotedInferenceError("margin must be in [0, 1]")
         if not 0.0 <= self.rejection_threshold <= 1.0:
-            raise PerceptionPromotedInferenceError("rejection_threshold must be in [0, 1]")
+            raise PerceptionPromotedInferenceError(
+                "rejection_threshold must be in [0, 1]"
+            )
         if self.semantics != PROMOTED_INFERENCE_SEMANTICS:
-            raise PerceptionPromotedInferenceError("unsupported promoted inference semantics")
+            raise PerceptionPromotedInferenceError(
+                "unsupported promoted inference semantics"
+            )
 
 
 @dataclass(frozen=True)
@@ -115,12 +125,23 @@ class PromotedTestExampleDTO:
     correct: bool
 
     def __post_init__(self) -> None:
-        if not all((self.interaction_id, self.expected_action, self.result_id, self.selected_action)):
-            raise PerceptionPromotedInferenceError("test example identities must be non-empty")
+        if not all(
+            (
+                self.interaction_id,
+                self.expected_action,
+                self.result_id,
+                self.selected_action,
+            )
+        ):
+            raise PerceptionPromotedInferenceError(
+                "test example identities must be non-empty"
+            )
         if self.status not in {"accepted", "rejected_ambiguous"}:
             raise PerceptionPromotedInferenceError("unsupported test example status")
         if not 0.0 <= self.margin <= 1.0:
-            raise PerceptionPromotedInferenceError("test example margin must be in [0, 1]")
+            raise PerceptionPromotedInferenceError(
+                "test example margin must be in [0, 1]"
+            )
 
 
 @dataclass(frozen=True)
@@ -147,7 +168,9 @@ class PromotedTestEvaluationReportDTO:
 
     def __post_init__(self) -> None:
         if self.split != "test":
-            raise PerceptionPromotedInferenceError("final promoted evaluation must use test split")
+            raise PerceptionPromotedInferenceError(
+                "final promoted evaluation must use test split"
+            )
         if self.model_kind not in {"single_frame", "temporal"}:
             raise PerceptionPromotedInferenceError("unsupported test model kind")
         if not all(
@@ -160,20 +183,38 @@ class PromotedTestEvaluationReportDTO:
                 self.validation_comparison_report_id,
             )
         ):
-            raise PerceptionPromotedInferenceError("test report identities must be non-empty")
+            raise PerceptionPromotedInferenceError(
+                "test report identities must be non-empty"
+            )
         if self.example_count <= 0 or self.example_count != len(self.examples):
             raise PerceptionPromotedInferenceError("test example count is invalid")
         if self.accepted_count + self.rejected_count != self.example_count:
-            raise PerceptionPromotedInferenceError("accepted and rejected counts must exhaust examples")
-        if self.examples != tuple(sorted(self.examples, key=lambda item: item.interaction_id)):
+            raise PerceptionPromotedInferenceError(
+                "accepted and rejected counts must exhaust examples"
+            )
+        if self.examples != tuple(
+            sorted(self.examples, key=lambda item: item.interaction_id)
+        ):
             raise PerceptionPromotedInferenceError("test examples must be sorted")
-        for value in (self.raw_accuracy, self.coverage, self.mean_margin, self.rejection_threshold):
+        for value in (
+            self.raw_accuracy,
+            self.coverage,
+            self.mean_margin,
+            self.rejection_threshold,
+        ):
             if not 0.0 <= value <= 1.0:
-                raise PerceptionPromotedInferenceError("bounded test metric outside [0, 1]")
-        if self.accepted_accuracy is not None and not 0.0 <= self.accepted_accuracy <= 1.0:
+                raise PerceptionPromotedInferenceError(
+                    "bounded test metric outside [0, 1]"
+                )
+        if (
+            self.accepted_accuracy is not None
+            and not 0.0 <= self.accepted_accuracy <= 1.0
+        ):
             raise PerceptionPromotedInferenceError("accepted_accuracy outside [0, 1]")
         if self.semantics != PROMOTED_TEST_EVALUATION_SEMANTICS:
-            raise PerceptionPromotedInferenceError("unsupported test evaluation semantics")
+            raise PerceptionPromotedInferenceError(
+                "unsupported test evaluation semantics"
+            )
 
 
 def run_promoted_inference(
@@ -190,37 +231,54 @@ def run_promoted_inference(
     """Execute the exact promoted candidate with its frozen validation threshold."""
 
     if promoted.model_kind == "single_frame":
-        if any(value is None for value in (single_translator, single_field_schema, source)):
+        if any(
+            value is None for value in (single_translator, single_field_schema, source)
+        ):
             raise PerceptionPromotedInferenceError(
                 "single-frame promotion requires translator, field schema, and source"
             )
         if temporal_source is not None:
-            raise PerceptionPromotedInferenceError("single-frame promotion cannot consume temporal source")
+            raise PerceptionPromotedInferenceError(
+                "single-frame promotion cannot consume temporal source"
+            )
         assert single_translator is not None
         assert single_field_schema is not None
         assert source is not None
         if single_translator.translator_id != promoted.model_id:
-            raise PerceptionPromotedInferenceError("single-frame translator does not match promoted model")
-        prediction = predict_target_vpm(single_translator, source, single_field_schema, action_schema)
+            raise PerceptionPromotedInferenceError(
+                "single-frame translator does not match promoted model"
+            )
+        prediction = predict_target_vpm(
+            single_translator, source, single_field_schema, action_schema
+        )
         input_id = source.source_vpm_id
         interaction_id = None
         scores = prediction.scores
         selected_action = prediction.selected_action
         margin = prediction.margin
     else:
-        if any(value is None for value in (temporal_translator, temporal_field_schema, temporal_source)):
+        if any(
+            value is None
+            for value in (temporal_translator, temporal_field_schema, temporal_source)
+        ):
             raise PerceptionPromotedInferenceError(
                 "temporal promotion requires translator, field schema, and temporal source"
             )
         if source is not None:
-            raise PerceptionPromotedInferenceError("temporal promotion cannot consume standalone source")
+            raise PerceptionPromotedInferenceError(
+                "temporal promotion cannot consume standalone source"
+            )
         assert temporal_translator is not None
         assert temporal_field_schema is not None
         assert temporal_source is not None
         if temporal_translator.temporal_translator_id != promoted.model_id:
-            raise PerceptionPromotedInferenceError("temporal translator does not match promoted model")
+            raise PerceptionPromotedInferenceError(
+                "temporal translator does not match promoted model"
+            )
         if temporal_source.temporal_window_spec_id != promoted.temporal_window_spec_id:
-            raise PerceptionPromotedInferenceError("temporal source does not match promoted window")
+            raise PerceptionPromotedInferenceError(
+                "temporal source does not match promoted window"
+            )
         prediction = predict_temporal_action(
             temporal_translator,
             temporal_source,
@@ -233,7 +291,9 @@ def run_promoted_inference(
         selected_action = prediction.selected_action
         margin = prediction.margin
 
-    status = "accepted" if margin >= promoted.rejection_threshold else "rejected_ambiguous"
+    status = (
+        "accepted" if margin >= promoted.rejection_threshold else "rejected_ambiguous"
+    )
     payload: Mapping[str, object] = {
         "calibration_id": promoted.calibration_id,
         "input_id": input_id,
@@ -285,14 +345,20 @@ def evaluate_promoted_model_on_test(
     """Evaluate the frozen promoted operating point on untouched aligned test examples."""
 
     if split != "test":
-        raise PerceptionPromotedInferenceError("final promoted evaluation requires split='test'")
+        raise PerceptionPromotedInferenceError(
+            "final promoted evaluation requires split='test'"
+        )
     if not test_temporal_sources:
         raise PerceptionPromotedInferenceError("test evaluation requires examples")
     seen: set[str] = set()
     examples: list[PromotedTestExampleDTO] = []
-    for item in sorted(test_temporal_sources, key=lambda value: value.target_interaction_id):
+    for item in sorted(
+        test_temporal_sources, key=lambda value: value.target_interaction_id
+    ):
         if item.target_interaction_id in seen:
-            raise PerceptionPromotedInferenceError("test interaction ids must be unique")
+            raise PerceptionPromotedInferenceError(
+                "test interaction ids must be unique"
+            )
         seen.add(item.target_interaction_id)
         if promoted.model_kind == "single_frame":
             try:
@@ -332,7 +398,9 @@ def evaluate_promoted_model_on_test(
     accepted = tuple(item for item in ordered if item.status == "accepted")
     raw_accuracy = sum(1 for item in ordered if item.correct) / len(ordered)
     accepted_accuracy = (
-        sum(1 for item in accepted if item.correct) / len(accepted) if accepted else None
+        sum(1 for item in accepted if item.correct) / len(accepted)
+        if accepted
+        else None
     )
     coverage = len(accepted) / len(ordered)
     mean_margin = sum(item.margin for item in ordered) / len(ordered)

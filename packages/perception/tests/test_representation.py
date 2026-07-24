@@ -145,7 +145,9 @@ def test_action_decoding_rejects_digest_schema_and_metadata_tampering() -> None:
     target = encode_discrete_action("LEFT", schema)
 
     with pytest.raises(PerceptionRepresentationError, match="digest mismatch"):
-        decode_discrete_action(replace(target, png_bytes=target.png_bytes + b"x"), schema)
+        decode_discrete_action(
+            replace(target, png_bytes=target.png_bytes + b"x"), schema
+        )
 
     other_schema = DiscreteActionSchemaDTO.from_labels(["FIRE", "LEFT", "RIGHT"])
     with pytest.raises(PerceptionRepresentationError, match="schema identity mismatch"):

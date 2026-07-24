@@ -123,7 +123,9 @@ class EvidenceVPMDTO:
         raise KeyError(field_id)
 
 
-def _eta_squared(values: np.ndarray, labels: tuple[str, ...]) -> tuple[float, float, float]:
+def _eta_squared(
+    values: np.ndarray, labels: tuple[str, ...]
+) -> tuple[float, float, float]:
     grand_mean = float(np.mean(values))
     total = float(np.sum((values - grand_mean) ** 2))
     within = 0.0
@@ -180,10 +182,14 @@ def estimate_field_relevance(
                 f"missing SourceVPMDTO for {interaction.source_vpm_id}"
             ) from exc
         if source.pixel_digest != interaction.source_pixel_digest:
-            raise PerceptionEvidenceError("source pixel identity disagrees with interaction")
+            raise PerceptionEvidenceError(
+                "source pixel identity disagrees with interaction"
+            )
         validate_source_for_schema(source, field_schema)
         for sample in extract_source_fields(source, field_schema):
-            values_by_field[sample.field_id].append(float(np.mean(sample.to_array())) / 255.0)
+            values_by_field[sample.field_id].append(
+                float(np.mean(sample.to_array())) / 255.0
+            )
 
     relevances: list[FieldRelevanceDTO] = []
     for field in field_schema.fields:

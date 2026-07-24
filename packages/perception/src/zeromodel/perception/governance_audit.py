@@ -71,11 +71,15 @@ class GovernanceIntegrityFindingDTO:
                 self.message,
             )
         ):
-            raise PerceptionGovernanceAuditError("audit finding fields must be non-empty")
+            raise PerceptionGovernanceAuditError(
+                "audit finding fields must be non-empty"
+            )
         if self.severity not in GOVERNANCE_AUDIT_SEVERITIES:
             raise PerceptionGovernanceAuditError("unsupported audit finding severity")
         if self.related_ids != tuple(sorted(set(self.related_ids))):
-            raise PerceptionGovernanceAuditError("audit related identities must be sorted and unique")
+            raise PerceptionGovernanceAuditError(
+                "audit related identities must be sorted and unique"
+            )
         if self.version != GOVERNANCE_AUDIT_FINDING_VERSION:
             raise PerceptionGovernanceAuditError("unsupported audit finding version")
 
@@ -97,11 +101,15 @@ class GovernanceIntegrityAuditReportDTO:
 
     def __post_init__(self) -> None:
         if not self.report_id or not self.active_pointer_id:
-            raise PerceptionGovernanceAuditError("audit report identities must be non-empty")
+            raise PerceptionGovernanceAuditError(
+                "audit report identities must be non-empty"
+            )
         if self.status not in GOVERNANCE_AUDIT_STATUSES:
             raise PerceptionGovernanceAuditError("unsupported audit report status")
         if self.active_pointer_revision < 0:
-            raise PerceptionGovernanceAuditError("audit pointer revision cannot be negative")
+            raise PerceptionGovernanceAuditError(
+                "audit pointer revision cannot be negative"
+            )
         counts = (
             self.recommendation_count,
             self.disposition_count,
@@ -112,7 +120,9 @@ class GovernanceIntegrityAuditReportDTO:
         if any(value < 0 for value in counts):
             raise PerceptionGovernanceAuditError("audit counts cannot be negative")
         if self.finding_count != len(self.findings):
-            raise PerceptionGovernanceAuditError("audit finding count does not match findings")
+            raise PerceptionGovernanceAuditError(
+                "audit finding count does not match findings"
+            )
         expected = tuple(
             sorted(
                 self.findings,
@@ -126,7 +136,9 @@ class GovernanceIntegrityAuditReportDTO:
             )
         )
         if self.findings != expected:
-            raise PerceptionGovernanceAuditError("audit findings must be canonically sorted")
+            raise PerceptionGovernanceAuditError(
+                "audit findings must be canonically sorted"
+            )
         if self.semantics != GOVERNANCE_AUDIT_SEMANTICS:
             raise PerceptionGovernanceAuditError("unsupported audit semantics")
         if self.version != GOVERNANCE_AUDIT_VERSION:
@@ -341,7 +353,9 @@ def audit_governance_integrity(
 
     recommendations_by_id = {item.recommendation_id: item for item in recommendations}
     dispositions_by_id = {item.disposition_id: item for item in dispositions}
-    dispositions_by_recommendation = {item.recommendation_id: item for item in dispositions}
+    dispositions_by_recommendation = {
+        item.recommendation_id: item for item in dispositions
+    }
     receipts_by_disposition = {item.disposition_id: item for item in receipts}
     attempts_by_disposition = {item.disposition_id: item for item in attempts}
 
@@ -416,7 +430,10 @@ def audit_governance_integrity(
                         code="receipt_recommendation_mismatch",
                         subject_kind="receipt",
                         subject_id=receipt.receipt_id,
-                        related_ids=(disposition.disposition_id, receipt.recommendation_id),
+                        related_ids=(
+                            disposition.disposition_id,
+                            receipt.recommendation_id,
+                        ),
                         message="receipt and disposition reference different recommendations",
                     )
                 )

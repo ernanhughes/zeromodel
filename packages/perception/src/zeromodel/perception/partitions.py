@@ -53,7 +53,9 @@ class DatasetPartitionDTO:
 
     def __post_init__(self) -> None:
         if not all((self.partition_id, self.dataset_id, self.action_schema_id)):
-            raise PerceptionDatasetPartitionError("partition identities must be non-empty")
+            raise PerceptionDatasetPartitionError(
+                "partition identities must be non-empty"
+            )
         if self.split not in _ALLOWED_PARTITIONS:
             raise PerceptionDatasetPartitionError("unsupported dataset partition")
         for name, values in (
@@ -93,7 +95,9 @@ def build_dataset_partition(
         )
     interaction_ids = tuple(sorted(item.interaction_id for item in selected))
     sequence_ids = tuple(sorted({item.sequence_id for item in selected}))
-    source_pixel_digests = tuple(sorted({item.source_pixel_digest for item in selected}))
+    source_pixel_digests = tuple(
+        sorted({item.source_pixel_digest for item in selected})
+    )
     payload: Mapping[str, object] = {
         "action_schema_id": manifest.action_schema_id,
         "dataset_id": manifest.dataset_id,

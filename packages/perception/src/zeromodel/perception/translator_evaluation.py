@@ -24,7 +24,9 @@ from .translator import (
 
 TRANSLATOR_EVALUATION_VERSION: Final = "perception-translator-evaluation/1"
 TRANSLATOR_CALIBRATION_VERSION: Final = "perception-translator-calibration/1"
-REJECTED_TRANSLATOR_PREDICTION_VERSION: Final = "perception-calibrated-target-prediction/1"
+REJECTED_TRANSLATOR_PREDICTION_VERSION: Final = (
+    "perception-calibrated-target-prediction/1"
+)
 RECONSTRUCTION_ERROR_SEMANTICS: Final = "mean_absolute_error_against_one_hot_target"
 SPARSITY_SEMANTICS: Final = "coefficient_absolute_value_at_or_below_threshold"
 REJECTION_SEMANTICS: Final = "reject_when_top_two_margin_below_calibrated_threshold"
@@ -35,7 +37,13 @@ class PerceptionTranslatorEvaluationError(ValueError):
 
 
 def _canonical_json(payload: Mapping[str, object]) -> bytes:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False).encode("utf-8")
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+        allow_nan=False,
+    ).encode("utf-8")
 
 
 def _digest(*parts: bytes) -> str:
@@ -84,7 +92,9 @@ class TranslatorEvaluationReportDTO:
         if self.example_count <= 0 or self.correct_count < 0:
             raise PerceptionTranslatorEvaluationError("evaluation counts are invalid")
         if not 0.0 <= self.accuracy <= 1.0 or not 0.0 <= self.sparsity_ratio <= 1.0:
-            raise PerceptionTranslatorEvaluationError("evaluation ratios must be in [0, 1]")
+            raise PerceptionTranslatorEvaluationError(
+                "evaluation ratios must be in [0, 1]"
+            )
 
 
 @dataclass(frozen=True)
@@ -117,11 +127,21 @@ class CalibratedTranslatorPredictionDTO:
 
 def _split_interactions(manifest: PerceptionDatasetManifestDTO, split: str):
     if split not in {"train", "validation", "test"}:
-        raise PerceptionTranslatorEvaluationError("split must be train, validation, or test")
-    selected = {item.interaction_id for item in manifest.split_assignments if item.split == split}
-    interactions = tuple(item for item in manifest.interactions if item.interaction_id in selected)
+        raise PerceptionTranslatorEvaluationError(
+            "split must be train, validation, or test"
+        )
+    selected = {
+        item.interaction_id
+        for item in manifest.split_assignments
+        if item.split == split
+    }
+    interactions = tuple(
+        item for item in manifest.interactions if item.interaction_id in selected
+    )
     if not interactions:
-        raise PerceptionTranslatorEvaluationError(f"dataset contains no {split!r} interactions")
+        raise PerceptionTranslatorEvaluationError(
+            f"dataset contains no {split!r} interactions"
+        )
     return interactions
 
 
@@ -137,40 +157,63 @@ def evaluate_source_target_translator(
 ) -> TranslatorEvaluationReportDTO:
     """Evaluate target reconstruction and action decoding on a non-training split."""
     if evaluation_split == translator.training_split:
-        raise PerceptionTranslatorEvaluationError("evaluation split must differ from translator training split")
+        raise PerceptionTranslatorEvaluationError(
+            "evaluation split must differ from translator training split"
+        )
     if sparsity_threshold < 0.0 or not np.isfinite(sparsity_threshold):
-        raise PerceptionTranslatorEvaluationError("sparsity_threshold must be finite and non-negative")
+        raise PerceptionTranslatorEvaluationError(
+            "sparsity_threshold must be finite and non-negative"
+        )
     interactions = _split_interactions(manifest, evaluation_split)
     records: list[TranslatorExampleEvaluationDTO] = []
     for interaction in interactions:
         try:
             source = source_vpms[interaction.source_vpm_id]
         except KeyError as exc:
-            raise PerceptionTranslatorEvaluationError(f"missing SourceVPMDTO for {interaction.source_vpm_id}") from exc
+            raise PerceptionTranslatorEvaluationError(
+                f"missing SourceVPMDTO for {interaction.source_vpm_id}"
+            ) from exc
         if source.pixel_digest != interaction.source_pixel_digest:
-            raise PerceptionTranslatorEvaluationError("source pixel identity disagrees with interaction")
-        prediction = predict_target_vpm(translator, source, source_field_schema, action_schema)
+            raise PerceptionTranslatorEvaluationError(
+                "source pixel identity disagrees with interaction"
+            )
+        prediction = predict_target_vpm(
+            translator, source, source_field_schema, action_schema
+        )
         expected = np.zeros(len(action_schema.labels), dtype=np.float64)
         expected[action_schema.index_of(interaction.action_label)] = 1.0
-        ordered_scores = np.asarray([
-            next(item.score for item in prediction.scores if item.action_label == label)
-            for label in action_schema.labels
-        ], dtype=np.float64)
+        ordered_scores = np.asarray(
+            [
+                next(
+                    item.score
+                    for item in prediction.scores
+                    if item.action_label == label
+                )
+                for label in action_schema.labels
+            ],
+            dtype=np.float64,
+        )
         error = float(np.mean(np.abs(ordered_scores - expected)))
-        records.append(TranslatorExampleEvaluationDTO(
-            interaction_id=interaction.interaction_id,
-            source_vpm_id=source.source_vpm_id,
-            expected_action=interaction.action_label,
-            predicted_action=prediction.selected_action,
-            correct=prediction.selected_action == interaction.action_label,
-            margin=prediction.margin,
-            reconstruction_error=error,
-            prediction_id=prediction.prediction_id,
-        ))
+        records.append(
+            TranslatorExampleEvaluationDTO(
+                interaction_id=interaction.interaction_id,
+                source_vpm_id=source.source_vpm_id,
+                expected_action=interaction.action_label,
+                predicted_action=prediction.selected_action,
+                correct=prediction.selected_action == interaction.action_label,
+                margin=prediction.margin,
+                reconstruction_error=error,
+                prediction_id=prediction.prediction_id,
+            )
+        )
     ordered = tuple(sorted(records, key=lambda item: item.interaction_id))
     margins = np.asarray([item.margin for item in ordered], dtype=np.float64)
-    errors = np.asarray([item.reconstruction_error for item in ordered], dtype=np.float64)
-    coefficient_values = np.abs(np.asarray(translator.coefficients, dtype=np.float64)).reshape(-1)
+    errors = np.asarray(
+        [item.reconstruction_error for item in ordered], dtype=np.float64
+    )
+    coefficient_values = np.abs(
+        np.asarray(translator.coefficients, dtype=np.float64)
+    ).reshape(-1)
     near_zero = int(np.sum(coefficient_values <= sparsity_threshold))
     correct = sum(item.correct for item in ordered)
     payload: Mapping[str, object] = {
@@ -210,15 +253,23 @@ def calibrate_translator_rejection(
 ) -> TranslatorCalibrationDTO:
     """Choose the lowest margin threshold meeting retained calibration accuracy."""
     if report.evaluation_split == "test":
-        raise PerceptionTranslatorEvaluationError("test split cannot be used for calibration")
+        raise PerceptionTranslatorEvaluationError(
+            "test split cannot be used for calibration"
+        )
     if not 0.0 < target_retained_accuracy <= 1.0:
-        raise PerceptionTranslatorEvaluationError("target_retained_accuracy must be in (0, 1]")
+        raise PerceptionTranslatorEvaluationError(
+            "target_retained_accuracy must be in (0, 1]"
+        )
     candidates = sorted({0.0, *(item.margin for item in report.examples)})
     chosen = candidates[-1]
     retained = tuple(item for item in report.examples if item.margin >= chosen)
     for threshold in candidates:
         current = tuple(item for item in report.examples if item.margin >= threshold)
-        if current and sum(item.correct for item in current) / len(current) >= target_retained_accuracy:
+        if (
+            current
+            and sum(item.correct for item in current) / len(current)
+            >= target_retained_accuracy
+        ):
             chosen = threshold
             retained = current
             break
@@ -251,7 +302,9 @@ def predict_calibrated_target_vpm(
 ) -> CalibratedTranslatorPredictionDTO:
     """Predict and explicitly reject when the calibrated top-two margin is too small."""
     if calibration.translator_id != translator.translator_id:
-        raise PerceptionTranslatorEvaluationError("calibration does not belong to translator")
+        raise PerceptionTranslatorEvaluationError(
+            "calibration does not belong to translator"
+        )
     raw = predict_target_vpm(translator, source, source_field_schema, action_schema)
     accepted = raw.margin >= calibration.minimum_margin
     status = "accepted" if accepted else "rejected_ambiguous"

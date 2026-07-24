@@ -90,7 +90,9 @@ def test_evaluation_is_held_out_and_deterministic() -> None:
     assert first == second
     assert first.example_count == 2
     assert 0.0 <= first.accuracy <= 1.0
-    assert first.coefficient_count == len(translator.action_labels) * len(translator.source_field_ids)
+    assert first.coefficient_count == len(translator.action_labels) * len(
+        translator.source_field_ids
+    )
 
 
 def test_calibration_and_rejection_contract() -> None:

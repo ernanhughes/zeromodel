@@ -132,7 +132,9 @@ def test_identical_pixels_with_same_action_cannot_cross_splits() -> None:
 
     assert len({item.split for item in manifest.split_assignments}) > 1
     finding = next(
-        item for item in manifest.findings if item.code == "identical_source_across_splits"
+        item
+        for item in manifest.findings
+        if item.code == "identical_source_across_splits"
     )
     assert finding.severity == "error"
     assert set(finding.interaction_ids) == {

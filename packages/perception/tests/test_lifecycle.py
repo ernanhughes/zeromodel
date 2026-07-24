@@ -93,7 +93,11 @@ def test_activation_supersession_and_rollback_preserve_history() -> None:
     assert supersession.transition_kind == "supersede"
     assert rollback.transition_kind == "rollback"
     assert rollback.related_transition_id == activation.transition_id
-    assert (pointer_one.revision, pointer_two.revision, pointer_three.revision) == (1, 2, 3)
+    assert (pointer_one.revision, pointer_two.revision, pointer_three.revision) == (
+        1,
+        2,
+        3,
+    )
     assert resolve_active_promoted_model(store) == first_model
 
     snapshot = build_model_lifecycle_snapshot(store)
@@ -163,7 +167,9 @@ def test_deactivation_clears_pointer_without_deleting_model() -> None:
     assert transition.transition_kind == "deactivate"
     assert pointer.active_promoted_model_id is None
     assert store.get_ledger_entry(model.promoted_model_id) == entry
-    with pytest.raises(PerceptionModelLifecycleError, match="no promoted model is active"):
+    with pytest.raises(
+        PerceptionModelLifecycleError, match="no promoted model is active"
+    ):
         resolve_active_promoted_model(store)
 
 

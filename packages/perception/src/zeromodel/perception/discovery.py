@@ -11,7 +11,7 @@ import hashlib
 import io
 import json
 from dataclasses import dataclass
-from typing import Final, Mapping, Sequence
+from typing import Final, Mapping
 
 import numpy as np
 from PIL import Image
@@ -31,12 +31,8 @@ UNEXPLAINED_EVIDENCE_VERSION: Final = "perception-unexplained-evidence/1"
 OBSERVED_SURFACE_SEMANTICS: Final = (
     "absolute_translator_coefficient_mass_normalized_per_action"
 )
-EXPECTED_SURFACE_SEMANTICS: Final = (
-    "declared_expected_annotation_membership_by_action"
-)
-DIFFERENCE_SURFACE_SEMANTICS: Final = (
-    "signed_observed_minus_expected_registration"
-)
+EXPECTED_SURFACE_SEMANTICS: Final = "declared_expected_annotation_membership_by_action"
+DIFFERENCE_SURFACE_SEMANTICS: Final = "signed_observed_minus_expected_registration"
 UNEXPLAINED_SURFACE_SEMANTICS: Final = (
     "observed_registration_outside_declared_expected_annotations"
 )
@@ -143,17 +139,31 @@ class UnexplainedEvidenceDTO:
     version: str = UNEXPLAINED_EVIDENCE_VERSION
 
     def __post_init__(self) -> None:
-        if not all((self.unexplained_id, self.translator_id, self.field_schema_id, self.action_label)):
-            raise PerceptionDiscoveryError("unexplained evidence identities must be non-empty")
+        if not all(
+            (
+                self.unexplained_id,
+                self.translator_id,
+                self.field_schema_id,
+                self.action_label,
+            )
+        ):
+            raise PerceptionDiscoveryError(
+                "unexplained evidence identities must be non-empty"
+            )
         if not self.field_ids or self.field_ids != tuple(sorted(set(self.field_ids))):
-            raise PerceptionDiscoveryError("unexplained field_ids must be non-empty, unique, sorted")
+            raise PerceptionDiscoveryError(
+                "unexplained field_ids must be non-empty, unique, sorted"
+            )
         if not 0.0 <= self.contribution_score <= 1.0:
             raise PerceptionDiscoveryError("contribution_score must be in [0, 1]")
         if self.recurrence_count <= 0:
             raise PerceptionDiscoveryError("recurrence_count must be positive")
         if not 0.0 <= self.stability <= 1.0:
             raise PerceptionDiscoveryError("stability must be in [0, 1]")
-        if self.intervention_effect is not None and not -1.0 <= self.intervention_effect <= 1.0:
+        if (
+            self.intervention_effect is not None
+            and not -1.0 <= self.intervention_effect <= 1.0
+        ):
             raise PerceptionDiscoveryError("intervention_effect must be in [-1, 1]")
         if self.suggested_labels != tuple(sorted(set(self.suggested_labels))):
             raise PerceptionDiscoveryError("suggested_labels must be unique and sorted")
@@ -187,9 +197,13 @@ class EvidenceDiscoveryReportDTO:
         keys = tuple((item.action_label, item.surface_kind) for item in self.surfaces)
         if keys != tuple(sorted(set(keys))):
             raise PerceptionDiscoveryError("surfaces must be unique and sorted")
-        unexplained_ids = tuple(item.unexplained_id for item in self.unexplained_evidence)
+        unexplained_ids = tuple(
+            item.unexplained_id for item in self.unexplained_evidence
+        )
         if unexplained_ids != tuple(sorted(set(unexplained_ids))):
-            raise PerceptionDiscoveryError("unexplained evidence must be unique and sorted")
+            raise PerceptionDiscoveryError(
+                "unexplained evidence must be unique and sorted"
+            )
 
 
 def _coefficient_surface(
@@ -197,7 +211,9 @@ def _coefficient_surface(
     action_label: str,
 ) -> dict[str, float]:
     action_index = translator.action_labels.index(action_label)
-    weights = np.abs(np.asarray(translator.coefficients[action_index], dtype=np.float64))
+    weights = np.abs(
+        np.asarray(translator.coefficients[action_index], dtype=np.float64)
+    )
     total = float(np.sum(weights))
     if total <= 0.0:
         return {field_id: 0.0 for field_id in translator.source_field_ids}
@@ -214,7 +230,9 @@ def _render_surface(
     signed: bool,
 ) -> tuple[bytes, tuple[tuple[str, float], ...]]:
     array = np.zeros((field_schema.height, field_schema.width), dtype=np.uint8)
-    ordered = tuple(sorted((field_id, float(value)) for field_id, value in values.items()))
+    ordered = tuple(
+        sorted((field_id, float(value)) for field_id, value in values.items())
+    )
     for field_id, value in ordered:
         field = field_schema.field(field_id)
         if signed:
@@ -297,7 +315,9 @@ def discover_unexpected_evidence(
     expected_annotation_ids = set(expectation.source_annotation_ids)
     unknown = expected_annotation_ids - set(annotation_by_id)
     if unknown:
-        raise PerceptionDiscoveryError(f"expectation references unknown annotations: {sorted(unknown)}")
+        raise PerceptionDiscoveryError(
+            f"expectation references unknown annotations: {sorted(unknown)}"
+        )
     expected_fields = {
         field_id
         for annotation_id in expected_annotation_ids
@@ -373,8 +393,16 @@ def discover_unexpected_evidence(
             if contribution < contribution_threshold:
                 continue
             key = (action_label, field_id)
-            recurrence = 1 if recurrence_by_action_field is None else recurrence_by_action_field.get(key, 1)
-            stability = 1.0 if stability_by_action_field is None else stability_by_action_field.get(key, 1.0)
+            recurrence = (
+                1
+                if recurrence_by_action_field is None
+                else recurrence_by_action_field.get(key, 1)
+            )
+            stability = (
+                1.0
+                if stability_by_action_field is None
+                else stability_by_action_field.get(key, 1.0)
+            )
             effect = None
             if intervention_effect_by_action_field is not None:
                 effect = intervention_effect_by_action_field.get(key)
@@ -403,8 +431,12 @@ def discover_unexpected_evidence(
                 )
             )
 
-    ordered_surfaces = tuple(sorted(surfaces, key=lambda item: (item.action_label, item.surface_kind)))
-    ordered_unexplained = tuple(sorted(unexplained_items, key=lambda item: item.unexplained_id))
+    ordered_surfaces = tuple(
+        sorted(surfaces, key=lambda item: (item.action_label, item.surface_kind))
+    )
+    ordered_unexplained = tuple(
+        sorted(unexplained_items, key=lambda item: item.unexplained_id)
+    )
     payload = {
         "conformance_report_id": conformance.report_id,
         "contribution_threshold": contribution_threshold,

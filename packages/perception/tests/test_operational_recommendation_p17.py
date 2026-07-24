@@ -31,7 +31,9 @@ def _model(name: str) -> PromotedPerceptionModelDTO:
     )
 
 
-def _contract(model: PromotedPerceptionModelDTO, *, action_schema_id: str = "actions-v1"):
+def _contract(
+    model: PromotedPerceptionModelDTO, *, action_schema_id: str = "actions-v1"
+):
     return build_model_compatibility_contract(
         model,
         action_schema_id=action_schema_id,
@@ -86,10 +88,18 @@ def _lifecycle():
     store = InMemoryPerceptionModelLifecycleStore()
     earlier = _model("earlier")
     current = _model("current")
-    register_promoted_model(store, earlier, registered_by="test", registration_reason="earlier")
-    register_promoted_model(store, current, registered_by="test", registration_reason="current")
-    activate_promoted_model(store, earlier.promoted_model_id, actor="operator", reason="activate")
-    supersede_active_model(store, current.promoted_model_id, actor="operator", reason="supersede")
+    register_promoted_model(
+        store, earlier, registered_by="test", registration_reason="earlier"
+    )
+    register_promoted_model(
+        store, current, registered_by="test", registration_reason="current"
+    )
+    activate_promoted_model(
+        store, earlier.promoted_model_id, actor="operator", reason="activate"
+    )
+    supersede_active_model(
+        store, current.promoted_model_id, actor="operator", reason="supersede"
+    )
     return earlier, current, build_model_lifecycle_snapshot(store)
 
 
@@ -159,4 +169,6 @@ def test_supported_drift_without_compatible_candidate_requires_investigation() -
     assert recommendation.status == "investigate"
     assert recommendation.selected_target_promoted_model_id is None
     assert recommendation.assessed_candidates[0].status == "incompatible"
-    assert recommendation.assessed_candidates[0].mismatched_fields == ("action_schema_id",)
+    assert recommendation.assessed_candidates[0].mismatched_fields == (
+        "action_schema_id",
+    )

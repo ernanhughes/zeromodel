@@ -58,8 +58,12 @@ def _fixture():
             registered_by="test",
             registration_reason="candidate",
         )
-    activate_promoted_model(store, earlier.promoted_model_id, actor="test", reason="activate")
-    supersede_active_model(store, current.promoted_model_id, actor="test", reason="supersede")
+    activate_promoted_model(
+        store, earlier.promoted_model_id, actor="test", reason="activate"
+    )
+    supersede_active_model(
+        store, current.promoted_model_id, actor="test", reason="supersede"
+    )
     snapshot = build_model_lifecycle_snapshot(store)
     current_contract = _contract(current)
     target_contract = _contract(earlier)
@@ -98,7 +102,9 @@ def test_approval_is_deterministic_and_non_mutating() -> None:
     )
 
     assert first == second
-    assert store.get_active_pointer().active_promoted_model_id == current.promoted_model_id
+    assert (
+        store.get_active_pointer().active_promoted_model_id == current.promoted_model_id
+    )
     assert first.selected_target_promoted_model_id == earlier.promoted_model_id
 
 
@@ -120,7 +126,9 @@ def test_rejection_cannot_execute_or_mutate_lifecycle() -> None:
             target_contract=target_contract,
         )
 
-    assert store.get_active_pointer().active_promoted_model_id == current.promoted_model_id
+    assert (
+        store.get_active_pointer().active_promoted_model_id == current.promoted_model_id
+    )
 
 
 def test_approved_fresh_recommendation_executes_governed_rollback() -> None:
@@ -176,7 +184,10 @@ def test_approved_recommendation_is_rejected_after_pointer_revision_changes() ->
             target_contract=target_contract,
         )
 
-    assert store.get_active_pointer().active_promoted_model_id == replacement.promoted_model_id
+    assert (
+        store.get_active_pointer().active_promoted_model_id
+        == replacement.promoted_model_id
+    )
     assert current.promoted_model_id != replacement.promoted_model_id
 
 
@@ -194,7 +205,9 @@ def test_non_rollback_recommendation_cannot_be_approved() -> None:
         }
     )
 
-    with pytest.raises(PerceptionOperationalDispositionError, match="rollback-candidate"):
+    with pytest.raises(
+        PerceptionOperationalDispositionError, match="rollback-candidate"
+    ):
         disposition_operational_recommendation(
             healthy,
             status="approved",

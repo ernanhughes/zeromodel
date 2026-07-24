@@ -75,7 +75,9 @@ def test_temporal_montage_is_deterministic_and_addressable() -> None:
     assert all(item.montage_source_vpm.width == 4 for item in first)
     assert all(item.montage_source_vpm.height == 2 for item in first)
     assert all(len(item.frame_source_vpm_ids) == 2 for item in first)
-    assert all(item.frame_source_vpm_ids[-1] == item.current_source_vpm_id for item in first)
+    assert all(
+        item.frame_source_vpm_ids[-1] == item.current_source_vpm_id for item in first
+    )
 
 
 def test_prior_context_confirms_incomplete_single_frame_state() -> None:
@@ -85,7 +87,9 @@ def test_prior_context_confirms_incomplete_single_frame_state() -> None:
 
     report = diagnose_temporal_state_completeness(manifest, temporal, spec)
     conflict = next(
-        item for item in report.groups if item.current_pixel_digest == current.pixel_digest
+        item
+        for item in report.groups
+        if item.current_pixel_digest == current.pixel_digest
     )
 
     assert conflict.action_labels == ("LEFT", "RIGHT")
@@ -104,7 +108,9 @@ def test_identical_temporal_context_remains_unresolved() -> None:
 
     report = diagnose_temporal_state_completeness(manifest, temporal, spec)
     conflict = next(
-        item for item in report.groups if item.current_pixel_digest == current.pixel_digest
+        item
+        for item in report.groups
+        if item.current_pixel_digest == current.pixel_digest
     )
 
     assert conflict.temporal_context_count == 1

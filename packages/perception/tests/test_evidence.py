@@ -57,9 +57,7 @@ def _left_and_right(schema):
 
 def test_relevance_identifies_action_discriminative_field() -> None:
     manifest, sources, schema = _fixture()
-    evidence = estimate_field_relevance(
-        manifest, sources, schema, training_split="all"
-    )
+    evidence = estimate_field_relevance(manifest, sources, schema, training_split="all")
     left, right = _left_and_right(schema)
 
     assert evidence.relevance_for(left.field_id).score == pytest.approx(1.0)
@@ -155,8 +153,6 @@ def test_relevance_requires_valid_split_and_two_actions() -> None:
 
 def test_evidence_dto_detects_png_tampering() -> None:
     manifest, sources, schema = _fixture()
-    evidence = estimate_field_relevance(
-        manifest, sources, schema, training_split="all"
-    )
+    evidence = estimate_field_relevance(manifest, sources, schema, training_split="all")
     with pytest.raises(PerceptionEvidenceError, match="PNG digest"):
         replace(evidence, png_bytes=evidence.png_bytes + b"tamper")

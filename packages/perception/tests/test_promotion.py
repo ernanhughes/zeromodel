@@ -80,7 +80,9 @@ def test_calibration_is_validation_owned_and_deterministic() -> None:
     assert temporal.coverage == 1.0
 
 
-def test_promotion_selects_temporal_when_it_improves_validation_operating_point() -> None:
+def test_promotion_selects_temporal_when_it_improves_validation_operating_point() -> (
+    None
+):
     decision, promoted = promote_perception_model(_report())
 
     assert decision.selected_model_kind == "temporal"

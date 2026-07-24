@@ -21,7 +21,9 @@ PRODUCTION_METRICS_REPORT_VERSION: Final = "perception-production-metrics-report
 PRODUCTION_INFERENCE_SEMANTICS: Final = (
     "append_only_runtime_inference_bound_to_active_model_pointer_revision"
 )
-PRODUCTION_OUTCOME_SEMANTICS: Final = "append_only_observed_outcome_for_runtime_inference"
+PRODUCTION_OUTCOME_SEMANTICS: Final = (
+    "append_only_observed_outcome_for_runtime_inference"
+)
 PRODUCTION_METRICS_SEMANTICS: Final = (
     "windowed_operational_metrics_over_immutable_inference_and_outcome_records"
 )
@@ -66,13 +68,19 @@ class ProductionInferenceRecordDTO:
 
     def __post_init__(self) -> None:
         if self.sequence_number <= 0:
-            raise PerceptionProductionLedgerError("inference sequence_number must be positive")
+            raise PerceptionProductionLedgerError(
+                "inference sequence_number must be positive"
+            )
         if self.pointer_revision <= 0:
-            raise PerceptionProductionLedgerError("production inference requires active pointer revision")
+            raise PerceptionProductionLedgerError(
+                "production inference requires active pointer revision"
+            )
         if self.model_kind not in {"single_frame", "temporal"}:
             raise PerceptionProductionLedgerError("unsupported production model kind")
         if self.status not in {"accepted", "rejected_ambiguous"}:
-            raise PerceptionProductionLedgerError("unsupported production inference status")
+            raise PerceptionProductionLedgerError(
+                "unsupported production inference status"
+            )
         if not all(
             (
                 self.record_id,
@@ -84,12 +92,18 @@ class ProductionInferenceRecordDTO:
                 self.selected_action,
             )
         ):
-            raise PerceptionProductionLedgerError("production inference identities must be non-empty")
+            raise PerceptionProductionLedgerError(
+                "production inference identities must be non-empty"
+            )
         for value in (self.margin, self.rejection_threshold):
             if not 0.0 <= value <= 1.0:
-                raise PerceptionProductionLedgerError("production inference metric outside [0, 1]")
+                raise PerceptionProductionLedgerError(
+                    "production inference metric outside [0, 1]"
+                )
         if self.semantics != PRODUCTION_INFERENCE_SEMANTICS:
-            raise PerceptionProductionLedgerError("unsupported production inference semantics")
+            raise PerceptionProductionLedgerError(
+                "unsupported production inference semantics"
+            )
 
 
 @dataclass(frozen=True)
@@ -105,11 +119,24 @@ class ProductionOutcomeRecordDTO:
 
     def __post_init__(self) -> None:
         if self.outcome_sequence_number <= 0:
-            raise PerceptionProductionLedgerError("outcome sequence_number must be positive")
-        if not all((self.outcome_id, self.inference_record_id, self.observed_action, self.source)):
-            raise PerceptionProductionLedgerError("production outcome fields must be non-empty")
+            raise PerceptionProductionLedgerError(
+                "outcome sequence_number must be positive"
+            )
+        if not all(
+            (
+                self.outcome_id,
+                self.inference_record_id,
+                self.observed_action,
+                self.source,
+            )
+        ):
+            raise PerceptionProductionLedgerError(
+                "production outcome fields must be non-empty"
+            )
         if self.semantics != PRODUCTION_OUTCOME_SEMANTICS:
-            raise PerceptionProductionLedgerError("unsupported production outcome semantics")
+            raise PerceptionProductionLedgerError(
+                "unsupported production outcome semantics"
+            )
 
 
 @dataclass(frozen=True)
@@ -134,24 +161,48 @@ class ProductionMetricsReportDTO:
     version: str = PRODUCTION_METRICS_REPORT_VERSION
 
     def __post_init__(self) -> None:
-        if self.start_sequence_number <= 0 or self.end_sequence_number < self.start_sequence_number:
+        if (
+            self.start_sequence_number <= 0
+            or self.end_sequence_number < self.start_sequence_number
+        ):
             raise PerceptionProductionLedgerError("invalid production metrics window")
-        if self.inference_count <= 0 or self.inference_count != len(self.inference_record_ids):
-            raise PerceptionProductionLedgerError("production metrics inference count is invalid")
+        if self.inference_count <= 0 or self.inference_count != len(
+            self.inference_record_ids
+        ):
+            raise PerceptionProductionLedgerError(
+                "production metrics inference count is invalid"
+            )
         if self.accepted_count + self.rejected_count != self.inference_count:
-            raise PerceptionProductionLedgerError("accepted and rejected counts must exhaust inferences")
-        if self.correct_count > self.labeled_count or self.labeled_count != len(self.outcome_ids):
-            raise PerceptionProductionLedgerError("production metrics outcome counts are invalid")
+            raise PerceptionProductionLedgerError(
+                "accepted and rejected counts must exhaust inferences"
+            )
+        if self.correct_count > self.labeled_count or self.labeled_count != len(
+            self.outcome_ids
+        ):
+            raise PerceptionProductionLedgerError(
+                "production metrics outcome counts are invalid"
+            )
         for value in (self.coverage, self.mean_margin):
             if not 0.0 <= value <= 1.0:
-                raise PerceptionProductionLedgerError("production metric outside [0, 1]")
+                raise PerceptionProductionLedgerError(
+                    "production metric outside [0, 1]"
+                )
         for value in (self.raw_accuracy, self.accepted_accuracy):
             if value is not None and not 0.0 <= value <= 1.0:
-                raise PerceptionProductionLedgerError("production accuracy outside [0, 1]")
-        if tuple(sorted(set(self.model_pointer_revisions))) != self.model_pointer_revisions:
-            raise PerceptionProductionLedgerError("pointer revisions must be unique and sorted")
+                raise PerceptionProductionLedgerError(
+                    "production accuracy outside [0, 1]"
+                )
+        if (
+            tuple(sorted(set(self.model_pointer_revisions)))
+            != self.model_pointer_revisions
+        ):
+            raise PerceptionProductionLedgerError(
+                "pointer revisions must be unique and sorted"
+            )
         if self.semantics != PRODUCTION_METRICS_SEMANTICS:
-            raise PerceptionProductionLedgerError("unsupported production metrics semantics")
+            raise PerceptionProductionLedgerError(
+                "unsupported production metrics semantics"
+            )
 
 
 class PerceptionProductionLedgerStore(Protocol):
@@ -163,7 +214,9 @@ class PerceptionProductionLedgerStore(Protocol):
 
     def append_outcome(self, outcome: ProductionOutcomeRecordDTO) -> None: ...
 
-    def get_outcome_for_inference(self, record_id: str) -> ProductionOutcomeRecordDTO | None: ...
+    def get_outcome_for_inference(
+        self, record_id: str
+    ) -> ProductionOutcomeRecordDTO | None: ...
 
     def list_outcomes(self) -> tuple[ProductionOutcomeRecordDTO, ...]: ...
 
@@ -180,12 +233,16 @@ class InMemoryPerceptionProductionLedgerStore:
     def append_inference(self, record: ProductionInferenceRecordDTO) -> None:
         expected = len(self._inferences) + 1
         if record.sequence_number != expected:
-            raise PerceptionProductionLedgerError("production inference sequence is not contiguous")
+            raise PerceptionProductionLedgerError(
+                "production inference sequence is not contiguous"
+            )
         existing = self._inference_by_id.get(record.record_id)
         if existing is not None:
             if existing == record:
                 return
-            raise PerceptionProductionLedgerError("production inference identity conflict")
+            raise PerceptionProductionLedgerError(
+                "production inference identity conflict"
+            )
         self._inferences.append(record)
         self._inference_by_id[record.record_id] = record
 
@@ -193,7 +250,9 @@ class InMemoryPerceptionProductionLedgerStore:
         try:
             return self._inference_by_id[record_id]
         except KeyError as exc:
-            raise PerceptionProductionLedgerError(f"unknown production inference: {record_id}") from exc
+            raise PerceptionProductionLedgerError(
+                f"unknown production inference: {record_id}"
+            ) from exc
 
     def list_inferences(self) -> tuple[ProductionInferenceRecordDTO, ...]:
         return tuple(self._inferences)
@@ -204,14 +263,20 @@ class InMemoryPerceptionProductionLedgerStore:
         if existing is not None:
             if existing == outcome:
                 return
-            raise PerceptionProductionLedgerError("inference already has a different outcome")
+            raise PerceptionProductionLedgerError(
+                "inference already has a different outcome"
+            )
         expected = len(self._outcomes) + 1
         if outcome.outcome_sequence_number != expected:
-            raise PerceptionProductionLedgerError("production outcome sequence is not contiguous")
+            raise PerceptionProductionLedgerError(
+                "production outcome sequence is not contiguous"
+            )
         self._outcomes.append(outcome)
         self._outcome_by_inference[outcome.inference_record_id] = outcome
 
-    def get_outcome_for_inference(self, record_id: str) -> ProductionOutcomeRecordDTO | None:
+    def get_outcome_for_inference(
+        self, record_id: str
+    ) -> ProductionOutcomeRecordDTO | None:
         return self._outcome_by_inference.get(record_id)
 
     def list_outcomes(self) -> tuple[ProductionOutcomeRecordDTO, ...]:
@@ -227,14 +292,22 @@ def record_production_inference(
     """Append one runtime inference tied to the exact active pointer revision."""
 
     if pointer.active_promoted_model_id is None:
-        raise PerceptionProductionLedgerError("cannot record production inference without active model")
+        raise PerceptionProductionLedgerError(
+            "cannot record production inference without active model"
+        )
     promoted = ledger_entry.promoted_model
     if pointer.active_promoted_model_id != promoted.promoted_model_id:
-        raise PerceptionProductionLedgerError("ledger entry is not the active promoted model")
+        raise PerceptionProductionLedgerError(
+            "ledger entry is not the active promoted model"
+        )
     if result.promoted_model_id != promoted.promoted_model_id:
-        raise PerceptionProductionLedgerError("inference result does not belong to active promoted model")
+        raise PerceptionProductionLedgerError(
+            "inference result does not belong to active promoted model"
+        )
     if result.model_id != promoted.model_id or result.model_kind != promoted.model_kind:
-        raise PerceptionProductionLedgerError("inference result candidate does not match promoted model")
+        raise PerceptionProductionLedgerError(
+            "inference result candidate does not match promoted model"
+        )
     sequence_number = len(store.list_inferences()) + 1
     payload: Mapping[str, object] = {
         "inference_result_id": result.result_id,
@@ -283,7 +356,9 @@ def record_production_outcome(
     """Append one authoritative observed outcome for a prior production inference."""
 
     if not observed_action or not source:
-        raise PerceptionProductionLedgerError("observed action and source must be non-empty")
+        raise PerceptionProductionLedgerError(
+            "observed action and source must be non-empty"
+        )
     inference = store.get_inference(inference_record_id)
     sequence_number = len(store.list_outcomes()) + 1
     correct = inference.selected_action == observed_action
@@ -319,10 +394,14 @@ def build_production_metrics_report(
 
     all_records = store.list_inferences()
     if not all_records:
-        raise PerceptionProductionLedgerError("production metrics require inference records")
+        raise PerceptionProductionLedgerError(
+            "production metrics require inference records"
+        )
     resolved_end = end_sequence_number or all_records[-1].sequence_number
     if start_sequence_number <= 0 or resolved_end < start_sequence_number:
-        raise PerceptionProductionLedgerError("invalid production metrics sequence window")
+        raise PerceptionProductionLedgerError(
+            "invalid production metrics sequence window"
+        )
     records = tuple(
         item
         for item in all_records
@@ -330,7 +409,9 @@ def build_production_metrics_report(
         and (promoted_model_id is None or item.promoted_model_id == promoted_model_id)
     )
     if not records:
-        raise PerceptionProductionLedgerError("production metrics window contains no matching records")
+        raise PerceptionProductionLedgerError(
+            "production metrics window contains no matching records"
+        )
     outcomes = tuple(
         outcome
         for item in records
@@ -338,7 +419,9 @@ def build_production_metrics_report(
     )
     accepted = tuple(item for item in records if item.status == "accepted")
     accepted_ids = {item.record_id for item in accepted}
-    accepted_outcomes = tuple(item for item in outcomes if item.inference_record_id in accepted_ids)
+    accepted_outcomes = tuple(
+        item for item in outcomes if item.inference_record_id in accepted_ids
+    )
     correct_count = sum(1 for item in outcomes if item.correct)
     raw_accuracy = correct_count / len(outcomes) if outcomes else None
     accepted_correct = sum(1 for item in accepted_outcomes if item.correct)
@@ -377,7 +460,9 @@ def build_production_metrics_report(
         accepted_accuracy=accepted_accuracy,
         coverage=len(accepted) / len(records),
         mean_margin=sum(item.margin for item in records) / len(records),
-        model_pointer_revisions=tuple(sorted({item.pointer_revision for item in records})),
+        model_pointer_revisions=tuple(
+            sorted({item.pointer_revision for item in records})
+        ),
         inference_record_ids=tuple(item.record_id for item in records),
         outcome_ids=tuple(item.outcome_id for item in outcomes),
     )

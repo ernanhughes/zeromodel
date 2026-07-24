@@ -10,8 +10,14 @@ from __future__ import annotations
 
 from typing import Final
 
-from .compatibility import ModelCompatibilityContractDTO, RollbackCompatibilityAssessmentDTO
-from .disposition import OperationalRecommendationDispositionDTO, execute_approved_rollback
+from .compatibility import (
+    ModelCompatibilityContractDTO,
+    RollbackCompatibilityAssessmentDTO,
+)
+from .disposition import (
+    OperationalRecommendationDispositionDTO,
+    execute_approved_rollback,
+)
 from .lifecycle import (
     ActiveModelPointerDTO,
     ModelLifecycleTransitionDTO,
@@ -64,7 +70,10 @@ def _require_persisted_chain(
     recommendation: OperationalRecommendationDTO,
     disposition: OperationalRecommendationDispositionDTO,
 ) -> None:
-    if governance_store.get_recommendation(recommendation.recommendation_id) != recommendation:
+    if (
+        governance_store.get_recommendation(recommendation.recommendation_id)
+        != recommendation
+    ):
         raise PerceptionGovernedExecutionError(
             "execution requires the exact persisted recommendation"
         )
@@ -104,13 +113,18 @@ def _reconciled_transition(
 ) -> ModelLifecycleTransitionDTO:
     target_id = disposition.selected_target_promoted_model_id
     if target_id is None:
-        raise PerceptionGovernedExecutionError("approved disposition lacks rollback target")
+        raise PerceptionGovernedExecutionError(
+            "approved disposition lacks rollback target"
+        )
     expected_revision = recommendation.active_pointer_revision + 1
     if pointer.revision != expected_revision:
         raise PerceptionGovernedExecutionError(
             "active pointer is neither reviewed pre-state nor exact rollback post-state"
         )
-    if pointer.active_promoted_model_id != target_id or pointer.last_transition_id is None:
+    if (
+        pointer.active_promoted_model_id != target_id
+        or pointer.last_transition_id is None
+    ):
         raise PerceptionGovernedExecutionError(
             "active pointer does not contain the reviewed rollback result"
         )
@@ -166,18 +180,19 @@ def execute_or_reconcile_approved_rollback(
         (
             pointer.pointer_id == recommendation.active_pointer_id,
             pointer.revision == recommendation.active_pointer_revision,
-            pointer.active_promoted_model_id
-            == recommendation.active_promoted_model_id,
+            pointer.active_promoted_model_id == recommendation.active_promoted_model_id,
         )
     )
     if reviewed_pre_state:
         try:
-            executed_assessment, transition, resulting_pointer = execute_approved_rollback(
-                lifecycle_store,
-                recommendation,
-                disposition,
-                current_contract=current_contract,
-                target_contract=target_contract,
+            executed_assessment, transition, resulting_pointer = (
+                execute_approved_rollback(
+                    lifecycle_store,
+                    recommendation,
+                    disposition,
+                    current_contract=current_contract,
+                    target_contract=target_contract,
+                )
             )
         except ValueError as error:
             raise PerceptionGovernedExecutionError(str(error)) from error

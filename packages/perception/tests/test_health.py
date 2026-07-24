@@ -15,7 +15,9 @@ def _test_report() -> PromotedTestEvaluationReportDTO:
         PromotedTestExampleDTO("t1", "left", "r1", "left", 0.8, "accepted", True),
         PromotedTestExampleDTO("t2", "right", "r2", "right", 0.6, "accepted", True),
         PromotedTestExampleDTO("t3", "left", "r3", "left", 0.4, "accepted", True),
-        PromotedTestExampleDTO("t4", "right", "r4", "left", 0.2, "rejected_ambiguous", False),
+        PromotedTestExampleDTO(
+            "t4", "right", "r4", "left", 0.2, "rejected_ambiguous", False
+        ),
     )
     return PromotedTestEvaluationReportDTO(
         report_id="test-report",
@@ -93,7 +95,9 @@ def test_reference_profile_is_deterministic_and_preserves_test_distribution() ->
 
     assert first == second
     assert first.coverage == 0.75
-    assert tuple((item.action_label, item.count) for item in first.action_distribution) == (
+    assert tuple(
+        (item.action_label, item.count) for item in first.action_distribution
+    ) == (
         ("left", 3),
         ("right", 1),
     )

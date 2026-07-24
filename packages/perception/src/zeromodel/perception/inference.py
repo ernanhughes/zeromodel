@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Final, Mapping, Sequence
+from typing import Final, Mapping
 
 import numpy as np
 
@@ -86,10 +86,14 @@ class BaselineTrainingExampleDTO:
 
     def __post_init__(self) -> None:
         if not self.interaction_id or not self.source_vpm_id or not self.action_label:
-            raise PerceptionInferenceError("training example identities must be non-empty")
+            raise PerceptionInferenceError(
+                "training example identities must be non-empty"
+            )
         expected = self.width * self.height * self.channels
         if expected <= 0 or len(self.pixels) != expected:
-            raise PerceptionInferenceError("training example pixel payload has invalid size")
+            raise PerceptionInferenceError(
+                "training example pixel payload has invalid size"
+            )
 
 
 @dataclass(frozen=True)
@@ -110,7 +114,9 @@ class BaselineNearestNeighborModelDTO:
         if not self.model_id or not self.dataset_id or not self.action_schema_id:
             raise PerceptionInferenceError("model identities must be non-empty")
         if not self.examples:
-            raise PerceptionInferenceError("model requires at least one training example")
+            raise PerceptionInferenceError(
+                "model requires at least one training example"
+            )
         ids = tuple(item.interaction_id for item in self.examples)
         if ids != tuple(sorted(ids)) or len(ids) != len(set(ids)):
             raise PerceptionInferenceError("model examples must be unique and sorted")
@@ -182,7 +188,9 @@ def fit_baseline_nearest_neighbor(
 
     resolved = config or BaselineInferenceConfigDTO()
     if training_split not in {"train", "validation", "test", "all"}:
-        raise PerceptionInferenceError("training_split must be train, validation, test, or all")
+        raise PerceptionInferenceError(
+            "training_split must be train, validation, test, or all"
+        )
 
     interactions = _interaction_by_id(manifest)
     selected_ids = tuple(
@@ -191,7 +199,9 @@ def fit_baseline_nearest_neighbor(
         if training_split == "all" or assignment.split == training_split
     )
     if not selected_ids:
-        raise PerceptionInferenceError(f"dataset contains no {training_split!r} examples")
+        raise PerceptionInferenceError(
+            f"dataset contains no {training_split!r} examples"
+        )
 
     examples: list[BaselineTrainingExampleDTO] = []
     shape: tuple[int, int, int] | None = None
@@ -205,15 +215,21 @@ def fit_baseline_nearest_neighbor(
                 f"missing SourceVPMDTO for {interaction.source_vpm_id}"
             ) from exc
         if source.pixel_digest != interaction.source_pixel_digest:
-            raise PerceptionInferenceError("source pixel identity disagrees with interaction")
+            raise PerceptionInferenceError(
+                "source pixel identity disagrees with interaction"
+            )
         current_shape = (source.width, source.height, source.channels)
         if shape is None:
             shape = current_shape
             encoder_spec_id = source.encoder_spec_id
         elif current_shape != shape:
-            raise PerceptionInferenceError("baseline model requires one source VPM shape")
+            raise PerceptionInferenceError(
+                "baseline model requires one source VPM shape"
+            )
         elif source.encoder_spec_id != encoder_spec_id:
-            raise PerceptionInferenceError("baseline model requires one source encoder spec")
+            raise PerceptionInferenceError(
+                "baseline model requires one source encoder spec"
+            )
         examples.append(
             BaselineTrainingExampleDTO(
                 interaction_id=interaction.interaction_id,

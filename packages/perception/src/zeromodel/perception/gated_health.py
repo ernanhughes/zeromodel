@@ -76,7 +76,9 @@ class OperationalDriftPolicyDTO:
             self.minimum_label_coverage,
         ):
             if not 0.0 <= value <= 1.0:
-                raise PerceptionOperationalHealthError("drift threshold or coverage gate outside [0, 1]")
+                raise PerceptionOperationalHealthError(
+                    "drift threshold or coverage gate outside [0, 1]"
+                )
         for value in (
             self.minimum_reference_count,
             self.minimum_inference_count,
@@ -84,9 +86,13 @@ class OperationalDriftPolicyDTO:
             self.minimum_accepted_labeled_count,
         ):
             if value <= 0:
-                raise PerceptionOperationalHealthError("health evidence counts must be positive")
+                raise PerceptionOperationalHealthError(
+                    "health evidence counts must be positive"
+                )
         if self.evidence_semantics != OPERATIONAL_EVIDENCE_SEMANTICS:
-            raise PerceptionOperationalHealthError("unsupported health evidence semantics")
+            raise PerceptionOperationalHealthError(
+                "unsupported health evidence semantics"
+            )
         if self.version != OPERATIONAL_DRIFT_POLICY_VERSION:
             raise PerceptionOperationalHealthError("unsupported drift policy version")
 
@@ -195,11 +201,15 @@ def diagnose_operational_health(
     selected: tuple[ProductionInferenceRecordDTO, ...] = tuple(
         item
         for item in store.list_inferences()
-        if metrics.start_sequence_number <= item.sequence_number <= metrics.end_sequence_number
+        if metrics.start_sequence_number
+        <= item.sequence_number
+        <= metrics.end_sequence_number
         and item.promoted_model_id == reference.promoted_model_id
     )
     actions = _distribution(tuple(item.selected_action for item in selected))
-    reference_map = {item.action_label: item.frequency for item in reference.action_distribution}
+    reference_map = {
+        item.action_label: item.frequency for item in reference.action_distribution
+    }
     production_map = {item.action_label: item.frequency for item in actions}
     labels = set(reference_map) | set(production_map)
     distance = 0.5 * sum(

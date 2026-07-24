@@ -131,9 +131,7 @@ class PartitionOwnedTestEvaluationReportDTO:
                 "unsupported partition governance semantics"
             )
         if self.version != PARTITION_OWNED_TEST_VERSION:
-            raise PerceptionPartitionGovernanceError(
-                "unsupported owned test version"
-            )
+            raise PerceptionPartitionGovernanceError("unsupported owned test version")
 
 
 def bind_comparison_report_to_partition(
@@ -189,7 +187,9 @@ def calibrate_partition_owned_candidates(
         raise PerceptionPartitionGovernanceError(
             "calibration requires validation partition ownership"
         )
-    return calibrate_comparison_candidates(owned_report.comparison_report, policy=policy)
+    return calibrate_comparison_candidates(
+        owned_report.comparison_report, policy=policy
+    )
 
 
 def promote_partition_owned_model(

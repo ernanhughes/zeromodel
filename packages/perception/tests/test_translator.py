@@ -42,9 +42,7 @@ def _fixture():
         interactions,
         source_encoder_spec_ids=[spec.encoder_spec_id],
     )
-    field_schema = build_grid_field_schema(
-        sources[0], tile_width=1, tile_height=2
-    )
+    field_schema = build_grid_field_schema(sources[0], tile_width=1, tile_height=2)
     mapping = {source.source_vpm_id: source for source in sources}
     return spec, actions, sources, manifest, field_schema, mapping
 

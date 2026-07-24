@@ -21,9 +21,7 @@ PROMOTION_DECISION_VERSION: Final = "perception-promotion-decision/1"
 CALIBRATION_SEMANTICS: Final = (
     "validation_margin_threshold_maximizing_accepted_accuracy_then_coverage"
 )
-PROMOTION_SEMANTICS: Final = (
-    "validation_candidate_selection_by_accepted_accuracy_accuracy_coverage_then_simplicity"
-)
+PROMOTION_SEMANTICS: Final = "validation_candidate_selection_by_accepted_accuracy_accuracy_coverage_then_simplicity"
 PROMOTED_MODEL_KINDS: Final = {"single_frame", "temporal"}
 
 
@@ -108,7 +106,9 @@ class ModelCalibrationDTO:
         if self.accepted_count <= 0 or self.rejected_count < 0:
             raise PerceptionPromotionError("calibration counts are invalid")
         if self.candidate_thresholds != tuple(sorted(set(self.candidate_thresholds))):
-            raise PerceptionPromotionError("candidate_thresholds must be unique and sorted")
+            raise PerceptionPromotionError(
+                "candidate_thresholds must be unique and sorted"
+            )
         if self.semantics != CALIBRATION_SEMANTICS:
             raise PerceptionPromotionError("unsupported calibration semantics")
 
@@ -139,7 +139,9 @@ class PromotionDecisionDTO:
                 self.selection_reason,
             )
         ):
-            raise PerceptionPromotionError("promotion decision identities must be non-empty")
+            raise PerceptionPromotionError(
+                "promotion decision identities must be non-empty"
+            )
         if self.semantics != PROMOTION_SEMANTICS:
             raise PerceptionPromotionError("unsupported promotion semantics")
 
@@ -170,15 +172,26 @@ class PromotedPerceptionModelDTO:
                 self.validation_comparison_report_id,
             )
         ):
-            raise PerceptionPromotionError("promoted model identities must be non-empty")
+            raise PerceptionPromotionError(
+                "promoted model identities must be non-empty"
+            )
         if not 0.0 <= self.rejection_threshold <= 1.0:
             raise PerceptionPromotionError("rejection_threshold must be in [0, 1]")
         if self.training_split != "train" or self.evaluation_split != "validation":
-            raise PerceptionPromotionError("promotion requires train/validation provenance")
+            raise PerceptionPromotionError(
+                "promotion requires train/validation provenance"
+            )
         if self.model_kind == "temporal" and not self.temporal_window_spec_id:
-            raise PerceptionPromotionError("temporal promotion requires window identity")
-        if self.model_kind == "single_frame" and self.temporal_window_spec_id is not None:
-            raise PerceptionPromotionError("single-frame promotion cannot carry temporal window")
+            raise PerceptionPromotionError(
+                "temporal promotion requires window identity"
+            )
+        if (
+            self.model_kind == "single_frame"
+            and self.temporal_window_spec_id is not None
+        ):
+            raise PerceptionPromotionError(
+                "single-frame promotion cannot carry temporal window"
+            )
 
 
 def _calibrate_one(
@@ -187,7 +200,9 @@ def _calibrate_one(
     policy: PromotionPolicyDTO,
 ) -> ModelCalibrationDTO:
     if report.split != "validation":
-        raise PerceptionPromotionError("calibration requires a validation comparison report")
+        raise PerceptionPromotionError(
+            "calibration requires a validation comparison report"
+        )
     margins = tuple(
         item.single_margin if model_kind == "single_frame" else item.temporal_margin
         for item in report.examples
@@ -199,7 +214,9 @@ def _calibrate_one(
     thresholds = tuple(sorted(set((0.0, *margins))))
     candidates: list[tuple[float, float, float, int, int]] = []
     for threshold in thresholds:
-        accepted = tuple(index for index, margin in enumerate(margins) if margin >= threshold)
+        accepted = tuple(
+            index for index, margin in enumerate(margins) if margin >= threshold
+        )
         if not accepted:
             continue
         coverage = len(accepted) / len(margins)
@@ -208,12 +225,22 @@ def _calibrate_one(
         accuracy = sum(1 for index in accepted if correct[index]) / len(accepted)
         candidates.append((accuracy, coverage, -threshold, len(accepted), threshold))
     if not candidates:
-        raise PerceptionPromotionError("no calibration threshold satisfies minimum coverage")
+        raise PerceptionPromotionError(
+            "no calibration threshold satisfies minimum coverage"
+        )
     _, coverage, _, accepted_count, threshold = max(candidates)
-    accepted_indices = tuple(index for index, margin in enumerate(margins) if margin >= threshold)
-    accepted_accuracy = sum(1 for index in accepted_indices if correct[index]) / len(accepted_indices)
+    accepted_indices = tuple(
+        index for index, margin in enumerate(margins) if margin >= threshold
+    )
+    accepted_accuracy = sum(1 for index in accepted_indices if correct[index]) / len(
+        accepted_indices
+    )
     raw_accuracy = sum(1 for value in correct if value) / len(correct)
-    model_id = report.single_translator_id if model_kind == "single_frame" else report.temporal_translator_id
+    model_id = (
+        report.single_translator_id
+        if model_kind == "single_frame"
+        else report.temporal_translator_id
+    )
     payload: Mapping[str, object] = {
         "accepted_accuracy": accepted_accuracy,
         "accepted_count": accepted_count,
@@ -319,7 +346,9 @@ def promote_perception_model(
         "promotion_decision_id": decision.decision_id,
         "rejection_threshold": selected.rejection_threshold,
         "temporal_window_spec_id": (
-            report.temporal_window_spec_id if selected.model_kind == "temporal" else None
+            report.temporal_window_spec_id
+            if selected.model_kind == "temporal"
+            else None
         ),
         "training_split": "train",
         "validation_comparison_report_id": report.report_id,
@@ -336,7 +365,9 @@ def promote_perception_model(
         training_split="train",
         evaluation_split="validation",
         temporal_window_spec_id=(
-            report.temporal_window_spec_id if selected.model_kind == "temporal" else None
+            report.temporal_window_spec_id
+            if selected.model_kind == "temporal"
+            else None
         ),
     )
     return decision, promoted

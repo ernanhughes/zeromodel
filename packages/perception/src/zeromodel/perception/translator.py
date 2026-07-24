@@ -68,7 +68,9 @@ class TranslatorConfigDTO:
 
     def __post_init__(self) -> None:
         if not np.isfinite(self.ridge_alpha) or self.ridge_alpha < 0.0:
-            raise PerceptionTranslatorError("ridge_alpha must be finite and non-negative")
+            raise PerceptionTranslatorError(
+                "ridge_alpha must be finite and non-negative"
+            )
 
     def canonical_payload(self) -> Mapping[str, object]:
         return {"ridge_alpha": self.ridge_alpha}
@@ -109,11 +111,15 @@ class SourceTargetTranslatorDTO:
         if self.action_labels != tuple(sorted(set(self.action_labels))):
             raise PerceptionTranslatorError("action_labels must be unique and sorted")
         if self.source_field_ids != tuple(sorted(set(self.source_field_ids))):
-            raise PerceptionTranslatorError("source_field_ids must be unique and sorted")
+            raise PerceptionTranslatorError(
+                "source_field_ids must be unique and sorted"
+            )
         if self.training_count <= 0:
             raise PerceptionTranslatorError("training_count must be positive")
         if len(self.coefficients) != len(self.action_labels):
-            raise PerceptionTranslatorError("one coefficient row is required per action")
+            raise PerceptionTranslatorError(
+                "one coefficient row is required per action"
+            )
         if len(self.intercepts) != len(self.action_labels):
             raise PerceptionTranslatorError("one intercept is required per action")
         if any(len(row) != len(self.source_field_ids) for row in self.coefficients):
@@ -149,7 +155,9 @@ class TargetActionScoreDTO:
 
     def __post_init__(self) -> None:
         if not self.action_label or self.rank <= 0:
-            raise PerceptionTranslatorError("target action score identity/rank is invalid")
+            raise PerceptionTranslatorError(
+                "target action score identity/rank is invalid"
+            )
         if not 0.0 <= self.score <= 1.0:
             raise PerceptionTranslatorError("target action score must be in [0, 1]")
 
@@ -185,15 +193,21 @@ class PredictedTargetVPMDTO:
         ):
             raise PerceptionTranslatorError("prediction identities must be non-empty")
         if (self.height, self.channels) != (1, 1) or self.width <= 0:
-            raise PerceptionTranslatorError("predicted target surface must be 1xN grayscale")
+            raise PerceptionTranslatorError(
+                "predicted target surface must be 1xN grayscale"
+            )
         if self.score_semantics != TARGET_SCORE_SEMANTICS:
             raise PerceptionTranslatorError("unsupported target score semantics")
         if len(self.scores) != self.width:
             raise PerceptionTranslatorError("prediction score count must match width")
         if tuple(item.rank for item in self.scores) != tuple(range(1, self.width + 1)):
-            raise PerceptionTranslatorError("prediction scores must be consecutively ranked")
+            raise PerceptionTranslatorError(
+                "prediction scores must be consecutively ranked"
+            )
         if self.scores[0].action_label != self.selected_action:
-            raise PerceptionTranslatorError("selected_action must match top-ranked score")
+            raise PerceptionTranslatorError(
+                "selected_action must match top-ranked score"
+            )
         if not 0.0 <= self.margin <= 1.0:
             raise PerceptionTranslatorError("prediction margin must be in [0, 1]")
         if _digest(self.png_bytes) != self.png_digest:
@@ -236,9 +250,14 @@ def _source_feature_vector(
     field_ids: tuple[str, ...],
 ) -> np.ndarray:
     validate_source_for_schema(source, field_schema)
-    samples = {item.field_id: item for item in extract_source_fields(source, field_schema)}
+    samples = {
+        item.field_id: item for item in extract_source_fields(source, field_schema)
+    }
     return np.asarray(
-        [float(np.mean(samples[field_id].to_array())) / 255.0 for field_id in field_ids],
+        [
+            float(np.mean(samples[field_id].to_array())) / 255.0
+            for field_id in field_ids
+        ],
         dtype=np.float64,
     )
 
@@ -260,7 +279,9 @@ def fit_source_target_translator(
     interactions = _selected_interactions(manifest, training_split)
     represented = {item.action_label for item in interactions}
     if not represented.issubset(set(action_schema.labels)):
-        raise PerceptionTranslatorError("dataset contains action outside supplied schema")
+        raise PerceptionTranslatorError(
+            "dataset contains action outside supplied schema"
+        )
 
     field_ids = tuple(sorted(field.field_id for field in source_field_schema.fields))
     feature_rows: list[np.ndarray] = []
@@ -274,8 +295,12 @@ def fit_source_target_translator(
                 f"missing SourceVPMDTO for {interaction.source_vpm_id}"
             ) from exc
         if source.pixel_digest != interaction.source_pixel_digest:
-            raise PerceptionTranslatorError("source pixel identity disagrees with interaction")
-        feature_rows.append(_source_feature_vector(source, source_field_schema, field_ids))
+            raise PerceptionTranslatorError(
+                "source pixel identity disagrees with interaction"
+            )
+        feature_rows.append(
+            _source_feature_vector(source, source_field_schema, field_ids)
+        )
         target = np.zeros(len(action_schema.labels), dtype=np.float64)
         target[action_schema.index_of(interaction.action_label)] = 1.0
         target_rows.append(target)
@@ -348,7 +373,10 @@ def predict_target_vpm(
         translator.source_field_ids,
     )
     coefficient_matrix = np.asarray(translator.coefficients, dtype=np.float64)
-    raw = np.asarray(translator.intercepts, dtype=np.float64) + coefficient_matrix @ features
+    raw = (
+        np.asarray(translator.intercepts, dtype=np.float64)
+        + coefficient_matrix @ features
+    )
     clipped = np.clip(raw, 0.0, 1.0)
     ranked_indices = sorted(
         range(len(action_schema.labels)),

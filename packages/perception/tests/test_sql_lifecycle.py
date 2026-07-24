@@ -88,7 +88,9 @@ def test_sql_store_commits_supersession_and_rollback_atomically(tmp_path) -> Non
         )
         snapshot = build_model_lifecycle_snapshot(store)
         assert snapshot.active_pointer.revision == 3
-        assert snapshot.active_pointer.active_promoted_model_id == first.promoted_model_id
+        assert (
+            snapshot.active_pointer.active_promoted_model_id == first.promoted_model_id
+        )
         assert tuple(item.transition_kind for item in snapshot.transitions) == (
             "activate",
             "supersede",
@@ -140,7 +142,9 @@ def test_failed_pointer_update_rolls_back_transition(tmp_path) -> None:
         assert replacement.revision == 1
 
         with pytest.raises(PerceptionSqlLifecycleError):
-            store.replace_active_pointer(replacement, expected_revision=pointer.revision)
+            store.replace_active_pointer(
+                replacement, expected_revision=pointer.revision
+            )
 
     with SqlitePerceptionModelLifecycleStore(database) as reopened:
         assert reopened.get_active_pointer().revision == 1

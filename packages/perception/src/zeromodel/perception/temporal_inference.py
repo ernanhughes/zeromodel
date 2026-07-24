@@ -18,7 +18,6 @@ from .representation import DiscreteActionSchemaDTO, SourceVPMDTO
 from .temporal import TemporalSourceVPMDTO, TemporalWindowSpecDTO
 from .translator import (
     COEFFICIENT_SEMANTICS,
-    SOURCE_FEATURE_SEMANTICS,
     TARGET_SCORE_SEMANTICS,
     PredictedTargetVPMDTO,
     SourceTargetTranslatorDTO,
@@ -39,7 +38,9 @@ TEMPORAL_COMPARISON_SEMANTICS: Final = (
 TEMPORAL_REJECTION_SEMANTICS: Final = (
     "reject_when_top_two_margin_below_declared_comparison_threshold"
 )
-TEMPORAL_FIT_ORDER_SEMANTICS: Final = "canonical_temporal_source_id_order_before_numerical_fit"
+TEMPORAL_FIT_ORDER_SEMANTICS: Final = (
+    "canonical_temporal_source_id_order_before_numerical_fit"
+)
 
 
 class PerceptionTemporalInferenceError(ValueError):
@@ -72,7 +73,10 @@ def _feature_vector(
     validate_source_for_schema(source, schema)
     samples = {item.field_id: item for item in extract_source_fields(source, schema)}
     return np.asarray(
-        [float(np.mean(samples[field_id].to_array())) / 255.0 for field_id in field_ids],
+        [
+            float(np.mean(samples[field_id].to_array())) / 255.0
+            for field_id in field_ids
+        ],
         dtype=np.float64,
     )
 
@@ -107,37 +111,59 @@ class TemporalTranslatorDTO:
                 self.action_schema_id,
             )
         ):
-            raise PerceptionTemporalInferenceError("temporal translator identities must be non-empty")
+            raise PerceptionTemporalInferenceError(
+                "temporal translator identities must be non-empty"
+            )
         if self.training_split not in {"train", "validation", "test", "all"}:
-            raise PerceptionTemporalInferenceError("unsupported temporal training split")
+            raise PerceptionTemporalInferenceError(
+                "unsupported temporal training split"
+            )
         if self.action_labels != tuple(sorted(set(self.action_labels))):
-            raise PerceptionTemporalInferenceError("action_labels must be unique and sorted")
+            raise PerceptionTemporalInferenceError(
+                "action_labels must be unique and sorted"
+            )
         if self.temporal_field_ids != tuple(sorted(set(self.temporal_field_ids))):
-            raise PerceptionTemporalInferenceError("temporal_field_ids must be unique and sorted")
-        if self.training_temporal_source_ids != tuple(
-            sorted(set(self.training_temporal_source_ids))
-        ) or not self.training_temporal_source_ids:
+            raise PerceptionTemporalInferenceError(
+                "temporal_field_ids must be unique and sorted"
+            )
+        if (
+            self.training_temporal_source_ids
+            != tuple(sorted(set(self.training_temporal_source_ids)))
+            or not self.training_temporal_source_ids
+        ):
             raise PerceptionTemporalInferenceError(
                 "training_temporal_source_ids must be non-empty, unique, and sorted"
             )
         if len(self.coefficients) != len(self.action_labels):
-            raise PerceptionTemporalInferenceError("one coefficient row is required per action")
+            raise PerceptionTemporalInferenceError(
+                "one coefficient row is required per action"
+            )
         if len(self.intercepts) != len(self.action_labels):
-            raise PerceptionTemporalInferenceError("one intercept is required per action")
+            raise PerceptionTemporalInferenceError(
+                "one intercept is required per action"
+            )
         if any(len(row) != len(self.temporal_field_ids) for row in self.coefficients):
-            raise PerceptionTemporalInferenceError("coefficient rows must match temporal fields")
+            raise PerceptionTemporalInferenceError(
+                "coefficient rows must match temporal fields"
+            )
         if self.source_feature_semantics != TEMPORAL_FEATURE_SEMANTICS:
-            raise PerceptionTemporalInferenceError("unsupported temporal feature semantics")
+            raise PerceptionTemporalInferenceError(
+                "unsupported temporal feature semantics"
+            )
         if self.target_score_semantics != TARGET_SCORE_SEMANTICS:
             raise PerceptionTemporalInferenceError("unsupported target score semantics")
         if self.coefficient_semantics != COEFFICIENT_SEMANTICS:
             raise PerceptionTemporalInferenceError("unsupported coefficient semantics")
         if self.fit_order_semantics != TEMPORAL_FIT_ORDER_SEMANTICS:
-            raise PerceptionTemporalInferenceError("unsupported temporal fit-order semantics")
+            raise PerceptionTemporalInferenceError(
+                "unsupported temporal fit-order semantics"
+            )
         values = np.asarray(self.coefficients, dtype=np.float64)
         intercepts = np.asarray(self.intercepts, dtype=np.float64)
         if not np.all(np.isfinite(values)) or not np.all(np.isfinite(intercepts)):
-            raise PerceptionTemporalInferenceError("temporal translator parameters must be finite")
+            raise PerceptionTemporalInferenceError(
+                "temporal translator parameters must be finite"
+            )
 
 
 @dataclass(frozen=True)
@@ -167,15 +193,23 @@ class TemporalPredictionDTO:
                 self.selected_action,
             )
         ):
-            raise PerceptionTemporalInferenceError("temporal prediction identities must be non-empty")
+            raise PerceptionTemporalInferenceError(
+                "temporal prediction identities must be non-empty"
+            )
         if self.status not in {"accepted", "rejected_ambiguous"}:
-            raise PerceptionTemporalInferenceError("unsupported temporal prediction status")
+            raise PerceptionTemporalInferenceError(
+                "unsupported temporal prediction status"
+            )
         if not 0.0 <= self.margin <= 1.0:
             raise PerceptionTemporalInferenceError("margin must be in [0, 1]")
         if not 0.0 <= self.rejection_threshold <= 1.0:
-            raise PerceptionTemporalInferenceError("rejection_threshold must be in [0, 1]")
+            raise PerceptionTemporalInferenceError(
+                "rejection_threshold must be in [0, 1]"
+            )
         if not self.scores or self.scores[0].action_label != self.selected_action:
-            raise PerceptionTemporalInferenceError("selected action must match top-ranked score")
+            raise PerceptionTemporalInferenceError(
+                "selected action must match top-ranked score"
+            )
 
     @property
     def correct(self) -> bool:
@@ -224,13 +258,23 @@ class TemporalInferenceComparisonReportDTO:
     version: str = TEMPORAL_COMPARISON_VERSION
 
     def __post_init__(self) -> None:
-        if not all((self.report_id, self.single_translator_id, self.temporal_translator_id)):
-            raise PerceptionTemporalInferenceError("comparison identities must be non-empty")
+        if not all(
+            (self.report_id, self.single_translator_id, self.temporal_translator_id)
+        ):
+            raise PerceptionTemporalInferenceError(
+                "comparison identities must be non-empty"
+            )
         if self.split not in {"validation", "test"}:
-            raise PerceptionTemporalInferenceError("comparison split must be validation or test")
+            raise PerceptionTemporalInferenceError(
+                "comparison split must be validation or test"
+            )
         if self.example_count <= 0 or self.example_count != len(self.examples):
-            raise PerceptionTemporalInferenceError("comparison example count is invalid")
-        if self.examples != tuple(sorted(self.examples, key=lambda item: item.interaction_id)):
+            raise PerceptionTemporalInferenceError(
+                "comparison example count is invalid"
+            )
+        if self.examples != tuple(
+            sorted(self.examples, key=lambda item: item.interaction_id)
+        ):
             raise PerceptionTemporalInferenceError("comparison examples must be sorted")
         for value in (
             self.single_accuracy,
@@ -241,9 +285,13 @@ class TemporalInferenceComparisonReportDTO:
             self.mean_temporal_margin,
         ):
             if not 0.0 <= value <= 1.0:
-                raise PerceptionTemporalInferenceError("bounded comparison metric outside [0, 1]")
+                raise PerceptionTemporalInferenceError(
+                    "bounded comparison metric outside [0, 1]"
+                )
         if not -1.0 <= self.accuracy_improvement <= 1.0:
-            raise PerceptionTemporalInferenceError("accuracy improvement must be in [-1, 1]")
+            raise PerceptionTemporalInferenceError(
+                "accuracy improvement must be in [-1, 1]"
+            )
 
 
 def fit_temporal_translator(
@@ -261,16 +309,24 @@ def fit_temporal_translator(
         raise PerceptionTemporalInferenceError("unsupported temporal training split")
     if not temporal_sources:
         raise PerceptionTemporalInferenceError("temporal fitting requires examples")
-    ordered_sources = tuple(sorted(temporal_sources, key=lambda item: item.temporal_source_id))
+    ordered_sources = tuple(
+        sorted(temporal_sources, key=lambda item: item.temporal_source_id)
+    )
     source_ids = tuple(item.temporal_source_id for item in ordered_sources)
     if len(source_ids) != len(set(source_ids)):
-        raise PerceptionTemporalInferenceError("temporal source identities must be unique")
+        raise PerceptionTemporalInferenceError(
+            "temporal source identities must be unique"
+        )
     resolved = config or TranslatorConfigDTO()
     for item in ordered_sources:
         if item.temporal_window_spec_id != temporal_window_spec.temporal_window_spec_id:
-            raise PerceptionTemporalInferenceError("temporal source window spec mismatch")
+            raise PerceptionTemporalInferenceError(
+                "temporal source window spec mismatch"
+            )
         if item.action_label not in action_schema.labels:
-            raise PerceptionTemporalInferenceError("temporal source action outside schema")
+            raise PerceptionTemporalInferenceError(
+                "temporal source action outside schema"
+            )
         validate_source_for_schema(item.montage_source_vpm, temporal_field_schema)
 
     field_ids = tuple(sorted(field.field_id for field in temporal_field_schema.fields))
@@ -351,7 +407,10 @@ def predict_temporal_action(
         np.asarray(translator.coefficients, dtype=np.float64) @ vector
     )
     clipped = np.clip(raw, 0.0, 1.0)
-    ranked = sorted(zip(translator.action_labels, clipped.tolist()), key=lambda item: (-item[1], item[0]))
+    ranked = sorted(
+        zip(translator.action_labels, clipped.tolist()),
+        key=lambda item: (-item[1], item[0]),
+    )
     scores = tuple(
         TargetActionScoreDTO(action_label=label, score=float(score), rank=index + 1)
         for index, (label, score) in enumerate(ranked)
@@ -404,13 +463,21 @@ def compare_single_and_temporal_inference(
     """Compare aligned held-out single-frame and temporal predictions."""
 
     if split not in {"validation", "test"}:
-        raise PerceptionTemporalInferenceError("comparison split must be validation or test")
+        raise PerceptionTemporalInferenceError(
+            "comparison split must be validation or test"
+        )
     if split in {single_translator.training_split, temporal_translator.training_split}:
-        raise PerceptionTemporalInferenceError("comparison split must be held out from both translators")
+        raise PerceptionTemporalInferenceError(
+            "comparison split must be held out from both translators"
+        )
     if single_translator.action_schema_id != action_schema.action_schema_id:
-        raise PerceptionTemporalInferenceError("single translator action schema mismatch")
+        raise PerceptionTemporalInferenceError(
+            "single translator action schema mismatch"
+        )
     if temporal_translator.action_schema_id != action_schema.action_schema_id:
-        raise PerceptionTemporalInferenceError("temporal translator action schema mismatch")
+        raise PerceptionTemporalInferenceError(
+            "temporal translator action schema mismatch"
+        )
     if not temporal_sources:
         raise PerceptionTemporalInferenceError("comparison requires temporal examples")
 
@@ -423,7 +490,9 @@ def compare_single_and_temporal_inference(
     single_margins: list[float] = []
     temporal_margins: list[float] = []
 
-    for temporal_source in sorted(temporal_sources, key=lambda item: item.target_interaction_id):
+    for temporal_source in sorted(
+        temporal_sources, key=lambda item: item.target_interaction_id
+    ):
         try:
             current = current_sources[temporal_source.current_source_vpm_id]
         except KeyError as exc:
@@ -443,7 +512,9 @@ def compare_single_and_temporal_inference(
             rejection_threshold=rejection_threshold,
         )
         single_status = (
-            "accepted" if single_prediction.margin >= rejection_threshold else "rejected_ambiguous"
+            "accepted"
+            if single_prediction.margin >= rejection_threshold
+            else "rejected_ambiguous"
         )
         expected = temporal_source.action_label
         single_is_correct = single_prediction.selected_action == expected
@@ -472,10 +543,14 @@ def compare_single_and_temporal_inference(
 
     conflict_rows = [item for item in rows if item.conflict_group]
     conflict_single_accuracy = (
-        None if not conflict_rows else sum(item.single_correct for item in conflict_rows) / len(conflict_rows)
+        None
+        if not conflict_rows
+        else sum(item.single_correct for item in conflict_rows) / len(conflict_rows)
     )
     conflict_temporal_accuracy = (
-        None if not conflict_rows else sum(item.temporal_correct for item in conflict_rows) / len(conflict_rows)
+        None
+        if not conflict_rows
+        else sum(item.temporal_correct for item in conflict_rows) / len(conflict_rows)
     )
     conflict_improvement = (
         None
@@ -506,7 +581,9 @@ def compare_single_and_temporal_inference(
         temporal_accuracy=temporal_accuracy,
         accuracy_improvement=temporal_accuracy - single_accuracy,
         single_accepted_accuracy=_accepted_accuracy(single_correct, single_accepted),
-        temporal_accepted_accuracy=_accepted_accuracy(temporal_correct, temporal_accepted),
+        temporal_accepted_accuracy=_accepted_accuracy(
+            temporal_correct, temporal_accepted
+        ),
         single_coverage=sum(single_accepted) / len(single_accepted),
         temporal_coverage=sum(temporal_accepted) / len(temporal_accepted),
         mean_single_margin=float(np.mean(single_margins)),

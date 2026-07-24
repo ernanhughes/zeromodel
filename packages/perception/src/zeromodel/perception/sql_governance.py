@@ -15,7 +15,9 @@ from .recommendation import OperationalRecommendationDTO
 
 SQL_GOVERNANCE_SCHEMA_VERSION: Final = "perception-sql-governance-schema/1"
 SQL_GOVERNANCE_STORE_VERSION: Final = "perception-sql-governance-store/1"
-GOVERNANCE_EXECUTION_RECEIPT_VERSION: Final = "perception-governance-execution-receipt/1"
+GOVERNANCE_EXECUTION_RECEIPT_VERSION: Final = (
+    "perception-governance-execution-receipt/1"
+)
 
 
 class PerceptionSqlGovernanceError(ValueError):
@@ -33,7 +35,8 @@ def _assessment(payload: dict[str, object]) -> RollbackCompatibilityAssessmentDT
 def _recommendation(payload: dict[str, object]) -> OperationalRecommendationDTO:
     payload = dict(payload)
     payload["assessed_candidates"] = tuple(
-        _assessment(item) for item in payload["assessed_candidates"]  # type: ignore[union-attr]
+        _assessment(item)
+        for item in payload["assessed_candidates"]  # type: ignore[union-attr]
     )
     return OperationalRecommendationDTO(**payload)  # type: ignore[arg-type]
 
@@ -62,9 +65,13 @@ class GovernanceExecutionReceiptDTO:
                 self.resulting_promoted_model_id,
             )
         ):
-            raise PerceptionSqlGovernanceError("execution receipt identities must be non-empty")
+            raise PerceptionSqlGovernanceError(
+                "execution receipt identities must be non-empty"
+            )
         if self.pointer_revision <= 0:
-            raise PerceptionSqlGovernanceError("execution receipt pointer revision must be positive")
+            raise PerceptionSqlGovernanceError(
+                "execution receipt pointer revision must be positive"
+            )
         if self.version != GOVERNANCE_EXECUTION_RECEIPT_VERSION:
             raise PerceptionSqlGovernanceError("unsupported execution receipt version")
 
@@ -77,11 +84,15 @@ class GovernanceExecutionReceiptDTO:
         pointer: ActiveModelPointerDTO,
     ) -> "GovernanceExecutionReceiptDTO":
         if disposition.status != "approved":
-            raise PerceptionSqlGovernanceError("execution receipt requires approved disposition")
+            raise PerceptionSqlGovernanceError(
+                "execution receipt requires approved disposition"
+            )
         if disposition.selected_assessment_id != assessment.assessment_id:
             raise PerceptionSqlGovernanceError("assessment does not match disposition")
         if pointer.active_promoted_model_id is None:
-            raise PerceptionSqlGovernanceError("execution receipt requires resulting active model")
+            raise PerceptionSqlGovernanceError(
+                "execution receipt requires resulting active model"
+            )
         payload = {
             "assessment_id": assessment.assessment_id,
             "disposition_id": disposition.disposition_id,
@@ -156,14 +167,18 @@ class SqlitePerceptionGovernanceLedgerStore:
             raise PerceptionSqlGovernanceError("unsupported governance schema version")
         self._connection.execute("PRAGMA foreign_keys = ON")
 
-    def _append(self, table: str, identity_column: str, identity: str, payload: object) -> None:
+    def _append(
+        self, table: str, identity_column: str, identity: str, payload: object
+    ) -> None:
         encoded = _json(asdict(payload))
         row = self._connection.execute(
             f"SELECT payload_json FROM {table} WHERE {identity_column} = ?", (identity,)
         ).fetchone()
         if row is not None:
             if row["payload_json"] != encoded:
-                raise PerceptionSqlGovernanceError("conflicting immutable governance artifact")
+                raise PerceptionSqlGovernanceError(
+                    "conflicting immutable governance artifact"
+                )
             return
         try:
             self._connection.execute(
@@ -185,7 +200,9 @@ class SqlitePerceptionGovernanceLedgerStore:
 
     def append_disposition(self, item: OperationalRecommendationDispositionDTO) -> None:
         if self.get_recommendation(item.recommendation_id) is None:
-            raise PerceptionSqlGovernanceError("disposition requires persisted recommendation")
+            raise PerceptionSqlGovernanceError(
+                "disposition requires persisted recommendation"
+            )
         encoded = _json(asdict(item))
         existing = self._connection.execute(
             "SELECT disposition_id, payload_json FROM perception_operational_dispositions "
@@ -193,8 +210,13 @@ class SqlitePerceptionGovernanceLedgerStore:
             (item.recommendation_id,),
         ).fetchone()
         if existing is not None:
-            if existing["disposition_id"] != item.disposition_id or existing["payload_json"] != encoded:
-                raise PerceptionSqlGovernanceError("recommendation already has a final disposition")
+            if (
+                existing["disposition_id"] != item.disposition_id
+                or existing["payload_json"] != encoded
+            ):
+                raise PerceptionSqlGovernanceError(
+                    "recommendation already has a final disposition"
+                )
             return
         try:
             self._connection.execute(
@@ -210,9 +232,13 @@ class SqlitePerceptionGovernanceLedgerStore:
     def append_execution_receipt(self, item: GovernanceExecutionReceiptDTO) -> None:
         disposition = self.get_disposition(item.disposition_id)
         if disposition is None or disposition.status != "approved":
-            raise PerceptionSqlGovernanceError("execution receipt requires persisted approval")
+            raise PerceptionSqlGovernanceError(
+                "execution receipt requires persisted approval"
+            )
         if disposition.recommendation_id != item.recommendation_id:
-            raise PerceptionSqlGovernanceError("receipt recommendation does not match disposition")
+            raise PerceptionSqlGovernanceError(
+                "receipt recommendation does not match disposition"
+            )
         encoded = _json(asdict(item))
         existing = self._connection.execute(
             "SELECT receipt_id, payload_json FROM perception_governance_execution_receipts "
@@ -220,8 +246,13 @@ class SqlitePerceptionGovernanceLedgerStore:
             (item.disposition_id, item.recommendation_id),
         ).fetchone()
         if existing is not None:
-            if existing["receipt_id"] != item.receipt_id or existing["payload_json"] != encoded:
-                raise PerceptionSqlGovernanceError("approved disposition has already been executed")
+            if (
+                existing["receipt_id"] != item.receipt_id
+                or existing["payload_json"] != encoded
+            ):
+                raise PerceptionSqlGovernanceError(
+                    "approved disposition has already been executed"
+                )
             return
         self._connection.execute(
             "INSERT INTO perception_governance_execution_receipts"
@@ -230,28 +261,46 @@ class SqlitePerceptionGovernanceLedgerStore:
         )
         self._connection.commit()
 
-    def get_recommendation(self, recommendation_id: str) -> OperationalRecommendationDTO | None:
+    def get_recommendation(
+        self, recommendation_id: str
+    ) -> OperationalRecommendationDTO | None:
         row = self._connection.execute(
             "SELECT payload_json FROM perception_operational_recommendations WHERE recommendation_id = ?",
             (recommendation_id,),
         ).fetchone()
         return None if row is None else _recommendation(json.loads(row["payload_json"]))
 
-    def get_disposition(self, disposition_id: str) -> OperationalRecommendationDispositionDTO | None:
+    def get_disposition(
+        self, disposition_id: str
+    ) -> OperationalRecommendationDispositionDTO | None:
         row = self._connection.execute(
             "SELECT payload_json FROM perception_operational_dispositions WHERE disposition_id = ?",
             (disposition_id,),
         ).fetchone()
-        return None if row is None else OperationalRecommendationDispositionDTO(**json.loads(row["payload_json"]))
+        return (
+            None
+            if row is None
+            else OperationalRecommendationDispositionDTO(
+                **json.loads(row["payload_json"])
+            )
+        )
 
-    def get_execution_receipt(self, receipt_id: str) -> GovernanceExecutionReceiptDTO | None:
+    def get_execution_receipt(
+        self, receipt_id: str
+    ) -> GovernanceExecutionReceiptDTO | None:
         row = self._connection.execute(
             "SELECT payload_json FROM perception_governance_execution_receipts WHERE receipt_id = ?",
             (receipt_id,),
         ).fetchone()
-        return None if row is None else GovernanceExecutionReceiptDTO(**json.loads(row["payload_json"]))
+        return (
+            None
+            if row is None
+            else GovernanceExecutionReceiptDTO(**json.loads(row["payload_json"]))
+        )
 
-    def _list_payloads(self, table: str, order_column: str) -> Iterable[dict[str, object]]:
+    def _list_payloads(
+        self, table: str, order_column: str
+    ) -> Iterable[dict[str, object]]:
         rows = self._connection.execute(
             f"SELECT payload_json FROM {table} ORDER BY {order_column}"
         ).fetchall()

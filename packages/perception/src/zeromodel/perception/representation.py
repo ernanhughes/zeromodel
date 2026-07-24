@@ -129,9 +129,13 @@ class DiscreteActionSchemaDTO:
 
     def __post_init__(self) -> None:
         if not self.labels:
-            raise PerceptionRepresentationError("action schema requires at least one label")
+            raise PerceptionRepresentationError(
+                "action schema requires at least one label"
+            )
         if any(not isinstance(label, str) or not label for label in self.labels):
-            raise PerceptionRepresentationError("action labels must be non-empty strings")
+            raise PerceptionRepresentationError(
+                "action labels must be non-empty strings"
+            )
         if len(set(self.labels)) != len(self.labels):
             raise PerceptionRepresentationError("action labels must be unique")
         if tuple(sorted(self.labels)) != self.labels:
@@ -181,7 +185,9 @@ class TargetVPMDTO:
         return tuple(int(value) for value in values.reshape(-1))
 
 
-def _validate_dimensions(width: int, height: int, spec: SourceImageEncoderSpecDTO) -> None:
+def _validate_dimensions(
+    width: int, height: int, spec: SourceImageEncoderSpecDTO
+) -> None:
     if width <= 0 or height <= 0:
         raise PerceptionRepresentationError("image dimensions must be positive")
     if width > spec.max_width or height > spec.max_height:
@@ -223,7 +229,9 @@ def encode_source_image_bytes(
             with Image.open(BytesIO(payload)) as image:
                 normalized = _normalize_pil_image(image, resolved)
     except (Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
-        raise PerceptionRepresentationError("image exceeds Pillow safety limits") from exc
+        raise PerceptionRepresentationError(
+            "image exceeds Pillow safety limits"
+        ) from exc
     except PerceptionRepresentationError:
         raise
     except Exception as exc:
@@ -243,7 +251,9 @@ def encode_source_array(
     expected_channels = _ALLOWED_COLOR_SPACES[resolved.color_space]
     if resolved.color_space == "L":
         if array.ndim != 2:
-            raise PerceptionRepresentationError("L source arrays must have shape (H, W)")
+            raise PerceptionRepresentationError(
+                "L source arrays must have shape (H, W)"
+            )
         height, width = array.shape
     else:
         if array.ndim != 3 or array.shape[2] != expected_channels:
@@ -338,7 +348,9 @@ def decode_discrete_action(
         raise PerceptionRepresentationError("target PNG digest mismatch")
     scores = target.scores()
     if len(scores) != len(schema.labels):
-        raise PerceptionRepresentationError("target PNG field count does not match schema")
+        raise PerceptionRepresentationError(
+            "target PNG field count does not match schema"
+        )
     active = [index for index, value in enumerate(scores) if value == 255]
     if len(active) != 1 or any(value not in (0, 255) for value in scores):
         raise PerceptionRepresentationError("target VPM is not canonical one-hot data")

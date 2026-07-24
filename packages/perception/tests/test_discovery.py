@@ -86,9 +86,12 @@ def test_discovery_materializes_four_surfaces_per_action() -> None:
     )
 
     assert len(report.surfaces) == 8
-    assert {
-        item.surface_kind for item in report.surfaces
-    } == {"observed", "expected", "difference", "unexplained"}
+    assert {item.surface_kind for item in report.surfaces} == {
+        "observed",
+        "expected",
+        "difference",
+        "unexplained",
+    }
     assert all(item.to_array().shape == (1, 2) for item in report.surfaces)
 
 

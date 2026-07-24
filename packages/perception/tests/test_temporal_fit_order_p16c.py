@@ -80,7 +80,9 @@ def test_every_caller_permutation_produces_exactly_one_translator() -> None:
         == tuple(sorted(source.temporal_source_id for source in examples))
         for item in fitted
     )
-    assert all(item.fit_order_semantics == TEMPORAL_FIT_ORDER_SEMANTICS for item in fitted)
+    assert all(
+        item.fit_order_semantics == TEMPORAL_FIT_ORDER_SEMANTICS for item in fitted
+    )
     assert all(item.version == TEMPORAL_TRANSLATOR_VERSION for item in fitted)
 
 
@@ -94,5 +96,7 @@ def test_duplicate_temporal_source_identity_is_rejected() -> None:
         tile_height=1,
     )
 
-    with pytest.raises(PerceptionTemporalInferenceError, match="identities must be unique"):
+    with pytest.raises(
+        PerceptionTemporalInferenceError, match="identities must be unique"
+    ):
         fit_temporal_translator((source, source), window, fields, actions)

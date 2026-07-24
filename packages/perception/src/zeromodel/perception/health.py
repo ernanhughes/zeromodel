@@ -22,7 +22,9 @@ from .production import (
 )
 from .promoted_inference import PromotedTestEvaluationReportDTO
 
-OPERATIONAL_REFERENCE_PROFILE_VERSION: Final = "perception-operational-reference-profile/1"
+OPERATIONAL_REFERENCE_PROFILE_VERSION: Final = (
+    "perception-operational-reference-profile/1"
+)
 OPERATIONAL_DRIFT_POLICY_VERSION: Final = "perception-operational-drift-policy/1"
 OPERATIONAL_HEALTH_FINDING_VERSION: Final = "perception-operational-health-finding/1"
 OPERATIONAL_HEALTH_REPORT_VERSION: Final = "perception-operational-health-report/1"
@@ -99,26 +101,43 @@ class OperationalReferenceProfileDTO:
                 self.test_report_id,
             )
         ):
-            raise PerceptionOperationalHealthError("reference identities must be non-empty")
+            raise PerceptionOperationalHealthError(
+                "reference identities must be non-empty"
+            )
         if self.model_kind not in {"single_frame", "temporal"}:
             raise PerceptionOperationalHealthError("unsupported reference model kind")
         if self.example_count <= 0:
-            raise PerceptionOperationalHealthError("reference profile requires examples")
+            raise PerceptionOperationalHealthError(
+                "reference profile requires examples"
+            )
         for value in (self.coverage, self.mean_margin, self.raw_accuracy):
             if not 0.0 <= value <= 1.0:
-                raise PerceptionOperationalHealthError("reference metric outside [0, 1]")
-        if self.accepted_accuracy is not None and not 0.0 <= self.accepted_accuracy <= 1.0:
-            raise PerceptionOperationalHealthError("reference accepted accuracy outside [0, 1]")
+                raise PerceptionOperationalHealthError(
+                    "reference metric outside [0, 1]"
+                )
+        if (
+            self.accepted_accuracy is not None
+            and not 0.0 <= self.accepted_accuracy <= 1.0
+        ):
+            raise PerceptionOperationalHealthError(
+                "reference accepted accuracy outside [0, 1]"
+            )
         if not self.action_distribution:
-            raise PerceptionOperationalHealthError("reference action distribution cannot be empty")
+            raise PerceptionOperationalHealthError(
+                "reference action distribution cannot be empty"
+            )
         if self.action_distribution != tuple(
             sorted(self.action_distribution, key=lambda item: item.action_label)
         ):
             raise PerceptionOperationalHealthError("reference actions must be sorted")
         if sum(item.count for item in self.action_distribution) != self.example_count:
-            raise PerceptionOperationalHealthError("reference action counts must exhaust examples")
+            raise PerceptionOperationalHealthError(
+                "reference action counts must exhaust examples"
+            )
         if abs(sum(item.frequency for item in self.action_distribution) - 1.0) > 1e-9:
-            raise PerceptionOperationalHealthError("reference action frequencies must sum to one")
+            raise PerceptionOperationalHealthError(
+                "reference action frequencies must sum to one"
+            )
         if self.semantics != OPERATIONAL_REFERENCE_SEMANTICS:
             raise PerceptionOperationalHealthError("unsupported reference semantics")
 
@@ -144,7 +163,9 @@ class OperationalDriftPolicyDTO:
             if not 0.0 <= value <= 1.0:
                 raise PerceptionOperationalHealthError("drift threshold outside [0, 1]")
         if self.minimum_labeled_count <= 0:
-            raise PerceptionOperationalHealthError("minimum_labeled_count must be positive")
+            raise PerceptionOperationalHealthError(
+                "minimum_labeled_count must be positive"
+            )
 
 
 @dataclass(frozen=True)
@@ -166,9 +187,13 @@ class OperationalHealthFindingDTO:
         if self.status not in OPERATIONAL_HEALTH_STATUSES:
             raise PerceptionOperationalHealthError("unsupported health status")
         if not self.finding_id or not self.rationale:
-            raise PerceptionOperationalHealthError("health finding identity and rationale required")
+            raise PerceptionOperationalHealthError(
+                "health finding identity and rationale required"
+            )
         if self.evidence_count < 0 or not 0.0 <= self.threshold <= 1.0:
-            raise PerceptionOperationalHealthError("invalid finding evidence or threshold")
+            raise PerceptionOperationalHealthError(
+                "invalid finding evidence or threshold"
+            )
         for value in (self.reference_value, self.observed_value):
             if value is not None and not 0.0 <= value <= 1.0:
                 raise PerceptionOperationalHealthError("finding value outside [0, 1]")
@@ -202,13 +227,20 @@ class OperationalHealthReportDTO:
                 self.production_metrics_report_id,
             )
         ):
-            raise PerceptionOperationalHealthError("health report identities must be non-empty")
-        if self.start_sequence_number <= 0 or self.end_sequence_number < self.start_sequence_number:
+            raise PerceptionOperationalHealthError(
+                "health report identities must be non-empty"
+            )
+        if (
+            self.start_sequence_number <= 0
+            or self.end_sequence_number < self.start_sequence_number
+        ):
             raise PerceptionOperationalHealthError("invalid health report window")
         if self.overall_status not in OPERATIONAL_HEALTH_STATUSES:
             raise PerceptionOperationalHealthError("unsupported overall health status")
         if not 0.0 <= self.action_distribution_distance <= 1.0:
-            raise PerceptionOperationalHealthError("action distribution distance outside [0, 1]")
+            raise PerceptionOperationalHealthError(
+                "action distribution distance outside [0, 1]"
+            )
         if tuple(item.metric for item in self.findings) != (
             "coverage",
             "mean_margin",
@@ -216,13 +248,19 @@ class OperationalHealthReportDTO:
             "raw_accuracy",
             "accepted_accuracy",
         ):
-            raise PerceptionOperationalHealthError("health findings must use canonical order")
+            raise PerceptionOperationalHealthError(
+                "health findings must use canonical order"
+            )
         if self.production_action_distribution != tuple(
-            sorted(self.production_action_distribution, key=lambda item: item.action_label)
+            sorted(
+                self.production_action_distribution, key=lambda item: item.action_label
+            )
         ):
             raise PerceptionOperationalHealthError("production actions must be sorted")
         if self.semantics != OPERATIONAL_HEALTH_SEMANTICS:
-            raise PerceptionOperationalHealthError("unsupported health report semantics")
+            raise PerceptionOperationalHealthError(
+                "unsupported health report semantics"
+            )
 
 
 def _distribution(labels: tuple[str, ...]) -> tuple[ActionFrequencyDTO, ...]:
@@ -247,11 +285,17 @@ def build_operational_reference_profile(
 ) -> OperationalReferenceProfileDTO:
     """Freeze the P11 untouched-test operating profile for later production comparison."""
 
-    actions = _distribution(tuple(item.selected_action for item in test_report.examples))
+    actions = _distribution(
+        tuple(item.selected_action for item in test_report.examples)
+    )
     payload: Mapping[str, object] = {
         "accepted_accuracy": test_report.accepted_accuracy,
         "action_distribution": [
-            {"action_label": item.action_label, "count": item.count, "frequency": item.frequency}
+            {
+                "action_label": item.action_label,
+                "count": item.count,
+                "frequency": item.frequency,
+            }
             for item in actions
         ],
         "coverage": test_report.coverage,
@@ -353,14 +397,19 @@ def diagnose_operational_health(
     selected: tuple[ProductionInferenceRecordDTO, ...] = tuple(
         item
         for item in all_records
-        if metrics.start_sequence_number <= item.sequence_number <= metrics.end_sequence_number
+        if metrics.start_sequence_number
+        <= item.sequence_number
+        <= metrics.end_sequence_number
         and item.promoted_model_id == reference.promoted_model_id
     )
     actions = _distribution(tuple(item.selected_action for item in selected))
     reference_map = _frequency_map(reference.action_distribution)
     production_map = _frequency_map(actions)
     labels = set(reference_map) | set(production_map)
-    distance = 0.5 * sum(abs(reference_map.get(label, 0.0) - production_map.get(label, 0.0)) for label in labels)
+    distance = 0.5 * sum(
+        abs(reference_map.get(label, 0.0) - production_map.get(label, 0.0))
+        for label in labels
+    )
 
     findings: list[OperationalHealthFindingDTO] = [
         _drop_finding(
@@ -477,7 +526,11 @@ def diagnose_operational_health(
         "outcome_ids": list(metrics.outcome_ids),
         "overall_status": overall,
         "production_action_distribution": [
-            {"action_label": item.action_label, "count": item.count, "frequency": item.frequency}
+            {
+                "action_label": item.action_label,
+                "count": item.count,
+                "frequency": item.frequency,
+            }
             for item in actions
         ],
         "production_metrics_report_id": metrics.report_id,

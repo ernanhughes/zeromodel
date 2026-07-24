@@ -100,7 +100,9 @@ class OperationalRecommendationDTO:
                 "only rollback_candidate recommendations may select a target"
             )
         if self.assessed_candidates != tuple(
-            sorted(self.assessed_candidates, key=lambda item: item.target_promoted_model_id)
+            sorted(
+                self.assessed_candidates, key=lambda item: item.target_promoted_model_id
+            )
         ):
             raise PerceptionOperationalRecommendationError(
                 "candidate assessments must be sorted by target model identity"

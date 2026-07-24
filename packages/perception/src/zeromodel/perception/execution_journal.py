@@ -30,7 +30,9 @@ from .sql_governance import (
 
 EXECUTION_ATTEMPT_VERSION: Final = "perception-governed-execution-attempt/1"
 EXECUTION_ATTEMPT_EVENT_VERSION: Final = "perception-governed-execution-attempt-event/1"
-SQL_EXECUTION_JOURNAL_SCHEMA_VERSION: Final = "perception-sql-execution-journal-schema/1"
+SQL_EXECUTION_JOURNAL_SCHEMA_VERSION: Final = (
+    "perception-sql-execution-journal-schema/1"
+)
 EXECUTION_ATTEMPT_EVENT_KINDS: Final = {
     "prepared",
     "completed",
@@ -85,13 +87,17 @@ class GovernedExecutionAttemptDTO:
                 self.target_contract_id,
             )
         ):
-            raise PerceptionExecutionJournalError("execution attempt identities must be non-empty")
+            raise PerceptionExecutionJournalError(
+                "execution attempt identities must be non-empty"
+            )
         if self.reviewed_pointer_revision <= 0:
             raise PerceptionExecutionJournalError(
                 "execution attempt requires a positive reviewed pointer revision"
             )
         if self.version != EXECUTION_ATTEMPT_VERSION:
-            raise PerceptionExecutionJournalError("unsupported execution attempt version")
+            raise PerceptionExecutionJournalError(
+                "unsupported execution attempt version"
+            )
 
 
 @dataclass(frozen=True)
@@ -108,9 +114,13 @@ class GovernedExecutionAttemptEventDTO:
 
     def __post_init__(self) -> None:
         if not self.event_id or not self.attempt_id:
-            raise PerceptionExecutionJournalError("attempt event identities must be non-empty")
+            raise PerceptionExecutionJournalError(
+                "attempt event identities must be non-empty"
+            )
         if self.sequence_number not in {1, 2}:
-            raise PerceptionExecutionJournalError("attempt event sequence must be one or two")
+            raise PerceptionExecutionJournalError(
+                "attempt event sequence must be one or two"
+            )
         if self.event_kind not in EXECUTION_ATTEMPT_EVENT_KINDS:
             raise PerceptionExecutionJournalError("unsupported attempt event kind")
         if self.event_kind == "prepared":
@@ -123,19 +133,39 @@ class GovernedExecutionAttemptEventDTO:
                     self.failure_message,
                 )
             ):
-                raise PerceptionExecutionJournalError("prepared event cannot contain terminal data")
+                raise PerceptionExecutionJournalError(
+                    "prepared event cannot contain terminal data"
+                )
         elif self.event_kind == "failed":
-            if self.sequence_number != 2 or not self.failure_type or not self.failure_message:
-                raise PerceptionExecutionJournalError("failed event requires failure details")
+            if (
+                self.sequence_number != 2
+                or not self.failure_type
+                or not self.failure_message
+            ):
+                raise PerceptionExecutionJournalError(
+                    "failed event requires failure details"
+                )
             if self.receipt_id is not None or self.pointer_revision is not None:
-                raise PerceptionExecutionJournalError("failed event cannot contain receipt data")
+                raise PerceptionExecutionJournalError(
+                    "failed event cannot contain receipt data"
+                )
         else:
-            if self.sequence_number != 2 or not self.receipt_id or self.pointer_revision is None:
-                raise PerceptionExecutionJournalError("successful terminal event requires receipt data")
+            if (
+                self.sequence_number != 2
+                or not self.receipt_id
+                or self.pointer_revision is None
+            ):
+                raise PerceptionExecutionJournalError(
+                    "successful terminal event requires receipt data"
+                )
             if self.pointer_revision <= 0:
-                raise PerceptionExecutionJournalError("terminal pointer revision must be positive")
+                raise PerceptionExecutionJournalError(
+                    "terminal pointer revision must be positive"
+                )
             if self.failure_type is not None or self.failure_message is not None:
-                raise PerceptionExecutionJournalError("successful terminal event cannot contain failure data")
+                raise PerceptionExecutionJournalError(
+                    "successful terminal event cannot contain failure data"
+                )
         if self.version != EXECUTION_ATTEMPT_EVENT_VERSION:
             raise PerceptionExecutionJournalError("unsupported attempt event version")
 
@@ -149,13 +179,21 @@ def build_governed_execution_attempt(
 ) -> GovernedExecutionAttemptDTO:
     target_id = disposition.selected_target_promoted_model_id
     if disposition.status != "approved" or target_id is None:
-        raise PerceptionExecutionJournalError("execution attempt requires an approved rollback target")
+        raise PerceptionExecutionJournalError(
+            "execution attempt requires an approved rollback target"
+        )
     if disposition.recommendation_id != recommendation.recommendation_id:
-        raise PerceptionExecutionJournalError("disposition does not belong to recommendation")
+        raise PerceptionExecutionJournalError(
+            "disposition does not belong to recommendation"
+        )
     if current_contract.contract_id != recommendation.current_contract_id:
-        raise PerceptionExecutionJournalError("current contract does not match recommendation")
+        raise PerceptionExecutionJournalError(
+            "current contract does not match recommendation"
+        )
     if target_contract.promoted_model_id != target_id:
-        raise PerceptionExecutionJournalError("target contract does not describe approved target")
+        raise PerceptionExecutionJournalError(
+            "target contract does not describe approved target"
+        )
     payload: Mapping[str, object] = {
         "current_contract_id": current_contract.contract_id,
         "disposition_id": disposition.disposition_id,
@@ -246,7 +284,9 @@ class SqliteGovernedExecutionAttemptStore:
             )
             self._connection.commit()
         elif row["value"] != SQL_EXECUTION_JOURNAL_SCHEMA_VERSION:
-            raise PerceptionExecutionJournalError("unsupported execution journal schema version")
+            raise PerceptionExecutionJournalError(
+                "unsupported execution journal schema version"
+            )
 
     def append_attempt(self, attempt: GovernedExecutionAttemptDTO) -> None:
         encoded = json.dumps(asdict(attempt), sort_keys=True, separators=(",", ":"))
@@ -256,7 +296,10 @@ class SqliteGovernedExecutionAttemptStore:
             (attempt.disposition_id,),
         ).fetchone()
         if row is not None:
-            if row["attempt_id"] != attempt.attempt_id or row["payload_json"] != encoded:
+            if (
+                row["attempt_id"] != attempt.attempt_id
+                or row["payload_json"] != encoded
+            ):
                 raise PerceptionExecutionJournalError(
                     "disposition already has a conflicting execution attempt"
                 )
@@ -270,7 +313,9 @@ class SqliteGovernedExecutionAttemptStore:
 
     def append_event(self, event: GovernedExecutionAttemptEventDTO) -> None:
         if self.get_attempt(event.attempt_id) is None:
-            raise PerceptionExecutionJournalError("attempt event requires persisted attempt")
+            raise PerceptionExecutionJournalError(
+                "attempt event requires persisted attempt"
+            )
         existing = self._connection.execute(
             "SELECT event_id, payload_json FROM perception_governed_execution_attempt_events "
             "WHERE attempt_id = ? AND sequence_number = ?",
@@ -278,15 +323,24 @@ class SqliteGovernedExecutionAttemptStore:
         ).fetchone()
         encoded = json.dumps(asdict(event), sort_keys=True, separators=(",", ":"))
         if existing is not None:
-            if existing["event_id"] != event.event_id or existing["payload_json"] != encoded:
-                raise PerceptionExecutionJournalError("attempt sequence already has another event")
+            if (
+                existing["event_id"] != event.event_id
+                or existing["payload_json"] != encoded
+            ):
+                raise PerceptionExecutionJournalError(
+                    "attempt sequence already has another event"
+                )
             return
         events = self.list_events(event.attempt_id)
         expected_sequence = len(events) + 1
         if event.sequence_number != expected_sequence:
-            raise PerceptionExecutionJournalError("attempt event sequence is not contiguous")
+            raise PerceptionExecutionJournalError(
+                "attempt event sequence is not contiguous"
+            )
         if events and events[-1].event_kind in EXECUTION_ATTEMPT_TERMINAL_KINDS:
-            raise PerceptionExecutionJournalError("terminal execution attempt cannot be extended")
+            raise PerceptionExecutionJournalError(
+                "terminal execution attempt cannot be extended"
+            )
         self._connection.execute(
             "INSERT INTO perception_governed_execution_attempt_events"
             "(event_id, attempt_id, sequence_number, event_kind, payload_json) "
@@ -306,24 +360,32 @@ class SqliteGovernedExecutionAttemptStore:
             "SELECT payload_json FROM perception_governed_execution_attempts WHERE attempt_id = ?",
             (attempt_id,),
         ).fetchone()
-        return None if row is None else GovernedExecutionAttemptDTO(**json.loads(row["payload_json"]))
+        return (
+            None
+            if row is None
+            else GovernedExecutionAttemptDTO(**json.loads(row["payload_json"]))
+        )
 
     def list_attempts(self) -> tuple[GovernedExecutionAttemptDTO, ...]:
         rows = self._connection.execute(
             "SELECT payload_json FROM perception_governed_execution_attempts ORDER BY attempt_id"
         ).fetchall()
         return tuple(
-            GovernedExecutionAttemptDTO(**json.loads(row["payload_json"])) for row in rows
+            GovernedExecutionAttemptDTO(**json.loads(row["payload_json"]))
+            for row in rows
         )
 
-    def list_events(self, attempt_id: str) -> tuple[GovernedExecutionAttemptEventDTO, ...]:
+    def list_events(
+        self, attempt_id: str
+    ) -> tuple[GovernedExecutionAttemptEventDTO, ...]:
         rows = self._connection.execute(
             "SELECT payload_json FROM perception_governed_execution_attempt_events "
             "WHERE attempt_id = ? ORDER BY sequence_number",
             (attempt_id,),
         ).fetchall()
         return tuple(
-            GovernedExecutionAttemptEventDTO(**json.loads(row["payload_json"])) for row in rows
+            GovernedExecutionAttemptEventDTO(**json.loads(row["payload_json"]))
+            for row in rows
         )
 
 
@@ -364,7 +426,9 @@ def execute_journaled_approved_rollback(
             )
         return attempt, receipts[0]
     if not events:
-        attempt_store.append_event(_event(attempt, sequence_number=1, event_kind="prepared"))
+        attempt_store.append_event(
+            _event(attempt, sequence_number=1, event_kind="prepared")
+        )
 
     existing_receipt = next(
         (
@@ -379,7 +443,8 @@ def execute_journaled_approved_rollback(
         (
             pointer_before.pointer_id == recommendation.active_pointer_id,
             pointer_before.revision == recommendation.active_pointer_revision,
-            pointer_before.active_promoted_model_id == recommendation.active_promoted_model_id,
+            pointer_before.active_promoted_model_id
+            == recommendation.active_promoted_model_id,
         )
     )
     try:

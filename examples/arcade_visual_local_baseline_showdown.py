@@ -18,11 +18,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_visual_address_benchmark import ( # noqa: E402
+from examples.arcade_visual_address_benchmark import (  # noqa: E402
     SOURCE_SCOPE,
     build_arcade_benchmark_dataset,
 )  # noqa: E402
-from research.visual.visual_experiment import ( # noqa: E402
+from research.visual.visual_experiment import (  # noqa: E402
     EXPECTED_ACCEPT,
     EXPECTED_REJECT,
     IMPOSSIBILITY_CONTROL,

@@ -29,7 +29,7 @@ from research.evidence.video_action_equivalence import (  # noqa: E402
     summarize_top1_records,
     verify_v3_preservation,
 )
-from zeromodel.video.video_policy_reachability import ( # noqa: E402
+from zeromodel.video.video_policy_reachability import (  # noqa: E402
     compile_reachability_tile,
     verify_reachability_tile,
 )  # noqa: E402

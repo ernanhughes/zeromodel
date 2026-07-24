@@ -98,7 +98,16 @@ class VPMFieldSchemaDTO:
     def __post_init__(self) -> None:
         if not self.field_schema_id or not self.source_encoder_spec_id:
             raise PerceptionFieldError("schema identities must be non-empty")
-        if min(self.width, self.height, self.channels, self.tile_width, self.tile_height) <= 0:
+        if (
+            min(
+                self.width,
+                self.height,
+                self.channels,
+                self.tile_width,
+                self.tile_height,
+            )
+            <= 0
+        ):
             raise PerceptionFieldError("schema dimensions must be positive")
         if self.channel_mode not in _ALLOWED_CHANNEL_MODES:
             raise PerceptionFieldError(
@@ -126,7 +135,9 @@ class VPMFieldSchemaDTO:
                 field.channel_start : field.channel_end,
             ] += 1
         if not np.all(coverage == 1):
-            raise PerceptionFieldError("fields must cover every source value exactly once")
+            raise PerceptionFieldError(
+                "fields must cover every source value exactly once"
+            )
 
     def field(self, field_id: str) -> VPMFieldAddressDTO:
         for item in self.fields:
@@ -150,7 +161,9 @@ class ExtractedFieldDTO:
     version: str = FIELD_SAMPLE_VERSION
 
     def __post_init__(self) -> None:
-        if not all((self.sample_id, self.source_vpm_id, self.field_schema_id, self.field_id)):
+        if not all(
+            (self.sample_id, self.source_vpm_id, self.field_schema_id, self.field_id)
+        ):
             raise PerceptionFieldError("sample identities must be non-empty")
         if self.dtype != "uint8":
             raise PerceptionFieldError("P4A samples must use uint8")
@@ -317,7 +330,9 @@ def reconstruct_source_array(
     by_id = {sample.field_id: sample for sample in samples}
     expected_ids = {field.field_id for field in schema.fields}
     if set(by_id) != expected_ids:
-        raise PerceptionFieldError("samples must contain exactly one value for every field")
+        raise PerceptionFieldError(
+            "samples must contain exactly one value for every field"
+        )
     output = np.zeros((schema.height, schema.width, schema.channels), dtype=np.uint8)
     for field in schema.fields:
         sample = by_id[field.field_id]

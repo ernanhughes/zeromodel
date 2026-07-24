@@ -12,7 +12,9 @@ from zeromodel.perception.execution_journal import (
     build_governed_execution_attempt,
     execute_journaled_approved_rollback,
 )
-from zeromodel.perception.governed_execution import execute_or_reconcile_approved_rollback
+from zeromodel.perception.governed_execution import (
+    execute_or_reconcile_approved_rollback,
+)
 from zeromodel.perception.lifecycle import (
     InMemoryPerceptionModelLifecycleStore,
     activate_promoted_model,
@@ -61,8 +63,12 @@ def _fixture(governance_database):
             registered_by="test",
             registration_reason="candidate",
         )
-    activate_promoted_model(lifecycle, earlier.promoted_model_id, actor="test", reason="activate")
-    supersede_active_model(lifecycle, current.promoted_model_id, actor="test", reason="supersede")
+    activate_promoted_model(
+        lifecycle, earlier.promoted_model_id, actor="test", reason="activate"
+    )
+    supersede_active_model(
+        lifecycle, current.promoted_model_id, actor="test", reason="supersede"
+    )
     snapshot = build_model_lifecycle_snapshot(lifecycle)
     current_contract = _contract(current)
     target_contract = _contract(earlier)
@@ -113,9 +119,10 @@ def test_normal_execution_records_prepared_and_completed(tmp_path) -> None:
         recommendation,
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         attempt, receipt = execute_journaled_approved_rollback(
             lifecycle,
             governance,
@@ -129,7 +136,10 @@ def test_normal_execution_records_prepared_and_completed(tmp_path) -> None:
 
     assert tuple(item.event_kind for item in events) == ("prepared", "completed")
     assert receipt.resulting_promoted_model_id == earlier.promoted_model_id
-    assert lifecycle.get_active_pointer().revision == recommendation.active_pointer_revision + 1
+    assert (
+        lifecycle.get_active_pointer().revision
+        == recommendation.active_pointer_revision + 1
+    )
 
 
 def test_prepared_only_attempt_is_reconciled_after_crash(tmp_path) -> None:
@@ -164,9 +174,12 @@ def test_prepared_only_attempt_is_reconciled_after_crash(tmp_path) -> None:
     )
     governance.close()
 
-    with SqlitePerceptionGovernanceLedgerStore(
-        tmp_path / "governance.sqlite3"
-    ) as reopened_governance, SqliteGovernedExecutionAttemptStore(attempts_database) as attempts:
+    with (
+        SqlitePerceptionGovernanceLedgerStore(
+            tmp_path / "governance.sqlite3"
+        ) as reopened_governance,
+        SqliteGovernedExecutionAttemptStore(attempts_database) as attempts,
+    ):
         resumed, receipt = execute_journaled_approved_rollback(
             lifecycle,
             reopened_governance,
@@ -200,9 +213,10 @@ def test_existing_receipt_with_new_attempt_is_idempotently_linked(tmp_path) -> N
         current_contract=current_contract,
         target_contract=target_contract,
     )
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         attempt, receipt = execute_journaled_approved_rollback(
             lifecycle,
             governance,
@@ -241,9 +255,10 @@ def test_failure_is_terminal_and_does_not_retry(tmp_path) -> None:
         actor="other",
         reason="unrelated change",
     )
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         with pytest.raises(PerceptionExecutionJournalError):
             execute_journaled_approved_rollback(
                 lifecycle,
@@ -298,7 +313,9 @@ def test_attempt_and_events_survive_restart(tmp_path) -> None:
         )
     with SqliteGovernedExecutionAttemptStore(database) as reopened:
         assert reopened.get_attempt(attempt.attempt_id) == attempt
-        assert tuple(item.event_kind for item in reopened.list_events(attempt.attempt_id)) == (
+        assert tuple(
+            item.event_kind for item in reopened.list_events(attempt.attempt_id)
+        ) == (
             "prepared",
             "completed",
         )

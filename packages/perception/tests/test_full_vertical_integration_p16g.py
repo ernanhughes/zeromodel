@@ -280,9 +280,7 @@ def test_full_pipeline_survives_sqlite_restart_and_preserves_lineage(tmp_path) -
             inference_semantics_version="p16g-runtime/1",
             deployment_slot="primary",
         )
-        assessment = assess_rollback_compatibility(
-            current_contract, earlier_contract
-        )
+        assessment = assess_rollback_compatibility(current_contract, earlier_contract)
         assert assessment.status == "compatible"
         rollback_compatible_model(
             lifecycle,

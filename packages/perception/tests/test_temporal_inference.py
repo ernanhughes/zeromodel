@@ -22,7 +22,9 @@ from zeromodel.perception import (
 )
 
 
-def _temporal(value0: int, value1: int, action: str, index: int) -> TemporalSourceVPMDTO:
+def _temporal(
+    value0: int, value1: int, action: str, index: int
+) -> TemporalSourceVPMDTO:
     base_spec = SourceImageEncoderSpecDTO(color_space="L")
     first = encode_source_array(np.full((1, 1), value0, dtype=np.uint8), base_spec)
     current = encode_source_array(np.full((1, 1), value1, dtype=np.uint8), base_spec)
@@ -66,7 +68,9 @@ def test_temporal_translator_is_deterministic_and_predicts_context() -> None:
     )
 
     first = fit_temporal_translator(examples, spec, schema, action_schema)
-    second = fit_temporal_translator(tuple(reversed(examples)), spec, schema, action_schema)
+    second = fit_temporal_translator(
+        tuple(reversed(examples)), spec, schema, action_schema
+    )
 
     assert first.temporal_translator_id == second.temporal_translator_id
     assert first.coefficient_semantics == COEFFICIENT_SEMANTICS

@@ -114,17 +114,25 @@ class TemporalSourceVPMDTO:
                 self.current_pixel_digest,
             )
         ):
-            raise PerceptionTemporalError("temporal source identities must be non-empty")
+            raise PerceptionTemporalError(
+                "temporal source identities must be non-empty"
+            )
         if self.target_step_index < 0:
             raise PerceptionTemporalError("target_step_index must be non-negative")
         if len(self.frame_source_vpm_ids) < 2:
-            raise PerceptionTemporalError("temporal source requires at least two frames")
+            raise PerceptionTemporalError(
+                "temporal source requires at least two frames"
+            )
         if len(self.frame_source_vpm_ids) != len(self.frame_pixel_digests):
             raise PerceptionTemporalError("frame ids and pixel digests must align")
         if self.frame_source_vpm_ids[-1] != self.current_source_vpm_id:
-            raise PerceptionTemporalError("last temporal frame must be the current source")
+            raise PerceptionTemporalError(
+                "last temporal frame must be the current source"
+            )
         if self.frame_pixel_digests[-1] != self.current_pixel_digest:
-            raise PerceptionTemporalError("last temporal digest must be the current digest")
+            raise PerceptionTemporalError(
+                "last temporal digest must be the current digest"
+            )
         if self.layout_semantics != TEMPORAL_LAYOUT_SEMANTICS:
             raise PerceptionTemporalError("unsupported temporal layout semantics")
 
@@ -149,15 +157,26 @@ class TemporalConflictGroupDTO:
     def __post_init__(self) -> None:
         if self.status not in TEMPORAL_DIAGNOSIS_STATUSES:
             raise PerceptionTemporalError("unsupported temporal conflict status")
-        if not self.group_id or not self.current_pixel_digest or not self.interaction_ids:
-            raise PerceptionTemporalError("temporal conflict identities must be non-empty")
+        if (
+            not self.group_id
+            or not self.current_pixel_digest
+            or not self.interaction_ids
+        ):
+            raise PerceptionTemporalError(
+                "temporal conflict identities must be non-empty"
+            )
         if self.interaction_ids != tuple(sorted(set(self.interaction_ids))):
             raise PerceptionTemporalError("interaction_ids must be unique and sorted")
         if self.action_labels != tuple(sorted(set(self.action_labels))):
             raise PerceptionTemporalError("action_labels must be unique and sorted")
         if self.temporal_source_ids != tuple(sorted(set(self.temporal_source_ids))):
-            raise PerceptionTemporalError("temporal_source_ids must be unique and sorted")
-        if self.temporal_context_count < 0 or self.temporally_conflicting_context_count < 0:
+            raise PerceptionTemporalError(
+                "temporal_source_ids must be unique and sorted"
+            )
+        if (
+            self.temporal_context_count < 0
+            or self.temporally_conflicting_context_count < 0
+        ):
             raise PerceptionTemporalError("temporal counts must be non-negative")
 
 
@@ -176,12 +195,22 @@ class TemporalStateDiagnosisReportDTO:
     version: str = TEMPORAL_DIAGNOSIS_VERSION
 
     def __post_init__(self) -> None:
-        if not self.report_id or not self.dataset_id or not self.temporal_window_spec_id:
-            raise PerceptionTemporalError("temporal diagnosis identities must be non-empty")
+        if (
+            not self.report_id
+            or not self.dataset_id
+            or not self.temporal_window_spec_id
+        ):
+            raise PerceptionTemporalError(
+                "temporal diagnosis identities must be non-empty"
+            )
         if self.split not in {"train", "validation", "test", "all"}:
             raise PerceptionTemporalError("unsupported temporal diagnosis split")
-        if self.groups != tuple(sorted(self.groups, key=lambda item: item.current_pixel_digest)):
-            raise PerceptionTemporalError("temporal groups must be sorted by current digest")
+        if self.groups != tuple(
+            sorted(self.groups, key=lambda item: item.current_pixel_digest)
+        ):
+            raise PerceptionTemporalError(
+                "temporal groups must be sorted by current digest"
+            )
         if self.diagnosis_semantics != TEMPORAL_DIAGNOSIS_SEMANTICS:
             raise PerceptionTemporalError("unsupported diagnosis semantics")
         counts = (
@@ -255,7 +284,9 @@ def build_temporal_source_vpms(
             try:
                 frames = tuple(source_vpms[item.source_vpm_id] for item in window)
             except KeyError as exc:
-                raise PerceptionTemporalError(f"missing SourceVPMDTO for {exc.args[0]}") from exc
+                raise PerceptionTemporalError(
+                    f"missing SourceVPMDTO for {exc.args[0]}"
+                ) from exc
             for interaction, frame in zip(window, frames):
                 if interaction.source_pixel_digest != frame.pixel_digest:
                     raise PerceptionTemporalError(
@@ -342,7 +373,9 @@ def diagnose_temporal_state_completeness(
             context_actions.setdefault(temporal.temporal_context_signature, set()).add(
                 temporal.action_label
             )
-        conflicting_contexts = sum(1 for labels in context_actions.values() if len(labels) > 1)
+        conflicting_contexts = sum(
+            1 for labels in context_actions.values() if len(labels) > 1
+        )
         if len(action_labels) <= 1:
             status = "no_single_frame_conflict"
         elif len(available) < len(interactions) or len(context_actions) < 2:
@@ -357,7 +390,9 @@ def diagnose_temporal_state_completeness(
             "interaction_ids": sorted(item.interaction_id for item in interactions),
             "status": status,
             "temporal_context_count": len(context_actions),
-            "temporal_source_ids": sorted(item.temporal_source_id for item in available),
+            "temporal_source_ids": sorted(
+                item.temporal_source_id for item in available
+            ),
             "temporally_conflicting_context_count": conflicting_contexts,
         }
         groups.append(

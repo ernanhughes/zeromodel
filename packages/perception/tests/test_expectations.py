@@ -114,7 +114,10 @@ def test_wrong_target_placement_is_preserved_as_finding() -> None:
         expectation,
     )
 
-    assert report.overall_status in {"wrong_target_placement", "missing_expected_evidence"}
+    assert report.overall_status in {
+        "wrong_target_placement",
+        "missing_expected_evidence",
+    }
     assert report.overall_status != "confirmed"
 
 

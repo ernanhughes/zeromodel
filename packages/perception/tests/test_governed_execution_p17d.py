@@ -63,7 +63,9 @@ def _fixture(tmp_path):
             registered_by="test",
             registration_reason="candidate",
         )
-    activate_promoted_model(lifecycle, earlier.promoted_model_id, actor="test", reason="activate")
+    activate_promoted_model(
+        lifecycle, earlier.promoted_model_id, actor="test", reason="activate"
+    )
     supersede_active_model(
         lifecycle,
         current.promoted_model_id,
@@ -140,13 +142,18 @@ def test_executes_and_persists_one_receipt(tmp_path) -> None:
             target_contract=target_contract,
         )
         assert repeated == receipt
-        assert lifecycle.get_active_pointer().active_promoted_model_id == earlier.promoted_model_id
+        assert (
+            lifecycle.get_active_pointer().active_promoted_model_id
+            == earlier.promoted_model_id
+        )
         assert governance.list_execution_receipts() == (receipt,)
     finally:
         governance.close()
 
 
-def test_recovers_receipt_after_crash_between_mutation_and_persistence(tmp_path) -> None:
+def test_recovers_receipt_after_crash_between_mutation_and_persistence(
+    tmp_path,
+) -> None:
     (
         lifecycle,
         governance,
@@ -245,7 +252,9 @@ def test_execution_requires_exact_persisted_chain(tmp_path) -> None:
                 "recommendation_id": "sha256:different-recommendation",
             }
         )
-        with pytest.raises(PerceptionGovernedExecutionError, match="exact persisted recommendation"):
+        with pytest.raises(
+            PerceptionGovernedExecutionError, match="exact persisted recommendation"
+        ):
             execute_or_reconcile_approved_rollback(
                 lifecycle,
                 governance,

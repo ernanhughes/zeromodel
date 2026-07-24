@@ -85,13 +85,18 @@ class OperationalRecommendationDispositionDTO:
                 "disposition requires a non-zero pointer revision"
             )
         if self.status not in OPERATIONAL_DISPOSITION_STATUSES:
-            raise PerceptionOperationalDispositionError("unsupported disposition status")
+            raise PerceptionOperationalDispositionError(
+                "unsupported disposition status"
+            )
         selected = self.selected_target_promoted_model_id is not None
         if selected != (self.selected_assessment_id is not None):
             raise PerceptionOperationalDispositionError(
                 "selected target and assessment must appear together"
             )
-        if self.status == "approved" and self.recommendation_status != "rollback_candidate":
+        if (
+            self.status == "approved"
+            and self.recommendation_status != "rollback_candidate"
+        ):
             raise PerceptionOperationalDispositionError(
                 "only rollback-candidate recommendations may be approved"
             )
@@ -100,9 +105,13 @@ class OperationalRecommendationDispositionDTO:
                 "approved rollback disposition requires a selected target"
             )
         if self.semantics != OPERATIONAL_DISPOSITION_SEMANTICS:
-            raise PerceptionOperationalDispositionError("unsupported disposition semantics")
+            raise PerceptionOperationalDispositionError(
+                "unsupported disposition semantics"
+            )
         if self.version != OPERATIONAL_DISPOSITION_VERSION:
-            raise PerceptionOperationalDispositionError("unsupported disposition version")
+            raise PerceptionOperationalDispositionError(
+                "unsupported disposition version"
+            )
 
 
 def disposition_operational_recommendation(
@@ -158,7 +167,9 @@ def execute_approved_rollback(
     """Execute an approved rollback only after revalidating all reviewed evidence."""
 
     if disposition.status != "approved":
-        raise PerceptionOperationalDispositionError("rollback requires an approved disposition")
+        raise PerceptionOperationalDispositionError(
+            "rollback requires an approved disposition"
+        )
     if disposition.recommendation_id != recommendation.recommendation_id:
         raise PerceptionOperationalDispositionError(
             "disposition does not describe the supplied recommendation"

@@ -81,9 +81,13 @@ class PerceptionRegionAnnotationDTO:
         if not self.field_ids:
             raise PerceptionConformanceError("annotation requires at least one field")
         if self.field_ids != tuple(sorted(set(self.field_ids))):
-            raise PerceptionConformanceError("annotation field_ids must be unique and sorted")
+            raise PerceptionConformanceError(
+                "annotation field_ids must be unique and sorted"
+            )
         if self.properties != tuple(sorted(set(self.properties))):
-            raise PerceptionConformanceError("annotation properties must be unique and sorted")
+            raise PerceptionConformanceError(
+                "annotation properties must be unique and sorted"
+            )
 
     @classmethod
     def create(
@@ -100,7 +104,9 @@ class PerceptionRegionAnnotationDTO:
         ordered_fields = tuple(sorted(set(field_ids)))
         unknown = set(ordered_fields) - known
         if unknown:
-            raise PerceptionConformanceError(f"annotation contains unknown fields: {sorted(unknown)}")
+            raise PerceptionConformanceError(
+                f"annotation contains unknown fields: {sorted(unknown)}"
+            )
         ordered_properties = tuple(sorted(set(properties)))
         payload: Mapping[str, object] = {
             "field_schema_id": field_schema.field_schema_id,
@@ -135,9 +141,13 @@ class RelationAnnotationDTO:
         if not self.relation_id or not self.relation_type:
             raise PerceptionConformanceError("relation identity/type must be non-empty")
         if len(self.member_annotation_ids) < 2:
-            raise PerceptionConformanceError("relation requires at least two annotation members")
+            raise PerceptionConformanceError(
+                "relation requires at least two annotation members"
+            )
         if self.member_annotation_ids != tuple(sorted(set(self.member_annotation_ids))):
-            raise PerceptionConformanceError("relation members must be unique and sorted")
+            raise PerceptionConformanceError(
+                "relation members must be unique and sorted"
+            )
         if self.derived_field_ids != tuple(sorted(set(self.derived_field_ids))):
             raise PerceptionConformanceError("derived fields must be unique and sorted")
 
@@ -159,7 +169,9 @@ class EvidenceExpectationDTO:
         if not self.expectation_id or not self.field_schema_id:
             raise PerceptionConformanceError("expectation identities must be non-empty")
         if not self.source_annotation_ids or not self.expected_action_labels:
-            raise PerceptionConformanceError("expectation requires source annotations and actions")
+            raise PerceptionConformanceError(
+                "expectation requires source annotations and actions"
+            )
         for name, values in (
             ("source_annotation_ids", self.source_annotation_ids),
             ("expected_action_labels", self.expected_action_labels),
@@ -224,7 +236,9 @@ class ObservedAnnotationRegistrationDTO:
 
     def __post_init__(self) -> None:
         if not self.annotation_id or not self.action_label:
-            raise PerceptionConformanceError("observed registration identities must be non-empty")
+            raise PerceptionConformanceError(
+                "observed registration identities must be non-empty"
+            )
         if not 0.0 <= self.registration <= 1.0:
             raise PerceptionConformanceError("registration must be in [0, 1]")
         if self.stability is not None and not 0.0 <= self.stability <= 1.0:
@@ -265,24 +279,37 @@ class EvidenceConformanceReportDTO:
         if self.overall_status not in CONFORMANCE_STATUSES:
             raise PerceptionConformanceError("unsupported overall conformance status")
         if not self.findings:
-            raise PerceptionConformanceError("conformance report requires at least one finding")
+            raise PerceptionConformanceError(
+                "conformance report requires at least one finding"
+            )
 
 
 def _registration_surface(
     translator: SourceTargetTranslatorDTO,
     annotations: tuple[PerceptionRegionAnnotationDTO, ...],
     stability_by_annotation_action: Mapping[tuple[str, str], float] | None,
-) -> tuple[tuple[ObservedAnnotationRegistrationDTO, ...], tuple[tuple[str, float], ...]]:
-    index_by_field = {field_id: index for index, field_id in enumerate(translator.source_field_ids)}
-    annotated_fields = {field_id for annotation in annotations for field_id in annotation.field_ids}
+) -> tuple[
+    tuple[ObservedAnnotationRegistrationDTO, ...], tuple[tuple[str, float], ...]
+]:
+    index_by_field = {
+        field_id: index for index, field_id in enumerate(translator.source_field_ids)
+    }
+    annotated_fields = {
+        field_id for annotation in annotations for field_id in annotation.field_ids
+    }
     registrations: list[ObservedAnnotationRegistrationDTO] = []
     unexplained: list[tuple[str, float]] = []
     for action_index, action_label in enumerate(translator.action_labels):
-        weights = np.abs(np.asarray(translator.coefficients[action_index], dtype=np.float64))
+        weights = np.abs(
+            np.asarray(translator.coefficients[action_index], dtype=np.float64)
+        )
         total = float(np.sum(weights))
         denominator = total if total > 0.0 else 1.0
         for annotation in annotations:
-            mass = sum(float(weights[index_by_field[field_id]]) for field_id in annotation.field_ids)
+            mass = sum(
+                float(weights[index_by_field[field_id]])
+                for field_id in annotation.field_ids
+            )
             registrations.append(
                 ObservedAnnotationRegistrationDTO(
                     annotation_id=annotation.annotation_id,
@@ -290,7 +317,9 @@ def _registration_surface(
                     registration=mass / denominator,
                     stability=None
                     if stability_by_annotation_action is None
-                    else stability_by_annotation_action.get((annotation.annotation_id, action_label)),
+                    else stability_by_annotation_action.get(
+                        (annotation.annotation_id, action_label)
+                    ),
                 )
             )
         unexplained_mass = sum(
@@ -300,7 +329,11 @@ def _registration_surface(
         )
         unexplained.append((action_label, unexplained_mass / denominator))
     return (
-        tuple(sorted(registrations, key=lambda item: (item.annotation_id, item.action_label))),
+        tuple(
+            sorted(
+                registrations, key=lambda item: (item.annotation_id, item.action_label)
+            )
+        ),
         tuple(sorted(unexplained)),
     )
 
@@ -329,9 +362,12 @@ def evaluate_evidence_conformance(
         if annotation.field_schema_id != field_schema.field_schema_id:
             raise PerceptionConformanceError("annotation field schema mismatch")
         if not set(annotation.field_ids).issubset(known_fields):
-            raise PerceptionConformanceError("annotation contains field outside translator")
+            raise PerceptionConformanceError(
+                "annotation contains field outside translator"
+            )
     missing_annotations = (
-        set(expectation.source_annotation_ids) | set(expectation.forbidden_annotation_ids)
+        set(expectation.source_annotation_ids)
+        | set(expectation.forbidden_annotation_ids)
     ) - set(annotation_by_id)
     if missing_annotations:
         raise PerceptionConformanceError(
@@ -342,8 +378,12 @@ def evaluate_evidence_conformance(
         raise PerceptionConformanceError(
             f"expectation references unknown relations: {sorted(missing_relations)}"
         )
-    if not set(expectation.expected_action_labels).issubset(set(translator.action_labels)):
-        raise PerceptionConformanceError("expectation contains action outside translator")
+    if not set(expectation.expected_action_labels).issubset(
+        set(translator.action_labels)
+    ):
+        raise PerceptionConformanceError(
+            "expectation contains action outside translator"
+        )
 
     registrations, unexplained = _registration_surface(
         translator, annotations, stability_by_annotation_action
@@ -355,7 +395,12 @@ def evaluate_evidence_conformance(
     threshold = expectation.minimum_registration
     findings: list[EvidenceConformanceFindingDTO] = []
 
-    def add(status: str, actions: tuple[str, ...], annotation_ids: tuple[str, ...], detail: str) -> None:
+    def add(
+        status: str,
+        actions: tuple[str, ...],
+        annotation_ids: tuple[str, ...],
+        detail: str,
+    ) -> None:
         payload: Mapping[str, object] = {
             "action_labels": list(actions),
             "annotation_ids": list(annotation_ids),
@@ -375,8 +420,12 @@ def evaluate_evidence_conformance(
         )
 
     if threshold is None:
-        add("inconclusive", expectation.expected_action_labels, expectation.source_annotation_ids,
-            "minimum_registration is not declared")
+        add(
+            "inconclusive",
+            expectation.expected_action_labels,
+            expectation.source_annotation_ids,
+            "minimum_registration is not declared",
+        )
     else:
         missing: list[tuple[str, str]] = []
         misplaced: list[tuple[str, str, str]] = []
@@ -394,7 +443,10 @@ def evaluate_evidence_conformance(
                     )
                     if (
                         best_action not in expectation.expected_action_labels
-                        and registration_by_key[(annotation_id, best_action)].registration >= threshold
+                        and registration_by_key[
+                            (annotation_id, best_action)
+                        ].registration
+                        >= threshold
                     ):
                         misplaced.append((annotation_id, action_label, best_action))
                     else:
@@ -408,7 +460,12 @@ def evaluate_evidence_conformance(
         if misplaced:
             add(
                 "wrong_target_placement",
-                tuple(sorted({item[1] for item in misplaced} | {item[2] for item in misplaced})),
+                tuple(
+                    sorted(
+                        {item[1] for item in misplaced}
+                        | {item[2] for item in misplaced}
+                    )
+                ),
                 tuple(sorted({item[0] for item in misplaced})),
                 "expected source evidence registers above threshold for another target action",
             )
@@ -431,7 +488,8 @@ def evaluate_evidence_conformance(
             (annotation_id, action_label)
             for annotation_id in expectation.forbidden_annotation_ids
             for action_label in expectation.expected_action_labels
-            if registration_by_key[(annotation_id, action_label)].registration >= threshold
+            if registration_by_key[(annotation_id, action_label)].registration
+            >= threshold
         ]
         if forbidden_present:
             add(
@@ -451,7 +509,8 @@ def evaluate_evidence_conformance(
             unexpected = False
             if expectation.maximum_unexplained_registration is not None:
                 unexpected = any(
-                    unexplained_by_action[action] > expectation.maximum_unexplained_registration
+                    unexplained_by_action[action]
+                    > expectation.maximum_unexplained_registration
                     for action in expectation.expected_action_labels
                 )
             add(
@@ -459,7 +518,11 @@ def evaluate_evidence_conformance(
                 expectation.expected_action_labels,
                 expectation.source_annotation_ids,
                 "declared evidence expectation is met"
-                + (" but unexplained coefficient mass exceeds the declared maximum" if unexpected else ""),
+                + (
+                    " but unexplained coefficient mass exceeds the declared maximum"
+                    if unexpected
+                    else ""
+                ),
             )
 
     priority = (
@@ -473,7 +536,11 @@ def evaluate_evidence_conformance(
     )
     statuses = {item.status for item in findings}
     overall = next(status for status in priority if status in statuses)
-    ordered_findings = tuple(sorted(findings, key=lambda item: (priority.index(item.status), item.finding_id)))
+    ordered_findings = tuple(
+        sorted(
+            findings, key=lambda item: (priority.index(item.status), item.finding_id)
+        )
+    )
     payload = {
         "expectation_id": expectation.expectation_id,
         "field_schema_id": field_schema.field_schema_id,

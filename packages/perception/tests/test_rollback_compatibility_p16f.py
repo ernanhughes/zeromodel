@@ -69,10 +69,18 @@ def test_compatible_historical_model_can_be_rolled_back() -> None:
     store = InMemoryPerceptionModelLifecycleStore()
     earlier = _promoted("earlier")
     current = _promoted("current")
-    register_promoted_model(store, earlier, registered_by="test", registration_reason="candidate")
-    register_promoted_model(store, current, registered_by="test", registration_reason="candidate")
-    activate_promoted_model(store, earlier.promoted_model_id, actor="test", reason="activate")
-    supersede_active_model(store, current.promoted_model_id, actor="test", reason="supersede")
+    register_promoted_model(
+        store, earlier, registered_by="test", registration_reason="candidate"
+    )
+    register_promoted_model(
+        store, current, registered_by="test", registration_reason="candidate"
+    )
+    activate_promoted_model(
+        store, earlier.promoted_model_id, actor="test", reason="activate"
+    )
+    supersede_active_model(
+        store, current.promoted_model_id, actor="test", reason="supersede"
+    )
 
     assessment, transition, pointer = rollback_compatible_model(
         store,
@@ -92,10 +100,18 @@ def test_incompatible_historical_model_is_not_rolled_back() -> None:
     store = InMemoryPerceptionModelLifecycleStore()
     earlier = _promoted("earlier")
     current = _promoted("current")
-    register_promoted_model(store, earlier, registered_by="test", registration_reason="candidate")
-    register_promoted_model(store, current, registered_by="test", registration_reason="candidate")
-    activate_promoted_model(store, earlier.promoted_model_id, actor="test", reason="activate")
-    supersede_active_model(store, current.promoted_model_id, actor="test", reason="supersede")
+    register_promoted_model(
+        store, earlier, registered_by="test", registration_reason="candidate"
+    )
+    register_promoted_model(
+        store, current, registered_by="test", registration_reason="candidate"
+    )
+    activate_promoted_model(
+        store, earlier.promoted_model_id, actor="test", reason="activate"
+    )
+    supersede_active_model(
+        store, current.promoted_model_id, actor="test", reason="supersede"
+    )
 
     with pytest.raises(PerceptionModelCompatibilityError, match="action_schema_id"):
         rollback_compatible_model(
@@ -107,4 +123,6 @@ def test_incompatible_historical_model_is_not_rolled_back() -> None:
             reason="unsafe rollback",
         )
 
-    assert store.get_active_pointer().active_promoted_model_id == current.promoted_model_id
+    assert (
+        store.get_active_pointer().active_promoted_model_id == current.promoted_model_id
+    )

@@ -72,17 +72,28 @@ class ModelCompatibilityContractDTO:
                 self.deployment_slot,
             )
         ):
-            raise PerceptionModelCompatibilityError("compatibility identities must be non-empty")
+            raise PerceptionModelCompatibilityError(
+                "compatibility identities must be non-empty"
+            )
         if self.model_kind not in {"single_frame", "temporal"}:
-            raise PerceptionModelCompatibilityError("unsupported compatibility model kind")
+            raise PerceptionModelCompatibilityError(
+                "unsupported compatibility model kind"
+            )
         if self.model_kind == "temporal" and not self.temporal_window_spec_id:
-            raise PerceptionModelCompatibilityError("temporal compatibility requires window identity")
-        if self.model_kind == "single_frame" and self.temporal_window_spec_id is not None:
+            raise PerceptionModelCompatibilityError(
+                "temporal compatibility requires window identity"
+            )
+        if (
+            self.model_kind == "single_frame"
+            and self.temporal_window_spec_id is not None
+        ):
             raise PerceptionModelCompatibilityError(
                 "single-frame compatibility cannot carry temporal window identity"
             )
         if self.semantics != MODEL_COMPATIBILITY_SEMANTICS:
-            raise PerceptionModelCompatibilityError("unsupported compatibility semantics")
+            raise PerceptionModelCompatibilityError(
+                "unsupported compatibility semantics"
+            )
         if self.version != MODEL_COMPATIBILITY_VERSION:
             raise PerceptionModelCompatibilityError("unsupported compatibility version")
 
@@ -119,13 +130,21 @@ class RollbackCompatibilityAssessmentDTO:
                 self.target_promoted_model_id,
             )
         ):
-            raise PerceptionModelCompatibilityError("rollback assessment identities required")
+            raise PerceptionModelCompatibilityError(
+                "rollback assessment identities required"
+            )
         if self.status not in ROLLBACK_COMPATIBILITY_STATUSES:
-            raise PerceptionModelCompatibilityError("unsupported rollback compatibility status")
+            raise PerceptionModelCompatibilityError(
+                "unsupported rollback compatibility status"
+            )
         if self.mismatched_fields != tuple(sorted(set(self.mismatched_fields))):
-            raise PerceptionModelCompatibilityError("mismatched fields must be unique and sorted")
+            raise PerceptionModelCompatibilityError(
+                "mismatched fields must be unique and sorted"
+            )
         if (self.status == "compatible") != (not self.mismatched_fields):
-            raise PerceptionModelCompatibilityError("assessment status must match mismatches")
+            raise PerceptionModelCompatibilityError(
+                "assessment status must match mismatches"
+            )
 
 
 def build_model_compatibility_contract(
@@ -166,7 +185,9 @@ def assess_rollback_compatibility(
         "deployment_slot",
     )
     mismatches = tuple(
-        sorted(name for name in fields if getattr(current, name) != getattr(target, name))
+        sorted(
+            name for name in fields if getattr(current, name) != getattr(target, name)
+        )
     )
     status = "compatible" if not mismatches else "incompatible"
     payload: Mapping[str, object] = {

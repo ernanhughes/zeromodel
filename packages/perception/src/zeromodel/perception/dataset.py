@@ -93,7 +93,9 @@ class RecordedInteractionDTO:
         payload: Mapping[str, object] = {
             "action_label": target.action_label,
             "action_schema_id": target.action_schema_id,
-            "next_source_vpm_id": None if next_source is None else next_source.source_vpm_id,
+            "next_source_vpm_id": None
+            if next_source is None
+            else next_source.source_vpm_id,
             "observed_at_ns": observed_at_ns,
             "sequence_id": sequence_id,
             "source_pixel_digest": source.pixel_digest,
@@ -155,7 +157,9 @@ class PerceptionDatasetManifestDTO:
 
     def __post_init__(self) -> None:
         if not self.dataset_id or not self.action_schema_id:
-            raise PerceptionDatasetError("dataset_id and action_schema_id must be non-empty")
+            raise PerceptionDatasetError(
+                "dataset_id and action_schema_id must be non-empty"
+            )
         ids = tuple(item.interaction_id for item in self.interactions)
         if ids != tuple(sorted(ids)) or len(set(ids)) != len(ids):
             raise PerceptionDatasetError(
@@ -252,7 +256,9 @@ def _findings(
                 DatasetFindingDTO(
                     code="conflicting_actions_for_identical_source",
                     severity="error",
-                    interaction_ids=tuple(sorted(item.interaction_id for item in group)),
+                    interaction_ids=tuple(
+                        sorted(item.interaction_id for item in group)
+                    ),
                     detail=f"source pixel digest {pixel_digest} maps to actions {sorted(labels)}",
                 )
             )
@@ -262,7 +268,9 @@ def _findings(
                 DatasetFindingDTO(
                     code="identical_source_across_splits",
                     severity="error",
-                    interaction_ids=tuple(sorted(item.interaction_id for item in group)),
+                    interaction_ids=tuple(
+                        sorted(item.interaction_id for item in group)
+                    ),
                     detail=(
                         f"source pixel digest {pixel_digest} appears in partitions "
                         f"{sorted(splits)}"
@@ -278,11 +286,15 @@ def _findings(
                 DatasetFindingDTO(
                     code="duplicate_sequence_step",
                     severity="error",
-                    interaction_ids=tuple(sorted(item.interaction_id for item in group)),
+                    interaction_ids=tuple(
+                        sorted(item.interaction_id for item in group)
+                    ),
                     detail=f"sequence {sequence_id!r} contains duplicate step indices",
                 )
             )
-        timestamps = [item.observed_at_ns for item in ordered if item.observed_at_ns is not None]
+        timestamps = [
+            item.observed_at_ns for item in ordered if item.observed_at_ns is not None
+        ]
         if timestamps and timestamps != sorted(timestamps):
             findings.append(
                 DatasetFindingDTO(
@@ -298,7 +310,9 @@ def _findings(
                 DatasetFindingDTO(
                     code="sequence_crosses_splits",
                     severity="error",
-                    interaction_ids=tuple(sorted(item.interaction_id for item in group)),
+                    interaction_ids=tuple(
+                        sorted(item.interaction_id for item in group)
+                    ),
                     detail=f"sequence {sequence_id!r} spans partitions {sorted(splits)}",
                 )
             )
@@ -355,7 +369,11 @@ def build_dataset_manifest(
         "interactions": [item.canonical_payload() for item in ordered],
         "source_encoder_spec_ids": list(encoder_ids),
         "split_assignments": [
-            {"interaction_id": item.interaction_id, "split": item.split, "version": item.version}
+            {
+                "interaction_id": item.interaction_id,
+                "split": item.split,
+                "version": item.version,
+            }
             for item in assignments
         ],
         "split_owner": "sequence_id",

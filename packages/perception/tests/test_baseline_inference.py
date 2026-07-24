@@ -25,9 +25,7 @@ def _dataset(values_and_actions: list[tuple[int, str]]):
     sources = {}
     interactions = []
     for index, (value, action) in enumerate(values_and_actions):
-        source = encode_source_array(
-            np.full((2, 2), value, dtype=np.uint8), spec
-        )
+        source = encode_source_array(np.full((2, 2), value, dtype=np.uint8), spec)
         target = encode_discrete_action(action, schema)
         sources[source.source_vpm_id] = source
         interactions.append(
@@ -49,7 +47,9 @@ def test_model_identity_is_deterministic() -> None:
     manifest, sources, _ = _dataset([(10, "LEFT"), (240, "RIGHT")])
 
     first = fit_baseline_nearest_neighbor(manifest, sources, training_split="all")
-    second = fit_baseline_nearest_neighbor(manifest, dict(reversed(list(sources.items()))), training_split="all")
+    second = fit_baseline_nearest_neighbor(
+        manifest, dict(reversed(list(sources.items()))), training_split="all"
+    )
 
     assert first == second
     assert first.model_id == second.model_id

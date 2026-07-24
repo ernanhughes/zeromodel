@@ -69,7 +69,10 @@ def test_governance_chain_survives_restart(tmp_path) -> None:
         store.append_execution_receipt(receipt)
 
     with SqlitePerceptionGovernanceLedgerStore(database) as reopened:
-        assert reopened.get_recommendation(recommendation.recommendation_id) == recommendation
+        assert (
+            reopened.get_recommendation(recommendation.recommendation_id)
+            == recommendation
+        )
         assert reopened.get_disposition(disposition.disposition_id) == disposition
         assert reopened.get_execution_receipt(receipt.receipt_id) == receipt
         assert reopened.list_recommendations() == (recommendation,)
@@ -79,8 +82,12 @@ def test_governance_chain_survives_restart(tmp_path) -> None:
 
 def test_disposition_requires_persisted_recommendation(tmp_path) -> None:
     _, disposition, _ = _artifacts()
-    with SqlitePerceptionGovernanceLedgerStore(tmp_path / "governance.sqlite3") as store:
-        with pytest.raises(PerceptionSqlGovernanceError, match="persisted recommendation"):
+    with SqlitePerceptionGovernanceLedgerStore(
+        tmp_path / "governance.sqlite3"
+    ) as store:
+        with pytest.raises(
+            PerceptionSqlGovernanceError, match="persisted recommendation"
+        ):
             store.append_disposition(disposition)
 
 
@@ -92,7 +99,9 @@ def test_one_final_disposition_per_recommendation(tmp_path) -> None:
         status="rejected",
         reason="continue investigation",
     )
-    with SqlitePerceptionGovernanceLedgerStore(tmp_path / "governance.sqlite3") as store:
+    with SqlitePerceptionGovernanceLedgerStore(
+        tmp_path / "governance.sqlite3"
+    ) as store:
         store.append_recommendation(recommendation)
         store.append_disposition(disposition)
         with pytest.raises(PerceptionSqlGovernanceError, match="final disposition"):
@@ -106,7 +115,9 @@ def test_execution_receipt_is_idempotent_but_not_replayable(tmp_path) -> None:
         receipt_id="sha256:second-receipt",
         transition_id="sha256:second-transition",
     )
-    with SqlitePerceptionGovernanceLedgerStore(tmp_path / "governance.sqlite3") as store:
+    with SqlitePerceptionGovernanceLedgerStore(
+        tmp_path / "governance.sqlite3"
+    ) as store:
         store.append_recommendation(recommendation)
         store.append_disposition(disposition)
         store.append_execution_receipt(receipt)

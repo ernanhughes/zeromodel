@@ -63,8 +63,12 @@ def _fixture(governance_database):
             registered_by="test",
             registration_reason="candidate",
         )
-    activate_promoted_model(lifecycle, earlier.promoted_model_id, actor="test", reason="activate")
-    supersede_active_model(lifecycle, current.promoted_model_id, actor="test", reason="supersede")
+    activate_promoted_model(
+        lifecycle, earlier.promoted_model_id, actor="test", reason="activate"
+    )
+    supersede_active_model(
+        lifecycle, current.promoted_model_id, actor="test", reason="supersede"
+    )
     snapshot = build_model_lifecycle_snapshot(lifecycle)
     current_contract = _contract(current)
     target_contract = _contract(earlier)
@@ -113,9 +117,10 @@ def test_complete_governance_chain_is_valid_and_deterministic(tmp_path) -> None:
         recommendation,
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         execute_journaled_approved_rollback(
             lifecycle,
             governance,
@@ -147,9 +152,10 @@ def test_prepared_only_attempt_requires_attention_not_corruption(tmp_path) -> No
         recommendation,
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         attempt = build_governed_execution_attempt(
             recommendation,
             disposition,
@@ -161,7 +167,9 @@ def test_prepared_only_attempt_requires_attention_not_corruption(tmp_path) -> No
         report = audit_governance_integrity(lifecycle, governance, attempts)
 
     assert report.status == "attention_required"
-    assert tuple(item.code for item in report.findings) == ("attempt_prepared_incomplete",)
+    assert tuple(item.code for item in report.findings) == (
+        "attempt_prepared_incomplete",
+    )
     assert report.findings[0].severity == "warning"
 
 
@@ -186,9 +194,10 @@ def test_receipt_with_missing_lifecycle_transition_is_invalid(tmp_path) -> None:
         resulting_promoted_model_id=earlier.promoted_model_id,
     )
     governance.append_execution_receipt(receipt)
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         report = audit_governance_integrity(lifecycle, governance, attempts)
 
     assert report.status == "invalid"
@@ -228,9 +237,10 @@ def test_undisposed_recommendation_is_informational_and_valid(tmp_path) -> None:
         rationale="investigation required",
     )
     governance.append_recommendation(recommendation)
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         report = audit_governance_integrity(lifecycle, governance, attempts)
 
     assert report.status == "valid"

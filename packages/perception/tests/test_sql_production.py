@@ -13,7 +13,9 @@ from zeromodel.perception import (
 )
 
 
-def _inference(sequence: int, *, model: str = "promoted-a") -> ProductionInferenceRecordDTO:
+def _inference(
+    sequence: int, *, model: str = "promoted-a"
+) -> ProductionInferenceRecordDTO:
     return ProductionInferenceRecordDTO(
         record_id=f"record-{sequence}",
         sequence_number=sequence,

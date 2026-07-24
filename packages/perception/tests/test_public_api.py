@@ -41,8 +41,12 @@ def test_public_contract_through_promoted_inference() -> None:
     )
     assert COEFFICIENT_SEMANTICS == "ridge_linear_mapping_with_unregularized_intercept"
     assert TARGET_SCORE_SEMANTICS == "clipped_ridge_predicted_one_hot_field_value"
-    assert RECONSTRUCTION_ERROR_SEMANTICS == "mean_absolute_error_against_one_hot_target"
-    assert REJECTION_SEMANTICS == "reject_when_top_two_margin_below_calibrated_threshold"
+    assert (
+        RECONSTRUCTION_ERROR_SEMANTICS == "mean_absolute_error_against_one_hot_target"
+    )
+    assert (
+        REJECTION_SEMANTICS == "reject_when_top_two_margin_below_calibrated_threshold"
+    )
     assert REGISTRATION_SEMANTICS == (
         "share_of_absolute_translator_coefficient_mass_in_declared_source_fields"
     )
@@ -80,7 +84,8 @@ def test_public_contract_through_promoted_inference() -> None:
     assert TranslatorConfigDTO().ridge_alpha == 1e-6
     assert SourceImageEncoderSpecDTO().color_space == "RGB"
     assert DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT"]).labels == (
-        "LEFT", "RIGHT"
+        "LEFT",
+        "RIGHT",
     )
     assert InMemoryPerceptionDatasetStore().list_ids() == ()
     assert BaselineInferenceConfigDTO().neighbor_count == 3

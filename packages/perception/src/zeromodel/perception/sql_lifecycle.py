@@ -15,8 +15,6 @@ from pathlib import Path
 from typing import Final, Mapping
 
 from .lifecycle import (
-    ACTIVE_MODEL_POINTER_VERSION,
-    ACTIVE_POINTER_SEMANTICS,
     MODEL_LEDGER_ENTRY_VERSION,
     MODEL_LEDGER_SEMANTICS,
     MODEL_TRANSITION_SEMANTICS,
@@ -66,7 +64,9 @@ def _promoted_model_payload(model: PromotedPerceptionModelDTO) -> Mapping[str, o
     }
 
 
-def _promoted_model_from_payload(payload: Mapping[str, object]) -> PromotedPerceptionModelDTO:
+def _promoted_model_from_payload(
+    payload: Mapping[str, object],
+) -> PromotedPerceptionModelDTO:
     return PromotedPerceptionModelDTO(
         promoted_model_id=str(payload["promoted_model_id"]),
         model_kind=str(payload["model_kind"]),
@@ -132,7 +132,9 @@ def _transition_payload(item: ModelLifecycleTransitionDTO) -> Mapping[str, objec
     }
 
 
-def _transition_from_payload(payload: Mapping[str, object]) -> ModelLifecycleTransitionDTO:
+def _transition_from_payload(
+    payload: Mapping[str, object],
+) -> ModelLifecycleTransitionDTO:
     return ModelLifecycleTransitionDTO(
         transition_id=str(payload["transition_id"]),
         sequence_number=int(payload["sequence_number"]),
@@ -247,7 +249,9 @@ class SqlitePerceptionModelLifecycleStore:
                 (SQL_LIFECYCLE_SCHEMA_VERSION,),
             )
         elif str(row["value"]) != SQL_LIFECYCLE_SCHEMA_VERSION:
-            raise PerceptionSqlLifecycleError("unsupported lifecycle database schema version")
+            raise PerceptionSqlLifecycleError(
+                "unsupported lifecycle database schema version"
+            )
 
         pointer = self._connection.execute(
             "SELECT singleton FROM perception_active_model_pointer WHERE singleton = 1"
@@ -322,7 +326,9 @@ class SqlitePerceptionModelLifecycleStore:
 
     def append_transition(self, transition: ModelLifecycleTransitionDTO) -> None:
         if self._pending_transition:
-            raise PerceptionSqlLifecycleError("another lifecycle transition is already pending")
+            raise PerceptionSqlLifecycleError(
+                "another lifecycle transition is already pending"
+            )
         self._connection.execute("BEGIN IMMEDIATE")
         self._pending_transition = True
         try:
@@ -359,7 +365,9 @@ class SqlitePerceptionModelLifecycleStore:
         for row in rows:
             payload = json.loads(str(row["payload_json"]))
             if not isinstance(payload, dict):
-                raise PerceptionSqlLifecycleError("stored transition payload is invalid")
+                raise PerceptionSqlLifecycleError(
+                    "stored transition payload is invalid"
+                )
             result.append(_transition_from_payload(payload))
         return tuple(result)
 
@@ -403,7 +411,9 @@ class SqlitePerceptionModelLifecycleStore:
         if pointer.revision != expected_revision + 1:
             self._connection.execute("ROLLBACK")
             self._pending_transition = False
-            raise PerceptionSqlLifecycleError("replacement pointer must advance revision by one")
+            raise PerceptionSqlLifecycleError(
+                "replacement pointer must advance revision by one"
+            )
         try:
             cursor = self._connection.execute(
                 """

@@ -308,6 +308,14 @@ class SqliteGovernedExecutionAttemptStore:
         ).fetchone()
         return None if row is None else GovernedExecutionAttemptDTO(**json.loads(row["payload_json"]))
 
+    def list_attempts(self) -> tuple[GovernedExecutionAttemptDTO, ...]:
+        rows = self._connection.execute(
+            "SELECT payload_json FROM perception_governed_execution_attempts ORDER BY attempt_id"
+        ).fetchall()
+        return tuple(
+            GovernedExecutionAttemptDTO(**json.loads(row["payload_json"])) for row in rows
+        )
+
     def list_events(self, attempt_id: str) -> tuple[GovernedExecutionAttemptEventDTO, ...]:
         rows = self._connection.execute(
             "SELECT payload_json FROM perception_governed_execution_attempt_events "

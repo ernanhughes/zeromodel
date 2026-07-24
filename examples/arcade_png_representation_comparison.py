@@ -36,6 +36,13 @@ FIXED_IDENTITY_FIELDS = (
 GENERIC_TARGET_METRICS = ("exact_count", "rejected_count", "latency_median_us")
 COOLDOWN_TARGET_METRICS = ("cooldown",)
 LANE_TARGET_METRICS = ("tank_column", "target_column")
+# Stage 2F factorial semantic annotation ablation: the declared primary
+# target metric is `exact_count` alone - `action_changing_count`,
+# `action_correct`, and `rejected_count` remain diagnostic (visible in the
+# comparison output and, for rejected/action-changing, still able to trigger
+# a `regression` classification via `classify_variant`'s unconditional
+# regression checks) but do not by themselves trigger `advance`.
+SEMANTIC_TARGET_METRICS = ("exact_count",)
 LATENCY_MATERIAL_IMPROVEMENT_RATIO = 0.10
 
 
@@ -349,6 +356,7 @@ __all__ = [
     "FIXED_IDENTITY_FIELDS",
     "GENERIC_TARGET_METRICS",
     "LANE_TARGET_METRICS",
+    "SEMANTIC_TARGET_METRICS",
     "ClassificationResult",
     "IncompatibleRunsError",
     "RepresentationComparisonRow",

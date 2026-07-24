@@ -1098,6 +1098,20 @@ example's fixture, renderer, response parser, and providers verbatim and
 adds only the PNG intervention recipes and the comparison/classification
 layer.
 
+A real local run of that harness found `labelled-v1` reaching 8/8 exact
+while `unlabelled-v1` and every tested implicit (non-textual) intervention
+stayed at or below 4/8
+(`docs/results/controlled-png-representation-v1/`). Because `labelled-v1`
+bundles footer geometry, lane numerals, and cooldown text together, that
+result alone cannot say which component mattered. Stage 2F factors those
+three apart into `footer-only-v1`, `lane-numerals-v1`, `cooldown-text-v1`,
+and `semantic-labelled-v1` - see
+[docs/reviews/stage-2f-semantic-annotation-ablation.md](../reviews/stage-2f-semantic-annotation-ablation.md)
+for the design rationale and the "seven lane centres, not eight boundaries"
+lesson carried over from the `lane-enhanced-v1` regression, and
+[docs/research/controlled-png-representation-benchmark.md](../research/controlled-png-representation-benchmark.md#running-the-stage-2f-factorial-ablation-locally)
+for the exact command to run it.
+
 Each result record should contain:
 
 * research question;

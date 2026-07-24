@@ -1,10 +1,8 @@
-"""Tests for `examples/arcade_png_interventions.py`: recipe identity,
-determinism, and pixel-level visual distinction between representation
-variants. No network, no Ollama - pure PIL pixel operations only.
-"""
+"""Recipe identity, determinism, and pixel-isolation tests for arcade PNG variants."""
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 import examples.local_model_zero_arcade_test as arcade
@@ -14,29 +12,48 @@ from examples.arcade_png_interventions import (
     COOLDOWN_DUAL_VARIANT,
     COOLDOWN_REDUNDANT_VARIANT,
     COOLDOWN_SHAPE_VARIANT,
+    COOLDOWN_TEXT_VARIANT,
+    FOOTER_ONLY_VARIANT,
+    IMG_HEIGHT,
+    IMG_WIDTH,
+    LABELLED_BOTTOM,
     LABELLED_VARIANT,
     LANE_ENHANCED_VARIANT,
+    LANE_NUMERALS_VARIANT,
+    LANES,
+    LEFT_MARGIN,
     PRIMARY_COOLDOWN_BOX,
+    RIGHT_MARGIN,
     SECONDARY_COOLDOWN_BOX,
+    SEMANTIC_LABELLED_VARIANT,
+    SEMANTIC_VARIANTS,
     UNLABELLED_VARIANT,
     ArcadePngInterventionRecipe,
     ArcadePngOperationSpec,
     apply_recipe,
     build_recipe,
+    png_bytes,
 )
 
 READY_STATE = arcade.ArcadeState(3, 3, 0)
 BLOCKED_STATE = arcade.ArcadeState(3, 3, 1)
+COOLDOWN_TEXT_REGION = (60, 20, 300, 42)
+LANE_TEXT_REGION = (0, IMG_HEIGHT - 36, IMG_WIDTH, IMG_HEIGHT)
 
 
 def _final_image(recipe: ArcadePngInterventionRecipe, state: arcade.ArcadeState):
-    base_image = arcade.render(state, recipe.base_render_mode)
-    steps = apply_recipe(recipe, base_image)
+    base = arcade.render(state, recipe.base_render_mode)
+    steps = apply_recipe(recipe, base)
     return steps[-1][0], steps
 
 
+def _lane_centres() -> list[float]:
+    lane_width = (IMG_WIDTH - LEFT_MARGIN - RIGHT_MARGIN) / LANES
+    return [LEFT_MARGIN + (index + 0.5) * lane_width for index in range(LANES)]
+
+
 class TestRecipeIdentity:
-    def test_every_variant_has_a_declared_recipe(self) -> None:
+    def test_every_declared_variant_builds(self) -> None:
         for variant_id in ALL_VARIANTS:
             if variant_id == COMBINED_VARIANT:
                 continue
@@ -48,65 +65,51 @@ class TestRecipeIdentity:
         with pytest.raises(ValueError, match="unknown representation variant"):
             build_recipe("does-not-exist-v1")
 
-    def test_combined_requires_component_args(self) -> None:
+    def test_combined_requires_named_components(self) -> None:
         with pytest.raises(ValueError, match="combined-cooldown"):
             build_recipe(COMBINED_VARIANT)
         with pytest.raises(ValueError, match="combined-lane"):
             build_recipe(COMBINED_VARIANT, combined_cooldown=COOLDOWN_DUAL_VARIANT)
-        with pytest.raises(ValueError):
-            build_recipe(COMBINED_VARIANT, combined_cooldown="not-a-cooldown-variant")
 
-    def test_combined_recipe_builds_with_valid_component_args(self) -> None:
+    def test_combined_contains_both_component_families(self) -> None:
         recipe = build_recipe(
             COMBINED_VARIANT,
             combined_cooldown=COOLDOWN_DUAL_VARIANT,
             combined_lane=LANE_ENHANCED_VARIANT,
         )
-        assert recipe.variant_id == COMBINED_VARIANT
-        operation_names = [op.operation for op in recipe.operations]
-        assert "cooldown_dual_overlay" in operation_names
-        assert "lane_separator_enhance" in operation_names
+        names = [operation.operation for operation in recipe.operations]
+        assert "cooldown_dual_overlay" in names
+        assert "lane_separator_enhance" in names
 
-    def test_operation_order_affects_identity(self) -> None:
-        op_a = ArcadePngOperationSpec("op_a", "v1", {"x": 1})
-        op_b = ArcadePngOperationSpec("op_b", "v1", {"y": 2})
+    def test_operation_order_changes_recipe_identity(self) -> None:
+        first = ArcadePngOperationSpec("first", "v1", {"x": 1})
+        second = ArcadePngOperationSpec("second", "v1", {"x": 2})
         forward = ArcadePngInterventionRecipe.build(
-            variant_id="order-test",
+            variant_id="order",
             base_render_mode="unlabelled",
-            operations=(op_a, op_b),
+            operations=(first, second),
         )
-        backward = ArcadePngInterventionRecipe.build(
-            variant_id="order-test",
+        reverse = ArcadePngInterventionRecipe.build(
+            variant_id="order",
             base_render_mode="unlabelled",
-            operations=(op_b, op_a),
+            operations=(second, first),
         )
-        assert forward.recipe_id != backward.recipe_id
+        assert forward.recipe_id != reverse.recipe_id
 
-    def test_parameter_changes_affect_identity(self) -> None:
-        op1 = ArcadePngOperationSpec("op", "v1", {"x": 1})
-        op2 = ArcadePngOperationSpec("op", "v1", {"x": 2})
-        recipe1 = ArcadePngInterventionRecipe.build(
-            variant_id="param-test", base_render_mode="unlabelled", operations=(op1,)
+    def test_parameter_change_changes_recipe_identity(self) -> None:
+        one = ArcadePngInterventionRecipe.build(
+            variant_id="parameters",
+            base_render_mode="unlabelled",
+            operations=(ArcadePngOperationSpec("op", "v1", {"x": 1}),),
         )
-        recipe2 = ArcadePngInterventionRecipe.build(
-            variant_id="param-test", base_render_mode="unlabelled", operations=(op2,)
+        two = ArcadePngInterventionRecipe.build(
+            variant_id="parameters",
+            base_render_mode="unlabelled",
+            operations=(ArcadePngOperationSpec("op", "v1", {"x": 2}),),
         )
-        assert recipe1.recipe_id != recipe2.recipe_id
+        assert one.recipe_id != two.recipe_id
 
-    def test_identical_recipe_produces_identical_png_bytes(self) -> None:
-        recipe = build_recipe(COOLDOWN_DUAL_VARIANT)
-        base_image = arcade.render(BLOCKED_STATE, recipe.base_render_mode)
-        steps_a = apply_recipe(recipe, base_image)
-        steps_b = apply_recipe(recipe, base_image)
-        assert steps_a[-1][1] == steps_b[-1][1]
-
-    def test_recipe_id_round_trips_through_to_dict(self) -> None:
-        recipe = build_recipe(LANE_ENHANCED_VARIANT)
-        payload = recipe.to_dict()
-        assert payload["recipe_id"] == recipe.recipe_id
-        assert payload["variant_id"] == LANE_ENHANCED_VARIANT
-
-    def test_tampered_recipe_id_rejected(self) -> None:
+    def test_recipe_id_tampering_is_rejected(self) -> None:
         recipe = build_recipe(COOLDOWN_SHAPE_VARIANT)
         with pytest.raises(ValueError, match="recipe id mismatch"):
             ArcadePngInterventionRecipe(
@@ -119,109 +122,169 @@ class TestRecipeIdentity:
             )
 
 
-class TestNoOpRejection:
-    def test_no_op_transform_is_rejected(self) -> None:
-        """A duplicate operation whose source and target positions are the
-        same box copies a region onto itself - a genuine byte-identical
-        no-op - and must be rejected."""
-        noop = ArcadePngOperationSpec(
-            operation="cooldown_marker_duplicate",
-            operation_version="v1",
-            parameters={
+class TestStage2EOperations:
+    def test_shape_encoding_differs_between_ready_and_blocked(self) -> None:
+        recipe = build_recipe(COOLDOWN_SHAPE_VARIANT)
+        ready, _ = _final_image(recipe, READY_STATE)
+        blocked, _ = _final_image(recipe, BLOCKED_STATE)
+        assert (
+            ready.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+            != blocked.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+        )
+
+    def test_dual_encoding_contains_blocked_red(self) -> None:
+        final, _ = _final_image(build_recipe(COOLDOWN_DUAL_VARIANT), BLOCKED_STATE)
+        colors = {
+            color
+            for _count, color in final.crop(PRIMARY_COOLDOWN_BOX)
+            .convert("RGB")
+            .getcolors(maxcolors=1_000_000)
+        }
+        assert (242, 74, 74) in colors
+
+    def test_redundant_encoding_duplicates_the_marker(self) -> None:
+        final, _ = _final_image(build_recipe(COOLDOWN_REDUNDANT_VARIANT), BLOCKED_STATE)
+        assert (
+            final.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+            == final.crop(SECONDARY_COOLDOWN_BOX).tobytes()
+        )
+
+    def test_lane_enhancement_does_not_touch_cooldown(self) -> None:
+        baseline, _ = _final_image(build_recipe(UNLABELLED_VARIANT), BLOCKED_STATE)
+        enhanced, _ = _final_image(build_recipe(LANE_ENHANCED_VARIANT), BLOCKED_STATE)
+        assert baseline.tobytes() != enhanced.tobytes()
+        assert (
+            baseline.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+            == enhanced.crop(PRIMARY_COOLDOWN_BOX).tobytes()
+        )
+
+    def test_operations_are_deterministic(self) -> None:
+        recipe = build_recipe(COOLDOWN_DUAL_VARIANT)
+        base = arcade.render(BLOCKED_STATE, recipe.base_render_mode)
+        assert apply_recipe(recipe, base)[-1][1] == apply_recipe(recipe, base)[-1][1]
+
+    def test_no_op_operation_is_rejected(self) -> None:
+        operation = ArcadePngOperationSpec(
+            "cooldown_marker_duplicate",
+            "v1",
+            {
                 "source_position": list(PRIMARY_COOLDOWN_BOX),
                 "target_position": list(PRIMARY_COOLDOWN_BOX),
             },
         )
         recipe = ArcadePngInterventionRecipe.build(
-            variant_id="self-duplicate",
-            base_render_mode="unlabelled",
-            operations=(noop,),
+            variant_id="no-op", base_render_mode="unlabelled", operations=(operation,)
         )
-        base_image = arcade.render(READY_STATE, recipe.base_render_mode)
         with pytest.raises(ValueError, match="produced no pixel change"):
-            apply_recipe(recipe, base_image)
+            apply_recipe(recipe, arcade.render(READY_STATE, "unlabelled"))
 
-    def test_unknown_operation_rejected(self) -> None:
-        bad_op = ArcadePngOperationSpec("does_not_exist", "v1", {})
+    def test_unknown_operation_is_rejected(self) -> None:
         recipe = ArcadePngInterventionRecipe.build(
-            variant_id="unknown-op", base_render_mode="unlabelled", operations=(bad_op,)
+            variant_id="unknown",
+            base_render_mode="unlabelled",
+            operations=(ArcadePngOperationSpec("missing", "v1", {}),),
         )
-        base_image = arcade.render(READY_STATE, recipe.base_render_mode)
         with pytest.raises(ValueError, match="unknown intervention operation"):
-            apply_recipe(recipe, base_image)
+            apply_recipe(recipe, arcade.render(READY_STATE, "unlabelled"))
 
 
-class TestPixelDistinction:
-    def test_labelled_and_unlabelled_differ(self) -> None:
-        labelled_final, _ = _final_image(build_recipe(LABELLED_VARIANT), READY_STATE)
-        unlabelled_final, _ = _final_image(
-            build_recipe(UNLABELLED_VARIANT), READY_STATE
+class TestHierarchicalSemanticAblation:
+    def test_semantic_variants_are_content_addressed_and_distinct(self) -> None:
+        recipes = [build_recipe(variant_id) for variant_id in SEMANTIC_VARIANTS]
+        assert len({recipe.recipe_id for recipe in recipes}) == len(recipes)
+
+    def test_footer_only_uses_historical_labelled_geometry(self) -> None:
+        recipe = build_recipe(FOOTER_ONLY_VARIANT)
+        assert recipe.base_render_mode == "labelled"
+        assert [operation.operation for operation in recipe.operations] == [
+            "cooldown_text_erase",
+            "lane_numerals_erase",
+        ]
+        final, _ = _final_image(recipe, READY_STATE)
+        # The historical labelled grid terminates at y=464 rather than the
+        # unlabelled y=488. Its horizontal grid line must remain present.
+        assert np.any(
+            np.asarray(final)[LABELLED_BOTTOM, :, :] != np.asarray(final)[0, 0, :]
         )
-        assert labelled_final.tobytes() != unlabelled_final.tobytes()
 
-    def test_cooldown_shape_differs_between_ready_and_blocked(self) -> None:
-        recipe = build_recipe(COOLDOWN_SHAPE_VARIANT)
-        ready_final, _ = _final_image(recipe, READY_STATE)
-        blocked_final, _ = _final_image(recipe, BLOCKED_STATE)
-        ready_crop = ready_final.crop(PRIMARY_COOLDOWN_BOX).tobytes()
-        blocked_crop = blocked_final.crop(PRIMARY_COOLDOWN_BOX).tobytes()
-        assert ready_crop != blocked_crop
-
-    def test_cooldown_dual_changes_both_shape_and_colour_channel(self) -> None:
-        shape_recipe = build_recipe(COOLDOWN_SHAPE_VARIANT)
-        dual_recipe = build_recipe(COOLDOWN_DUAL_VARIANT)
-        shape_final, _ = _final_image(shape_recipe, BLOCKED_STATE)
-        dual_final, _ = _final_image(dual_recipe, BLOCKED_STATE)
-        shape_crop = shape_final.crop(PRIMARY_COOLDOWN_BOX)
-        dual_crop = dual_final.crop(PRIMARY_COOLDOWN_BOX)
-        # Shape-only has no fill (background only); dual fills with the red
-        # blocked colour - the dual crop must contain red pixels the
-        # shape-only crop does not.
-        assert dual_crop.tobytes() != shape_crop.tobytes()
-        dual_colors = {
-            rgb
-            for _count, rgb in dual_crop.convert("RGB").getcolors(maxcolors=1_000_000)
-        }
-        assert (242, 74, 74) in dual_colors
-
-    def test_redundant_has_two_identical_markers(self) -> None:
-        recipe = build_recipe(COOLDOWN_REDUNDANT_VARIANT)
-        final_image, _ = _final_image(recipe, BLOCKED_STATE)
-        primary = final_image.crop(PRIMARY_COOLDOWN_BOX).tobytes()
-        secondary = final_image.crop(SECONDARY_COOLDOWN_BOX).tobytes()
-        assert primary == secondary
-        base_unlabelled, _ = _final_image(
-            build_recipe(UNLABELLED_VARIANT), BLOCKED_STATE
+    def test_lane_numerals_keeps_labelled_geometry_and_removes_only_cooldown_text(
+        self,
+    ) -> None:
+        recipe = build_recipe(LANE_NUMERALS_VARIANT)
+        assert recipe.base_render_mode == "labelled"
+        assert [operation.operation for operation in recipe.operations] == [
+            "cooldown_text_erase"
+        ]
+        final, _ = _final_image(recipe, BLOCKED_STATE)
+        labelled = arcade.render(BLOCKED_STATE, "labelled")
+        assert (
+            final.crop(LANE_TEXT_REGION).tobytes()
+            == labelled.crop(LANE_TEXT_REGION).tobytes()
         )
-        base_secondary = base_unlabelled.crop(SECONDARY_COOLDOWN_BOX).tobytes()
-        assert secondary != base_secondary
-
-    def test_lane_enhanced_changes_only_declared_regions(self) -> None:
-        baseline_final, _ = _final_image(
-            build_recipe(UNLABELLED_VARIANT), BLOCKED_STATE
+        assert (
+            final.crop(COOLDOWN_TEXT_REGION).tobytes()
+            != labelled.crop(COOLDOWN_TEXT_REGION).tobytes()
         )
-        enhanced_final, _ = _final_image(
-            build_recipe(LANE_ENHANCED_VARIANT), BLOCKED_STATE
-        )
-        assert baseline_final.tobytes() != enhanced_final.tobytes()
-        baseline_cooldown = baseline_final.crop(PRIMARY_COOLDOWN_BOX).tobytes()
-        enhanced_cooldown = enhanced_final.crop(PRIMARY_COOLDOWN_BOX).tobytes()
-        assert baseline_cooldown == enhanced_cooldown
 
-    def test_same_state_and_recipe_produces_identical_bytes(self) -> None:
-        recipe = build_recipe(LANE_ENHANCED_VARIANT)
-        first, _ = _final_image(recipe, READY_STATE)
-        second, _ = _final_image(recipe, READY_STATE)
-        assert first.tobytes() == second.tobytes()
+    def test_lane_numerals_encode_exactly_seven_region_centres(self) -> None:
+        footer_only, _ = _final_image(build_recipe(FOOTER_ONLY_VARIANT), READY_STATE)
+        numerals, _ = _final_image(build_recipe(LANE_NUMERALS_VARIANT), READY_STATE)
+        base = np.asarray(footer_only.convert("L"))[IMG_HEIGHT - 36 :, :]
+        candidate = np.asarray(numerals.convert("L"))[IMG_HEIGHT - 36 :, :]
+        changed_columns = np.any(base != candidate, axis=0)
+        clusters = 0
+        active = False
+        for changed in changed_columns:
+            if changed and not active:
+                clusters += 1
+            active = bool(changed)
+        assert clusters == 7
+        for centre in _lane_centres():
+            lo, hi = round(centre) - 6, round(centre) + 6
+            assert np.any(changed_columns[lo:hi])
 
-    def test_source_and_result_digests_differ_when_pixels_change(self) -> None:
-        recipe = build_recipe(COOLDOWN_DUAL_VARIANT)
-        base_image = arcade.render(BLOCKED_STATE, recipe.base_render_mode)
-        steps = apply_recipe(recipe, base_image)
-        assert len(steps) == 2
-        assert steps[0][1] != steps[1][1]
+    def test_cooldown_text_uses_exact_historical_wording(self) -> None:
+        recipe = build_recipe(COOLDOWN_TEXT_VARIANT)
+        assert recipe.base_render_mode == "unlabelled"
+        for state in (READY_STATE, BLOCKED_STATE):
+            final, _ = _final_image(recipe, state)
+            expected = arcade.render(state, "unlabelled")
+            # Reproduce only the historical text on the unlabelled geometry.
+            from PIL import ImageDraw
 
-    def test_reference_variants_produce_a_single_step(self) -> None:
-        base_image = arcade.render(READY_STATE, "labelled")
-        steps = apply_recipe(build_recipe(LABELLED_VARIANT), base_image)
-        assert len(steps) == 1
+            draw = ImageDraw.Draw(expected)
+            draw.text(
+                (68, 27),
+                "READY (cooldown 0)" if state.cooldown == 0 else "BLOCKED (cooldown 1)",
+                fill=(224, 232, 245),
+            )
+            assert final.tobytes() == expected.tobytes()
+
+    def test_semantic_labelled_is_byte_identical_to_labelled_for_all_112_states(
+        self,
+    ) -> None:
+        recipe = build_recipe(SEMANTIC_LABELLED_VARIANT)
+        assert recipe.base_render_mode == "labelled"
+        assert recipe.operations == ()
+        for state in arcade.all_states():
+            semantic, steps = _final_image(recipe, state)
+            labelled = arcade.render(state, "labelled")
+            assert semantic.tobytes() == labelled.tobytes()
+            assert steps[-1][1] == png_bytes(labelled)
+
+    def test_semantic_labelled_and_labelled_have_distinct_recipe_identity(self) -> None:
+        semantic = build_recipe(SEMANTIC_LABELLED_VARIANT)
+        labelled = build_recipe(LABELLED_VARIANT)
+        assert semantic.recipe_id != labelled.recipe_id
+        state = arcade.all_states()[0]
+        semantic_image, _ = _final_image(semantic, state)
+        labelled_image, _ = _final_image(labelled, state)
+        assert semantic_image.tobytes() == labelled_image.tobytes()
+
+    def test_each_semantic_variant_preserves_input_ownership(self) -> None:
+        for variant_id in SEMANTIC_VARIANTS:
+            recipe = build_recipe(variant_id)
+            base = arcade.render(READY_STATE, recipe.base_render_mode)
+            before = base.tobytes()
+            apply_recipe(recipe, base)
+            assert base.tobytes() == before

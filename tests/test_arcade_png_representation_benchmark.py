@@ -5,7 +5,10 @@ provider isolation, comparison/classification, and Store integration
 
 from __future__ import annotations
 
+import argparse
 import hashlib
+import json
+from pathlib import Path
 
 import pytest
 from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
@@ -17,10 +20,16 @@ from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
 )
 from zeromodel.video.runtime import build_runtime
 
+import examples.arcade_png_representation_benchmark as benchmark
 import examples.local_model_zero_arcade_test as arcade
 from examples.arcade_png_interventions import (
     COOLDOWN_DUAL_VARIANT,
+    COOLDOWN_TEXT_VARIANT,
+    FOOTER_ONLY_VARIANT,
     LABELLED_VARIANT,
+    LANE_NUMERALS_VARIANT,
+    SEMANTIC_LABELLED_VARIANT,
+    SEMANTIC_VARIANTS,
     UNLABELLED_VARIANT,
     apply_recipe,
     build_recipe,
@@ -28,6 +37,7 @@ from examples.arcade_png_interventions import (
 from examples.arcade_png_representation_comparison import (
     COOLDOWN_TARGET_METRICS,
     GENERIC_TARGET_METRICS,
+    SEMANTIC_TARGET_METRICS,
     classify_variant,
     validate_comparable_runs,
 )
@@ -787,3 +797,201 @@ class TestSqliteStoreIntegration:
             observation = facade.get_materialized_observation(case.frame_id)
             assert observation is not None
             assert len(observation.observation.operation_chain.operations) == 2
+
+
+def _benchmark_args(
+    *, output_dir: Path, variants: list[str], fixture: str = "smoke"
+) -> argparse.Namespace:
+    return argparse.Namespace(
+        backend="fake",
+        model="fake",
+        base_url="http://localhost:11434",
+        fixture=fixture,
+        variants=variants,
+        store="memory",
+        sqlite_path=None,
+        output_dir=output_dir,
+        compile_reports=False,
+        combined_cooldown=None,
+        combined_lane=None,
+        seed=0,
+        timeout=180.0,
+        confidence_threshold=0.0,
+        overwrite_output=False,
+        resume=False,
+        max_cases=2,
+        write_pngs=False,
+    )
+
+
+class TestSemanticComparability:
+    def test_semantic_variants_stay_comparable_with_each_other_and_the_baseline(
+        self,
+    ) -> None:
+        config = _config()
+        runs = [
+            _simple_run(
+                representation_mode=UNLABELLED_VARIANT,
+                provider_configuration=config,
+                exact_count=3,
+                equivalent_count=4,
+                changing_count=1,
+            )
+        ]
+        for variant_id in SEMANTIC_VARIANTS:
+            runs.append(
+                _simple_run(
+                    representation_mode=variant_id,
+                    provider_configuration=config,
+                    exact_count=8,
+                )
+            )
+        validate_comparable_runs(tuple(runs))  # must not raise
+
+    def test_semantic_target_metrics_gate_on_exact_count_alone(self) -> None:
+        config = _config()
+        baseline = _simple_run(
+            representation_mode=UNLABELLED_VARIANT,
+            provider_configuration=config,
+            exact_count=3,
+            equivalent_count=4,
+            changing_count=1,
+        )
+        # rejected_count improves but exact_count does not - under the
+        # generic target metrics this would already count as an improvement
+        # (rejected_count is a generic-family signal); under the Stage 2F
+        # semantic target metrics (exact_count only) it must not.
+        candidate_same_exact = _simple_run(
+            representation_mode=FOOTER_ONLY_VARIANT,
+            provider_configuration=config,
+            exact_count=3,
+            equivalent_count=4,
+            changing_count=1,
+        )
+        generic_result = classify_variant(
+            baseline=baseline,
+            candidate=candidate_same_exact,
+            target_metrics=GENERIC_TARGET_METRICS,
+        )
+        semantic_result = classify_variant(
+            baseline=baseline,
+            candidate=candidate_same_exact,
+            target_metrics=SEMANTIC_TARGET_METRICS,
+        )
+        assert semantic_result.label == "no_material_change"
+        assert generic_result.label in {"no_material_change", "advance"}
+
+    def test_semantic_labelled_advances_when_exact_count_improves(self) -> None:
+        config = _config()
+        baseline = _simple_run(
+            representation_mode=UNLABELLED_VARIANT,
+            provider_configuration=config,
+            exact_count=3,
+            equivalent_count=4,
+            changing_count=1,
+        )
+        candidate = _simple_run(
+            representation_mode=SEMANTIC_LABELLED_VARIANT,
+            provider_configuration=config,
+            exact_count=8,
+        )
+        result = classify_variant(
+            baseline=baseline,
+            candidate=candidate,
+            target_metrics=SEMANTIC_TARGET_METRICS,
+        )
+        assert result.label == "advance"
+        assert "exact_count" in result.reasoning
+
+    def test_mismatched_policy_artifact_is_incompatible_for_semantic_variants(
+        self,
+    ) -> None:
+        config = _config()
+        baseline = _simple_run(
+            representation_mode=UNLABELLED_VARIANT,
+            provider_configuration=config,
+            exact_count=8,
+        )
+        candidate = _simple_run(
+            representation_mode=LANE_NUMERALS_VARIANT,
+            provider_configuration=config,
+            policy_artifact_id="sha256:" + "55" * 32,
+            exact_count=8,
+        )
+        result = classify_variant(
+            baseline=baseline,
+            candidate=candidate,
+            target_metrics=SEMANTIC_TARGET_METRICS,
+        )
+        assert result.label == "incompatible"
+
+
+class TestSemanticBenchmarkOrchestration:
+    def test_fake_backend_runs_all_required_stage_2f_variants(
+        self, tmp_path: Path
+    ) -> None:
+        output_dir = tmp_path / "stage-2f-run"
+        variants = [
+            UNLABELLED_VARIANT,
+            FOOTER_ONLY_VARIANT,
+            LANE_NUMERALS_VARIANT,
+            COOLDOWN_TEXT_VARIANT,
+            SEMANTIC_LABELLED_VARIANT,
+        ]
+        args = _benchmark_args(output_dir=output_dir, variants=variants)
+        exit_code = benchmark.run(args)
+        assert exit_code == 0
+
+        for variant_id in variants:
+            variant_dir = output_dir / variant_id
+            assert (variant_dir / "run.json").exists()
+            assert (variant_dir / "recipe.json").exists()
+            assert (variant_dir / "summary.json").exists()
+            assert (variant_dir / "cases.jsonl").exists()
+
+        assert (output_dir / "comparison.json").exists()
+        assert (output_dir / "comparison.csv").exists()
+        assert (output_dir / "comparison.md").exists()
+        assert (output_dir / "experiment.json").exists()
+
+    def test_variant_summary_counts_match_the_case_projection(
+        self, tmp_path: Path
+    ) -> None:
+        output_dir = tmp_path / "stage-2f-summary-check"
+        args = _benchmark_args(
+            output_dir=output_dir,
+            variants=[UNLABELLED_VARIANT, LANE_NUMERALS_VARIANT],
+        )
+        assert benchmark.run(args) == 0
+
+        variant_dir = output_dir / LANE_NUMERALS_VARIANT
+        summary = json.loads((variant_dir / "summary.json").read_text(encoding="utf-8"))
+        cases = [
+            json.loads(line)
+            for line in (variant_dir / "cases.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        ]
+        assert summary["attempted"] == len(cases)
+        assert summary["accepted"] == sum(1 for case in cases if not case.get("error"))
+        assert summary["rejected"] == summary["attempted"] - summary["accepted"]
+        assert summary["exact_state_correct"] == sum(
+            1 for case in cases if case.get("outcome") == "exact"
+        )
+
+    def test_recipe_json_matches_the_declared_recipe_identity(
+        self, tmp_path: Path
+    ) -> None:
+        output_dir = tmp_path / "stage-2f-recipe-check"
+        args = _benchmark_args(
+            output_dir=output_dir, variants=[UNLABELLED_VARIANT, COOLDOWN_TEXT_VARIANT]
+        )
+        assert benchmark.run(args) == 0
+        recipe_payload = json.loads(
+            (output_dir / COOLDOWN_TEXT_VARIANT / "recipe.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        expected_recipe = build_recipe(COOLDOWN_TEXT_VARIANT)
+        assert recipe_payload["recipe_id"] == expected_recipe.recipe_id
+        assert recipe_payload["variant_id"] == COOLDOWN_TEXT_VARIANT

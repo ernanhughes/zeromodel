@@ -28,8 +28,6 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 
-
-
 from zeromodel.video.domains.video_action_set.provider_evaluation_dto import (
     MaterializedProviderEvaluationRunDTO,
 )
@@ -38,22 +36,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import examples.local_model_zero_arcade_test as arcade # noqa: E402
-from examples.arcade_png_interventions import ( # noqa: E402
+import examples.local_model_zero_arcade_test as arcade
+from examples.arcade_png_interventions import (
     ALL_VARIANTS,
     COMBINED_VARIANT,
     COOLDOWN_VARIANTS,
     LANE_VARIANTS,
     REFERENCE_VARIANTS,
+    SEMANTIC_VARIANTS,
     UNLABELLED_VARIANT,
     ArcadePngInterventionRecipe,
     apply_recipe,
     build_recipe,
 )
-from examples.arcade_png_representation_comparison import ( # noqa: E402
+from examples.arcade_png_representation_comparison import (
     COOLDOWN_TARGET_METRICS,
     GENERIC_TARGET_METRICS,
     LANE_TARGET_METRICS,
+    SEMANTIC_TARGET_METRICS,
     build_comparison_rows,
     build_compatibility_statement,
     classify_variant,
@@ -62,7 +62,7 @@ from examples.arcade_png_representation_comparison import ( # noqa: E402
     write_comparison_json,
     write_comparison_md,
 )
-from examples.arcade_png_representation_runner import ( # noqa: E402
+from examples.arcade_png_representation_runner import (
     build_provider_configuration,
     build_scripted_replies_for_variant,
     find_resumable_run,
@@ -303,6 +303,8 @@ def _target_metrics_for_variant(variant_id: str) -> Sequence[str]:
         return COOLDOWN_TARGET_METRICS
     if variant_id in LANE_VARIANTS:
         return LANE_TARGET_METRICS
+    if variant_id in SEMANTIC_VARIANTS:
+        return SEMANTIC_TARGET_METRICS
     return GENERIC_TARGET_METRICS
 
 

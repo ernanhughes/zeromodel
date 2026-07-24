@@ -3,26 +3,34 @@ from __future__ import annotations
 import numpy as np
 
 from zeromodel.perception import (
+    COEFFICIENT_SEMANTICS,
     FIELD_RELEVANCE_SEMANTICS,
     PERCEPTION_PACKAGE_VERSION,
     PERCEPTION_STAGE,
+    TARGET_SCORE_SEMANTICS,
     WEIGHTED_DISTANCE_SEMANTICS,
     BaselineInferenceConfigDTO,
     DiscreteActionSchemaDTO,
     InMemoryPerceptionDatasetStore,
     SourceImageEncoderSpecDTO,
+    TranslatorConfigDTO,
     build_grid_field_schema,
     encode_source_array,
 )
 
 
-def test_phase_four_c_public_contract() -> None:
+def test_phase_five_a_public_contract() -> None:
     assert PERCEPTION_PACKAGE_VERSION == "1.0.13"
-    assert PERCEPTION_STAGE == "P4C"
+    assert PERCEPTION_STAGE == "P5A"
     assert FIELD_RELEVANCE_SEMANTICS == "eta_squared_of_field_mean_by_action"
     assert WEIGHTED_DISTANCE_SEMANTICS == (
         "field_relevance_weighted_normalized_mean_absolute_distance"
     )
+    assert COEFFICIENT_SEMANTICS == (
+        "ridge_linear_mapping_with_unregularized_intercept"
+    )
+    assert TARGET_SCORE_SEMANTICS == "clipped_ridge_predicted_one_hot_field_value"
+    assert TranslatorConfigDTO().ridge_alpha == 1e-6
     assert SourceImageEncoderSpecDTO().color_space == "RGB"
     assert DiscreteActionSchemaDTO.from_labels(["RIGHT", "LEFT"]).labels == (
         "LEFT",

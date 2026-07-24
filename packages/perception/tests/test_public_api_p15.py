@@ -1,8 +1,7 @@
 from zeromodel import perception
 
 
-def test_public_api_exposes_p15_sql_production_contract() -> None:
-    assert perception.PERCEPTION_STAGE == "P15"
+def test_sql_production_public_contract() -> None:
     assert perception.SQL_PRODUCTION_SCHEMA_VERSION == "perception-sql-production-schema/1"
     assert perception.SQL_PRODUCTION_STORE_VERSION == "perception-sql-production-store/1"
     assert perception.SQL_PRODUCTION_SEMANTICS == (

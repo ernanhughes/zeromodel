@@ -17,10 +17,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from examples.arcade_visual_local_evidence_benchmark import (
+from examples.arcade_visual_local_evidence_benchmark import ( # noqa: E402
     SOURCE_SCOPE,
     build_arcade_local_evidence_dataset,
-)  # noqa: E402
+)  
 from research.visual.visual_experiment import evaluate_visual_provider  # noqa: E402
 from research.visual.visual_local_baselines import (  # noqa: E402
     build_registered_pixel_candidates_v2,

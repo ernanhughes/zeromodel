@@ -22,7 +22,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 
-from examples.arcade_shooter_policy import (
+from examples.arcade_shooter_policy import ( # noqa: E402
     ACTIONS,
     ShooterConfig,
     compile_policy_artifact,

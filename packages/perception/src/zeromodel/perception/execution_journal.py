@@ -409,6 +409,7 @@ def execute_journaled_approved_rollback(
     )
     attempt_store.append_attempt(attempt)
     events = attempt_store.list_events(attempt.attempt_id)
+    had_prepared_event = bool(events)
     if events and events[-1].event_kind in EXECUTION_ATTEMPT_TERMINAL_KINDS:
         terminal = events[-1]
         if terminal.event_kind == "failed":
@@ -469,7 +470,7 @@ def execute_journaled_approved_rollback(
         raise PerceptionExecutionJournalError(str(error)) from error
 
     if existing_receipt is not None:
-        event_kind = "idempotent"
+        event_kind = "reconciled" if had_prepared_event else "idempotent"
     elif reviewed_pre_state:
         event_kind = "completed"
     else:

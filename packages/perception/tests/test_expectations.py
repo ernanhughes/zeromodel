@@ -97,11 +97,11 @@ def test_confirmed_expectation_is_deterministic() -> None:
     assert first.findings[0].status == "confirmed"
 
 
-def test_wrong_target_placement_is_preserved_as_finding() -> None:
+def test_missing_expected_evidence_is_preserved_as_finding() -> None:
     schema, translator, signal, irrelevant = _fixture()
     expectation = EvidenceExpectationDTO.create(
         field_schema_id=schema.field_schema_id,
-        source_annotation_ids=(signal.annotation_id,),
+        source_annotation_ids=(irrelevant.annotation_id,),
         expected_action_labels=("LEFT",),
         minimum_registration=0.5,
     )

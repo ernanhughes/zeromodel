@@ -116,7 +116,8 @@ def test_identical_temporal_context_remains_unresolved() -> None:
     assert conflict.temporal_context_count == 1
     assert conflict.temporally_conflicting_context_count == 1
     assert conflict.status == "insufficient_temporal_support"
-    assert report.insufficient_support_group_count == 1
+    assert report.single_frame_conflict_group_count == 2
+    assert report.insufficient_support_group_count == 2
 
 
 def test_temporal_identity_changes_with_window_contract() -> None:

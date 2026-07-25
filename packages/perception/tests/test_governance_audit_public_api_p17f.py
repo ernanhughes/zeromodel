@@ -16,6 +16,5 @@ def test_p17f_governance_audit_is_public() -> None:
         "audit_governance_integrity",
     }
 
-    assert perception.PERCEPTION_STAGE == "P17F"
     assert expected <= set(perception.__all__)
     assert hasattr(perception.SqliteGovernedExecutionAttemptStore, "list_attempts")

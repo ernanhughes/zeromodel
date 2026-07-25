@@ -59,6 +59,7 @@ class OperationalDriftPolicyDTO:
     maximum_accepted_accuracy_drop: float = 0.10
     minimum_reference_count: int = 20
     minimum_inference_count: int = 20
+    minimum_action_distribution_count: int = 20
     minimum_labeled_count: int = 20
     minimum_accepted_labeled_count: int = 20
     minimum_label_coverage: float = 1.0
@@ -82,6 +83,7 @@ class OperationalDriftPolicyDTO:
         for value in (
             self.minimum_reference_count,
             self.minimum_inference_count,
+            self.minimum_action_distribution_count,
             self.minimum_labeled_count,
             self.minimum_accepted_labeled_count,
         ):
@@ -248,23 +250,6 @@ def diagnose_operational_health(
                 resolved.maximum_mean_margin_drop,
                 metrics.inference_count,
             ),
-            _finding(
-                metric="action_distribution",
-                status=(
-                    "drifted"
-                    if distance > resolved.maximum_action_distribution_distance
-                    else "healthy"
-                ),
-                reference_value=0.0,
-                observed_value=distance,
-                delta=distance,
-                threshold=resolved.maximum_action_distribution_distance,
-                evidence_count=metrics.inference_count,
-                rationale=(
-                    f"total-variation distance is {distance:.6f}; allowed distance is "
-                    f"{resolved.maximum_action_distribution_distance:.6f}"
-                ),
-            ),
         ]
     else:
         findings = [
@@ -284,15 +269,46 @@ def diagnose_operational_health(
                 metrics.inference_count,
                 unlabeled_reason,
             ),
+        ]
+
+    action_distribution_ready = (
+        unlabeled_ready
+        and metrics.inference_count >= resolved.minimum_action_distribution_count
+    )
+    if action_distribution_ready:
+        findings.append(
+            _finding(
+                metric="action_distribution",
+                status=(
+                    "drifted"
+                    if distance > resolved.maximum_action_distribution_distance
+                    else "healthy"
+                ),
+                reference_value=0.0,
+                observed_value=distance,
+                delta=distance,
+                threshold=resolved.maximum_action_distribution_distance,
+                evidence_count=metrics.inference_count,
+                rationale=(
+                    f"total-variation distance is {distance:.6f}; allowed distance is "
+                    f"{resolved.maximum_action_distribution_distance:.6f}"
+                ),
+            )
+        )
+    else:
+        findings.append(
             _insufficient(
                 "action_distribution",
                 0.0,
                 distance,
                 resolved.maximum_action_distribution_distance,
                 metrics.inference_count,
-                unlabeled_reason,
-            ),
-        ]
+                (
+                    f"{unlabeled_reason}; action distribution additionally requires "
+                    f"inference_count>={resolved.minimum_action_distribution_count}"
+                ),
+            )
+        )
 
     label_coverage = metrics.labeled_count / metrics.inference_count
     accuracy_ready = (

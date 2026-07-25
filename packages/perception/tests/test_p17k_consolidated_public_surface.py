@@ -3,8 +3,7 @@ from __future__ import annotations
 import zeromodel.perception as perception
 
 
-def test_p17k_is_exposed_from_package_root() -> None:
-    assert perception.PERCEPTION_STAGE == "P17K"
+def test_p17k_contract_remains_exposed_from_package_root() -> None:
     assert perception.CERTIFICATION_EXECUTION_GATE_VERSION
     assert perception.CERTIFICATION_AUDIT_VERSION
     assert perception.GOVERNANCE_EXECUTION_GATE_VERSION

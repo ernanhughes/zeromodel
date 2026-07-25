@@ -1,4 +1,4 @@
-"""ZeroModel perception public API through Stage P18F."""
+"""ZeroModel perception public API through Stage P18G."""
 
 from __future__ import annotations
 
@@ -68,6 +68,38 @@ from .governance_gate import (  # noqa: F401
     PerceptionGovernanceExecutionGateError,
     authorize_governance_execution,
     execute_audit_gated_approved_rollback,
+)
+from .promotion_activation import (  # noqa: F401
+    PROMOTION_ACTIVATION_ADMISSION_STATUS,
+    PROMOTION_ACTIVATION_ADMISSION_VERSION,
+    PROMOTION_ACTIVATION_AUDIT_FINDING_VERSION,
+    PROMOTION_ACTIVATION_AUDIT_REPORT_VERSION,
+    PROMOTION_ACTIVATION_AUDIT_STATUSES,
+    PROMOTION_ACTIVATION_BUNDLE_VERSION,
+    PROMOTION_ACTIVATION_FINDING_SEVERITIES,
+    PROMOTION_ACTIVATION_POLICY_VERSION,
+    PROMOTION_ACTIVATION_RECEIPT_STATUS,
+    PROMOTION_ACTIVATION_RECEIPT_VERSION,
+    PROMOTION_ACTIVATION_SEMANTICS,
+    PROMOTION_ACTIVATION_STORE_VERSION,
+    PROMOTION_ACTIVE_STATE_VERSION,
+    PROMOTION_ROLLBACK_PLAN_STATUS,
+    PROMOTION_ROLLBACK_PLAN_VERSION,
+    ActivePromotionStateDTO,
+    InMemoryPromotionActivationStore,
+    PerceptionPromotionActivationError,
+    PromotionActivationAdmissionDTO,
+    PromotionActivationAuditFindingDTO,
+    PromotionActivationAuditReportDTO,
+    PromotionActivationBundleDTO,
+    PromotionActivationPolicyDTO,
+    PromotionActivationReceiptDTO,
+    PromotionActivationStore,
+    PromotionRollbackPlanDTO,
+    audit_promotion_activation,
+    authorize_promotion_activation,
+    build_promotion_activation_bundle,
+    execute_promotion_activation,
 )
 from .promotion_materialization import (  # noqa: F401
     MATERIALIZED_PROMOTION_CHANGE_VERSION,
@@ -161,7 +193,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18F"
+PERCEPTION_STAGE = "P18G"
 
 __all__ = [
     name

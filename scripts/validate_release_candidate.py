@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 _IMPLEMENTATION_PATH = Path(__file__).with_name("_validate_release_candidate_impl.py")
 _ORIGINAL_MODULE_NAME = __name__
+_IMPLEMENTATION_MODULE_NAME = "_zeromodel_validate_release_candidate_impl"
 
-globals()["__name__"] = "_zeromodel_validate_release_candidate_impl"
+_CURRENT_MODULE = sys.modules[_ORIGINAL_MODULE_NAME]
+sys.modules[_IMPLEMENTATION_MODULE_NAME] = _CURRENT_MODULE
+globals()["__name__"] = _IMPLEMENTATION_MODULE_NAME
 try:
     exec(
         compile(
@@ -18,6 +22,7 @@ try:
     )
 finally:
     globals()["__name__"] = _ORIGINAL_MODULE_NAME
+    sys.modules.pop(_IMPLEMENTATION_MODULE_NAME, None)
 
 _VERSION = globals()["VERSION"]
 globals()["PACKAGES"]["perception"] = {

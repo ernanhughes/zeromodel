@@ -113,7 +113,9 @@ def test_instrument_audits_and_verification(
         build_patch.setattr(
             benchmark,
             "measure_record_collection",
-            lambda records, prototypes, policy_artifact_id, **_kwargs: fake_provider_rows,
+            lambda records, prototypes, policy_artifact_id, **_kwargs: (
+                fake_provider_rows
+            ),
         )
         build_patch.setattr(benchmark, "canonical_prototypes", lambda: {})
         benchmark.build_split("development", tmp_path, REPO_ROOT)

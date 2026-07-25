@@ -147,7 +147,9 @@ def isolate_video_action_set_orchestration_tests(
             stored_records[:] = list(records)
             return tuple(records)
 
-        def list_observation_records(self, **_kwargs: Any) -> tuple[dict[str, Any], ...]:
+        def list_observation_records(
+            self, **_kwargs: Any
+        ) -> tuple[dict[str, Any], ...]:
             return tuple(stored_records)
 
     class FakeRuntime:

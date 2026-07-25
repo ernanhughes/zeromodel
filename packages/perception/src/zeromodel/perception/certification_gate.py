@@ -13,7 +13,10 @@ from .certification_audit import (
 )
 from .compatibility import ModelCompatibilityContractDTO
 from .disposition import OperationalRecommendationDispositionDTO
-from .execution_journal import GovernedExecutionAttemptDTO, SqliteGovernedExecutionAttemptStore
+from .execution_journal import (
+    GovernedExecutionAttemptDTO,
+    SqliteGovernedExecutionAttemptStore,
+)
 from .lifecycle import PerceptionModelLifecycleStore
 from .recommendation import OperationalRecommendationDTO
 from .sql_certification import (
@@ -21,9 +24,14 @@ from .sql_certification import (
     SqliteGovernanceCertificationStore,
     execute_and_certify_audit_gated_rollback,
 )
-from .sql_governance import GovernanceExecutionReceiptDTO, SqlitePerceptionGovernanceLedgerStore
+from .sql_governance import (
+    GovernanceExecutionReceiptDTO,
+    SqlitePerceptionGovernanceLedgerStore,
+)
 
-CERTIFICATION_EXECUTION_GATE_VERSION: Final = "perception-certification-execution-gate/1"
+CERTIFICATION_EXECUTION_GATE_VERSION: Final = (
+    "perception-certification-execution-gate/1"
+)
 CERTIFICATION_EXECUTION_GATE_SEMANTICS: Final = (
     "four_store_preflight_and_postflight_gated_governed_execution"
 )
@@ -75,12 +83,16 @@ class CertificationExecutionGateDTO:
                 "certification execution gate requires a positive pointer revision"
             )
         if self.semantics != CERTIFICATION_EXECUTION_GATE_SEMANTICS:
-            raise PerceptionCertificationExecutionGateError("unsupported gate semantics")
+            raise PerceptionCertificationExecutionGateError(
+                "unsupported gate semantics"
+            )
         if self.version != CERTIFICATION_EXECUTION_GATE_VERSION:
             raise PerceptionCertificationExecutionGateError("unsupported gate version")
 
 
-def authorize_certification_execution(report: CertificationIntegrityAuditReportDTO) -> None:
+def authorize_certification_execution(
+    report: CertificationIntegrityAuditReportDTO,
+) -> None:
     """Require a completely valid four-store state before starting fresh execution."""
 
     if report.status != "valid":

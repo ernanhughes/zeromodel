@@ -4,7 +4,9 @@ from dataclasses import replace
 
 import pytest
 
-from zeromodel.perception.certification_audit import CertificationIntegrityAuditReportDTO
+from zeromodel.perception.certification_audit import (
+    CertificationIntegrityAuditReportDTO,
+)
 from zeromodel.perception.certification_gate import CertificationExecutionGateDTO
 from zeromodel.perception.sql_admission import (
     CertificationExecutionAdmissionBundleDTO,
@@ -13,7 +15,9 @@ from zeromodel.perception.sql_admission import (
 )
 
 
-def _report(identity: str, *, certifications: int) -> CertificationIntegrityAuditReportDTO:
+def _report(
+    identity: str, *, certifications: int
+) -> CertificationIntegrityAuditReportDTO:
     return CertificationIntegrityAuditReportDTO(
         report_id=identity,
         status="valid",
@@ -76,4 +80,6 @@ def test_bundle_requires_exact_valid_preflight_and_postflight() -> None:
     with pytest.raises(PerceptionSqlAdmissionError, match="preflight report"):
         replace(bundle, preflight=replace(bundle.preflight, report_id="sha256:wrong"))
     with pytest.raises(PerceptionSqlAdmissionError, match="valid preflight"):
-        replace(bundle, postflight=replace(bundle.postflight, status="attention_required"))
+        replace(
+            bundle, postflight=replace(bundle.postflight, status="attention_required")
+        )

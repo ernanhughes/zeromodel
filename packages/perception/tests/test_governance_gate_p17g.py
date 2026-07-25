@@ -26,7 +26,9 @@ from zeromodel.perception.governance_gate import (
     authorize_governance_execution,
     execute_audit_gated_approved_rollback,
 )
-from zeromodel.perception.governed_execution import execute_or_reconcile_approved_rollback
+from zeromodel.perception.governed_execution import (
+    execute_or_reconcile_approved_rollback,
+)
 from zeromodel.perception.lifecycle import (
     InMemoryPerceptionModelLifecycleStore,
     activate_promoted_model,
@@ -117,16 +119,29 @@ def _fixture(database):
     governance = SqlitePerceptionGovernanceLedgerStore(database)
     governance.append_recommendation(recommendation)
     governance.append_disposition(disposition)
-    return lifecycle, governance, current_contract, target_contract, recommendation, disposition
+    return (
+        lifecycle,
+        governance,
+        current_contract,
+        target_contract,
+        recommendation,
+        disposition,
+    )
 
 
 def test_clean_execution_finishes_with_valid_audit(tmp_path) -> None:
-    lifecycle, governance, current_contract, target_contract, recommendation, disposition = (
-        _fixture(tmp_path / "governance.sqlite3")
-    )
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts:
+    (
+        lifecycle,
+        governance,
+        current_contract,
+        target_contract,
+        recommendation,
+        disposition,
+    ) = _fixture(tmp_path / "governance.sqlite3")
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+    ):
         gate, attempt, receipt, report = execute_audit_gated_approved_rollback(
             lifecycle,
             governance,
@@ -145,9 +160,14 @@ def test_clean_execution_finishes_with_valid_audit(tmp_path) -> None:
 
 
 def test_exact_prepared_attempt_can_recover(tmp_path) -> None:
-    lifecycle, governance, current_contract, target_contract, recommendation, disposition = (
-        _fixture(tmp_path / "governance.sqlite3")
-    )
+    (
+        lifecycle,
+        governance,
+        current_contract,
+        target_contract,
+        recommendation,
+        disposition,
+    ) = _fixture(tmp_path / "governance.sqlite3")
     attempts_path = tmp_path / "attempts.sqlite3"
     attempt = build_governed_execution_attempt(
         recommendation,
@@ -179,9 +199,12 @@ def test_exact_prepared_attempt_can_recover(tmp_path) -> None:
     )
     governance.close()
 
-    with SqlitePerceptionGovernanceLedgerStore(
-        tmp_path / "governance.sqlite3"
-    ) as reopened, SqliteGovernedExecutionAttemptStore(attempts_path) as attempts:
+    with (
+        SqlitePerceptionGovernanceLedgerStore(
+            tmp_path / "governance.sqlite3"
+        ) as reopened,
+        SqliteGovernedExecutionAttemptStore(attempts_path) as attempts,
+    ):
         pre = audit_governance_integrity(lifecycle, reopened, attempts)
         gate, _, _, post = execute_audit_gated_approved_rollback(
             lifecycle,

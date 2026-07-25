@@ -13,7 +13,9 @@ _IMPLEMENTATION_SPEC = importlib.util.spec_from_file_location(
     _IMPLEMENTATION_PATH,
 )
 if _IMPLEMENTATION_SPEC is None or _IMPLEMENTATION_SPEC.loader is None:
-    raise ImportError(f"cannot load inventory implementation from {_IMPLEMENTATION_PATH}")
+    raise ImportError(
+        f"cannot load inventory implementation from {_IMPLEMENTATION_PATH}"
+    )
 
 _implementation = importlib.util.module_from_spec(_IMPLEMENTATION_SPEC)
 sys.modules[_IMPLEMENTATION_NAME] = _implementation

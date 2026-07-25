@@ -16,16 +16,25 @@ from typing import Final, Mapping
 
 from .compatibility import ModelCompatibilityContractDTO
 from .disposition import OperationalRecommendationDispositionDTO
-from .execution_journal import GovernedExecutionAttemptDTO, SqliteGovernedExecutionAttemptStore
+from .execution_journal import (
+    GovernedExecutionAttemptDTO,
+    SqliteGovernedExecutionAttemptStore,
+)
 from .governance_audit import (
     GovernanceIntegrityAuditReportDTO,
     GovernanceIntegrityFindingDTO,
     audit_governance_integrity,
 )
-from .governance_gate import GovernanceExecutionGateDTO, execute_audit_gated_approved_rollback
+from .governance_gate import (
+    GovernanceExecutionGateDTO,
+    execute_audit_gated_approved_rollback,
+)
 from .lifecycle import PerceptionModelLifecycleStore
 from .recommendation import OperationalRecommendationDTO
-from .sql_governance import GovernanceExecutionReceiptDTO, SqlitePerceptionGovernanceLedgerStore
+from .sql_governance import (
+    GovernanceExecutionReceiptDTO,
+    SqlitePerceptionGovernanceLedgerStore,
+)
 
 GOVERNANCE_CERTIFICATION_VERSION: Final = "perception-governance-certification/1"
 SQL_CERTIFICATION_SCHEMA_VERSION: Final = "perception-sql-certification-schema/1"
@@ -79,7 +88,9 @@ class GovernanceExecutionCertificationDTO:
             self.post_audit_report_id,
         )
         if not all(identities):
-            raise PerceptionSqlCertificationError("certification identities must be non-empty")
+            raise PerceptionSqlCertificationError(
+                "certification identities must be non-empty"
+            )
         if self.resulting_pointer_revision <= 0:
             raise PerceptionSqlCertificationError(
                 "certification requires a positive resulting pointer revision"
@@ -101,7 +112,9 @@ class GovernanceExecutionCertificationBundleDTO:
         certification = self.certification
         gate = self.gate
         if certification.gate_id != gate.gate_id:
-            raise PerceptionSqlCertificationError("certification does not reference supplied gate")
+            raise PerceptionSqlCertificationError(
+                "certification does not reference supplied gate"
+            )
         for field in (
             "recommendation_id",
             "disposition_id",
@@ -116,11 +129,17 @@ class GovernanceExecutionCertificationBundleDTO:
                     f"certification and gate disagree on {field}"
                 )
         if gate.pre_audit_report_id != self.pre_audit.report_id:
-            raise PerceptionSqlCertificationError("gate does not reference supplied pre-audit")
+            raise PerceptionSqlCertificationError(
+                "gate does not reference supplied pre-audit"
+            )
         if gate.post_audit_report_id != self.post_audit.report_id:
-            raise PerceptionSqlCertificationError("gate does not reference supplied post-audit")
+            raise PerceptionSqlCertificationError(
+                "gate does not reference supplied post-audit"
+            )
         if self.post_audit.status != "valid":
-            raise PerceptionSqlCertificationError("certification requires a valid post-audit")
+            raise PerceptionSqlCertificationError(
+                "certification requires a valid post-audit"
+            )
         if self.post_audit.active_pointer_revision != gate.resulting_pointer_revision:
             raise PerceptionSqlCertificationError(
                 "post-audit pointer revision does not match certified result"
@@ -212,7 +231,9 @@ class SqliteGovernanceCertificationStore:
             )
             self._connection.commit()
         elif row["value"] != SQL_CERTIFICATION_SCHEMA_VERSION:
-            raise PerceptionSqlCertificationError("unsupported certification schema version")
+            raise PerceptionSqlCertificationError(
+                "unsupported certification schema version"
+            )
 
     def append_certification(
         self, bundle: GovernanceExecutionCertificationBundleDTO
@@ -222,7 +243,9 @@ class SqliteGovernanceCertificationStore:
             json.dumps(asdict(certification), sort_keys=True, separators=(",", ":")),
             json.dumps(asdict(bundle.gate), sort_keys=True, separators=(",", ":")),
             json.dumps(asdict(bundle.pre_audit), sort_keys=True, separators=(",", ":")),
-            json.dumps(asdict(bundle.post_audit), sort_keys=True, separators=(",", ":")),
+            json.dumps(
+                asdict(bundle.post_audit), sort_keys=True, separators=(",", ":")
+            ),
         )
         row = self._connection.execute(
             "SELECT certification_id, payload_json, gate_json, pre_audit_json, post_audit_json "
@@ -236,7 +259,10 @@ class SqliteGovernanceCertificationStore:
                 row["pre_audit_json"],
                 row["post_audit_json"],
             )
-            if row["certification_id"] != certification.certification_id or existing != encoded:
+            if (
+                row["certification_id"] != certification.certification_id
+                or existing != encoded
+            ):
                 raise PerceptionSqlCertificationError(
                     "attempt or disposition already has a conflicting certification"
                 )
@@ -274,7 +300,9 @@ class SqliteGovernanceCertificationStore:
             post_audit=_decode_audit(json.loads(row["post_audit_json"])),
         )
 
-    def list_certifications(self) -> tuple[GovernanceExecutionCertificationBundleDTO, ...]:
+    def list_certifications(
+        self,
+    ) -> tuple[GovernanceExecutionCertificationBundleDTO, ...]:
         rows = self._connection.execute(
             "SELECT certification_id FROM perception_governance_certifications "
             "ORDER BY certification_id"

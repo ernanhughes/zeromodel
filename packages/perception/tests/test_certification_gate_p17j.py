@@ -129,11 +129,13 @@ def test_valid_four_store_state_executes_and_finishes_valid(tmp_path) -> None:
         recommendation,
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts, SqliteGovernanceCertificationStore(
-        tmp_path / "certifications.sqlite3"
-    ) as certifications:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+        SqliteGovernanceCertificationStore(
+            tmp_path / "certifications.sqlite3"
+        ) as certifications,
+    ):
         preflight = audit_certification_integrity(
             lifecycle,
             governance,

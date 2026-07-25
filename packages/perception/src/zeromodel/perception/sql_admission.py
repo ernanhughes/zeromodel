@@ -19,14 +19,20 @@ from .certification_gate import (
 )
 from .compatibility import ModelCompatibilityContractDTO
 from .disposition import OperationalRecommendationDispositionDTO
-from .execution_journal import GovernedExecutionAttemptDTO, SqliteGovernedExecutionAttemptStore
+from .execution_journal import (
+    GovernedExecutionAttemptDTO,
+    SqliteGovernedExecutionAttemptStore,
+)
 from .lifecycle import PerceptionModelLifecycleStore
 from .recommendation import OperationalRecommendationDTO
 from .sql_certification import (
     GovernanceExecutionCertificationBundleDTO,
     SqliteGovernanceCertificationStore,
 )
-from .sql_governance import GovernanceExecutionReceiptDTO, SqlitePerceptionGovernanceLedgerStore
+from .sql_governance import (
+    GovernanceExecutionReceiptDTO,
+    SqlitePerceptionGovernanceLedgerStore,
+)
 
 SQL_ADMISSION_SCHEMA_VERSION: Final = "perception-sql-admission-schema/1"
 SQL_ADMISSION_STORE_VERSION: Final = "perception-sql-admission-store/1"
@@ -44,9 +50,13 @@ class CertificationExecutionAdmissionBundleDTO:
 
     def __post_init__(self) -> None:
         if self.gate.preflight_report_id != self.preflight.report_id:
-            raise PerceptionSqlAdmissionError("gate does not reference supplied preflight report")
+            raise PerceptionSqlAdmissionError(
+                "gate does not reference supplied preflight report"
+            )
         if self.gate.postflight_report_id != self.postflight.report_id:
-            raise PerceptionSqlAdmissionError("gate does not reference supplied postflight report")
+            raise PerceptionSqlAdmissionError(
+                "gate does not reference supplied postflight report"
+            )
         if self.preflight.status != "valid" or self.postflight.status != "valid":
             raise PerceptionSqlAdmissionError(
                 "admission bundle requires valid preflight and postflight"
@@ -112,12 +122,16 @@ class SqliteCertificationExecutionAdmissionStore:
                 "unsupported execution-admission schema version"
             )
 
-    def append_admission(self, bundle: CertificationExecutionAdmissionBundleDTO) -> None:
+    def append_admission(
+        self, bundle: CertificationExecutionAdmissionBundleDTO
+    ) -> None:
         gate = bundle.gate
         encoded = (
             json.dumps(asdict(gate), sort_keys=True, separators=(",", ":")),
             json.dumps(asdict(bundle.preflight), sort_keys=True, separators=(",", ":")),
-            json.dumps(asdict(bundle.postflight), sort_keys=True, separators=(",", ":")),
+            json.dumps(
+                asdict(bundle.postflight), sort_keys=True, separators=(",", ":")
+            ),
         )
         row = self._connection.execute(
             "SELECT gate_id, gate_json, preflight_json, postflight_json "

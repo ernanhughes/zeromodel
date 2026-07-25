@@ -119,9 +119,11 @@ def test_certification_survives_restart_with_exact_audits(tmp_path) -> None:
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
     certification_database = tmp_path / "certifications.sqlite3"
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts, SqliteGovernanceCertificationStore(certification_database) as certifications:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+        SqliteGovernanceCertificationStore(certification_database) as certifications,
+    ):
         bundle, attempt, receipt = execute_and_certify_audit_gated_rollback(
             lifecycle,
             governance,
@@ -156,11 +158,13 @@ def test_conflicting_certification_for_same_attempt_is_rejected(tmp_path) -> Non
         recommendation,
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts, SqliteGovernanceCertificationStore(
-        tmp_path / "certifications.sqlite3"
-    ) as certifications:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+        SqliteGovernanceCertificationStore(
+            tmp_path / "certifications.sqlite3"
+        ) as certifications,
+    ):
         bundle, _, _ = execute_and_certify_audit_gated_rollback(
             lifecycle,
             governance,
@@ -194,11 +198,13 @@ def test_bundle_rejects_non_valid_post_audit(tmp_path) -> None:
         recommendation,
         disposition,
     ) = _fixture(tmp_path / "governance.sqlite3")
-    with governance, SqliteGovernedExecutionAttemptStore(
-        tmp_path / "attempts.sqlite3"
-    ) as attempts, SqliteGovernanceCertificationStore(
-        tmp_path / "certifications.sqlite3"
-    ) as certifications:
+    with (
+        governance,
+        SqliteGovernedExecutionAttemptStore(tmp_path / "attempts.sqlite3") as attempts,
+        SqliteGovernanceCertificationStore(
+            tmp_path / "certifications.sqlite3"
+        ) as certifications,
+    ):
         bundle, _, _ = execute_and_certify_audit_gated_rollback(
             lifecycle,
             governance,
@@ -211,4 +217,6 @@ def test_bundle_rejects_non_valid_post_audit(tmp_path) -> None:
         )
 
     with pytest.raises(PerceptionSqlCertificationError, match="valid post-audit"):
-        replace(bundle, post_audit=replace(bundle.post_audit, status="attention_required"))
+        replace(
+            bundle, post_audit=replace(bundle.post_audit, status="attention_required")
+        )

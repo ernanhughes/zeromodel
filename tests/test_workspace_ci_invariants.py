@@ -95,9 +95,9 @@ def test_check_package_boundaries_has_a_python_3_10_toml_fallback() -> None:
 
 
 def test_validate_release_candidate_has_a_python_3_10_toml_fallback() -> None:
-    wrapper = (
-        REPO_ROOT / "scripts" / "validate_release_candidate.py"
-    ).read_text(encoding="utf-8")
+    wrapper = (REPO_ROOT / "scripts" / "validate_release_candidate.py").read_text(
+        encoding="utf-8"
+    )
     implementation = (
         REPO_ROOT / "scripts" / "_validate_release_candidate_impl.py"
     ).read_text(encoding="utf-8")
@@ -106,6 +106,7 @@ def test_validate_release_candidate_has_a_python_3_10_toml_fallback() -> None:
 
     assert "import tomllib" in effective_source
     assert "import tomli as tomllib" in effective_source
+
 
 def test_publish_testpypi_workflow_does_not_claim_to_publish() -> None:
     text = (WORKFLOWS_DIR / "publish-testpypi.yml").read_text(encoding="utf-8")

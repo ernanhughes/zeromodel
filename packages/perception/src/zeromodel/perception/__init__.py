@@ -1,8 +1,28 @@
-"""ZeroModel perception public API through Stage P18C."""
+"""ZeroModel perception public API through Stage P18D."""
 
 from __future__ import annotations
 
 from ._public_api_p17f import *  # noqa: F401,F403
+from .candidate_validation import (  # noqa: F401
+    CANDIDATE_VALIDATION_EXPECTATION_VERSION,
+    CANDIDATE_VALIDATION_FINDING_STATUSES,
+    CANDIDATE_VALIDATION_FINDING_VERSION,
+    CANDIDATE_VALIDATION_POLICY_VERSION,
+    CANDIDATE_VALIDATION_REPORT_STATUSES,
+    CANDIDATE_VALIDATION_REPORT_VERSION,
+    CANDIDATE_VALIDATION_RESULT_STATUSES,
+    CANDIDATE_VALIDATION_RESULT_VERSION,
+    CANDIDATE_VALIDATION_SEMANTICS,
+    HELD_OUT_TRANSITION_OBSERVATION_VERSION,
+    CandidateValidationExpectationDTO,
+    CandidateValidationFindingDTO,
+    CandidateValidationPolicyDTO,
+    CandidateValidationReportDTO,
+    CandidateValidationResultDTO,
+    HeldOutTransitionObservationDTO,
+    PerceptionCandidateValidationError,
+    validate_discovered_transition_candidates,
+)
 from .certification_audit import (  # noqa: F401
     CERTIFICATION_AUDIT_FINDING_VERSION,
     CERTIFICATION_AUDIT_SEMANTICS,
@@ -101,7 +121,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18C"
+PERCEPTION_STAGE = "P18D"
 
 __all__ = [
     name

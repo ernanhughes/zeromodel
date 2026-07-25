@@ -16,16 +16,22 @@ Aggregate P18A evidence and P18B findings across an explicit discovery cohort. P
 
 Observations without unexplained findings remain in the denominator. Repeated deterministic transition artifacts from distinct interactions remain valid evidence. Discovery never doubles as validation.
 
-## P18D — Held-out candidate validation — current
+## P18D — Held-out candidate validation — complete
 
-Derive explicit, content-addressed expectations from P18C candidates and their source statistics, then evaluate every candidate against a separately identified validation cohort. Discovery and validation cohort, interaction, transition, and observation identities must remain disjoint.
+Derive explicit, content-addressed expectations from P18C candidates and their source statistics, then evaluate every candidate against a separately identified validation cohort. Discovery and validation cohort, interaction, transition, and observation identities remain disjoint.
 
 Preserve validated, rejected, inconclusive, and insufficient-evidence outcomes. Failed candidates remain visible and cannot be silently discarded.
 
-## P18E — Governed candidate promotion — next
+## P18E — Governed candidate promotion — current
 
-Convert only P18D-validated candidates into reviewable promotion proposals for the annotation and expectation model. Promotion should bind discovery and validation lineage, require an explicit approval decision, and never automatically assign semantic labels or rewrite production expectations.
+Convert only P18D-validated candidates into reviewable, content-addressed proposals. Bind complete discovery and validation lineage, require an explicit reviewer decision, and require reviewer-supplied semantic identity for approval.
+
+Approved proposals remain `not_materialized`. P18E records authorization but cannot create annotations, relations, production expectations, or runtime changes.
+
+## P18F — Reversible promotion materialization — next
+
+Convert only approved proposals from a fully reviewed P18E ledger into versioned annotation and expectation change sets. Materialization must be reversible, preserve complete P18C/P18D/P18E lineage, and remain inactive until a separate admission decision succeeds.
 
 ## Boundary
 
-P18 measures and tests visual transitions. It does not infer semantic labels from pixels, claim that correlation is causation, or replace the source and result VPMs with an opaque learned representation.
+P18 measures, tests, validates, and governs visual transition hypotheses. It does not infer semantic labels from pixels, claim that correlation is causation, or replace the source and result VPMs with an opaque learned representation.

@@ -1,8 +1,26 @@
-"""ZeroModel perception public API through Stage P18D."""
+"""ZeroModel perception public API through Stage P18E."""
 
 from __future__ import annotations
 
 from ._public_api_p17f import *  # noqa: F401,F403
+from .candidate_promotion import (  # noqa: F401
+    CANDIDATE_PROMOTION_DECISIONS,
+    CANDIDATE_PROMOTION_DECISION_VERSION,
+    CANDIDATE_PROMOTION_MATERIALIZATION_STATUS,
+    CANDIDATE_PROMOTION_PROPOSAL_SET_VERSION,
+    CANDIDATE_PROMOTION_PROPOSAL_STATUS,
+    CANDIDATE_PROMOTION_PROPOSAL_VERSION,
+    CANDIDATE_PROMOTION_REVIEW_STATUSES,
+    CANDIDATE_PROMOTION_REVIEW_VERSION,
+    CANDIDATE_PROMOTION_SEMANTICS,
+    CandidatePromotionDecisionDTO,
+    CandidatePromotionProposalDTO,
+    CandidatePromotionProposalSetDTO,
+    CandidatePromotionReviewDTO,
+    PerceptionCandidatePromotionError,
+    propose_validated_candidate_promotions,
+    review_candidate_promotion_proposals,
+)
 from .candidate_validation import (  # noqa: F401
     CANDIDATE_VALIDATION_EXPECTATION_VERSION,
     CANDIDATE_VALIDATION_FINDING_STATUSES,
@@ -121,7 +139,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18D"
+PERCEPTION_STAGE = "P18E"
 
 __all__ = [
     name

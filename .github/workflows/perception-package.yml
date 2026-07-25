@@ -60,6 +60,17 @@ jobs:
             build/perception-test-results.xml
             build/perception-test-output.log
           if-no-files-found: warn
+      - name: Upload P17 hardening source snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p17-hardening-source
+          path: |
+            packages/core
+            packages/observation
+            packages/perception
+            pyproject.toml
+          if-no-files-found: error
       - name: Verify installed import locations
         run: |
           build/perception-ci-venv/bin/python -c "import inspect, zeromodel, zeromodel.observation, zeromodel.perception; print(inspect.getfile(zeromodel)); print(inspect.getfile(zeromodel.observation)); print(inspect.getfile(zeromodel.perception))"

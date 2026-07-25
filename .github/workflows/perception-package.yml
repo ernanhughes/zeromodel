@@ -79,7 +79,19 @@ jobs:
             | tee build/perception-test-output.log
       - name: Verify installed import locations
         run: |
-          build/perception-ci-venv/bin/python -c "import inspect, zeromodel, zeromodel.observation, zeromodel.perception; print(inspect.getfile(zeromodel)); print(inspect.getfile(zeromodel.observation)); print(inspect.getfile(zeromodel.perception))"
+          build/perception-ci-venv/bin/python - <<'PY'
+          import inspect
+          from pathlib import Path
+
+          import zeromodel.observation
+          import zeromodel.perception
+
+          for module in (zeromodel.observation, zeromodel.perception):
+              path = Path(inspect.getfile(module)).resolve()
+              print(path)
+              if "site-packages" not in path.parts:
+                  raise SystemExit(f"module was not imported from the clean wheel environment: {path}")
+          PY
       - name: Commit verified P17 hardening changes
         shell: bash
         run: |

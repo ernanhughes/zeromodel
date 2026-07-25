@@ -1,10 +1,9 @@
 """Recurrent unexplained transition discovery for Stage P18C.
 
-P18C materializes a declared discovery cohort from immutable P18A transition
-artifacts and P18B conformance reports. It measures recurrence and exact
-co-occurrence of unexplained fields, then emits unvalidated candidate components
-and falsifiable change hypotheses. Recurrence is association evidence, not
-semantic detection, validation, or causal proof.
+P18C aggregates immutable P18A evidence and P18B unexplained findings inside one
+explicit discovery cohort. It produces thresholded, content-addressed candidate
+components and falsifiable change hypotheses. Candidates remain unvalidated
+associations; they are not semantic detections or causal conclusions.
 """
 
 from __future__ import annotations
@@ -26,11 +25,8 @@ TRANSITION_DISCOVERY_OBSERVATION_VERSION: Final = (
 TRANSITION_DISCOVERY_POLICY_VERSION: Final = (
     "perception-transition-discovery-policy/1"
 )
-UNEXPLAINED_FIELD_RECURRENCE_VERSION: Final = (
-    "perception-unexplained-field-recurrence/1"
-)
-UNEXPLAINED_SIGNATURE_RECURRENCE_VERSION: Final = (
-    "perception-unexplained-signature-recurrence/1"
+RECURRENT_UNEXPLAINED_STATISTIC_VERSION: Final = (
+    "perception-recurrent-unexplained-statistic/1"
 )
 MISSING_COMPONENT_CANDIDATE_VERSION: Final = (
     "perception-missing-component-candidate/1"
@@ -46,7 +42,7 @@ TRANSITION_DISCOVERY_REPORT_STATUSES: Final = {
     "no_candidates",
     "candidates_found",
 }
-MISSING_COMPONENT_CANDIDATE_KINDS: Final = {
+RECURRENT_UNEXPLAINED_STATISTIC_KINDS: Final = {
     "field",
     "cooccurrence_signature",
 }
@@ -83,13 +79,30 @@ def _payload(value: object, identity_field: str) -> dict[str, object]:
     return payload
 
 
-def _ordered(name: str, values: tuple[str, ...], *, allow_empty: bool = True) -> None:
+def _ordered_unique(
+    name: str,
+    values: tuple[str, ...],
+    *,
+    allow_empty: bool = True,
+) -> None:
     if not allow_empty and not values:
         raise PerceptionTransitionDiscoveryError(f"{name} must be non-empty")
     if values != tuple(sorted(set(values))):
         raise PerceptionTransitionDiscoveryError(
             f"{name} must be unique and sorted"
         )
+
+
+def _ordered_with_repetition(
+    name: str,
+    values: tuple[str, ...],
+    *,
+    allow_empty: bool = True,
+) -> None:
+    if not allow_empty and not values:
+        raise PerceptionTransitionDiscoveryError(f"{name} must be non-empty")
+    if values != tuple(sorted(values)):
+        raise PerceptionTransitionDiscoveryError(f"{name} must be sorted")
 
 
 def _unit(name: str, value: float) -> None:
@@ -99,7 +112,9 @@ def _unit(name: str, value: float) -> None:
 
 def _positive_int(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise PerceptionTransitionDiscoveryError(f"{name} must be a positive integer")
+        raise PerceptionTransitionDiscoveryError(
+            f"{name} must be a positive integer"
+        )
 
 
 def _same_float(left: float, right: float) -> bool:
@@ -178,7 +193,7 @@ class UnexplainedFieldOccurrenceDTO:
 
 @dataclass(frozen=True)
 class TransitionDiscoveryObservationDTO:
-    """One interaction in an explicit discovery cohort, including empty evidence."""
+    """One interaction in a discovery cohort, including zero-finding controls."""
 
     observation_id: str
     interaction_id: str
@@ -209,7 +224,10 @@ class TransitionDiscoveryObservationDTO:
                 "unexplained fields must be unique and sorted by field_id"
             )
         occurrence_ids = tuple(item.occurrence_id for item in self.unexplained_fields)
-        _ordered("unexplained occurrence identities", occurrence_ids)
+        if len(occurrence_ids) != len(set(occurrence_ids)):
+            raise PerceptionTransitionDiscoveryError(
+                "unexplained occurrence identities must be unique"
+            )
         if self.version != TRANSITION_DISCOVERY_OBSERVATION_VERSION:
             raise PerceptionTransitionDiscoveryError(
                 "unsupported discovery observation version"
@@ -300,7 +318,9 @@ class TransitionDiscoveryObservationDTO:
             "version": TRANSITION_DISCOVERY_OBSERVATION_VERSION,
         }
         identity_values = dict(values)
-        identity_values["unexplained_fields"] = tuple(asdict(item) for item in ordered)
+        identity_values["unexplained_fields"] = tuple(
+            asdict(item) for item in ordered
+        )
         return cls(
             observation_id=_digest(identity_values),
             **values,  # type: ignore[arg-type]
@@ -372,86 +392,9 @@ class TransitionDiscoveryPolicyDTO:
 
 
 @dataclass(frozen=True)
-class UnexplainedFieldRecurrenceDTO:
+class RecurrentUnexplainedStatisticDTO:
     statistic_id: str
-    field_id: str
-    observation_count: int
-    occurrence_count: int
-    recurrence_fraction: float
-    mean_absolute_change: float
-    mean_signed_change: float
-    mean_changed_fraction: float
-    positive_count: int
-    negative_count: int
-    neutral_count: int
-    dominant_direction: str
-    direction_consistency: float
-    supporting_observation_ids: tuple[str, ...]
-    supporting_interaction_ids: tuple[str, ...]
-    supporting_transition_evidence_ids: tuple[str, ...]
-    supporting_conformance_report_ids: tuple[str, ...]
-    supporting_finding_ids: tuple[str, ...]
-    version: str = UNEXPLAINED_FIELD_RECURRENCE_VERSION
-
-    def __post_init__(self) -> None:
-        if not self.statistic_id or not self.field_id:
-            raise PerceptionTransitionDiscoveryError(
-                "field recurrence identities must be non-empty"
-            )
-        _positive_int("observation_count", self.observation_count)
-        _positive_int("occurrence_count", self.occurrence_count)
-        if self.occurrence_count > self.observation_count:
-            raise PerceptionTransitionDiscoveryError(
-                "field occurrence_count exceeds observation_count"
-            )
-        _unit("recurrence_fraction", self.recurrence_fraction)
-        _unit("mean_absolute_change", self.mean_absolute_change)
-        _unit("mean_changed_fraction", self.mean_changed_fraction)
-        _unit("direction_consistency", self.direction_consistency)
-        if not -1.0 <= self.mean_signed_change <= 1.0:
-            raise PerceptionTransitionDiscoveryError(
-                "mean_signed_change must be in [-1, 1]"
-            )
-        if not _same_float(
-            self.recurrence_fraction,
-            self.occurrence_count / self.observation_count,
-        ):
-            raise PerceptionTransitionDiscoveryError(
-                "field recurrence_fraction disagrees with counts"
-            )
-        if self.positive_count + self.negative_count + self.neutral_count != self.occurrence_count:
-            raise PerceptionTransitionDiscoveryError(
-                "field direction counts disagree with occurrence_count"
-            )
-        if self.dominant_direction not in DIRECTION_LABELS:
-            raise PerceptionTransitionDiscoveryError(
-                f"unsupported dominant_direction: {self.dominant_direction}"
-            )
-        for name in (
-            "supporting_observation_ids",
-            "supporting_interaction_ids",
-            "supporting_transition_evidence_ids",
-            "supporting_conformance_report_ids",
-            "supporting_finding_ids",
-        ):
-            _ordered(name, getattr(self, name), allow_empty=False)
-        if len(self.supporting_observation_ids) != self.occurrence_count:
-            raise PerceptionTransitionDiscoveryError(
-                "field supporting observation count disagrees with occurrence_count"
-            )
-        if self.version != UNEXPLAINED_FIELD_RECURRENCE_VERSION:
-            raise PerceptionTransitionDiscoveryError(
-                "unsupported field recurrence version"
-            )
-        if self.statistic_id != _digest(_payload(self, "statistic_id")):
-            raise PerceptionTransitionDiscoveryError(
-                "field recurrence identity disagrees with canonical payload"
-            )
-
-
-@dataclass(frozen=True)
-class UnexplainedSignatureRecurrenceDTO:
-    statistic_id: str
+    statistic_kind: str
     field_ids: tuple[str, ...]
     observation_count: int
     occurrence_count: int
@@ -469,23 +412,31 @@ class UnexplainedSignatureRecurrenceDTO:
     supporting_transition_evidence_ids: tuple[str, ...]
     supporting_conformance_report_ids: tuple[str, ...]
     supporting_finding_ids: tuple[str, ...]
-    version: str = UNEXPLAINED_SIGNATURE_RECURRENCE_VERSION
+    version: str = RECURRENT_UNEXPLAINED_STATISTIC_VERSION
 
     def __post_init__(self) -> None:
         if not self.statistic_id:
             raise PerceptionTransitionDiscoveryError(
-                "signature recurrence identity must be non-empty"
+                "recurrence statistic identity must be non-empty"
             )
-        _ordered("signature field_ids", self.field_ids, allow_empty=False)
-        if len(self.field_ids) < 2:
+        if self.statistic_kind not in RECURRENT_UNEXPLAINED_STATISTIC_KINDS:
             raise PerceptionTransitionDiscoveryError(
-                "signature recurrence requires at least two fields"
+                f"unsupported statistic_kind: {self.statistic_kind}"
+            )
+        _ordered_unique("statistic field_ids", self.field_ids, allow_empty=False)
+        if self.statistic_kind == "field" and len(self.field_ids) != 1:
+            raise PerceptionTransitionDiscoveryError(
+                "field statistics require exactly one field"
+            )
+        if self.statistic_kind == "cooccurrence_signature" and len(self.field_ids) < 2:
+            raise PerceptionTransitionDiscoveryError(
+                "cooccurrence statistics require at least two fields"
             )
         _positive_int("observation_count", self.observation_count)
         _positive_int("occurrence_count", self.occurrence_count)
         if self.occurrence_count > self.observation_count:
             raise PerceptionTransitionDiscoveryError(
-                "signature occurrence_count exceeds observation_count"
+                "occurrence_count exceeds observation_count"
             )
         _unit("recurrence_fraction", self.recurrence_fraction)
         _unit("mean_absolute_change", self.mean_absolute_change)
@@ -500,43 +451,69 @@ class UnexplainedSignatureRecurrenceDTO:
             self.occurrence_count / self.observation_count,
         ):
             raise PerceptionTransitionDiscoveryError(
-                "signature recurrence_fraction disagrees with counts"
+                "recurrence_fraction disagrees with counts"
             )
-        if self.positive_count + self.negative_count + self.neutral_count != self.occurrence_count:
+        if (
+            self.positive_count + self.negative_count + self.neutral_count
+            != self.occurrence_count
+        ):
             raise PerceptionTransitionDiscoveryError(
-                "signature direction counts disagree with occurrence_count"
+                "direction counts disagree with occurrence_count"
             )
         if self.dominant_direction not in DIRECTION_LABELS:
             raise PerceptionTransitionDiscoveryError(
                 f"unsupported dominant_direction: {self.dominant_direction}"
             )
-        for name in (
+        _ordered_unique(
             "supporting_observation_ids",
+            self.supporting_observation_ids,
+            allow_empty=False,
+        )
+        _ordered_unique(
             "supporting_interaction_ids",
+            self.supporting_interaction_ids,
+            allow_empty=False,
+        )
+        _ordered_with_repetition(
             "supporting_transition_evidence_ids",
+            self.supporting_transition_evidence_ids,
+            allow_empty=False,
+        )
+        _ordered_with_repetition(
             "supporting_conformance_report_ids",
+            self.supporting_conformance_report_ids,
+            allow_empty=False,
+        )
+        _ordered_unique(
             "supporting_finding_ids",
+            self.supporting_finding_ids,
+            allow_empty=False,
+        )
+        if not (
+            len(self.supporting_observation_ids)
+            == len(self.supporting_interaction_ids)
+            == len(self.supporting_transition_evidence_ids)
+            == len(self.supporting_conformance_report_ids)
+            == self.occurrence_count
         ):
-            _ordered(name, getattr(self, name), allow_empty=False)
-        if len(self.supporting_observation_ids) != self.occurrence_count:
             raise PerceptionTransitionDiscoveryError(
-                "signature supporting observation count disagrees with occurrence_count"
+                "supporting evidence counts disagree with occurrence_count"
             )
-        if self.version != UNEXPLAINED_SIGNATURE_RECURRENCE_VERSION:
+        if self.version != RECURRENT_UNEXPLAINED_STATISTIC_VERSION:
             raise PerceptionTransitionDiscoveryError(
-                "unsupported signature recurrence version"
+                "unsupported recurrence statistic version"
             )
         if self.statistic_id != _digest(_payload(self, "statistic_id")):
             raise PerceptionTransitionDiscoveryError(
-                "signature recurrence identity disagrees with canonical payload"
+                "recurrence statistic identity disagrees with canonical payload"
             )
 
 
 @dataclass(frozen=True)
 class MissingComponentCandidateDTO:
     candidate_id: str
-    candidate_kind: str
     source_statistic_id: str
+    candidate_kind: str
     field_ids: tuple[str, ...]
     occurrence_count: int
     observation_count: int
@@ -551,13 +528,13 @@ class MissingComponentCandidateDTO:
     def __post_init__(self) -> None:
         if not self.candidate_id or not self.source_statistic_id:
             raise PerceptionTransitionDiscoveryError(
-                "missing-component candidate identities must be non-empty"
+                "candidate identities must be non-empty"
             )
-        if self.candidate_kind not in MISSING_COMPONENT_CANDIDATE_KINDS:
+        if self.candidate_kind not in RECURRENT_UNEXPLAINED_STATISTIC_KINDS:
             raise PerceptionTransitionDiscoveryError(
                 f"unsupported candidate_kind: {self.candidate_kind}"
             )
-        _ordered("candidate field_ids", self.field_ids, allow_empty=False)
+        _ordered_unique("candidate field_ids", self.field_ids, allow_empty=False)
         if self.candidate_kind == "field" and len(self.field_ids) != 1:
             raise PerceptionTransitionDiscoveryError(
                 "field candidates require exactly one field"
@@ -582,18 +559,18 @@ class MissingComponentCandidateDTO:
             raise PerceptionTransitionDiscoveryError(
                 f"unsupported dominant_direction: {self.dominant_direction}"
             )
-        _ordered(
+        _ordered_unique(
             "candidate supporting_observation_ids",
             self.supporting_observation_ids,
             allow_empty=False,
         )
         if len(self.supporting_observation_ids) != self.occurrence_count:
             raise PerceptionTransitionDiscoveryError(
-                "candidate supporting observations disagree with occurrence_count"
+                "candidate support count disagrees with occurrence_count"
             )
         if self.hypothesis_status != MISSING_COMPONENT_HYPOTHESIS_STATUS:
             raise PerceptionTransitionDiscoveryError(
-                "unsupported missing-component hypothesis status"
+                "unsupported candidate hypothesis status"
             )
         if self.version != MISSING_COMPONENT_CANDIDATE_VERSION:
             raise PerceptionTransitionDiscoveryError(
@@ -601,7 +578,7 @@ class MissingComponentCandidateDTO:
             )
         if self.candidate_id != _digest(_payload(self, "candidate_id")):
             raise PerceptionTransitionDiscoveryError(
-                "missing-component candidate identity disagrees with canonical payload"
+                "candidate identity disagrees with canonical payload"
             )
 
 
@@ -616,8 +593,7 @@ class TransitionDiscoveryReportDTO:
     interaction_ids: tuple[str, ...]
     transition_evidence_ids: tuple[str, ...]
     conformance_report_ids: tuple[str, ...]
-    field_statistics: tuple[UnexplainedFieldRecurrenceDTO, ...]
-    signature_statistics: tuple[UnexplainedSignatureRecurrenceDTO, ...]
+    statistics: tuple[RecurrentUnexplainedStatisticDTO, ...]
     candidates: tuple[MissingComponentCandidateDTO, ...]
     semantics: str = TRANSITION_DISCOVERY_SEMANTICS
     version: str = TRANSITION_DISCOVERY_REPORT_VERSION
@@ -625,19 +601,24 @@ class TransitionDiscoveryReportDTO:
     def __post_init__(self) -> None:
         if not all((self.report_id, self.cohort_id, self.field_schema_id, self.policy_id)):
             raise PerceptionTransitionDiscoveryError(
-                "transition discovery report identities must be non-empty"
+                "discovery report identities must be non-empty"
             )
         if self.status not in TRANSITION_DISCOVERY_REPORT_STATUSES:
             raise PerceptionTransitionDiscoveryError(
                 f"unsupported discovery report status: {self.status}"
             )
-        for name in (
-            "observation_ids",
-            "interaction_ids",
+        _ordered_unique("observation_ids", self.observation_ids, allow_empty=False)
+        _ordered_unique("interaction_ids", self.interaction_ids, allow_empty=False)
+        _ordered_with_repetition(
             "transition_evidence_ids",
+            self.transition_evidence_ids,
+            allow_empty=False,
+        )
+        _ordered_with_repetition(
             "conformance_report_ids",
-        ):
-            _ordered(name, getattr(self, name), allow_empty=False)
+            self.conformance_report_ids,
+            allow_empty=False,
+        )
         count = len(self.observation_ids)
         if not (
             len(self.interaction_ids)
@@ -646,31 +627,31 @@ class TransitionDiscoveryReportDTO:
             == count
         ):
             raise PerceptionTransitionDiscoveryError(
-                "report evidence identity counts must match observations"
+                "report evidence counts must match observations"
             )
-        field_statistic_ids = tuple(item.statistic_id for item in self.field_statistics)
-        signature_statistic_ids = tuple(
-            item.statistic_id for item in self.signature_statistics
-        )
+        statistic_ids = tuple(item.statistic_id for item in self.statistics)
         candidate_ids = tuple(item.candidate_id for item in self.candidates)
-        _ordered("field statistic identities", field_statistic_ids)
-        _ordered("signature statistic identities", signature_statistic_ids)
-        _ordered("candidate identities", candidate_ids)
-        expected_status = (
-            "candidates_found" if self.candidates else "no_candidates"
-        )
-        if self.status != "insufficient_evidence" and self.status != expected_status:
-            raise PerceptionTransitionDiscoveryError(
-                "discovery report status disagrees with candidates"
-            )
+        _ordered_unique("statistic identities", statistic_ids)
+        _ordered_unique("candidate identities", candidate_ids)
         if self.status == "insufficient_evidence" and self.candidates:
             raise PerceptionTransitionDiscoveryError(
                 "insufficient-evidence reports cannot contain candidates"
             )
-        known_statistics = set(field_statistic_ids) | set(signature_statistic_ids)
-        if any(item.source_statistic_id not in known_statistics for item in self.candidates):
+        if self.status == "candidates_found" and not self.candidates:
             raise PerceptionTransitionDiscoveryError(
-                "candidate references unknown recurrence statistic"
+                "candidates_found reports require candidates"
+            )
+        if self.status == "no_candidates" and self.candidates:
+            raise PerceptionTransitionDiscoveryError(
+                "no_candidates reports cannot contain candidates"
+            )
+        known_statistics = set(statistic_ids)
+        if any(
+            item.source_statistic_id not in known_statistics
+            for item in self.candidates
+        ):
+            raise PerceptionTransitionDiscoveryError(
+                "candidate references an unknown recurrence statistic"
             )
         if self.semantics != TRANSITION_DISCOVERY_SEMANTICS:
             raise PerceptionTransitionDiscoveryError(
@@ -682,14 +663,14 @@ class TransitionDiscoveryReportDTO:
             )
         if self.report_id != _digest(_payload(self, "report_id")):
             raise PerceptionTransitionDiscoveryError(
-                "transition discovery report identity disagrees with canonical payload"
+                "discovery report identity disagrees with canonical payload"
             )
 
     def candidates_for_kind(
         self,
         candidate_kind: str,
     ) -> tuple[MissingComponentCandidateDTO, ...]:
-        if candidate_kind not in MISSING_COMPONENT_CANDIDATE_KINDS:
+        if candidate_kind not in RECURRENT_UNEXPLAINED_STATISTIC_KINDS:
             raise PerceptionTransitionDiscoveryError(
                 f"unsupported candidate_kind: {candidate_kind}"
             )
@@ -698,159 +679,72 @@ class TransitionDiscoveryReportDTO:
         )
 
 
-def _direction_counts(
-    signed_values: tuple[float, ...],
+def _direction_summary(
+    values: tuple[float, ...],
     epsilon: float,
 ) -> tuple[int, int, int, str, float]:
-    positive = sum(value > epsilon for value in signed_values)
-    negative = sum(value < -epsilon for value in signed_values)
-    neutral = len(signed_values) - positive - negative
+    positive = sum(item > epsilon for item in values)
+    negative = sum(item < -epsilon for item in values)
+    neutral = len(values) - positive - negative
     counts = {"positive": positive, "negative": negative, "neutral": neutral}
     maximum = max(counts.values())
     leaders = tuple(sorted(name for name, count in counts.items() if count == maximum))
     dominant = leaders[0] if len(leaders) == 1 else "mixed"
-    return positive, negative, neutral, dominant, maximum / len(signed_values)
+    return positive, negative, neutral, dominant, maximum / len(values)
 
 
-def _aggregate_occurrence_groups(
-    groups: tuple[tuple[UnexplainedFieldOccurrenceDTO, ...], ...],
-    epsilon: float,
-) -> tuple[float, float, float, int, int, int, str, float]:
-    total_values = 0
-    absolute_total = 0.0
-    signed_total = 0.0
-    changed_values = 0
-    per_observation_signed: list[float] = []
-    for group in groups:
-        group_total = sum(item.total_value_count for item in group)
-        if group_total <= 0:
-            raise PerceptionTransitionDiscoveryError(
-                "recurrence evidence group has no measurable values"
-            )
-        total_values += group_total
-        absolute_total += sum(
-            item.mean_absolute_change * item.total_value_count for item in group
-        )
-        signed_value = sum(
-            item.mean_signed_change * item.total_value_count for item in group
-        ) / group_total
-        signed_total += signed_value * group_total
-        changed_values += sum(item.changed_value_count for item in group)
-        per_observation_signed.append(signed_value)
-    positive, negative, neutral, dominant, consistency = _direction_counts(
-        tuple(per_observation_signed),
-        epsilon,
-    )
-    return (
-        absolute_total / total_values,
-        signed_total / total_values,
-        changed_values / total_values,
-        positive,
-        negative,
-        neutral,
-        dominant,
-        consistency,
-    )
-
-
-def _support_values(
-    observations: tuple[TransitionDiscoveryObservationDTO, ...],
-    field_ids: tuple[str, ...],
-) -> tuple[
-    tuple[tuple[UnexplainedFieldOccurrenceDTO, ...], ...],
-    tuple[str, ...],
-    tuple[str, ...],
-    tuple[str, ...],
-    tuple[str, ...],
-    tuple[str, ...],
-]:
-    field_set = set(field_ids)
-    groups: list[tuple[UnexplainedFieldOccurrenceDTO, ...]] = []
-    selected: list[TransitionDiscoveryObservationDTO] = []
-    finding_ids: set[str] = set()
-    for observation in observations:
-        matches = tuple(
-            item for item in observation.unexplained_fields if item.field_id in field_set
-        )
-        if len(matches) != len(field_ids):
-            continue
-        groups.append(matches)
-        selected.append(observation)
-        finding_ids.update(item.finding_id for item in matches)
-    return (
-        tuple(groups),
-        tuple(sorted(item.observation_id for item in selected)),
-        tuple(sorted(item.interaction_id for item in selected)),
-        tuple(sorted(item.transition_evidence_id for item in selected)),
-        tuple(sorted(item.conformance_report_id for item in selected)),
-        tuple(sorted(finding_ids)),
-    )
-
-
-def _field_statistic(
-    field_id: str,
-    observations: tuple[TransitionDiscoveryObservationDTO, ...],
-    policy: TransitionDiscoveryPolicyDTO,
-) -> UnexplainedFieldRecurrenceDTO:
-    groups, observation_ids, interaction_ids, transition_ids, report_ids, finding_ids = (
-        _support_values(observations, (field_id,))
-    )
-    metrics = _aggregate_occurrence_groups(groups, policy.direction_epsilon)
-    values: dict[str, object] = {
-        "field_id": field_id,
-        "observation_count": len(observations),
-        "occurrence_count": len(groups),
-        "recurrence_fraction": len(groups) / len(observations),
-        "mean_absolute_change": metrics[0],
-        "mean_signed_change": metrics[1],
-        "mean_changed_fraction": metrics[2],
-        "positive_count": metrics[3],
-        "negative_count": metrics[4],
-        "neutral_count": metrics[5],
-        "dominant_direction": metrics[6],
-        "direction_consistency": metrics[7],
-        "supporting_observation_ids": observation_ids,
-        "supporting_interaction_ids": interaction_ids,
-        "supporting_transition_evidence_ids": transition_ids,
-        "supporting_conformance_report_ids": report_ids,
-        "supporting_finding_ids": finding_ids,
-        "version": UNEXPLAINED_FIELD_RECURRENCE_VERSION,
-    }
-    return UnexplainedFieldRecurrenceDTO(
-        statistic_id=_digest(values), **values  # type: ignore[arg-type]
-    )
-
-
-def _signature_statistic(
+def _build_statistic(
+    *,
+    statistic_kind: str,
     field_ids: tuple[str, ...],
     supporting: tuple[TransitionDiscoveryObservationDTO, ...],
     observation_count: int,
     policy: TransitionDiscoveryPolicyDTO,
-) -> UnexplainedSignatureRecurrenceDTO:
-    groups = tuple(item.unexplained_fields for item in supporting)
-    metrics = _aggregate_occurrence_groups(groups, policy.direction_epsilon)
-    finding_ids = tuple(
-        sorted(
-            {
-                occurrence.finding_id
-                for observation in supporting
-                for occurrence in observation.unexplained_fields
-            }
+) -> RecurrentUnexplainedStatisticDTO:
+    field_set = set(field_ids)
+    total_values = 0
+    absolute_total = 0.0
+    signed_total = 0.0
+    changed_values = 0
+    observation_signed: list[float] = []
+    finding_ids: set[str] = set()
+    for observation in supporting:
+        occurrences = tuple(
+            item for item in observation.unexplained_fields if item.field_id in field_set
         )
-    )
+        if len(occurrences) != len(field_ids):
+            raise PerceptionTransitionDiscoveryError(
+                "supporting observation does not contain every statistic field"
+            )
+        group_values = sum(item.total_value_count for item in occurrences)
+        group_signed = sum(
+            item.mean_signed_change * item.total_value_count
+            for item in occurrences
+        ) / group_values
+        total_values += group_values
+        absolute_total += sum(
+            item.mean_absolute_change * item.total_value_count
+            for item in occurrences
+        )
+        signed_total += group_signed * group_values
+        changed_values += sum(item.changed_value_count for item in occurrences)
+        observation_signed.append(group_signed)
+        finding_ids.update(item.finding_id for item in occurrences)
+    direction = _direction_summary(tuple(observation_signed), policy.direction_epsilon)
     values: dict[str, object] = {
+        "statistic_kind": statistic_kind,
         "field_ids": field_ids,
         "observation_count": observation_count,
         "occurrence_count": len(supporting),
         "recurrence_fraction": len(supporting) / observation_count,
-        "mean_absolute_change": metrics[0],
-        "mean_signed_change": metrics[1],
-        "mean_changed_fraction": metrics[2],
-        "positive_count": metrics[3],
-        "negative_count": metrics[4],
-        "neutral_count": metrics[5],
-        "dominant_direction": metrics[6],
-        "direction_consistency": metrics[7],
+        "mean_absolute_change": absolute_total / total_values,
+        "mean_signed_change": signed_total / total_values,
+        "mean_changed_fraction": changed_values / total_values,
+        "positive_count": direction[0],
+        "negative_count": direction[1],
+        "neutral_count": direction[2],
+        "dominant_direction": direction[3],
+        "direction_consistency": direction[4],
         "supporting_observation_ids": tuple(
             sorted(item.observation_id for item in supporting)
         ),
@@ -863,61 +757,49 @@ def _signature_statistic(
         "supporting_conformance_report_ids": tuple(
             sorted(item.conformance_report_id for item in supporting)
         ),
-        "supporting_finding_ids": finding_ids,
-        "version": UNEXPLAINED_SIGNATURE_RECURRENCE_VERSION,
+        "supporting_finding_ids": tuple(sorted(finding_ids)),
+        "version": RECURRENT_UNEXPLAINED_STATISTIC_VERSION,
     }
-    return UnexplainedSignatureRecurrenceDTO(
-        statistic_id=_digest(values), **values  # type: ignore[arg-type]
+    return RecurrentUnexplainedStatisticDTO(
+        statistic_id=_digest(values),
+        **values,  # type: ignore[arg-type]
     )
 
 
 def _proposed_change(
-    dominant_direction: str,
-    direction_consistency: float,
+    statistic: RecurrentUnexplainedStatisticDTO,
     policy: TransitionDiscoveryPolicyDTO,
 ) -> str:
-    if direction_consistency < policy.minimum_direction_consistency:
+    if statistic.direction_consistency < policy.minimum_direction_consistency:
         return "change"
-    if dominant_direction == "positive":
+    if statistic.dominant_direction == "positive":
         return "increase"
-    if dominant_direction == "negative":
+    if statistic.dominant_direction == "negative":
         return "decrease"
     return "change"
 
 
 def _candidate(
-    *,
-    candidate_kind: str,
-    source_statistic_id: str,
-    field_ids: tuple[str, ...],
-    occurrence_count: int,
-    observation_count: int,
-    recurrence_fraction: float,
-    dominant_direction: str,
-    direction_consistency: float,
-    supporting_observation_ids: tuple[str, ...],
+    statistic: RecurrentUnexplainedStatisticDTO,
     policy: TransitionDiscoveryPolicyDTO,
 ) -> MissingComponentCandidateDTO:
     values: dict[str, object] = {
-        "candidate_kind": candidate_kind,
-        "source_statistic_id": source_statistic_id,
-        "field_ids": field_ids,
-        "occurrence_count": occurrence_count,
-        "observation_count": observation_count,
-        "recurrence_fraction": recurrence_fraction,
-        "proposed_expected_change": _proposed_change(
-            dominant_direction,
-            direction_consistency,
-            policy,
-        ),
-        "dominant_direction": dominant_direction,
-        "direction_consistency": direction_consistency,
-        "supporting_observation_ids": supporting_observation_ids,
+        "source_statistic_id": statistic.statistic_id,
+        "candidate_kind": statistic.statistic_kind,
+        "field_ids": statistic.field_ids,
+        "occurrence_count": statistic.occurrence_count,
+        "observation_count": statistic.observation_count,
+        "recurrence_fraction": statistic.recurrence_fraction,
+        "proposed_expected_change": _proposed_change(statistic, policy),
+        "dominant_direction": statistic.dominant_direction,
+        "direction_consistency": statistic.direction_consistency,
+        "supporting_observation_ids": statistic.supporting_observation_ids,
         "hypothesis_status": MISSING_COMPONENT_HYPOTHESIS_STATUS,
         "version": MISSING_COMPONENT_CANDIDATE_VERSION,
     }
     return MissingComponentCandidateDTO(
-        candidate_id=_digest(values), **values  # type: ignore[arg-type]
+        candidate_id=_digest(values),
+        **values,  # type: ignore[arg-type]
     )
 
 
@@ -932,25 +814,13 @@ def discover_recurrent_unexplained_transitions(
             "transition discovery requires at least one observation"
         )
     resolved = policy or TransitionDiscoveryPolicyDTO.create()
-    observation_map = {item.observation_id: item for item in observations}
-    interaction_map = {item.interaction_id: item for item in observations}
-    transition_map = {item.transition_evidence_id: item for item in observations}
-    report_map = {item.conformance_report_id: item for item in observations}
-    if len(observation_map) != len(observations):
+    if len({item.observation_id for item in observations}) != len(observations):
         raise PerceptionTransitionDiscoveryError(
             "discovery observations must have unique identities"
         )
-    if len(interaction_map) != len(observations):
+    if len({item.interaction_id for item in observations}) != len(observations):
         raise PerceptionTransitionDiscoveryError(
             "discovery interactions must have unique identities"
-        )
-    if len(transition_map) != len(observations):
-        raise PerceptionTransitionDiscoveryError(
-            "discovery transitions must have unique identities"
-        )
-    if len(report_map) != len(observations):
-        raise PerceptionTransitionDiscoveryError(
-            "discovery conformance reports must have unique identities"
         )
     cohort_ids = {item.cohort_id for item in observations}
     schema_ids = {item.field_schema_id for item in observations}
@@ -962,98 +832,75 @@ def discover_recurrent_unexplained_transitions(
         raise PerceptionTransitionDiscoveryError(
             "discovery observations must use one field schema"
         )
-    ordered_observations = tuple(
-        sorted(observations, key=lambda item: item.observation_id)
-    )
+    ordered = tuple(sorted(observations, key=lambda item: item.observation_id))
     all_field_ids = tuple(
         sorted(
             {
                 occurrence.field_id
-                for observation in ordered_observations
+                for observation in ordered
                 for occurrence in observation.unexplained_fields
             }
         )
     )
-    field_statistics = tuple(
+    statistics: list[RecurrentUnexplainedStatisticDTO] = []
+    for field_id in all_field_ids:
+        supporting = tuple(
+            item for item in ordered if field_id in item.unexplained_field_ids
+        )
+        statistics.append(
+            _build_statistic(
+                statistic_kind="field",
+                field_ids=(field_id,),
+                supporting=supporting,
+                observation_count=len(ordered),
+                policy=resolved,
+            )
+        )
+    signatures = tuple(
         sorted(
-            (
-                _field_statistic(field_id, ordered_observations, resolved)
-                for field_id in all_field_ids
-            ),
-            key=lambda item: item.statistic_id,
+            {
+                item.unexplained_field_ids
+                for item in ordered
+                if len(item.unexplained_field_ids) >= 2
+            }
         )
     )
-    signature_support: dict[
-        tuple[str, ...], list[TransitionDiscoveryObservationDTO]
-    ] = {}
-    for observation in ordered_observations:
-        signature = observation.unexplained_field_ids
-        if len(signature) >= 2:
-            signature_support.setdefault(signature, []).append(observation)
-    signature_statistics = tuple(
-        sorted(
-            (
-                _signature_statistic(
-                    signature,
-                    tuple(supporting),
-                    len(ordered_observations),
-                    resolved,
-                )
-                for signature, supporting in signature_support.items()
-            ),
-            key=lambda item: item.statistic_id,
+    for signature in signatures:
+        supporting = tuple(
+            item for item in ordered if item.unexplained_field_ids == signature
         )
+        statistics.append(
+            _build_statistic(
+                statistic_kind="cooccurrence_signature",
+                field_ids=signature,
+                supporting=supporting,
+                observation_count=len(ordered),
+                policy=resolved,
+            )
+        )
+    ordered_statistics = tuple(
+        sorted(statistics, key=lambda item: item.statistic_id)
     )
-
+    evidence_ready = len(ordered) >= resolved.minimum_observation_count
     candidates: list[MissingComponentCandidateDTO] = []
-    evidence_ready = len(ordered_observations) >= resolved.minimum_observation_count
     if evidence_ready:
-        for statistic in field_statistics:
-            if (
-                statistic.occurrence_count
-                >= resolved.minimum_field_occurrence_count
-                and statistic.recurrence_fraction
-                >= resolved.minimum_field_recurrence_fraction
-            ):
-                candidates.append(
-                    _candidate(
-                        candidate_kind="field",
-                        source_statistic_id=statistic.statistic_id,
-                        field_ids=(statistic.field_id,),
-                        occurrence_count=statistic.occurrence_count,
-                        observation_count=statistic.observation_count,
-                        recurrence_fraction=statistic.recurrence_fraction,
-                        dominant_direction=statistic.dominant_direction,
-                        direction_consistency=statistic.direction_consistency,
-                        supporting_observation_ids=(
-                            statistic.supporting_observation_ids
-                        ),
-                        policy=resolved,
-                    )
+        for statistic in ordered_statistics:
+            if statistic.statistic_kind == "field":
+                qualifies = (
+                    statistic.occurrence_count
+                    >= resolved.minimum_field_occurrence_count
+                    and statistic.recurrence_fraction
+                    >= resolved.minimum_field_recurrence_fraction
                 )
-        for statistic in signature_statistics:
-            if (
-                statistic.occurrence_count
-                >= resolved.minimum_signature_occurrence_count
-                and statistic.recurrence_fraction
-                >= resolved.minimum_signature_recurrence_fraction
-            ):
-                candidates.append(
-                    _candidate(
-                        candidate_kind="cooccurrence_signature",
-                        source_statistic_id=statistic.statistic_id,
-                        field_ids=statistic.field_ids,
-                        occurrence_count=statistic.occurrence_count,
-                        observation_count=statistic.observation_count,
-                        recurrence_fraction=statistic.recurrence_fraction,
-                        dominant_direction=statistic.dominant_direction,
-                        direction_consistency=statistic.direction_consistency,
-                        supporting_observation_ids=(
-                            statistic.supporting_observation_ids
-                        ),
-                        policy=resolved,
-                    )
+            else:
+                qualifies = (
+                    statistic.occurrence_count
+                    >= resolved.minimum_signature_occurrence_count
+                    and statistic.recurrence_fraction
+                    >= resolved.minimum_signature_recurrence_fraction
                 )
+            if qualifies:
+                candidates.append(_candidate(statistic, resolved))
     ordered_candidates = tuple(sorted(candidates, key=lambda item: item.candidate_id))
     if not evidence_ready:
         status = "insufficient_evidence"
@@ -1066,24 +913,26 @@ def discover_recurrent_unexplained_transitions(
         "cohort_id": next(iter(cohort_ids)),
         "field_schema_id": next(iter(schema_ids)),
         "policy_id": resolved.policy_id,
-        "observation_ids": tuple(sorted(observation_map)),
-        "interaction_ids": tuple(sorted(interaction_map)),
-        "transition_evidence_ids": tuple(sorted(transition_map)),
-        "conformance_report_ids": tuple(sorted(report_map)),
-        "field_statistics": field_statistics,
-        "signature_statistics": signature_statistics,
+        "observation_ids": tuple(sorted(item.observation_id for item in ordered)),
+        "interaction_ids": tuple(sorted(item.interaction_id for item in ordered)),
+        "transition_evidence_ids": tuple(
+            sorted(item.transition_evidence_id for item in ordered)
+        ),
+        "conformance_report_ids": tuple(
+            sorted(item.conformance_report_id for item in ordered)
+        ),
+        "statistics": ordered_statistics,
         "candidates": ordered_candidates,
         "semantics": TRANSITION_DISCOVERY_SEMANTICS,
         "version": TRANSITION_DISCOVERY_REPORT_VERSION,
     }
     identity_values = dict(values)
-    identity_values["field_statistics"] = tuple(
-        asdict(item) for item in field_statistics
+    identity_values["statistics"] = tuple(
+        asdict(item) for item in ordered_statistics
     )
-    identity_values["signature_statistics"] = tuple(
-        asdict(item) for item in signature_statistics
+    identity_values["candidates"] = tuple(
+        asdict(item) for item in ordered_candidates
     )
-    identity_values["candidates"] = tuple(asdict(item) for item in ordered_candidates)
     return TransitionDiscoveryReportDTO(
         report_id=_digest(identity_values),
         **values,  # type: ignore[arg-type]

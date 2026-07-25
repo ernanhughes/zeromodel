@@ -50,6 +50,10 @@ _STAGE6_MATERIALIZATION_TEST_MODULES = {
     "test_video_provider_observation_boundary",
 }
 _STAGE6_PLAN_CACHE: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+_ORCHESTRATION_RUNTIME_DOUBLE_TESTS = {
+    "test_build_split_writes_overlap_and_observation_manifests",
+    "test_instrument_audits_and_verification",
+}
 
 
 def _stage6_plan_cache_key(
@@ -107,16 +111,17 @@ def cache_stage6_materialization_plans(request: pytest.FixtureRequest):
 
 
 @pytest.fixture(autouse=True)
-def isolate_video_action_set_manifest_test(
+def isolate_video_action_set_orchestration_tests(
     request: pytest.FixtureRequest,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    """Keep the manifest unit test outside the durable SQL ownership boundary."""
-    if request.node.name != "test_build_split_writes_overlap_and_observation_manifests":
+    """Keep synthetic research tests outside durable SQL ownership checks."""
+    if request.node.name not in _ORCHESTRATION_RUNTIME_DOUBLE_TESTS:
         yield
         return
 
     import research.benchmarks.video_action_set_benchmark as benchmark
+    from zeromodel.video.domains.video_action_set.dto import SealedSplitPlanDTO
 
     stored_records: list[dict[str, Any]] = []
 
@@ -126,6 +131,17 @@ def isolate_video_action_set_manifest_test(
 
         def save_episode_plans(self, plans: Any) -> Any:
             return plans
+
+        def seal_final_split(
+            self,
+            *,
+            episodes: Any,
+            seed_commitment: str,
+        ) -> SealedSplitPlanDTO:
+            return SealedSplitPlanDTO.build_final(
+                episodes=episodes,
+                seed_commitment=seed_commitment,
+            )
 
         def save_observation_records(self, records: Any) -> Any:
             stored_records[:] = list(records)

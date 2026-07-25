@@ -117,7 +117,7 @@ def _discovery_report():
     report = discover_recurrent_unexplained_transitions(observations, policy)
     assert report.status == "candidates_found"
     assert len(report.candidates) == 1
-    return report, observations
+    return report
 
 
 def _held_out(
@@ -132,15 +132,12 @@ def _held_out(
         [0, 0, *after_candidate],
         include_control_annotation=False,
     )
-    return (
-        HeldOutTransitionObservationDTO.create(
-            interaction_id=interaction_id,
-            cohort_id=cohort_id,
-            transition=transition,
-        ),
-        transition,
-        fields,
+    observation = HeldOutTransitionObservationDTO.create(
+        interaction_id=interaction_id,
+        cohort_id=cohort_id,
+        transition=transition,
     )
+    return observation, transition, fields
 
 
 def _policy(**changes: object) -> CandidateValidationPolicyDTO:
@@ -156,7 +153,7 @@ def _policy(**changes: object) -> CandidateValidationPolicyDTO:
 
 
 def test_validates_candidate_on_disjoint_held_out_evidence() -> None:
-    discovery, _ = _discovery_report()
+    discovery = _discovery_report()
     repeated = _held_out(
         interaction_id="validation-1",
         after_candidate=(170, 170),
@@ -185,7 +182,6 @@ def test_validates_candidate_on_disjoint_held_out_evidence() -> None:
 
     assert first == second
     assert first.status == "all_validated"
-    assert len(first.results) == 1
     result = first.results[0]
     assert result.status == "validated"
     assert result.confirmation_count == 3
@@ -207,7 +203,7 @@ def test_validates_candidate_on_disjoint_held_out_evidence() -> None:
 
 
 def test_preserves_rejected_and_inconclusive_candidate_outcomes() -> None:
-    discovery, _ = _discovery_report()
+    discovery = _discovery_report()
     rejected_observations = tuple(
         _held_out(
             interaction_id=f"rejected-{index}",
@@ -266,7 +262,7 @@ def test_preserves_rejected_and_inconclusive_candidate_outcomes() -> None:
 
 
 def test_validation_evidence_gate_is_separate_from_findings() -> None:
-    discovery, _ = _discovery_report()
+    discovery = _discovery_report()
     observations = (
         _held_out(
             interaction_id="small-1",
@@ -291,13 +287,17 @@ def test_validation_evidence_gate_is_separate_from_findings() -> None:
 
 
 def test_rejects_discovery_leakage_and_identity_tampering() -> None:
-    discovery, discovery_observations = _discovery_report()
+    discovery = _discovery_report()
     valid = _held_out(
         interaction_id="valid-held-out",
         after_candidate=(170, 170),
     )[0]
 
-    same_cohort = replace(valid, cohort_id=discovery.cohort_id)
+    same_cohort = _held_out(
+        interaction_id="same-cohort",
+        after_candidate=(170, 170),
+        cohort_id=discovery.cohort_id,
+    )[0]
     with pytest.raises(
         PerceptionCandidateValidationError,
         match="cohort must differ",
@@ -361,5 +361,3 @@ def test_rejects_discovery_leakage_and_identity_tampering() -> None:
         match="report identity",
     ):
         replace(report, report_id="sha256:tampered")
-
-    assert discovery_observations

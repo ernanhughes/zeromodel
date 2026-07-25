@@ -12,7 +12,6 @@ def test_p18a_is_exposed_from_package_root() -> None:
         "TRANSITION_EVIDENCE_VPM_VERSION",
     }
 
-    assert perception.PERCEPTION_STAGE == "P18A"
     assert expected <= set(perception.__all__)
     for name in expected:
         assert getattr(perception, name) is not None

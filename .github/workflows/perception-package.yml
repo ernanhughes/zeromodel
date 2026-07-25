@@ -46,7 +46,32 @@ jobs:
           build/perception-ci-venv/bin/python -m pip install packages/perception/dist/*.whl
           build/perception-ci-venv/bin/python -m pip check
       - name: Run perception package tests
-        run: build/perception-ci-venv/bin/python -m pytest -q packages/perception/tests
+        run: |
+          set -o pipefail
+          build/perception-ci-venv/bin/python -m pytest -q packages/perception/tests \
+            --junitxml=build/perception-test-results.xml \
+            | tee build/perception-test-output.log
       - name: Verify installed import locations
         run: |
-          build/perception-ci-venv/bin/python -c "import inspect, zeromodel, zeromodel.observation, zeromodel.perception; print(inspect.getfile(zeromodel)); print(inspect.getfile(zeromodel.observation)); print(inspect.getfile(zeromodel.perception))"
+          build/perception-ci-venv/bin/python - <<'PY'
+          import inspect
+          from pathlib import Path
+
+          import zeromodel.observation
+          import zeromodel.perception
+
+          for module in (zeromodel.observation, zeromodel.perception):
+              path = Path(inspect.getfile(module)).resolve()
+              print(path)
+              if "site-packages" not in path.parts:
+                  raise SystemExit(f"module was not imported from the clean wheel environment: {path}")
+          PY
+      - name: Upload perception test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perception-test-diagnostics
+          path: |
+            build/perception-test-results.xml
+            build/perception-test-output.log
+          if-no-files-found: warn

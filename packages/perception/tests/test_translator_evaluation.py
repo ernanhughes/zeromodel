@@ -37,8 +37,10 @@ def _fixture():
     sources = [encode_source_array(array, spec) for array in arrays]
     interactions = [
         RecordedInteractionDTO.from_vpms(
-            sequence_id="evaluation",
-            step_index=index,
+            sequence_id=(
+                "evaluation-train" if index < 4 else "evaluation-validation"
+            ),
+            step_index=index if index < 4 else index - 4,
             source=source,
             target=encode_discrete_action(label, actions),
         )
@@ -52,7 +54,11 @@ def _fixture():
     assignments = tuple(
         SplitAssignmentDTO(
             interaction_id=item.interaction_id,
-            split="train" if item.step_index < 4 else "validation",
+            split=(
+                "train"
+                if item.sequence_id == "evaluation-train"
+                else "validation"
+            ),
         )
         for item in ordered
     )

@@ -299,6 +299,7 @@ def test_full_pipeline_survives_sqlite_restart_and_preserves_lineage(tmp_path) -
             policy=OperationalDriftPolicyDTO(
                 minimum_reference_count=1,
                 minimum_inference_count=1,
+                minimum_action_distribution_count=1,
                 minimum_labeled_count=1,
                 minimum_accepted_labeled_count=1,
                 minimum_label_coverage=1.0,

@@ -81,6 +81,7 @@ def _small_policy(**changes: object) -> OperationalDriftPolicyDTO:
     values: dict[str, object] = {
         "minimum_reference_count": 4,
         "minimum_inference_count": 2,
+        "minimum_action_distribution_count": 4,
         "minimum_labeled_count": 2,
         "minimum_accepted_labeled_count": 2,
         "minimum_label_coverage": 1.0,
@@ -139,7 +140,7 @@ def test_health_reports_insufficient_accuracy_evidence_without_labels() -> None:
     assert tuple(item.status for item in report.findings[:3]) == (
         "healthy",
         "healthy",
-        "healthy",
+        "insufficient_evidence",
     )
     assert report.findings[3].status == "insufficient_evidence"
     assert report.findings[4].status == "insufficient_evidence"
@@ -229,6 +230,7 @@ def test_healthy_window_preserves_exact_evidence_ids() -> None:
             maximum_action_distribution_distance=0.3,
             maximum_raw_accuracy_drop=0.3,
             maximum_accepted_accuracy_drop=0.3,
+            minimum_action_distribution_count=2,
         ),
     )
 

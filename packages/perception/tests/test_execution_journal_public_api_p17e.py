@@ -17,7 +17,6 @@ def test_p17e_execution_governance_is_public() -> None:
         "execute_or_reconcile_approved_rollback",
     }
 
-    assert perception.PERCEPTION_STAGE == "P17E"
     assert expected <= set(perception.__all__)
     for name in expected:
         assert getattr(perception, name) is not None

@@ -29,7 +29,16 @@ def _json(value: object) -> str:
 
 
 def _assessment(payload: dict[str, object]) -> RollbackCompatibilityAssessmentDTO:
-    return RollbackCompatibilityAssessmentDTO(**payload)  # type: ignore[arg-type]
+    normalized = dict(payload)
+    mismatched_fields = normalized.get("mismatched_fields")
+    if not isinstance(mismatched_fields, (list, tuple)) or not all(
+        isinstance(item, str) for item in mismatched_fields
+    ):
+        raise PerceptionSqlGovernanceError(
+            "rollback assessment mismatched_fields must be a string sequence"
+        )
+    normalized["mismatched_fields"] = tuple(mismatched_fields)
+    return RollbackCompatibilityAssessmentDTO(**normalized)  # type: ignore[arg-type]
 
 
 def _recommendation(payload: dict[str, object]) -> OperationalRecommendationDTO:

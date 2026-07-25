@@ -175,7 +175,7 @@ def test_approved_recommendation_is_rejected_after_pointer_revision_changes() ->
         reason="state changed before execution",
     )
 
-    with pytest.raises(PerceptionOperationalDispositionError, match="pointer revision"):
+    with pytest.raises(PerceptionOperationalDispositionError, match="pointer identity"):
         execute_approved_rollback(
             store,
             recommendation,

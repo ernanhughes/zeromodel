@@ -218,7 +218,7 @@ def test_unrelated_pointer_movement_is_not_misread_as_recovery(tmp_path) -> None
         )
         with pytest.raises(
             PerceptionGovernedExecutionError,
-            match="neither reviewed pre-state nor exact rollback post-state",
+            match="active pointer does not contain the reviewed rollback result",
         ):
             execute_or_reconcile_approved_rollback(
                 lifecycle,

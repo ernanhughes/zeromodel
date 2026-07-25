@@ -1,4 +1,4 @@
-"""ZeroModel perception public API through Stage P18E."""
+"""ZeroModel perception public API through Stage P18F."""
 
 from __future__ import annotations
 
@@ -68,6 +68,28 @@ from .governance_gate import (  # noqa: F401
     PerceptionGovernanceExecutionGateError,
     authorize_governance_execution,
     execute_audit_gated_approved_rollback,
+)
+from .promotion_materialization import (  # noqa: F401
+    MATERIALIZED_PROMOTION_CHANGE_VERSION,
+    PROMOTION_MATERIALIZATION_ACTIVATION_STATUS,
+    PROMOTION_MATERIALIZATION_BASELINE_VERSION,
+    PROMOTION_MATERIALIZATION_CHANGE_SET_STATUSES,
+    PROMOTION_MATERIALIZATION_CHANGE_SET_VERSION,
+    PROMOTION_MATERIALIZATION_DIRECTIONS,
+    PROMOTION_MATERIALIZATION_DIRECTIVE_VERSION,
+    PROMOTION_MATERIALIZATION_ITEM_STATUS,
+    PROMOTION_MATERIALIZATION_OBJECT_KINDS,
+    PROMOTION_MATERIALIZATION_OPERATION_ACTIONS,
+    PROMOTION_MATERIALIZATION_OPERATION_VERSION,
+    PROMOTION_MATERIALIZATION_SEMANTICS,
+    PROMOTION_MATERIALIZATION_TARGET_KINDS,
+    MaterializedPromotionChangeDTO,
+    PerceptionPromotionMaterializationError,
+    PromotionMaterializationBaselineDTO,
+    PromotionMaterializationChangeSetDTO,
+    PromotionMaterializationDirectiveDTO,
+    PromotionMaterializationOperationDTO,
+    materialize_approved_candidate_promotions,
 )
 from .sql_admission import (  # noqa: F401
     SQL_ADMISSION_SCHEMA_VERSION,
@@ -139,7 +161,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18E"
+PERCEPTION_STAGE = "P18F"
 
 __all__ = [
     name

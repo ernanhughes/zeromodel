@@ -1,4 +1,4 @@
-"""ZeroModel perception public API through Stage P18B."""
+"""ZeroModel perception public API through Stage P18C."""
 
 from __future__ import annotations
 
@@ -65,6 +65,28 @@ from .transition_conformance import (  # noqa: F401
     TransitionExpectationDTO,
     evaluate_transition_conformance,
 )
+from .transition_discovery import (  # noqa: F401
+    DIRECTION_LABELS,
+    MISSING_COMPONENT_CANDIDATE_VERSION,
+    MISSING_COMPONENT_HYPOTHESIS_STATUS,
+    PROPOSED_CHANGE_KINDS,
+    RECURRENT_UNEXPLAINED_STATISTIC_KINDS,
+    RECURRENT_UNEXPLAINED_STATISTIC_VERSION,
+    TRANSITION_DISCOVERY_OBSERVATION_VERSION,
+    TRANSITION_DISCOVERY_POLICY_VERSION,
+    TRANSITION_DISCOVERY_REPORT_STATUSES,
+    TRANSITION_DISCOVERY_REPORT_VERSION,
+    TRANSITION_DISCOVERY_SEMANTICS,
+    UNEXPLAINED_FIELD_OCCURRENCE_VERSION,
+    MissingComponentCandidateDTO,
+    PerceptionTransitionDiscoveryError,
+    RecurrentUnexplainedStatisticDTO,
+    TransitionDiscoveryObservationDTO,
+    TransitionDiscoveryPolicyDTO,
+    TransitionDiscoveryReportDTO,
+    UnexplainedFieldOccurrenceDTO,
+    discover_recurrent_unexplained_transitions,
+)
 from .transition_evidence import (  # noqa: F401
     TRANSITION_CHANGED_FRACTION_SEMANTICS,
     TRANSITION_CHANGE_SEMANTICS,
@@ -79,7 +101,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18B"
+PERCEPTION_STAGE = "P18C"
 
 __all__ = [
     name

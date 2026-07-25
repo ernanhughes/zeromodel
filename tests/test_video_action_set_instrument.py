@@ -59,10 +59,12 @@ def _fake_provider_rows() -> list[dict[str, object]]:
     ]
 
 
-def test_instrument_audits_and_verification(tmp_path: Path) -> None:
+def test_instrument_audits_and_verification(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     benchmark.freeze_benchmark(tmp_path, REPO_ROOT)
     fake_provider_rows = _fake_provider_rows()
-    monkeypatch = pytest.MonkeyPatch()
     fake_records = [
         {
             "split": "development",
@@ -97,47 +99,50 @@ def test_instrument_audits_and_verification(tmp_path: Path) -> None:
         {**record, "split": "selection", "frame_id": "selection:episode-001:frame-00"}
         for record in fake_records
     ]
-    monkeypatch.setattr(
-        benchmark,
-        "_materialize_records",
-        lambda split, repo_root: {
-            "development": fake_records,
-            "calibration": fake_records_calibration,
-            "selection": fake_records_selection,
-        }[split],
-    )
-    monkeypatch.setattr(
-        benchmark,
-        "measure_record_collection",
-        lambda records, prototypes, policy_artifact_id, **_kwargs: fake_provider_rows,
-    )
-    monkeypatch.setattr(benchmark, "canonical_prototypes", lambda: {})
-    benchmark.build_split("development", tmp_path, REPO_ROOT)
-    benchmark.build_split("calibration", tmp_path, REPO_ROOT)
-    benchmark.build_split("selection", tmp_path, REPO_ROOT)
-    monkeypatch.undo()
+
+    with monkeypatch.context() as build_patch:
+        build_patch.setattr(
+            benchmark,
+            "_materialize_records",
+            lambda split, repo_root: {
+                "development": fake_records,
+                "calibration": fake_records_calibration,
+                "selection": fake_records_selection,
+            }[split],
+        )
+        build_patch.setattr(
+            benchmark,
+            "measure_record_collection",
+            lambda records, prototypes, policy_artifact_id, **_kwargs: fake_provider_rows,
+        )
+        build_patch.setattr(benchmark, "canonical_prototypes", lambda: {})
+        benchmark.build_split("development", tmp_path, REPO_ROOT)
+        benchmark.build_split("calibration", tmp_path, REPO_ROOT)
+        benchmark.build_split("selection", tmp_path, REPO_ROOT)
+
     evidence = benchmark.audit_evidence_completeness(tmp_path)
-    monkeypatch = pytest.MonkeyPatch()
-    monkeypatch.setattr(
-        benchmark,
-        "audit_canonical_providers",
-        lambda output_dir: {
-            "P1": {"exact_top1_count": 112},
-            "P2": {"exact_top1_count": 112},
-            "P3": {"exact_top1_count": 112},
-        },
-    )
-    monkeypatch.setattr(
-        benchmark,
-        "verify_instrument",
-        lambda output_dir, repo_root: {
-            "verified": True,
-            "final_materialization_count": 0,
-        },
-    )
-    canonical = benchmark.audit_canonical_providers(tmp_path)
-    verification = benchmark.verify_instrument(tmp_path, REPO_ROOT)
-    monkeypatch.undo()
+
+    with monkeypatch.context() as audit_patch:
+        audit_patch.setattr(
+            benchmark,
+            "audit_canonical_providers",
+            lambda output_dir: {
+                "P1": {"exact_top1_count": 112},
+                "P2": {"exact_top1_count": 112},
+                "P3": {"exact_top1_count": 112},
+            },
+        )
+        audit_patch.setattr(
+            benchmark,
+            "verify_instrument",
+            lambda output_dir, repo_root: {
+                "verified": True,
+                "final_materialization_count": 0,
+            },
+        )
+        canonical = benchmark.audit_canonical_providers(tmp_path)
+        verification = benchmark.verify_instrument(tmp_path, REPO_ROOT)
+
     assert evidence["complete_score_evidence"] is True
     assert canonical["P3"]["exact_top1_count"] == 112
     assert verification["verified"] is True

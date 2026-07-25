@@ -17,7 +17,7 @@ def test_package_versions_and_dependency_graph_are_synchronized() -> None:
     validator.validate_versions()
 
 
-def test_release_manifest_lists_all_nine_distributions() -> None:
+def test_release_manifest_lists_all_distributions() -> None:
     assert set(validator.PACKAGES) == {
         "core",
         "analysis",
@@ -28,6 +28,7 @@ def test_release_manifest_lists_all_nine_distributions() -> None:
         "artifacts",
         "trust",
         "navigation",
+        "perception",
     }
     assert all(
         item["distribution"].startswith("zeromodel")

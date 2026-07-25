@@ -155,7 +155,7 @@ def test_wheel_smoke_probe_namespaces_covers_every_configured_package() -> None:
     namespaces = validator.wheel_smoke_probe_namespaces()
     expected = {expected["namespace"] for expected in validator.PACKAGES.values()}
     assert set(namespaces) == expected
-    assert len(namespaces) == len(validator.PACKAGES) == 9
+    assert len(namespaces) == len(validator.PACKAGES) == 10
 
 
 def test_wheel_smoke_probe_namespaces_includes_the_new_packages() -> None:

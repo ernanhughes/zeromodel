@@ -46,7 +46,20 @@ jobs:
           build/perception-ci-venv/bin/python -m pip install packages/perception/dist/*.whl
           build/perception-ci-venv/bin/python -m pip check
       - name: Run perception package tests
-        run: build/perception-ci-venv/bin/python -m pytest -q packages/perception/tests
+        run: |
+          set -o pipefail
+          build/perception-ci-venv/bin/python -m pytest -q packages/perception/tests \
+            --junitxml=build/perception-test-results.xml \
+            | tee build/perception-test-output.log
+      - name: Upload perception test diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perception-test-diagnostics
+          path: |
+            build/perception-test-results.xml
+            build/perception-test-output.log
+          if-no-files-found: warn
       - name: Verify installed import locations
         run: |
           build/perception-ci-venv/bin/python -c "import inspect, zeromodel, zeromodel.observation, zeromodel.perception; print(inspect.getfile(zeromodel)); print(inspect.getfile(zeromodel.observation)); print(inspect.getfile(zeromodel.perception))"

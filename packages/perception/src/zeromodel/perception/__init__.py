@@ -1,4 +1,4 @@
-"""ZeroModel perception public API through Stage P18A."""
+"""ZeroModel perception public API through Stage P18B."""
 
 from __future__ import annotations
 
@@ -51,6 +51,20 @@ from .sql_certification import (  # noqa: F401
     build_governance_execution_certification,
     execute_and_certify_audit_gated_rollback,
 )
+from .transition_conformance import (  # noqa: F401
+    TRANSITION_CONFORMANCE_FINDING_VERSION,
+    TRANSITION_CONFORMANCE_REPORT_STATUSES,
+    TRANSITION_CONFORMANCE_REPORT_VERSION,
+    TRANSITION_CONFORMANCE_SEMANTICS,
+    TRANSITION_CONFORMANCE_STATUSES,
+    TRANSITION_EXPECTATION_VERSION,
+    TRANSITION_EXPECTED_CHANGE_KINDS,
+    PerceptionTransitionConformanceError,
+    TransitionConformanceFindingDTO,
+    TransitionConformanceReportDTO,
+    TransitionExpectationDTO,
+    evaluate_transition_conformance,
+)
 from .transition_evidence import (  # noqa: F401
     TRANSITION_CHANGED_FRACTION_SEMANTICS,
     TRANSITION_CHANGE_SEMANTICS,
@@ -65,7 +79,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18A"
+PERCEPTION_STAGE = "P18B"
 
 __all__ = [
     name

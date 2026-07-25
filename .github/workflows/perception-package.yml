@@ -92,18 +92,62 @@ jobs:
               if "site-packages" not in path.parts:
                   raise SystemExit(f"module was not imported from the clean wheel environment: {path}")
           PY
-      - name: Commit verified P17 hardening changes
-        shell: bash
+      - name: Publish verified P17 blobs
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add packages/perception
-          if git diff --cached --quiet; then
-            echo "No hardening changes remain to commit"
-          else
-            git commit -m "fix(perception): complete P17 integration hardening"
-            git push origin HEAD:agent/p17-hardening
-          fi
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+
+          paths = (
+              "packages/perception/src/zeromodel/perception/execution_journal.py",
+              "packages/perception/src/zeromodel/perception/gated_health.py",
+              "packages/perception/tests/test_execution_journal_public_api_p17e.py",
+              "packages/perception/tests/test_governance_audit_public_api_p17f.py",
+              "packages/perception/tests/test_p17b_public_api.py",
+              "packages/perception/tests/test_governed_execution_p17d.py",
+              "packages/perception/tests/test_operational_disposition_p17b.py",
+              "packages/perception/tests/test_expectations.py",
+              "packages/perception/tests/test_temporal.py",
+              "packages/perception/tests/test_health.py",
+              "packages/perception/tests/test_full_vertical_integration_p16g.py",
+          )
+          token = os.environ["GH_TOKEN"]
+          endpoint = "https://api.github.com/repos/ernanhughes/zeromodel/git/blobs"
+          result = {}
+          for path in paths:
+              payload = json.dumps({
+                  "content": base64.b64encode(Path(path).read_bytes()).decode("ascii"),
+                  "encoding": "base64",
+              }).encode("utf-8")
+              request = Request(
+                  endpoint,
+                  data=payload,
+                  method="POST",
+                  headers={
+                      "Authorization": f"Bearer {token}",
+                      "Accept": "application/vnd.github+json",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "Content-Type": "application/json",
+                  },
+              )
+              with urlopen(request) as response:
+                  result[path] = json.load(response)["sha"]
+          Path("build/p17-verified-blobs.json").write_text(
+              json.dumps(result, indent=2, sort_keys=True) + "\n"
+          )
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+      - name: Upload verified P17 blob map
+        uses: actions/upload-artifact@v4
+        with:
+          name: p17-verified-blobs
+          path: build/p17-verified-blobs.json
+          if-no-files-found: error
       - name: Upload perception test diagnostics
         if: always()
         uses: actions/upload-artifact@v4

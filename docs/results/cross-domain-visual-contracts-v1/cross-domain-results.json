@@ -1,0 +1,239 @@
+{
+  "capability_table": [
+    {
+      "arcade": 1.0,
+      "capability": "visible_component_attribution_micro_f1",
+      "replicated": "replicated",
+      "threshold": 0.95,
+      "warehouse": 1.0
+    },
+    {
+      "arcade": 0.5,
+      "capability": "unexpected_change_detection_rate",
+      "replicated": "domain_specific",
+      "threshold": 0.9,
+      "warehouse": 1.0
+    },
+    {
+      "arcade": 0.6923076923076923,
+      "capability": "missing_change_detection_rate",
+      "replicated": "domain_specific",
+      "threshold": 0.9,
+      "warehouse": 1.0
+    },
+    {
+      "arcade": 0.8333333333333334,
+      "capability": "direction_correctness_rate",
+      "replicated": "not_replicated",
+      "threshold": 0.9,
+      "warehouse": 0.8695652173913043
+    },
+    {
+      "arcade": 0.8333333333333334,
+      "capability": "magnitude_correctness_rate",
+      "replicated": "not_applicable",
+      "warehouse": 0.8260869565217391
+    },
+    {
+      "arcade": 0.8888888888888888,
+      "capability": "value_correctness_rate",
+      "replicated": "not_replicated",
+      "threshold": 0.9,
+      "warehouse": 0.8260869565217391
+    },
+    {
+      "arcade": 1.0,
+      "capability": "relation_correctness_rate",
+      "replicated": "replicated",
+      "threshold": 0.9,
+      "warehouse": 0.9565217391304348
+    },
+    {
+      "arcade": null,
+      "capability": "identity_correctness_rate",
+      "replicated": "not_applicable",
+      "warehouse": 0.25
+    }
+  ],
+  "domain_reports": {
+    "arcade": {
+      "component_attribution_full": {
+        "pixel_diff": {
+          "exact_set_accuracy": 0.8888888888888888,
+          "micro_f1": 0.9365079365079364,
+          "micro_precision": 1.0,
+          "micro_recall": 0.8805970149253731,
+          "n": 1800
+        },
+        "privileged": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 1800
+        },
+        "zeromodel": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 1800
+        }
+      },
+      "component_attribution_micro_f1": {
+        "pixel_diff": 0.9365079365079364,
+        "privileged": 1.0,
+        "zeromodel": 1.0
+      },
+      "domain": "arcade",
+      "false_implicated_components": {
+        "mean_count": 0.18055555555555555,
+        "median_count": 0.0,
+        "pct_zero": 0.8194444444444444
+      },
+      "hidden_value_faults": {
+        "label_clean_but_value_wrong": 175,
+        "n_faulty": 1000
+      },
+      "missing_change_detection": {
+        "detection_rate": 0.6923076923076923,
+        "false_alarm_rate_on_correct": 0.125,
+        "n_relevant": 325
+      },
+      "n": 1800,
+      "n_faulty": 1000,
+      "n_ordinary": 800,
+      "unexpected_change_detection": {
+        "detection_rate": 0.5,
+        "fault_localization_rate": 1.0,
+        "n_relevant": 600,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "value_capability_rates": {
+        "direction": {
+          "n_applicable": 1800,
+          "n_correct": 1500
+        },
+        "identity": {
+          "n_applicable": 0,
+          "n_correct": 0
+        },
+        "magnitude": {
+          "n_applicable": 1800,
+          "n_correct": 1500
+        },
+        "relation": {
+          "n_applicable": 1800,
+          "n_correct": 1800
+        },
+        "value": {
+          "n_applicable": 1800,
+          "n_correct": 1600
+        }
+      },
+      "value_fault_detection": {
+        "detection_rate": 1.0,
+        "false_alarm_rate_on_correct": 0.23076923076923078,
+        "n_clean": 1300,
+        "n_relevant": 500
+      }
+    },
+    "warehouse": {
+      "component_attribution_full": {
+        "pixel_diff": {
+          "exact_set_accuracy": 0.5217391304347826,
+          "micro_f1": 0.863157894736842,
+          "micro_precision": 0.7735849056603774,
+          "micro_recall": 0.9761904761904762,
+          "n": 2300
+        },
+        "privileged": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 2300
+        },
+        "zeromodel": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 2300
+        }
+      },
+      "component_attribution_micro_f1": {
+        "pixel_diff": 0.863157894736842,
+        "privileged": 1.0,
+        "zeromodel": 1.0
+      },
+      "domain": "warehouse",
+      "false_implicated_components": {
+        "mean_count": 0.21739130434782608,
+        "median_count": 0.0,
+        "pct_zero": 0.8695652173913043
+      },
+      "hidden_value_faults": {
+        "label_clean_but_value_wrong": 900,
+        "n_faulty": 1500
+      },
+      "missing_change_detection": {
+        "detection_rate": 1.0,
+        "false_alarm_rate_on_correct": 0.25,
+        "n_relevant": 100
+      },
+      "n": 2300,
+      "n_faulty": 1500,
+      "n_ordinary": 800,
+      "unexpected_change_detection": {
+        "detection_rate": 1.0,
+        "fault_localization_rate": 1.0,
+        "n_relevant": 500,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "value_capability_rates": {
+        "direction": {
+          "n_applicable": 2300,
+          "n_correct": 2000
+        },
+        "identity": {
+          "n_applicable": 800,
+          "n_correct": 200
+        },
+        "magnitude": {
+          "n_applicable": 2300,
+          "n_correct": 1900
+        },
+        "relation": {
+          "n_applicable": 2300,
+          "n_correct": 2200
+        },
+        "value": {
+          "n_applicable": 2300,
+          "n_correct": 1900
+        }
+      },
+      "value_fault_detection": {
+        "detection_rate": 0.7692307692307693,
+        "false_alarm_rate_on_correct": 0.3,
+        "n_clean": 1000,
+        "n_relevant": 1300
+      }
+    }
+  },
+  "environment": {
+    "arcade_dev_episodes": 40,
+    "arcade_eval_episodes": 100,
+    "arcade_eval_transitions": 1800,
+    "command": "C:\\Projects\\zeromodel\\examples\\visual_transition_benchmark\\cross_domain_run.py --arcade-dev-episodes 40 --arcade-eval-episodes 100 --warehouse-dev-episodes 20 --warehouse-eval-episodes 100 --output-dir C:/Projects/zeromodel/artifacts/cross_domain_visual_contracts",
+    "duration_seconds": 397.066,
+    "git_commit": "6b75b15a6178f018a99a8e1394fc7dde99e4c034",
+    "numpy_version": "2.2.3",
+    "python_version": "3.11.4",
+    "warehouse_dev_episodes": 20,
+    "warehouse_eval_episodes": 100,
+    "warehouse_eval_transitions": 2300
+  }
+}

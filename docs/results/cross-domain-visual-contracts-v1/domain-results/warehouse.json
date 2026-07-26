@@ -1,0 +1,83 @@
+{
+  "component_attribution_full": {
+    "pixel_diff": {
+      "exact_set_accuracy": 0.5217391304347826,
+      "micro_f1": 0.863157894736842,
+      "micro_precision": 0.7735849056603774,
+      "micro_recall": 0.9761904761904762,
+      "n": 2300
+    },
+    "privileged": {
+      "exact_set_accuracy": 1.0,
+      "micro_f1": 1.0,
+      "micro_precision": 1.0,
+      "micro_recall": 1.0,
+      "n": 2300
+    },
+    "zeromodel": {
+      "exact_set_accuracy": 1.0,
+      "micro_f1": 1.0,
+      "micro_precision": 1.0,
+      "micro_recall": 1.0,
+      "n": 2300
+    }
+  },
+  "component_attribution_micro_f1": {
+    "pixel_diff": 0.863157894736842,
+    "privileged": 1.0,
+    "zeromodel": 1.0
+  },
+  "domain": "warehouse",
+  "false_implicated_components": {
+    "mean_count": 0.21739130434782608,
+    "median_count": 0.0,
+    "pct_zero": 0.8695652173913043
+  },
+  "hidden_value_faults": {
+    "label_clean_but_value_wrong": 900,
+    "n_faulty": 1500
+  },
+  "missing_change_detection": {
+    "detection_rate": 1.0,
+    "false_alarm_rate_on_correct": 0.25,
+    "n_relevant": 100
+  },
+  "n": 2300,
+  "n_faulty": 1500,
+  "n_ordinary": 800,
+  "unexpected_change_detection": {
+    "detection_rate": 1.0,
+    "fault_localization_rate": 1.0,
+    "n_relevant": 500,
+    "precision": 1.0,
+    "recall": 1.0
+  },
+  "value_capability_rates": {
+    "direction": {
+      "n_applicable": 2300,
+      "n_correct": 2000
+    },
+    "identity": {
+      "n_applicable": 800,
+      "n_correct": 200
+    },
+    "magnitude": {
+      "n_applicable": 2300,
+      "n_correct": 1900
+    },
+    "relation": {
+      "n_applicable": 2300,
+      "n_correct": 2200
+    },
+    "value": {
+      "n_applicable": 2300,
+      "n_correct": 1900
+    }
+  },
+  "value_fault_detection": {
+    "detection_rate": 0.7692307692307693,
+    "false_alarm_rate_on_correct": 0.3,
+    "n_clean": 1000,
+    "n_relevant": 1300
+  }
+}

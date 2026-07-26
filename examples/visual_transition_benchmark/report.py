@@ -210,7 +210,7 @@ def render_summary_markdown(
     lines.append("|---|---:|---:|---:|")
     ca = all_m["component_attribution"]
     lines.append(
-        "| Component micro-F1 | %.3f | %.3f | %.3f |"
+        "| Visible changed-component attribution micro-F1 | %.3f | %.3f | %.3f |"
         % (ca["pixel_diff"]["micro_f1"], ca["privileged"]["micro_f1"], ca["zeromodel"]["micro_f1"])
     )
     lines.append(

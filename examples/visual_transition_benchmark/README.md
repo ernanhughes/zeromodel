@@ -101,6 +101,37 @@ docstring/functions for what each one does and why.
   do. This is a genuine property of P18C as written (field-level, not
   band-level, recurrence), not a bug in this demo.
 
+## Stage 2: value-aware transition contracts
+
+Stage 1 asks "did this named component change?" Stage 2
+(`value_contracts.py`, `value_adapter.py`, `value_metrics.py`, `value_run.py`)
+asks "did it change to the *correct value*?" -- direction, magnitude, cooldown
+level, and one cross-field relation, all decoded from pixels via a *finer*
+P4A field grid (1x1px, vs. stage 1's 4x1px) over the same existing
+`build_transition_evidence_vpm`. No perception-package code changed; no new
+P-stage was added. Stage 1's dataset, tests, and `run.py` are untouched --
+`dataset.py` only gained new, additive category tables
+(`VALUE_FAULT_CATEGORIES`) and a parallel `build_value_transition`/
+`generate_value_episode`/`generate_value_split`.
+
+Run it:
+
+```bash
+PYTHONPATH=examples python -m visual_transition_benchmark.value_run \
+    --dev-episodes 40 --eval-episodes 120 \
+    --output-dir artifacts/value_aware_transition_contracts
+```
+
+**Result**: resolves stage 1's documented wrong-direction blind spot
+(`tank_moves_wrong_direction`), plus catches wrong-magnitude and
+wrong-cooldown-value faults that stage 1 had no vocabulary for at all. It
+remains honestly blind to target/alien *identity* faults
+(`wrong_alien_disappears`, `two_aliens_disappear_instead_of_one`,
+`fire_no_projectile`): those require the hidden alien queue, which no
+non-privileged contract here can reconstruct from frames + action alone. See
+`artifacts/value_aware_transition_contracts/value-benchmark-summary.md` for
+the full breakdown.
+
 ## Directory layout
 
 ```
@@ -111,6 +142,10 @@ discovery_demo.py       secondary P18C cohort-recurrence demonstration
 metrics.py              section-6 metric definitions
 render.py               diagnostic PNG panels + HTML index
 report.py               aggregation into the required output files
-run.py                  CLI entry point
+run.py                  CLI entry point (stage 1)
+value_contracts.py      stage 2: pixel-decoded typed values + contracts
+value_adapter.py        stage 2: System D (value-aware ZeroModel)
+value_metrics.py        stage 2: direction/magnitude/cooldown/target/relation metrics
+value_run.py            stage 2 CLI entry point
 tests/                  dataset / metrics / baselines / adapter / e2e-smoke tests
 ```

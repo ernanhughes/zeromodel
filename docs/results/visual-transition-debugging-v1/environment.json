@@ -1,0 +1,11 @@
+{
+  "repository_commit": "80b608d",
+  "python_version": "3.11.4",
+  "numpy_version": "2.2.3",
+  "development_transitions": 720,
+  "evaluation_transitions": 2160,
+  "ordinary_categories": 8,
+  "fault_categories": 10,
+  "benchmark_tests_passed": 24,
+  "perception_tests_passed": 212
+}

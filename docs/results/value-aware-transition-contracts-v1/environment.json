@@ -1,0 +1,25 @@
+{
+  "repository_commit": "0e295a6",
+  "parent_commit": "f28d8a1",
+  "python_version": "3.11.4",
+  "numpy_version": "2.2.3",
+  "command": "python -m visual_transition_benchmark.value_run --dev-episodes 40 --eval-episodes 120 --output-dir artifacts/value_aware_transition_contracts",
+  "development_episodes": 40,
+  "evaluation_episodes": 120,
+  "evaluation_transitions": 2760,
+  "reused_stage1_evaluation_transitions": 2160,
+  "new_value_fault_evaluation_transitions": 600,
+  "value_fault_categories": [
+    "tank_moves_too_far",
+    "cooldown_activates_with_wrong_value",
+    "cooldown_decreases_to_wrong_value",
+    "wrong_alien_disappears",
+    "two_aliens_disappear_instead_of_one"
+  ],
+  "duration_seconds": 54.126,
+  "warning_count": 0,
+  "benchmark_tests_passed": 48,
+  "stage1_tests_unchanged_and_passing": 24,
+  "stage2_tests_new_and_passing": 24,
+  "perception_tests_passed": 212
+}

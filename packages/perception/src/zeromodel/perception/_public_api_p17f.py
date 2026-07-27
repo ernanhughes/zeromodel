@@ -351,7 +351,7 @@ from .weighted import (  # noqa: F401
     predict_evidence_weighted_action,
 )
 
-PERCEPTION_PACKAGE_VERSION = "1.0.13"
+PERCEPTION_PACKAGE_VERSION = "1.1.0"
 PERCEPTION_STAGE = "P17F"
 
 __all__ = [

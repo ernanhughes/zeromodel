@@ -211,7 +211,7 @@ from .transition_evidence import (  # noqa: F401
     build_transition_evidence_vpm,
 )
 
-PERCEPTION_PACKAGE_VERSION = "1.0.13"
+PERCEPTION_PACKAGE_VERSION = "1.1.0"
 PERCEPTION_STAGE = "P18H"
 
 __all__ = [

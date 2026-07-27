@@ -3,22 +3,36 @@ param(
     [ValidateSet("Prepare", "Publish")]
     [string]$Mode = "Prepare",
 
+    [Parameter(Mandatory = $true)]
     [ValidatePattern('^\d+\.\d+\.\d+$')]
-    [string]$Version = "1.0.12",
+    [string]$Version,
 
     [string]$Python = "python",
+
     [string]$Remote = "origin",
+
     [string]$BaseBranch = "main",
+
     [string]$Repository = "ernanhughes/zeromodel",
+
     [string]$ReleaseNotesPath = "",
 
     [switch]$SkipQuality,
+
     [switch]$SkipTests,
-    [switch]$SkipDemos,
-    [switch]$SkipFinalizationIntegration,
+
+    [switch]$SkipReleaseValidator,
+
+    [switch]$SkipCI,
+
     [switch]$SkipPyPI,
+
     [switch]$SkipGitHubRelease,
+
+    [switch]$ResumePartialPyPI,
+
     [switch]$Yes,
+
     [switch]$DryRun
 )
 
@@ -26,317 +40,1018 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
 
-function Step([string]$Message) {
+
+function Step {
+    param([Parameter(Mandatory = $true)][string]$Message)
+
     Write-Host ""
     Write-Host "==> $Message" -ForegroundColor Cyan
 }
 
-function Fail([string]$Message) {
+
+function Fail {
+    param([Parameter(Mandatory = $true)][string]$Message)
+
     throw $Message
 }
 
-function Run([string]$Command, [string[]]$Arguments = @()) {
+
+function Run {
+    param(
+        [Parameter(Mandatory = $true)][string]$Command,
+        [string[]]$Arguments = @()
+    )
+
     & $Command @Arguments
+
     if ($LASTEXITCODE -ne 0) {
         Fail "Command failed ($LASTEXITCODE): $Command $($Arguments -join ' ')"
     }
 }
 
-function Capture([string]$Command, [string[]]$Arguments = @()) {
+
+function Capture {
+    param(
+        [Parameter(Mandatory = $true)][string]$Command,
+        [string[]]$Arguments = @()
+    )
+
     $Output = & $Command @Arguments 2>&1
+
     if ($LASTEXITCODE -ne 0) {
-        Fail "Command failed ($LASTEXITCODE): $Command $($Arguments -join ' ')`n$(($Output | Out-String).Trim())"
+        Fail @"
+Command failed ($LASTEXITCODE): $Command $($Arguments -join ' ')
+$(($Output | Out-String).Trim())
+"@
     }
+
     return (($Output | Out-String).Trim())
 }
 
-function Need([string]$Command) {
+
+function Need {
+    param([Parameter(Mandatory = $true)][string]$Command)
+
     if (-not (Get-Command $Command -ErrorAction SilentlyContinue)) {
         Fail "Required command '$Command' was not found on PATH."
     }
 }
 
-function Read-Text([string]$Path) {
+
+function Read-Text {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         Fail "Required file not found: $Path"
     }
+
     return [IO.File]::ReadAllText($Path)
 }
 
-function Write-Text([string]$Path, [string]$Content) {
-    [IO.File]::WriteAllText($Path, $Content, (New-Object Text.UTF8Encoding($false)))
+
+function Write-Text {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Content
+    )
+
+    $Parent = Split-Path -Parent $Path
+
+    if ($Parent -and -not (Test-Path -LiteralPath $Parent)) {
+        New-Item -ItemType Directory -Path $Parent | Out-Null
+    }
+
+    [IO.File]::WriteAllText(
+        $Path,
+        $Content,
+        (New-Object Text.UTF8Encoding($false))
+    )
 }
 
-function Replace-One([string]$Path, [string]$Pattern, [string]$Replacement) {
+
+function Replace-ExactlyOne {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Pattern,
+        [Parameter(Mandatory = $true)][string]$Replacement
+    )
+
     $Text = Read-Text $Path
     $Matches = [regex]::Matches($Text, $Pattern)
+
     if ($Matches.Count -ne 1) {
-        Fail "Expected one version marker in '$Path'; found $($Matches.Count)."
+        Fail @"
+Expected exactly one match in:
+$Path
+
+Pattern:
+$Pattern
+
+Found:
+$($Matches.Count)
+"@
     }
-    Write-Text $Path ([regex]::Replace($Text, $Pattern, $Replacement, 1))
+
+    $Updated = [regex]::Replace(
+        $Text,
+        $Pattern,
+        $Replacement,
+        1
+    )
+
+    Write-Text -Path $Path -Content $Updated
 }
 
-function Project-Version([string]$Root) {
-    $Match = [regex]::Match((Read-Text (Join-Path $Root "pyproject.toml")), '(?m)^version\s*=\s*"([^"]+)"\s*$')
-    if (-not $Match.Success) { Fail "Could not read pyproject.toml version." }
+
+function Get-PackageDefinitions {
+    param([Parameter(Mandatory = $true)][string]$Root)
+
+    $BoundaryPath = Join-Path $Root "package-boundaries.toml"
+    $Lines = Get-Content -LiteralPath $BoundaryPath
+
+    $Packages = [System.Collections.Generic.List[object]]::new()
+    $Current = $null
+
+    foreach ($RawLine in $Lines) {
+        $Line = $RawLine.Trim()
+
+        if ($Line -match '^\[packages\.([A-Za-z0-9_-]+)\]$') {
+            if ($null -ne $Current) {
+                $Packages.Add([pscustomobject]$Current)
+            }
+
+            $Current = [ordered]@{
+                Key          = $Matches[1]
+                Distribution = $null
+                Namespace    = $null
+                SourceRoot   = $null
+                PackageRoot  = $null
+                DependsOn    = @()
+                Publishable  = $false
+            }
+
+            continue
+        }
+
+        if ($null -eq $Current) {
+            continue
+        }
+
+        if ($Line -match '^distribution\s*=\s*"([^"]+)"$') {
+            $Current.Distribution = $Matches[1]
+            continue
+        }
+
+        if ($Line -match '^namespace\s*=\s*"([^"]+)"$') {
+            $Current.Namespace = $Matches[1]
+            continue
+        }
+
+        if ($Line -match '^source_root\s*=\s*"([^"]+)"$') {
+            $Current.SourceRoot = $Matches[1]
+
+            $Normalized = $Matches[1].Replace("\", "/")
+
+            if ($Normalized -notmatch '^(.+)/src$') {
+                Fail "Unsupported source_root: $Normalized"
+            }
+
+            $Current.PackageRoot = $Matches[1].Substring(
+                0,
+                $Matches[1].Length - 4
+            )
+
+            continue
+        }
+
+        if ($Line -match '^depends_on\s*=\s*\[(.*)\]$') {
+            $Dependencies = [System.Collections.Generic.List[string]]::new()
+
+            foreach ($Match in [regex]::Matches($Matches[1], '"([^"]+)"')) {
+                $Dependencies.Add($Match.Groups[1].Value)
+            }
+
+            $Current.DependsOn = @($Dependencies)
+            continue
+        }
+
+        if ($Line -match '^publishable\s*=\s*(true|false)$') {
+            $Current.Publishable = $Matches[1] -eq "true"
+            continue
+        }
+    }
+
+    if ($null -ne $Current) {
+        $Packages.Add([pscustomobject]$Current)
+    }
+
+    $Publishable = @(
+        $Packages |
+            Where-Object { $_.Publishable } |
+            Sort-Object Key
+    )
+
+    if ($Publishable.Count -eq 0) {
+        Fail "No publishable packages found in package-boundaries.toml."
+    }
+
+    return $Publishable
+}
+
+
+function Get-PackageVersion {
+    param(
+        [Parameter(Mandatory = $true)][string]$Root,
+        [Parameter(Mandatory = $true)]$Package
+    )
+
+    $Path = Join-Path $Root "$($Package.PackageRoot)\pyproject.toml"
+    $Text = Read-Text $Path
+
+    $Match = [regex]::Match(
+        $Text,
+        '(?m)^version\s*=\s*"([^"]+)"\s*$'
+    )
+
+    if (-not $Match.Success) {
+        Fail "Could not read package version from $Path."
+    }
+
     return $Match.Groups[1].Value
 }
 
-function Runtime-Version([string]$Root) {
-    $Match = [regex]::Match((Read-Text (Join-Path $Root "zeromodel\__init__.py")), '(?m)^__version__\s*=\s*["'']([^"'']+)["'']\s*$')
-    if (-not $Match.Success) { Fail "Could not read zeromodel.__version__." }
+
+function Get-BoundaryVersion {
+    param([Parameter(Mandatory = $true)][string]$Root)
+
+    $Text = Read-Text (Join-Path $Root "package-boundaries.toml")
+    $Match = [regex]::Match(
+        $Text,
+        '(?m)^release_version\s*=\s*"([^"]+)"\s*$'
+    )
+
+    if (-not $Match.Success) {
+        Fail "Could not read release_version from package-boundaries.toml."
+    }
+
     return $Match.Groups[1].Value
 }
+
 
 function Assert-Clean {
     $Status = Capture "git" @("status", "--porcelain")
-    if ($Status) { Fail "Working tree is not clean.`n$Status" }
+
+    if ($Status) {
+        Fail "Working tree is not clean.`n$Status"
+    }
 }
 
-function Assert-SyncedMain([string]$RemoteName, [string]$BranchName) {
-    [void](Run "git" @("fetch", "--prune", "--tags", $RemoteName))
-    $Branch = Capture "git" @("branch", "--show-current")
-    if ($Branch -ne $BranchName) { Fail "Expected '$BranchName'; current branch is '$Branch'." }
-    $Head = Capture "git" @("rev-parse", "HEAD")
-    $RemoteHead = Capture "git" @("rev-parse", "$RemoteName/$BranchName")
-    if ($Head -ne $RemoteHead) { Fail "Local and remote $BranchName differ. Local=$Head Remote=$RemoteHead" }
-    return $Head
+
+function Assert-SynchronizedBranch {
+    param(
+        [Parameter(Mandatory = $true)][string]$RemoteName,
+        [Parameter(Mandatory = $true)][string]$BranchName
+    )
+
+    Run "git" @("fetch", "--prune", "--tags", $RemoteName)
+
+    $CurrentBranch = Capture "git" @("branch", "--show-current")
+
+    if ($CurrentBranch -ne $BranchName) {
+        Fail @"
+Expected branch '$BranchName'.
+Current branch: '$CurrentBranch'
+"@
+    }
+
+    $LocalHead = Capture "git" @("rev-parse", "HEAD")
+    $RemoteHead = Capture "git" @(
+        "rev-parse",
+        "$RemoteName/$BranchName"
+    )
+
+    if ($LocalHead -ne $RemoteHead) {
+        Fail @"
+Local and remote $BranchName differ.
+Local:  $LocalHead
+Remote: $RemoteHead
+"@
+    }
+
+    return $LocalHead
 }
 
-function Update-Changelog([string]$Root, [string]$ReleaseVersion, [string]$NotesPath) {
+
+function Set-WorkspaceVersion {
+    param(
+        [Parameter(Mandatory = $true)][string]$Root,
+        [Parameter(Mandatory = $true)][object[]]$Packages,
+        [Parameter(Mandatory = $true)][string]$ReleaseVersion
+    )
+
+    Step "Updating package-boundaries.toml"
+
+    Replace-ExactlyOne `
+        -Path (Join-Path $Root "package-boundaries.toml") `
+        -Pattern '(?m)^release_version\s*=\s*"[^"]+"\s*$' `
+        -Replacement "release_version = `"$ReleaseVersion`""
+
+    $DistributionNames = @(
+        $Packages | ForEach-Object { $_.Distribution }
+    )
+
+    foreach ($Package in $Packages) {
+        $Path = Join-Path $Root "$($Package.PackageRoot)\pyproject.toml"
+
+        Step "Updating $($Package.Distribution)"
+
+        Replace-ExactlyOne `
+            -Path $Path `
+            -Pattern '(?m)^version\s*=\s*"[^"]+"\s*$' `
+            -Replacement "version = `"$ReleaseVersion`""
+
+        $Text = Read-Text $Path
+
+        foreach ($Distribution in $DistributionNames) {
+            $Escaped = [regex]::Escape($Distribution)
+
+            $Pattern = (
+                "(?m)(`"$Escaped)==[0-9]+\.[0-9]+\.[0-9]+(`")"
+            )
+
+            if ([regex]::IsMatch($Text, $Pattern)) {
+                $Text = [regex]::Replace(
+                    $Text,
+                    $Pattern,
+                    "`${1}$ReleaseVersion`${2}"
+                )
+            }
+        }
+
+        Write-Text -Path $Path -Content $Text
+    }
+
+    $ReadmePath = Join-Path $Root "README.md"
+
+    if (Test-Path -LiteralPath $ReadmePath -PathType Leaf) {
+        $Readme = Read-Text $ReadmePath
+        $Readme = [regex]::Replace(
+            $Readme,
+            'zeromodel==[0-9]+\.[0-9]+\.[0-9]+',
+            "zeromodel==$ReleaseVersion"
+        )
+
+        Write-Text -Path $ReadmePath -Content $Readme
+    }
+}
+
+
+function Assert-WorkspaceVersion {
+    param(
+        [Parameter(Mandatory = $true)][string]$Root,
+        [Parameter(Mandatory = $true)][object[]]$Packages,
+        [Parameter(Mandatory = $true)][string]$ExpectedVersion
+    )
+
+    $BoundaryVersion = Get-BoundaryVersion $Root
+
+    if ($BoundaryVersion -ne $ExpectedVersion) {
+        Fail @"
+package-boundaries.toml has release_version=$BoundaryVersion,
+expected $ExpectedVersion.
+"@
+    }
+
+    $DistributionNames = @(
+        $Packages | ForEach-Object { $_.Distribution }
+    )
+
+    foreach ($Package in $Packages) {
+        $VersionFound = Get-PackageVersion `
+            -Root $Root `
+            -Package $Package
+
+        if ($VersionFound -ne $ExpectedVersion) {
+            Fail @"
+Package $($Package.Distribution) has version $VersionFound,
+expected $ExpectedVersion.
+"@
+        }
+
+        $Path = Join-Path $Root "$($Package.PackageRoot)\pyproject.toml"
+        $Text = Read-Text $Path
+
+        foreach ($Distribution in $DistributionNames) {
+            $Escaped = [regex]::Escape($Distribution)
+            $Pattern = (
+                "`"$Escaped==([0-9]+\.[0-9]+\.[0-9]+)`""
+            )
+
+            foreach ($Match in [regex]::Matches($Text, $Pattern)) {
+                $DependencyVersion = $Match.Groups[1].Value
+
+                if ($DependencyVersion -ne $ExpectedVersion) {
+                    Fail @"
+Internal dependency mismatch in $Path:
+$($Match.Value)
+Expected version: $ExpectedVersion
+"@
+                }
+            }
+        }
+    }
+}
+
+
+function Update-Changelog {
+    param(
+        [Parameter(Mandatory = $true)][string]$Root,
+        [Parameter(Mandatory = $true)][string]$ReleaseVersion,
+        [Parameter(Mandatory = $true)][string]$NotesRelativePath
+    )
+
     $Path = Join-Path $Root "CHANGELOG.md"
     $Text = Read-Text $Path
-    if ($Text -match "(?m)^##\s+$([regex]::Escape($ReleaseVersion))(?:\s|$)") { return }
-    if (-not $Text.StartsWith("# Changelog")) { Fail "CHANGELOG.md has an unexpected heading." }
+
+    if (
+        $Text -match (
+            "(?m)^##\s+" +
+            [regex]::Escape($ReleaseVersion) +
+            "(?:\s|$)"
+        )
+    ) {
+        return
+    }
+
+    if (-not $Text.StartsWith("# Changelog")) {
+        Fail "CHANGELOG.md has an unexpected heading."
+    }
+
     $Date = Get-Date -Format "yyyy-MM-dd"
-    $Section = "`r`n`r`n## $ReleaseVersion - $Date`r`n`r`nSee the [ZeroModel $ReleaseVersion release notes]($NotesPath)."
-    Write-Text $Path ("# Changelog" + $Section + $Text.Substring("# Changelog".Length))
+
+    $Section = @"
+
+## $ReleaseVersion - $Date
+
+See the [ZeroModel $ReleaseVersion release notes]($NotesRelativePath).
+"@
+
+    $Updated = (
+        "# Changelog" +
+        $Section +
+        $Text.Substring("# Changelog".Length)
+    )
+
+    Write-Text -Path $Path -Content $Updated
 }
 
-function Set-ReleaseFiles([string]$Root, [string]$ReleaseVersion, [string]$NotesPath) {
-    Replace-One (Join-Path $Root "pyproject.toml") '(?m)^version\s*=\s*"[^"]+"\s*$' "version = `"$ReleaseVersion`""
-    Replace-One (Join-Path $Root "zeromodel\__init__.py") '(?m)^__version__\s*=\s*["''][^"'']+["'']\s*$' "__version__ = `"$ReleaseVersion`""
-    Replace-One (Join-Path $Root "README.md") '(?m)python -m pip install zeromodel==[0-9]+\.[0-9]+\.[0-9]+' "python -m pip install zeromodel==$ReleaseVersion"
-    Update-Changelog $Root $ReleaseVersion $NotesPath
-}
 
-function Assert-ReleaseFiles([string]$Root, [string]$ReleaseVersion) {
-    $Project = Project-Version $Root
-    $Runtime = Runtime-Version $Root
-    if ($Project -ne $Runtime -or $Project -ne $ReleaseVersion) {
-        Fail "Expected both package versions to be $ReleaseVersion; found project=$Project runtime=$Runtime."
-    }
-    if ((Read-Text (Join-Path $Root "README.md")) -notmatch [regex]::Escape("zeromodel==$ReleaseVersion")) {
-        Fail "README production install pin is not $ReleaseVersion."
-    }
-    if ((Read-Text (Join-Path $Root "CHANGELOG.md")) -notmatch "(?m)^##\s+$([regex]::Escape($ReleaseVersion))(?:\s|$)") {
-        Fail "CHANGELOG.md has no $ReleaseVersion section."
-    }
-}
+function Invoke-ReleaseGates {
+    param(
+        [Parameter(Mandatory = $true)][string]$Root,
+        [Parameter(Mandatory = $true)][string]$PythonCommand
+    )
 
-function Gates([string]$Root, [string]$PythonCommand) {
-    Step "Installing release dependencies"
     Run $PythonCommand @("-m", "pip", "install", "--upgrade", "pip")
-    Run $PythonCommand @("-m", "pip", "install", "-e", ".[dev,release]")
+    Run $PythonCommand @("-m", "pip", "install", "build", "twine")
+
+    if (-not $SkipReleaseValidator) {
+        Step "Authoritative release-candidate validator"
+        Run $PythonCommand @("scripts/validate_release_candidate.py")
+    }
 
     if (-not $SkipQuality) {
         Step "Repository quality gate"
         Run $PythonCommand @("scripts/check_quality.py")
     }
+
     if (-not $SkipTests) {
         Step "Bounded fast suite"
         Run $PythonCommand @("scripts/run_fast_tests.py")
     }
-    if (-not $SkipDemos) {
-        Step "Release demos"
-        Run $PythonCommand @("examples/arcade_shooter_policy.py")
-        Run $PythonCommand @("examples/criticality_verification.py", "--output-dir", (Join-Path $Root "build\release\criticality-verification"))
-    }
-
-    Step "Building distributions"
-    Remove-Item -Recurse -Force (Join-Path $Root "dist"), (Join-Path $Root "build") -ErrorAction SilentlyContinue
-    Get-ChildItem -Path $Root -Directory -Filter "*.egg-info" | Remove-Item -Recurse -Force
-    Run $PythonCommand @("-m", "build")
-
-    Step "Checking distribution metadata"
-    $Artifacts = Get-ChildItem -Path (Join-Path $Root "dist") -File
-    if (-not $Artifacts) { Fail "Build produced no distribution files." }
-    Run $PythonCommand (@("-m", "twine", "check") + @($Artifacts | ForEach-Object { $_.FullName }))
 }
 
-function Shell-Command {
-    if (Get-Command "pwsh" -ErrorAction SilentlyContinue) { return "pwsh" }
-    if (Get-Command "powershell" -ErrorAction SilentlyContinue) { return "powershell" }
-    Fail "Neither pwsh nor powershell is available."
-}
 
-function Finalization-Gate([string]$Root, [string]$Commit) {
-    Step "Bounded video-finalization integration validation"
-    Run (Shell-Command) @(
-        "-NoProfile",
-        "-File", (Join-Path $Root "scripts\run-video-finalization-integration.ps1"),
-        "-RepositoryPath", $Root,
-        "-ExpectedCommit", $Commit,
-        "-ExpectedBranch", $BaseBranch,
-        "-Python", $Python,
-        "-RemoveSuccessfulFixtures"
+function Wait-ForCommitCI {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepositoryName,
+        [Parameter(Mandatory = $true)][string]$Commit
     )
-}
 
-function PyPI-Exists([string]$PythonCommand, [string]$ReleaseVersion) {
-    $Code = @"
-import sys, urllib.error, urllib.request
-try:
-    urllib.request.urlopen('https://pypi.org/pypi/zeromodel/$ReleaseVersion/json', timeout=20)
-    sys.exit(0)
-except urllib.error.HTTPError as exc:
-    sys.exit(1 if exc.code == 404 else 2)
-"@
-    & $PythonCommand -c $Code
-    if ($LASTEXITCODE -eq 0) { return $true }
-    if ($LASTEXITCODE -eq 1) { return $false }
-    Fail "Could not query PyPI for zeromodel==$ReleaseVersion."
-}
+    Step "Waiting for GitHub Actions on $Commit"
 
-function Wait-CI([string]$Repo, [string]$Commit) {
-    Step "Waiting for GitHub Actions"
-    $RunId = $null
-    for ($Attempt = 0; $Attempt -lt 30; $Attempt++) {
-        $Json = & gh run list --repo $Repo --commit $Commit --workflow python.yml --limit 1 --json databaseId 2>$null
+    $Runs = $null
+
+    for ($Attempt = 1; $Attempt -le 30; $Attempt++) {
+        $Json = & gh run list `
+            --repo $RepositoryName `
+            --commit $Commit `
+            --limit 100 `
+            --json databaseId,name,status,conclusion,event 2>$null
+
         if ($LASTEXITCODE -eq 0 -and $Json) {
-            $Runs = $Json | ConvertFrom-Json
-            if ($Runs -and $Runs.Count -gt 0) { $RunId = [string]$Runs[0].databaseId; break }
+            $CandidateRuns = @($Json | ConvertFrom-Json)
+
+            $Runs = @(
+                $CandidateRuns |
+                    Where-Object {
+                        $_.event -in @(
+                            "push",
+                            "workflow_dispatch",
+                            "pull_request"
+                        )
+                    }
+            )
+
+            if ($Runs.Count -gt 0) {
+                break
+            }
         }
-        Start-Sleep -Seconds 2
+
+        Start-Sleep -Seconds 5
     }
-    if (-not $RunId) { Fail "No package workflow appeared for commit $Commit." }
-    Run "gh" @("run", "watch", $RunId, "--repo", $Repo, "--exit-status")
+
+    if (-not $Runs -or $Runs.Count -eq 0) {
+        Fail "No GitHub Actions runs found for commit $Commit."
+    }
+
+    foreach ($Run in $Runs) {
+        if ($Run.status -ne "completed") {
+            Write-Host "Watching workflow: $($Run.name)"
+
+            Run "gh" @(
+                "run",
+                "watch",
+                [string]$Run.databaseId,
+                "--repo",
+                $RepositoryName,
+                "--exit-status"
+            )
+        }
+    }
+
+    $FinalJson = Capture "gh" @(
+        "run",
+        "list",
+        "--repo",
+        $RepositoryName,
+        "--commit",
+        $Commit,
+        "--limit",
+        "100",
+        "--json",
+        "databaseId,name,status,conclusion,event"
+    )
+
+    $FinalRuns = @(
+        $FinalJson |
+            ConvertFrom-Json |
+            Where-Object {
+                $_.event -in @(
+                    "push",
+                    "workflow_dispatch",
+                    "pull_request"
+                )
+            }
+    )
+
+    $Failures = @(
+        $FinalRuns |
+            Where-Object {
+                $_.status -ne "completed" -or
+                $_.conclusion -notin @("success", "skipped", "neutral")
+            }
+    )
+
+    if ($Failures.Count -gt 0) {
+        $Summary = (
+            $Failures |
+                ForEach-Object {
+                    "  $($_.name): status=$($_.status) conclusion=$($_.conclusion)"
+                }
+        ) -join "`n"
+
+        Fail "GitHub Actions did not pass:`n$Summary"
+    }
+
+    Write-Host "GitHub Actions passed for $Commit." -ForegroundColor Green
 }
 
-function Ensure-Tag([string]$Tag, [string]$Commit, [string]$RemoteName) {
-    $Local = & git rev-parse -q --verify "$Tag^{commit}" 2>$null
+
+function Ensure-Tag {
+    param(
+        [Parameter(Mandatory = $true)][string]$Tag,
+        [Parameter(Mandatory = $true)][string]$Commit,
+        [Parameter(Mandatory = $true)][string]$RemoteName
+    )
+
+    $LocalTag = & git rev-parse -q --verify "$Tag^{commit}" 2>$null
+
     if ($LASTEXITCODE -eq 0) {
-        if ((($Local | Out-String).Trim()) -ne $Commit) { Fail "Local tag $Tag points at the wrong commit." }
+        $Resolved = (($LocalTag | Out-String).Trim())
+
+        if ($Resolved -ne $Commit) {
+            Fail "Local tag $Tag points to $Resolved, expected $Commit."
+        }
     }
     else {
-        Run "git" @("tag", "-a", $Tag, "-m", "ZeroModel $Version", $Commit)
+        Run "git" @(
+            "tag",
+            "-a",
+            $Tag,
+            "-m",
+            "ZeroModel $Version",
+            $Commit
+        )
     }
 
-    $RemoteTags = & git ls-remote --tags $RemoteName "refs/tags/$Tag" "refs/tags/$Tag^{}" 2>$null
-    if ($LASTEXITCODE -ne 0) { Fail "Could not inspect remote tag $Tag." }
+    $RemoteTags = & git ls-remote `
+        --tags `
+        $RemoteName `
+        "refs/tags/$Tag" `
+        "refs/tags/$Tag^{}" 2>$null
+
+    if ($LASTEXITCODE -ne 0) {
+        Fail "Could not inspect remote tag $Tag."
+    }
+
     if ($RemoteTags) {
-        $Peeled = $RemoteTags | Where-Object { $_ -match "refs/tags/$([regex]::Escape($Tag))\^\{\}$" } | Select-Object -First 1
-        $Selected = if ($Peeled) { $Peeled } else { $RemoteTags | Select-Object -First 1 }
-        if (((($Selected -split "`t")[0]).Trim()) -ne $Commit) { Fail "Remote tag $Tag points at the wrong commit." }
+        $Peeled = @(
+            $RemoteTags |
+                Where-Object {
+                    $_ -match (
+                        "refs/tags/" +
+                        [regex]::Escape($Tag) +
+                        "\^\{\}$"
+                    )
+                }
+        ) | Select-Object -First 1
+
+        $Selected = if ($Peeled) {
+            $Peeled
+        }
+        else {
+            @($RemoteTags) | Select-Object -First 1
+        }
+
+        $RemoteCommit = (($Selected -split "`t")[0]).Trim()
+
+        if ($RemoteCommit -ne $Commit) {
+            Fail @"
+Remote tag $Tag points to $RemoteCommit,
+expected $Commit.
+"@
+        }
     }
     else {
         Run "git" @("push", $RemoteName, $Tag)
     }
 }
 
-$Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
-if (-not $ReleaseNotesPath) { $ReleaseNotesPath = "docs/releases/$Version.md" }
-$NotesFull = if ([IO.Path]::IsPathRooted($ReleaseNotesPath)) {
-    [IO.Path]::GetFullPath($ReleaseNotesPath)
-}
-else {
-    [IO.Path]::GetFullPath((Join-Path $Root $ReleaseNotesPath))
-}
-$NotesRelative = $NotesFull.Substring($Root.Length).TrimStart([char[]]@('\', '/')).Replace('\', '/')
-$ReleaseBranch = "release/$Version"
-$Tag = "v$Version"
 
-Push-Location $Root
-try {
-    Need "git"
-    Need $Python
-    if (([IO.Path]::GetFullPath((Capture "git" @("rev-parse", "--show-toplevel")))) -ne $Root) {
-        Fail "This script must run from the ZeroModel repository."
-    }
-    Assert-Clean
-    if (-not (Test-Path -LiteralPath $NotesFull -PathType Leaf)) { Fail "Release notes not found: $NotesFull" }
+function Ensure-GitHubRelease {
+    param(
+        [Parameter(Mandatory = $true)][string]$RepositoryName,
+        [Parameter(Mandatory = $true)][string]$Tag,
+        [Parameter(Mandatory = $true)][string]$Title,
+        [Parameter(Mandatory = $true)][string]$NotesPath,
+        [Parameter(Mandatory = $true)][string]$ArtifactRoot
+    )
 
-    $BaseCommit = Assert-SyncedMain $Remote $BaseBranch
-    Step "ZeroModel $Version $Mode preflight"
-    Write-Host "Base commit: $BaseCommit"
-    Write-Host "Release notes: $NotesRelative"
-    if ($DryRun) { Write-Host "Dry run complete; nothing changed." -ForegroundColor Yellow; return }
+    & gh release view $Tag --repo $RepositoryName *> $null
 
-    Need "gh"
-    Run "gh" @("auth", "status")
-
-    if ($Mode -eq "Prepare") {
-        $Current = Project-Version $Root
-        if ($Current -ne (Runtime-Version $Root)) { Fail "Current package versions do not match." }
-        if ([version]$Version -le [version]$Current) { Fail "$Version must be greater than current version $Current." }
-
-        Step "Creating $ReleaseBranch"
-        Run "git" @("switch", "-c", $ReleaseBranch)
-        Set-ReleaseFiles $Root $Version $NotesRelative
-        Assert-ReleaseFiles $Root $Version
-        Gates $Root $Python
-
-        Step "Committing release preparation"
-        Run "git" @("add", "--", "pyproject.toml", "zeromodel/__init__.py", "README.md", "CHANGELOG.md", $NotesRelative)
-        Run "git" @("diff", "--cached", "--check")
-        Run "git" @("commit", "-m", "release: ZeroModel $Version")
-        Run "git" @("push", "-u", $Remote, $ReleaseBranch)
-
-        $BodyPath = Join-Path $env:TEMP "zeromodel-release-$Version-pr.md"
-        $Body = @(
-            "## Summary", "",
-            "Prepare ZeroModel $Version as the final monolithic 1.x release.", "",
-            "## Validation", "",
-            "- quality gate", "- bounded fast suite", "- release demos", "- wheel and sdist build", "- twine check", "",
-            "After merge run: .\scripts\create-release.ps1 -Mode Publish -Version $Version"
-        ) -join [Environment]::NewLine
-        Write-Text $BodyPath $Body
-        Run "gh" @("pr", "create", "--repo", $Repository, "--base", $BaseBranch, "--head", $ReleaseBranch, "--title", "release: ZeroModel $Version", "--body-file", $BodyPath)
-        Write-Host "Release PR created." -ForegroundColor Green
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "GitHub release $Tag already exists."
         return
     }
 
-    Assert-ReleaseFiles $Root $Version
-    $Commit = Capture "git" @("rev-parse", "HEAD")
-    if (-not $Yes) {
-        $Confirm = Read-Host "Type RELEASE $Version to publish"
-        if ($Confirm -ne "RELEASE $Version") { Fail "Release cancelled." }
+    $Artifacts = @(
+        Get-ChildItem -LiteralPath $ArtifactRoot -File |
+            Sort-Object Name |
+            ForEach-Object { $_.FullName }
+    )
+
+    if ($Artifacts.Count -eq 0) {
+        Fail "No release artifacts found in $ArtifactRoot."
     }
 
-    Gates $Root $Python
-    if (-not $SkipFinalizationIntegration) { Assert-Clean; Finalization-Gate $Root $Commit }
+    Run "gh" (
+        @(
+            "release",
+            "create",
+            $Tag,
+            "--repo",
+            $RepositoryName,
+            "--title",
+            $Title,
+            "--notes-file",
+            $NotesPath,
+            "--verify-tag"
+        ) +
+        $Artifacts
+    )
+}
 
-    Step "Validating merged commit on GitHub"
-    Run "git" @("push", $Remote, $BaseBranch)
-    Wait-CI $Repository $Commit
 
-    if (-not $SkipPyPI) {
-        if (PyPI-Exists $Python $Version) {
-            Write-Host "zeromodel==$Version already exists on PyPI; upload skipped." -ForegroundColor Yellow
-        }
-        else {
-            Step "Publishing to PyPI"
-            Run (Shell-Command) @("-NoProfile", "-File", (Join-Path $Root "scripts\publish-pypi.ps1"), "-Python", $Python, "-SkipTests", "-SkipDemo", "-Yes")
-        }
+$Root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+
+if (-not $ReleaseNotesPath) {
+    $ReleaseNotesPath = "docs/releases/$Version.md"
+}
+
+$NotesFullPath = if ([IO.Path]::IsPathRooted($ReleaseNotesPath)) {
+    [IO.Path]::GetFullPath($ReleaseNotesPath)
+}
+else {
+    [IO.Path]::GetFullPath(
+        (Join-Path $Root $ReleaseNotesPath)
+    )
+}
+
+$NotesRelativePath = $NotesFullPath
+    .Substring($Root.Length)
+    .TrimStart([char[]]@("\", "/"))
+    .Replace("\", "/")
+
+$ReleaseBranch = "release/$Version"
+$Tag = "v$Version"
+$DistRoot = Join-Path $Root "dist\release-$Version"
+
+
+Push-Location $Root
+
+try {
+    Need "git"
+    Need $Python
+
+    $RepositoryRoot = [IO.Path]::GetFullPath(
+        (Capture "git" @("rev-parse", "--show-toplevel"))
+    )
+
+    if ($RepositoryRoot.TrimEnd("\") -ne $Root.TrimEnd("\")) {
+        Fail "Run this script from the ZeroModel repository."
     }
 
-    Step "Creating $Tag"
-    Ensure-Tag $Tag $Commit $Remote
+    Assert-Clean
 
-    if (-not $SkipGitHubRelease) {
-        & gh release view $Tag --repo $Repository 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "GitHub release already exists; creation skipped." -ForegroundColor Yellow
-        }
-        else {
-            $Assets = Get-ChildItem -Path (Join-Path $Root "dist") -File | ForEach-Object { $_.FullName }
-            Run "gh" (@("release", "create", $Tag, "--repo", $Repository, "--title", "ZeroModel $Version", "--notes-file", $NotesFull, "--verify-tag") + @($Assets))
-        }
+    if (-not (Test-Path -LiteralPath $NotesFullPath -PathType Leaf)) {
+        Fail @"
+Release notes not found:
+
+$NotesFullPath
+
+Create the release notes before running the release workflow.
+"@
     }
 
-    Write-Host "ZeroModel $Version release complete." -ForegroundColor Green
-    Write-Host "Next development version: 2.0.0.dev0" -ForegroundColor Green
+    $Packages = Get-PackageDefinitions $Root
+
+    if ($Mode -eq "Prepare") {
+        $BaseCommit = Assert-SynchronizedBranch `
+            -RemoteName $Remote `
+            -BranchName $BaseBranch
+
+        $CurrentVersion = Get-BoundaryVersion $Root
+
+        if ([version]$Version -le [version]$CurrentVersion) {
+            Fail @"
+Release version $Version must be greater than
+current version $CurrentVersion.
+"@
+        }
+
+        Step "ZeroModel $Version release preparation"
+
+        Write-Host "Base commit: $BaseCommit"
+        Write-Host "Release branch: $ReleaseBranch"
+        Write-Host "Release notes: $NotesRelativePath"
+        Write-Host "Publishable packages: $($Packages.Count)"
+
+        if ($DryRun) {
+            Write-Host ""
+            Write-Host "Dry run complete; nothing changed." `
+                -ForegroundColor Yellow
+            return
+        }
+
+        Need "gh"
+        Run "gh" @("auth", "status")
+
+        Run "git" @("switch", "-c", $ReleaseBranch)
+
+        Set-WorkspaceVersion `
+            -Root $Root `
+            -Packages $Packages `
+            -ReleaseVersion $Version
+
+        Update-Changelog `
+            -Root $Root `
+            -ReleaseVersion $Version `
+            -NotesRelativePath $NotesRelativePath
+
+        Assert-WorkspaceVersion `
+            -Root $Root `
+            -Packages $Packages `
+            -ExpectedVersion $Version
+
+        Invoke-ReleaseGates `
+            -Root $Root `
+            -PythonCommand $Python
+
+        $Changes = Capture "git" @("status", "--porcelain")
+
+        if (-not $Changes) {
+            Fail "Release preparation produced no changes."
+        }
+
+        Step "Committing release metadata and validation evidence"
+
+        Run "git" @("add", "--all")
+        Run "git" @(
+            "commit",
+            "-m",
+            "chore(release): prepare ZeroModel $Version"
+        )
+        Run "git" @(
+            "push",
+            "-u",
+            $Remote,
+            $ReleaseBranch
+        )
+
+        $Body = @"
+## Objective
+
+Prepare ZeroModel $Version across the complete package workspace.
+
+## Included
+
+- updates package-boundaries.toml release_version;
+- updates all publishable package versions;
+- updates exact internal ZeroModel dependency pins;
+- updates release documentation;
+- records generated release-candidate evidence;
+- validates quality, fast tests, package builds, integration tests, visual-transition tests, and clean-wheel imports.
+
+## Publication
+
+This PR does not publish packages, create a tag, or create a GitHub release.
+
+After merge, run:
+
+``````powershell
+.\scripts\create-release.ps1 `
+    -Mode Publish `
+    -Version $Version
+```````
+
+"@
+
+```
+    Step "Opening release pull request"
+
+    Run "gh" @(
+        "pr",
+        "create",
+        "--repo",
+        $Repository,
+        "--base",
+        $BaseBranch,
+        "--head",
+        $ReleaseBranch,
+        "--title",
+        "chore(release): prepare ZeroModel $Version",
+        "--body",
+        $Body
+    )
+
+    Write-Host ""
+    Write-Host (
+        "Release PR created for ZeroModel $Version."
+    ) -ForegroundColor Green
+
+    return
+}
+
+$ReleaseCommit = Assert-SynchronizedBranch `
+    -RemoteName $Remote `
+    -BranchName $BaseBranch
+
+Assert-WorkspaceVersion `
+    -Root $Root `
+    -Packages $Packages `
+    -ExpectedVersion $Version
+
+Step "ZeroModel $Version publication preflight"
+
+Write-Host "Release commit: $ReleaseCommit"
+Write-Host "Release tag: $Tag"
+Write-Host "Release notes: $NotesRelativePath"
+
+if ($DryRun) {
+    Write-Host ""
+    Write-Host "Dry run complete; nothing changed." `
+        -ForegroundColor Yellow
+    return
+}
+
+Need "gh"
+Run "gh" @("auth", "status")
+
+Invoke-ReleaseGates `
+    -Root $Root `
+    -PythonCommand $Python
+
+$StatusAfterGates = Capture "git" @("status", "--porcelain")
+
+if ($StatusAfterGates) {
+    Fail @"
+```
+
+Release gates changed the working tree.
+
+Commit those generated results before publication:
+
+$StatusAfterGates
+"@
+}
+
+```
+if (-not $SkipCI) {
+    Wait-ForCommitCI `
+        -RepositoryName $Repository `
+        -Commit $ReleaseCommit
+}
+
+if (-not $Yes) {
+    Write-Host ""
+    Write-Host (
+        "This will publish ten immutable package versions,"
+    ) -ForegroundColor Yellow
+    Write-Host (
+        "create tag $Tag, and create a GitHub release."
+    ) -ForegroundColor Yellow
+
+    $Confirmation = Read-Host (
+        "Type RELEASE $Version to continue"
+    )
+
+    if ($Confirmation -ne "RELEASE $Version") {
+        Fail "Release cancelled."
+    }
+}
+
+if (-not $SkipPyPI) {
+    Step "Publishing complete package workspace to PyPI"
+
+    $PublishArguments = @(
+        "-NoProfile",
+        "-File",
+        (Join-Path $Root "scripts\publish-pypi.ps1"),
+        "-Version",
+        $Version,
+        "-Python",
+        $Python,
+        "-SkipValidation",
+        "-Yes"
+    )
+
+    if ($ResumePartialPyPI) {
+        $PublishArguments += "-ResumePartial"
+    }
+
+    Run "powershell" $PublishArguments
+}
+
+Step "Creating and pushing release tag"
+
+Ensure-Tag `
+    -Tag $Tag `
+    -Commit $ReleaseCommit `
+    -RemoteName $Remote
+
+if (-not $SkipGitHubRelease) {
+    Step "Creating GitHub release"
+
+    Ensure-GitHubRelease `
+        -RepositoryName $Repository `
+        -Tag $Tag `
+        -Title "ZeroModel $Version" `
+        -NotesPath $NotesFullPath `
+        -ArtifactRoot $DistRoot
+}
+
+Step "Release complete"
+
+Write-Host ""
+Write-Host (
+    "ZeroModel $Version has been released."
+) -ForegroundColor Green
+Write-Host "Commit: $ReleaseCommit"
+Write-Host "Tag: $Tag"
+```
+
 }
 finally {
-    Pop-Location
+Pop-Location
 }

@@ -25,7 +25,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-VERSION = "1.0.13"
+VERSION = "1.1.0"
 INTEGRATION_TEST_ROOT = "tests/integration"
 VISUAL_TRANSITION_TEST_ROOT = "examples/visual_transition_benchmark/tests"
 VISUAL_TRANSITION_TIMEOUT_SECONDS = 480

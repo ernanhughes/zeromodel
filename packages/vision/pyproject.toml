@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeromodel-vision"
-version = "1.0.13"
+version = "1.1.0"
 description = "ZeroModel vision package"
 readme = "README.md"
 requires-python = ">=3.10"

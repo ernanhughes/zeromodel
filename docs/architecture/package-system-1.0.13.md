@@ -452,7 +452,7 @@ The intended shape is:
 
 ```toml
 schema_version = 1
-release_version = "1.0.13"
+release_version = "1.1.0"
 
 [packages.core]
 distribution = "zeromodel"

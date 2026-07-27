@@ -46,7 +46,7 @@ The historical monolithic root (`package-boundaries.toml`'s `forbidden_roots = [
 
 ## Package Build And Data Inventory
 
-Each production package under `packages/*/` ships its own `pyproject.toml`, distribution name, and version. `package-boundaries.toml` declares `release_version = "1.0.13"` as the coordinated release-candidate version across all nine packages; see the individual package manifests under `packages/*/pyproject.toml` for exact per-package dependency declarations. The repository root `pyproject.toml` no longer declares a `[project]` section or builds a distribution of its own; it only holds shared tool configuration (pytest, ruff, mypy) that spans all nine packages via `pythonpath`/`mypy_path` entries under `packages/*/src`.
+Each production package under `packages/*/` ships its own `pyproject.toml`, distribution name, and version. `package-boundaries.toml` declares `release_version = "1.1.0"` as the coordinated release-candidate version across all nine packages; see the individual package manifests under `packages/*/pyproject.toml` for exact per-package dependency declarations. The repository root `pyproject.toml` no longer declares a `[project]` section or builds a distribution of its own; it only holds shared tool configuration (pytest, ruff, mypy) that spans all nine packages via `pythonpath`/`mypy_path` entries under `packages/*/src`.
 
 ## Domain Boundary Inventory
 

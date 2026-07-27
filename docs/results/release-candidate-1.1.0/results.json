@@ -17,7 +17,7 @@
         "integration",
         "tests/integration"
       ],
-      "duration_seconds": 52.797,
+      "duration_seconds": 68.891,
       "errors": 0,
       "failed": 0,
       "gate": "cross_package_integration_tests",
@@ -29,7 +29,7 @@
       "returncode": 0,
       "skipped": 0,
       "status": "passed",
-      "summary_line": "====================== 77 passed, 1 deselected in 51.97s ======================",
+      "summary_line": "================= 77 passed, 1 deselected in 68.07s (0:01:08) =================",
       "timeout_seconds": 180
     },
     "gate_topology": {
@@ -115,7 +115,7 @@
           "-q",
           "packages/analysis/tests"
         ],
-        "duration_seconds": 2.141,
+        "duration_seconds": 1.938,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:analysis",
@@ -127,7 +127,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 65 passed in 1.29s ==============================",
+        "summary_line": "============================= 65 passed in 1.20s ==============================",
         "timeout_seconds": 180
       },
       "artifacts": {
@@ -140,7 +140,7 @@
           "-q",
           "packages/artifacts/tests"
         ],
-        "duration_seconds": 1.0,
+        "duration_seconds": 1.313,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:artifacts",
@@ -152,7 +152,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 97 passed in 0.45s ==============================",
+        "summary_line": "============================= 97 passed in 0.59s ==============================",
         "timeout_seconds": 180
       },
       "core": {
@@ -165,7 +165,7 @@
           "-q",
           "packages/core/tests"
         ],
-        "duration_seconds": 1.5,
+        "duration_seconds": 1.515,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:core",
@@ -177,7 +177,7 @@
         "returncode": 0,
         "skipped": 1,
         "status": "passed",
-        "summary_line": "======================== 20 passed, 1 skipped in 0.56s ========================",
+        "summary_line": "======================== 20 passed, 1 skipped in 0.49s ========================",
         "timeout_seconds": 180
       },
       "navigation": {
@@ -190,7 +190,7 @@
           "-q",
           "packages/navigation/tests"
         ],
-        "duration_seconds": 0.844,
+        "duration_seconds": 1.031,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:navigation",
@@ -202,7 +202,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 33 passed in 0.29s ==============================",
+        "summary_line": "============================= 33 passed in 0.32s ==============================",
         "timeout_seconds": 180
       },
       "observation": {
@@ -215,7 +215,7 @@
           "-q",
           "packages/observation/tests"
         ],
-        "duration_seconds": 0.953,
+        "duration_seconds": 0.969,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:observation",
@@ -227,7 +227,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 32 passed in 0.33s ==============================",
+        "summary_line": "============================= 32 passed in 0.44s ==============================",
         "timeout_seconds": 180
       },
       "perception": {
@@ -240,7 +240,7 @@
           "-q",
           "packages/perception/tests"
         ],
-        "duration_seconds": 6.672,
+        "duration_seconds": 8.531,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:perception",
@@ -252,7 +252,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 223 passed in 6.06s =============================",
+        "summary_line": "============================= 223 passed in 7.87s =============================",
         "timeout_seconds": 180
       },
       "sqlalchemy": {
@@ -265,7 +265,7 @@
           "-q",
           "packages/sqlalchemy/tests"
         ],
-        "duration_seconds": 4.75,
+        "duration_seconds": 6.703,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:sqlalchemy",
@@ -277,7 +277,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================== 6 passed in 4.11s ==============================",
+        "summary_line": "============================== 6 passed in 5.85s ==============================",
         "timeout_seconds": 180
       },
       "trust": {
@@ -290,7 +290,7 @@
           "-q",
           "packages/trust/tests"
         ],
-        "duration_seconds": 1.0,
+        "duration_seconds": 1.078,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:trust",
@@ -302,7 +302,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 52 passed in 0.33s ==============================",
+        "summary_line": "============================= 52 passed in 0.34s ==============================",
         "timeout_seconds": 180
       },
       "video": {
@@ -315,7 +315,7 @@
           "-q",
           "packages/video/tests"
         ],
-        "duration_seconds": 1.015,
+        "duration_seconds": 1.031,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:video",
@@ -327,7 +327,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 24 passed in 0.50s ==============================",
+        "summary_line": "============================= 24 passed in 0.51s ==============================",
         "timeout_seconds": 180
       },
       "vision": {
@@ -340,7 +340,7 @@
           "-q",
           "packages/vision/tests"
         ],
-        "duration_seconds": 0.828,
+        "duration_seconds": 0.906,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:vision",
@@ -352,7 +352,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 10 passed in 0.35s ==============================",
+        "summary_line": "============================= 10 passed in 0.37s ==============================",
         "timeout_seconds": 180
       }
     },
@@ -370,7 +370,7 @@
         "-q",
         "examples/visual_transition_benchmark/tests"
       ],
-      "duration_seconds": 220.75,
+      "duration_seconds": 250.781,
       "errors": 0,
       "failed": 0,
       "gate": "visual_transition_regression_tests",
@@ -382,7 +382,7 @@
       "returncode": 0,
       "skipped": 0,
       "status": "passed",
-      "summary_line": "======================= 125 passed in 220.25s (0:03:40) =======================",
+      "summary_line": "======================= 125 passed in 250.30s (0:04:10) =======================",
       "timeout_seconds": 480
     }
   },

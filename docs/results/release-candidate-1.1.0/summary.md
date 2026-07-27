@@ -1,6 +1,6 @@
 # ZeroModel 1.1.0 Release Candidate Validation
 
-- Commit: `73a065529e0597a0ee631d00bf4a04a6569e5227`
+- Commit: `23007e293c5722c67e25dcbae8f1ecd8f414f96c`
 - Version: `1.1.0`
 - Integration root: `tests/integration`
 - Retired root: `integration_tests/`

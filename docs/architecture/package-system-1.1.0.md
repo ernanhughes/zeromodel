@@ -1,7 +1,7 @@
-# ZeroModel 1.0.13 Package System Architecture
+# ZeroModel 1.1.0 Package System Architecture
 
 **Status:** Historical baseline — describes the completed six-distribution split. Superseded as the *current* architecture by [package-system-next.md](package-system-next.md), which documents the nine-distribution workspace (this document's six packages plus `zeromodel-artifacts`, `zeromodel-trust`, `zeromodel-navigation`). This document is preserved unmodified below as the record of what Stage 1.0.13A–H actually delivered; it is not rewritten in place.  
-**Release:** `1.0.13`  
+**Release:** `1.1.0`  
 **Repository model:** one repository, multiple independently buildable Python distributions  
 **Compatibility policy:** breaking source and import changes are permitted  
 **Release policy:** no intermediate extraction stage is publishable
@@ -511,7 +511,7 @@ Production package dependencies use exact synchronized pins for this release:
 
 ```toml
 dependencies = [
-    "zeromodel==1.0.13",
+    "zeromodel==1.1.0",
 ]
 ```
 

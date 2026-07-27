@@ -32,7 +32,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.23",
-    "zeromodel==1.0.13",
+    "zeromodel==1.1.0",
     "zeromodel-artifacts==1.0.13",
 ]
 

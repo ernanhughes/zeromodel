@@ -12,7 +12,7 @@ license = {text = "MIT"}
 dependencies = [
     "numpy>=1.23",
     "SQLAlchemy>=2.0,<3",
-    "zeromodel==1.0.13",
+    "zeromodel==1.1.0",
     "zeromodel-video==1.0.13",
 ]
 

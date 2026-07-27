@@ -38,7 +38,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-analysis",
       "filename": "zeromodel_analysis-1.0.13-py3-none-any.whl",
@@ -54,7 +54,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-analysis",
       "filename": "zeromodel_analysis-1.0.13.tar.gz",
@@ -71,7 +71,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-observation",
       "filename": "zeromodel_observation-1.0.13-py3-none-any.whl",
@@ -87,7 +87,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-observation",
       "filename": "zeromodel_observation-1.0.13.tar.gz",
@@ -104,7 +104,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13",
+        "zeromodel==1.1.0",
         "zeromodel-observation==1.0.13"
       ],
       "distribution": "zeromodel-vision",
@@ -122,7 +122,7 @@
       "direct_dependencies": [
         "numpy>=1.23",
         "zeromodel-observation==1.0.13",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-vision",
       "filename": "zeromodel_vision-1.0.13.tar.gz",
@@ -139,7 +139,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13",
+        "zeromodel==1.1.0",
         "zeromodel-observation==1.0.13"
       ],
       "distribution": "zeromodel-video",
@@ -157,7 +157,7 @@
       "direct_dependencies": [
         "numpy>=1.23",
         "zeromodel-observation==1.0.13",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-video",
       "filename": "zeromodel_video-1.0.13.tar.gz",
@@ -175,7 +175,7 @@
       "direct_dependencies": [
         "numpy>=1.23",
         "SQLAlchemy<3,>=2.0",
-        "zeromodel==1.0.13",
+        "zeromodel==1.1.0",
         "zeromodel-video==1.0.13"
       ],
       "distribution": "zeromodel-sqlalchemy",
@@ -194,7 +194,7 @@
         "SQLAlchemy>=2.0,<3",
         "numpy>=1.23",
         "zeromodel-video==1.0.13",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-sqlalchemy",
       "filename": "zeromodel_sqlalchemy-1.0.13.tar.gz",
@@ -211,7 +211,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-artifacts",
       "filename": "zeromodel_artifacts-1.0.13-py3-none-any.whl",
@@ -227,7 +227,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-artifacts",
       "filename": "zeromodel_artifacts-1.0.13.tar.gz",
@@ -245,7 +245,7 @@
       "direct_dependencies": [
         "numpy>=1.23",
         "cryptography>=41",
-        "zeromodel==1.0.13",
+        "zeromodel==1.1.0",
         "zeromodel-artifacts==1.0.13"
       ],
       "distribution": "zeromodel-trust",
@@ -264,7 +264,7 @@
         "cryptography>=41",
         "numpy>=1.23",
         "zeromodel-artifacts==1.0.13",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-trust",
       "filename": "zeromodel_trust-1.0.13.tar.gz",
@@ -281,7 +281,7 @@
       ],
       "direct_dependencies": [
         "numpy>=1.23",
-        "zeromodel==1.0.13",
+        "zeromodel==1.1.0",
         "zeromodel-artifacts==1.0.13"
       ],
       "distribution": "zeromodel-navigation",
@@ -299,7 +299,7 @@
       "direct_dependencies": [
         "numpy>=1.23",
         "zeromodel-artifacts==1.0.13",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-navigation",
       "filename": "zeromodel_navigation-1.0.13.tar.gz",
@@ -317,7 +317,7 @@
       "direct_dependencies": [
         "numpy>=1.23",
         "pillow>=9.0",
-        "zeromodel==1.0.13",
+        "zeromodel==1.1.0",
         "zeromodel-observation==1.0.13"
       ],
       "distribution": "zeromodel-perception",
@@ -336,7 +336,7 @@
         "numpy>=1.23",
         "pillow>=9.0",
         "zeromodel-observation==1.0.13",
-        "zeromodel==1.0.13"
+        "zeromodel==1.1.0"
       ],
       "distribution": "zeromodel-perception",
       "filename": "zeromodel_perception-1.0.13.tar.gz",

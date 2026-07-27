@@ -1,0 +1,19 @@
+{
+  "repository_commit": "f7652d4",
+  "parent_commit": "6b75b15",
+  "python_version": "3.11.4",
+  "numpy_version": "2.2.3",
+  "command": "python -m visual_transition_benchmark.cross_domain_run --arcade-dev-episodes 40 --arcade-eval-episodes 100 --warehouse-dev-episodes 20 --warehouse-eval-episodes 100 --output-dir artifacts/cross_domain_visual_contracts",
+  "arcade_dev_episodes": 40,
+  "arcade_eval_episodes": 100,
+  "arcade_eval_transitions": 1800,
+  "arcade_categories": 18,
+  "warehouse_dev_episodes": 20,
+  "warehouse_eval_episodes": 100,
+  "warehouse_eval_transitions": 2300,
+  "warehouse_categories": 23,
+  "duration_seconds": 397.066,
+  "benchmark_tests_passed": 100,
+  "perception_tests_passed": 212,
+  "note": "warehouse_categories includes push_fails_silently, added mid-execution after the first run showed an empty missing-change-detection test set (n_relevant=0); numbers below are from the corrected re-run."
+}

@@ -216,10 +216,7 @@ function Get-PackageDefinitions {
                 Fail "Unsupported source_root: $Normalized"
             }
 
-            $Current.PackageRoot = $Matches[1].Substring(
-                0,
-                $Matches[1].Length - 4
-            )
+            $Current.PackageRoot = $Matches[1]
 
             continue
         }

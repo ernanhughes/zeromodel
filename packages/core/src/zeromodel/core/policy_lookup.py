@@ -243,6 +243,7 @@ class VPMPolicyLookup:
         view_columns: np.ndarray,
     ) -> np.ndarray:
         row_count = len(self.artifact.source.row_ids)
+        values: np.ndarray
         if source_columns.size == 0:
             values = np.empty((row_count, 0), dtype=np.float64)
         elif value_source == "raw":

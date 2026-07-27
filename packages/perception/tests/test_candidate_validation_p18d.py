@@ -187,9 +187,12 @@ def test_validates_candidate_on_disjoint_held_out_evidence() -> None:
     assert result.confirmation_count == 3
     assert result.rejection_count == 0
     assert {item.status for item in result.findings} == {"confirmed"}
-    assert first.validation_transition_evidence_ids.count(
-        repeated[1].transition_evidence_id
-    ) == 2
+    assert (
+        first.validation_transition_evidence_ids.count(
+            repeated[1].transition_evidence_id
+        )
+        == 2
+    )
 
     source = discovery.statistics[0]
     expectation = result.expectation
@@ -222,9 +225,7 @@ def test_preserves_rejected_and_inconclusive_candidate_outcomes() -> None:
     assert rejected.status == "none_validated"
     assert rejected.results[0].status == "rejected"
     assert rejected.results[0].rejection_count == 3
-    assert {item.status for item in rejected.results[0].findings} == {
-        "missing_change"
-    }
+    assert {item.status for item in rejected.results[0].findings} == {"missing_change"}
 
     inconclusive_observations = (
         _held_out(

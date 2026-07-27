@@ -6,7 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# Every one of the six production packages, plus the repository-wide
+# Every production package, plus the repository-wide
 # integration test tree, must appear here. If a package is ever missing from
 # this list, tests/test_quality_gate_coverage.py fails.
 FORMAT_LINT_PATHS = [
@@ -24,6 +24,8 @@ FORMAT_LINT_PATHS = [
     Path("packages/vision/src/zeromodel/vision/visual_policy.py"),
     Path("packages/vision/src/zeromodel/vision/__init__.py"),
     Path("packages/vision/tests"),
+    Path("packages/perception/src"),
+    Path("packages/perception/tests"),
     Path("packages/video/src"),
     Path("packages/video/tests"),
     Path("packages/sqlalchemy/src"),
@@ -34,7 +36,7 @@ FORMAT_LINT_PATHS = [
     Path("packages/trust/tests"),
     Path("packages/navigation/src"),
     Path("packages/navigation/tests"),
-    Path("integration_tests"),
+    Path("tests/integration"),
 ]
 
 TYPING_PATHS = [

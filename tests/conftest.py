@@ -195,7 +195,6 @@ def pytest_collection_modifyitems(
         filename = item.path.name
         if (
             "integration" in item.path.parts
-            or "integration_tests" in item.path.parts
             or filename in INTEGRATION_TEST_FILES
             or filename.startswith(INTEGRATION_TEST_PREFIXES)
         ):

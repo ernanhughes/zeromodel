@@ -3,7 +3,7 @@ release_version = "1.0.13"
 forbidden_roots = ["zeromodel"]
 research_root = "research"
 examples_root = "examples"
-integration_tests_root = "integration_tests"
+integration_tests_root = "tests/integration"
 
 [packages.core]
 distribution = "zeromodel"

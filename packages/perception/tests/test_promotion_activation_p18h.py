@@ -12,7 +12,6 @@ from zeromodel.perception import (
     PromotionRollbackRequestDTO,
     SqlitePromotionActivationStore,
     execute_promotion_activation,
-    execute_promotion_rollback,
 )
 from zeromodel.perception.promotion_activation import _dumps
 
@@ -50,7 +49,10 @@ def test_governed_rollback_restores_exact_state_and_preserves_history(
     assert rollback.receipt.prior_state_id == activation.resulting_state.state_id
     assert rollback.receipt.restored_state_id == initial.state_id
     assert rollback.rollback_plan.status == "stored_inactive"
-    assert rollback.rollback_plan.rollback_plan_id == activation.rollback_plan.rollback_plan_id
+    assert (
+        rollback.rollback_plan.rollback_plan_id
+        == activation.rollback_plan.rollback_plan_id
+    )
     assert rollback.receipt.rollback_plan_id == rollback.rollback_plan.rollback_plan_id
 
     second = store.commit_rollback(admission)
@@ -73,7 +75,10 @@ def test_sqlite_activation_and_rollback_survive_restart(tmp_path) -> None:
     reopened = SqlitePromotionActivationStore(str(path))
     assert reopened.get_active_state() == activation.resulting_state
     assert reopened.get_activation_bundle(change_set.change_set_id) == activation
-    assert reopened.get_rollback_plan(activation.rollback_plan.rollback_plan_id) == activation.rollback_plan
+    assert (
+        reopened.get_rollback_plan(activation.rollback_plan.rollback_plan_id)
+        == activation.rollback_plan
+    )
 
     rollback = reopened.commit_rollback(admission)
     again = SqlitePromotionActivationStore(str(path))
@@ -107,11 +112,16 @@ def test_stale_rollback_admission_is_rejected_without_mutation(tmp_path) -> None
             ),
         )
 
-    with pytest.raises(PerceptionPromotionActivationError, match="active state changed"):
+    with pytest.raises(
+        PerceptionPromotionActivationError, match="active state changed"
+    ):
         store.commit_rollback(admission)
 
     assert store.get_active_state() == initial
-    assert store.get_rollback_plan(first.rollback_plan.rollback_plan_id).status == "stored_inactive"
+    assert (
+        store.get_rollback_plan(first.rollback_plan.rollback_plan_id).status
+        == "stored_inactive"
+    )
 
 
 def test_sqlite_rollback_failure_injection_leaves_no_partial_state(tmp_path) -> None:
@@ -137,7 +147,10 @@ def test_sqlite_rollback_failure_injection_leaves_no_partial_state(tmp_path) -> 
 
     reopened = SqlitePromotionActivationStore(str(tmp_path / "activation.sqlite3"))
     assert reopened.get_active_state() == activation.resulting_state
-    assert reopened.get_rollback_plan(activation.rollback_plan.rollback_plan_id).status == "stored_inactive"
+    assert (
+        reopened.get_rollback_plan(activation.rollback_plan.rollback_plan_id).status
+        == "stored_inactive"
+    )
 
 
 def test_sqlite_rejects_malformed_json_and_missing_operation_ordinals(tmp_path) -> None:
@@ -152,7 +165,9 @@ def test_sqlite_rejects_malformed_json_and_missing_operation_ordinals(tmp_path) 
             ("{not json", change_set.change_set_id),
         )
     with pytest.raises(PerceptionPromotionActivationError, match="malformed"):
-        SqlitePromotionActivationStore(str(path)).get_activation_bundle(change_set.change_set_id)
+        SqlitePromotionActivationStore(str(path)).get_activation_bundle(
+            change_set.change_set_id
+        )
 
     store = SqlitePromotionActivationStore(str(tmp_path / "ordinals.sqlite3"), initial)
     activation = execute_promotion_activation(store, change_set)
@@ -167,9 +182,9 @@ def test_sqlite_rejects_malformed_json_and_missing_operation_ordinals(tmp_path) 
             (payload, change_set.change_set_id),
         )
     with pytest.raises(PerceptionPromotionActivationError, match="ordinals"):
-        SqlitePromotionActivationStore(str(tmp_path / "ordinals.sqlite3")).get_rollback_plan(
-            activation.rollback_plan.rollback_plan_id
-        )
+        SqlitePromotionActivationStore(
+            str(tmp_path / "ordinals.sqlite3")
+        ).get_rollback_plan(activation.rollback_plan.rollback_plan_id)
 
 
 def test_policy_rejects_non_latest_rollback_mode() -> None:
@@ -229,7 +244,9 @@ def test_sqlite_cross_checks_operation_table_against_bundle_payload(tmp_path) ->
         )
 
 
-def test_sqlite_rejects_corrupted_rollback_admission_and_bundle_lineage(tmp_path) -> None:
+def test_sqlite_rejects_corrupted_rollback_admission_and_bundle_lineage(
+    tmp_path,
+) -> None:
     initial, change_set = _materialization()
     path = tmp_path / "activation.sqlite3"
     store = SqlitePromotionActivationStore(str(path), initial)

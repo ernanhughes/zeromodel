@@ -15,12 +15,9 @@ sys.modules[SPEC.name] = conftest
 SPEC.loader.exec_module(conftest)
 
 
-def test_integration_tests_directory_is_recognized_as_integration() -> None:
-    # The real directory is named integration_tests, not integration - a
-    # path-part check against the literal string "integration" alone would
-    # miss it.
-    parts = ("integration_tests", "test_package_integration_smoke.py")
-    assert "integration_tests" in parts
+def test_tests_integration_directory_is_recognized_as_integration() -> None:
+    parts = ("tests", "integration", "test_package_integration_smoke.py")
+    assert "integration" in parts
 
 
 def test_research_directory_files_are_recognized_as_research() -> None:

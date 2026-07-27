@@ -38,6 +38,7 @@ def _base_report() -> dict[str, Any]:
             key: _passing_counts() for key in validator.PACKAGES
         },
         "cross_package_integration_tests": _passing_counts(),
+        "visual_transition_regression_tests": _passing_counts(),
         "research": {"status": "excluded_by_policy", "note": "excluded"},
     }
 

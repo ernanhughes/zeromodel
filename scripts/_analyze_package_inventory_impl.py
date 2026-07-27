@@ -39,7 +39,6 @@ TOOLING_ROOTS: dict[str, str] = {
     "examples": "examples",
     "scripts": "tooling",
     "research": "research",
-    "integration_tests": "tooling",
 }
 
 CLASSIFICATIONS = {
@@ -133,7 +132,7 @@ def discover_tooling_files(
 
 def is_test_path(path: str) -> bool:
     return (
-        path.startswith(("tests/", "integration_tests/"))
+        path.startswith("tests/")
         or path.startswith("packages/")
         and "/tests/" in path
     )
@@ -232,7 +231,6 @@ def external_name(candidate: str, known: set[str]) -> str | None:
         "examples",
         "scripts",
         "research",
-        "integration_tests",
         "packages",
     }:
         return None
@@ -368,7 +366,7 @@ def classify(
     Production modules are classified directly from the package whose
     source_root they were discovered under - no name-based heuristics are
     needed since discover_package_files already knows the owning package.
-    Tooling-root modules (tests/examples/scripts/research/integration_tests)
+    Tooling-root modules (tests/examples/scripts/research)
     keep the previous path-prefix classification.
     """
     if is_test_path(path):
@@ -400,16 +398,6 @@ def classify(
             "retain-tooling",
             "high",
             "Repository script is not a production import namespace.",
-        )
-    if path.startswith("integration_tests/"):
-        return (
-            "tooling",
-            "",
-            "",
-            "cross-package integration test",
-            "retain-tooling",
-            "high",
-            "Integration test exercises multiple production distributions together and is not itself a production namespace.",
         )
     if path.startswith("research/"):
         return (

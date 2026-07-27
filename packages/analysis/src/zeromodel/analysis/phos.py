@@ -60,10 +60,12 @@ def to_square(vec: np.ndarray, pad_value: float = 0.0) -> np.ndarray:
     side = int(np.ceil(np.sqrt(values.size)))
     pad = side * side - values.size
     if pad:
-        values = np.concatenate(
+        padded = np.concatenate(
             [values, np.full(pad, float(pad_value), dtype=np.float64)]
         )
-    return values.reshape(side, side)
+    else:
+        padded = values
+    return padded.reshape(side, side)
 
 
 def top_left_concentration(field: np.ndarray, fraction: float = 0.25) -> float:
@@ -87,9 +89,11 @@ def image_entropy(field: np.ndarray) -> float:
     total = float(arr.sum())
     if total <= 0:
         return 0.0
-    p = (arr / total).reshape(-1)
-    p = p[p > 0]
-    return float(-np.sum(p * np.log(p + 1e-12)))
+    probabilities = (arr / total).reshape(-1)
+    positive_probabilities = probabilities[probabilities > 0]
+    return float(
+        -np.sum(positive_probabilities * np.log(positive_probabilities + 1e-12))
+    )
 
 
 def phos_sort_pack(

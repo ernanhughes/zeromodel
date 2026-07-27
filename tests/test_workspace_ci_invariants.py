@@ -71,7 +71,7 @@ def test_package_integration_workflow_installs_from_requirements_dev() -> None:
 
 def test_python_workflow_trigger_paths_cover_packages_and_requirements_dev() -> None:
     text = (WORKFLOWS_DIR / "python.yml").read_text(encoding="utf-8")
-    for required in ("packages/**", "integration_tests/**", "requirements-dev.txt"):
+    for required in ("packages/**", "tests/integration/**", "requirements-dev.txt"):
         assert required in text, f"python.yml trigger paths missing {required}"
     assert "zeromodel/**" not in text
 

@@ -14,7 +14,7 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = check_quality
 SPEC.loader.exec_module(check_quality)
 
-SIX_PACKAGE_SRC_ROOTS = [
+TYPED_PACKAGE_SRC_ROOTS = [
     "packages/core/src",
     "packages/analysis/src",
     "packages/observation/src",
@@ -55,24 +55,24 @@ def test_sqlalchemy_src_is_in_root_mypy_path() -> None:
     assert "packages/sqlalchemy/src" in pyproject
 
 
-def test_all_six_packages_are_covered_by_ruff_format_and_lint() -> None:
+def test_all_packages_are_covered_by_ruff_format_and_lint() -> None:
     paths = _paths("FORMAT_LINT_PATHS")
-    for root in SIX_PACKAGE_SRC_ROOTS:
+    for root in [*TYPED_PACKAGE_SRC_ROOTS, "packages/perception/src"]:
         assert root in paths, f"{root} missing from FORMAT_LINT_PATHS"
     for path in VISION_SRC_FILES:
         assert path in paths, f"{path} missing from FORMAT_LINT_PATHS"
 
 
-def test_all_six_packages_are_covered_by_mypy() -> None:
+def test_all_typed_packages_are_covered_by_mypy() -> None:
     paths = _paths("TYPING_PATHS")
-    for root in SIX_PACKAGE_SRC_ROOTS:
+    for root in TYPED_PACKAGE_SRC_ROOTS:
         assert root in paths, f"{root} missing from TYPING_PATHS"
     for path in VISION_SRC_FILES:
         assert path in paths, f"{path} missing from TYPING_PATHS"
 
 
 def test_integration_tests_are_covered_by_ruff() -> None:
-    assert "integration_tests" in _paths("FORMAT_LINT_PATHS")
+    assert "tests/integration" in _paths("FORMAT_LINT_PATHS")
 
 
 def test_quality_gate_stages_run_in_the_required_order() -> None:

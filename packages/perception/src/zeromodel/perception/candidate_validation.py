@@ -23,21 +23,15 @@ from .transition_evidence import TransitionEvidenceVPMDTO, TransitionFieldEviden
 HELD_OUT_TRANSITION_OBSERVATION_VERSION: Final = (
     "perception-held-out-transition-observation/1"
 )
-CANDIDATE_VALIDATION_POLICY_VERSION: Final = (
-    "perception-candidate-validation-policy/1"
-)
+CANDIDATE_VALIDATION_POLICY_VERSION: Final = "perception-candidate-validation-policy/1"
 CANDIDATE_VALIDATION_EXPECTATION_VERSION: Final = (
     "perception-candidate-validation-expectation/1"
 )
 CANDIDATE_VALIDATION_FINDING_VERSION: Final = (
     "perception-candidate-validation-finding/1"
 )
-CANDIDATE_VALIDATION_RESULT_VERSION: Final = (
-    "perception-candidate-validation-result/1"
-)
-CANDIDATE_VALIDATION_REPORT_VERSION: Final = (
-    "perception-candidate-validation-report/1"
-)
+CANDIDATE_VALIDATION_RESULT_VERSION: Final = "perception-candidate-validation-result/1"
+CANDIDATE_VALIDATION_REPORT_VERSION: Final = "perception-candidate-validation-report/1"
 CANDIDATE_VALIDATION_SEMANTICS: Final = (
     "held_out_validation_of_p18c_candidates_against_disjoint_p18a_transition_evidence"
 )
@@ -103,9 +97,7 @@ def _unit(name: str, value: float) -> None:
 
 def _positive_int(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise PerceptionCandidateValidationError(
-            f"{name} must be a positive integer"
-        )
+        raise PerceptionCandidateValidationError(f"{name} must be a positive integer")
 
 
 def _ordered_unique(
@@ -117,9 +109,7 @@ def _ordered_unique(
     if not allow_empty and not values:
         raise PerceptionCandidateValidationError(f"{name} must be non-empty")
     if values != tuple(sorted(set(values))):
-        raise PerceptionCandidateValidationError(
-            f"{name} must be unique and sorted"
-        )
+        raise PerceptionCandidateValidationError(f"{name} must be unique and sorted")
 
 
 def _ordered_with_repetition(
@@ -292,7 +282,9 @@ class CandidateValidationExpectationDTO:
             raise PerceptionCandidateValidationError(
                 "candidate expectation identities must be non-empty"
             )
-        _ordered_unique("candidate expectation field_ids", self.field_ids, allow_empty=False)
+        _ordered_unique(
+            "candidate expectation field_ids", self.field_ids, allow_empty=False
+        )
         if self.expected_change not in {"change", "increase", "decrease"}:
             raise PerceptionCandidateValidationError(
                 f"unsupported candidate expected_change: {self.expected_change}"
@@ -351,7 +343,9 @@ class CandidateValidationFindingDTO:
             raise PerceptionCandidateValidationError(
                 "candidate validation finding identities and detail must be non-empty"
             )
-        _ordered_unique("candidate finding field_ids", self.field_ids, allow_empty=False)
+        _ordered_unique(
+            "candidate finding field_ids", self.field_ids, allow_empty=False
+        )
         if self.status not in CANDIDATE_VALIDATION_FINDING_STATUSES:
             raise PerceptionCandidateValidationError(
                 f"unsupported candidate validation finding status: {self.status}"
@@ -436,9 +430,7 @@ class CandidateValidationResultDTO:
                     f"{name} must be a non-negative integer"
                 )
         if (
-            self.confirmation_count
-            + self.rejection_count
-            + self.inconclusive_count
+            self.confirmation_count + self.rejection_count + self.inconclusive_count
             != self.observation_count
         ):
             raise PerceptionCandidateValidationError(
@@ -466,7 +458,10 @@ class CandidateValidationResultDTO:
             raise PerceptionCandidateValidationError(
                 "candidate validation findings must cover every observation"
             )
-        if any(item.expectation_id != self.expectation.expectation_id for item in self.findings):
+        if any(
+            item.expectation_id != self.expectation.expectation_id
+            for item in self.findings
+        ):
             raise PerceptionCandidateValidationError(
                 "candidate validation finding expectation mismatch"
             )
@@ -546,7 +541,10 @@ class CandidateValidationReportDTO:
         _ordered_unique("candidate expectation identities", self.expectation_ids)
         result_ids = tuple(item.result_id for item in self.results)
         _ordered_unique("candidate validation result identities", result_ids)
-        if tuple(sorted(item.expectation.expectation_id for item in self.results)) != self.expectation_ids:
+        if (
+            tuple(sorted(item.expectation.expectation_id for item in self.results))
+            != self.expectation_ids
+        ):
             raise PerceptionCandidateValidationError(
                 "validation report expectation identities disagree with results"
             )
@@ -582,10 +580,7 @@ def _source_statistic(
     discovery: TransitionDiscoveryReportDTO,
     candidate: MissingComponentCandidateDTO,
 ) -> RecurrentUnexplainedStatisticDTO:
-    statistics = {
-        item.statistic_id: item
-        for item in discovery.statistics
-    }
+    statistics = {item.statistic_id: item for item in discovery.statistics}
     try:
         statistic = statistics[candidate.source_statistic_id]
     except KeyError as exc:
@@ -624,12 +619,8 @@ def _expectation(
         "field_schema_id": discovery.field_schema_id,
         "field_ids": candidate.field_ids,
         "expected_change": candidate.proposed_expected_change,
-        "minimum_mean_absolute_change": (
-            statistic.mean_absolute_change * retention
-        ),
-        "minimum_changed_fraction": (
-            statistic.mean_changed_fraction * retention
-        ),
+        "minimum_mean_absolute_change": (statistic.mean_absolute_change * retention),
+        "minimum_changed_fraction": (statistic.mean_changed_fraction * retention),
         "minimum_signed_change_magnitude": minimum_signed,
         "version": CANDIDATE_VALIDATION_EXPECTATION_VERSION,
     }
@@ -648,14 +639,14 @@ def _aggregate_fields(
             "candidate validation target has no measurable values"
         )
     changed_values = sum(item.changed_value_count for item in fields)
-    absolute = sum(
-        item.mean_absolute_change * item.total_value_count
-        for item in fields
-    ) / total_values
-    signed = sum(
-        item.mean_signed_change * item.total_value_count
-        for item in fields
-    ) / total_values
+    absolute = (
+        sum(item.mean_absolute_change * item.total_value_count for item in fields)
+        / total_values
+    )
+    signed = (
+        sum(item.mean_signed_change * item.total_value_count for item in fields)
+        / total_values
+    )
     return absolute, signed, changed_values / total_values, changed_values, total_values
 
 
@@ -706,9 +697,7 @@ def _finding(
             detail = "held-out change was present but direction was not decisive"
         else:
             status = "confirmed"
-            detail = (
-                "held-out evidence confirmed the candidate's directional change"
-            )
+            detail = "held-out evidence confirmed the candidate's directional change"
     values: dict[str, object] = {
         "expectation_id": expectation.expectation_id,
         "validation_observation_id": observation.observation_id,
@@ -810,7 +799,10 @@ def _report_status(results: tuple[CandidateValidationResultDTO, ...]) -> str:
         return "insufficient_evidence"
     if statuses == {"validated"}:
         return "all_validated"
-    if "validated" not in statuses and "insufficient_validation_evidence" not in statuses:
+    if (
+        "validated" not in statuses
+        and "insufficient_validation_evidence" not in statuses
+    ):
         return "none_validated"
     return "mixed_outcomes"
 
@@ -858,9 +850,7 @@ def validate_discovered_transition_candidates(
         raise PerceptionCandidateValidationError(
             "held-out observations must use the discovery field schema"
         )
-    validation_interactions = {
-        item.interaction_id for item in validation_observations
-    }
+    validation_interactions = {item.interaction_id for item in validation_observations}
     overlap_interactions = validation_interactions & set(discovery.interaction_ids)
     if overlap_interactions:
         raise PerceptionCandidateValidationError(

@@ -167,7 +167,9 @@ def _materialization(*, target_kind: str = "region_annotation"):
             rationale="Held-out evidence and semantic review support activation.",
             semantic_name="projectile-shadow",
             semantic_type=(
-                "spatial_relation" if target_kind == "relation_annotation" else "region_component"
+                "spatial_relation"
+                if target_kind == "relation_annotation"
+                else "region_component"
             ),
             semantic_role="context",
         )
@@ -212,9 +214,7 @@ def _materialization(*, target_kind: str = "region_annotation"):
             else ()
         ),
         annotation_properties=(
-            (("source", "p18g-test"),)
-            if target_kind == "region_annotation"
-            else ()
+            (("source", "p18g-test"),) if target_kind == "region_annotation" else ()
         ),
     )
     change_set = materialize_approved_candidate_promotions(
@@ -282,7 +282,9 @@ def test_activates_all_operations_and_persists_exact_inverse_plan() -> None:
     assert active.state_id != initial.state_id
     assert active.baseline().baseline_id == bundle.receipt.resulting_baseline_id
     assert bundle.rollback_plan.restore_state == initial
-    assert bundle.rollback_plan.inverse_operation_ids == change_set.inverse_operation_ids
+    assert (
+        bundle.rollback_plan.inverse_operation_ids == change_set.inverse_operation_ids
+    )
     assert bundle.receipt.forward_operation_ids == change_set.forward_operation_ids
     assert store.get_activation_bundle(change_set.change_set_id) == bundle
     assert store.list_activation_bundles() == (bundle,)
@@ -333,9 +335,7 @@ def test_activation_policy_can_forbid_relation_materialization() -> None:
     report = audit_promotion_activation(initial, change_set, policy)
 
     assert report.status == "blocked"
-    assert {item.code for item in report.findings} == {
-        "target_kind_disallowed"
-    }
+    assert {item.code for item in report.findings} == {"target_kind_disallowed"}
 
 
 def test_mid_plan_failure_is_atomic() -> None:

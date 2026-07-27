@@ -22,18 +22,12 @@ UNEXPLAINED_FIELD_OCCURRENCE_VERSION: Final = (
 TRANSITION_DISCOVERY_OBSERVATION_VERSION: Final = (
     "perception-transition-discovery-observation/1"
 )
-TRANSITION_DISCOVERY_POLICY_VERSION: Final = (
-    "perception-transition-discovery-policy/1"
-)
+TRANSITION_DISCOVERY_POLICY_VERSION: Final = "perception-transition-discovery-policy/1"
 RECURRENT_UNEXPLAINED_STATISTIC_VERSION: Final = (
     "perception-recurrent-unexplained-statistic/1"
 )
-MISSING_COMPONENT_CANDIDATE_VERSION: Final = (
-    "perception-missing-component-candidate/1"
-)
-TRANSITION_DISCOVERY_REPORT_VERSION: Final = (
-    "perception-transition-discovery-report/1"
-)
+MISSING_COMPONENT_CANDIDATE_VERSION: Final = "perception-missing-component-candidate/1"
+TRANSITION_DISCOVERY_REPORT_VERSION: Final = "perception-transition-discovery-report/1"
 TRANSITION_DISCOVERY_SEMANTICS: Final = (
     "recurrence_of_p18b_unexplained_fields_within_one_declared_discovery_cohort"
 )
@@ -88,9 +82,7 @@ def _ordered_unique(
     if not allow_empty and not values:
         raise PerceptionTransitionDiscoveryError(f"{name} must be non-empty")
     if values != tuple(sorted(set(values))):
-        raise PerceptionTransitionDiscoveryError(
-            f"{name} must be unique and sorted"
-        )
+        raise PerceptionTransitionDiscoveryError(f"{name} must be unique and sorted")
 
 
 def _ordered_with_repetition(
@@ -112,9 +104,7 @@ def _unit(name: str, value: float) -> None:
 
 def _positive_int(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise PerceptionTransitionDiscoveryError(
-            f"{name} must be a positive integer"
-        )
+        raise PerceptionTransitionDiscoveryError(f"{name} must be a positive integer")
 
 
 def _same_float(left: float, right: float) -> bool:
@@ -318,9 +308,7 @@ class TransitionDiscoveryObservationDTO:
             "version": TRANSITION_DISCOVERY_OBSERVATION_VERSION,
         }
         identity_values = dict(values)
-        identity_values["unexplained_fields"] = tuple(
-            asdict(item) for item in ordered
-        )
+        identity_values["unexplained_fields"] = tuple(asdict(item) for item in ordered)
         return cls(
             observation_id=_digest(identity_values),
             **values,  # type: ignore[arg-type]
@@ -599,7 +587,9 @@ class TransitionDiscoveryReportDTO:
     version: str = TRANSITION_DISCOVERY_REPORT_VERSION
 
     def __post_init__(self) -> None:
-        if not all((self.report_id, self.cohort_id, self.field_schema_id, self.policy_id)):
+        if not all(
+            (self.report_id, self.cohort_id, self.field_schema_id, self.policy_id)
+        ):
             raise PerceptionTransitionDiscoveryError(
                 "discovery report identities must be non-empty"
             )
@@ -647,8 +637,7 @@ class TransitionDiscoveryReportDTO:
             )
         known_statistics = set(statistic_ids)
         if any(
-            item.source_statistic_id not in known_statistics
-            for item in self.candidates
+            item.source_statistic_id not in known_statistics for item in self.candidates
         ):
             raise PerceptionTransitionDiscoveryError(
                 "candidate references an unknown recurrence statistic"
@@ -710,21 +699,24 @@ def _build_statistic(
     finding_ids: set[str] = set()
     for observation in supporting:
         occurrences = tuple(
-            item for item in observation.unexplained_fields if item.field_id in field_set
+            item
+            for item in observation.unexplained_fields
+            if item.field_id in field_set
         )
         if len(occurrences) != len(field_ids):
             raise PerceptionTransitionDiscoveryError(
                 "supporting observation does not contain every statistic field"
             )
         group_values = sum(item.total_value_count for item in occurrences)
-        group_signed = sum(
-            item.mean_signed_change * item.total_value_count
-            for item in occurrences
-        ) / group_values
+        group_signed = (
+            sum(
+                item.mean_signed_change * item.total_value_count for item in occurrences
+            )
+            / group_values
+        )
         total_values += group_values
         absolute_total += sum(
-            item.mean_absolute_change * item.total_value_count
-            for item in occurrences
+            item.mean_absolute_change * item.total_value_count for item in occurrences
         )
         signed_total += group_signed * group_values
         changed_values += sum(item.changed_value_count for item in occurrences)
@@ -878,9 +870,7 @@ def discover_recurrent_unexplained_transitions(
                 policy=resolved,
             )
         )
-    ordered_statistics = tuple(
-        sorted(statistics, key=lambda item: item.statistic_id)
-    )
+    ordered_statistics = tuple(sorted(statistics, key=lambda item: item.statistic_id))
     evidence_ready = len(ordered) >= resolved.minimum_observation_count
     candidates: list[MissingComponentCandidateDTO] = []
     if evidence_ready:
@@ -927,12 +917,8 @@ def discover_recurrent_unexplained_transitions(
         "version": TRANSITION_DISCOVERY_REPORT_VERSION,
     }
     identity_values = dict(values)
-    identity_values["statistics"] = tuple(
-        asdict(item) for item in ordered_statistics
-    )
-    identity_values["candidates"] = tuple(
-        asdict(item) for item in ordered_candidates
-    )
+    identity_values["statistics"] = tuple(asdict(item) for item in ordered_statistics)
+    identity_values["candidates"] = tuple(asdict(item) for item in ordered_candidates)
     return TransitionDiscoveryReportDTO(
         report_id=_digest(identity_values),
         **values,  # type: ignore[arg-type]

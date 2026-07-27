@@ -25,7 +25,6 @@ MARKER_USAGE_PATTERN = re.compile(r"pytest\.mark\.([a-zA-Z_][a-zA-Z0-9_]*)")
 
 SEARCH_ROOTS = (
     "tests",
-    "integration_tests",
     "packages",
     "research",
 )

@@ -46,7 +46,7 @@ def test_manifest_has_the_required_columns() -> None:
     ]
 
 
-def test_manifest_contains_all_nine_distributions() -> None:
+def test_manifest_contains_all_ten_distributions() -> None:
     rows = _read_manifest_rows()
     distributions = {row["distribution"] for row in rows}
     assert distributions == {
@@ -54,6 +54,7 @@ def test_manifest_contains_all_nine_distributions() -> None:
         "zeromodel-analysis",
         "zeromodel-observation",
         "zeromodel-vision",
+        "zeromodel-perception",
         "zeromodel-video",
         "zeromodel-sqlalchemy",
         "zeromodel-artifacts",
@@ -79,6 +80,7 @@ def test_manifest_is_not_a_placeholder() -> None:
         "zeromodel.analysis",
         "zeromodel.observation",
         "zeromodel.vision",
+        "zeromodel.perception",
         "zeromodel.video",
         "zeromodel.persistence.sqlalchemy",
         "zeromodel.artifacts",

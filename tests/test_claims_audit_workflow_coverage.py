@@ -7,12 +7,11 @@ WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 CLAIMS_AUDIT_WORKFLOW = WORKFLOWS_DIR / "claims-audit.yml"
 
 
-def test_claims_audit_reacts_to_the_six_package_workspace() -> None:
+def test_claims_audit_reacts_to_the_package_workspace() -> None:
     source = CLAIMS_AUDIT_WORKFLOW.read_text(encoding="utf-8")
     for required in (
         "packages/",
         "tests/",
-        "integration_tests/",
         "scripts/",
         "README.md",
         "package-boundaries.toml",

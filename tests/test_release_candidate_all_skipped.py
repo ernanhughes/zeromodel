@@ -41,6 +41,13 @@ def test_required_layer_with_only_skipped_tests_fails_release_verdict() -> None:
             "skipped": 0,
             "returncode": 0,
         },
+        "visual_transition_regression_tests": {
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "skipped": 0,
+            "returncode": 0,
+        },
         "research": {"status": "excluded_by_policy"},
     }
 

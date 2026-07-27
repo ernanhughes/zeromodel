@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -48,7 +49,9 @@ def test_governed_rollback_restores_exact_state_and_preserves_history(
     assert rollback.activation_receipt == activation.receipt
     assert rollback.receipt.prior_state_id == activation.resulting_state.state_id
     assert rollback.receipt.restored_state_id == initial.state_id
-    assert rollback.rollback_plan.status == "executed"
+    assert rollback.rollback_plan.status == "stored_inactive"
+    assert rollback.rollback_plan.rollback_plan_id == activation.rollback_plan.rollback_plan_id
+    assert rollback.receipt.rollback_plan_id == rollback.rollback_plan.rollback_plan_id
 
     second = store.commit_rollback(admission)
     assert second == rollback
@@ -76,7 +79,9 @@ def test_sqlite_activation_and_rollback_survive_restart(tmp_path) -> None:
     again = SqlitePromotionActivationStore(str(path))
     assert again.get_active_state() == initial
     assert again.commit_rollback(admission) == rollback
-    assert again.get_rollback_plan(activation.rollback_plan.rollback_plan_id).status == "executed"
+    loaded = again.get_rollback_plan(activation.rollback_plan.rollback_plan_id)
+    assert loaded.status == "stored_inactive"
+    assert loaded.rollback_plan_id == activation.rollback_plan.rollback_plan_id
 
 
 def test_stale_rollback_admission_is_rejected_without_mutation(tmp_path) -> None:
@@ -164,4 +169,114 @@ def test_sqlite_rejects_malformed_json_and_missing_operation_ordinals(tmp_path) 
     with pytest.raises(PerceptionPromotionActivationError, match="ordinals"):
         SqlitePromotionActivationStore(str(tmp_path / "ordinals.sqlite3")).get_rollback_plan(
             activation.rollback_plan.rollback_plan_id
+        )
+
+
+def test_policy_rejects_non_latest_rollback_mode() -> None:
+    with pytest.raises(PerceptionPromotionActivationError, match="exact latest"):
+        PromotionRollbackPolicyDTO.create(require_latest_activation=False)
+
+
+def test_two_sqlite_stores_commit_same_rollback_idempotently(tmp_path) -> None:
+    initial, change_set = _materialization()
+    path = tmp_path / "activation.sqlite3"
+    store = SqlitePromotionActivationStore(str(path), initial)
+    activation = execute_promotion_activation(store, change_set)
+    request = PromotionRollbackRequestDTO.create(
+        rollback_plan_id=activation.rollback_plan.rollback_plan_id,
+        expected_active_state_id=activation.resulting_state.state_id,
+        requested_by="operator:alice",
+        reason="Two-connection rollback contention.",
+    )
+    admission = store.admit_rollback(request)
+
+    def commit_from_new_store():
+        return SqlitePromotionActivationStore(str(path)).commit_rollback(admission)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = tuple(pool.map(lambda _: commit_from_new_store(), range(2)))
+
+    assert results[0] == results[1]
+    assert results[0].restored_state == initial
+    assert SqlitePromotionActivationStore(str(path)).get_active_state() == initial
+
+
+def test_sqlite_rejects_unsupported_schema_version(tmp_path) -> None:
+    initial, _ = _materialization()
+    path = tmp_path / "activation.sqlite3"
+    SqlitePromotionActivationStore(str(path), initial)
+    with sqlite3.connect(path) as conn:
+        conn.execute("UPDATE schema_version SET version = 999")
+
+    with pytest.raises(PerceptionPromotionActivationError, match="schema version"):
+        SqlitePromotionActivationStore(str(path))
+
+
+def test_sqlite_cross_checks_operation_table_against_bundle_payload(tmp_path) -> None:
+    initial, change_set = _materialization()
+    path = tmp_path / "activation.sqlite3"
+    store = SqlitePromotionActivationStore(str(path), initial)
+    activation = execute_promotion_activation(store, change_set)
+    with sqlite3.connect(path) as conn:
+        conn.execute(
+            "UPDATE activation_operations SET ordinal = ordinal + 10 WHERE change_set_id = ? AND direction = 'inverse'",
+            (change_set.change_set_id,),
+        )
+
+    with pytest.raises(PerceptionPromotionActivationError, match="ordinals disagree"):
+        SqlitePromotionActivationStore(str(path)).get_rollback_plan(
+            activation.rollback_plan.rollback_plan_id
+        )
+
+
+def test_sqlite_rejects_corrupted_rollback_admission_and_bundle_lineage(tmp_path) -> None:
+    initial, change_set = _materialization()
+    path = tmp_path / "activation.sqlite3"
+    store = SqlitePromotionActivationStore(str(path), initial)
+    activation = execute_promotion_activation(store, change_set)
+    request = PromotionRollbackRequestDTO.create(
+        rollback_plan_id=activation.rollback_plan.rollback_plan_id,
+        expected_active_state_id=activation.resulting_state.state_id,
+        requested_by="operator:alice",
+        reason="Corruption matrix.",
+    )
+    admission = store.admit_rollback(request)
+    with sqlite3.connect(path) as conn:
+        conn.execute(
+            "UPDATE rollback_admissions SET payload = ? WHERE admission_id = ?",
+            ("{}", admission.admission_id),
+        )
+
+    with pytest.raises(PerceptionPromotionActivationError):
+        SqlitePromotionActivationStore(str(path)).commit_rollback(admission)
+
+    path2 = tmp_path / "bundle-lineage.sqlite3"
+    store2 = SqlitePromotionActivationStore(str(path2), initial)
+    activation2 = execute_promotion_activation(store2, change_set)
+    request2 = PromotionRollbackRequestDTO.create(
+        rollback_plan_id=activation2.rollback_plan.rollback_plan_id,
+        expected_active_state_id=activation2.resulting_state.state_id,
+        requested_by="operator:alice",
+        reason="Corrupt rollback bundle lineage.",
+    )
+    admission2 = store2.admit_rollback(request2)
+    rollback = store2.commit_rollback(admission2)
+    with sqlite3.connect(path2) as conn:
+        payload = conn.execute(
+            "SELECT payload FROM rollback_bundles WHERE rollback_plan_id = ?",
+            (activation2.rollback_plan.rollback_plan_id,),
+        ).fetchone()[0]
+        payload = payload.replace(
+            rollback.receipt.rollback_plan_id,
+            "sha256:wrongrollbackplan",
+            1,
+        )
+        conn.execute(
+            "UPDATE rollback_bundles SET payload = ? WHERE rollback_plan_id = ?",
+            (payload, activation2.rollback_plan.rollback_plan_id),
+        )
+
+    with pytest.raises(PerceptionPromotionActivationError):
+        SqlitePromotionActivationStore(str(path2)).get_rollback_plan(
+            activation2.rollback_plan.rollback_plan_id
         )

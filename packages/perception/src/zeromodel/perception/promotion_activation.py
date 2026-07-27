@@ -135,36 +135,6 @@ def _object_digest(kind: str, value: object) -> str:
     return _digest({"object_kind": kind, "payload": asdict(value)})  # type: ignore[arg-type]
 
 
-def replace_rollback_plan_status(
-    plan: "PromotionRollbackPlanDTO",
-    status: str,
-) -> "PromotionRollbackPlanDTO":
-    values: dict[str, object] = {
-        "status": status,
-        "change_set_id": plan.change_set_id,
-        "admission_id": plan.admission_id,
-        "activated_state_id": plan.activated_state_id,
-        "activated_baseline_id": plan.activated_baseline_id,
-        "activated_baseline_version_id": plan.activated_baseline_version_id,
-        "restore_state": plan.restore_state,
-        "restore_baseline_id": plan.restore_baseline_id,
-        "restore_baseline_version_id": plan.restore_baseline_version_id,
-        "inverse_operation_ids": plan.inverse_operation_ids,
-        "inverse_operations": plan.inverse_operations,
-        "semantics": plan.semantics,
-        "version": plan.version,
-    }
-    identity_values = dict(values)
-    identity_values["restore_state"] = asdict(plan.restore_state)
-    identity_values["inverse_operations"] = tuple(
-        asdict(item) for item in plan.inverse_operations
-    )
-    return PromotionRollbackPlanDTO(
-        rollback_plan_id=_digest(identity_values),
-        **values,  # type: ignore[arg-type]
-    )
-
-
 def _annotation_identity(annotation: PerceptionRegionAnnotationDTO) -> str:
     return _digest(
         {
@@ -850,6 +820,10 @@ class PromotionRollbackPolicyDTO:
             raise PerceptionPromotionActivationError(
                 "rollback policy identity must be non-empty"
             )
+        if not self.require_latest_activation:
+            raise PerceptionPromotionActivationError(
+                "P18H supports rollback of the exact latest activation only"
+            )
         _positive_int("maximum rollback operations", self.maximum_operations)
         _ordered_unique(
             "permitted rollback operation kinds",
@@ -1036,12 +1010,13 @@ class PromotionRollbackBundleDTO:
     version: str = PROMOTION_ROLLBACK_BUNDLE_VERSION
 
     def __post_init__(self) -> None:
-        if self.rollback_plan.status != "executed":
+        if self.rollback_plan.status != PROMOTION_ROLLBACK_PLAN_STATUS:
             raise PerceptionPromotionActivationError(
-                "rollback bundles require an executed rollback plan"
+                "rollback bundles preserve the original stored inactive rollback plan"
             )
         if (
-            self.receipt.rollback_plan_id != self.activation_receipt.rollback_plan_id
+            self.receipt.rollback_plan_id != self.rollback_plan.rollback_plan_id
+            or self.receipt.rollback_plan_id != self.activation_receipt.rollback_plan_id
             or self.receipt.activation_receipt_id != self.activation_receipt.receipt_id
             or self.receipt.restored_state_id != self.restored_state.state_id
         ):
@@ -1763,24 +1738,29 @@ def _activation_bundle_from_dict(data: Mapping[str, object]) -> PromotionActivat
 
 
 def _rollback_admission_from_dict(data: Mapping[str, object]) -> PromotionRollbackAdmissionDTO:
-    return PromotionRollbackAdmissionDTO(
-        admission_id=str(data["admission_id"]),
-        status=str(data["status"]),
-        request_id=str(data["request_id"]),
-        policy_id=str(data["policy_id"]),
-        audit_report_id=str(data["audit_report_id"]),
-        rollback_plan_id=str(data["rollback_plan_id"]),
-        expected_state_id=str(data["expected_state_id"]),
-        expected_revision=int(data["expected_revision"]),
-        expected_baseline_id=str(data["expected_baseline_id"]),
-        expected_baseline_version_id=str(data["expected_baseline_version_id"]),
-        predicted_restore_state_id=str(data["predicted_restore_state_id"]),
-        predicted_restore_baseline_id=str(data["predicted_restore_baseline_id"]),
-        predicted_restore_baseline_version_id=str(data["predicted_restore_baseline_version_id"]),
-        inverse_operation_ids=tuple(str(item) for item in data["inverse_operation_ids"]),  # type: ignore[index]
-        semantics=str(data["semantics"]),
-        version=str(data["version"]),
-    )
+    try:
+        return PromotionRollbackAdmissionDTO(
+            admission_id=str(data["admission_id"]),
+            status=str(data["status"]),
+            request_id=str(data["request_id"]),
+            policy_id=str(data["policy_id"]),
+            audit_report_id=str(data["audit_report_id"]),
+            rollback_plan_id=str(data["rollback_plan_id"]),
+            expected_state_id=str(data["expected_state_id"]),
+            expected_revision=int(data["expected_revision"]),
+            expected_baseline_id=str(data["expected_baseline_id"]),
+            expected_baseline_version_id=str(data["expected_baseline_version_id"]),
+            predicted_restore_state_id=str(data["predicted_restore_state_id"]),
+            predicted_restore_baseline_id=str(data["predicted_restore_baseline_id"]),
+            predicted_restore_baseline_version_id=str(data["predicted_restore_baseline_version_id"]),
+            inverse_operation_ids=tuple(str(item) for item in data["inverse_operation_ids"]),  # type: ignore[index]
+            semantics=str(data["semantics"]),
+            version=str(data["version"]),
+        )
+    except Exception as exc:
+        raise PerceptionPromotionActivationError(
+            "stored rollback admission is malformed"
+        ) from exc
 
 
 def _rollback_receipt_from_dict(data: Mapping[str, object]) -> PromotionRollbackReceiptDTO:
@@ -1977,24 +1957,73 @@ class SqlitePromotionActivationStore:
                 raise PerceptionPromotionActivationError(
                     f"unknown activated change set: {change_set_id}"
                 )
-            return _activation_bundle_from_dict(_loads(row[0]))
+            bundle = _activation_bundle_from_dict(_loads(row[0]))
+            self._validate_operation_rows(conn, bundle)
+            return bundle
 
     def list_activation_bundles(self) -> tuple[PromotionActivationBundleDTO, ...]:
         with self._connect() as conn:
             rows = conn.execute("SELECT payload FROM activation_bundles ORDER BY change_set_id").fetchall()
-            return tuple(_activation_bundle_from_dict(_loads(row[0])) for row in rows)
+            bundles = tuple(_activation_bundle_from_dict(_loads(row[0])) for row in rows)
+            for bundle in bundles:
+                self._validate_operation_rows(conn, bundle)
+            return bundles
 
     def get_rollback_plan(self, rollback_plan_id: str) -> PromotionRollbackPlanDTO:
         with self._connect() as conn:
             row = conn.execute("SELECT payload FROM rollback_bundles WHERE rollback_plan_id = ?", (rollback_plan_id,)).fetchone()
             if row is not None:
-                return _rollback_bundle_from_dict(_loads(row[0])).rollback_plan
+                bundle = _rollback_bundle_from_dict(_loads(row[0]))
+                activation_row = conn.execute(
+                    "SELECT payload FROM activation_bundles WHERE change_set_id = ?",
+                    (bundle.activation_receipt.change_set_id,),
+                ).fetchone()
+                if activation_row is None:
+                    raise PerceptionPromotionActivationError(
+                        "rollback bundle references a missing activation owner"
+                    )
+                activation = _activation_bundle_from_dict(_loads(activation_row[0]))
+                self._validate_operation_rows(conn, activation)
+                return bundle.rollback_plan
             row = conn.execute("SELECT payload FROM activation_bundles WHERE rollback_plan_id = ?", (rollback_plan_id,)).fetchone()
             if row is None:
                 raise PerceptionPromotionActivationError(
                     f"unknown rollback plan: {rollback_plan_id}"
                 )
-            return _activation_bundle_from_dict(_loads(row[0])).rollback_plan
+            bundle = _activation_bundle_from_dict(_loads(row[0]))
+            self._validate_operation_rows(conn, bundle)
+            return bundle.rollback_plan
+
+    def _validate_operation_rows(
+        self,
+        conn: sqlite3.Connection,
+        bundle: PromotionActivationBundleDTO,
+    ) -> None:
+        rows = conn.execute(
+            "SELECT direction, ordinal, operation_id FROM activation_operations WHERE change_set_id = ? ORDER BY direction, ordinal",
+            (bundle.change_set_id,),
+        ).fetchall()
+        observed = {
+            direction: tuple((ordinal, operation_id) for _, ordinal, operation_id in rows if direction == _)
+            for direction in ("forward", "inverse")
+        }
+        expected = {
+            "forward": tuple(
+                (index, operation_id)
+                for index, operation_id in enumerate(
+                    bundle.receipt.forward_operation_ids,
+                    start=1,
+                )
+            ),
+            "inverse": tuple(
+                (operation.sequence, operation.operation_id)
+                for operation in bundle.rollback_plan.inverse_operations
+            ),
+        }
+        if observed != expected:
+            raise PerceptionPromotionActivationError(
+                "persisted activation operation ordinals disagree with bundle payload"
+            )
 
     def admit_rollback(
         self,
@@ -2012,7 +2041,9 @@ class SqlitePromotionActivationStore:
             if plan_row is None:
                 plan = None
             else:
-                plan = _activation_bundle_from_dict(_loads(plan_row[0])).rollback_plan
+                activation = _activation_bundle_from_dict(_loads(plan_row[0]))
+                self._validate_operation_rows(conn, activation)
+                plan = activation.rollback_plan
             report = audit_promotion_rollback(current, plan, request, resolved)
             if plan is None:
                 raise PerceptionPromotionActivationError(
@@ -2070,6 +2101,7 @@ class SqlitePromotionActivationStore:
             if activation_row is None:
                 raise PerceptionPromotionActivationError("rollback plan has no activation owner")
             activation = _activation_bundle_from_dict(_loads(activation_row[0]))
+            self._validate_operation_rows(conn, activation)
             restored = _apply_inverse_operations(current, activation.rollback_plan, operation_hook=self)
             if restored.state_id != admission.predicted_restore_state_id:
                 raise PerceptionPromotionActivationError(
@@ -2091,11 +2123,10 @@ class SqlitePromotionActivationStore:
                 receipt_id=_digest(receipt_values),
                 **receipt_values,  # type: ignore[arg-type]
             )
-            executed_plan = replace_rollback_plan_status(activation.rollback_plan, "executed")
             bundle_values: dict[str, object] = {
                 "receipt": receipt,
                 "restored_state": restored,
-                "rollback_plan": executed_plan,
+                "rollback_plan": activation.rollback_plan,
                 "activation_receipt": activation.receipt,
                 "semantics": PROMOTION_ACTIVATION_SEMANTICS,
                 "version": PROMOTION_ROLLBACK_BUNDLE_VERSION,
@@ -2603,11 +2634,10 @@ class InMemoryPromotionActivationStore:
                 receipt_id=_digest(receipt_values),
                 **receipt_values,  # type: ignore[arg-type]
             )
-            executed_plan = replace_rollback_plan_status(plan, "executed")
             bundle_values: dict[str, object] = {
                 "receipt": receipt,
                 "restored_state": restored,
-                "rollback_plan": executed_plan,
+                "rollback_plan": plan,
                 "activation_receipt": activation.receipt,
                 "semantics": PROMOTION_ACTIVATION_SEMANTICS,
                 "version": PROMOTION_ROLLBACK_BUNDLE_VERSION,

@@ -1,6 +1,28 @@
 # Release process
 
-## Current: 1.0.13 nine-package release-candidate validation
+## Current: v1.1.0 release-candidate validation preparation
+
+P18H closes the in-memory durability gap left by P18G for the perception package.
+The bounded claim is an in-process SQLite reference implementation that preserves
+admitted active state, activation receipts, rollback plans, rollback admissions,
+and rollback receipts across restart, and executes exact stored inverse rollback
+plans atomically only when the current active state still matches the activated
+state named by the plan.
+
+This does not create distributed activation, multi-step historical rewind,
+production authorization, semantic safety recovery, or a production uptime/scale
+claim.
+
+Before tagging or publishing `v1.1.0`, run the release-candidate gates below and
+record any unrelated failures separately:
+
+```powershell
+python scripts/validate_release_candidate.py
+python scripts/run_fast_tests.py
+python scripts/check_quality.py
+```
+
+## Historical: 1.0.13 nine-package release-candidate validation
 
 ZeroModel 1.0.13 uses a nine-distribution release-candidate workflow before any
 publish, tag, or GitHub release action:

@@ -84,7 +84,16 @@ from .promotion_activation import (  # noqa: F401
     PROMOTION_ACTIVATION_STORE_VERSION,
     PROMOTION_ACTIVE_STATE_VERSION,
     PROMOTION_ROLLBACK_PLAN_STATUS,
+    PROMOTION_ROLLBACK_PLAN_STATUSES,
     PROMOTION_ROLLBACK_PLAN_VERSION,
+    PROMOTION_ROLLBACK_RECEIPT_STATUS,
+    PROMOTION_ROLLBACK_RECEIPT_VERSION,
+    PROMOTION_ROLLBACK_REQUEST_VERSION,
+    PROMOTION_ROLLBACK_POLICY_VERSION,
+    PROMOTION_ROLLBACK_AUDIT_REPORT_VERSION,
+    PROMOTION_ROLLBACK_ADMISSION_VERSION,
+    PROMOTION_ROLLBACK_BUNDLE_VERSION,
+    PROMOTION_SQLITE_ACTIVATION_SCHEMA_VERSION,
     ActivePromotionStateDTO,
     InMemoryPromotionActivationStore,
     PerceptionPromotionActivationError,
@@ -95,11 +104,21 @@ from .promotion_activation import (  # noqa: F401
     PromotionActivationPolicyDTO,
     PromotionActivationReceiptDTO,
     PromotionActivationStore,
+    PromotionRollbackAdmissionDTO,
+    PromotionRollbackAuditDTO,
+    PromotionRollbackBundleDTO,
+    PromotionRollbackPolicyDTO,
     PromotionRollbackPlanDTO,
+    PromotionRollbackReceiptDTO,
+    PromotionRollbackRequestDTO,
+    SqlitePromotionActivationStore,
     audit_promotion_activation,
+    audit_promotion_rollback,
     authorize_promotion_activation,
+    authorize_promotion_rollback,
     build_promotion_activation_bundle,
     execute_promotion_activation,
+    execute_promotion_rollback,
 )
 from .promotion_materialization import (  # noqa: F401
     MATERIALIZED_PROMOTION_CHANGE_VERSION,
@@ -193,7 +212,7 @@ from .transition_evidence import (  # noqa: F401
 )
 
 PERCEPTION_PACKAGE_VERSION = "1.0.13"
-PERCEPTION_STAGE = "P18G"
+PERCEPTION_STAGE = "P18H"
 
 __all__ = [
     name

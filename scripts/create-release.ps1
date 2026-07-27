@@ -1116,13 +1116,71 @@ Remote: $RemoteCommit
     $StatusAfterGates = Capture "git" @("status", "--porcelain")
 
     if ($StatusAfterGates) {
-        Fail @"
-Release gates changed the working tree.
+        $ChangedPaths = @(
+            $StatusAfterGates -split "`r?`n" |
+                ForEach-Object {
+                    if ($_.Length -ge 4) {
+                        $_.Substring(3).Trim()
+                    }
+                } |
+                Where-Object { $_ }
+        )
 
-Commit those generated results before publication:
+        $AllowedGeneratedPrefixes = @(
+            "docs/architecture/package-release-artifacts-$Version.json",
+            "docs/architecture/package-public-api-$Version.csv",
+            "docs/architecture/package-release-test-layers-$Version.json",
+            "docs/results/release-candidate-$Version/"
+        )
 
-$StatusAfterGates
-"@
+        $UnexpectedChanges = @(
+            $ChangedPaths |
+                Where-Object {
+                    $Path = $_.Replace("\", "/")
+                    -not (
+                        $AllowedGeneratedPrefixes |
+                            Where-Object {
+                                $Path -eq $_ -or $Path.StartsWith($_)
+                            }
+                    )
+                }
+        )
+
+        if ($UnexpectedChanges.Count -gt 0) {
+            Fail @"
+    Release gates changed files outside the approved generated-evidence paths:
+
+    $($UnexpectedChanges -join "`n")
+    "@
+        }
+
+        Step "Committing generated release evidence"
+
+        Run "git" @(
+            "add",
+            "docs/architecture/package-release-artifacts-$Version.json",
+            "docs/architecture/package-public-api-$Version.csv",
+            "docs/architecture/package-release-test-layers-$Version.json",
+            "docs/results/release-candidate-$Version"
+        )
+
+        $StagedChanges = Capture "git" @("diff", "--cached", "--name-only")
+
+        if ($StagedChanges) {
+            Run "git" @(
+                "commit",
+                "-m",
+                "chore(release): record ZeroModel $Version validation evidence"
+            )
+
+            Run "git" @(
+                "push",
+                $Remote,
+                $BaseBranch
+            )
+
+            $ReleaseCommit = Capture "git" @("rev-parse", "HEAD")
+        }
     }
 
     if (-not $SkipCI) {

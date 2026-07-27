@@ -28,8 +28,14 @@ def _compile(adapter, name, count, seed=0):
 
 
 def test_arcade_alien_identity_is_not_recoverable():
+    # Tightened per repair review: the alien sprite carries no marker at all,
+    # so this must land specifically on insufficient_observability (evidence
+    # absent from the frame), not merely "not compiled" -- a regression that
+    # instead produced insufficient_representation (evidence exists but no
+    # candidate captured it) would be a different, incorrect finding and
+    # this assertion previously would not have caught it.
     compiled = _compile(arcade_adapter, "alien_target_identity", count=10)
-    assert compiled.status != "compiled"
+    assert compiled.status == "insufficient_observability"
 
 
 def test_warehouse_crate_identity_is_recoverable():

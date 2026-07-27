@@ -452,7 +452,7 @@ expected $ExpectedVersion.
 
                 if ($DependencyVersion -ne $ExpectedVersion) {
                     Fail @"
-Internal dependency mismatch in $Path:
+Internal dependency mismatch in ${Path}:
 $($Match.Value)
 Expected version: $ExpectedVersion
 "@
@@ -768,10 +768,11 @@ else {
     )
 }
 
-$NotesRelativePath = $NotesFullPath
-    .Substring($Root.Length)
-    .TrimStart([char[]]@("\", "/"))
-    .Replace("\", "/")
+$NotesRelativePath = $NotesFullPath.Substring($Root.Length)
+$NotesRelativePath = $NotesRelativePath.TrimStart(
+    [char[]]@("\", "/")
+)
+$NotesRelativePath = $NotesRelativePath.Replace("\", "/")
 
 $ReleaseBranch = "release/$Version"
 $Tag = "v$Version"

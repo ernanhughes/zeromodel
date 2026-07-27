@@ -21,13 +21,13 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 
 import numpy as np
 
 from visual_transition_benchmark import report as rp
 from visual_transition_benchmark.run import _git_sha
-from visual_transition_benchmark.compiler.candidates import RepresentationCandidate, generate_candidates
+from visual_transition_benchmark.compiler.candidates import RegionGeometry, RepresentationCandidate, generate_candidates
 from visual_transition_benchmark.compiler.compile import compile_requirement
 from visual_transition_benchmark.compiler.evaluate import CandidateEvaluationResult, evaluate_candidate
 from visual_transition_benchmark.compiler_adapters import arcade as arcade_adapter
@@ -47,6 +47,77 @@ _NAIVE_DECODER_PREFERENCE = (
     "relation_over_decoded",
     "exact_lookup",
 )
+
+
+def _manual_candidate(
+    req, region_for_id: RegionGeometry, *, field_height: int, field_width: int, aggregation: str, decoder_kind: str
+) -> RepresentationCandidate:
+    return RepresentationCandidate(
+        requirement_id=req.requirement_id,
+        region_id=region_for_id.region_id,
+        field_height=field_height,
+        field_width=field_width,
+        aggregation=aggregation,
+        decoder_kind=decoder_kind,
+        comparison=req.comparison,
+        complexity_cost=0.0,
+        assumptions=("manual reference: the literal historical hand-built representation",),
+    )
+
+
+def _manual_reference(case) -> Optional[Tuple[RepresentationCandidate, RegionGeometry]]:
+    """The literal historical hand-built representation for cases where one
+    existed (see ``compiler/MANUAL_REPRESENTATION_INVENTORY.md``), evaluated
+    on the exact same held-out split as every other strategy -- a live
+    comparison, not a cited historical number from a different run.
+
+    Two cases (cooldown_value, door_state) hand-narrowed the *declared
+    region itself* to just the real signal pixels, rather than declaring the
+    coarse region and repairing it at decode time (the compiler's
+    auto-narrowing approach) -- those get their own narrower
+    ``RegionGeometry`` here to reproduce that literally, not just
+    approximately. Returns ``None`` for ``alien_target_identity``: the
+    inventory records no manual representation was ever successfully built
+    for it (a hidden/unobservable limitation, not a resolution choice), so
+    there is nothing honest to compare against.
+    """
+
+    req = case.requirement
+    region = case.region
+
+    if case.name == "tank_presence":
+        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="presence_threshold"), region
+    if case.name == "tank_position":
+        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="mean", decoder_kind="argmax_field"), region
+    if case.name == "tank_direction":
+        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="mean", decoder_kind="signed_delta_over_position"), region
+    if case.name == "tank_movement_magnitude":
+        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="mean", decoder_kind="exact_delta_over_position"), region
+    if case.name == "cooldown_value":
+        narrow = RegionGeometry(
+            region_id="cooldown_region_manual_narrow", canvas_shape=region.canvas_shape,
+            y0=region.y0, y1=region.y1, x0=region.x1 - 3, x1=region.x1 - 1, cell_height=1, cell_width=1,
+        )
+        return _manual_candidate(req, narrow, field_height=1, field_width=1, aggregation="mean", decoder_kind="nearest_permitted_value"), narrow
+    if case.name == "alien_target_identity":
+        return None
+    if case.name == "robot_position":
+        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="argmax_field"), region
+    if case.name == "robot_direction":
+        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="signed_delta_over_position"), region
+    if case.name == "robot_movement_magnitude":
+        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="exact_delta_over_position"), region
+    if case.name == "battery_value":
+        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="nearest_permitted_value"), region
+    if case.name == "door_state":
+        narrow = RegionGeometry(
+            region_id="door_cell_manual_narrow", canvas_shape=region.canvas_shape,
+            y0=region.y0, y1=region.y1, x0=region.x0 + 2, x1=region.x0 + 4, cell_height=1, cell_width=1,
+        )
+        return _manual_candidate(req, narrow, field_height=1, field_width=1, aggregation="mean", decoder_kind="nearest_permitted_value"), narrow
+    if case.name == "crate_identity":
+        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="exact_pattern", decoder_kind="local_marker_pattern"), region
+    return None
 
 
 def _pick_reference_candidate(
@@ -103,13 +174,15 @@ def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: in
         min_decoding_accuracy=case.min_decoding_accuracy,
     )
 
-    def _held_out(candidate: Optional[RepresentationCandidate]) -> Optional[CandidateEvaluationResult]:
+    def _held_out(
+        candidate: Optional[RepresentationCandidate], region: Optional[RegionGeometry] = None
+    ) -> Optional[CandidateEvaluationResult]:
         if candidate is None or not eval_samples:
             return None
         return evaluate_candidate(
             candidate,
             case.requirement,
-            case.region,
+            region if region is not None else case.region,
             eval_samples,
             canonical_levels=case.canonical_levels,
             sub_patch_offsets=sub_offsets,
@@ -120,6 +193,8 @@ def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: in
         candidates, field_height=case.region.cell_height, field_width=case.region.cell_width
     )
     always_pixel = _pick_reference_candidate(candidates, field_height=1, field_width=1)
+    manual_ref = _manual_reference(case)
+    manual_candidate, manual_region = manual_ref if manual_ref is not None else (None, None)
 
     selected = compiled.selected_candidate
     return {
@@ -146,6 +221,17 @@ def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: in
             "candidate": _candidate_summary(always_pixel),
             "held_out_eval": _eval_summary(_held_out(always_pixel)),
         },
+        "manual_strategy": {
+            "candidate": _candidate_summary(manual_candidate),
+            "region_id": None if manual_region is None else manual_region.region_id,
+            "held_out_eval": _eval_summary(_held_out(manual_candidate, manual_region)),
+            "note": (
+                "no manual representation was ever successfully hand-built for this property "
+                "(hidden/unobservable limitation, not a resolution choice) -- nothing honest to compare"
+                if manual_ref is None
+                else None
+            ),
+        },
         "all_dev_evaluations": [
             {
                 "candidate_id": e.candidate_id,
@@ -170,8 +256,8 @@ def _render_summary_markdown(environment: dict, results: list) -> str:
     lines.append("")
     lines.append("## Per-case outcomes")
     lines.append("")
-    lines.append("| Domain | Case | Status | Selected (dev) | Dev acc. | Held-out acc. | Fixed-coarse held-out | Always-pixel held-out |")
-    lines.append("|---|---|---|---|---:|---:|---:|---:|")
+    lines.append("| Domain | Case | Status | Selected (dev) | Dev acc. | Held-out acc. | Fixed-coarse held-out | Always-pixel held-out | Manual held-out |")
+    lines.append("|---|---|---|---|---:|---:|---:|---:|---:|")
     for r in results:
         cs = r["compiled_strategy"]
         candidate = cs["candidate"]
@@ -183,9 +269,19 @@ def _render_summary_markdown(environment: dict, results: list) -> str:
         fc_acc = "-" if fc is None else f"{fc['decoding_accuracy']:.3f}"
         ap = r["always_pixel_strategy"]["held_out_eval"]
         ap_acc = "-" if ap is None else f"{ap['decoding_accuracy']:.3f}"
+        manual = r["manual_strategy"]["held_out_eval"]
+        manual_acc = "n/a" if r["manual_strategy"]["note"] else ("-" if manual is None else f"{manual['decoding_accuracy']:.3f}")
         lines.append(
-            f"| {r['domain']} | {r['case']} | {r['status']} | {selected_desc} | {dev_acc} | {held_out_acc} | {fc_acc} | {ap_acc} |"
+            f"| {r['domain']} | {r['case']} | {r['status']} | {selected_desc} | {dev_acc} | {held_out_acc} | {fc_acc} | {ap_acc} | {manual_acc} |"
         )
+    lines.append("")
+    lines.append(
+        "Manual = the literal historical hand-built representation from "
+        "`compiler/MANUAL_REPRESENTATION_INVENTORY.md`, evaluated on the same "
+        "held-out split as every other strategy (not a cited number from a "
+        "different run). `n/a` marks `alien_target_identity`, for which no "
+        "manual representation was ever successfully built."
+    )
     lines.append("")
     lines.append("## Status counts")
     lines.append("")

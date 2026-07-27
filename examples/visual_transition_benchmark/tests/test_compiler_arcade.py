@@ -72,8 +72,11 @@ def test_cooldown_value_compiles_via_auto_narrowing():
     assert naive_passed == []
 
 
-def test_alien_target_identity_does_not_compile():
-    # The alien sprite carries no identity marker -- this is the documented,
-    # honest negative result, not a bug to be patched around.
+def test_alien_target_identity_reports_insufficient_observability():
+    # The alien sprite carries no identity marker at all -- this is the
+    # documented, honest negative result, not a bug to be patched around.
+    # Asserted as the exact status (not just "!= compiled") because the
+    # compiled/insufficient_representation/insufficient_observability
+    # trichotomy is itself one of this experiment's central findings.
     compiled = _compile(_case("alien_target_identity"), count=10)
-    assert compiled.status != "compiled"
+    assert compiled.status == "insufficient_observability"

@@ -65,7 +65,14 @@ def _subtract(a, b):
 
 def _nearest_level(value: float, levels: Sequence[float], tolerance: float) -> object:
     if not levels:
-        return round(value, 6)
+        # No canonical vocabulary was declared to snap to -- passing the raw
+        # continuous intensity through as if it were a decode would silently
+        # fabricate precision this decoder never earned, and would prevent a
+        # genuinely-unobservable property (e.g. an identity with no visible
+        # marker at all) from ever being classified as degenerate: the raw
+        # intensity varies with irrelevant scene content even though it
+        # carries no information about the declared property.
+        return "no_canonical_levels_declared"
     best, best_distance = None, None
     for level in levels:
         distance = abs(value - level)

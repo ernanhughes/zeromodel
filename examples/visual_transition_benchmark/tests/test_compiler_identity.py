@@ -44,7 +44,10 @@ def test_warehouse_crate_identity_is_recoverable():
 
 
 def test_identity_evidence_kind_requires_permits_identity_marker_in_both_domains():
-    for adapter, name in ((arcade_adapter, "alien_target_identity"), (warehouse_adapter, "crate_identity")):
+    for adapter, name in (
+        (arcade_adapter, "alien_target_identity"),
+        (warehouse_adapter, "crate_identity"),
+    ):
         case = next(c for c in adapter.build_cases() if c.name == name)
         assert case.requirement.evidence_kind == "visible_identity"
         assert case.requirement.permits_identity_marker is True

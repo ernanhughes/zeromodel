@@ -57,8 +57,12 @@ class ValueAwareZeroModelAnalyzer:
         action: str,
         metadata: TransitionMetadata,
     ) -> ValueTransitionAnalysis:
-        component_analysis = self._component_analyzer.analyze(frame_before, frame_after, action, metadata)
-        transition_evidence = vc.build_value_transition_evidence(frame_before, frame_after)
+        component_analysis = self._component_analyzer.analyze(
+            frame_before, frame_after, action, metadata
+        )
+        transition_evidence = vc.build_value_transition_evidence(
+            frame_before, frame_after
+        )
         values = vc.decode_values(transition_evidence)
         verdict = vc.evaluate_contracts(action, values)
         return ValueTransitionAnalysis(

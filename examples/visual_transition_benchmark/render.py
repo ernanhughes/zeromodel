@@ -42,7 +42,9 @@ def _mask_overlay(base: np.ndarray, mask: np.ndarray, color: tuple) -> Image.Ima
 
 
 def _labeled(image: Image.Image, label: str) -> Image.Image:
-    canvas = Image.new("RGB", (image.width, image.height + TEXT_LINE_HEIGHT + 2), (24, 24, 24))
+    canvas = Image.new(
+        "RGB", (image.width, image.height + TEXT_LINE_HEIGHT + 2), (24, 24, 24)
+    )
     canvas.paste(image, (0, TEXT_LINE_HEIGHT + 2))
     draw = ImageDraw.Draw(canvas)
     draw.text((2, 1), label, fill=(255, 255, 255), font=_FONT)
@@ -70,13 +72,21 @@ def render_transition_panel(
     panels = [
         _labeled(_upscale(record.frame_before), "1. frame_before"),
         _labeled(_upscale(record.frame_after), "2. frame_after"),
-        _labeled(_diff_heatmap(record.frame_before, record.frame_after), "3. raw pixel diff"),
         _labeled(
-            _mask_overlay(record.frame_after, privileged_output.predicted_region_mask, (0, 220, 0)),
+            _diff_heatmap(record.frame_before, record.frame_after), "3. raw pixel diff"
+        ),
+        _labeled(
+            _mask_overlay(
+                record.frame_after, privileged_output.predicted_region_mask, (0, 220, 0)
+            ),
             "4. privileged ground truth",
         ),
         _labeled(
-            _mask_overlay(record.frame_after, zeromodel_output.predicted_region_mask, (0, 200, 255)),
+            _mask_overlay(
+                record.frame_after,
+                zeromodel_output.predicted_region_mask,
+                (0, 200, 255),
+            ),
             "5. ZeroModel predicted",
         ),
     ]
@@ -97,7 +107,12 @@ def render_transition_panel(
     canvas.paste(strip, (0, 0))
     draw = ImageDraw.Draw(canvas)
     for index, line in enumerate(lines):
-        draw.text((4, strip.height + 4 + index * TEXT_LINE_HEIGHT), line, fill=(230, 230, 230), font=_FONT)
+        draw.text(
+            (4, strip.height + 4 + index * TEXT_LINE_HEIGHT),
+            line,
+            fill=(230, 230, 230),
+            font=_FONT,
+        )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(output_path, format="PNG")
@@ -126,7 +141,9 @@ def build_html_index(
     for row in rows:
         groups["all rendered transitions"].append(row)
         if row.get("zeromodel_status") in {"nonconformant", "attention_required"}:
-            groups["failures (nonconformant/attention_required ZeroModel status)"].append(row)
+            groups[
+                "failures (nonconformant/attention_required ZeroModel status)"
+            ].append(row)
         if row.get("verdict") == "better":
             groups["ZeroModel-only successes"].append(row)
         elif row.get("verdict") == "worse":
@@ -134,9 +151,13 @@ def build_html_index(
         if row.get("false_positive"):
             groups["false positives (ZeroModel flagged, nothing wrong)"].append(row)
         if row.get("false_negative"):
-            groups["false negatives (ZeroModel silent, something was wrong)"].append(row)
+            groups["false negatives (ZeroModel silent, something was wrong)"].append(
+                row
+            )
 
-    parts = [f"<html><head><meta charset='utf-8'><title>{esc(title)}</title></head><body>"]
+    parts = [
+        f"<html><head><meta charset='utf-8'><title>{esc(title)}</title></head><body>"
+    ]
     parts.append(f"<h1>{esc(title)}</h1>")
     for group_name, group_rows in groups.items():
         parts.append(f"<h2>{esc(group_name)} ({len(group_rows)})</h2><ul>")

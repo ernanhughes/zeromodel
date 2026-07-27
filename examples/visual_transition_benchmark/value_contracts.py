@@ -79,13 +79,22 @@ COOLDOWN_LEVELS: Dict[str, float] = {
     "ready": COOLDOWN_READY_VALUE / 255.0,
     "blocked": COOLDOWN_BLOCKED_VALUE / 255.0,
 }
-ACTION_TANK_EXPECTED_DELTA: Dict[str, int] = {"LEFT": -1, "RIGHT": 1, "STAY": 0, "FIRE": 0}
+ACTION_TANK_EXPECTED_DELTA: Dict[str, int] = {
+    "LEFT": -1,
+    "RIGHT": 1,
+    "STAY": 0,
+    "FIRE": 0,
+}
 TANK_MAGNITUDE_BOUND = 1  # this environment's single-step movement quantum
 
 
 def _build_value_field_schema() -> VPMFieldSchemaDTO:
-    dummy = encode_source_array(np.zeros((zm.FRAME_HEIGHT, zm.WIDTH_PX), dtype=np.uint8), zm._SPEC)
-    return build_grid_field_schema(dummy, tile_width=1, tile_height=1, channel_mode="joint")
+    dummy = encode_source_array(
+        np.zeros((zm.FRAME_HEIGHT, zm.WIDTH_PX), dtype=np.uint8), zm._SPEC
+    )
+    return build_grid_field_schema(
+        dummy, tile_width=1, tile_height=1, channel_mode="joint"
+    )
 
 
 def _fine_band_for_field(y0: int, x0: int) -> str:
@@ -106,10 +115,16 @@ def _fine_band_for_field(y0: int, x0: int) -> str:
 
 VALUE_FIELD_SCHEMA: VPMFieldSchemaDTO = _build_value_field_schema()
 _VALUE_FIELD_BY_ID = {field.field_id: field for field in VALUE_FIELD_SCHEMA.fields}
-_VALUE_BAND_FIELD_IDS: Dict[str, Tuple[str, ...]] = {name: [] for name in ("tank", "alien", "cooldown", "background")}
+_VALUE_BAND_FIELD_IDS: Dict[str, Tuple[str, ...]] = {
+    name: [] for name in ("tank", "alien", "cooldown", "background")
+}
 for _field in VALUE_FIELD_SCHEMA.fields:
-    _VALUE_BAND_FIELD_IDS[_fine_band_for_field(_field.y0, _field.x0)].append(_field.field_id)
-_VALUE_BAND_FIELD_IDS = {name: tuple(ids) for name, ids in _VALUE_BAND_FIELD_IDS.items()}
+    _VALUE_BAND_FIELD_IDS[_fine_band_for_field(_field.y0, _field.x0)].append(
+        _field.field_id
+    )
+_VALUE_BAND_FIELD_IDS = {
+    name: tuple(ids) for name, ids in _VALUE_BAND_FIELD_IDS.items()
+}
 
 
 def build_value_transition_evidence(
@@ -117,10 +132,18 @@ def build_value_transition_evidence(
 ) -> TransitionEvidenceVPMDTO:
     """Per-pixel P18A evidence -- the resolution value decoding needs."""
 
-    before_vpm = encode_source_array(np.ascontiguousarray(frame_before, dtype=np.uint8), zm._SPEC)
-    after_vpm = encode_source_array(np.ascontiguousarray(frame_after, dtype=np.uint8), zm._SPEC)
+    before_vpm = encode_source_array(
+        np.ascontiguousarray(frame_before, dtype=np.uint8), zm._SPEC
+    )
+    after_vpm = encode_source_array(
+        np.ascontiguousarray(frame_after, dtype=np.uint8), zm._SPEC
+    )
     return build_transition_evidence_vpm(
-        before_vpm, after_vpm, VALUE_FIELD_SCHEMA, annotations=(), change_threshold=zm.CHANGE_THRESHOLD
+        before_vpm,
+        after_vpm,
+        VALUE_FIELD_SCHEMA,
+        annotations=(),
+        change_threshold=zm.CHANGE_THRESHOLD,
     )
 
 
@@ -202,7 +225,11 @@ def decode_values(transition_evidence: TransitionEvidenceVPMDTO) -> DecodedValue
     tank_after_cols = _column_intensities(transition_evidence, "tank", "after_mean")
     tank_before_x = _decode_column(tank_before_cols)
     tank_after_x = _decode_column(tank_after_cols)
-    delta_x = None if (tank_before_x is None or tank_after_x is None) else tank_after_x - tank_before_x
+    delta_x = (
+        None
+        if (tank_before_x is None or tank_after_x is None)
+        else tank_after_x - tank_before_x
+    )
     tank = TankValues(before_x=tank_before_x, after_x=tank_after_x, delta_x=delta_x)
 
     alien_before_cols = _column_intensities(transition_evidence, "alien", "before_mean")
@@ -262,12 +289,16 @@ def evaluate_contracts(action: str, values: DecodedValues) -> ValueContractVerdi
     cooldown_ok = values.cooldown.after_level == expected_cooldown_level
 
     violations = []
-    if values.tank.delta_x is not None and abs(values.tank.delta_x) > TANK_MAGNITUDE_BOUND:
+    if (
+        values.tank.delta_x is not None
+        and abs(values.tank.delta_x) > TANK_MAGNITUDE_BOUND
+    ):
         violations.append("tank_magnitude_exceeds_single_step_bound")
     if values.cooldown.after_level == "out_of_domain":
         violations.append("cooldown_value_out_of_domain")
     alien_substituted = (
-        values.alien.after_x != values.alien.before_x or values.alien.after_alive != values.alien.before_alive
+        values.alien.after_x != values.alien.before_x
+        or values.alien.after_alive != values.alien.before_alive
     )
     if alien_substituted and values.cooldown.after_level != "blocked":
         violations.append("alien_substitution_without_cooldown_blocked")

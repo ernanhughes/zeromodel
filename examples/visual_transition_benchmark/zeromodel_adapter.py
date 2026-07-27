@@ -71,7 +71,7 @@ from zeromodel.perception.transition_evidence import (
     build_transition_evidence_vpm,
 )
 
-from visual_transition_benchmark.dataset import CELL_PIXELS, COMPONENT_NAMES, WIDTH, WIDTH_PX
+from visual_transition_benchmark.dataset import CELL_PIXELS, COMPONENT_NAMES, WIDTH_PX
 
 FRAME_HEIGHT = 16
 
@@ -93,8 +93,12 @@ _SPEC = SourceImageEncoderSpecDTO(color_space="L")
 
 
 def _build_field_schema() -> VPMFieldSchemaDTO:
-    dummy = encode_source_array(np.zeros((FRAME_HEIGHT, WIDTH_PX), dtype=np.uint8), _SPEC)
-    return build_grid_field_schema(dummy, tile_width=CELL_PIXELS, tile_height=1, channel_mode="joint")
+    dummy = encode_source_array(
+        np.zeros((FRAME_HEIGHT, WIDTH_PX), dtype=np.uint8), _SPEC
+    )
+    return build_grid_field_schema(
+        dummy, tile_width=CELL_PIXELS, tile_height=1, channel_mode="joint"
+    )
 
 
 FIELD_SCHEMA: VPMFieldSchemaDTO = _build_field_schema()
@@ -130,8 +134,12 @@ def _make_annotation(name: str) -> PerceptionRegionAnnotationDTO:
 ANNOTATIONS: Dict[str, PerceptionRegionAnnotationDTO] = {
     name: _make_annotation(name) for name in COMPONENT_NAMES
 }
-ANNOTATIONS_TUPLE: Tuple[PerceptionRegionAnnotationDTO, ...] = tuple(ANNOTATIONS.values())
-ANNOTATION_ID_TO_NAME: Dict[str, str] = {ann.annotation_id: name for name, ann in ANNOTATIONS.items()}
+ANNOTATIONS_TUPLE: Tuple[PerceptionRegionAnnotationDTO, ...] = tuple(
+    ANNOTATIONS.values()
+)
+ANNOTATION_ID_TO_NAME: Dict[str, str] = {
+    ann.annotation_id: name for name, ann in ANNOTATIONS.items()
+}
 
 
 def _expectation(name: str, expected_change: str, **bounds) -> TransitionExpectationDTO:
@@ -183,7 +191,11 @@ EXPECTED_CHANGE_BAND_BY_ACTION: Dict[str, Tuple[str, ...]] = {
 }
 
 _MISSING_STATUSES = {"missing_expected_change", "insufficient_change"}
-_VIOLATION_STATUSES = {"unexpected_change", "excessive_change", "wrong_change_direction"}
+_VIOLATION_STATUSES = {
+    "unexpected_change",
+    "excessive_change",
+    "wrong_change_direction",
+}
 
 
 @dataclass(frozen=True)
@@ -273,7 +285,10 @@ class ArcadeBandZeroModelAnalyzer:
         )
         evidence_scores = {
             name: max(
-                (transition_evidence.field_evidence(fid).mean_absolute_change for fid in fids),
+                (
+                    transition_evidence.field_evidence(fid).mean_absolute_change
+                    for fid in fids
+                ),
                 default=0.0,
             )
             for name, fids in BAND_FIELD_IDS.items()

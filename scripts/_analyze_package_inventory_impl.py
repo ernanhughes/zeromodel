@@ -132,9 +132,7 @@ def discover_tooling_files(
 
 def is_test_path(path: str) -> bool:
     return (
-        path.startswith("tests/")
-        or path.startswith("packages/")
-        and "/tests/" in path
+        path.startswith("tests/") or path.startswith("packages/") and "/tests/" in path
     )
 
 

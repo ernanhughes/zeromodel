@@ -26,12 +26,19 @@ def test_cross_domain_run_end_to_end_small(tmp_path: Path):
     assert (tmp_path / "transition-level-results.jsonl").exists()
     assert (tmp_path / "visual-index.html").exists()
 
-    lines = (tmp_path / "transition-level-results.jsonl").read_text(encoding="utf-8").strip().splitlines()
+    lines = (
+        (tmp_path / "transition-level-results.jsonl")
+        .read_text(encoding="utf-8")
+        .strip()
+        .splitlines()
+    )
     assert len(lines) > 0
 
     import json
 
-    results = json.loads((tmp_path / "cross-domain-results.json").read_text(encoding="utf-8"))
+    results = json.loads(
+        (tmp_path / "cross-domain-results.json").read_text(encoding="utf-8")
+    )
     assert "capability_table" in results
     assert results["domain_reports"]["arcade"]["n"] > 0
     assert results["domain_reports"]["warehouse"]["n"] > 0

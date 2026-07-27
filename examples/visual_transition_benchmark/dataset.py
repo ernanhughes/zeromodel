@@ -26,7 +26,7 @@ from typing import Optional, Sequence, Tuple
 
 import numpy as np
 
-from zeromodel.video.arcade_policy.model import ACTIONS, ShooterConfig, TinyArcadeShooter
+from zeromodel.video.arcade_policy.model import ShooterConfig, TinyArcadeShooter
 from zeromodel.video.arcade_policy.rendering import (
     CELL_PIXELS,
     FRAME_HEIGHT,
@@ -112,11 +112,15 @@ def true_next_state(state: ArcadeState, action: str) -> ArcadeState:
 
     game = _game_from_state(state)
     game.step(action)
-    return ArcadeState(tank_x=game.tank_x, aliens=tuple(game.aliens), cooldown=game.cooldown)
+    return ArcadeState(
+        tank_x=game.tank_x, aliens=tuple(game.aliens), cooldown=game.cooldown
+    )
 
 
 def render(state: ArcadeState) -> np.ndarray:
-    frame = render_state_frame(state.tank_x, state.target_x, state.cooldown, width=WIDTH)
+    frame = render_state_frame(
+        state.tank_x, state.target_x, state.cooldown, width=WIDTH
+    )
     return np.array(frame, dtype=np.uint8, copy=True)
 
 
@@ -184,7 +188,12 @@ def transition_component_masks(
     alien = alien_mask(before_target_x) | alien_mask(after_target_x)
     cooldown = cooldown_mask()
     background = ~(tank | alien | cooldown)
-    return {"tank": tank, "alien": alien, "cooldown": cooldown, "background": background}
+    return {
+        "tank": tank,
+        "alien": alien,
+        "cooldown": cooldown,
+        "background": background,
+    }
 
 
 def _changed_components_from_pixels(
@@ -195,7 +204,9 @@ def _changed_components_from_pixels(
     after_tank_x: int,
     after_target_x: Optional[int],
 ) -> Tuple[str, ...]:
-    masks = transition_component_masks(before_tank_x, before_target_x, after_tank_x, after_target_x)
+    masks = transition_component_masks(
+        before_tank_x, before_target_x, after_tank_x, after_target_x
+    )
     changed = []
     for name in COMPONENT_NAMES:
         region = masks[name]
@@ -204,7 +215,9 @@ def _changed_components_from_pixels(
     return tuple(changed)
 
 
-def _changed_components_from_states(before: ArcadeState, after: ArcadeState) -> Tuple[str, ...]:
+def _changed_components_from_states(
+    before: ArcadeState, after: ArcadeState
+) -> Tuple[str, ...]:
     changed = []
     if before.tank_x != after.tank_x:
         changed.append("tank")
@@ -244,7 +257,9 @@ def _clip(x: int) -> int:
     return max(0, min(WIDTH - 1, x))
 
 
-def _pick_aliens(rng: random.Random, count: int, *, exclude: Sequence[int] = ()) -> Tuple[int, ...]:
+def _pick_aliens(
+    rng: random.Random, count: int, *, exclude: Sequence[int] = ()
+) -> Tuple[int, ...]:
     pool = [c for c in range(WIDTH) if c not in exclude]
     rng.shuffle(pool)
     if len(pool) < count:
@@ -361,7 +376,9 @@ def _fault_alien_disappears_without_hit(true_after: ArcadeState, before: ArcadeS
 
 
 def _fault_tank_wrong_action(true_after: ArcadeState, before: ArcadeState):
-    shifted = _clip(before.tank_x + 1) if before.tank_x < WIDTH - 1 else before.tank_x - 1
+    shifted = (
+        _clip(before.tank_x + 1) if before.tank_x < WIDTH - 1 else before.tank_x - 1
+    )
     return (
         shifted,
         true_after.target_x,
@@ -394,7 +411,11 @@ def _fault_cooldown_incorrect(true_after: ArcadeState, before: ArcadeState):
 
 def _fault_unrelated_alien_change(true_after: ArcadeState, before: ArcadeState):
     assert before.target_x is not None
-    relocated = _clip(before.target_x + 1) if before.target_x < WIDTH - 1 else before.target_x - 1
+    relocated = (
+        _clip(before.target_x + 1)
+        if before.target_x < WIDTH - 1
+        else before.target_x - 1
+    )
     return (
         true_after.tank_x,
         relocated,
@@ -559,8 +580,8 @@ def build_transition(
     frame_before = render(before)
 
     if is_faulty:
-        render_tank, render_target, render_cooldown, extra_edits, notes = FAULT_FUNCTIONS[category](
-            true_after, before
+        render_tank, render_target, render_cooldown, extra_edits, notes = (
+            FAULT_FUNCTIONS[category](true_after, before)
         )
         rendered_state = ArcadeState(
             tank_x=render_tank,
@@ -636,7 +657,9 @@ class DatasetSplit:
     records: Tuple[TransitionRecord, ...]
 
 
-def generate_split(*, prefix: str, episode_count: int, seed_offset: int) -> DatasetSplit:
+def generate_split(
+    *, prefix: str, episode_count: int, seed_offset: int
+) -> DatasetSplit:
     episode_ids = tuple(f"{prefix}-{index:04d}" for index in range(episode_count))
     records: list = []
     for index, episode_id in enumerate(episode_ids):
@@ -679,7 +702,9 @@ def assert_disjoint_splits(*splits: DatasetSplit) -> None:
 # are reused (not re-implemented) by the stage-2 runner; see value_run.py.
 # =========================================================================== #
 
-COOLDOWN_CORRUPTED_VALUE = 100  # neither COOLDOWN_READY_VALUE (40) nor COOLDOWN_BLOCKED_VALUE (160)
+COOLDOWN_CORRUPTED_VALUE = (
+    100  # neither COOLDOWN_READY_VALUE (40) nor COOLDOWN_BLOCKED_VALUE (160)
+)
 
 VALUE_FAULT_CATEGORIES: Tuple[str, ...] = (
     "tank_moves_too_far",
@@ -841,9 +866,9 @@ def build_value_transition(
     true_after = true_next_state(before, action)
     frame_before = render(before)
 
-    render_tank, render_target, render_cooldown, extra_edits, notes = VALUE_FAULT_FUNCTIONS[
-        category
-    ](true_after, before)
+    render_tank, render_target, render_cooldown, extra_edits, notes = (
+        VALUE_FAULT_FUNCTIONS[category](true_after, before)
+    )
     rendered_state = ArcadeState(
         tank_x=render_tank,
         aliens=(render_target,) if render_target is not None else (),
@@ -855,9 +880,16 @@ def build_value_transition(
 
     expected_changed = _changed_components_from_states(before, true_after)
     observed_changed = _changed_components_from_pixels(
-        frame_before, frame_after, before.tank_x, before.target_x, render_tank, render_target
+        frame_before,
+        frame_after,
+        before.tank_x,
+        before.target_x,
+        render_tank,
+        render_target,
     )
-    annotations = transition_component_masks(before.tank_x, before.target_x, render_tank, render_target)
+    annotations = transition_component_masks(
+        before.tank_x, before.target_x, render_tank, render_target
+    )
 
     transition_id = f"{episode_id}-{step_number:04d}"
     return TransitionRecord(
@@ -885,13 +917,18 @@ def generate_value_episode(episode_id: str, seed: int) -> Tuple[TransitionRecord
     for step_number, category in enumerate(VALUE_FAULT_CATEGORIES):
         records.append(
             build_value_transition(
-                episode_id=episode_id, step_number=step_number, seed=seed, category=category
+                episode_id=episode_id,
+                step_number=step_number,
+                seed=seed,
+                category=category,
             )
         )
     return tuple(records)
 
 
-def generate_value_split(*, prefix: str, episode_count: int, seed_offset: int) -> DatasetSplit:
+def generate_value_split(
+    *, prefix: str, episode_count: int, seed_offset: int
+) -> DatasetSplit:
     episode_ids = tuple(f"{prefix}-{index:04d}" for index in range(episode_count))
     records: list = []
     for index, episode_id in enumerate(episode_ids):

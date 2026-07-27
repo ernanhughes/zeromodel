@@ -23,17 +23,26 @@ from visual_transition_benchmark import cross_domain_baselines as cdb
 from visual_transition_benchmark import cross_domain_metrics as cdm
 from visual_transition_benchmark import metrics as mx
 from visual_transition_benchmark.domains.arcade.domain import ArcadeTransitionDomain
-from visual_transition_benchmark.domains.protocol import AnalysisMetadata, VisualTransitionDomain
-from visual_transition_benchmark.domains.warehouse.domain import WarehouseTransitionDomain
+from visual_transition_benchmark.domains.protocol import (
+    AnalysisMetadata,
+    VisualTransitionDomain,
+)
+from visual_transition_benchmark.domains.warehouse.domain import (
+    WarehouseTransitionDomain,
+)
 from visual_transition_benchmark.render import build_html_index, render_transition_panel
 from visual_transition_benchmark.run import _git_sha
 
 
-def _generate(domain: VisualTransitionDomain, *, prefix: str, episode_count: int, seed_offset: int):
+def _generate(
+    domain: VisualTransitionDomain, *, prefix: str, episode_count: int, seed_offset: int
+):
     episode_ids = tuple(f"{prefix}-{index:04d}" for index in range(episode_count))
     transitions = []
     for index, episode_id in enumerate(episode_ids):
-        transitions.extend(domain.generate_episode(seed=seed_offset + index, episode_id=episode_id))
+        transitions.extend(
+            domain.generate_episode(seed=seed_offset + index, episode_id=episode_id)
+        )
     return episode_ids, tuple(transitions)
 
 
@@ -44,23 +53,50 @@ def _analyze_domain(domain: VisualTransitionDomain, transitions, band_masks):
     for transition in transitions:
         metadata = AnalysisMetadata(transition.transition_id, transition.step_number)
         component_outputs.append(
-            component_analyzer.analyze(transition.frame_before, transition.frame_after, transition.action, metadata)
+            component_analyzer.analyze(
+                transition.frame_before,
+                transition.frame_after,
+                transition.action,
+                metadata,
+            )
         )
         value_outputs.append(
-            value_analyzer.analyze(transition.frame_before, transition.frame_after, transition.action, metadata)
+            value_analyzer.analyze(
+                transition.frame_before,
+                transition.frame_after,
+                transition.action,
+                metadata,
+            )
         )
-        pixel_outputs.append(cdb.pixel_diff_baseline(transition.frame_before, transition.frame_after, band_masks))
+        pixel_outputs.append(
+            cdb.pixel_diff_baseline(
+                transition.frame_before, transition.frame_after, band_masks
+            )
+        )
         privileged_outputs.append(cdb.privileged_baseline(transition))
     return component_outputs, value_outputs, pixel_outputs, privileged_outputs
 
 
-def _domain_report(domain_name, transitions, component_outputs, value_outputs, pixel_outputs, privileged_outputs):
+def _domain_report(
+    domain_name,
+    transitions,
+    component_outputs,
+    value_outputs,
+    pixel_outputs,
+    privileged_outputs,
+):
     observed = [t.observed_changed_components for t in transitions]
 
     component_attribution = {
-        "zeromodel": mx.component_multilabel_metrics([o.predicted_components for o in component_outputs], observed),
-        "pixel_diff": mx.component_multilabel_metrics([o.predicted_components for o in pixel_outputs], observed),
-        "privileged": mx.component_multilabel_metrics([o.predicted_components for o in privileged_outputs], observed),
+        "zeromodel": mx.component_multilabel_metrics(
+            [o.predicted_components for o in component_outputs], observed
+        ),
+        "pixel_diff": mx.component_multilabel_metrics(
+            [o.predicted_components for o in pixel_outputs], observed
+        ),
+        "privileged": mx.component_multilabel_metrics(
+            [o.predicted_components for o in privileged_outputs], observed
+        ),
     }
     unexpected_summary = mx.unexpected_change_summary(transitions, component_outputs)
     missing_summary = mx.missing_change_summary(transitions, component_outputs)
@@ -71,7 +107,9 @@ def _domain_report(domain_name, transitions, component_outputs, value_outputs, p
         for capability in ("direction", "magnitude", "value", "relation", "identity")
     }
     value_detection = asdict(cdm.value_fault_detection(transitions, value_outputs))
-    hidden = asdict(cdm.label_correct_but_value_wrong(transitions, component_outputs, value_outputs))
+    hidden = asdict(
+        cdm.label_correct_but_value_wrong(transitions, component_outputs, value_outputs)
+    )
 
     ordinary = [t for t in transitions if not t.is_faulty]
     faulty = [t for t in transitions if t.is_faulty]
@@ -82,7 +120,8 @@ def _domain_report(domain_name, transitions, component_outputs, value_outputs, p
         "n_ordinary": len(ordinary),
         "n_faulty": len(faulty),
         "component_attribution_micro_f1": {
-            system: result["micro_f1"] for system, result in component_attribution.items()
+            system: result["micro_f1"]
+            for system, result in component_attribution.items()
         },
         "component_attribution_full": component_attribution,
         "unexpected_change_detection": asdict(unexpected_summary),
@@ -107,7 +146,9 @@ def _capability_table(arcade_report, warehouse_report) -> list:
         {
             "capability": "unexpected_change_detection_rate",
             "arcade": arcade_report["unexpected_change_detection"]["detection_rate"],
-            "warehouse": warehouse_report["unexpected_change_detection"]["detection_rate"],
+            "warehouse": warehouse_report["unexpected_change_detection"][
+                "detection_rate"
+            ],
         },
         {
             "capability": "missing_change_detection_rate",
@@ -119,13 +160,19 @@ def _capability_table(arcade_report, warehouse_report) -> list:
         rows.append(
             {
                 "capability": f"{capability}_correctness_rate",
-                "arcade": arcade_report["value_capability_rates"][capability]["n_correct"]
+                "arcade": arcade_report["value_capability_rates"][capability][
+                    "n_correct"
+                ]
                 / arcade_report["value_capability_rates"][capability]["n_applicable"]
                 if arcade_report["value_capability_rates"][capability]["n_applicable"]
                 else None,
-                "warehouse": warehouse_report["value_capability_rates"][capability]["n_correct"]
+                "warehouse": warehouse_report["value_capability_rates"][capability][
+                    "n_correct"
+                ]
                 / warehouse_report["value_capability_rates"][capability]["n_applicable"]
-                if warehouse_report["value_capability_rates"][capability]["n_applicable"]
+                if warehouse_report["value_capability_rates"][capability][
+                    "n_applicable"
+                ]
                 else None,
             }
         )
@@ -169,7 +216,11 @@ def main(argv=None) -> int:
     parser.add_argument("--arcade-eval-episodes", type=int, default=100)
     parser.add_argument("--warehouse-dev-episodes", type=int, default=20)
     parser.add_argument("--warehouse-eval-episodes", type=int, default=100)
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/cross_domain_visual_contracts"))
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("artifacts/cross_domain_visual_contracts"),
+    )
     parser.add_argument("--skip-render", action="store_true")
     args = parser.parse_args(argv)
 
@@ -178,15 +229,29 @@ def main(argv=None) -> int:
     arcade = ArcadeTransitionDomain()
     warehouse = WarehouseTransitionDomain()
 
-    arcade_dev_ids, _ = _generate(arcade, prefix="cd-arcade-dev", episode_count=args.arcade_dev_episodes, seed_offset=0)
+    arcade_dev_ids, _ = _generate(
+        arcade,
+        prefix="cd-arcade-dev",
+        episode_count=args.arcade_dev_episodes,
+        seed_offset=0,
+    )
     arcade_eval_ids, arcade_eval = _generate(
-        arcade, prefix="cd-arcade-eval", episode_count=args.arcade_eval_episodes, seed_offset=5_000_000
+        arcade,
+        prefix="cd-arcade-eval",
+        episode_count=args.arcade_eval_episodes,
+        seed_offset=5_000_000,
     )
     warehouse_dev_ids, _ = _generate(
-        warehouse, prefix="cd-wh-dev", episode_count=args.warehouse_dev_episodes, seed_offset=0
+        warehouse,
+        prefix="cd-wh-dev",
+        episode_count=args.warehouse_dev_episodes,
+        seed_offset=0,
     )
     warehouse_eval_ids, warehouse_eval = _generate(
-        warehouse, prefix="cd-wh-eval", episode_count=args.warehouse_eval_episodes, seed_offset=7_000_000
+        warehouse,
+        prefix="cd-wh-eval",
+        episode_count=args.warehouse_eval_episodes,
+        seed_offset=7_000_000,
     )
     assert set(arcade_dev_ids).isdisjoint(arcade_eval_ids)
     assert set(warehouse_dev_ids).isdisjoint(warehouse_eval_ids)
@@ -194,14 +259,23 @@ def main(argv=None) -> int:
     arcade_band_masks = cdb.declared_band_masks_arcade()
     warehouse_band_masks = cdb.declared_band_masks_warehouse()
 
-    arcade_component, arcade_value, arcade_pixel, arcade_priv = _analyze_domain(arcade, arcade_eval, arcade_band_masks)
-    warehouse_component, warehouse_value, warehouse_pixel, warehouse_priv = _analyze_domain(
-        warehouse, warehouse_eval, warehouse_band_masks
+    arcade_component, arcade_value, arcade_pixel, arcade_priv = _analyze_domain(
+        arcade, arcade_eval, arcade_band_masks
+    )
+    warehouse_component, warehouse_value, warehouse_pixel, warehouse_priv = (
+        _analyze_domain(warehouse, warehouse_eval, warehouse_band_masks)
     )
 
-    arcade_report = _domain_report("arcade", arcade_eval, arcade_component, arcade_value, arcade_pixel, arcade_priv)
+    arcade_report = _domain_report(
+        "arcade", arcade_eval, arcade_component, arcade_value, arcade_pixel, arcade_priv
+    )
     warehouse_report = _domain_report(
-        "warehouse", warehouse_eval, warehouse_component, warehouse_value, warehouse_pixel, warehouse_priv
+        "warehouse",
+        warehouse_eval,
+        warehouse_component,
+        warehouse_value,
+        warehouse_pixel,
+        warehouse_priv,
     )
 
     capability_table = _capability_table(arcade_report, warehouse_report)
@@ -211,17 +285,25 @@ def main(argv=None) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "domain-results").mkdir(parents=True, exist_ok=True)
 
-    with (output_dir / "domain-results" / "arcade.json").open("w", encoding="utf-8") as handle:
+    with (output_dir / "domain-results" / "arcade.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(arcade_report, handle, indent=2, sort_keys=True, default=str)
-    with (output_dir / "domain-results" / "warehouse.json").open("w", encoding="utf-8") as handle:
+    with (output_dir / "domain-results" / "warehouse.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
         json.dump(warehouse_report, handle, indent=2, sort_keys=True, default=str)
 
-    with (output_dir / "transition-level-results.jsonl").open("w", encoding="utf-8") as handle:
+    with (output_dir / "transition-level-results.jsonl").open(
+        "w", encoding="utf-8"
+    ) as handle:
         for domain_name, transitions, component_outputs, value_outputs in (
             ("arcade", arcade_eval, arcade_component, arcade_value),
             ("warehouse", warehouse_eval, warehouse_component, warehouse_value),
         ):
-            for transition, component, value in zip(transitions, component_outputs, value_outputs):
+            for transition, component, value in zip(
+                transitions, component_outputs, value_outputs
+            ):
                 row = {
                     "domain": domain_name,
                     "transition_id": transition.transition_id,
@@ -233,7 +315,10 @@ def main(argv=None) -> int:
                     "missing_components": list(component.missing_components),
                     "unexpected_components": list(component.unexpected_components),
                     "value_flags": list(value.value_flags),
-                    "decoded": {k: (list(v) if isinstance(v, tuple) else v) for k, v in value.decoded.items()},
+                    "decoded": {
+                        k: (list(v) if isinstance(v, tuple) else v)
+                        for k, v in value.decoded.items()
+                    },
                 }
                 handle.write(json.dumps(row, sort_keys=True) + "\n")
 
@@ -254,10 +339,18 @@ def main(argv=None) -> int:
     if not args.skip_render:
         artifacts_dir = output_dir / "representative-artifacts"
         samples = []
-        for transition, component, priv in zip(arcade_eval, arcade_component, arcade_priv):
-            if transition.category in ("tank_moves_wrong_direction", "background_changes_unexpectedly", "fire_no_projectile"):
+        for transition, component, priv in zip(
+            arcade_eval, arcade_component, arcade_priv
+        ):
+            if transition.category in (
+                "tank_moves_wrong_direction",
+                "background_changes_unexpectedly",
+                "fire_no_projectile",
+            ):
                 samples.append((transition, component, priv))
-        for transition, component, priv in zip(warehouse_eval, warehouse_component, warehouse_priv):
+        for transition, component, priv in zip(
+            warehouse_eval, warehouse_component, warehouse_priv
+        ):
             if transition.category in (
                 "robot_moves_wrong_direction",
                 "wall_changes_unexpectedly",
@@ -271,20 +364,27 @@ def main(argv=None) -> int:
             if key in seen_categories:
                 continue
             seen_categories.add(key)
-            png_path = artifacts_dir / f"{transition.domain_name}-{transition.transition_id}.png"
+            png_path = (
+                artifacts_dir
+                / f"{transition.domain_name}-{transition.transition_id}.png"
+            )
             render_transition_panel(transition, priv, component, output_path=png_path)
             artifact_rows.append(
                 {
                     "transition_id": transition.transition_id,
                     "category": f"{transition.domain_name}/{transition.category}",
                     "fault_type": transition.fault_type,
-                    "verdict": "flagged" if (component.missing_components or component.unexpected_components) else "clean",
+                    "verdict": "flagged"
+                    if (component.missing_components or component.unexpected_components)
+                    else "clean",
                     "zeromodel_status": "n/a",
                     "artifact_path": f"representative-artifacts/{transition.domain_name}-{transition.transition_id}.png",
                 }
             )
         build_html_index(
-            artifact_rows, output_path=output_dir / "visual-index.html", title="Cross-Domain Visual Contracts"
+            artifact_rows,
+            output_path=output_dir / "visual-index.html",
+            title="Cross-Domain Visual Contracts",
         )
 
     duration = time.time() - started
@@ -318,13 +418,25 @@ def _render_summary(environment, decisions, arcade_report, warehouse_report) -> 
     lines.append("## Executive result")
     lines.append("")
     replicated = [d["capability"] for d in decisions if d["replicated"] == "replicated"]
-    domain_specific = [d["capability"] for d in decisions if d["replicated"] == "domain_specific"]
-    not_replicated = [d["capability"] for d in decisions if d["replicated"] == "not_replicated"]
-    not_measurable = [d["capability"] for d in decisions if d["replicated"] == "not_measurable_in_both_domains"]
+    domain_specific = [
+        d["capability"] for d in decisions if d["replicated"] == "domain_specific"
+    ]
+    not_replicated = [
+        d["capability"] for d in decisions if d["replicated"] == "not_replicated"
+    ]
+    not_measurable = [
+        d["capability"]
+        for d in decisions
+        if d["replicated"] == "not_measurable_in_both_domains"
+    ]
     lines.append(f"- **Replicated in both domains**: {replicated or 'none'}")
-    lines.append(f"- **Domain-specific (one domain only)**: {domain_specific or 'none'}")
+    lines.append(
+        f"- **Domain-specific (one domain only)**: {domain_specific or 'none'}"
+    )
     lines.append(f"- **Not replicated in either domain**: {not_replicated or 'none'}")
-    lines.append(f"- **Not measurable in both domains** (e.g. identity is arcade-unavailable): {not_measurable or 'none'}")
+    lines.append(
+        f"- **Not measurable in both domains** (e.g. identity is arcade-unavailable): {not_measurable or 'none'}"
+    )
     lines.append("")
     lines.append("## Exact environment")
     lines.append("")

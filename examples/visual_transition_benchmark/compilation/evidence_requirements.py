@@ -29,7 +29,9 @@ class VisualEvidenceRequirement:
     component: str
     property_name: str
     evidence_kind: str
-    region: Tuple[int, int, int, int]  # (y0, y1, x0, x1), half-open, static and declared once
+    region: Tuple[
+        int, int, int, int
+    ]  # (y0, y1, x0, x1), half-open, static and declared once
     required_resolution: Tuple[int, int]  # (tile_height, tile_width)
     aggregation: str
 

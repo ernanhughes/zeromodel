@@ -22,7 +22,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Sequence
 
-from visual_transition_benchmark.domains.protocol import DomainTransition, ValueAnalysisResult
+from visual_transition_benchmark.domains.protocol import (
+    DomainTransition,
+    ValueAnalysisResult,
+)
 
 
 def direction_correct(transition: DomainTransition, decoded) -> Optional[bool]:
@@ -44,11 +47,16 @@ def value_level_correct(transition: DomainTransition, decoded) -> Optional[bool]
     ``*_decoded_level`` pair (arcade has one -- cooldown; warehouse has two --
     battery and door) without knowing their names."""
 
-    keys = [key[: -len("_expected_level")] for key in transition.value_ground_truth if key.endswith("_expected_level")]
+    keys = [
+        key[: -len("_expected_level")]
+        for key in transition.value_ground_truth
+        if key.endswith("_expected_level")
+    ]
     if not keys:
         return None
     return all(
-        decoded.get(f"{key}_decoded_level") == transition.value_ground_truth.get(f"{key}_expected_level")
+        decoded.get(f"{key}_decoded_level")
+        == transition.value_ground_truth.get(f"{key}_expected_level")
         for key in keys
     )
 
@@ -87,7 +95,9 @@ class CapabilityRate:
 
 
 def capability_rate(
-    capability: str, transitions: Sequence[DomainTransition], analyses: Sequence[ValueAnalysisResult]
+    capability: str,
+    transitions: Sequence[DomainTransition],
+    analyses: Sequence[ValueAnalysisResult],
 ) -> CapabilityRate:
     check = _CHECKS[capability]
     applicable = 0
@@ -120,19 +130,27 @@ class HiddenValueFaultRate:
 
     @property
     def rate(self) -> float:
-        return self.label_clean_but_value_wrong / self.n_faulty if self.n_faulty else 0.0
+        return (
+            self.label_clean_but_value_wrong / self.n_faulty if self.n_faulty else 0.0
+        )
 
 
 def label_correct_but_value_wrong(
-    transitions: Sequence[DomainTransition], component_outputs: Sequence, value_analyses: Sequence[ValueAnalysisResult]
+    transitions: Sequence[DomainTransition],
+    component_outputs: Sequence,
+    value_analyses: Sequence[ValueAnalysisResult],
 ) -> HiddenValueFaultRate:
     faulty = 0
     hidden = 0
-    for transition, component, value in zip(transitions, component_outputs, value_analyses):
+    for transition, component, value in zip(
+        transitions, component_outputs, value_analyses
+    ):
         if not transition.is_faulty:
             continue
         faulty += 1
-        label_clean = not component.missing_components and not component.unexpected_components
+        label_clean = (
+            not component.missing_components and not component.unexpected_components
+        )
         fault_present = value_fault_present(transition, value.decoded)
         if label_clean and fault_present:
             hidden += 1
@@ -148,7 +166,8 @@ class ValueDetectionRate:
 
 
 def value_fault_detection(
-    transitions: Sequence[DomainTransition], value_analyses: Sequence[ValueAnalysisResult]
+    transitions: Sequence[DomainTransition],
+    value_analyses: Sequence[ValueAnalysisResult],
 ) -> ValueDetectionRate:
     relevant = []
     clean = []

@@ -66,7 +66,8 @@ def test_cooldown_value_compiles_via_auto_narrowing():
     assert compiled.status == "compiled"
     assert compiled.selected_candidate.decoder_kind == "dominant_field_value"
     naive_passed = [
-        e for e in compiled.all_evaluations
+        e
+        for e in compiled.all_evaluations
         if e.passed and e.candidate_id != compiled.selected_candidate.candidate_id
     ]
     assert naive_passed == []

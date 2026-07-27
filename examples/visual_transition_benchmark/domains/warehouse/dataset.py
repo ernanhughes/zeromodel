@@ -16,7 +16,14 @@ import numpy as np
 from visual_transition_benchmark.domains.warehouse import model as wm
 from visual_transition_benchmark.domains.warehouse import rendering as wr
 
-COMPONENT_NAMES: Tuple[str, ...] = ("robot", "crate", "door", "battery", "wall", "background")
+COMPONENT_NAMES: Tuple[str, ...] = (
+    "robot",
+    "crate",
+    "door",
+    "battery",
+    "wall",
+    "background",
+)
 
 # A fixed floor cell used by background/wall probe faults; builders that need
 # a *guaranteed-empty* pixel exclude this cell from robot/crate placement in
@@ -27,12 +34,17 @@ BACKGROUND_PROBE_PIXEL: Tuple[int, int] = (
     wr.cell_origin(*PROBE_CELL)[0] + 1,
     wr.cell_origin(*PROBE_CELL)[1] + 1,
 )
-BACKGROUND_PROBE_VALUE = 175  # matches no canonical glyph level (0/50/60/120/200/220/255)
+BACKGROUND_PROBE_VALUE = (
+    175  # matches no canonical glyph level (0/50/60/120/200/220/255)
+)
 
 # Interior cells available for robot/crate placement (excludes only the door;
 # the goal is placeable since a crate legitimately ends up there).
 PLACEABLE_CELLS: Tuple[Tuple[int, int], ...] = tuple(
-    (row, col) for row in wm.INTERIOR for col in wm.INTERIOR if (row, col) != wm.DOOR_POSITION
+    (row, col)
+    for row in wm.INTERIOR
+    for col in wm.INTERIOR
+    if (row, col) != wm.DOOR_POSITION
 )
 
 
@@ -89,7 +101,9 @@ def wall_mask() -> np.ndarray:
     return mask
 
 
-def transition_component_masks(before: wm.WarehouseState, after: wm.WarehouseState) -> dict:
+def transition_component_masks(
+    before: wm.WarehouseState, after: wm.WarehouseState
+) -> dict:
     """Exact partition of the canvas across one transition (same discipline as
     ``dataset.transition_component_masks``: background is the complement of
     the *combined* before/after footprint, not two independently-complemented
@@ -101,11 +115,21 @@ def transition_component_masks(before: wm.WarehouseState, after: wm.WarehouseSta
     battery = battery_mask()
     wall = wall_mask()
     background = ~(robot | crate | door | battery | wall)
-    return {"robot": robot, "crate": crate, "door": door, "battery": battery, "wall": wall, "background": background}
+    return {
+        "robot": robot,
+        "crate": crate,
+        "door": door,
+        "battery": battery,
+        "wall": wall,
+        "background": background,
+    }
 
 
 def _changed_components_from_pixels(
-    frame_before: np.ndarray, frame_after: np.ndarray, before: wm.WarehouseState, after: wm.WarehouseState
+    frame_before: np.ndarray,
+    frame_after: np.ndarray,
+    before: wm.WarehouseState,
+    after: wm.WarehouseState,
 ) -> Tuple[str, ...]:
     masks = transition_component_masks(before, after)
     changed = []
@@ -116,7 +140,9 @@ def _changed_components_from_pixels(
     return tuple(changed)
 
 
-def _changed_components_from_states(before: wm.WarehouseState, after: wm.WarehouseState) -> Tuple[str, ...]:
+def _changed_components_from_states(
+    before: wm.WarehouseState, after: wm.WarehouseState
+) -> Tuple[str, ...]:
     changed = []
     if before.robot != after.robot:
         changed.append("robot")

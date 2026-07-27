@@ -104,7 +104,8 @@ def pixel_diff_baseline(
 
     predicted_components = _components_touching(keep_mask)
     evidence_scores = {
-        name: float(np.mean(diff[zm.BAND_MASKS[name]]) / 255.0) for name in COMPONENT_NAMES
+        name: float(np.mean(diff[zm.BAND_MASKS[name]]) / 255.0)
+        for name in COMPONENT_NAMES
     }
     diagnostics = {
         "pixel_threshold": pixel_threshold,
@@ -140,7 +141,9 @@ def privileged_baseline(record: TransitionRecord) -> SystemOutput:
     region_mask = np.zeros_like(record.component_annotations["tank"])
     for name in observed:
         region_mask |= record.component_annotations[name]
-    evidence_scores = {name: (1.0 if name in observed else 0.0) for name in COMPONENT_NAMES}
+    evidence_scores = {
+        name: (1.0 if name in observed else 0.0) for name in COMPONENT_NAMES
+    }
     diagnostics = {
         "source": "exact ground-truth component masks (tank/alien/cooldown/background)",
         "privileged": True,

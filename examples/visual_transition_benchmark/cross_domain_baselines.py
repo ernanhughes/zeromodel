@@ -41,14 +41,21 @@ def _connected_components(changed_mask: np.ndarray) -> np.ndarray:
                 r, c = stack.pop()
                 for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
                     nr, nc = r + dr, c + dc
-                    if 0 <= nr < height and 0 <= nc < width and changed_mask[nr, nc] and labels[nr, nc] == 0:
+                    if (
+                        0 <= nr < height
+                        and 0 <= nc < width
+                        and changed_mask[nr, nc]
+                        and labels[nr, nc] == 0
+                    ):
                         labels[nr, nc] = next_label
                         stack.append((nr, nc))
     return labels
 
 
 def pixel_diff_baseline(
-    frame_before: np.ndarray, frame_after: np.ndarray, band_masks: Mapping[str, np.ndarray]
+    frame_before: np.ndarray,
+    frame_after: np.ndarray,
+    band_masks: Mapping[str, np.ndarray],
 ) -> SimpleSystemOutput:
     diff = np.abs(frame_after.astype(np.int16) - frame_before.astype(np.int16))
     changed_mask = diff >= PIXEL_THRESHOLD
@@ -59,7 +66,9 @@ def pixel_diff_baseline(
         if counts[label_id] >= MIN_COMPONENT_SIZE:
             keep_mask |= labels == label_id
 
-    predicted = tuple(sorted(name for name, mask in band_masks.items() if keep_mask[mask].any()))
+    predicted = tuple(
+        sorted(name for name, mask in band_masks.items() if keep_mask[mask].any())
+    )
     return SimpleSystemOutput(
         predicted_components=predicted,
         missing_components=(),  # no expectation model, same limitation as stage 1's System A
@@ -98,7 +107,9 @@ def declared_band_masks_warehouse() -> Dict[str, np.ndarray]:
 
     door_mask = np.zeros((height, width), dtype=bool)
     door_y0, door_x0 = wr.cell_origin(*wm.DOOR_POSITION)
-    door_mask[door_y0 : door_y0 + wr.CELL_PIXELS, door_x0 : door_x0 + wr.CELL_PIXELS] = True
+    door_mask[
+        door_y0 : door_y0 + wr.CELL_PIXELS, door_x0 : door_x0 + wr.CELL_PIXELS
+    ] = True
 
     wall_mask = np.zeros((height, width), dtype=bool)
     for row in range(wm.GRID_SIZE):

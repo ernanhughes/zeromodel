@@ -18,9 +18,8 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Tuple
 
-import numpy as np
 
 from visual_transition_benchmark.domains.warehouse import dataset as wds
 from visual_transition_benchmark.domains.warehouse import model as wm
@@ -62,7 +61,10 @@ IDENTITY_FAULT_CATEGORIES: Tuple[str, ...] = (
 )
 
 FAULT_CATEGORIES: Tuple[str, ...] = (
-    PRESENCE_FAULT_CATEGORIES + VALUE_FAULT_CATEGORIES + RELATION_FAULT_CATEGORIES + IDENTITY_FAULT_CATEGORIES
+    PRESENCE_FAULT_CATEGORIES
+    + VALUE_FAULT_CATEGORIES
+    + RELATION_FAULT_CATEGORIES
+    + IDENTITY_FAULT_CATEGORIES
 )
 ALL_CATEGORIES: Tuple[str, ...] = ORDINARY_CATEGORIES + FAULT_CATEGORIES
 
@@ -81,7 +83,9 @@ class WarehouseFaultError(ValueError):
     pass
 
 
-def _extra_pixel_edits(*edits: Tuple[int, int, int]) -> Tuple[Tuple[int, int, int], ...]:
+def _extra_pixel_edits(
+    *edits: Tuple[int, int, int],
+) -> Tuple[Tuple[int, int, int], ...]:
     return tuple(edits)
 
 
@@ -99,12 +103,18 @@ def _door_bar_edit(height_px: int) -> Tuple[Tuple[int, int, int], ...]:
 # Ordinary category builders: (rng) -> (robot, crates, door_open, battery, action)
 # --------------------------------------------------------------------------- #
 
-_SAFE_LEFT = ((1, 3), (3, 3), (3, 2))  # (start, target) pairs where MOVE_LEFT succeeds cleanly
+_SAFE_LEFT = (
+    (1, 3),
+    (3, 3),
+    (3, 2),
+)  # (start, target) pairs where MOVE_LEFT succeeds cleanly
 _SAFE_LEFT_TARGETS = {(1, 3): (1, 2), (3, 3): (3, 2), (3, 2): (3, 1)}
 _SAFE_RIGHT_TARGETS = {(1, 1): (1, 2), (3, 1): (3, 2), (3, 2): (3, 3)}
 
 
-def _extra_crates(rng: random.Random, count: int, exclude: Tuple[Tuple[int, int], ...]) -> Tuple[Tuple[int, int], ...]:
+def _extra_crates(
+    rng: random.Random, count: int, exclude: Tuple[Tuple[int, int], ...]
+) -> Tuple[Tuple[int, int], ...]:
     pool = [cell for cell in wds.PLACEABLE_CELLS if cell not in exclude]
     rng.shuffle(pool)
     if len(pool) < count:
@@ -115,44 +125,60 @@ def _extra_crates(rng: random.Random, count: int, exclude: Tuple[Tuple[int, int]
 def _build_robot_moves_left(rng: random.Random):
     start = rng.choice(list(_SAFE_LEFT_TARGETS))
     target = _SAFE_LEFT_TARGETS[start]
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=(start, target, wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=(start, target, wm.DOOR_POSITION)
+    )
     return start, crates, False, 3, "MOVE_LEFT"
 
 
 def _build_robot_moves_right(rng: random.Random):
     start = rng.choice(list(_SAFE_RIGHT_TARGETS))
     target = _SAFE_RIGHT_TARGETS[start]
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=(start, target, wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=(start, target, wm.DOOR_POSITION)
+    )
     return start, crates, False, 3, "MOVE_RIGHT"
 
 
 def _build_robot_blocked_by_wall(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "MOVE_UP"
 
 
 def _build_push_crate_moves_target(rng: random.Random):
-    crates = ((1, 2),) + _extra_crates(rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), wm.DOOR_POSITION))
+    crates = ((1, 2),) + _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "PUSH_RIGHT"
 
 
 def _build_push_crate_reaches_goal(rng: random.Random):
-    crates = ((3, 2),) + _extra_crates(rng, rng.choice((0, 1)), exclude=((3, 1), (3, 2), (3, 3), wm.DOOR_POSITION))
+    crates = ((3, 2),) + _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((3, 1), (3, 2), (3, 3), wm.DOOR_POSITION)
+    )
     return (3, 1), crates, False, 3, "PUSH_RIGHT"
 
 
 def _build_push_attempt_with_no_crate_is_noop(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((1, 2)), exclude=((1, 1), (1, 2), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((1, 2)), exclude=((1, 1), (1, 2), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "PUSH_RIGHT"
 
 
 def _build_door_opens(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "OPEN_DOOR"
 
 
 def _build_wait_no_op(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "WAIT"
 
 
@@ -174,11 +200,15 @@ ORDINARY_BUILDERS = {
 
 
 def _build_robot_moves_during_wait(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "WAIT"
 
 
-def _fault_robot_moves_during_wait(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_robot_moves_during_wait(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     return (
         (1, 2),
         true_after.crates,
@@ -190,11 +220,15 @@ def _fault_robot_moves_during_wait(true_after: wm.WarehouseState, before: wm.War
 
 
 def _build_wall_changes_unexpectedly(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "WAIT"
 
 
-def _fault_wall_changes_unexpectedly(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_wall_changes_unexpectedly(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     wall_y, wall_x = wr.cell_origin(0, 1)
     edits = _extra_pixel_edits((wall_y + 1, wall_x + 1, 150))
     return (
@@ -208,11 +242,15 @@ def _fault_wall_changes_unexpectedly(true_after: wm.WarehouseState, before: wm.W
 
 
 def _build_door_changes_during_move(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=((3, 3), (3, 2), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((3, 3), (3, 2), wm.DOOR_POSITION)
+    )
     return (3, 3), crates, False, 3, "MOVE_LEFT"
 
 
-def _fault_door_changes_during_move(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_door_changes_during_move(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     return (
         true_after.robot,
         true_after.crates,
@@ -224,11 +262,17 @@ def _fault_door_changes_during_move(true_after: wm.WarehouseState, before: wm.Wa
 
 
 def _build_unrelated_crate_moves_during_robot_move(rng: random.Random):
-    crates = ((1, 3),) + _extra_crates(rng, rng.choice((0, 1)), exclude=((3, 1), (3, 2), (1, 3), (1, 2), wm.DOOR_POSITION))
+    crates = ((1, 3),) + _extra_crates(
+        rng,
+        rng.choice((0, 1)),
+        exclude=((3, 1), (3, 2), (1, 3), (1, 2), wm.DOOR_POSITION),
+    )
     return (3, 1), crates, False, 3, "MOVE_RIGHT"
 
 
-def _fault_unrelated_crate_moves_during_robot_move(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_unrelated_crate_moves_during_robot_move(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     new_crates = ((1, 2),) + true_after.crates[1:]
     return (
         true_after.robot,
@@ -241,11 +285,15 @@ def _fault_unrelated_crate_moves_during_robot_move(true_after: wm.WarehouseState
 
 
 def _build_push_fails_silently(rng: random.Random):
-    crates = ((1, 2),) + _extra_crates(rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), wm.DOOR_POSITION))
+    crates = ((1, 2),) + _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "PUSH_RIGHT"
 
 
-def _fault_push_fails_silently(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_push_fails_silently(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     # A valid push precondition holds (crate ahead, landing cell clear), so
     # the true transition moves robot+crate and spends battery -- but the
     # render is the *exact* pre-push scene: nothing visibly changes. This is
@@ -263,11 +311,15 @@ def _fault_push_fails_silently(true_after: wm.WarehouseState, before: wm.Warehou
 
 
 def _build_robot_moves_wrong_direction(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=((3, 2), (3, 1), (3, 3), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((3, 2), (3, 1), (3, 3), wm.DOOR_POSITION)
+    )
     return (3, 2), crates, False, 3, "MOVE_LEFT"
 
 
-def _fault_robot_moves_wrong_direction(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_robot_moves_wrong_direction(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     return (
         (3, 3),
         true_after.crates,
@@ -279,11 +331,15 @@ def _fault_robot_moves_wrong_direction(true_after: wm.WarehouseState, before: wm
 
 
 def _build_robot_moves_too_far(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=((3, 3), (3, 2), (3, 1), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((3, 3), (3, 2), (3, 1), wm.DOOR_POSITION)
+    )
     return (3, 3), crates, False, 3, "MOVE_LEFT"
 
 
-def _fault_robot_moves_too_far(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_robot_moves_too_far(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     return (
         (3, 1),
         true_after.crates,
@@ -295,11 +351,15 @@ def _fault_robot_moves_too_far(true_after: wm.WarehouseState, before: wm.Warehou
 
 
 def _build_battery_decreases_by_wrong_amount(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "MOVE_RIGHT"
 
 
-def _fault_battery_decreases_by_wrong_amount(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_battery_decreases_by_wrong_amount(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     return (
         true_after.robot,
         true_after.crates,
@@ -311,11 +371,15 @@ def _fault_battery_decreases_by_wrong_amount(true_after: wm.WarehouseState, befo
 
 
 def _build_door_changes_to_wrong_visual_state(rng: random.Random):
-    crates = _extra_crates(rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION))
+    crates = _extra_crates(
+        rng, rng.choice((0, 1, 2)), exclude=((1, 1), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "OPEN_DOOR"
 
 
-def _fault_door_changes_to_wrong_visual_state(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_door_changes_to_wrong_visual_state(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     edits = _door_bar_edit(2)  # neither closed (6px) nor open (3px)
     return (
         true_after.robot,
@@ -328,11 +392,15 @@ def _fault_door_changes_to_wrong_visual_state(true_after: wm.WarehouseState, bef
 
 
 def _build_push_advances_robot_without_crate(rng: random.Random):
-    crates = ((1, 2),) + _extra_crates(rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), wm.DOOR_POSITION))
+    crates = ((1, 2),) + _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), wm.DOOR_POSITION)
+    )
     return (1, 1), crates, False, 3, "PUSH_RIGHT"
 
 
-def _fault_push_advances_robot_without_crate(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_push_advances_robot_without_crate(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     unaffected = before.crates[1:]
     return (
         true_after.robot,
@@ -347,11 +415,15 @@ def _fault_push_advances_robot_without_crate(true_after: wm.WarehouseState, befo
 
 
 def _build_crate_moves_without_robot_adjacency(rng: random.Random):
-    crates = ((1, 3),) + _extra_crates(rng, rng.choice((0, 1)), exclude=((3, 1), (1, 3), (1, 2), wm.DOOR_POSITION))
+    crates = ((1, 3),) + _extra_crates(
+        rng, rng.choice((0, 1)), exclude=((3, 1), (1, 3), (1, 2), wm.DOOR_POSITION)
+    )
     return (3, 1), crates, False, 3, "WAIT"
 
 
-def _fault_crate_moves_without_robot_adjacency(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_crate_moves_without_robot_adjacency(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     new_crates = ((1, 2),) + true_after.crates[1:]
     return (
         true_after.robot,
@@ -365,12 +437,16 @@ def _fault_crate_moves_without_robot_adjacency(true_after: wm.WarehouseState, be
 
 def _build_two_crates_move_during_single_push(rng: random.Random):
     crates = ((1, 2), (3, 1)) + _extra_crates(
-        rng, rng.choice((0, 1)), exclude=((1, 1), (1, 2), (1, 3), (3, 1), (3, 2), wm.DOOR_POSITION)
+        rng,
+        rng.choice((0, 1)),
+        exclude=((1, 1), (1, 2), (1, 3), (3, 1), (3, 2), wm.DOOR_POSITION),
     )
     return (1, 1), crates, False, 3, "PUSH_RIGHT"
 
 
-def _fault_two_crates_move_during_single_push(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_two_crates_move_during_single_push(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     new_crates = (true_after.crates[0], (3, 2)) + true_after.crates[2:]
     return (
         true_after.robot,
@@ -405,7 +481,9 @@ def _build_two_crates_swap_identities(rng: random.Random):
     return (1, 1), ((1, 2), (3, 1)), False, 3, "PUSH_RIGHT"
 
 
-def _fault_two_crates_swap_identities(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_two_crates_swap_identities(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     # true_after.crates == ((1, 3), (3, 1)) -- render with the tuple order
     # swapped: since identity == tuple index, swapping order swaps which
     # position shows which dot-count without moving anything.
@@ -423,7 +501,9 @@ def _build_expected_crate_remains_while_another_moves(rng: random.Random):
     return (1, 1), ((1, 2), (3, 1)), False, 3, "PUSH_RIGHT"
 
 
-def _fault_expected_crate_remains_while_another_moves(true_after: wm.WarehouseState, before: wm.WarehouseState):
+def _fault_expected_crate_remains_while_another_moves(
+    true_after: wm.WarehouseState, before: wm.WarehouseState
+):
     # crate A never appears at (1, 3) (stays nominally at (1, 2), hidden);
     # crate B wrongly moves from (3, 1) to (3, 2) though nothing commanded it.
     return (
@@ -481,7 +561,9 @@ def _category_seed(seed: int, episode_id: str, category: str) -> int:
     return digest
 
 
-def build_transition(*, episode_id: str, step_number: int, seed: int, category: str) -> wds.WarehouseTransitionRecord:
+def build_transition(
+    *, episode_id: str, step_number: int, seed: int, category: str
+) -> wds.WarehouseTransitionRecord:
     if category not in ALL_CATEGORIES:
         raise WarehouseFaultError(f"unknown category: {category}")
     rng = random.Random(_category_seed(seed, episode_id, category))
@@ -492,16 +574,26 @@ def build_transition(*, episode_id: str, step_number: int, seed: int, category: 
     else:
         robot, crates, door_open, battery, action = ORDINARY_BUILDERS[category](rng)
 
-    before = wm.WarehouseState(robot=robot, crates=crates, door_open=door_open, battery=battery)
+    before = wm.WarehouseState(
+        robot=robot, crates=crates, door_open=door_open, battery=battery
+    )
     true_after = wm.step(before, action)
     frame_before = wds.render(before)
 
     if is_faulty:
-        render_robot, render_crates, render_door_open, render_battery, extra_edits, notes = FAULT_FUNCTIONS[category](
-            true_after, before
-        )
+        (
+            render_robot,
+            render_crates,
+            render_door_open,
+            render_battery,
+            extra_edits,
+            notes,
+        ) = FAULT_FUNCTIONS[category](true_after, before)
         rendered_state = wm.WarehouseState(
-            robot=render_robot, crates=render_crates, door_open=render_door_open, battery=render_battery
+            robot=render_robot,
+            crates=render_crates,
+            door_open=render_door_open,
+            battery=render_battery,
         )
         frame_after = wds.render(rendered_state)
         for row, col, value in extra_edits:
@@ -514,7 +606,9 @@ def build_transition(*, episode_id: str, step_number: int, seed: int, category: 
         notes = "ordinary transition; rendered from the true post-state"
 
     expected_changed = wds._changed_components_from_states(before, true_after)
-    observed_changed = wds._changed_components_from_pixels(frame_before, frame_after, before, rendered_state)
+    observed_changed = wds._changed_components_from_pixels(
+        frame_before, frame_after, before, rendered_state
+    )
     annotations = wds.transition_component_masks(before, rendered_state)
 
     transition_id = f"{episode_id}-{step_number:04d}"
@@ -539,9 +633,13 @@ def build_transition(*, episode_id: str, step_number: int, seed: int, category: 
     )
 
 
-def generate_episode(episode_id: str, seed: int) -> Tuple[wds.WarehouseTransitionRecord, ...]:
+def generate_episode(
+    episode_id: str, seed: int
+) -> Tuple[wds.WarehouseTransitionRecord, ...]:
     return tuple(
-        build_transition(episode_id=episode_id, step_number=step_number, seed=seed, category=category)
+        build_transition(
+            episode_id=episode_id, step_number=step_number, seed=seed, category=category
+        )
         for step_number, category in enumerate(ALL_CATEGORIES)
     )
 
@@ -553,9 +651,13 @@ class WarehouseDatasetSplit:
     records: Tuple[wds.WarehouseTransitionRecord, ...]
 
 
-def generate_split(*, prefix: str, episode_count: int, seed_offset: int) -> WarehouseDatasetSplit:
+def generate_split(
+    *, prefix: str, episode_count: int, seed_offset: int
+) -> WarehouseDatasetSplit:
     episode_ids = tuple(f"{prefix}-{index:04d}" for index in range(episode_count))
     records: list = []
     for index, episode_id in enumerate(episode_ids):
         records.extend(generate_episode(episode_id, seed_offset + index))
-    return WarehouseDatasetSplit(name=prefix, episode_ids=episode_ids, records=tuple(records))
+    return WarehouseDatasetSplit(
+        name=prefix, episode_ids=episode_ids, records=tuple(records)
+    )

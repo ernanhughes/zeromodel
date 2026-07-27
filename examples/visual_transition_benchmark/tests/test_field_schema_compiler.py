@@ -6,7 +6,9 @@ reproduce their exact tile sizes?
 
 from visual_transition_benchmark import zeromodel_adapter as zm
 from visual_transition_benchmark import value_contracts as vc
-from visual_transition_benchmark.compilation.evidence_requirements import VisualEvidenceRequirement
+from visual_transition_benchmark.compilation.evidence_requirements import (
+    VisualEvidenceRequirement,
+)
 from visual_transition_benchmark.compilation.field_schema_compiler import (
     FieldSchemaCompilationError,
     compile_field_schema,
@@ -53,12 +55,20 @@ def test_compiler_reproduces_stage2_fine_tile_size_from_value_requirements():
 
 def test_compiler_picks_the_finest_resolution_across_mixed_requirements():
     coarse = VisualEvidenceRequirement(
-        component="a", property_name="presence", evidence_kind="presence",
-        region=(0, 8, 0, 8), required_resolution=(4, 4), aggregation="mean",
+        component="a",
+        property_name="presence",
+        evidence_kind="presence",
+        region=(0, 8, 0, 8),
+        required_resolution=(4, 4),
+        aggregation="mean",
     )
     fine = VisualEvidenceRequirement(
-        component="b", property_name="value", evidence_kind="numeric_intensity",
-        region=(0, 8, 0, 8), required_resolution=(1, 2), aggregation="mean",
+        component="b",
+        property_name="value",
+        evidence_kind="numeric_intensity",
+        region=(0, 8, 0, 8),
+        required_resolution=(1, 2),
+        aggregation="mean",
     )
     compiled = compile_field_schema((8, 8), (coarse, fine))
     assert (compiled.tile_height, compiled.tile_width) == (1, 2)
@@ -66,8 +76,12 @@ def test_compiler_picks_the_finest_resolution_across_mixed_requirements():
 
 def test_compiler_rejects_a_requirement_that_resolves_to_zero_fields():
     bad = VisualEvidenceRequirement(
-        component="x", property_name="y", evidence_kind="presence",
-        region=(0, 3, 0, 3), required_resolution=(4, 4), aggregation="mean",
+        component="x",
+        property_name="y",
+        evidence_kind="presence",
+        region=(0, 3, 0, 3),
+        required_resolution=(4, 4),
+        aggregation="mean",
     )
     try:
         compile_field_schema((8, 8), (bad,))

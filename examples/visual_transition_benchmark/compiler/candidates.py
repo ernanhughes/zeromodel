@@ -14,7 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from typing import Optional, Tuple
+from typing import Tuple
 
 from visual_transition_benchmark.compiler.contracts import (
     AggregationKind,
@@ -37,7 +37,9 @@ DECODER_WEIGHT = {
 
 
 def _canonical_json(payload) -> bytes:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
 
 
 def _digest(payload) -> str:
@@ -97,7 +99,9 @@ class RegionGeometry:
         return self.x1 - self.x0
 
 
-def _complexity(region: RegionGeometry, field_height: int, field_width: int, decoder_kind: str) -> float:
+def _complexity(
+    region: RegionGeometry, field_height: int, field_width: int, decoder_kind: str
+) -> float:
     area = region.height * region.width
     tile_area = max(1, field_height * field_width)
     field_count_estimate = max(1, -(-area // tile_area))  # ceil
@@ -110,14 +114,19 @@ def generate_candidates(
     kind = requirement.evidence_kind
     generator = _GENERATORS.get(kind)
     if generator is None:
-        raise ValueError(f"no candidate generator registered for evidence_kind={kind!r}")
+        raise ValueError(
+            f"no candidate generator registered for evidence_kind={kind!r}"
+        )
     candidates = generator(requirement, region)
     return tuple(sorted(candidates, key=lambda c: c.candidate_id))
 
 
 def _presence_candidates(req, region):
     out = []
-    for (fh, fw), note in ((region.cell_height, region.cell_width), "cell-resolution"), ((1, 1), "pixel-resolution"):
+    for (fh, fw), note in (
+        ((region.cell_height, region.cell_width), "cell-resolution"),
+        ((1, 1), "pixel-resolution"),
+    ):
         out.append(
             RepresentationCandidate(
                 requirement_id=req.requirement_id,
@@ -137,7 +146,11 @@ def _presence_candidates(req, region):
 def _numeric_value_candidates(req, region):
     out = []
     resolutions = [
-        (region.cell_height, region.cell_width, "cell-resolution (may dilute a sub-cell signal)"),
+        (
+            region.cell_height,
+            region.cell_width,
+            "cell-resolution (may dilute a sub-cell signal)",
+        ),
         (1, 1, "pixel-resolution"),
     ]
     # "nearest_permitted_value"/"exact_lookup" average every field the
@@ -147,7 +160,11 @@ def _numeric_value_candidates(req, region):
     # development samples (pixel variance only, no labels) to find which
     # fields ever carry non-background signal, then averages only those.
     for fh, fw, note in resolutions:
-        for decoder in ("nearest_permitted_value", "exact_lookup", "dominant_field_value"):
+        for decoder in (
+            "nearest_permitted_value",
+            "exact_lookup",
+            "dominant_field_value",
+        ):
             out.append(
                 RepresentationCandidate(
                     requirement_id=req.requirement_id,
@@ -171,7 +188,11 @@ def _categorical_state_candidates(req, region):
         (1, 1, "pixel-resolution"),
     ]
     for fh, fw, note in resolutions:
-        for decoder in ("nearest_permitted_value", "categorical_template", "dominant_field_value"):
+        for decoder in (
+            "nearest_permitted_value",
+            "categorical_template",
+            "dominant_field_value",
+        ):
             out.append(
                 RepresentationCandidate(
                     requirement_id=req.requirement_id,
@@ -190,7 +211,10 @@ def _categorical_state_candidates(req, region):
 
 def _spatial_position_candidates(req, region):
     out = []
-    resolutions = [(region.cell_height, region.cell_width, "cell-resolution"), (1, 1, "pixel-resolution")]
+    resolutions = [
+        (region.cell_height, region.cell_width, "cell-resolution"),
+        (1, 1, "pixel-resolution"),
+    ]
     for fh, fw, note in resolutions:
         for aggregation in ("mean", "max", "centroid"):
             out.append(
@@ -210,9 +234,16 @@ def _spatial_position_candidates(req, region):
 
 
 def _delta_candidates(req, region):
-    decoder = "signed_delta_over_position" if req.evidence_kind == "signed_delta" else "exact_delta_over_position"
+    decoder = (
+        "signed_delta_over_position"
+        if req.evidence_kind == "signed_delta"
+        else "exact_delta_over_position"
+    )
     out = []
-    resolutions = [(region.cell_height, region.cell_width, "cell-resolution"), (1, 1, "pixel-resolution")]
+    resolutions = [
+        (region.cell_height, region.cell_width, "cell-resolution"),
+        (1, 1, "pixel-resolution"),
+    ]
     for fh, fw, note in resolutions:
         for aggregation in ("mean", "max"):
             out.append(
@@ -233,7 +264,10 @@ def _delta_candidates(req, region):
 
 def _relation_candidates(req, region):
     out = []
-    for threshold, note in ((1, "adjacency<=1"), (0, "adjacency==0 (coincidence only)")):
+    for threshold, note in (
+        (1, "adjacency<=1"),
+        (0, "adjacency==0 (coincidence only)"),
+    ):
         out.append(
             RepresentationCandidate(
                 requirement_id=req.requirement_id,
@@ -243,7 +277,8 @@ def _relation_candidates(req, region):
                 aggregation="mean",
                 decoder_kind="relation_over_decoded",
                 comparison=req.comparison,
-                complexity_cost=_complexity(region, 1, 1, "relation_over_decoded") + threshold,
+                complexity_cost=_complexity(region, 1, 1, "relation_over_decoded")
+                + threshold,
                 assumptions=(note,),
             )
         )
@@ -261,8 +296,12 @@ def _visible_identity_candidates(req, region):
             aggregation="mean",
             decoder_kind="nearest_permitted_value",
             comparison=req.comparison,
-            complexity_cost=_complexity(region, region.cell_height, region.cell_width, "nearest_permitted_value"),
-            assumptions=("cell-resolution mean (may wash out a small sub-cell marker)",),
+            complexity_cost=_complexity(
+                region, region.cell_height, region.cell_width, "nearest_permitted_value"
+            ),
+            assumptions=(
+                "cell-resolution mean (may wash out a small sub-cell marker)",
+            ),
         )
     )
     out.append(

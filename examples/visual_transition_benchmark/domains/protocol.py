@@ -93,7 +93,11 @@ class ComponentAnalysisResult:
 
 class ComponentAnalyzer(Protocol):
     def analyze(
-        self, frame_before: np.ndarray, frame_after: np.ndarray, action: str, metadata: AnalysisMetadata
+        self,
+        frame_before: np.ndarray,
+        frame_after: np.ndarray,
+        action: str,
+        metadata: AnalysisMetadata,
     ) -> ComponentAnalysisResult: ...
 
 
@@ -106,14 +110,20 @@ class ValueAnalysisResult:
 
 class ValueAnalyzer(Protocol):
     def analyze(
-        self, frame_before: np.ndarray, frame_after: np.ndarray, action: str, metadata: AnalysisMetadata
+        self,
+        frame_before: np.ndarray,
+        frame_after: np.ndarray,
+        action: str,
+        metadata: AnalysisMetadata,
     ) -> ValueAnalysisResult: ...
 
 
 class VisualTransitionDomain(Protocol):
     name: str
 
-    def generate_episode(self, *, seed: int, episode_id: str) -> Tuple[DomainTransition, ...]: ...
+    def generate_episode(
+        self, *, seed: int, episode_id: str
+    ) -> Tuple[DomainTransition, ...]: ...
 
     def render(self, state: object) -> np.ndarray: ...
 

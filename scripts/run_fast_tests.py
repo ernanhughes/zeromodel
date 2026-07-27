@@ -95,8 +95,7 @@ def main() -> int:
     missing_roots = [root for root in TEST_ROOTS if not (REPO_ROOT / root).exists()]
     if missing_roots:
         print(
-            "Fast-suite configured test roots are missing: "
-            + ", ".join(missing_roots),
+            "Fast-suite configured test roots are missing: " + ", ".join(missing_roots),
             file=sys.stderr,
         )
         return 2

@@ -71,29 +71,44 @@ STAGE3_WAREHOUSE_EXPECTED = {
     "two_crates_move_during_single_push": ("4a2116dfcdda1d50", "7a97bc9f68817cce"),
     "wrong_crate_moves": ("4a2116dfcdda1d50", "39f85f1dc1074bf4"),
     "two_crates_swap_identities": ("4a2116dfcdda1d50", "fbe490428aaf0176"),
-    "expected_crate_remains_while_another_moves": ("4a2116dfcdda1d50", "a788e8670d75a060"),
+    "expected_crate_remains_while_another_moves": (
+        "4a2116dfcdda1d50",
+        "a788e8670d75a060",
+    ),
 }
 
 
 def test_stage1_arcade_frames_are_bit_for_bit_unchanged():
     for category, expected in STAGE1_EXPECTED.items():
-        rec = ds.build_transition(episode_id="fp", step_number=0, seed=7, category=category)
+        rec = ds.build_transition(
+            episode_id="fp", step_number=0, seed=7, category=category
+        )
         actual = (_hash(rec.frame_before), _hash(rec.frame_after))
-        assert actual == expected, f"stage1 category {category!r} frame hash changed: {actual} != {expected}"
+        assert actual == expected, (
+            f"stage1 category {category!r} frame hash changed: {actual} != {expected}"
+        )
 
 
 def test_stage2_value_fault_frames_are_bit_for_bit_unchanged():
     for category, expected in STAGE2_EXPECTED.items():
-        rec = ds.build_value_transition(episode_id="fp2", step_number=0, seed=7, category=category)
+        rec = ds.build_value_transition(
+            episode_id="fp2", step_number=0, seed=7, category=category
+        )
         actual = (_hash(rec.frame_before), _hash(rec.frame_after))
-        assert actual == expected, f"stage2 category {category!r} frame hash changed: {actual} != {expected}"
+        assert actual == expected, (
+            f"stage2 category {category!r} frame hash changed: {actual} != {expected}"
+        )
 
 
 def test_stage3_warehouse_frames_are_bit_for_bit_unchanged():
     for category, expected in STAGE3_WAREHOUSE_EXPECTED.items():
-        rec = wf.build_transition(episode_id="fp3", step_number=0, seed=7, category=category)
+        rec = wf.build_transition(
+            episode_id="fp3", step_number=0, seed=7, category=category
+        )
         actual = (_hash(rec.frame_before), _hash(rec.frame_after))
-        assert actual == expected, f"stage3 warehouse category {category!r} frame hash changed: {actual} != {expected}"
+        assert actual == expected, (
+            f"stage3 warehouse category {category!r} frame hash changed: {actual} != {expected}"
+        )
 
 
 def test_all_categories_are_covered():

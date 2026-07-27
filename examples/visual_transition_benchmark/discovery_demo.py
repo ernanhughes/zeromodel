@@ -57,7 +57,9 @@ def run_episode_discovery(
     if not observations:
         return {"episode_id": episode_id, "status": "no_observations"}
 
-    report = discover_recurrent_unexplained_transitions(tuple(observations), DEMO_POLICY)
+    report = discover_recurrent_unexplained_transitions(
+        tuple(observations), DEMO_POLICY
+    )
     candidates = []
     for candidate in report.candidates:
         bands = sorted({zm.FIELD_ID_TO_BAND[fid] for fid in candidate.field_ids})

@@ -70,15 +70,18 @@ def render_state_frame(state: WarehouseState) -> np.ndarray:
             frame[y0 + dy : y0 + dy + 2, x0 + dx : x0 + dx + 2] = CRATE_DOT_VALUE
 
     robot_y0, robot_x0 = cell_origin(*state.robot)
-    frame[robot_y0 : robot_y0 + CELL_PIXELS, robot_x0 : robot_x0 + CELL_PIXELS] = ROBOT_VALUE
+    frame[robot_y0 : robot_y0 + CELL_PIXELS, robot_x0 : robot_x0 + CELL_PIXELS] = (
+        ROBOT_VALUE
+    )
 
     strip_y0 = GRID_SIZE * CELL_PIXELS
     segment_width = CANVAS_WIDTH // MAX_BATTERY
     for index in range(MAX_BATTERY):
         if index < state.battery:
-            frame[strip_y0 : strip_y0 + BATTERY_STRIP_HEIGHT, index * segment_width : (index + 1) * segment_width] = (
-                BATTERY_ON_VALUE
-            )
+            frame[
+                strip_y0 : strip_y0 + BATTERY_STRIP_HEIGHT,
+                index * segment_width : (index + 1) * segment_width,
+            ] = BATTERY_ON_VALUE
 
     frame.flags.writeable = False
     return frame

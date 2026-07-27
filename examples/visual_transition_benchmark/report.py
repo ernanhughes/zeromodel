@@ -9,11 +9,17 @@ from typing import Mapping, Sequence
 
 from visual_transition_benchmark import metrics as mx
 from visual_transition_benchmark.baselines import SystemOutput
-from visual_transition_benchmark.dataset import FAULT_CATEGORIES, ORDINARY_CATEGORIES, TransitionRecord
+from visual_transition_benchmark.dataset import (
+    FAULT_CATEGORIES,
+    ORDINARY_CATEGORIES,
+    TransitionRecord,
+)
 from visual_transition_benchmark.zeromodel_adapter import TransitionAnalysis
 
 
-def _field_metrics(records: Sequence[TransitionRecord], outputs: Sequence) -> Mapping[str, float]:
+def _field_metrics(
+    records: Sequence[TransitionRecord], outputs: Sequence
+) -> Mapping[str, float]:
     precisions = []
     recalls = []
     for record, output in zip(records, outputs):
@@ -110,7 +116,9 @@ def build_metrics_report(
         "by_fault_type": {},
     }
     for category in ORDINARY_CATEGORIES + FAULT_CATEGORIES:
-        report["by_category"][category] = score_group(*_subset(lambda r, c=category: r.category == c))
+        report["by_category"][category] = score_group(
+            *_subset(lambda r, c=category: r.category == c)
+        )
     for fault_type in FAULT_CATEGORIES:
         report["by_fault_type"][fault_type] = score_group(
             *_subset(lambda r, f=fault_type: r.fault_type == f)
@@ -127,8 +135,12 @@ def write_transition_level_results(
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
-        for record, zm_out, pd_out, priv_out in zip(records, zm_outputs, pd_outputs, priv_outputs):
-            truth_fields = mx.ground_truth_changed_fields(record.frame_before, record.frame_after)
+        for record, zm_out, pd_out, priv_out in zip(
+            records, zm_outputs, pd_outputs, priv_outputs
+        ):
+            truth_fields = mx.ground_truth_changed_fields(
+                record.frame_before, record.frame_after
+            )
             row = {
                 "transition_id": record.transition_id,
                 "episode_id": record.episode_id,
@@ -161,7 +173,9 @@ def write_transition_level_results(
                         "unexpected_components": list(zm_out.unexpected_components),
                         "evidence_scores": zm_out.evidence_scores,
                         "conformance_status": zm_out.diagnostics["conformance_status"],
-                        "unexplained_components": list(zm_out.diagnostics["unexplained_components"]),
+                        "unexplained_components": list(
+                            zm_out.diagnostics["unexplained_components"]
+                        ),
                     },
                 },
             }
@@ -211,7 +225,11 @@ def render_summary_markdown(
     ca = all_m["component_attribution"]
     lines.append(
         "| Visible changed-component attribution micro-F1 | %.3f | %.3f | %.3f |"
-        % (ca["pixel_diff"]["micro_f1"], ca["privileged"]["micro_f1"], ca["zeromodel"]["micro_f1"])
+        % (
+            ca["pixel_diff"]["micro_f1"],
+            ca["privileged"]["micro_f1"],
+            ca["zeromodel"]["micro_f1"],
+        )
     )
     lines.append(
         "| Component exact-set accuracy | %.3f | %.3f | %.3f |"
@@ -224,13 +242,21 @@ def render_summary_markdown(
     fl = all_m["field_level"]
     lines.append(
         "| Field-level mean recall | %.3f | %.3f | %.3f |"
-        % (fl["pixel_diff"]["mean_recall"], fl["privileged"]["mean_recall"], fl["zeromodel"]["mean_recall"])
+        % (
+            fl["pixel_diff"]["mean_recall"],
+            fl["privileged"]["mean_recall"],
+            fl["zeromodel"]["mean_recall"],
+        )
     )
     lines.append(
         "| Missing-change detection rate (faulty only) | n/a (0 by construction) | %.3f | %.3f |"
         % (
-            faulty_m["missing_expected_change_detection"]["privileged"]["detection_rate"],
-            faulty_m["missing_expected_change_detection"]["zeromodel"]["detection_rate"],
+            faulty_m["missing_expected_change_detection"]["privileged"][
+                "detection_rate"
+            ],
+            faulty_m["missing_expected_change_detection"]["zeromodel"][
+                "detection_rate"
+            ],
         )
     )
     lines.append(
@@ -242,7 +268,11 @@ def render_summary_markdown(
     )
     lines.append(
         "| False alarm rate on correct transitions | n/a | 0.000 | %.3f |"
-        % (ordinary_m["missing_expected_change_detection"]["zeromodel"]["false_alarm_rate_on_correct"])
+        % (
+            ordinary_m["missing_expected_change_detection"]["zeromodel"][
+                "false_alarm_rate_on_correct"
+            ]
+        )
     )
     lines.append(
         "| Mean false-implicated components | %.3f | %.3f | %.3f |"
@@ -261,7 +291,9 @@ def render_summary_markdown(
     lines.append("")
     lines.append("## Fault detection results by fault type")
     lines.append("")
-    lines.append("| Fault type | n | ZeroModel missing-detect | ZeroModel unexpected-detect | ZeroModel false-implicated (mean) |")
+    lines.append(
+        "| Fault type | n | ZeroModel missing-detect | ZeroModel unexpected-detect | ZeroModel false-implicated (mean) |"
+    )
     lines.append("|---|---:|---:|---:|---:|")
     for fault_type, group in metrics_report["by_fault_type"].items():
         if group.get("n", 0) == 0:
@@ -271,7 +303,9 @@ def render_summary_markdown(
             % (
                 fault_type,
                 group["n"],
-                group["missing_expected_change_detection"]["zeromodel"]["detection_rate"],
+                group["missing_expected_change_detection"]["zeromodel"][
+                    "detection_rate"
+                ],
                 group["unexpected_change_detection"]["zeromodel"]["detection_rate"],
                 group["false_implicated_components"]["zeromodel"]["mean_count"],
             )

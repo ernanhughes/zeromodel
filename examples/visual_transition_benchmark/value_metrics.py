@@ -23,7 +23,6 @@ from dataclasses import dataclass
 from typing import Sequence, Tuple
 
 from visual_transition_benchmark.dataset import TransitionRecord
-from visual_transition_benchmark.value_adapter import ValueTransitionAnalysis
 from visual_transition_benchmark.value_contracts import DecodedValues
 from visual_transition_benchmark.zeromodel_adapter import TransitionAnalysis
 
@@ -87,10 +86,16 @@ def value_accuracy_summary(
     n = len(records)
     if n == 0:
         return ValueAccuracySummary(0, 0.0, 0.0, 0.0, 0.0)
-    direction_hits = sum(tank_direction_correct(r, v) for r, v in zip(records, values_list))
+    direction_hits = sum(
+        tank_direction_correct(r, v) for r, v in zip(records, values_list)
+    )
     delta_hits = sum(tank_magnitude_correct(r, v) for r, v in zip(records, values_list))
-    cooldown_hits = sum(cooldown_value_correct(r, v) for r, v in zip(records, values_list))
-    target_hits = sum(target_selection_correct(r, v) for r, v in zip(records, values_list))
+    cooldown_hits = sum(
+        cooldown_value_correct(r, v) for r, v in zip(records, values_list)
+    )
+    target_hits = sum(
+        target_selection_correct(r, v) for r, v in zip(records, values_list)
+    )
     return ValueAccuracySummary(
         n=n,
         movement_direction_accuracy=direction_hits / n,
@@ -114,10 +119,14 @@ def value_fault_localization_summary(
     flags_list: Sequence[Tuple[str, ...]],
 ) -> ValueFaultLocalizationSummary:
     relevant = [
-        (r, v, f) for r, v, f in zip(records, values_list, flags_list) if value_fault_present(r, v)
+        (r, v, f)
+        for r, v, f in zip(records, values_list, flags_list)
+        if value_fault_present(r, v)
     ]
     clean = [
-        (r, v, f) for r, v, f in zip(records, values_list, flags_list) if not value_fault_present(r, v)
+        (r, v, f)
+        for r, v, f in zip(records, values_list, flags_list)
+        if not value_fault_present(r, v)
     ]
     hits = sum(1 for _, _, f in relevant if f)
     alarms = sum(1 for _, _, f in clean if f)
@@ -139,7 +148,8 @@ def relation_violation_rate_by_category(
         if any(flag.startswith("relation:") for flag in flags):
             bucket[1] += 1
     return {
-        category: (count[1] / count[0] if count[0] else 0.0) for category, count in by_category.items()
+        category: (count[1] / count[0] if count[0] else 0.0)
+        for category, count in by_category.items()
     }
 
 
@@ -150,7 +160,9 @@ class HiddenValueFaultSummary:
 
     @property
     def rate(self) -> float:
-        return self.label_clean_but_value_wrong / self.n_faulty if self.n_faulty else 0.0
+        return (
+            self.label_clean_but_value_wrong / self.n_faulty if self.n_faulty else 0.0
+        )
 
 
 def label_correct_but_value_wrong(
@@ -168,7 +180,9 @@ def label_correct_but_value_wrong(
         if not record.is_faulty:
             continue
         faulty += 1
-        label_clean = not component.missing_components and not component.unexpected_components
+        label_clean = (
+            not component.missing_components and not component.unexpected_components
+        )
         if label_clean and value_fault_present(record, values):
             hidden += 1
     return HiddenValueFaultSummary(n_faulty=faulty, label_clean_but_value_wrong=hidden)

@@ -17,7 +17,6 @@ from typing import Tuple
 import numpy as np
 
 from visual_transition_benchmark import dataset as ds
-from visual_transition_benchmark import value_contracts as vc
 from visual_transition_benchmark import value_metrics as vm
 from visual_transition_benchmark import zeromodel_adapter as zm
 from visual_transition_benchmark.domains.protocol import (
@@ -30,7 +29,9 @@ from visual_transition_benchmark.domains.protocol import (
 )
 from visual_transition_benchmark.value_adapter import ValueAwareZeroModelAnalyzer
 
-_RELATION_VIOLATING_CATEGORIES = frozenset({"alien_disappears_without_hit", "unrelated_alien_change"})
+_RELATION_VIOLATING_CATEGORIES = frozenset(
+    {"alien_disappears_without_hit", "unrelated_alien_change"}
+)
 _RELATION_NAME = "alien_substitution_without_cooldown_blocked"
 
 
@@ -42,21 +43,55 @@ def _contracts_for_action(action: str) -> Tuple[TransitionContract, ...]:
     contracts = []
     if action in ("LEFT", "RIGHT"):
         contracts.append(
-            TransitionContract("tank-must-change", "tank", "presence_change", "tank must change on LEFT/RIGHT")
+            TransitionContract(
+                "tank-must-change",
+                "tank",
+                "presence_change",
+                "tank must change on LEFT/RIGHT",
+            )
         )
     else:
         contracts.append(
-            TransitionContract("tank-must-stay", "tank", "presence_stable", "tank must stay stable on STAY/FIRE")
+            TransitionContract(
+                "tank-must-stay",
+                "tank",
+                "presence_stable",
+                "tank must stay stable on STAY/FIRE",
+            )
         )
     contracts.append(
-        TransitionContract("background-must-stay", "background", "presence_stable", "background never legitimately changes")
+        TransitionContract(
+            "background-must-stay",
+            "background",
+            "presence_stable",
+            "background never legitimately changes",
+        )
     )
     if action == "FIRE":
         contracts.append(
-            TransitionContract("cooldown-must-change", "cooldown", "presence_change", "cooldown must change on FIRE")
+            TransitionContract(
+                "cooldown-must-change",
+                "cooldown",
+                "presence_change",
+                "cooldown must change on FIRE",
+            )
         )
-    contracts.append(TransitionContract("tank-direction", "tank", "direction", "tank delta sign must match the action"))
-    contracts.append(TransitionContract("tank-magnitude", "tank", "magnitude", "tank delta must equal exactly one cell"))
+    contracts.append(
+        TransitionContract(
+            "tank-direction",
+            "tank",
+            "direction",
+            "tank delta sign must match the action",
+        )
+    )
+    contracts.append(
+        TransitionContract(
+            "tank-magnitude",
+            "tank",
+            "magnitude",
+            "tank delta must equal exactly one cell",
+        )
+    )
     contracts.append(
         TransitionContract(
             "cooldown-value",
@@ -80,8 +115,12 @@ class _ComponentAnalyzerAdapter:
     def __init__(self) -> None:
         self._inner = zm.ArcadeBandZeroModelAnalyzer()
 
-    def analyze(self, frame_before, frame_after, action, metadata: AnalysisMetadata) -> ComponentAnalysisResult:
-        inner_metadata = zm.TransitionMetadata(transition_id=metadata.transition_id, step_number=metadata.step_number)
+    def analyze(
+        self, frame_before, frame_after, action, metadata: AnalysisMetadata
+    ) -> ComponentAnalysisResult:
+        inner_metadata = zm.TransitionMetadata(
+            transition_id=metadata.transition_id, step_number=metadata.step_number
+        )
         result = self._inner.analyze(frame_before, frame_after, action, inner_metadata)
         return ComponentAnalysisResult(
             predicted_region_mask=result.predicted_region_mask,
@@ -99,29 +138,44 @@ class _ValueAnalyzerAdapter:
     def __init__(self) -> None:
         self._inner = ValueAwareZeroModelAnalyzer()
 
-    def analyze(self, frame_before, frame_after, action, metadata: AnalysisMetadata) -> ValueAnalysisResult:
-        inner_metadata = zm.TransitionMetadata(transition_id=metadata.transition_id, step_number=metadata.step_number)
-        analysis = self._inner.analyze(frame_before, frame_after, action, inner_metadata)
+    def analyze(
+        self, frame_before, frame_after, action, metadata: AnalysisMetadata
+    ) -> ValueAnalysisResult:
+        inner_metadata = zm.TransitionMetadata(
+            transition_id=metadata.transition_id, step_number=metadata.step_number
+        )
+        analysis = self._inner.analyze(
+            frame_before, frame_after, action, inner_metadata
+        )
         values = analysis.values
         decoded = {
-            "direction_decoded_sign": None if values.tank.delta_x is None else _sign(values.tank.delta_x),
+            "direction_decoded_sign": None
+            if values.tank.delta_x is None
+            else _sign(values.tank.delta_x),
             "magnitude_decoded_delta": values.tank.delta_x,
             "value_decoded_level": values.cooldown.after_level,
-            "relation_decoded_satisfied": _RELATION_NAME not in analysis.verdict.relation_violations,
+            "relation_decoded_satisfied": _RELATION_NAME
+            not in analysis.verdict.relation_violations,
             "identity_decoded_id": None,
             "decoded_target_after": values.alien.after_x,
         }
         return ValueAnalysisResult(
             decoded=decoded,
             value_flags=analysis.value_flags,
-            diagnostics={"conformance_status": analysis.component_analysis.diagnostics["conformance_status"]},
+            diagnostics={
+                "conformance_status": analysis.component_analysis.diagnostics[
+                    "conformance_status"
+                ]
+            },
         )
 
 
 class ArcadeTransitionDomain:
     name = "arcade"
 
-    def generate_episode(self, *, seed: int, episode_id: str) -> Tuple[DomainTransition, ...]:
+    def generate_episode(
+        self, *, seed: int, episode_id: str
+    ) -> Tuple[DomainTransition, ...]:
         records = ds.generate_episode(episode_id, seed)
         return tuple(self._to_domain_transition(record) for record in records)
 
@@ -149,7 +203,8 @@ class ArcadeTransitionDomain:
             "direction_expected_sign": _sign(vm.true_tank_delta(record)),
             "magnitude_expected_delta": vm.true_tank_delta(record),
             "value_expected_level": vm.true_cooldown_level(record),
-            "relation_expected_satisfied": record.category not in _RELATION_VIOLATING_CATEGORIES,
+            "relation_expected_satisfied": record.category
+            not in _RELATION_VIOLATING_CATEGORIES,
             "true_target_after": vm.true_target_after(record),
         }
         return DomainTransition(

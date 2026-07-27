@@ -19,7 +19,11 @@ from visual_transition_benchmark.domains.warehouse import faults as wf
 from visual_transition_benchmark.domains.warehouse import model as wm
 
 _RELATION_FAULT_WITH_ADJACENCY_VIOLATION = frozenset(
-    {"crate_moves_without_robot_adjacency", "two_crates_move_during_single_push", "expected_crate_remains_while_another_moves"}
+    {
+        "crate_moves_without_robot_adjacency",
+        "two_crates_move_during_single_push",
+        "expected_crate_remains_while_another_moves",
+    }
 )
 
 
@@ -32,15 +36,51 @@ def _contracts_for_action(action: str) -> Tuple[TransitionContract, ...]:
     contracts = []
     for name in ("robot", "crate", "door"):
         kind = "presence_change" if name in expected else "presence_stable"
-        contracts.append(TransitionContract(f"{name}-{kind}", name, kind, f"{name} {kind} on {action}"))
-    contracts.append(TransitionContract("wall-stable", "wall", "presence_stable", "wall never legitimately changes"))
-    contracts.append(TransitionContract("robot-direction", "robot", "direction", "robot delta must match the action"))
-    contracts.append(TransitionContract("robot-magnitude", "robot", "magnitude", "robot delta must equal exactly one cell"))
-    contracts.append(TransitionContract("battery-value", "battery", "value", "battery decrements by exactly one on a successful move/push"))
-    contracts.append(TransitionContract("door-value", "door", "value", "door must read as open after OPEN_DOOR, closed otherwise"))
+        contracts.append(
+            TransitionContract(
+                f"{name}-{kind}", name, kind, f"{name} {kind} on {action}"
+            )
+        )
     contracts.append(
         TransitionContract(
-            "crate-adjacency-relation", "crate", "relation", "a crate change must coincide with robot adjacency"
+            "wall-stable", "wall", "presence_stable", "wall never legitimately changes"
+        )
+    )
+    contracts.append(
+        TransitionContract(
+            "robot-direction", "robot", "direction", "robot delta must match the action"
+        )
+    )
+    contracts.append(
+        TransitionContract(
+            "robot-magnitude",
+            "robot",
+            "magnitude",
+            "robot delta must equal exactly one cell",
+        )
+    )
+    contracts.append(
+        TransitionContract(
+            "battery-value",
+            "battery",
+            "value",
+            "battery decrements by exactly one on a successful move/push",
+        )
+    )
+    contracts.append(
+        TransitionContract(
+            "door-value",
+            "door",
+            "value",
+            "door must read as open after OPEN_DOOR, closed otherwise",
+        )
+    )
+    contracts.append(
+        TransitionContract(
+            "crate-adjacency-relation",
+            "crate",
+            "relation",
+            "a crate change must coincide with robot adjacency",
         )
     )
     return tuple(contracts)
@@ -49,7 +89,9 @@ def _contracts_for_action(action: str) -> Tuple[TransitionContract, ...]:
 class WarehouseTransitionDomain:
     name = "warehouse"
 
-    def generate_episode(self, *, seed: int, episode_id: str) -> Tuple[DomainTransition, ...]:
+    def generate_episode(
+        self, *, seed: int, episode_id: str
+    ) -> Tuple[DomainTransition, ...]:
         records = wf.generate_episode(episode_id, seed)
         return tuple(self._to_domain_transition(record) for record in records)
 
@@ -72,7 +114,9 @@ class WarehouseTransitionDomain:
     def build_value_analyzer(self) -> wc.WarehouseValueAnalyzer:
         return wc.WarehouseValueAnalyzer()
 
-    def _to_domain_transition(self, record: wds.WarehouseTransitionRecord) -> DomainTransition:
+    def _to_domain_transition(
+        self, record: wds.WarehouseTransitionRecord
+    ) -> DomainTransition:
         true_robot_delta = (
             record.state_after["robot"][0] - record.state_before["robot"][0],
             record.state_after["robot"][1] - record.state_before["robot"][1],
@@ -80,9 +124,15 @@ class WarehouseTransitionDomain:
         true_battery_after = record.state_after["battery"]
         true_door_state = "open" if record.state_after["door_open"] else "closed"
 
-        relation_expected_satisfied = record.category not in _RELATION_FAULT_WITH_ADJACENCY_VIOLATION
+        relation_expected_satisfied = (
+            record.category not in _RELATION_FAULT_WITH_ADJACENCY_VIOLATION
+        )
         true_new_cell = _true_new_crate_target(record)
-        identity_expected_id = _true_identity_at(record, true_new_cell) if true_new_cell is not None else None
+        identity_expected_id = (
+            _true_identity_at(record, true_new_cell)
+            if true_new_cell is not None
+            else None
+        )
 
         value_ground_truth = {
             "direction_expected_sign": tuple(_sign(v) for v in true_robot_delta),

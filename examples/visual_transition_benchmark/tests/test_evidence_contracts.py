@@ -26,7 +26,11 @@ def test_requirement_id_is_deterministic():
 
 def test_requirement_id_changes_with_any_identity_field():
     base = _make()
-    changed = _make(property_name="direction", evidence_kind="signed_delta", comparison="signed_delta")
+    changed = _make(
+        property_name="direction",
+        evidence_kind="signed_delta",
+        comparison="signed_delta",
+    )
     assert base.requirement_id != changed.requirement_id
 
 
@@ -47,7 +51,9 @@ def test_rejects_empty_identity_fields():
 
 def test_numeric_value_with_precision_requires_value_domain():
     with pytest.raises(EvidenceContractError):
-        _make(evidence_kind="numeric_value", comparison="equal", required_precision=0.05)
+        _make(
+            evidence_kind="numeric_value", comparison="equal", required_precision=0.05
+        )
 
 
 def test_numeric_value_with_precision_and_value_domain_is_valid():
@@ -67,6 +73,8 @@ def test_visible_identity_requires_identity_marker_permission():
 
 def test_visible_identity_with_permission_is_valid():
     req = _make(
-        evidence_kind="visible_identity", comparison="identity_equal", permits_identity_marker=True
+        evidence_kind="visible_identity",
+        comparison="identity_equal",
+        permits_identity_marker=True,
     )
     assert req.requirement_id

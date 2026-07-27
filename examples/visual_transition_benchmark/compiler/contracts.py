@@ -57,7 +57,9 @@ class EvidenceContractError(ValueError):
 
 
 def _canonical_json(payload) -> bytes:
-    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
 
 
 def _digest(payload) -> str:
@@ -86,18 +88,34 @@ class VisualEvidenceRequirement:
 
     def __post_init__(self) -> None:
         if self.evidence_kind not in _EVIDENCE_KINDS:
-            raise EvidenceContractError(f"unsupported evidence_kind: {self.evidence_kind}")
+            raise EvidenceContractError(
+                f"unsupported evidence_kind: {self.evidence_kind}"
+            )
         if self.comparison not in _COMPARISON_KINDS:
             raise EvidenceContractError(f"unsupported comparison: {self.comparison}")
-        if not self.domain_name or not self.component_type or not self.property_name or not self.candidate_region_id:
+        if (
+            not self.domain_name
+            or not self.component_type
+            or not self.property_name
+            or not self.candidate_region_id
+        ):
             raise EvidenceContractError("requirement identities must be non-empty")
-        if self.evidence_kind == "numeric_value" and self.required_precision is not None and not self.expected_value_domain:
+        if (
+            self.evidence_kind == "numeric_value"
+            and self.required_precision is not None
+            and not self.expected_value_domain
+        ):
             raise EvidenceContractError(
                 "exact-value requirements (numeric_value with a declared required_precision) "
                 "must declare expected_value_domain"
             )
-        if self.evidence_kind == "visible_identity" and not self.permits_identity_marker:
-            raise EvidenceContractError("visible_identity requirements must set permits_identity_marker=True")
+        if (
+            self.evidence_kind == "visible_identity"
+            and not self.permits_identity_marker
+        ):
+            raise EvidenceContractError(
+                "visible_identity requirements must set permits_identity_marker=True"
+            )
         payload = {
             "domain_name": self.domain_name,
             "component_type": self.component_type,
@@ -105,7 +123,9 @@ class VisualEvidenceRequirement:
             "evidence_kind": self.evidence_kind,
             "candidate_region_id": self.candidate_region_id,
             "expected_value_domain": [str(v) for v in self.expected_value_domain],
-            "required_resolution": list(self.required_resolution) if self.required_resolution else None,
+            "required_resolution": list(self.required_resolution)
+            if self.required_resolution
+            else None,
             "required_precision": self.required_precision,
             "comparison": self.comparison,
             "permits_temporal_pair": self.permits_temporal_pair,

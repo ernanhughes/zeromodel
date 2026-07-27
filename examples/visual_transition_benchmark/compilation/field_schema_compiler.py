@@ -21,10 +21,18 @@ from typing import Callable, Dict, Hashable, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from zeromodel.perception.fields import VPMFieldSchemaDTO, build_grid_field_schema
-from zeromodel.perception.representation import SourceImageEncoderSpecDTO, encode_source_array
-from zeromodel.perception.transition_evidence import TransitionEvidenceVPMDTO, build_transition_evidence_vpm
+from zeromodel.perception.representation import (
+    SourceImageEncoderSpecDTO,
+    encode_source_array,
+)
+from zeromodel.perception.transition_evidence import (
+    TransitionEvidenceVPMDTO,
+    build_transition_evidence_vpm,
+)
 
-from visual_transition_benchmark.compilation.evidence_requirements import VisualEvidenceRequirement
+from visual_transition_benchmark.compilation.evidence_requirements import (
+    VisualEvidenceRequirement,
+)
 
 _SPEC = SourceImageEncoderSpecDTO(color_space="L")
 
@@ -39,19 +47,33 @@ class CompiledFieldSchema:
     tile_height: int
     tile_width: int
     field_schema: VPMFieldSchemaDTO
-    fields_for: Mapping[str, Tuple[str, ...]]  # "component.property" -> field ids inside its declared region
+    fields_for: Mapping[
+        str, Tuple[str, ...]
+    ]  # "component.property" -> field ids inside its declared region
     requirement_by_key: Mapping[str, VisualEvidenceRequirement]
 
     def field_ids(self, component: str, property_name: str) -> Tuple[str, ...]:
         return self.fields_for[f"{component}.{property_name}"]
 
     def build_transition_evidence(
-        self, frame_before: np.ndarray, frame_after: np.ndarray, *, change_threshold: int = 8
+        self,
+        frame_before: np.ndarray,
+        frame_after: np.ndarray,
+        *,
+        change_threshold: int = 8,
     ) -> TransitionEvidenceVPMDTO:
-        before_vpm = encode_source_array(np.ascontiguousarray(frame_before, dtype=np.uint8), _SPEC)
-        after_vpm = encode_source_array(np.ascontiguousarray(frame_after, dtype=np.uint8), _SPEC)
+        before_vpm = encode_source_array(
+            np.ascontiguousarray(frame_before, dtype=np.uint8), _SPEC
+        )
+        after_vpm = encode_source_array(
+            np.ascontiguousarray(frame_after, dtype=np.uint8), _SPEC
+        )
         return build_transition_evidence_vpm(
-            before_vpm, after_vpm, self.field_schema, annotations=(), change_threshold=change_threshold
+            before_vpm,
+            after_vpm,
+            self.field_schema,
+            annotations=(),
+            change_threshold=change_threshold,
         )
 
 
@@ -59,17 +81,23 @@ def compile_field_schema(
     canvas_shape: Tuple[int, int], requirements: Sequence[VisualEvidenceRequirement]
 ) -> CompiledFieldSchema:
     if not requirements:
-        raise FieldSchemaCompilationError("at least one evidence requirement is required")
+        raise FieldSchemaCompilationError(
+            "at least one evidence requirement is required"
+        )
     height, width = canvas_shape
     tile_height = min(req.required_resolution[0] for req in requirements)
     tile_width = min(req.required_resolution[1] for req in requirements)
     if height % tile_height != 0 and tile_height != 1:
-        tile_height = 1  # fall back to exact resolution rather than silently misaligning
+        tile_height = (
+            1  # fall back to exact resolution rather than silently misaligning
+        )
     if width % tile_width != 0 and tile_width != 1:
         tile_width = 1
 
     dummy = encode_source_array(np.zeros((height, width), dtype=np.uint8), _SPEC)
-    schema = build_grid_field_schema(dummy, tile_width=tile_width, tile_height=tile_height, channel_mode="joint")
+    schema = build_grid_field_schema(
+        dummy, tile_width=tile_width, tile_height=tile_height, channel_mode="joint"
+    )
 
     fields_for: Dict[str, Tuple[str, ...]] = {}
     requirement_by_key: Dict[str, VisualEvidenceRequirement] = {}
@@ -79,7 +107,10 @@ def compile_field_schema(
             sorted(
                 field.field_id
                 for field in schema.fields
-                if field.y0 >= y0 and field.y1 <= y1 and field.x0 >= x0 and field.x1 <= x1
+                if field.y0 >= y0
+                and field.y1 <= y1
+                and field.x0 >= x0
+                and field.x1 <= x1
             )
         )
         if not ids:
@@ -128,10 +159,14 @@ def aggregate_by_group(
         return {group: totals[group] / counts[group] for group in totals}
     if aggregation == "max":
         return dict(maxima)
-    raise ValueError(f"aggregate_by_group does not support aggregation={aggregation!r} (use exact_pattern for that)")
+    raise ValueError(
+        f"aggregate_by_group does not support aggregation={aggregation!r} (use exact_pattern for that)"
+    )
 
 
-def argmax_group(groups: Mapping[Hashable, float], *, threshold: float) -> Optional[Hashable]:
+def argmax_group(
+    groups: Mapping[Hashable, float], *, threshold: float
+) -> Optional[Hashable]:
     if not groups:
         return None
     best = max(groups, key=lambda key: groups[key])
@@ -152,5 +187,6 @@ def exact_pattern(
     (a domain-specific decoder) interprets the resulting pattern."""
 
     return tuple(
-        getattr(transition_evidence.field_evidence(fid), which) >= on_threshold for fid in sorted(field_ids)
+        getattr(transition_evidence.field_evidence(fid), which) >= on_threshold
+        for fid in sorted(field_ids)
     )

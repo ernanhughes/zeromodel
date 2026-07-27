@@ -31,7 +31,9 @@ def test_different_episodes_do_not_cross_splits():
 
 def test_frame_and_state_annotations_agree():
     for category in ds.ALL_CATEGORIES:
-        record = ds.build_transition(episode_id="agree", step_number=0, seed=3, category=category)
+        record = ds.build_transition(
+            episode_id="agree", step_number=0, seed=3, category=category
+        )
         for name in ds.COMPONENT_NAMES:
             mask = record.component_annotations[name]
             assert mask.shape == record.frame_before.shape
@@ -55,7 +57,10 @@ def test_component_annotations_are_a_strict_partition():
 def test_fault_injection_changes_only_declared_targets():
     # background_changes_unexpectedly must not touch tank/alien/cooldown pixels.
     record = ds.build_transition(
-        episode_id="fault-scope", step_number=0, seed=5, category="background_changes_unexpectedly"
+        episode_id="fault-scope",
+        step_number=0,
+        seed=5,
+        category="background_changes_unexpectedly",
     )
     assert record.observed_changed_components == ("background",)
     row, col = ds.BACKGROUND_PROBE_PIXEL
@@ -65,7 +70,9 @@ def test_fault_injection_changes_only_declared_targets():
 
 def test_ordinary_transitions_contain_no_injected_fault():
     for category in ds.ORDINARY_CATEGORIES:
-        record = ds.build_transition(episode_id="ordinary", step_number=0, seed=9, category=category)
+        record = ds.build_transition(
+            episode_id="ordinary", step_number=0, seed=9, category=category
+        )
         assert record.is_faulty is False
         assert record.fault_type is None
         # ordinary transitions render exactly the true post-state: expected == observed.

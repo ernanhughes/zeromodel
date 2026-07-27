@@ -1,8 +1,18 @@
-from visual_transition_benchmark.compiler.candidates import RegionGeometry, generate_candidates
+from visual_transition_benchmark.compiler.candidates import (
+    RegionGeometry,
+    generate_candidates,
+)
 from visual_transition_benchmark.compiler.contracts import VisualEvidenceRequirement
 
 REGION = RegionGeometry(
-    region_id="r", canvas_shape=(16, 28), y0=7, y1=9, x0=24, x1=28, cell_height=1, cell_width=4
+    region_id="r",
+    canvas_shape=(16, 28),
+    y0=7,
+    y1=9,
+    x0=24,
+    x1=28,
+    cell_height=1,
+    cell_width=4,
 )
 
 
@@ -75,6 +85,18 @@ def test_unknown_evidence_kind_has_no_generator():
 def test_complexity_cost_increases_with_finer_resolution():
     req = _req("numeric_value", "equal", expected_value_domain=(0.1, 0.6))
     candidates = generate_candidates(req, REGION)
-    coarse = [c for c in candidates if c.field_height == 1 and c.field_width == 4 and c.decoder_kind == "nearest_permitted_value"][0]
-    fine = [c for c in candidates if c.field_height == 1 and c.field_width == 1 and c.decoder_kind == "nearest_permitted_value"][0]
+    coarse = [
+        c
+        for c in candidates
+        if c.field_height == 1
+        and c.field_width == 4
+        and c.decoder_kind == "nearest_permitted_value"
+    ][0]
+    fine = [
+        c
+        for c in candidates
+        if c.field_height == 1
+        and c.field_width == 1
+        and c.decoder_kind == "nearest_permitted_value"
+    ][0]
     assert fine.complexity_cost > coarse.complexity_cost

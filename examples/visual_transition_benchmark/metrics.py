@@ -26,7 +26,9 @@ from visual_transition_benchmark.dataset import COMPONENT_NAMES, TransitionRecor
 COMPONENT_UNIVERSE = frozenset(COMPONENT_NAMES)
 
 
-def ground_truth_changed_fields(frame_before: np.ndarray, frame_after: np.ndarray) -> Tuple[str, ...]:
+def ground_truth_changed_fields(
+    frame_before: np.ndarray, frame_after: np.ndarray
+) -> Tuple[str, ...]:
     changed = []
     for field in zm.FIELD_SCHEMA.fields:
         before_region = frame_before[field.y0 : field.y1, field.x0 : field.x1]
@@ -55,11 +57,15 @@ def field_precision_recall(
 
 
 def unexpected_ground_truth(record: TransitionRecord) -> frozenset:
-    return frozenset(record.observed_changed_components) - frozenset(record.expected_changed_components)
+    return frozenset(record.observed_changed_components) - frozenset(
+        record.expected_changed_components
+    )
 
 
 def missing_ground_truth(record: TransitionRecord) -> frozenset:
-    return frozenset(record.expected_changed_components) - frozenset(record.observed_changed_components)
+    return frozenset(record.expected_changed_components) - frozenset(
+        record.observed_changed_components
+    )
 
 
 def fault_ground_truth(record: TransitionRecord) -> frozenset:
@@ -76,7 +82,9 @@ def flagged_relevant(output: SystemOutput) -> frozenset:
     )
 
 
-def false_implicated_components(record: TransitionRecord, output: SystemOutput) -> frozenset:
+def false_implicated_components(
+    record: TransitionRecord, output: SystemOutput
+) -> frozenset:
     return flagged_relevant(output) - frozenset(record.observed_changed_components)
 
 
@@ -112,7 +120,9 @@ def component_multilabel_metrics(
     }
 
 
-def per_transition_component_f1(predicted: Iterable[str], truth: Iterable[str]) -> float:
+def per_transition_component_f1(
+    predicted: Iterable[str], truth: Iterable[str]
+) -> float:
     predicted_set = set(predicted)
     truth_set = set(truth)
     tp = len(predicted_set & truth_set)
@@ -206,7 +216,8 @@ def false_implicated_summary(
     records: Sequence[TransitionRecord], outputs: Sequence[SystemOutput]
 ) -> FalseImplicatedSummary:
     counts = [
-        len(false_implicated_components(record, output)) for record, output in zip(records, outputs)
+        len(false_implicated_components(record, output))
+        for record, output in zip(records, outputs)
     ]
     if not counts:
         return FalseImplicatedSummary(mean_count=0.0, median_count=0.0, pct_zero=0.0)
@@ -251,7 +262,9 @@ def compare_to_pixel_diff(
         zm_f1 = per_transition_component_f1(zm_out.predicted_components, truth)
         pd_f1 = per_transition_component_f1(pd_out.predicted_components, truth)
         missing_gt = missing_ground_truth(record)
-        zm_flags_absence = bool(missing_gt) and bool(missing_gt & frozenset(zm_out.missing_components))
+        zm_flags_absence = bool(missing_gt) and bool(
+            missing_gt & frozenset(zm_out.missing_components)
+        )
         if zm_flags_absence:
             verdict = "better"
         elif zm_f1 > pd_f1 + 1e-9:

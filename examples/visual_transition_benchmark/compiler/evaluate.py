@@ -26,9 +26,11 @@ from visual_transition_benchmark.compilation.field_schema_compiler import (
     aggregate_by_group,
     argmax_group,
     compile_field_schema,
-    exact_pattern,
 )
-from visual_transition_benchmark.compiler.candidates import RegionGeometry, RepresentationCandidate
+from visual_transition_benchmark.compiler.candidates import (
+    RegionGeometry,
+    RepresentationCandidate,
+)
 from visual_transition_benchmark.compiler.contracts import VisualEvidenceRequirement
 
 
@@ -39,7 +41,9 @@ class DevelopmentSample:
     frame_after: np.ndarray
     true_before: object  # privileged; scoring only
     true_after: object
-    is_unrelated: bool = False  # this sample's only real change is unrelated to the property under test
+    is_unrelated: bool = (
+        False  # this sample's only real change is unrelated to the property under test
+    )
     fault_present: bool = False
 
 
@@ -114,18 +118,21 @@ def _build_schema(candidate: RepresentationCandidate, region: RegionGeometry):
         evidence_kind="presence",  # not semantically used downstream; only region/resolution/aggregation matter
         region=(region.y0, region.y1, region.x0, region.x1),
         required_resolution=(candidate.field_height, candidate.field_width),
-        aggregation="mean" if candidate.aggregation not in ("mean", "max") else candidate.aggregation,
+        aggregation="mean"
+        if candidate.aggregation not in ("mean", "max")
+        else candidate.aggregation,
     )
     return compile_field_schema(region.canvas_shape, (low,))
 
 
 def _cell_group_of(compiled, field_id: str, region: RegionGeometry):
-    field = compiled.requirement_by_key[f"{region.region_id}.candidate"]
-    by_id = {f.field_id: f for f in compiled.field_schema.fields}
-    f = by_id[field_id]
-    row = (f.y0 - region.y0) // max(1, region.cell_height)
-    col = (f.x0 - region.x0) // max(1, region.cell_width)
-    return (row, col)
+    by_id = {field.field_id: field for field in compiled.field_schema.fields}
+    selected_field = by_id[field_id]
+
+    row = (selected_field.y0 - region.y0) // max(1, region.cell_height)
+    col = (selected_field.x0 - region.x0) // max(1, region.cell_width)
+
+    return row, col
 
 
 def decode_candidate(
@@ -142,7 +149,9 @@ def decode_candidate(
     active_field_ids: Optional[frozenset] = None,
 ) -> DecodedProperty:
     compiled = _build_schema(candidate, region)
-    evidence = _FastFieldEvidence(compiled.build_transition_evidence(frame_before, frame_after))
+    evidence = _FastFieldEvidence(
+        compiled.build_transition_evidence(frame_before, frame_after)
+    )
     field_ids = compiled.field_ids(region.region_id, "candidate")
     by_id = {f.field_id: f for f in compiled.field_schema.fields}
 
@@ -154,13 +163,19 @@ def decode_candidate(
         # region without changing its total (e.g. a sprite sliding sideways
         # conserves total lit-pixel mass across tiles), which would silently
         # decode as "unchanged" despite every pixel having moved.
-        before_vec = tuple(evidence.field_evidence(fid).before_mean for fid in field_ids)
+        before_vec = tuple(
+            evidence.field_evidence(fid).before_mean for fid in field_ids
+        )
         after_vec = tuple(evidence.field_evidence(fid).after_mean for fid in field_ids)
         return DecodedProperty(before=before_vec, after=after_vec)
 
     if decoder in ("nearest_permitted_value", "exact_lookup"):
-        before_mean = float(np.mean([evidence.field_evidence(fid).before_mean for fid in field_ids]))
-        after_mean = float(np.mean([evidence.field_evidence(fid).after_mean for fid in field_ids]))
+        before_mean = float(
+            np.mean([evidence.field_evidence(fid).before_mean for fid in field_ids])
+        )
+        after_mean = float(
+            np.mean([evidence.field_evidence(fid).after_mean for fid in field_ids])
+        )
         tol = 1e-6 if decoder == "exact_lookup" else level_tolerance
         return DecodedProperty(
             before=_nearest_level(before_mean, canonical_levels, tol),
@@ -174,43 +189,96 @@ def decode_candidate(
         # non-background signal. Falls back to the full region if no
         # active-field fit was supplied (e.g. a single-field coarse tile).
         use_ids = active_field_ids if active_field_ids else field_ids
-        before_mean = float(np.mean([evidence.field_evidence(fid).before_mean for fid in use_ids]))
-        after_mean = float(np.mean([evidence.field_evidence(fid).after_mean for fid in use_ids]))
+        before_mean = float(
+            np.mean([evidence.field_evidence(fid).before_mean for fid in use_ids])
+        )
+        after_mean = float(
+            np.mean([evidence.field_evidence(fid).after_mean for fid in use_ids])
+        )
         return DecodedProperty(
             before=_nearest_level(before_mean, canonical_levels, level_tolerance),
             after=_nearest_level(after_mean, canonical_levels, level_tolerance),
         )
 
     if decoder == "categorical_template":
-        before_mean = float(np.mean([evidence.field_evidence(fid).before_mean for fid in field_ids]))
-        after_mean = float(np.mean([evidence.field_evidence(fid).after_mean for fid in field_ids]))
+        before_mean = float(
+            np.mean([evidence.field_evidence(fid).before_mean for fid in field_ids])
+        )
+        after_mean = float(
+            np.mean([evidence.field_evidence(fid).after_mean for fid in field_ids])
+        )
         return DecodedProperty(
             before=_nearest_level(before_mean, canonical_levels, level_tolerance),
             after=_nearest_level(after_mean, canonical_levels, level_tolerance),
         )
 
     if decoder == "argmax_field":
-        group_of = lambda fid: _cell_group_of(compiled, fid, region)
-        agg = candidate.aggregation if candidate.aggregation in ("mean", "max") else "mean"
-        before_groups = aggregate_by_group(evidence, field_ids, "before_mean", group_of, agg, by_id)
-        after_groups = aggregate_by_group(evidence, field_ids, "after_mean", group_of, agg, by_id)
+
+        def group_of(field_id: str):
+            return _cell_group_of(compiled, field_id, region)
+
+        agg = (
+            candidate.aggregation
+            if candidate.aggregation in ("mean", "max")
+            else "mean"
+        )
+
+        before_groups = aggregate_by_group(
+            evidence,
+            field_ids,
+            "before_mean",
+            group_of,
+            agg,
+            by_id,
+        )
+        after_groups = aggregate_by_group(
+            evidence, field_ids, "after_mean", group_of, agg, by_id
+        )
         before_cell = argmax_group(before_groups, threshold=alive_threshold)
         after_cell = argmax_group(after_groups, threshold=alive_threshold)
         tie_before = _is_tie(before_groups, before_cell)
         tie_after = _is_tie(after_groups, after_cell)
-        return DecodedProperty(before=before_cell, after=after_cell, tie_before=tie_before, tie_after=tie_after)
+        return DecodedProperty(
+            before=before_cell,
+            after=after_cell,
+            tie_before=tie_before,
+            tie_after=tie_after,
+        )
 
     if decoder in ("signed_delta_over_position", "exact_delta_over_position"):
-        group_of = lambda fid: _cell_group_of(compiled, fid, region)
-        agg = candidate.aggregation if candidate.aggregation in ("mean", "max") else "mean"
-        before_groups = aggregate_by_group(evidence, field_ids, "before_mean", group_of, agg, by_id)
-        after_groups = aggregate_by_group(evidence, field_ids, "after_mean", group_of, agg, by_id)
+
+        def group_of(field_id: str):
+            return _cell_group_of(compiled, field_id, region)
+
+        agg = (
+            candidate.aggregation
+            if candidate.aggregation in ("mean", "max")
+            else "mean"
+        )
+
+        before_groups = aggregate_by_group(
+            evidence,
+            field_ids,
+            "before_mean",
+            group_of,
+            agg,
+            by_id,
+        )
+        after_groups = aggregate_by_group(
+            evidence, field_ids, "after_mean", group_of, agg, by_id
+        )
         before_cell = argmax_group(before_groups, threshold=alive_threshold)
         after_cell = argmax_group(after_groups, threshold=alive_threshold)
         tie_before = _is_tie(before_groups, before_cell)
         tie_after = _is_tie(after_groups, after_cell)
-        delta = None if before_cell is None or after_cell is None else _subtract(after_cell, before_cell)
-        return DecodedProperty(before=before_cell, after=delta, tie_before=tie_before, tie_after=tie_after)
+        delta = (
+            None
+            if before_cell is None or after_cell is None
+            else _subtract(after_cell, before_cell)
+        )
+        return DecodedProperty(
+            before=before_cell, after=delta, tie_before=tie_before, tie_after=tie_after
+        )
 
     if decoder == "local_marker_pattern":
         lit_before = 0
@@ -224,7 +292,9 @@ def decode_candidate(
             ]
             if not patch_ids:
                 continue
-            before_vals = [evidence.field_evidence(fid).before_mean for fid in patch_ids]
+            before_vals = [
+                evidence.field_evidence(fid).before_mean for fid in patch_ids
+            ]
             after_vals = [evidence.field_evidence(fid).after_mean for fid in patch_ids]
             if min(before_vals) >= dot_threshold:
                 lit_before += 1
@@ -262,7 +332,9 @@ def compute_dominant_fields(
     field_ids = compiled.field_ids(region.region_id, "candidate")
     max_seen: Dict[str, float] = {fid: 0.0 for fid in field_ids}
     for sample in samples:
-        evidence = _FastFieldEvidence(compiled.build_transition_evidence(sample.frame_before, sample.frame_after))
+        evidence = _FastFieldEvidence(
+            compiled.build_transition_evidence(sample.frame_before, sample.frame_after)
+        )
         for fid in field_ids:
             fe = evidence.field_evidence(fid)
             max_seen[fid] = max(max_seen[fid], fe.before_mean, fe.after_mean)
@@ -373,11 +445,17 @@ def evaluate_candidate(
 
     reasons = []
     if decoding_accuracy < min_decoding_accuracy:
-        reasons.append(f"decoding_accuracy {decoding_accuracy:.3f} < required {min_decoding_accuracy:.3f}")
+        reasons.append(
+            f"decoding_accuracy {decoding_accuracy:.3f} < required {min_decoding_accuracy:.3f}"
+        )
     if require_zero_collisions and ambiguous_pairs:
-        reasons.append(f"{len(ambiguous_pairs)} value collisions found but exactness is required")
+        reasons.append(
+            f"{len(ambiguous_pairs)} value collisions found but exactness is required"
+        )
     if ambiguous > 0 and candidate.aggregation == "max":
-        reasons.append(f"{ambiguous} of {n} samples produced a tied (ambiguous) decode under max aggregation")
+        reasons.append(
+            f"{ambiguous} of {n} samples produced a tied (ambiguous) decode under max aggregation"
+        )
 
     return CandidateEvaluationResult(
         candidate_id=candidate.candidate_id,
@@ -401,7 +479,9 @@ def _freeze(value):
     return value
 
 
-def _score_sample(comparison: str, decoded: DecodedProperty, sample: DevelopmentSample) -> bool:
+def _score_sample(
+    comparison: str, decoded: DecodedProperty, sample: DevelopmentSample
+) -> bool:
     if comparison in ("equal", "categorical_transition", "identity_equal"):
         return decoded.after == _freeze(sample.true_after)
     if comparison == "not_equal":

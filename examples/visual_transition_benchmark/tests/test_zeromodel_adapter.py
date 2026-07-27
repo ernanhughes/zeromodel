@@ -6,12 +6,18 @@ from visual_transition_benchmark import zeromodel_adapter as zm
 
 def _analyze(record):
     analyzer = zm.ArcadeBandZeroModelAnalyzer()
-    metadata = zm.TransitionMetadata(transition_id=record.transition_id, step_number=record.step_number)
-    return analyzer.analyze(record.frame_before, record.frame_after, record.action, metadata)
+    metadata = zm.TransitionMetadata(
+        transition_id=record.transition_id, step_number=record.step_number
+    )
+    return analyzer.analyze(
+        record.frame_before, record.frame_after, record.action, metadata
+    )
 
 
 def test_output_coordinates_align_with_original_frame():
-    record = ds.build_transition(episode_id="e", step_number=0, seed=1, category="tank_moves_left")
+    record = ds.build_transition(
+        episode_id="e", step_number=0, seed=1, category="tank_moves_left"
+    )
     analysis = _analyze(record)
     assert analysis.predicted_region_mask.shape == record.frame_before.shape
     # every predicted field's rectangle must lie inside the frame bounds
@@ -46,7 +52,9 @@ def test_no_component_is_invented_outside_the_declared_mapping():
 
 
 def test_same_transition_produces_identical_evidence():
-    record = ds.build_transition(episode_id="e", step_number=0, seed=4, category="cooldown_clears")
+    record = ds.build_transition(
+        episode_id="e", step_number=0, seed=4, category="cooldown_clears"
+    )
     a = _analyze(record)
     b = _analyze(record)
     assert a.predicted_fields == b.predicted_fields
@@ -55,7 +63,10 @@ def test_same_transition_produces_identical_evidence():
     assert a.unexpected_components == b.unexpected_components
     assert a.evidence_scores == b.evidence_scores
     assert np.array_equal(a.predicted_region_mask, b.predicted_region_mask)
-    assert a.transition_evidence.transition_evidence_id == b.transition_evidence.transition_evidence_id
+    assert (
+        a.transition_evidence.transition_evidence_id
+        == b.transition_evidence.transition_evidence_id
+    )
 
 
 def test_adapter_never_receives_privileged_state():

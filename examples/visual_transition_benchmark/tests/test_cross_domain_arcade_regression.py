@@ -29,8 +29,14 @@ def test_generated_transitions_are_bit_for_bit_identical():
             assert transition.action == record.action
             assert transition.fault_type == record.fault_type
             assert transition.is_faulty == record.is_faulty
-            assert transition.expected_changed_components == record.expected_changed_components
-            assert transition.observed_changed_components == record.observed_changed_components
+            assert (
+                transition.expected_changed_components
+                == record.expected_changed_components
+            )
+            assert (
+                transition.observed_changed_components
+                == record.observed_changed_components
+            )
             assert np.array_equal(transition.frame_before, record.frame_before)
             assert np.array_equal(transition.frame_after, record.frame_after)
 
@@ -41,24 +47,32 @@ def test_component_analysis_matches_original_analyzer_exactly():
     wrapped_analyzer = domain.build_component_analyzer()
 
     for category in ds.ALL_CATEGORIES:
-        record = ds.build_transition(episode_id="regress-c", step_number=0, seed=3, category=category)
+        record = ds.build_transition(
+            episode_id="regress-c", step_number=0, seed=3, category=category
+        )
         original = original_analyzer.analyze(
             record.frame_before,
             record.frame_after,
             record.action,
-            zm.TransitionMetadata(transition_id=record.transition_id, step_number=record.step_number),
+            zm.TransitionMetadata(
+                transition_id=record.transition_id, step_number=record.step_number
+            ),
         )
         wrapped = wrapped_analyzer.analyze(
             record.frame_before,
             record.frame_after,
             record.action,
-            AnalysisMetadata(transition_id=record.transition_id, step_number=record.step_number),
+            AnalysisMetadata(
+                transition_id=record.transition_id, step_number=record.step_number
+            ),
         )
         assert wrapped.predicted_components == original.predicted_components
         assert wrapped.missing_components == original.missing_components
         assert wrapped.unexpected_components == original.unexpected_components
         assert wrapped.predicted_fields == original.predicted_fields
-        assert np.array_equal(wrapped.predicted_region_mask, original.predicted_region_mask)
+        assert np.array_equal(
+            wrapped.predicted_region_mask, original.predicted_region_mask
+        )
         assert wrapped.evidence_scores == original.evidence_scores
 
 
@@ -69,35 +83,58 @@ def test_value_analysis_matches_original_analyzer_exactly():
 
     for category in ds.ALL_CATEGORIES + ds.VALUE_FAULT_CATEGORIES:
         if category in ds.VALUE_FAULT_CATEGORIES:
-            record = ds.build_value_transition(episode_id="regress-v", step_number=0, seed=5, category=category)
+            record = ds.build_value_transition(
+                episode_id="regress-v", step_number=0, seed=5, category=category
+            )
         else:
-            record = ds.build_transition(episode_id="regress-v", step_number=0, seed=5, category=category)
+            record = ds.build_transition(
+                episode_id="regress-v", step_number=0, seed=5, category=category
+            )
         original = original_analyzer.analyze(
             record.frame_before,
             record.frame_after,
             record.action,
-            zm.TransitionMetadata(transition_id=record.transition_id, step_number=record.step_number),
+            zm.TransitionMetadata(
+                transition_id=record.transition_id, step_number=record.step_number
+            ),
         )
         wrapped = wrapped_analyzer.analyze(
             record.frame_before,
             record.frame_after,
             record.action,
-            AnalysisMetadata(transition_id=record.transition_id, step_number=record.step_number),
+            AnalysisMetadata(
+                transition_id=record.transition_id, step_number=record.step_number
+            ),
         )
         assert wrapped.value_flags == original.value_flags
-        assert wrapped.decoded["magnitude_decoded_delta"] == original.values.tank.delta_x
-        assert wrapped.decoded["value_decoded_level"] == original.values.cooldown.after_level
+        assert (
+            wrapped.decoded["magnitude_decoded_delta"] == original.values.tank.delta_x
+        )
+        assert (
+            wrapped.decoded["value_decoded_level"]
+            == original.values.cooldown.after_level
+        )
 
 
 def test_value_ground_truth_matches_value_metrics_functions():
     domain = ArcadeTransitionDomain()
     for category in ds.ALL_CATEGORIES:
-        record = ds.build_transition(episode_id="regress-g", step_number=0, seed=9, category=category)
+        record = ds.build_transition(
+            episode_id="regress-g", step_number=0, seed=9, category=category
+        )
         transition = domain._to_domain_transition(record)
-        expected_sign = -1 if vm.true_tank_delta(record) < 0 else (1 if vm.true_tank_delta(record) > 0 else 0)
+        expected_sign = (
+            -1
+            if vm.true_tank_delta(record) < 0
+            else (1 if vm.true_tank_delta(record) > 0 else 0)
+        )
         assert transition.value_ground_truth["direction_expected_sign"] == expected_sign
-        assert transition.value_ground_truth["magnitude_expected_delta"] == vm.true_tank_delta(record)
-        assert transition.value_ground_truth["value_expected_level"] == vm.true_cooldown_level(record)
+        assert transition.value_ground_truth[
+            "magnitude_expected_delta"
+        ] == vm.true_tank_delta(record)
+        assert transition.value_ground_truth[
+            "value_expected_level"
+        ] == vm.true_cooldown_level(record)
 
 
 def test_stage1_metrics_functions_run_unchanged_over_wrapped_transitions():
@@ -112,12 +149,16 @@ def test_stage1_metrics_functions_run_unchanged_over_wrapped_transitions():
     analyzer = domain.build_component_analyzer()
     outputs = [
         analyzer.analyze(
-            t.frame_before, t.frame_after, t.action, AnalysisMetadata(t.transition_id, t.step_number)
+            t.frame_before,
+            t.frame_after,
+            t.action,
+            AnalysisMetadata(t.transition_id, t.step_number),
         )
         for t in transitions
     ]
     result = mx.component_multilabel_metrics(
-        [o.predicted_components for o in outputs], [t.observed_changed_components for t in transitions]
+        [o.predicted_components for o in outputs],
+        [t.observed_changed_components for t in transitions],
     )
     assert result["n"] == len(transitions)
     assert 0.0 <= result["micro_f1"] <= 1.0

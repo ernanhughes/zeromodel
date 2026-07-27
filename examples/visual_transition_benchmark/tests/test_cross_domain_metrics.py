@@ -1,5 +1,8 @@
 from visual_transition_benchmark import cross_domain_metrics as cdm
-from visual_transition_benchmark.domains.protocol import DomainTransition, ValueAnalysisResult
+from visual_transition_benchmark.domains.protocol import (
+    DomainTransition,
+    ValueAnalysisResult,
+)
 
 
 def _transition(**ground_truth) -> DomainTransition:
@@ -55,7 +58,9 @@ def test_identity_correct_is_not_applicable_without_ground_truth():
 def test_value_fault_present_and_detection_rate():
     faulty = _transition(direction_expected_sign=-1)
     clean = _transition(direction_expected_sign=-1)
-    faulty_analysis = _analysis({"direction_decoded_sign": 1}, flags=("robot_direction_violation",))
+    faulty_analysis = _analysis(
+        {"direction_decoded_sign": 1}, flags=("robot_direction_violation",)
+    )
     clean_analysis = _analysis({"direction_decoded_sign": -1}, flags=())
 
     assert cdm.value_fault_present(faulty, faulty_analysis.decoded) is True

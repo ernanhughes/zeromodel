@@ -49,9 +49,13 @@ def test_robot_direction_compiles_and_rejects_max_aggregation_candidate():
     compiled = _compile(_case("robot_direction"), count=10)
     assert compiled.status == "compiled"
     max_candidates = [
-        e for e in compiled.all_evaluations if not e.passed and "tied" in " ".join(e.rejection_reasons)
+        e
+        for e in compiled.all_evaluations
+        if not e.passed and "tied" in " ".join(e.rejection_reasons)
     ]
-    assert max_candidates, "expected at least one max-aggregation candidate to be rejected for ambiguity"
+    assert max_candidates, (
+        "expected at least one max-aggregation candidate to be rejected for ambiguity"
+    )
 
 
 def test_robot_movement_magnitude_compiles():

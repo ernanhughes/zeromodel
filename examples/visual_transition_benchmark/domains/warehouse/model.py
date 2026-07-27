@@ -25,7 +25,12 @@ MAX_BATTERY = 3
 MAX_CRATES = 3
 CRATE_LABELS: Tuple[str, ...] = ("A", "B", "C")
 
-DIRECTIONS: Dict[str, Tuple[int, int]] = {"UP": (-1, 0), "DOWN": (1, 0), "LEFT": (0, -1), "RIGHT": (0, 1)}
+DIRECTIONS: Dict[str, Tuple[int, int]] = {
+    "UP": (-1, 0),
+    "DOWN": (1, 0),
+    "LEFT": (0, -1),
+    "RIGHT": (0, 1),
+}
 MOVE_ACTIONS: Tuple[str, ...] = tuple(f"MOVE_{d}" for d in DIRECTIONS)
 PUSH_ACTIONS: Tuple[str, ...] = tuple(f"PUSH_{d}" for d in DIRECTIONS)
 ACTIONS: Tuple[str, ...] = MOVE_ACTIONS + PUSH_ACTIONS + ("OPEN_DOOR", "WAIT")
@@ -38,7 +43,9 @@ class WarehouseError(ValueError):
 @dataclass(frozen=True)
 class WarehouseState:
     robot: Tuple[int, int]
-    crates: Tuple[Tuple[int, int], ...]  # ordered; index is the crate's visible identity (0=A, 1=B, 2=C)
+    crates: Tuple[
+        Tuple[int, int], ...
+    ]  # ordered; index is the crate's visible identity (0=A, 1=B, 2=C)
     door_open: bool
     battery: int
 
@@ -70,7 +77,9 @@ def is_wall(position: Tuple[int, int]) -> bool:
     return row in (0, GRID_SIZE - 1) or col in (0, GRID_SIZE - 1)
 
 
-def _passable(state: WarehouseState, position: Tuple[int, int], *, for_crate: bool) -> bool:
+def _passable(
+    state: WarehouseState, position: Tuple[int, int], *, for_crate: bool
+) -> bool:
     if is_wall(position):
         return False
     if position == DOOR_POSITION:
@@ -90,14 +99,22 @@ def step(state: WarehouseState, action: str) -> WarehouseState:
     if action == "WAIT":
         return state
     if action == "OPEN_DOOR":
-        return WarehouseState(robot=state.robot, crates=state.crates, door_open=True, battery=state.battery)
+        return WarehouseState(
+            robot=state.robot,
+            crates=state.crates,
+            door_open=True,
+            battery=state.battery,
+        )
     if action in MOVE_ACTIONS:
         direction = DIRECTIONS[action[len("MOVE_") :]]
         target = (state.robot[0] + direction[0], state.robot[1] + direction[1])
         if not _passable(state, target, for_crate=False):
             return state
         return WarehouseState(
-            robot=target, crates=state.crates, door_open=state.door_open, battery=max(0, state.battery - 1)
+            robot=target,
+            crates=state.crates,
+            door_open=state.door_open,
+            battery=max(0, state.battery - 1),
         )
     # PUSH_*
     direction = DIRECTIONS[action[len("PUSH_") :]]
@@ -111,5 +128,8 @@ def step(state: WarehouseState, action: str) -> WarehouseState:
     new_crates = list(state.crates)
     new_crates[crate_index] = beyond
     return WarehouseState(
-        robot=target, crates=tuple(new_crates), door_open=state.door_open, battery=max(0, state.battery - 1)
+        robot=target,
+        crates=tuple(new_crates),
+        door_open=state.door_open,
+        battery=max(0, state.battery - 1),
     )

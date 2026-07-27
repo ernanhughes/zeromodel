@@ -27,9 +27,16 @@ import numpy as np
 
 from visual_transition_benchmark import report as rp
 from visual_transition_benchmark.run import _git_sha
-from visual_transition_benchmark.compiler.candidates import RegionGeometry, RepresentationCandidate, generate_candidates
+from visual_transition_benchmark.compiler.candidates import (
+    RegionGeometry,
+    RepresentationCandidate,
+    generate_candidates,
+)
 from visual_transition_benchmark.compiler.compile import compile_requirement
-from visual_transition_benchmark.compiler.evaluate import CandidateEvaluationResult, evaluate_candidate
+from visual_transition_benchmark.compiler.evaluate import (
+    CandidateEvaluationResult,
+    evaluate_candidate,
+)
 from visual_transition_benchmark.compiler_adapters import arcade as arcade_adapter
 from visual_transition_benchmark.compiler_adapters import warehouse as warehouse_adapter
 
@@ -50,7 +57,13 @@ _NAIVE_DECODER_PREFERENCE = (
 
 
 def _manual_candidate(
-    req, region_for_id: RegionGeometry, *, field_height: int, field_width: int, aggregation: str, decoder_kind: str
+    req,
+    region_for_id: RegionGeometry,
+    *,
+    field_height: int,
+    field_width: int,
+    aggregation: str,
+    decoder_kind: str,
 ) -> RepresentationCandidate:
     return RepresentationCandidate(
         requirement_id=req.requirement_id,
@@ -61,7 +74,9 @@ def _manual_candidate(
         decoder_kind=decoder_kind,
         comparison=req.comparison,
         complexity_cost=0.0,
-        assumptions=("manual reference: the literal historical hand-built representation",),
+        assumptions=(
+            "manual reference: the literal historical hand-built representation",
+        ),
     )
 
 
@@ -86,44 +101,140 @@ def _manual_reference(case) -> Optional[Tuple[RepresentationCandidate, RegionGeo
     region = case.region
 
     if case.name == "tank_presence":
-        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="presence_threshold"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=region.cell_height,
+            field_width=region.cell_width,
+            aggregation="mean",
+            decoder_kind="presence_threshold",
+        ), region
     if case.name == "tank_position":
-        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="mean", decoder_kind="argmax_field"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=1,
+            field_width=1,
+            aggregation="mean",
+            decoder_kind="argmax_field",
+        ), region
     if case.name == "tank_direction":
-        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="mean", decoder_kind="signed_delta_over_position"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=1,
+            field_width=1,
+            aggregation="mean",
+            decoder_kind="signed_delta_over_position",
+        ), region
     if case.name == "tank_movement_magnitude":
-        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="mean", decoder_kind="exact_delta_over_position"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=1,
+            field_width=1,
+            aggregation="mean",
+            decoder_kind="exact_delta_over_position",
+        ), region
     if case.name == "cooldown_value":
         narrow = RegionGeometry(
-            region_id="cooldown_region_manual_narrow", canvas_shape=region.canvas_shape,
-            y0=region.y0, y1=region.y1, x0=region.x1 - 3, x1=region.x1 - 1, cell_height=1, cell_width=1,
+            region_id="cooldown_region_manual_narrow",
+            canvas_shape=region.canvas_shape,
+            y0=region.y0,
+            y1=region.y1,
+            x0=region.x1 - 3,
+            x1=region.x1 - 1,
+            cell_height=1,
+            cell_width=1,
         )
-        return _manual_candidate(req, narrow, field_height=1, field_width=1, aggregation="mean", decoder_kind="nearest_permitted_value"), narrow
+        return _manual_candidate(
+            req,
+            narrow,
+            field_height=1,
+            field_width=1,
+            aggregation="mean",
+            decoder_kind="nearest_permitted_value",
+        ), narrow
     if case.name == "alien_target_identity":
         return None
     if case.name == "robot_position":
-        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="argmax_field"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=region.cell_height,
+            field_width=region.cell_width,
+            aggregation="mean",
+            decoder_kind="argmax_field",
+        ), region
     if case.name == "robot_direction":
-        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="signed_delta_over_position"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=region.cell_height,
+            field_width=region.cell_width,
+            aggregation="mean",
+            decoder_kind="signed_delta_over_position",
+        ), region
     if case.name == "robot_movement_magnitude":
-        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="exact_delta_over_position"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=region.cell_height,
+            field_width=region.cell_width,
+            aggregation="mean",
+            decoder_kind="exact_delta_over_position",
+        ), region
     if case.name == "battery_value":
-        return _manual_candidate(req, region, field_height=region.cell_height, field_width=region.cell_width, aggregation="mean", decoder_kind="nearest_permitted_value"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=region.cell_height,
+            field_width=region.cell_width,
+            aggregation="mean",
+            decoder_kind="nearest_permitted_value",
+        ), region
     if case.name == "door_state":
         narrow = RegionGeometry(
-            region_id="door_cell_manual_narrow", canvas_shape=region.canvas_shape,
-            y0=region.y0, y1=region.y1, x0=region.x0 + 2, x1=region.x0 + 4, cell_height=1, cell_width=1,
+            region_id="door_cell_manual_narrow",
+            canvas_shape=region.canvas_shape,
+            y0=region.y0,
+            y1=region.y1,
+            x0=region.x0 + 2,
+            x1=region.x0 + 4,
+            cell_height=1,
+            cell_width=1,
         )
-        return _manual_candidate(req, narrow, field_height=1, field_width=1, aggregation="mean", decoder_kind="nearest_permitted_value"), narrow
+        return _manual_candidate(
+            req,
+            narrow,
+            field_height=1,
+            field_width=1,
+            aggregation="mean",
+            decoder_kind="nearest_permitted_value",
+        ), narrow
     if case.name == "crate_identity":
-        return _manual_candidate(req, region, field_height=1, field_width=1, aggregation="exact_pattern", decoder_kind="local_marker_pattern"), region
+        return _manual_candidate(
+            req,
+            region,
+            field_height=1,
+            field_width=1,
+            aggregation="exact_pattern",
+            decoder_kind="local_marker_pattern",
+        ), region
     return None
 
 
 def _pick_reference_candidate(
-    candidates: Sequence[RepresentationCandidate], *, field_height: int, field_width: int
+    candidates: Sequence[RepresentationCandidate],
+    *,
+    field_height: int,
+    field_width: int,
 ) -> Optional[RepresentationCandidate]:
-    matches = [c for c in candidates if c.field_height == field_height and c.field_width == field_width]
+    matches = [
+        c
+        for c in candidates
+        if c.field_height == field_height and c.field_width == field_width
+    ]
     if not matches:
         return None
     for decoder in _NAIVE_DECODER_PREFERENCE:
@@ -158,7 +269,9 @@ def _candidate_summary(candidate: Optional[RepresentationCandidate]) -> Optional
     }
 
 
-def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: int, eval_seed: int) -> dict:
+def run_case(
+    domain: str, case, *, dev_count: int, eval_count: int, dev_seed: int, eval_seed: int
+) -> dict:
     dev_samples = case.build_samples(dev_count, dev_seed)
     eval_samples = case.build_samples(eval_count, eval_seed)
     candidates = generate_candidates(case.requirement, case.region)
@@ -175,7 +288,8 @@ def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: in
     )
 
     def _held_out(
-        candidate: Optional[RepresentationCandidate], region: Optional[RegionGeometry] = None
+        candidate: Optional[RepresentationCandidate],
+        region: Optional[RegionGeometry] = None,
     ) -> Optional[CandidateEvaluationResult]:
         if candidate is None or not eval_samples:
             return None
@@ -190,11 +304,15 @@ def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: in
         )
 
     fixed_coarse = _pick_reference_candidate(
-        candidates, field_height=case.region.cell_height, field_width=case.region.cell_width
+        candidates,
+        field_height=case.region.cell_height,
+        field_width=case.region.cell_width,
     )
     always_pixel = _pick_reference_candidate(candidates, field_height=1, field_width=1)
     manual_ref = _manual_reference(case)
-    manual_candidate, manual_region = manual_ref if manual_ref is not None else (None, None)
+    manual_candidate, manual_region = (
+        manual_ref if manual_ref is not None else (None, None)
+    )
 
     selected = compiled.selected_candidate
     return {
@@ -210,7 +328,9 @@ def run_case(domain: str, case, *, dev_count: int, eval_count: int, dev_seed: in
         "known_limitations": list(compiled.known_limitations),
         "compiled_strategy": {
             "candidate": _candidate_summary(selected),
-            "dev_accuracy": None if compiled.selected_evaluation is None else compiled.selected_evaluation.decoding_accuracy,
+            "dev_accuracy": None
+            if compiled.selected_evaluation is None
+            else compiled.selected_evaluation.decoding_accuracy,
             "held_out_eval": _eval_summary(_held_out(selected)),
         },
         "fixed_coarse_strategy": {
@@ -256,21 +376,33 @@ def _render_summary_markdown(environment: dict, results: list) -> str:
     lines.append("")
     lines.append("## Per-case outcomes")
     lines.append("")
-    lines.append("| Domain | Case | Status | Selected (dev) | Dev acc. | Held-out acc. | Fixed-coarse held-out | Always-pixel held-out | Manual held-out |")
+    lines.append(
+        "| Domain | Case | Status | Selected (dev) | Dev acc. | Held-out acc. | Fixed-coarse held-out | Always-pixel held-out | Manual held-out |"
+    )
     lines.append("|---|---|---|---|---:|---:|---:|---:|---:|")
     for r in results:
         cs = r["compiled_strategy"]
         candidate = cs["candidate"]
-        selected_desc = "-" if candidate is None else f"{candidate['field_height']}x{candidate['field_width']} {candidate['decoder_kind']}"
+        selected_desc = (
+            "-"
+            if candidate is None
+            else f"{candidate['field_height']}x{candidate['field_width']} {candidate['decoder_kind']}"
+        )
         dev_acc = "-" if cs["dev_accuracy"] is None else f"{cs['dev_accuracy']:.3f}"
         held_out = cs["held_out_eval"]
-        held_out_acc = "-" if held_out is None else f"{held_out['decoding_accuracy']:.3f}"
+        held_out_acc = (
+            "-" if held_out is None else f"{held_out['decoding_accuracy']:.3f}"
+        )
         fc = r["fixed_coarse_strategy"]["held_out_eval"]
         fc_acc = "-" if fc is None else f"{fc['decoding_accuracy']:.3f}"
         ap = r["always_pixel_strategy"]["held_out_eval"]
         ap_acc = "-" if ap is None else f"{ap['decoding_accuracy']:.3f}"
         manual = r["manual_strategy"]["held_out_eval"]
-        manual_acc = "n/a" if r["manual_strategy"]["note"] else ("-" if manual is None else f"{manual['decoding_accuracy']:.3f}")
+        manual_acc = (
+            "n/a"
+            if r["manual_strategy"]["note"]
+            else ("-" if manual is None else f"{manual['decoding_accuracy']:.3f}")
+        )
         lines.append(
             f"| {r['domain']} | {r['case']} | {r['status']} | {selected_desc} | {dev_acc} | {held_out_acc} | {fc_acc} | {ap_acc} | {manual_acc} |"
         )
@@ -295,21 +427,38 @@ def _render_summary_markdown(environment: dict, results: list) -> str:
     lines.append("")
     for r in results:
         if r["known_limitations"]:
-            lines.append(f"- **{r['domain']}/{r['case']}**: {'; '.join(r['known_limitations'])}")
+            lines.append(
+                f"- **{r['domain']}/{r['case']}**: {'; '.join(r['known_limitations'])}"
+            )
     lines.append("")
     return "\n".join(lines) + "\n"
 
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dev-samples", type=int, default=12, help="samples per category for development splits")
-    parser.add_argument("--eval-samples", type=int, default=30, help="samples per category for evaluation splits")
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts/evidence_contract_compiler"))
+    parser.add_argument(
+        "--dev-samples",
+        type=int,
+        default=12,
+        help="samples per category for development splits",
+    )
+    parser.add_argument(
+        "--eval-samples",
+        type=int,
+        default=30,
+        help="samples per category for evaluation splits",
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=Path("artifacts/evidence_contract_compiler")
+    )
     args = parser.parse_args(argv)
 
     started = time.time()
     results = []
-    for domain, adapter in (("arcade", arcade_adapter), ("warehouse", warehouse_adapter)):
+    for domain, adapter in (
+        ("arcade", arcade_adapter),
+        ("warehouse", warehouse_adapter),
+    ):
         for case in adapter.build_cases():
             results.append(
                 run_case(
@@ -336,7 +485,10 @@ def main(argv=None) -> int:
 
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    rp.write_json(output_dir / "compiler-results.json", {"environment": environment, "results": results})
+    rp.write_json(
+        output_dir / "compiler-results.json",
+        {"environment": environment, "results": results},
+    )
     summary_md = _render_summary_markdown(environment, results)
     (output_dir / "compiler-summary.md").write_text(summary_md, encoding="utf-8")
 

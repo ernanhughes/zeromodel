@@ -17,7 +17,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Sequence, Tuple
 
-from visual_transition_benchmark.compiler.candidates import RegionGeometry, RepresentationCandidate
+from visual_transition_benchmark.compiler.candidates import (
+    RegionGeometry,
+    RepresentationCandidate,
+)
 from visual_transition_benchmark.compiler.contracts import VisualEvidenceRequirement
 from visual_transition_benchmark.compiler.evaluate import (
     CandidateEvaluationResult,
@@ -25,7 +28,9 @@ from visual_transition_benchmark.compiler.evaluate import (
     evaluate_candidate,
 )
 
-CompileStatus = str  # "compiled" | "insufficient_representation" | "insufficient_observability"
+CompileStatus = (
+    str  # "compiled" | "insufficient_representation" | "insufficient_observability"
+)
 
 
 @dataclass(frozen=True)
@@ -84,10 +89,14 @@ def compile_requirement(
             f"collision_rate={best.collision_rate:.3f}, complexity_cost={best.complexity_cost:.1f})"
         ]
         if len(passing) > 1:
-            rationale.append(f"{len(passing) - 1} other candidate(s) also passed and were ranked lower")
+            rationale.append(
+                f"{len(passing) - 1} other candidate(s) also passed and were ranked lower"
+            )
         limitations = []
         if best.ambiguous_sample_count:
-            limitations.append(f"{best.ambiguous_sample_count} development samples were ambiguous")
+            limitations.append(
+                f"{best.ambiguous_sample_count} development samples were ambiguous"
+            )
         return CompiledEvidenceRepresentation(
             status="compiled",
             requirement_id=requirement.requirement_id,
@@ -112,7 +121,9 @@ def compile_requirement(
                 "samples whose true values genuinely vary -- the permitted region/frames do not "
                 "contain evidence for this property, regardless of resolution or aggregation",
             ),
-            known_limitations=("insufficient_observability: no representation can recover this property",),
+            known_limitations=(
+                "insufficient_observability: no representation can recover this property",
+            ),
         )
 
     best_attempt = min(evaluations, key=_rank_key) if evaluations else None
@@ -129,5 +140,7 @@ def compile_requirement(
         selected_evaluation=best_attempt,
         all_evaluations=evaluations,
         selection_rationale=tuple(rationale),
-        known_limitations=("insufficient_representation: evidence may exist but no candidate in the bounded search preserved it",),
+        known_limitations=(
+            "insufficient_representation: evidence may exist but no candidate in the bounded search preserved it",
+        ),
     )

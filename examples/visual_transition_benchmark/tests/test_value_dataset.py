@@ -32,7 +32,9 @@ def test_new_faults_look_correct_at_component_label_level():
         record = by_category[category]
         assert record.is_faulty
         assert record.fault_type == category
-        assert set(record.observed_changed_components) == set(record.expected_changed_components), (
+        assert set(record.observed_changed_components) == set(
+            record.expected_changed_components
+        ), (
             f"{category} should be label-correct; component metrics alone must not catch it"
         )
 
@@ -40,6 +42,9 @@ def test_new_faults_look_correct_at_component_label_level():
 def test_wrong_alien_disappears_never_degenerates_to_no_visible_change():
     for seed in range(300):
         record = ds.build_value_transition(
-            episode_id="degenerate-check", step_number=0, seed=seed, category="wrong_alien_disappears"
+            episode_id="degenerate-check",
+            step_number=0,
+            seed=seed,
+            category="wrong_alien_disappears",
         )
         assert "alien" in record.observed_changed_components

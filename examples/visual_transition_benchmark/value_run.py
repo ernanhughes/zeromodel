@@ -38,9 +38,17 @@ def _analyze_all(records):
     pd_outputs = []
     priv_outputs = []
     for record in records:
-        metadata = zm.TransitionMetadata(transition_id=record.transition_id, step_number=record.step_number)
-        analyses.append(analyzer.analyze(record.frame_before, record.frame_after, record.action, metadata))
-        pd_outputs.append(bl.pixel_diff_baseline(record.frame_before, record.frame_after))
+        metadata = zm.TransitionMetadata(
+            transition_id=record.transition_id, step_number=record.step_number
+        )
+        analyses.append(
+            analyzer.analyze(
+                record.frame_before, record.frame_after, record.action, metadata
+            )
+        )
+        pd_outputs.append(
+            bl.pixel_diff_baseline(record.frame_before, record.frame_after)
+        )
         priv_outputs.append(bl.privileged_baseline(record))
     return analyses, pd_outputs, priv_outputs
 
@@ -50,7 +58,9 @@ def _group_metrics(records, analyses, pd_outputs, priv_outputs):
     flags_list = [a.value_flags for a in analyses]
     component_outputs = [a.component_analysis for a in analyses]
 
-    component_report = rp.score_group(records, component_outputs, pd_outputs, priv_outputs)
+    component_report = rp.score_group(
+        records, component_outputs, pd_outputs, priv_outputs
+    )
     return {
         "n": len(records),
         "component_level": {
@@ -63,7 +73,9 @@ def _group_metrics(records, analyses, pd_outputs, priv_outputs):
                 vm.value_fault_localization_summary(records, values_list, flags_list)
             ),
             "hidden_value_faults": asdict(
-                vm.label_correct_but_value_wrong(records, component_outputs, values_list)
+                vm.label_correct_but_value_wrong(
+                    records, component_outputs, values_list
+                )
             ),
             "relation_violation_rate_by_category": vm.relation_violation_rate_by_category(
                 records, flags_list
@@ -104,7 +116,9 @@ def _render_summary_markdown(environment: dict, metrics_report: dict) -> str:
     lines.append("")
     lines.append("## Value-level accuracy (decoded value vs. true simulated state)")
     lines.append("")
-    lines.append("| Split | n | Movement-direction | State-delta (exact) | Cooldown-value | Target-selection |")
+    lines.append(
+        "| Split | n | Movement-direction | State-delta (exact) | Cooldown-value | Target-selection |"
+    )
     lines.append("|---|---:|---:|---:|---:|---:|")
     for name, group in (
         ("all", all_m),
@@ -125,16 +139,30 @@ def _render_summary_markdown(environment: dict, metrics_report: dict) -> str:
             )
         )
     lines.append("")
-    lines.append("## Value-level fault localization (ZeroModel's own, non-privileged flags)")
+    lines.append(
+        "## Value-level fault localization (ZeroModel's own, non-privileged flags)"
+    )
     lines.append("")
-    for name, group in (("all", all_m), ("reused stage-1 categories", reused_m), ("new value-fault categories", new_m)):
+    for name, group in (
+        ("all", all_m),
+        ("reused stage-1 categories", reused_m),
+        ("new value-fault categories", new_m),
+    ):
         loc = group["value_level"]["fault_localization"]
         lines.append(
             "- **%s**: detection_rate=%.3f (n_relevant=%d), false_alarm_rate_on_correct=%.3f (n_clean=%d)"
-            % (name, loc["detection_rate"], loc["n_relevant"], loc["false_alarm_rate_on_correct"], loc["n_clean"])
+            % (
+                name,
+                loc["detection_rate"],
+                loc["n_relevant"],
+                loc["false_alarm_rate_on_correct"],
+                loc["n_clean"],
+            )
         )
     lines.append("")
-    lines.append("## Component-level still correctly reported alongside (unchanged stage-1 metrics)")
+    lines.append(
+        "## Component-level still correctly reported alongside (unchanged stage-1 metrics)"
+    )
     lines.append("")
     ca = all_m["component_level"]["component_attribution"]
     lines.append(
@@ -142,12 +170,18 @@ def _render_summary_markdown(environment: dict, metrics_report: dict) -> str:
         "privileged=%.3f, zeromodel=%.3f (identical mechanism to stage 1 -- "
         "included here only so component-level and value-level results sit "
         "side by side, never conflated)."
-        % (ca["pixel_diff"]["micro_f1"], ca["privileged"]["micro_f1"], ca["zeromodel"]["micro_f1"])
+        % (
+            ca["pixel_diff"]["micro_f1"],
+            ca["privileged"]["micro_f1"],
+            ca["zeromodel"]["micro_f1"],
+        )
     )
     lines.append("")
     lines.append("## By-category breakdown")
     lines.append("")
-    lines.append("| Category | n | Direction acc. | Delta acc. | Cooldown acc. | Target acc. | Value-fault detect | Relation-flag rate |")
+    lines.append(
+        "| Category | n | Direction acc. | Delta acc. | Cooldown acc. | Target acc. | Value-fault detect | Relation-flag rate |"
+    )
     lines.append("|---|---:|---:|---:|---:|---:|---:|---:|")
     for category, group in metrics_report["by_category"].items():
         acc = group["value_level"]["accuracy"]
@@ -213,7 +247,9 @@ def main(argv=None) -> int:
     parser.add_argument("--dev-episodes", type=int, default=40)
     parser.add_argument("--eval-episodes", type=int, default=120)
     parser.add_argument(
-        "--output-dir", type=Path, default=Path("artifacts/value_aware_transition_contracts")
+        "--output-dir",
+        type=Path,
+        default=Path("artifacts/value_aware_transition_contracts"),
     )
     parser.add_argument("--skip-render", action="store_true")
     args = parser.parse_args(argv)
@@ -223,9 +259,13 @@ def main(argv=None) -> int:
         warnings.simplefilter("always")
         started = time.time()
 
-        original_dev = ds.generate_split(prefix="stage1-dev", episode_count=args.dev_episodes, seed_offset=0)
+        original_dev = ds.generate_split(
+            prefix="stage1-dev", episode_count=args.dev_episodes, seed_offset=0
+        )
         original_eval = ds.generate_split(
-            prefix="stage1-eval", episode_count=args.eval_episodes, seed_offset=1_000_000
+            prefix="stage1-eval",
+            episode_count=args.eval_episodes,
+            seed_offset=1_000_000,
         )
         value_dev = ds.generate_value_split(
             prefix="value-dev", episode_count=args.dev_episodes, seed_offset=2_000_000
@@ -242,23 +282,33 @@ def main(argv=None) -> int:
         metrics_report = {
             "all": _group_metrics(eval_records, analyses, pd_outputs, priv_outputs),
             "reused_stage1_categories": _group_metrics(
-                eval_records[:n_original], analyses[:n_original], pd_outputs[:n_original], priv_outputs[:n_original]
+                eval_records[:n_original],
+                analyses[:n_original],
+                pd_outputs[:n_original],
+                priv_outputs[:n_original],
             ),
             "new_value_fault_categories": _group_metrics(
-                eval_records[n_original:], analyses[n_original:], pd_outputs[n_original:], priv_outputs[n_original:]
+                eval_records[n_original:],
+                analyses[n_original:],
+                pd_outputs[n_original:],
+                priv_outputs[n_original:],
             ),
             "ordinary_only": _group_metrics(
                 *zip(
                     *[
                         (r, a, p, v)
-                        for r, a, p, v in zip(eval_records, analyses, pd_outputs, priv_outputs)
+                        for r, a, p, v in zip(
+                            eval_records, analyses, pd_outputs, priv_outputs
+                        )
                         if not r.is_faulty
                     ]
                 )
             ),
             "by_category": {},
         }
-        for category in ds.ORDINARY_CATEGORIES + ds.FAULT_CATEGORIES + ds.VALUE_FAULT_CATEGORIES:
+        for category in (
+            ds.ORDINARY_CATEGORIES + ds.FAULT_CATEGORIES + ds.VALUE_FAULT_CATEGORIES
+        ):
             subset = [
                 (r, a, p, v)
                 for r, a, p, v in zip(eval_records, analyses, pd_outputs, priv_outputs)
@@ -271,7 +321,9 @@ def main(argv=None) -> int:
         output_dir = args.output_dir
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        with (output_dir / "value-transition-level-results.jsonl").open("w", encoding="utf-8") as handle:
+        with (output_dir / "value-transition-level-results.jsonl").open(
+            "w", encoding="utf-8"
+        ) as handle:
             for record, analysis in zip(eval_records, analyses):
                 row = {
                     "transition_id": record.transition_id,
@@ -285,15 +337,31 @@ def main(argv=None) -> int:
                     "decoded_tank_delta": analysis.values.tank.delta_x,
                     "decoded_cooldown_after_level": analysis.values.cooldown.after_level,
                     "decoded_target_after": analysis.values.alien.after_x,
-                    "tank_direction_correct": vm.tank_direction_correct(record, analysis.values),
-                    "tank_magnitude_correct": vm.tank_magnitude_correct(record, analysis.values),
-                    "cooldown_value_correct": vm.cooldown_value_correct(record, analysis.values),
-                    "target_selection_correct": vm.target_selection_correct(record, analysis.values),
-                    "value_fault_present": vm.value_fault_present(record, analysis.values),
+                    "tank_direction_correct": vm.tank_direction_correct(
+                        record, analysis.values
+                    ),
+                    "tank_magnitude_correct": vm.tank_magnitude_correct(
+                        record, analysis.values
+                    ),
+                    "cooldown_value_correct": vm.cooldown_value_correct(
+                        record, analysis.values
+                    ),
+                    "target_selection_correct": vm.target_selection_correct(
+                        record, analysis.values
+                    ),
+                    "value_fault_present": vm.value_fault_present(
+                        record, analysis.values
+                    ),
                     "value_flags": list(analysis.value_flags),
-                    "component_predicted": list(analysis.component_analysis.predicted_components),
-                    "component_missing": list(analysis.component_analysis.missing_components),
-                    "component_unexpected": list(analysis.component_analysis.unexpected_components),
+                    "component_predicted": list(
+                        analysis.component_analysis.predicted_components
+                    ),
+                    "component_missing": list(
+                        analysis.component_analysis.missing_components
+                    ),
+                    "component_unexpected": list(
+                        analysis.component_analysis.unexpected_components
+                    ),
                 }
                 handle.write(json.dumps(row, sort_keys=True) + "\n")
 
@@ -314,14 +382,18 @@ def main(argv=None) -> int:
         if not args.skip_render:
             artifacts_dir = output_dir / "artifacts"
             new_faulty_sample = [
-                (r, a) for r, a in zip(eval_records, analyses) if r.category in ds.VALUE_FAULT_CATEGORIES
+                (r, a)
+                for r, a in zip(eval_records, analyses)
+                if r.category in ds.VALUE_FAULT_CATEGORIES
             ]
             direction_fix_sample = [
                 (r, a)
                 for r, a in zip(eval_records, analyses)
                 if r.category == "tank_moves_wrong_direction"
             ][:10]
-            priv_by_id = {r.transition_id: p for r, p in zip(eval_records, priv_outputs)}
+            priv_by_id = {
+                r.transition_id: p for r, p in zip(eval_records, priv_outputs)
+            }
             for record, analysis in new_faulty_sample + direction_fix_sample:
                 priv_out = priv_by_id[record.transition_id]
                 png_path = artifacts_dir / f"{record.transition_id}.png"
@@ -333,8 +405,12 @@ def main(argv=None) -> int:
                         "transition_id": record.transition_id,
                         "category": record.category,
                         "fault_type": record.fault_type,
-                        "verdict": "value_fault_flagged" if analysis.value_flags else "value_clean",
-                        "zeromodel_status": analysis.component_analysis.diagnostics["conformance_status"],
+                        "verdict": "value_fault_flagged"
+                        if analysis.value_flags
+                        else "value_clean",
+                        "zeromodel_status": analysis.component_analysis.diagnostics[
+                            "conformance_status"
+                        ],
                         "artifact_path": f"artifacts/{record.transition_id}.png",
                     }
                 )
@@ -351,11 +427,16 @@ def main(argv=None) -> int:
     environment["duration_seconds"] = round(duration, 3)
     environment["warning_count"] = len(warning_records)
     rp.write_json(
-        output_dir / "value-benchmark-results.json", {"environment": environment, "metrics": metrics_report}
+        output_dir / "value-benchmark-results.json",
+        {"environment": environment, "metrics": metrics_report},
     )
     rp.write_json(
         output_dir / "value-run-log.json",
-        {"environment": environment, "warnings": warning_records, "rendered_artifact_count": len(artifact_rows)},
+        {
+            "environment": environment,
+            "warnings": warning_records,
+            "rendered_artifact_count": len(artifact_rows),
+        },
     )
     summary_md = _render_summary_markdown(environment, metrics_report)
     (output_dir / "value-benchmark-summary.md").write_text(summary_md, encoding="utf-8")

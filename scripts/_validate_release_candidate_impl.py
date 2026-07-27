@@ -851,9 +851,7 @@ def release_test_layer_report() -> dict[str, Any]:
             "integration_root": INTEGRATION_TEST_ROOT,
             "retired_roots": ["integration_tests"],
             "visual_transition_root": VISUAL_TRANSITION_TEST_ROOT,
-            "package_local_roots": {
-                key: f"packages/{key}/tests" for key in PACKAGES
-            },
+            "package_local_roots": {key: f"packages/{key}/tests" for key in PACKAGES},
         },
         "research": {
             "status": "excluded_by_policy",
@@ -915,7 +913,9 @@ def write_release_candidate_reports(
         json.dumps(commands, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     (RELEASE_CANDIDATE_REPORT_DIR / "results.json").write_text(
-        json.dumps({"report": report, "verdicts": verdict_payload}, indent=2, sort_keys=True)
+        json.dumps(
+            {"report": report, "verdicts": verdict_payload}, indent=2, sort_keys=True
+        )
         + "\n",
         encoding="utf-8",
     )

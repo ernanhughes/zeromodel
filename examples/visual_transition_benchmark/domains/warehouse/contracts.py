@@ -38,11 +38,20 @@ from typing import Dict, Optional, Tuple
 
 import numpy as np
 
-from visual_transition_benchmark.compilation.evidence_requirements import VisualEvidenceRequirement
-from visual_transition_benchmark.compilation.field_schema_compiler import CompiledFieldSchema, compile_field_schema
+from visual_transition_benchmark.compilation.evidence_requirements import (
+    VisualEvidenceRequirement,
+)
+from visual_transition_benchmark.compilation.field_schema_compiler import (
+    CompiledFieldSchema,
+    compile_field_schema,
+)
 from visual_transition_benchmark.domains.warehouse import model as wm
 from visual_transition_benchmark.domains.warehouse import rendering as wr
-from visual_transition_benchmark.domains.protocol import AnalysisMetadata, ComponentAnalysisResult, ValueAnalysisResult
+from visual_transition_benchmark.domains.protocol import (
+    AnalysisMetadata,
+    ComponentAnalysisResult,
+    ValueAnalysisResult,
+)
 
 CANVAS_SHAPE = (wr.CANVAS_HEIGHT, wr.CANVAS_WIDTH)
 
@@ -75,7 +84,9 @@ _CANONICAL_LEVELS: Dict[str, float] = {
     "robot": wr.ROBOT_VALUE / 255,
     "door": wr.DOOR_VALUE / 255,
 }
-_LEVEL_TOLERANCE = 4 / 255  # canonical levels are >= 10/255 apart; this must be < half that gap
+_LEVEL_TOLERANCE = (
+    4 / 255
+)  # canonical levels are >= 10/255 apart; this must be < half that gap
 _CHANGE_THRESHOLD = 8
 
 
@@ -100,8 +111,12 @@ class DecodedGrids:
     changed: np.ndarray  # (H, W) bool
 
 
-def build_transition_evidence(frame_before: np.ndarray, frame_after: np.ndarray) -> DecodedGrids:
-    evidence = COMPILED.build_transition_evidence(frame_before, frame_after, change_threshold=_CHANGE_THRESHOLD)
+def build_transition_evidence(
+    frame_before: np.ndarray, frame_after: np.ndarray
+) -> DecodedGrids:
+    evidence = COMPILED.build_transition_evidence(
+        frame_before, frame_after, change_threshold=_CHANGE_THRESHOLD
+    )
     height, width = CANVAS_SHAPE
     before = np.zeros((height, width), dtype=np.float64)
     after = np.zeros((height, width), dtype=np.float64)
@@ -122,7 +137,9 @@ def _mode_value(values: np.ndarray) -> float:
     return counts.most_common(1)[0][0] / 255.0
 
 
-def _cell_pixel_values(grids: DecodedGrids, row: int, col: int, which: str) -> np.ndarray:
+def _cell_pixel_values(
+    grids: DecodedGrids, row: int, col: int, which: str
+) -> np.ndarray:
     y0, x0 = wr.cell_origin(row, col)
     grid = _grid_of(grids, which)
     return grid[y0 : y0 + wr.CELL_PIXELS, x0 : x0 + wr.CELL_PIXELS].reshape(-1)
@@ -137,7 +154,9 @@ def cell_changed(grids: DecodedGrids, row: int, col: int) -> bool:
     return bool(grids.changed[y0 : y0 + wr.CELL_PIXELS, x0 : x0 + wr.CELL_PIXELS].any())
 
 
-def decode_crate_identity(grids: DecodedGrids, row: int, col: int, which: str) -> Optional[int]:
+def decode_crate_identity(
+    grids: DecodedGrids, row: int, col: int, which: str
+) -> Optional[int]:
     """Count of the 3 fixed dot sub-positions reading >= the dot threshold.
     0 dots means the cell is not classified as a crate at all; 1/2/3 dots is
     the crate's decoded identity index (0/1/2)."""
@@ -234,12 +253,17 @@ class WarehouseComponentAnalyzer:
     """Component-level (presence/absence) analysis. See module docstring for
     why this is direct Python, not P18B, for robot/crate/wall/background."""
 
-    def analyze(self, frame_before, frame_after, action, metadata: AnalysisMetadata) -> ComponentAnalysisResult:
+    def analyze(
+        self, frame_before, frame_after, action, metadata: AnalysisMetadata
+    ) -> ComponentAnalysisResult:
         grids = build_transition_evidence(frame_before, frame_after)
 
         changed_components = set()
         predicted_cells = []
-        evidence_scores = {name: 0.0 for name in ("robot", "crate", "door", "battery", "wall", "background")}
+        evidence_scores = {
+            name: 0.0
+            for name in ("robot", "crate", "door", "battery", "wall", "background")
+        }
 
         for row in range(wm.GRID_SIZE):
             for col in range(wm.GRID_SIZE):
@@ -253,7 +277,11 @@ class WarehouseComponentAnalyzer:
                 # object, never to "background" -- otherwise every legitimate
                 # robot/crate move would also register a spurious background
                 # change at the cell it left.
-                real_objects = {t for t in (before_type, after_type) if t in ("robot", "crate", "wall")}
+                real_objects = {
+                    t
+                    for t in (before_type, after_type)
+                    if t in ("robot", "crate", "wall")
+                }
                 if real_objects:
                     for occupant in real_objects:
                         name = _COMPONENT_OF_OCCUPANT[occupant]
@@ -271,22 +299,36 @@ class WarehouseComponentAnalyzer:
             evidence_scores["door"] = 1.0
             predicted_cells.append(wm.DOOR_POSITION)
 
-        battery_changed = battery_level(grids, "before_mean") != battery_level(grids, "after_mean")
+        battery_changed = battery_level(grids, "before_mean") != battery_level(
+            grids, "after_mean"
+        )
         if battery_changed:
             changed_components.add("battery")
             evidence_scores["battery"] = 1.0
 
         expected = _EXPECTED_CHANGE_COMPONENTS.get(action, ())
-        stable_required = tuple(name for name in ("robot", "crate", "door", "wall", "background") if name not in expected)
+        stable_required = tuple(
+            name
+            for name in ("robot", "crate", "door", "wall", "background")
+            if name not in expected
+        )
 
-        missing = tuple(sorted(name for name in expected if name not in changed_components))
-        unexpected = tuple(sorted(name for name in stable_required if name in changed_components))
+        missing = tuple(
+            sorted(name for name in expected if name not in changed_components)
+        )
+        unexpected = tuple(
+            sorted(name for name in stable_required if name in changed_components)
+        )
 
-        predicted_region_mask = np.zeros((wr.CANVAS_HEIGHT, wr.CANVAS_WIDTH), dtype=bool)
+        predicted_region_mask = np.zeros(
+            (wr.CANVAS_HEIGHT, wr.CANVAS_WIDTH), dtype=bool
+        )
         predicted_fields = []
         for row, col in predicted_cells:
             y0, x0 = wr.cell_origin(row, col)
-            predicted_region_mask[y0 : y0 + wr.CELL_PIXELS, x0 : x0 + wr.CELL_PIXELS] = True
+            predicted_region_mask[
+                y0 : y0 + wr.CELL_PIXELS, x0 : x0 + wr.CELL_PIXELS
+            ] = True
             predicted_fields.append(f"cell:{row}:{col}")
         if battery_changed:
             predicted_region_mask[wm.GRID_SIZE * wr.CELL_PIXELS :, :] = True
@@ -308,7 +350,9 @@ class WarehouseValueAnalyzer:
     """Value-level: decoded robot delta, battery level, crate identities, and
     one adjacency relation -- all from pixels + action, no hidden state."""
 
-    def analyze(self, frame_before, frame_after, action, metadata: AnalysisMetadata) -> ValueAnalysisResult:
+    def analyze(
+        self, frame_before, frame_after, action, metadata: AnalysisMetadata
+    ) -> ValueAnalysisResult:
         grids = build_transition_evidence(frame_before, frame_after)
 
         robot_before = _decode_robot_cell(grids, "before_mean")
@@ -322,14 +366,18 @@ class WarehouseValueAnalyzer:
             direction_ok = None
             magnitude_ok = None
         else:
-            direction_ok = tuple(_sign(v) for v in delta) == tuple(_sign(v) for v in expected_delta)
+            direction_ok = tuple(_sign(v) for v in delta) == tuple(
+                _sign(v) for v in expected_delta
+            )
             magnitude_ok = delta == expected_delta
 
         battery_before = battery_level(grids, "before_mean")
         battery_after = battery_level(grids, "after_mean")
         moved = delta is not None and delta != (0, 0)
         expected_battery_after = (
-            max(0, battery_before - 1) if (action != "WAIT" and action != "OPEN_DOOR" and moved) else battery_before
+            max(0, battery_before - 1)
+            if (action != "WAIT" and action != "OPEN_DOOR" and moved)
+            else battery_before
         )
         battery_ok = battery_after == expected_battery_after
 
@@ -340,20 +388,27 @@ class WarehouseValueAnalyzer:
         relation_violations = []
         new_crate_cells = _crate_cells_appearing(grids)
         for cell in new_crate_cells:
-            if not _adjacent_to_any(cell, {c for c in (robot_before, robot_after) if c is not None}):
+            if not _adjacent_to_any(
+                cell, {c for c in (robot_before, robot_after) if c is not None}
+            ):
                 relation_violations.append("crate_change_without_robot_adjacency")
                 break
 
         identity_decoded_id = None
         if len(new_crate_cells) == 1:
-            identity_decoded_id = decode_crate_identity(grids, *new_crate_cells[0], "after_mean")
+            identity_decoded_id = decode_crate_identity(
+                grids, *new_crate_cells[0], "after_mean"
+            )
 
         decoded = {
-            "direction_decoded_sign": None if delta is None else tuple(_sign(v) for v in delta),
+            "direction_decoded_sign": None
+            if delta is None
+            else tuple(_sign(v) for v in delta),
             "magnitude_decoded_delta": delta,
             "value_decoded_level": battery_after,
             "door_decoded_level": door_after_state,
-            "relation_decoded_satisfied": "crate_change_without_robot_adjacency" not in relation_violations,
+            "relation_decoded_satisfied": "crate_change_without_robot_adjacency"
+            not in relation_violations,
             "identity_decoded_id": identity_decoded_id,
         }
 
@@ -410,6 +465,8 @@ def _adjacent_to_any(cell: Tuple[int, int], others) -> bool:
     return False
 
 
-def decode_identity_at(frame_before, frame_after, row: int, col: int, which: str) -> Optional[int]:
+def decode_identity_at(
+    frame_before, frame_after, row: int, col: int, which: str
+) -> Optional[int]:
     grids = build_transition_evidence(frame_before, frame_after)
     return decode_crate_identity(grids, row, col, which)

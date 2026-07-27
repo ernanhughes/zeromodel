@@ -382,7 +382,16 @@ function Set-WorkspaceVersion {
                 $Text = [regex]::Replace(
                     $Text,
                     $Pattern,
-                    "`${1}$ReleaseVersion`${2}"
+                    {
+                        param($Match)
+
+                        return (
+                            $Match.Groups[1].Value +
+                            "==" +
+                            $ReleaseVersion +
+                            $Match.Groups[2].Value
+                        )
+                    }
                 )
             }
         }

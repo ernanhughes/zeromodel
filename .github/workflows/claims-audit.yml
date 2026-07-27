@@ -38,7 +38,7 @@ jobs:
           # Reacts to the current nine-package workspace, not the deleted
           # root `zeromodel/` distribution. See
           # docs/reviews/post-split-main-audit.md finding H1.
-          GUARDED_PREFIXES = ("packages/", "tests/", "integration_tests/", "scripts/")
+          GUARDED_PREFIXES = ("packages/", "tests/", "scripts/")
           GUARDED_FILES = ("README.md", "package-boundaries.toml")
 
           def is_guarded(path: str) -> bool:

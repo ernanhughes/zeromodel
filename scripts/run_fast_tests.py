@@ -14,22 +14,24 @@ FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = Path(__file__).resolve().parent
 
-# Bounded, deterministic production behavior only. `slow`, `external`, and
-# `research` tests are excluded by marker, not by omitting directories, so
-# that a bounded integration test is not silently dropped just because it
-# lives next to expensive ones.
+# Bounded, deterministic production behavior only. Integration, slow, external,
+# and research tiers remain opt-in outside this fast runner.
 MARKER_EXPRESSION = "not slow and not external and not research"
 
-# The canonical production fast suite: the two repository-wide test roots
-# plus every one of the package-local suites. A package cannot silently
+# The canonical production fast suite: the repository-wide test root
+# plus every one of the package-local suites. `tests/` contains the current
+# `tests/integration/` cross-package integration root, but this runner does
+# not pass --run-integration, so those tests stay in the explicit integration
+# gate instead of consuming the 120-second fast budget.
+# A package cannot silently
 # disappear from this list without a reviewer noticing the diff.
 TEST_ROOTS = [
     "tests",
-    "integration_tests",
     "packages/core/tests",
     "packages/analysis/tests",
     "packages/observation/tests",
     "packages/vision/tests",
+    "packages/perception/tests",
     "packages/video/tests",
     "packages/sqlalchemy/tests",
     "packages/artifacts/tests",
@@ -90,6 +92,14 @@ def main() -> int:
     for root in TEST_ROOTS:
         print(f"  - {root}")
     print(f"Fast-suite marker expression: {MARKER_EXPRESSION}")
+    missing_roots = [root for root in TEST_ROOTS if not (REPO_ROOT / root).exists()]
+    if missing_roots:
+        print(
+            "Fast-suite configured test roots are missing: "
+            + ", ".join(missing_roots),
+            file=sys.stderr,
+        )
+        return 2
 
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     if REPORT_PATH.exists():
@@ -103,12 +113,6 @@ def main() -> int:
     env["ZEROMODEL_FAST_SUITE_TEST_ROOTS"] = os.pathsep.join(TEST_ROOTS)
     env["ZEROMODEL_FAST_SUITE_MARKER_EXPRESSION"] = MARKER_EXPRESSION
 
-    # --run-integration defeats this repository's legacy opt-in-only
-    # deselection of every `integration`-marked item (see tests/conftest.py);
-    # the marker expression above is the actual, authoritative filter now.
-    # --run-slow is deliberately NOT passed, so slow-marked items stay
-    # excluded by that legacy mechanism too (redundant with `-m`, not
-    # conflicting with it).
     command = [
         sys.executable,
         "-m",
@@ -117,7 +121,6 @@ def main() -> int:
         "--maxfail=1",
         "-p",
         "fast_suite_reporter",
-        "--run-integration",
         "-m",
         MARKER_EXPRESSION,
         *TEST_ROOTS,

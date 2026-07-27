@@ -37,18 +37,21 @@ def test_release_test_layer_report_distinguishes_every_required_layer(
 
     calls: list[list[str]] = []
 
-    def fake_pytest_count(args, *, timeout: int = 180):
-        calls.append(args)
+    def fake_run_pytest_gate(gate):
+        calls.append([*gate.args, *gate.paths])
         return {
+            "status": "passed",
             "passed": 1,
             "failed": 0,
             "skipped": 0,
             "errors": 0,
+            "collected": 1,
             "returncode": 0,
             "summary_line": "1 passed",
+            "command": ["python", "-m", "pytest"],
         }
 
-    monkeypatch.setattr(validator, "_pytest_count", fake_pytest_count)
+    monkeypatch.setattr(validator, "run_pytest_gate", fake_run_pytest_gate)
     # Redirect REPO_ROOT so the report is written under tmp_path instead of
     # overwriting the real, data-driven docs/architecture report with this
     # test's fake counts.
@@ -66,7 +69,9 @@ def test_release_test_layer_report_distinguishes_every_required_layer(
         "source_tree_fast_production_tests",
         "package_local_source_tests_by_package",
         "cross_package_integration_tests",
+        "visual_transition_regression_tests",
         "installed_wheel_smoke_result_by_package",
+        "gate_topology",
         "research",
     }
     assert set(report["package_local_source_tests_by_package"]) == set(

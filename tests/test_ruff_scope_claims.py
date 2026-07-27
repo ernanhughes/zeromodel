@@ -70,6 +70,15 @@ def test_unscoped_ruff_still_has_known_pre_existing_findings() -> None:
     known_offenders = {
         "examples/arcade_visual_video_discriminative_evidence_benchmark.py",
         "examples/render_signs_demo.py",
+        "examples/visual_transition_benchmark/compiler/candidates.py",
+        "examples/visual_transition_benchmark/compiler/evaluate.py",
+        "examples/visual_transition_benchmark/compiler_adapters/arcade.py",
+        "examples/visual_transition_benchmark/dataset.py",
+        "examples/visual_transition_benchmark/domains/arcade/domain.py",
+        "examples/visual_transition_benchmark/domains/warehouse/faults.py",
+        "examples/visual_transition_benchmark/run.py",
+        "examples/visual_transition_benchmark/value_metrics.py",
+        "examples/visual_transition_benchmark/zeromodel_adapter.py",
     }
     offenders_seen = {
         line.split(":", 1)[0].replace("\\", "/")

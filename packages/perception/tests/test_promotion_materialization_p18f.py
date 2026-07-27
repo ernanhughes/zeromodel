@@ -209,7 +209,9 @@ def _baseline(schema, control, anchor, **changes):
     return PromotionMaterializationBaselineDTO.create(**values)
 
 
-def test_materializes_approved_region_and_relation_as_inactive_reversible_changes() -> None:
+def test_materializes_approved_region_and_relation_as_inactive_reversible_changes() -> (
+    None
+):
     proposal_set, review, approved_region, approved_relation = (
         _review_with_two_approvals()
     )
@@ -414,7 +416,9 @@ def test_collision_and_identity_tampering_are_rejected() -> None:
         control,
         anchor,
         existing_annotation_ids=tuple(
-            sorted((control.annotation_id, anchor.annotation_id, *generated_annotations))
+            sorted(
+                (control.annotation_id, anchor.annotation_id, *generated_annotations)
+            )
         ),
     )
     with pytest.raises(

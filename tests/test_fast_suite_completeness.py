@@ -15,11 +15,12 @@ sys.modules[SPEC.name] = runner
 SPEC.loader.exec_module(runner)
 
 
-NINE_PACKAGE_TEST_ROOTS = [
+PACKAGE_TEST_ROOTS = [
     "packages/core/tests",
     "packages/analysis/tests",
     "packages/observation/tests",
     "packages/vision/tests",
+    "packages/perception/tests",
     "packages/video/tests",
     "packages/sqlalchemy/tests",
     "packages/artifacts/tests",
@@ -28,8 +29,8 @@ NINE_PACKAGE_TEST_ROOTS = [
 ]
 
 
-def test_every_nine_package_test_root_is_passed_to_pytest() -> None:
-    for root in NINE_PACKAGE_TEST_ROOTS:
+def test_every_package_test_root_is_passed_to_pytest() -> None:
+    for root in PACKAGE_TEST_ROOTS:
         assert root in runner.TEST_ROOTS, (
             f"{root} is missing from the canonical fast suite"
         )
@@ -37,7 +38,7 @@ def test_every_nine_package_test_root_is_passed_to_pytest() -> None:
 
 def test_repository_wide_roots_are_also_included() -> None:
     assert "tests" in runner.TEST_ROOTS
-    assert "integration_tests" in runner.TEST_ROOTS
+    assert "integration_tests" not in runner.TEST_ROOTS
 
 
 def test_package_local_suite_cannot_silently_shrink() -> None:
@@ -45,11 +46,11 @@ def test_package_local_suite_cannot_silently_shrink() -> None:
     # quietly disappearing from the fast suite.
     assert runner.TEST_ROOTS == [
         "tests",
-        "integration_tests",
         "packages/core/tests",
         "packages/analysis/tests",
         "packages/observation/tests",
         "packages/vision/tests",
+        "packages/perception/tests",
         "packages/video/tests",
         "packages/sqlalchemy/tests",
         "packages/artifacts/tests",
@@ -67,9 +68,10 @@ def test_slow_and_external_are_excluded_by_marker_expression() -> None:
     assert "not external" in runner.MARKER_EXPRESSION
 
 
-def test_integration_is_not_blanket_excluded_by_marker_expression() -> None:
-    # Directory location alone must not define whether an integration test
-    # runs in the fast suite - only slow/external/research do.
+def test_integration_marker_filter_is_owned_by_pytest_option() -> None:
+    # The fast runner does not pass --run-integration, so tests/conftest.py
+    # keeps integration-tier tests deselected even though the marker expression
+    # itself is focused on the slow/external/research production exclusions.
     assert "integration" not in runner.MARKER_EXPRESSION
 
 

@@ -150,9 +150,7 @@ def test_discovers_recurrent_fields_and_exact_cooccurrence_signatures() -> None:
     assert signature.occurrence_count == 2
     assert signature.recurrence_fraction == 0.5
 
-    assert {item.proposed_expected_change for item in first.candidates} == {
-        "increase"
-    }
+    assert {item.proposed_expected_change for item in first.candidates} == {"increase"}
     assert {item.hypothesis_status for item in first.candidates} == {
         "candidate_unvalidated"
     }

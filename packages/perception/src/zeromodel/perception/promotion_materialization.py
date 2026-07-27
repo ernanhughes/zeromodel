@@ -225,7 +225,11 @@ class PromotionMaterializationBaselineDTO:
     version: str = PROMOTION_MATERIALIZATION_BASELINE_VERSION
 
     def __post_init__(self) -> None:
-        if not self.baseline_id or not self.baseline_version_id or not self.field_schema_id:
+        if (
+            not self.baseline_id
+            or not self.baseline_version_id
+            or not self.field_schema_id
+        ):
             raise PerceptionPromotionMaterializationError(
                 "materialization baseline identities must be non-empty"
             )
@@ -566,15 +570,24 @@ class PromotionMaterializationChangeSetDTO:
             raise PerceptionPromotionMaterializationError(
                 "materialization change identities disagree with changes"
             )
-        if tuple(sorted(item.proposal_id for item in self.changes)) != self.approved_proposal_ids:
+        if (
+            tuple(sorted(item.proposal_id for item in self.changes))
+            != self.approved_proposal_ids
+        ):
             raise PerceptionPromotionMaterializationError(
                 "approved proposal identities disagree with materialized changes"
             )
-        if tuple(sorted(item.decision_id for item in self.changes)) != self.decision_ids:
+        if (
+            tuple(sorted(item.decision_id for item in self.changes))
+            != self.decision_ids
+        ):
             raise PerceptionPromotionMaterializationError(
                 "decision identities disagree with materialized changes"
             )
-        if tuple(sorted(item.directive_id for item in self.changes)) != self.directive_ids:
+        if (
+            tuple(sorted(item.directive_id for item in self.changes))
+            != self.directive_ids
+        ):
             raise PerceptionPromotionMaterializationError(
                 "directive identities disagree with materialized changes"
             )
@@ -632,11 +645,15 @@ class PromotionMaterializationChangeSetDTO:
             raise PerceptionPromotionMaterializationError(
                 "inverse operation identities disagree with execution order"
             )
-        if tuple(item.sequence for item in forward) != tuple(range(1, len(forward) + 1)):
+        if tuple(item.sequence for item in forward) != tuple(
+            range(1, len(forward) + 1)
+        ):
             raise PerceptionPromotionMaterializationError(
                 "forward operation sequence must be contiguous"
             )
-        if tuple(item.sequence for item in inverse) != tuple(range(1, len(inverse) + 1)):
+        if tuple(item.sequence for item in inverse) != tuple(
+            range(1, len(inverse) + 1)
+        ):
             raise PerceptionPromotionMaterializationError(
                 "inverse operation sequence must be contiguous"
             )
@@ -759,7 +776,11 @@ def _objects_for_approval(
     RelationAnnotationDTO | None,
     TransitionExpectationDTO,
 ]:
-    if decision.decision != "approved" or not decision.semantic_name or not decision.semantic_type:
+    if (
+        decision.decision != "approved"
+        or not decision.semantic_name
+        or not decision.semantic_type
+    ):
         raise PerceptionPromotionMaterializationError(
             "materialization requires an approved decision with semantic identity"
         )
@@ -864,11 +885,17 @@ def materialize_approved_candidate_promotions(
             raise PerceptionPromotionMaterializationError(
                 "approved proposal references fields outside the supplied schema"
             )
-        if proposal.materialization_status != CANDIDATE_PROMOTION_MATERIALIZATION_STATUS:
+        if (
+            proposal.materialization_status
+            != CANDIDATE_PROMOTION_MATERIALIZATION_STATUS
+        ):
             raise PerceptionPromotionMaterializationError(
                 "approved proposal was already materialized"
             )
-        if decision.materialization_status != CANDIDATE_PROMOTION_MATERIALIZATION_STATUS:
+        if (
+            decision.materialization_status
+            != CANDIDATE_PROMOTION_MATERIALIZATION_STATUS
+        ):
             raise PerceptionPromotionMaterializationError(
                 "approved decision was already materialized"
             )
@@ -1008,7 +1035,9 @@ def materialize_approved_candidate_promotions(
             "version": MATERIALIZED_PROMOTION_CHANGE_VERSION,
         }
         identity_values = dict(values)
-        identity_values["annotation"] = None if annotation is None else asdict(annotation)
+        identity_values["annotation"] = (
+            None if annotation is None else asdict(annotation)
+        )
         identity_values["relation"] = None if relation is None else asdict(relation)
         identity_values["transition_expectation"] = asdict(expectation)
         identity_values["forward_operations"] = tuple(

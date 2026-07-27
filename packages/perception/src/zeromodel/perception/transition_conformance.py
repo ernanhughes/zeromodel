@@ -22,9 +22,7 @@ TRANSITION_CONFORMANCE_FINDING_VERSION: Final = (
 TRANSITION_CONFORMANCE_REPORT_VERSION: Final = (
     "perception-transition-conformance-report/1"
 )
-TRANSITION_CONFORMANCE_SEMANTICS: Final = (
-    "weighted_field_transition_measurements_compared_with_declared_annotation_or_relation_thresholds"
-)
+TRANSITION_CONFORMANCE_SEMANTICS: Final = "weighted_field_transition_measurements_compared_with_declared_annotation_or_relation_thresholds"
 TRANSITION_EXPECTED_CHANGE_KINDS: Final = {
     "stable",
     "change",
@@ -229,7 +227,11 @@ class TransitionConformanceFindingDTO:
                 "observed_mean_signed_change must be in [-1, 1]"
             )
         if self.status == "unexplained_change":
-            if self.expectation_id is not None or self.annotation_ids or self.relation_ids:
+            if (
+                self.expectation_id is not None
+                or self.annotation_ids
+                or self.relation_ids
+            ):
                 raise PerceptionTransitionConformanceError(
                     "unexplained findings cannot reference declared targets"
                 )
@@ -263,7 +265,11 @@ class TransitionConformanceReportDTO:
     version: str = TRANSITION_CONFORMANCE_REPORT_VERSION
 
     def __post_init__(self) -> None:
-        if not self.report_id or not self.transition_evidence_id or not self.field_schema_id:
+        if (
+            not self.report_id
+            or not self.transition_evidence_id
+            or not self.field_schema_id
+        ):
             raise PerceptionTransitionConformanceError(
                 "transition report identities must be non-empty"
             )
@@ -288,7 +294,9 @@ class TransitionConformanceReportDTO:
             self.minimum_unexplained_changed_fraction,
         )
         declared = {
-            item.expectation_id for item in self.findings if item.expectation_id is not None
+            item.expectation_id
+            for item in self.findings
+            if item.expectation_id is not None
         }
         if declared != set(self.expectation_ids):
             raise PerceptionTransitionConformanceError(
@@ -353,7 +361,8 @@ def _finding(
         "version": TRANSITION_CONFORMANCE_FINDING_VERSION,
     }
     return TransitionConformanceFindingDTO(
-        finding_id=_digest(values), **values  # type: ignore[arg-type]
+        finding_id=_digest(values),
+        **values,  # type: ignore[arg-type]
     )
 
 
@@ -365,10 +374,13 @@ def _aggregate(
         raise PerceptionTransitionConformanceError(
             "transition target has no measurable values"
         )
-    absolute = sum(
-        item.mean_absolute_change * item.total_value_count for item in fields
-    ) / total
-    signed = sum(item.mean_signed_change * item.total_value_count for item in fields) / total
+    absolute = (
+        sum(item.mean_absolute_change * item.total_value_count for item in fields)
+        / total
+    )
+    signed = (
+        sum(item.mean_signed_change * item.total_value_count for item in fields) / total
+    )
     changed = sum(item.changed_value_count for item in fields)
     return absolute, signed, changed / total, changed
 
@@ -401,7 +413,11 @@ def _classify(
         detail = "observed transition did not reach the declared minimum"
     elif expectation.expected_change in {"increase", "decrease"}:
         required = expectation.minimum_signed_change_magnitude
-        wrong = signed < -required if expectation.expected_change == "increase" else signed > required
+        wrong = (
+            signed < -required
+            if expectation.expected_change == "increase"
+            else signed > required
+        )
         inconclusive = (
             signed <= required
             if expectation.expected_change == "increase"
@@ -516,7 +532,9 @@ def evaluate_transition_conformance(
 
     field_map = {item.field_id: item for item in transition.fields}
     known_fields = set(field_map)
-    expected_bindings: dict[str, list[str]] = {field_id: [] for field_id in known_fields}
+    expected_bindings: dict[str, list[str]] = {
+        field_id: [] for field_id in known_fields
+    }
     for annotation in annotations:
         if annotation.field_schema_id != transition.field_schema_id:
             raise PerceptionTransitionConformanceError(
@@ -579,8 +597,7 @@ def evaluate_transition_conformance(
         field = field_map[field_id]
         if (
             field.changed_value_count > 0
-            and field.mean_absolute_change
-            >= minimum_unexplained_mean_absolute_change
+            and field.mean_absolute_change >= minimum_unexplained_mean_absolute_change
             and field.changed_fraction >= minimum_unexplained_changed_fraction
         ):
             findings.append(
@@ -617,5 +634,6 @@ def evaluate_transition_conformance(
     identity_values = dict(values)
     identity_values["findings"] = tuple(asdict(item) for item in ordered_findings)
     return TransitionConformanceReportDTO(
-        report_id=_digest(identity_values), **values  # type: ignore[arg-type]
+        report_id=_digest(identity_values),
+        **values,  # type: ignore[arg-type]
     )

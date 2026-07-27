@@ -1,7 +1,7 @@
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"
-testpaths = ["tests", "integration_tests"]
+testpaths = ["tests"]
 pythonpath = [
     "packages/core/src",
     "packages/analysis/src",

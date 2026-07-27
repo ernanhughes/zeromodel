@@ -5,7 +5,7 @@ on:
     paths:
       - "packages/**"
       - "tests/**"
-      - "integration_tests/**"
+      - "tests/integration/**"
       - "scripts/**"
       - "requirements-dev.txt"
       - "pyproject.toml"
@@ -18,7 +18,7 @@ on:
     paths:
       - "packages/**"
       - "tests/**"
-      - "integration_tests/**"
+      - "tests/integration/**"
       - "scripts/**"
       - "requirements-dev.txt"
       - "pyproject.toml"

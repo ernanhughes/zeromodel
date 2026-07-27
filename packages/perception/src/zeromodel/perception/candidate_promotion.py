@@ -33,9 +33,7 @@ CANDIDATE_PROMOTION_PROPOSAL_SET_VERSION: Final = (
 CANDIDATE_PROMOTION_DECISION_VERSION: Final = (
     "perception-candidate-promotion-decision/1"
 )
-CANDIDATE_PROMOTION_REVIEW_VERSION: Final = (
-    "perception-candidate-promotion-review/1"
-)
+CANDIDATE_PROMOTION_REVIEW_VERSION: Final = "perception-candidate-promotion-review/1"
 CANDIDATE_PROMOTION_SEMANTICS: Final = (
     "reviewable_authorization_without_automatic_semantic_or_production_materialization"
 )
@@ -89,9 +87,7 @@ def _unit(name: str, value: float) -> None:
 
 def _positive_int(name: str, value: int) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
-        raise PerceptionCandidatePromotionError(
-            f"{name} must be a positive integer"
-        )
+        raise PerceptionCandidatePromotionError(f"{name} must be a positive integer")
 
 
 def _non_negative_int(name: str, value: int) -> None:
@@ -110,9 +106,7 @@ def _ordered_unique(
     if not allow_empty and not values:
         raise PerceptionCandidatePromotionError(f"{name} must be non-empty")
     if values != tuple(sorted(set(values))):
-        raise PerceptionCandidatePromotionError(
-            f"{name} must be unique and sorted"
-        )
+        raise PerceptionCandidatePromotionError(f"{name} must be unique and sorted")
 
 
 def _ordered_with_repetition(
@@ -199,7 +193,9 @@ class CandidatePromotionProposalDTO:
             raise PerceptionCandidatePromotionError(
                 f"unsupported promotion candidate_kind: {self.candidate_kind}"
             )
-        _ordered_unique("promotion proposal field_ids", self.field_ids, allow_empty=False)
+        _ordered_unique(
+            "promotion proposal field_ids", self.field_ids, allow_empty=False
+        )
         if self.candidate_kind == "field" and len(self.field_ids) != 1:
             raise PerceptionCandidatePromotionError(
                 "field promotion proposals require exactly one field"
@@ -365,7 +361,9 @@ class CandidatePromotionProposalSetDTO:
             raise PerceptionCandidatePromotionError(
                 "promotion proposal-set cohorts must differ"
             )
-        _ordered_unique("promotion proposal identities", self.proposal_ids, allow_empty=False)
+        _ordered_unique(
+            "promotion proposal identities", self.proposal_ids, allow_empty=False
+        )
         actual_ids = tuple(sorted(item.proposal_id for item in self.proposals))
         if actual_ids != self.proposal_ids:
             raise PerceptionCandidatePromotionError(
@@ -395,7 +393,9 @@ class CandidatePromotionProposalSetDTO:
                 "candidate promotion proposal-set identity disagrees with canonical payload"
             )
 
-    def proposal_for_candidate(self, candidate_id: str) -> CandidatePromotionProposalDTO:
+    def proposal_for_candidate(
+        self, candidate_id: str
+    ) -> CandidatePromotionProposalDTO:
         for proposal in self.proposals:
             if proposal.candidate_id == candidate_id:
                 return proposal
@@ -416,7 +416,9 @@ class CandidatePromotionDecisionDTO:
     version: str = CANDIDATE_PROMOTION_DECISION_VERSION
 
     def __post_init__(self) -> None:
-        if not all((self.decision_id, self.proposal_id, self.reviewer_id, self.rationale)):
+        if not all(
+            (self.decision_id, self.proposal_id, self.reviewer_id, self.rationale)
+        ):
             raise PerceptionCandidatePromotionError(
                 "promotion decision identities and rationale must be non-empty"
             )
@@ -498,7 +500,9 @@ class CandidatePromotionReviewDTO:
             raise PerceptionCandidatePromotionError(
                 f"unsupported promotion review status: {self.status}"
             )
-        _ordered_unique("promotion review proposal_ids", self.proposal_ids, allow_empty=False)
+        _ordered_unique(
+            "promotion review proposal_ids", self.proposal_ids, allow_empty=False
+        )
         _ordered_unique("promotion review decision_ids", self.decision_ids)
         actual_decision_ids = tuple(sorted(item.decision_id for item in self.decisions))
         if actual_decision_ids != self.decision_ids:
@@ -663,12 +667,8 @@ def _proposal(
         "validation_confirmation_count": result.confirmation_count,
         "validation_observation_count": result.observation_count,
         "validation_confirmation_fraction": result.confirmation_fraction,
-        "supporting_discovery_observation_ids": (
-            statistic.supporting_observation_ids
-        ),
-        "supporting_discovery_interaction_ids": (
-            statistic.supporting_interaction_ids
-        ),
+        "supporting_discovery_observation_ids": (statistic.supporting_observation_ids),
+        "supporting_discovery_interaction_ids": (statistic.supporting_interaction_ids),
         "supporting_discovery_transition_evidence_ids": (
             statistic.supporting_transition_evidence_ids
         ),
@@ -796,9 +796,7 @@ def review_candidate_promotion_proposals(
         "status": status,
         "proposal_set_id": proposal_set.proposal_set_id,
         "proposal_ids": proposal_set.proposal_ids,
-        "decision_ids": tuple(
-            sorted(item.decision_id for item in ordered_decisions)
-        ),
+        "decision_ids": tuple(sorted(item.decision_id for item in ordered_decisions)),
         "decisions": ordered_decisions,
         "pending_proposal_ids": pending,
         "approved_proposal_ids": by_decision["approved"],
@@ -811,9 +809,7 @@ def review_candidate_promotion_proposals(
         "version": CANDIDATE_PROMOTION_REVIEW_VERSION,
     }
     identity_values = dict(values)
-    identity_values["decisions"] = tuple(
-        asdict(item) for item in ordered_decisions
-    )
+    identity_values["decisions"] = tuple(asdict(item) for item in ordered_decisions)
     return CandidatePromotionReviewDTO(
         review_id=_digest(identity_values),
         **values,  # type: ignore[arg-type]

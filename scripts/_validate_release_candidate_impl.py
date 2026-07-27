@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import time
 import zipfile
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
@@ -25,6 +26,12 @@ except ModuleNotFoundError:  # pragma: no cover
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VERSION = "1.0.13"
+INTEGRATION_TEST_ROOT = "tests/integration"
+VISUAL_TRANSITION_TEST_ROOT = "examples/visual_transition_benchmark/tests"
+VISUAL_TRANSITION_TIMEOUT_SECONDS = 480
+RELEASE_CANDIDATE_REPORT_DIR = (
+    REPO_ROOT / "docs" / "results" / "release-candidate-1.1.0"
+)
 PACKAGES = {
     "core": {
         "path": Path("packages/core"),
@@ -619,40 +626,180 @@ def write_public_exports() -> None:
     )
 
 
-def _pytest_count(args: list[str], *, timeout: int = 180) -> dict[str, Any]:
-    """Run pytest with -q and pull collected/passed/failed counts from its summary line.
+@dataclass(frozen=True)
+class ReleaseGate:
+    name: str
+    paths: tuple[str, ...]
+    args: tuple[str, ...] = ()
+    required: bool = True
+    timeout_seconds: int = 180
 
-    Used only for source-tree counts here (fast suite, package-local
-    source), where full structured reporting already exists via
-    scripts/fast_suite_reporter.py for the canonical fast-suite command
-    itself; this is a lighter-weight counter for the additional per-package
-    breakdowns this report adds on top of that.
-    """
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", *args],
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
+
+def _extract_pytest_summary(stdout: str) -> str:
     summary_line = ""
-    for line in reversed(result.stdout.splitlines()):
+    for line in reversed(stdout.splitlines()):
         if " in " in line and (
             "passed" in line
             or "failed" in line
             or "error" in line
+            or "skipped" in line
             or "no tests ran" in line
         ):
             summary_line = line.strip()
             break
+    return summary_line
+
+
+def _counts_from_pytest_summary(summary_line: str) -> dict[str, int]:
     counts = {"passed": 0, "failed": 0, "skipped": 0, "errors": 0}
     for key in counts:
         match = re.search(rf"(\d+) {key}", summary_line)
         if match:
             counts[key] = int(match.group(1))
-    counts["returncode"] = result.returncode
-    counts["summary_line"] = summary_line
+    return counts
+
+
+def _classify_pytest_result(
+    *,
+    returncode: int,
+    counts: Mapping[str, Any],
+    summary_line: str,
+    timed_out: bool = False,
+) -> str:
+    if timed_out:
+        return "timed_out"
+    passed = int(counts.get("passed") or 0)
+    failed = int(counts.get("failed") or 0)
+    errors = int(counts.get("errors") or 0)
+    skipped = int(counts.get("skipped") or 0)
+    collected = passed + failed + errors + skipped
+    if collected == 0:
+        if returncode == 0 or "no tests ran" in summary_line:
+            return "zero_tests"
+        return "setup_failed"
+    if returncode == 0 and failed == 0 and errors == 0:
+        return "passed"
+    return "failed"
+
+
+def run_pytest_gate(gate: ReleaseGate) -> dict[str, Any]:
+    missing = [path for path in gate.paths if not (REPO_ROOT / path).exists()]
+    command = [sys.executable, "-m", "pytest", "-q", *gate.args, *gate.paths]
+    base: dict[str, Any] = {
+        "gate": gate.name,
+        "paths": list(gate.paths),
+        "args": list(gate.args),
+        "required": gate.required,
+        "timeout_seconds": gate.timeout_seconds,
+        "command": command,
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "errors": 0,
+        "collected": 0,
+        "returncode": None,
+        "summary_line": "",
+        "duration_seconds": 0.0,
+    }
+    if missing:
+        base["missing_paths"] = missing
+        base["status"] = "missing" if gate.required else "skipped_optional"
+        return base
+    start = time.monotonic()
+    try:
+        result = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=gate.timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors="replace")
+        summary_line = _extract_pytest_summary(stdout)
+        counts = _counts_from_pytest_summary(summary_line)
+        base.update(counts)
+        base.update(
+            {
+                "status": _classify_pytest_result(
+                    returncode=124,
+                    counts=counts,
+                    summary_line=summary_line,
+                    timed_out=True,
+                ),
+                "returncode": 124,
+                "summary_line": summary_line,
+                "duration_seconds": round(time.monotonic() - start, 3),
+            }
+        )
+        return base
+
+    summary_line = _extract_pytest_summary(result.stdout)
+    counts = _counts_from_pytest_summary(summary_line)
+    collected = sum(counts.values())
+    status = _classify_pytest_result(
+        returncode=result.returncode, counts=counts, summary_line=summary_line
+    )
+    base.update(counts)
+    base.update(
+        {
+            "status": status,
+            "collected": collected,
+            "returncode": result.returncode,
+            "summary_line": summary_line,
+            "duration_seconds": round(time.monotonic() - start, 3),
+        }
+    )
+    return base
+
+
+def _pytest_count(args: list[str], *, timeout: int = 180) -> dict[str, Any]:
+    """Run pytest with -q and return the legacy count shape plus status."""
+    start = time.monotonic()
+    command = [sys.executable, "-m", "pytest", "-q", *args]
+    try:
+        result = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout or ""
+        if isinstance(stdout, bytes):
+            stdout = stdout.decode(errors="replace")
+        summary_line = _extract_pytest_summary(stdout)
+        counts = _counts_from_pytest_summary(summary_line)
+        counts.update(
+            {
+                "returncode": 124,
+                "summary_line": summary_line,
+                "status": "timed_out",
+                "duration_seconds": round(time.monotonic() - start, 3),
+                "command": command,
+            }
+        )
+        return counts
+    summary_line = _extract_pytest_summary(result.stdout)
+    counts = _counts_from_pytest_summary(summary_line)
+    counts.update(
+        {
+            "returncode": result.returncode,
+            "summary_line": summary_line,
+            "status": _classify_pytest_result(
+                returncode=result.returncode,
+                counts=counts,
+                summary_line=summary_line,
+            ),
+            "duration_seconds": round(time.monotonic() - start, 3),
+            "command": command,
+        }
+    )
     return counts
 
 
@@ -666,34 +813,48 @@ def release_test_layer_report() -> dict[str, Any]:
     research is out of the production release contract by policy rather
     than leaving it silently absent from the report.
     """
-    fast_suite = _pytest_count(
-        [
-            "--maxfail=1",
-            "-m",
-            "not slow and not external and not research",
-            "tests",
-            "integration_tests",
-        ]
+    fast_suite = run_pytest_gate(
+        ReleaseGate(
+            "source_tree_fast_production_tests",
+            ("tests",),
+            ("--maxfail=1", "-m", "not slow and not external and not research"),
+        )
     )
     package_local: dict[str, Any] = {}
     for key in PACKAGES:
-        package_local[key] = _pytest_count([f"packages/{key}/tests"])
-    integration = _pytest_count(
-        [
-            "--run-integration",
-            "-m",
-            "integration",
-            "tests",
-            "integration_tests",
-            *(f"packages/{key}/tests" for key in PACKAGES),
-        ]
+        package_local[key] = run_pytest_gate(
+            ReleaseGate(f"package_local_source_tests:{key}", (f"packages/{key}/tests",))
+        )
+    integration = run_pytest_gate(
+        ReleaseGate(
+            "cross_package_integration_tests",
+            (INTEGRATION_TEST_ROOT,),
+            ("--run-integration", "-m", "integration"),
+        )
+    )
+    visual_transition = run_pytest_gate(
+        ReleaseGate(
+            "visual_transition_regression_tests",
+            (VISUAL_TRANSITION_TEST_ROOT,),
+            timeout_seconds=VISUAL_TRANSITION_TIMEOUT_SECONDS,
+        )
     )
 
     report = {
         "source_tree_fast_production_tests": fast_suite,
         "package_local_source_tests_by_package": package_local,
         "cross_package_integration_tests": integration,
+        "visual_transition_regression_tests": visual_transition,
         "installed_wheel_smoke_result_by_package": WHEEL_SMOKE_RESULTS,
+        "gate_topology": {
+            "fast_source_root": "tests",
+            "integration_root": INTEGRATION_TEST_ROOT,
+            "retired_roots": ["integration_tests"],
+            "visual_transition_root": VISUAL_TRANSITION_TEST_ROOT,
+            "package_local_roots": {
+                key: f"packages/{key}/tests" for key in PACKAGES
+            },
+        },
         "research": {
             "status": "excluded_by_policy",
             "note": (
@@ -714,12 +875,88 @@ def release_test_layer_report() -> dict[str, Any]:
     return report
 
 
+def write_release_candidate_reports(
+    report: Mapping[str, Any], verdicts: Iterable["ReleaseLayerVerdict"]
+) -> None:
+    RELEASE_CANDIDATE_REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    verdict_payload = [
+        {"name": v.name, "status": v.status, "ok": v.ok, "reasons": list(v.reasons)}
+        for v in verdicts
+    ]
+    try:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        commit = "unavailable"
+    environment = {
+        "python": sys.version,
+        "platform": sys.platform,
+        "repo_root": str(REPO_ROOT),
+        "commit": commit,
+        "version": VERSION,
+    }
+    (RELEASE_CANDIDATE_REPORT_DIR / "environment.json").write_text(
+        json.dumps(environment, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    commands = {
+        key: value.get("command")
+        for key, value in report.items()
+        if isinstance(value, Mapping) and "command" in value
+    }
+    commands["package_local_source_tests_by_package"] = {
+        key: value.get("command")
+        for key, value in (
+            report.get("package_local_source_tests_by_package", {}) or {}
+        ).items()
+        if isinstance(value, Mapping)
+    }
+    (RELEASE_CANDIDATE_REPORT_DIR / "commands.json").write_text(
+        json.dumps(commands, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    (RELEASE_CANDIDATE_REPORT_DIR / "results.json").write_text(
+        json.dumps({"report": report, "verdicts": verdict_payload}, indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    lines = [
+        "# ZeroModel 1.1 Release Candidate Validation",
+        "",
+        f"- Commit: `{commit}`",
+        f"- Version: `{VERSION}`",
+        f"- Integration root: `{INTEGRATION_TEST_ROOT}`",
+        "- Retired root: `integration_tests/`",
+        f"- Visual transition timeout: `{VISUAL_TRANSITION_TIMEOUT_SECONDS}` seconds",
+        "",
+        "## Verdicts",
+        "",
+    ]
+    for verdict in verdict_payload:
+        suffix = f" - {'; '.join(verdict['reasons'])}" if verdict["reasons"] else ""
+        lines.append(f"- `{verdict['name']}`: `{verdict['status']}`{suffix}")
+    lines.append("")
+    (RELEASE_CANDIDATE_REPORT_DIR / "summary.md").write_text(
+        "\n".join(lines), encoding="utf-8"
+    )
+    print(
+        f"{RELEASE_CANDIDATE_REPORT_DIR.relative_to(REPO_ROOT).as_posix()}: release-candidate reports written"
+    )
+
+
 WHEEL_SMOKE_RESULTS: dict[str, dict[str, Any]] = {}
 
 _LAYER_STATUS_PASSED = "passed"
 _LAYER_STATUS_FAILED = "failed"
 _LAYER_STATUS_NOT_EXECUTED = "not_executed"
 _LAYER_STATUS_EXCLUDED = "excluded_by_policy"
+_PASSING_GATE_STATUSES = {"passed"}
+_INCOMPLETE_GATE_STATUSES = {
+    "missing",
+    "zero_tests",
+    "timed_out",
+    "setup_failed",
+    "skipped_optional",
+}
 _COUNT_KEYS = ("passed", "failed", "errors", "skipped")
 
 
@@ -760,6 +997,13 @@ def _evaluate_required_layer(
             name, _LAYER_STATUS_NOT_EXECUTED, ("required layer result is missing",)
         )
     reasons: list[str] = []
+    explicit_status = counts.get("status")
+    if explicit_status is not None and explicit_status not in _PASSING_GATE_STATUSES:
+        reasons.append(f"status={explicit_status!r}")
+    if explicit_status in _INCOMPLETE_GATE_STATUSES:
+        missing = counts.get("missing_paths")
+        if missing:
+            reasons.append(f"missing_paths={missing!r}")
     returncode = counts.get("returncode")
     if returncode != 0:
         reasons.append(f"returncode={returncode!r}")
@@ -817,6 +1061,12 @@ def evaluate_release_test_layers(
             report.get("cross_package_integration_tests"),
         )
     )
+    verdicts.append(
+        _evaluate_required_layer(
+            "visual_transition_regression_tests",
+            report.get("visual_transition_regression_tests"),
+        )
+    )
     research = report.get("research")
     research_status = research.get("status") if isinstance(research, Mapping) else None
     if research_status == _LAYER_STATUS_EXCLUDED:
@@ -862,6 +1112,7 @@ def main() -> int:
     write_public_exports()
     report = release_test_layer_report()
     verdicts = evaluate_release_test_layers(report)
+    write_release_candidate_reports(report, verdicts)
     print_release_verdicts(verdicts)
     if not release_verdict_passed(verdicts):
         print("Release candidate validation FAILED")

@@ -1,0 +1,83 @@
+{
+  "component_attribution_full": {
+    "pixel_diff": {
+      "exact_set_accuracy": 0.8888888888888888,
+      "micro_f1": 0.9365079365079364,
+      "micro_precision": 1.0,
+      "micro_recall": 0.8805970149253731,
+      "n": 1800
+    },
+    "privileged": {
+      "exact_set_accuracy": 1.0,
+      "micro_f1": 1.0,
+      "micro_precision": 1.0,
+      "micro_recall": 1.0,
+      "n": 1800
+    },
+    "zeromodel": {
+      "exact_set_accuracy": 1.0,
+      "micro_f1": 1.0,
+      "micro_precision": 1.0,
+      "micro_recall": 1.0,
+      "n": 1800
+    }
+  },
+  "component_attribution_micro_f1": {
+    "pixel_diff": 0.9365079365079364,
+    "privileged": 1.0,
+    "zeromodel": 1.0
+  },
+  "domain": "arcade",
+  "false_implicated_components": {
+    "mean_count": 0.18055555555555555,
+    "median_count": 0.0,
+    "pct_zero": 0.8194444444444444
+  },
+  "hidden_value_faults": {
+    "label_clean_but_value_wrong": 175,
+    "n_faulty": 1000
+  },
+  "missing_change_detection": {
+    "detection_rate": 0.6923076923076923,
+    "false_alarm_rate_on_correct": 0.125,
+    "n_relevant": 325
+  },
+  "n": 1800,
+  "n_faulty": 1000,
+  "n_ordinary": 800,
+  "unexpected_change_detection": {
+    "detection_rate": 0.5,
+    "fault_localization_rate": 1.0,
+    "n_relevant": 600,
+    "precision": 1.0,
+    "recall": 0.5
+  },
+  "value_capability_rates": {
+    "direction": {
+      "n_applicable": 1800,
+      "n_correct": 1500
+    },
+    "identity": {
+      "n_applicable": 0,
+      "n_correct": 0
+    },
+    "magnitude": {
+      "n_applicable": 1800,
+      "n_correct": 1500
+    },
+    "relation": {
+      "n_applicable": 1800,
+      "n_correct": 1800
+    },
+    "value": {
+      "n_applicable": 1800,
+      "n_correct": 1600
+    }
+  },
+  "value_fault_detection": {
+    "detection_rate": 1.0,
+    "false_alarm_rate_on_correct": 0.23076923076923078,
+    "n_clean": 1300,
+    "n_relevant": 500
+  }
+}

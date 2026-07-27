@@ -660,3 +660,240 @@ def assert_disjoint_splits(*splits: DatasetSplit) -> None:
         for j in range(i + 1, len(ids_by_split)):
             if ids_by_split[i] & ids_by_split[j]:
                 raise DatasetError("splits are not disjoint")
+
+
+# =========================================================================== #
+# Value-aware transition contracts (stage 2). Everything above this line is
+# unchanged from the first benchmark -- ORDINARY_CATEGORIES, FAULT_CATEGORIES,
+# ALL_CATEGORIES, build_transition, generate_episode, and generate_split keep
+# their exact original behaviour. Stage 2 adds five NEW fault categories that
+# the first benchmark could not have expressed (they need typed values, not
+# just component labels), plus a parallel generator so the original dataset
+# path is never touched.
+#
+# Two of stage 2's requested fault categories are not new constructions: the
+# environment only ever renders a single current target, so "correct alien
+# remains alive" is the exact same observable transition as stage 1's
+# fire_no_projectile, and "target changes but not to expected state" is the
+# same observable transition as stage 1's alien_disappears_without_hit. Both
+# are reused (not re-implemented) by the stage-2 runner; see value_run.py.
+# =========================================================================== #
+
+COOLDOWN_CORRUPTED_VALUE = 100  # neither COOLDOWN_READY_VALUE (40) nor COOLDOWN_BLOCKED_VALUE (160)
+
+VALUE_FAULT_CATEGORIES: Tuple[str, ...] = (
+    "tank_moves_too_far",
+    "cooldown_activates_with_wrong_value",
+    "cooldown_decreases_to_wrong_value",
+    "wrong_alien_disappears",
+    "two_aliens_disappear_instead_of_one",
+)
+
+
+def _cooldown_region_edits(value: int) -> Tuple[Tuple[int, int, int], ...]:
+    edits = []
+    for row in (7, 8):
+        for col in range(WIDTH_PX - 3, WIDTH_PX - 1):
+            edits.append((row, col, value))
+    return tuple(edits)
+
+
+def _build_tank_too_far(rng: random.Random):
+    if rng.random() < 0.5:
+        tank_x, action = rng.randint(2, WIDTH - 1), "LEFT"
+    else:
+        tank_x, action = rng.randint(0, WIDTH - 3), "RIGHT"
+    aliens = _pick_aliens(rng, rng.choice((1, 2)))
+    return tank_x, aliens, 0, action
+
+
+def _build_cooldown_wrong_value_on_fire(rng: random.Random):
+    # Isolated to a miss (like _build_fire_no_cooldown) so the only thing this
+    # fault could plausibly be attributed to is the cooldown region itself.
+    aliens = _pick_aliens(rng, 1)
+    tank_x = _clip(aliens[0] + 1) if aliens[0] < WIDTH - 1 else aliens[0] - 1
+    return tank_x, aliens, 0, "FIRE"
+
+
+def _build_cooldown_wrong_value_on_decay(rng: random.Random):
+    tank_x = rng.randint(0, WIDTH - 1)
+    aliens = _pick_aliens(rng, rng.choice((1, 2)))
+    return tank_x, aliens, 1, "STAY"
+
+
+def _build_wrong_alien_disappears(rng: random.Random):
+    aliens = _pick_aliens(rng, 3)
+    tank_x = aliens[0]
+    return tank_x, aliens, 0, "FIRE"
+
+
+def _build_two_aliens_disappear(rng: random.Random):
+    aliens = _pick_aliens(rng, 3)
+    tank_x = aliens[0]
+    return tank_x, aliens, 0, "FIRE"
+
+
+VALUE_FAULT_BUILDERS = {
+    "tank_moves_too_far": _build_tank_too_far,
+    "cooldown_activates_with_wrong_value": _build_cooldown_wrong_value_on_fire,
+    "cooldown_decreases_to_wrong_value": _build_cooldown_wrong_value_on_decay,
+    "wrong_alien_disappears": _build_wrong_alien_disappears,
+    "two_aliens_disappear_instead_of_one": _build_two_aliens_disappear,
+}
+
+
+def _fault_tank_too_far(true_after: ArcadeState, before: ArcadeState):
+    direction = -1 if true_after.tank_x < before.tank_x else 1
+    wrong_tank = _clip(before.tank_x + 2 * direction)
+    return (
+        wrong_tank,
+        true_after.target_x,
+        true_after.cooldown,
+        (),
+        "tank moved two cells instead of one in the commanded direction",
+    )
+
+
+def _fault_cooldown_wrong_value_on_fire(true_after: ArcadeState, before: ArcadeState):
+    return (
+        true_after.tank_x,
+        true_after.target_x,
+        true_after.cooldown,
+        _cooldown_region_edits(COOLDOWN_CORRUPTED_VALUE),
+        "cooldown rendered an out-of-contract intensity after FIRE "
+        "(neither the ready nor the blocked level)",
+    )
+
+
+def _fault_cooldown_wrong_value_on_decay(true_after: ArcadeState, before: ArcadeState):
+    return (
+        true_after.tank_x,
+        true_after.target_x,
+        true_after.cooldown,
+        _cooldown_region_edits(COOLDOWN_CORRUPTED_VALUE),
+        "cooldown rendered an out-of-contract intensity while decaying "
+        "(neither the ready nor the blocked level)",
+    )
+
+
+def _garbage_column(correct_next: int, *avoid: int) -> int:
+    """A column distinct from ``correct_next`` and every column in ``avoid``."""
+
+    forbidden = set(avoid) | {correct_next}
+    for delta in range(1, WIDTH):
+        candidate = (correct_next + delta) % WIDTH
+        if candidate not in forbidden:
+            return candidate
+    raise DatasetError("no garbage column available")
+
+
+def _fault_wrong_alien_disappears(true_after: ArcadeState, before: ArcadeState):
+    correct_next = before.aliens[1]
+    garbage_next = _garbage_column(correct_next, before.target_x)
+    return (
+        true_after.tank_x,
+        garbage_next,
+        true_after.cooldown,
+        (),
+        "hit legitimately occurred, but the rendered next target is a "
+        "column outside the true remaining alien queue",
+    )
+
+
+def _fault_two_aliens_disappear(true_after: ArcadeState, before: ArcadeState):
+    skipped_next = before.aliens[2]
+    return (
+        true_after.tank_x,
+        skipped_next,
+        true_after.cooldown,
+        (),
+        "hit legitimately occurred, but the render skips an extra alien "
+        "as if two were removed instead of one",
+    )
+
+
+VALUE_FAULT_FUNCTIONS = {
+    "tank_moves_too_far": _fault_tank_too_far,
+    "cooldown_activates_with_wrong_value": _fault_cooldown_wrong_value_on_fire,
+    "cooldown_decreases_to_wrong_value": _fault_cooldown_wrong_value_on_decay,
+    "wrong_alien_disappears": _fault_wrong_alien_disappears,
+    "two_aliens_disappear_instead_of_one": _fault_two_aliens_disappear,
+}
+
+
+def build_value_transition(
+    *,
+    episode_id: str,
+    step_number: int,
+    seed: int,
+    category: str,
+) -> TransitionRecord:
+    """Mirrors build_transition exactly, sourced from the stage-2-only category
+    tables. Kept as a separate function (rather than folding into
+    build_transition) so stage 1's dispatch path is provably untouched."""
+
+    if category not in VALUE_FAULT_CATEGORIES:
+        raise DatasetError(f"unknown value-fault category: {category}")
+    rng = random.Random(_category_seed(seed, episode_id, category))
+    tank_x, aliens, cooldown, action = VALUE_FAULT_BUILDERS[category](rng)
+
+    before = ArcadeState(tank_x=tank_x, aliens=aliens, cooldown=cooldown)
+    true_after = true_next_state(before, action)
+    frame_before = render(before)
+
+    render_tank, render_target, render_cooldown, extra_edits, notes = VALUE_FAULT_FUNCTIONS[
+        category
+    ](true_after, before)
+    rendered_state = ArcadeState(
+        tank_x=render_tank,
+        aliens=(render_target,) if render_target is not None else (),
+        cooldown=render_cooldown,
+    )
+    frame_after = render(rendered_state)
+    for row, col, value in extra_edits:
+        frame_after[row, col] = value
+
+    expected_changed = _changed_components_from_states(before, true_after)
+    observed_changed = _changed_components_from_pixels(
+        frame_before, frame_after, before.tank_x, before.target_x, render_tank, render_target
+    )
+    annotations = transition_component_masks(before.tank_x, before.target_x, render_tank, render_target)
+
+    transition_id = f"{episode_id}-{step_number:04d}"
+    return TransitionRecord(
+        transition_id=transition_id,
+        episode_id=episode_id,
+        step_number=step_number,
+        seed=seed,
+        action=action,
+        category=category,
+        frame_before=frame_before,
+        frame_after=frame_after,
+        state_before=before.as_dict(),
+        state_after=true_after.as_dict(),
+        component_annotations=annotations,
+        expected_changed_components=expected_changed,
+        observed_changed_components=observed_changed,
+        fault_type=category,
+        is_faulty=True,
+        notes=notes,
+    )
+
+
+def generate_value_episode(episode_id: str, seed: int) -> Tuple[TransitionRecord, ...]:
+    records = []
+    for step_number, category in enumerate(VALUE_FAULT_CATEGORIES):
+        records.append(
+            build_value_transition(
+                episode_id=episode_id, step_number=step_number, seed=seed, category=category
+            )
+        )
+    return tuple(records)
+
+
+def generate_value_split(*, prefix: str, episode_count: int, seed_offset: int) -> DatasetSplit:
+    episode_ids = tuple(f"{prefix}-{index:04d}" for index in range(episode_count))
+    records: list = []
+    for index, episode_id in enumerate(episode_ids):
+        records.extend(generate_value_episode(episode_id, seed_offset + index))
+    return DatasetSplit(name=prefix, episode_ids=episode_ids, records=tuple(records))

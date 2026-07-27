@@ -12,7 +12,7 @@
       "filename": "zeromodel-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "6eee036e7f78901b0af383aec2fd4b7e48f63b18ed0ad5fe7af4746a7ec6a899",
+      "sha256": "10a98c6d3c0650cf2ac6a6ecd37967806e60163a2dc1c8bee9f0db462a72ed3e",
       "size": 29225,
       "version": "1.1.0"
     },
@@ -27,8 +27,8 @@
       "filename": "zeromodel-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "0a1ed3140d185f87fab2a720ea69972648f716b3aff27d18e4273e2bb7d7a8dc",
-      "size": 30031,
+      "sha256": "92c4c0a0abe4929ada26041e92b49bbfa146b405567adbe754bba8ffd11b10b9",
+      "size": 30016,
       "version": "1.1.0"
     },
     {
@@ -44,7 +44,7 @@
       "filename": "zeromodel_analysis-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "36f21dd2f33d65edb7367d97711bbd33aae3b4c8f3005b56865c930920023517",
+      "sha256": "e5b26b06fea8ae013a39d17c4937275b3521179b61490e16e469f1bca0599c5e",
       "size": 49152,
       "version": "1.1.0"
     },
@@ -60,8 +60,8 @@
       "filename": "zeromodel_analysis-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "c87f865d4f6a75eb981248a3886ce8de289bc14f479e5b276257a5e0dc64c851",
-      "size": 51912,
+      "sha256": "27261012db25d51a78b44af6ef317b42eae80cfbf65732ebfbb30aea6ff4617c",
+      "size": 51931,
       "version": "1.1.0"
     },
     {
@@ -77,7 +77,7 @@
       "filename": "zeromodel_observation-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "10b5d7492ed40a00479704ca0274114de7635792a496d71683d614458e9b1a4a",
+      "sha256": "cd98f72598faab2a3b5c6d9f52c09926497d69cd1bf72bc40b05c473c4e33505",
       "size": 10840,
       "version": "1.1.0"
     },
@@ -93,8 +93,8 @@
       "filename": "zeromodel_observation-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "0681bb2c87b9bb5b5cb4f003f34a19f4b139dcd1a6cc4bf22ce16342248db06b",
-      "size": 13693,
+      "sha256": "315108e0309e9db1448c7e4efdaa91e09e0e081f7c1f3d0c6087640a18e519c1",
+      "size": 13681,
       "version": "1.1.0"
     },
     {
@@ -112,7 +112,7 @@
       "filename": "zeromodel_perception-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "b5473a4fc765fd5bddec9c53b24c51ff88ee3d4ca1ac97a990e7047fce366e65",
+      "sha256": "9f1465790e641a21dd534a389d8c2750e04280af94f1926d09de8256fe0b3ce9",
       "size": 172140,
       "version": "1.1.0"
     },
@@ -130,8 +130,8 @@
       "filename": "zeromodel_perception-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "bc5168b6e00e5df1e98b939daaf687504fc79c36779203c85e8b48e1fd47df4b",
-      "size": 190694,
+      "sha256": "e69af979f8580cf072617aa8345743a60615ba87a8e3923b3c5b77fcf7422e7a",
+      "size": 190704,
       "version": "1.1.0"
     },
     {
@@ -148,7 +148,7 @@
       "filename": "zeromodel_vision-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "1a4f3736cd029165bb3e4f1aa6cec7bdb4bb2df64aa799c2f55ab546037549f7",
+      "sha256": "0240045bcc85efa3236f86a7a3f5b54f3f6d0809c5342bf06c3804fb115bac40",
       "size": 13484,
       "version": "1.1.0"
     },
@@ -165,8 +165,8 @@
       "filename": "zeromodel_vision-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "ecf0147ec4694b4508fecdfe38a31f0a03590b8ae797cc4f7fed17b1bf8338bb",
-      "size": 17192,
+      "sha256": "5682ce4eba094f7446aabf2acca30aa505310c8da948990c7c6fd04df9ed63bf",
+      "size": 17181,
       "version": "1.1.0"
     },
     {
@@ -183,7 +183,7 @@
       "filename": "zeromodel_video-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "dc05821192e0c1e5ccae10fb41537cffafe5be24824084899596e5ad397a286f",
+      "sha256": "0fda9eb4e6c867c09d8e0ff8eafaf0a023272942a373e8c86758666fbf4cec78",
       "size": 148174,
       "version": "1.1.0"
     },
@@ -200,8 +200,8 @@
       "filename": "zeromodel_video-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "9728d74d727e33762d2833107402ab782ce19ca06b5c23f540f9ebdec2864e2a",
-      "size": 119506,
+      "sha256": "bfb3350efe7fa080f513a5e53897d59172b3305e54403096d243b8951efdb987",
+      "size": 119505,
       "version": "1.1.0"
     },
     {
@@ -219,7 +219,7 @@
       "filename": "zeromodel_sqlalchemy-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "a9980301819ba638e0f264154b85f67c118aa5fe44fbe82aeb934b1d6c383357",
+      "sha256": "41db94bc53372e98957be26abb76532f798b34a862fde1991435a6c2249783bd",
       "size": 28264,
       "version": "1.1.0"
     },
@@ -237,8 +237,8 @@
       "filename": "zeromodel_sqlalchemy-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "afb8bac2a31b2576f79eccc382995231f376d2e5612fe438e449a088b26ca7d6",
-      "size": 26931,
+      "sha256": "1e392575e0bbb91e0e3a42e7c763140ea6ddab009b73d85bd6aaabda19b18e3f",
+      "size": 26923,
       "version": "1.1.0"
     },
     {
@@ -254,7 +254,7 @@
       "filename": "zeromodel_artifacts-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "03f4c84e41527036b84c00a449c88e36cc1dca0bb2bbc717e4ed354435e18e1d",
+      "sha256": "005686dfa0ffdc6d3727cb4e63a22437367728e4b5df7a9dfb6707f2cac0abbf",
       "size": 38250,
       "version": "1.1.0"
     },
@@ -270,8 +270,8 @@
       "filename": "zeromodel_artifacts-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "6d05d4990d0407318349b5b620007a8de9f56dc1320ea3c1c2cbf9c5fe861686",
-      "size": 52022,
+      "sha256": "6372b5ce6b0373f12aa88e48763ea110177baf071871b8b995ccd68912592870",
+      "size": 52024,
       "version": "1.1.0"
     },
     {
@@ -289,7 +289,7 @@
       "filename": "zeromodel_trust-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "d604b351258579df849237eb8f0bd598fd3b6c4a442f5de35cf0c8820d95ecf1",
+      "sha256": "528a68e8ab5e130ea34fdc42520756674aca82047d12dfcd948164c315ef4937",
       "size": 16197,
       "version": "1.1.0"
     },
@@ -307,8 +307,8 @@
       "filename": "zeromodel_trust-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "a3854f54ac9d197d545f5fc2b6b45c95d2aa5dcd5be8410ec490a70b4b0c9b96",
-      "size": 22599,
+      "sha256": "bbac78daaa15308b9ece20d2bf3b8104fe5b6c87c5cf9cc5360ca5f5ca7a862d",
+      "size": 22585,
       "version": "1.1.0"
     },
     {
@@ -325,7 +325,7 @@
       "filename": "zeromodel_navigation-1.1.0-py3-none-any.whl",
       "kind": "wheel",
       "python_requirement": ">=3.10",
-      "sha256": "6ded2e9a0b3e322013afc0ec0f80775601137078add4b27a9df636824491a874",
+      "sha256": "9cf79cd412decd03765c0d81cc84991e22a873e7bda02debf2a0fc7df78efc84",
       "size": 17417,
       "version": "1.1.0"
     },
@@ -342,8 +342,8 @@
       "filename": "zeromodel_navigation-1.1.0.tar.gz",
       "kind": "sdist",
       "python_requirement": ">=3.10",
-      "sha256": "dab8ea681deb5d7edf6785cd6da9e14c124c3693b5e45ce0489ca311c7cfd1f7",
-      "size": 23352,
+      "sha256": "431251756c4210003e72a9356c5288060a6cd0b6d292ca340c632d7e8a1d38ea",
+      "size": 23357,
       "version": "1.1.0"
     }
   ],

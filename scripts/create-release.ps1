@@ -1116,42 +1116,84 @@ Remote: $RemoteCommit
     $StatusAfterGates = Capture "git" @("status", "--porcelain")
 
     if ($StatusAfterGates) {
-        $ChangedPaths = @(
-            $StatusAfterGates -split "`r?`n" |
-                ForEach-Object {
-                    if ($_.Length -ge 4) {
-                        $_.Substring(3).Trim()
-                    }
-                } |
-                Where-Object { $_ }
-        )
+        $ChangedPaths = [System.Collections.Generic.List[string]]::new()
 
-        $AllowedGeneratedPrefixes = @(
+        foreach ($StatusLine in ($StatusAfterGates -split "`r?`n")) {
+            if ([string]::IsNullOrWhiteSpace($StatusLine)) {
+                continue
+            }
+
+            if ($StatusLine.Length -lt 4) {
+                Fail "Unexpected git status --porcelain line: $StatusLine"
+            }
+
+            $ChangedPath = $StatusLine.Substring(3).Trim()
+
+            # Porcelain may quote paths containing special characters.
+            if (
+                $ChangedPath.Length -ge 2 -and
+                $ChangedPath.StartsWith('"') -and
+                $ChangedPath.EndsWith('"')
+            ) {
+                $ChangedPath = $ChangedPath.Substring(
+                    1,
+                    $ChangedPath.Length - 2
+                )
+            }
+
+            # For rename records, validate the destination path.
+            if ($ChangedPath.Contains(" -> ")) {
+                $ChangedPath = ($ChangedPath -split " -> ", 2)[1]
+            }
+
+            $ChangedPaths.Add($ChangedPath.Replace("\", "/"))
+        }
+
+        $AllowedGeneratedPaths = @(
             "docs/architecture/package-release-artifacts-$Version.json",
             "docs/architecture/package-public-api-$Version.csv",
-            "docs/architecture/package-release-test-layers-$Version.json",
+            "docs/architecture/package-release-test-layers-$Version.json"
+        )
+
+        $AllowedGeneratedDirectory = (
             "docs/results/release-candidate-$Version/"
         )
 
-        $UnexpectedChanges = @(
-            $ChangedPaths |
-                Where-Object {
-                    $Path = $_.Replace("\", "/")
-                    -not (
-                        $AllowedGeneratedPrefixes |
-                            Where-Object {
-                                $Path -eq $_ -or $Path.StartsWith($_)
-                            }
-                    )
+        $UnexpectedChanges = [System.Collections.Generic.List[string]]::new()
+
+        foreach ($ChangedPath in $ChangedPaths) {
+            $Allowed = $false
+
+            foreach ($AllowedPath in $AllowedGeneratedPaths) {
+                if ($ChangedPath -eq $AllowedPath) {
+                    $Allowed = $true
+                    break
                 }
-        )
+            }
+
+            if (
+                -not $Allowed -and
+                $ChangedPath.StartsWith(
+                    $AllowedGeneratedDirectory,
+                    [System.StringComparison]::Ordinal
+                )
+            ) {
+                $Allowed = $true
+            }
+
+            if (-not $Allowed) {
+                $UnexpectedChanges.Add($ChangedPath)
+            }
+        }
 
         if ($UnexpectedChanges.Count -gt 0) {
-            Fail @"
-    Release gates changed files outside the approved generated-evidence paths:
+            $FailureMessage = @(
+                "Release gates changed files outside the approved generated-evidence paths:",
+                "",
+                ($UnexpectedChanges -join "`n")
+            ) -join "`n"
 
-    $($UnexpectedChanges -join "`n")
-    "@
+            Fail $FailureMessage
         }
 
         Step "Committing generated release evidence"
@@ -1164,7 +1206,11 @@ Remote: $RemoteCommit
             "docs/results/release-candidate-$Version"
         )
 
-        $StagedChanges = Capture "git" @("diff", "--cached", "--name-only")
+        $StagedChanges = Capture "git" @(
+            "diff",
+            "--cached",
+            "--name-only"
+        )
 
         if ($StagedChanges) {
             Run "git" @(
@@ -1181,6 +1227,8 @@ Remote: $RemoteCommit
 
             $ReleaseCommit = Capture "git" @("rev-parse", "HEAD")
         }
+
+        Assert-Clean
     }
 
     if (-not $SkipCI) {

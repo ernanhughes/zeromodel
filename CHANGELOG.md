@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Adds P18H bounded SQLite persistence for perception promotion activation state, activation receipts, rollback plans, rollback admissions, rollback receipts, and explicit operation ordering.
+- Adds governed rollback admission and atomic inverse-plan execution for the existing P18G activation boundary. Rollback requires the active state to exactly match the plan's activated state and is idempotent after successful execution.
+- Documents the P18H claim boundary: single-process SQLite reference implementation only, no distributed rollback, no semantic safety proof, and no production authorization claim.
+
 ## 1.0.13 - 2026-07-22
 
 Release candidate for the six-distribution namespace split:

@@ -34,15 +34,17 @@ Convert approved proposals from a fully reviewed P18E ledger into staged annotat
 
 P18F change sets remain `staged_inactive` and `not_admitted`. A complete review without approvals produces an explicit `no_approved_changes` result rather than an empty implicit success.
 
-## P18G — Materialization admission and atomic activation — current
+## P18G — Materialization admission and atomic activation — complete
 
 Audit the staged change set against the exact active schema, baseline version, and annotation/relation/expectation identity snapshot. Bind an admissible audit to expected and resulting state identities, then apply every forward operation through a compare-and-swap transaction or apply nothing.
 
 Persist one immutable activation bundle containing the audit, admission, receipt, resulting state, and exact inactive rollback plan. P18G does not execute rollback.
 
-## P18H — Durable activation and governed rollback — next
+## P18H — Durable activation and governed rollback — complete
 
 Add restart-safe SQLite persistence for the P18G store protocol. Admit rollback only when the current active state exactly equals the rollback plan's activated state, then apply every inverse operation atomically and preserve activation and rollback history.
+
+P18A-P18H operational chain complete for the bounded in-process SQLite reference implementation.
 
 ## Boundary
 

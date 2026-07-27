@@ -114,6 +114,30 @@ The repository also contains a deterministic visual-transition debugging benchma
 
 ## Claims to avoid until stronger evidence exists
 
+## Perception P18H bounded durable rollback claim
+
+The perception package includes a reference SQLite-backed activation store that
+preserves admitted active state, activation receipts, and rollback plans across
+restart, and can atomically execute an exact stored inverse plan only when the
+current active state still matches the plan's activated state.
+
+Limitations: single-process reference implementation; SQLite only; no distributed
+coordination; no multi-step historical rewind; no semantic correctness guarantee;
+rollback restores exact stored state but does not prove the activated model was
+safe or unsafe; governance DTOs do not constitute organizational authorization;
+corruption is detected, not automatically repaired; no production uptime or
+scale claim.
+
+Additional claims to avoid:
+
+- "production-grade distributed rollback"
+- "automatic safety recovery"
+- "self-healing perception"
+- "rollback proves correctness"
+- "activation is safe because it was admitted"
+- "enterprise authorization system"
+- "zero-downtime distributed activation"
+
 - “planet-scale”
 - “infinite memory”
 - “constant-time decision”

@@ -69,7 +69,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p build/ci
-          python scripts/check_quality.py > build/ci/quality.log 2>&1
+          python scripts/check_quality.py 2>&1 | tee build/ci/quality.log
 
       - name: Upload quality failure log
         if: steps.quality_gate.outcome == 'failure'

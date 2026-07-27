@@ -34,7 +34,7 @@ dependencies = [
     "numpy>=1.23",
     "pillow>=9.0",
     "zeromodel==1.1.0",
-    "zeromodel-observation==1.0.13",
+    "zeromodel-observation==1.1.0",
 ]
 
 [project.urls]

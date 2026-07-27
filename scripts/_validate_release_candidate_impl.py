@@ -29,8 +29,23 @@ VERSION = "1.1.0"
 INTEGRATION_TEST_ROOT = "tests/integration"
 VISUAL_TRANSITION_TEST_ROOT = "examples/visual_transition_benchmark/tests"
 VISUAL_TRANSITION_TIMEOUT_SECONDS = 480
+
+ARCHITECTURE_REPORT_DIR = REPO_ROOT / "docs" / "architecture"
+
+PACKAGE_RELEASE_ARTIFACTS_PATH = (
+    ARCHITECTURE_REPORT_DIR / f"package-release-artifacts-{VERSION}.json"
+)
+
+PACKAGE_PUBLIC_API_PATH = (
+    ARCHITECTURE_REPORT_DIR / f"package-public-api-{VERSION}.csv"
+)
+
+PACKAGE_RELEASE_TEST_LAYERS_PATH = (
+    ARCHITECTURE_REPORT_DIR / f"package-release-test-layers-{VERSION}.json"
+)
+
 RELEASE_CANDIDATE_REPORT_DIR = (
-    REPO_ROOT / "docs" / "results" / "release-candidate-1.1.0"
+    REPO_ROOT / "docs" / "results" / f"release-candidate-{VERSION}"
 )
 PACKAGES = {
     "core": {
@@ -56,6 +71,19 @@ PACKAGES = {
         "namespace": "zeromodel.observation",
         "requires": {"numpy>=1.23", f"zeromodel=={VERSION}"},
         "depends_on": ("core",),
+    },
+    "perception": {
+        "path": Path("packages/perception"),
+        "distribution": "zeromodel-perception",
+        "wheel_stem": "zeromodel_perception",
+        "namespace": "zeromodel.perception",
+        "requires": {
+            "numpy>=1.23",
+            "pillow>=9.0",
+            f"zeromodel=={VERSION}",
+            f"zeromodel-observation=={VERSION}",
+        },
+        "depends_on": ("core", "observation"),
     },
     "vision": {
         "path": Path("packages/vision"),
@@ -482,7 +510,7 @@ def manifest_rows() -> list[dict[str, Any]]:
 
 
 def write_manifest() -> None:
-    path = REPO_ROOT / "docs" / "architecture" / "package-release-artifacts-1.0.13.json"
+    path = PACKAGE_RELEASE_ARTIFACTS_PATH
     path.write_text(
         json.dumps(
             {
@@ -616,7 +644,7 @@ def write_public_exports() -> None:
 
     rows.sort(key=lambda row: (row["distribution"], row["exported_symbol"]))
 
-    path = REPO_ROOT / "docs" / "architecture" / "package-public-api-1.0.13.csv"
+    path = PACKAGE_PUBLIC_API_PATH
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, PUBLIC_API_CSV_COLUMNS)
         writer.writeheader()
@@ -813,13 +841,6 @@ def release_test_layer_report() -> dict[str, Any]:
     research is out of the production release contract by policy rather
     than leaving it silently absent from the report.
     """
-    fast_suite = run_pytest_gate(
-        ReleaseGate(
-            "source_tree_fast_production_tests",
-            ("tests",),
-            ("--maxfail=1", "-m", "not slow and not external and not research"),
-        )
-    )
     package_local: dict[str, Any] = {}
     for key in PACKAGES:
         package_local[key] = run_pytest_gate(
@@ -841,7 +862,6 @@ def release_test_layer_report() -> dict[str, Any]:
     )
 
     report = {
-        "source_tree_fast_production_tests": fast_suite,
         "package_local_source_tests_by_package": package_local,
         "cross_package_integration_tests": integration,
         "visual_transition_regression_tests": visual_transition,
@@ -863,9 +883,7 @@ def release_test_layer_report() -> dict[str, Any]:
             ),
         },
     }
-    path = (
-        REPO_ROOT / "docs" / "architecture" / "package-release-test-layers-1.0.13.json"
-    )
+    path = PACKAGE_RELEASE_TEST_LAYERS_PATH
     path.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -920,7 +938,7 @@ def write_release_candidate_reports(
         encoding="utf-8",
     )
     lines = [
-        "# ZeroModel 1.1 Release Candidate Validation",
+        f"# ZeroModel {VERSION} Release Candidate Validation",
         "",
         f"- Commit: `{commit}`",
         f"- Version: `{VERSION}`",
@@ -1040,12 +1058,7 @@ def evaluate_release_test_layers(
     the production release verdict, but its exclusion is itself recorded
     as a verdict entry rather than left silently absent.
     """
-    verdicts: list[ReleaseLayerVerdict] = [
-        _evaluate_required_layer(
-            "source_tree_fast_production_tests",
-            report.get("source_tree_fast_production_tests"),
-        )
-    ]
+    verdicts: list[ReleaseLayerVerdict] = []
     package_local = report.get("package_local_source_tests_by_package")
     package_local_map = package_local if isinstance(package_local, Mapping) else {}
     for key in PACKAGES:

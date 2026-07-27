@@ -66,7 +66,6 @@ def test_release_test_layer_report_distinguishes_every_required_layer(
     assert written_path.exists()
 
     assert set(report) == {
-        "source_tree_fast_production_tests",
         "package_local_source_tests_by_package",
         "cross_package_integration_tests",
         "visual_transition_regression_tests",

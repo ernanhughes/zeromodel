@@ -1,0 +1,352 @@
+{
+  "artifacts": [
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23"
+      ],
+      "distribution": "zeromodel",
+      "filename": "zeromodel-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "b5bdf4715cf4a07564ce341677d075329e2d3a3518697dc23ef2acdf14659534",
+      "size": 29225,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23"
+      ],
+      "distribution": "zeromodel",
+      "filename": "zeromodel-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "64ff30f13886d42ec451e64d78c045e086d668c9ea023f4e7989604c19bc23c4",
+      "size": 30016,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_analysis-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-analysis",
+      "filename": "zeromodel_analysis-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "6ab9ee590d843f35001245a2b4921bb1fb90ea7b19a87b6418e74614022ce295",
+      "size": 49152,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_analysis-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-analysis",
+      "filename": "zeromodel_analysis-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "b7852d8d035bb1ba2ab30f99e3f932aea277d02e7bfafa609349a3d42f5364d9",
+      "size": 51916,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_observation-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-observation",
+      "filename": "zeromodel_observation-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "031ccf192fdce880eb50d63e3a5ca6109cb2bde45c5b436fc1636cdd5f5b7e4e",
+      "size": 10840,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_observation-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-observation",
+      "filename": "zeromodel_observation-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "cff34b6ff961054029cfacb3c869b291f875c7dab6c6a809bca3344f982c390c",
+      "size": 13677,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_perception-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "pillow>=9.0",
+        "zeromodel==1.1.0",
+        "zeromodel-observation==1.1.0"
+      ],
+      "distribution": "zeromodel-perception",
+      "filename": "zeromodel_perception-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "b1a0aac97033cb4168b29a0793bff1496d33d44bf744888871c05c6985ef4b94",
+      "size": 172140,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_perception-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "pillow>=9.0",
+        "zeromodel-observation==1.1.0",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-perception",
+      "filename": "zeromodel_perception-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "967bbeb0ab160934c67226f98e692499e15442ea2c168ab1a9fc54c39949bb4a",
+      "size": 190700,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_vision-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0",
+        "zeromodel-observation==1.1.0"
+      ],
+      "distribution": "zeromodel-vision",
+      "filename": "zeromodel_vision-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "481670bf197650a5ee0e2d7a4a9b1e761388b19a1b58d09d970c4f0076cc50d0",
+      "size": 13484,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_vision-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel-observation==1.1.0",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-vision",
+      "filename": "zeromodel_vision-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "209cc2a3aee8e1b639d151139bd0d2b29bcc25cc91b13e23411fc62e347b8041",
+      "size": 17188,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_video-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0",
+        "zeromodel-observation==1.1.0"
+      ],
+      "distribution": "zeromodel-video",
+      "filename": "zeromodel_video-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "8c315070e489f52d7be09bf7378df143c543cf51cb3ff4bf75763ba8aaf00671",
+      "size": 148174,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_video-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel-observation==1.1.0",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-video",
+      "filename": "zeromodel_video-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "2bb1ecf5ea4cec7feec4b5a6e74cc575b6f574b554a1de597e0e3b875cd68c5a",
+      "size": 119505,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_sqlalchemy-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "SQLAlchemy<3,>=2.0",
+        "zeromodel==1.1.0",
+        "zeromodel-video==1.1.0"
+      ],
+      "distribution": "zeromodel-sqlalchemy",
+      "filename": "zeromodel_sqlalchemy-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "7e8e9ce836535aaea8cd15e3b284fe6c6d704038cf33f2857e3ffd6e723d5745",
+      "size": 28264,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_sqlalchemy-1.1.0"
+      ],
+      "direct_dependencies": [
+        "SQLAlchemy>=2.0,<3",
+        "numpy>=1.23",
+        "zeromodel-video==1.1.0",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-sqlalchemy",
+      "filename": "zeromodel_sqlalchemy-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "5db37fbe41b62305fcc7904dd33093e4d1d158d5d9850b08cf07014e9c84023c",
+      "size": 26928,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_artifacts-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-artifacts",
+      "filename": "zeromodel_artifacts-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "6f87fa06e09e6ba3e286dbe149f69d610b13e17dfa02e416fb1d7d54224a5c4a",
+      "size": 38250,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_artifacts-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-artifacts",
+      "filename": "zeromodel_artifacts-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "8af2e412d1daba5f270488145fdf3faa9ae6febf53085f6998194009d50b7a18",
+      "size": 52007,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_trust-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "cryptography>=41",
+        "zeromodel==1.1.0",
+        "zeromodel-artifacts==1.1.0"
+      ],
+      "distribution": "zeromodel-trust",
+      "filename": "zeromodel_trust-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "8cf23c1e19288e644782525ce05e49ac75f80a2591e79ff53ef19e1f8a8e63ae",
+      "size": 16197,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_trust-1.1.0"
+      ],
+      "direct_dependencies": [
+        "cryptography>=41",
+        "numpy>=1.23",
+        "zeromodel-artifacts==1.1.0",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-trust",
+      "filename": "zeromodel_trust-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "ba5f22d46073cf1ffc23adca3dbe1805ae39c417c4fa7a475a75d76bd8cbe1d0",
+      "size": 22572,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel",
+        "zeromodel_navigation-1.1.0.dist-info"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel==1.1.0",
+        "zeromodel-artifacts==1.1.0"
+      ],
+      "distribution": "zeromodel-navigation",
+      "filename": "zeromodel_navigation-1.1.0-py3-none-any.whl",
+      "kind": "wheel",
+      "python_requirement": ">=3.10",
+      "sha256": "9815309b0496390082945129b1cb2237433c826dceaef1ec86098e5b35fe3ab6",
+      "size": 17417,
+      "version": "1.1.0"
+    },
+    {
+      "contained_top_level_paths": [
+        "zeromodel_navigation-1.1.0"
+      ],
+      "direct_dependencies": [
+        "numpy>=1.23",
+        "zeromodel-artifacts==1.1.0",
+        "zeromodel==1.1.0"
+      ],
+      "distribution": "zeromodel-navigation",
+      "filename": "zeromodel_navigation-1.1.0.tar.gz",
+      "kind": "sdist",
+      "python_requirement": ">=3.10",
+      "sha256": "ea7628b8db8d7d935d0c320394a979bae4abad2ca1f56f790415fd9169e48fa9",
+      "size": 23353,
+      "version": "1.1.0"
+    }
+  ],
+  "schema_version": 1,
+  "version": "1.1.0"
+}

@@ -1,6 +1,6 @@
 {
   "cross_package_integration_tests": [
-    "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
     "-m",
     "pytest",
     "-q",
@@ -11,88 +11,78 @@
   ],
   "package_local_source_tests_by_package": {
     "analysis": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/analysis/tests"
     ],
     "artifacts": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/artifacts/tests"
     ],
     "core": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/core/tests"
     ],
     "navigation": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/navigation/tests"
     ],
     "observation": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/observation/tests"
     ],
     "perception": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/perception/tests"
     ],
     "sqlalchemy": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/sqlalchemy/tests"
     ],
     "trust": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/trust/tests"
     ],
     "video": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/video/tests"
     ],
     "vision": [
-      "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+      "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
       "-m",
       "pytest",
       "-q",
       "packages/vision/tests"
     ]
   },
-  "source_tree_fast_production_tests": [
-    "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
-    "-m",
-    "pytest",
-    "-q",
-    "--maxfail=1",
-    "-m",
-    "not slow and not external and not research",
-    "tests"
-  ],
   "visual_transition_regression_tests": [
-    "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+    "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
     "-m",
     "pytest",
     "-q",

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeromodel-artifacts"
-version = "1.0.13"
+version = "1.1.0"
 description = "ZeroModel canonical artifact reference, resolution, and content-addressed storage"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,7 +31,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.23",
-    "zeromodel==1.0.13",
+    "zeromodel==1.1.0",
 ]
 
 [project.urls]

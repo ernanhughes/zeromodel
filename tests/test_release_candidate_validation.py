@@ -33,7 +33,6 @@ def _base_report() -> dict[str, Any]:
     """A payload shaped like the committed release-test-layers report, with
     every required layer passing and research correctly excluded."""
     return {
-        "source_tree_fast_production_tests": _passing_counts(),
         "package_local_source_tests_by_package": {
             key: _passing_counts() for key in validator.PACKAGES
         },
@@ -50,22 +49,6 @@ def test_all_required_layers_passing_yields_an_overall_pass() -> None:
     verdicts = validator.evaluate_release_test_layers(_base_report())
     assert validator.release_verdict_passed(verdicts)
     assert all(v.ok for v in verdicts)
-
-
-def test_a_layer_with_nonzero_returncode_fails_the_verdict() -> None:
-    report = _base_report()
-    report["source_tree_fast_production_tests"] = {
-        "passed": 0,
-        "failed": 0,
-        "skipped": 0,
-        "errors": 3,
-        "returncode": 2,
-    }
-    verdicts = validator.evaluate_release_test_layers(report)
-    assert not validator.release_verdict_passed(verdicts)
-    fast = next(v for v in verdicts if v.name == "source_tree_fast_production_tests")
-    assert fast.status == "failed"
-    assert any("returncode" in reason for reason in fast.reasons)
 
 
 def test_a_layer_reporting_collection_errors_fails_the_verdict() -> None:

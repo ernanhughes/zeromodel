@@ -8,7 +8,7 @@
       ],
       "collected": 77,
       "command": [
-        "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
         "-m",
         "pytest",
         "-q",
@@ -17,7 +17,7 @@
         "integration",
         "tests/integration"
       ],
-      "duration_seconds": 67.75,
+      "duration_seconds": 52.797,
       "errors": 0,
       "failed": 0,
       "gate": "cross_package_integration_tests",
@@ -29,7 +29,7 @@
       "returncode": 0,
       "skipped": 0,
       "status": "passed",
-      "summary_line": "================= 77 passed, 1 deselected in 66.91s (0:01:06) =================",
+      "summary_line": "====================== 77 passed, 1 deselected in 51.97s ======================",
       "timeout_seconds": 180
     },
     "gate_topology": {
@@ -109,13 +109,13 @@
         "args": [],
         "collected": 65,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/analysis/tests"
         ],
-        "duration_seconds": 1.75,
+        "duration_seconds": 2.141,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:analysis",
@@ -127,20 +127,20 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 65 passed in 0.94s ==============================",
+        "summary_line": "============================= 65 passed in 1.29s ==============================",
         "timeout_seconds": 180
       },
       "artifacts": {
         "args": [],
         "collected": 97,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/artifacts/tests"
         ],
-        "duration_seconds": 1.25,
+        "duration_seconds": 1.0,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:artifacts",
@@ -152,20 +152,20 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 97 passed in 0.44s ==============================",
+        "summary_line": "============================= 97 passed in 0.45s ==============================",
         "timeout_seconds": 180
       },
       "core": {
         "args": [],
         "collected": 21,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/core/tests"
         ],
-        "duration_seconds": 1.109,
+        "duration_seconds": 1.5,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:core",
@@ -177,20 +177,20 @@
         "returncode": 0,
         "skipped": 1,
         "status": "passed",
-        "summary_line": "======================== 20 passed, 1 skipped in 0.46s ========================",
+        "summary_line": "======================== 20 passed, 1 skipped in 0.56s ========================",
         "timeout_seconds": 180
       },
       "navigation": {
         "args": [],
         "collected": 33,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/navigation/tests"
         ],
-        "duration_seconds": 1.032,
+        "duration_seconds": 0.844,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:navigation",
@@ -209,13 +209,13 @@
         "args": [],
         "collected": 32,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/observation/tests"
         ],
-        "duration_seconds": 1.078,
+        "duration_seconds": 0.953,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:observation",
@@ -227,20 +227,20 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 32 passed in 0.37s ==============================",
+        "summary_line": "============================= 32 passed in 0.33s ==============================",
         "timeout_seconds": 180
       },
       "perception": {
         "args": [],
         "collected": 223,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/perception/tests"
         ],
-        "duration_seconds": 24.562,
+        "duration_seconds": 6.672,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:perception",
@@ -252,20 +252,20 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================ 223 passed in 23.72s =============================",
+        "summary_line": "============================= 223 passed in 6.06s =============================",
         "timeout_seconds": 180
       },
       "sqlalchemy": {
         "args": [],
         "collected": 6,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/sqlalchemy/tests"
         ],
-        "duration_seconds": 14.093,
+        "duration_seconds": 4.75,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:sqlalchemy",
@@ -277,20 +277,20 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 6 passed in 13.13s ==============================",
+        "summary_line": "============================== 6 passed in 4.11s ==============================",
         "timeout_seconds": 180
       },
       "trust": {
         "args": [],
         "collected": 52,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/trust/tests"
         ],
-        "duration_seconds": 1.172,
+        "duration_seconds": 1.0,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:trust",
@@ -302,20 +302,20 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 52 passed in 0.35s ==============================",
+        "summary_line": "============================= 52 passed in 0.33s ==============================",
         "timeout_seconds": 180
       },
       "video": {
         "args": [],
         "collected": 24,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/video/tests"
         ],
-        "duration_seconds": 1.157,
+        "duration_seconds": 1.015,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:video",
@@ -334,13 +334,13 @@
         "args": [],
         "collected": 10,
         "command": [
-          "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+          "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
           "-m",
           "pytest",
           "-q",
           "packages/vision/tests"
         ],
-        "duration_seconds": 1.078,
+        "duration_seconds": 0.828,
         "errors": 0,
         "failed": 0,
         "gate": "package_local_source_tests:vision",
@@ -352,7 +352,7 @@
         "returncode": 0,
         "skipped": 0,
         "status": "passed",
-        "summary_line": "============================= 10 passed in 0.39s ==============================",
+        "summary_line": "============================= 10 passed in 0.35s ==============================",
         "timeout_seconds": 180
       }
     },
@@ -360,49 +360,17 @@
       "note": "research/ is not part of the production release contract and is not executed by this validator. See docs/reviews/post-split-research-health.md for its own, separately-tracked collection/health status.",
       "status": "excluded_by_policy"
     },
-    "source_tree_fast_production_tests": {
-      "args": [
-        "--maxfail=1",
-        "-m",
-        "not slow and not external and not research"
-      ],
-      "collected": 705,
-      "command": [
-        "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
-        "-m",
-        "pytest",
-        "-q",
-        "--maxfail=1",
-        "-m",
-        "not slow and not external and not research",
-        "tests"
-      ],
-      "duration_seconds": 76.391,
-      "errors": 0,
-      "failed": 0,
-      "gate": "source_tree_fast_production_tests",
-      "passed": 705,
-      "paths": [
-        "tests"
-      ],
-      "required": true,
-      "returncode": 0,
-      "skipped": 0,
-      "status": "passed",
-      "summary_line": "=============== 705 passed, 200 deselected in 74.70s (0:01:14) ================",
-      "timeout_seconds": 180
-    },
     "visual_transition_regression_tests": {
       "args": [],
       "collected": 125,
       "command": [
-        "C:\\Users\\ernan\\AppData\\Local\\Programs\\Python\\Python311\\python.exe",
+        "C:\\Projects\\zeromodel\\venv\\Scripts\\python.exe",
         "-m",
         "pytest",
         "-q",
         "examples/visual_transition_benchmark/tests"
       ],
-      "duration_seconds": 222.391,
+      "duration_seconds": 220.75,
       "errors": 0,
       "failed": 0,
       "gate": "visual_transition_regression_tests",
@@ -414,17 +382,11 @@
       "returncode": 0,
       "skipped": 0,
       "status": "passed",
-      "summary_line": "======================= 125 passed in 221.78s (0:03:41) =======================",
+      "summary_line": "======================= 125 passed in 220.25s (0:03:40) =======================",
       "timeout_seconds": 480
     }
   },
   "verdicts": [
-    {
-      "name": "source_tree_fast_production_tests",
-      "ok": true,
-      "reasons": [],
-      "status": "passed"
-    },
     {
       "name": "package_local_source_tests:core",
       "ok": true,
@@ -439,6 +401,12 @@
     },
     {
       "name": "package_local_source_tests:observation",
+      "ok": true,
+      "reasons": [],
+      "status": "passed"
+    },
+    {
+      "name": "package_local_source_tests:perception",
       "ok": true,
       "reasons": [],
       "status": "passed"
@@ -475,12 +443,6 @@
     },
     {
       "name": "package_local_source_tests:navigation",
-      "ok": true,
-      "reasons": [],
-      "status": "passed"
-    },
-    {
-      "name": "package_local_source_tests:perception",
       "ok": true,
       "reasons": [],
       "status": "passed"

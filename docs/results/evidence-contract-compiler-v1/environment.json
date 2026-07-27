@@ -1,0 +1,19 @@
+{
+  "repository_commit": "aea9cab",
+  "parent_commit": "a39c64d",
+  "python_version": "3.11.4",
+  "numpy_version": "2.2.3",
+  "command": "python -m visual_transition_benchmark.compiler_run --dev-samples 15 --eval-samples 40 --output-dir artifacts/evidence_contract_compiler",
+  "dev_samples_per_category": 15,
+  "eval_samples_per_category": 40,
+  "case_count": 12,
+  "duration_seconds": 841.014,
+  "arcade_cases": 6,
+  "warehouse_cases": 6,
+  "cases_compiled": 11,
+  "cases_insufficient_representation": 0,
+  "cases_insufficient_observability": 1,
+  "benchmark_tests_passed": 125,
+  "perception_tests_passed": 212,
+  "note": "aea9cab is a content-empty merge commit on top of a39c64d (the repair commit that fixed the alien-identity classification and added the manual baseline); this run and its regression suite were executed at aea9cab, which has zero file diff from a39c64d."
+}

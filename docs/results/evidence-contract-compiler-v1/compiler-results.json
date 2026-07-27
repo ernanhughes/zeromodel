@@ -1,0 +1,1482 @@
+{
+  "environment": {
+    "case_count": 12,
+    "command": "C:\\Projects\\zeromodel\\examples\\visual_transition_benchmark\\compiler_run.py --dev-samples 15 --eval-samples 40 --output-dir examples/visual_transition_benchmark/artifacts/evidence_contract_compiler",
+    "dev_samples_per_category": 15,
+    "duration_seconds": 841.014,
+    "eval_samples_per_category": 40,
+    "git_commit": "aea9cab1b4ef2abb46548c13a93f8c4a09638900",
+    "numpy_version": "2.2.3",
+    "python_version": "3.11.4"
+  },
+  "results": [
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:4a7b749359de582a7e9c4e04",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:9288bfdd24698fa4e70b5a8d",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:9288bfdd24698fa4e70b5a8d",
+          "complexity_cost": 84.0,
+          "decoder_kind": "presence_threshold",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "tank_presence",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:4a7b749359de582a7e9c4e04",
+          "complexity_cost": 7.0,
+          "decoder_kind": "presence_threshold",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "arcade",
+      "evidence_kind": "presence",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:4a7b749359de582a7e9c4e04",
+          "complexity_cost": 7.0,
+          "decoder_kind": "presence_threshold",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:4a7b749359de582a7e9c4e04",
+          "complexity_cost": 0.0,
+          "decoder_kind": "presence_threshold",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "tank_band"
+      },
+      "n_candidates_considered": 2,
+      "n_dev_samples": 270,
+      "n_eval_samples": 720,
+      "requirement_id": "sha256:3bbb91e35c9285fe234b594a",
+      "selection_rationale": [
+        "selected sha256:4a7b749359de582a7e9c4e04 (decoding_accuracy=1.000, stability_false_change_rate=0.000, collision_rate=1.000, complexity_cost=7.0)",
+        "1 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:09e5c1df0cc7450ea8a24c5e",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:339304515fc1258bc250a014",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:47c93ea56378336692a5e245",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:c3131e78cc0b3ea378f9cf22",
+          "decoding_accuracy": 0.5583333333333333,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.558 < required 0.950",
+            "100 of 120 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:c41e055eac9715f6cae66b45",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:f1834d63bc2ecd87b2490b7c",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "centroid",
+          "candidate_id": "sha256:09e5c1df0cc7450ea8a24c5e",
+          "complexity_cost": 168.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "tank_position",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "centroid",
+          "candidate_id": "sha256:339304515fc1258bc250a014",
+          "complexity_cost": 14.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "arcade",
+      "evidence_kind": "spatial_position",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "centroid",
+          "candidate_id": "sha256:339304515fc1258bc250a014",
+          "complexity_cost": 14.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:c41e055eac9715f6cae66b45",
+          "complexity_cost": 0.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "tank_band"
+      },
+      "n_candidates_considered": 6,
+      "n_dev_samples": 120,
+      "n_eval_samples": 320,
+      "requirement_id": "sha256:ae767951d85d95409dbd3579",
+      "selection_rationale": [
+        "selected sha256:339304515fc1258bc250a014 (decoding_accuracy=1.000, stability_false_change_rate=0.000, collision_rate=0.000, complexity_cost=14.0)",
+        "4 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:0c407ce005fff7ef15a0c562",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:87d548e207205b7c3e647b4b",
+          "decoding_accuracy": 0.9,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.900 < required 0.950",
+            "100 of 120 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:ce18672609604435957a6167",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:d69917adac0408d7c46abc8a",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:0c407ce005fff7ef15a0c562",
+          "complexity_cost": 252.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        }
+      },
+      "case": "tank_direction",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:ce18672609604435957a6167",
+          "complexity_cost": 21.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        }
+      },
+      "domain": "arcade",
+      "evidence_kind": "signed_delta",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:ce18672609604435957a6167",
+          "complexity_cost": 21.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:0c407ce005fff7ef15a0c562",
+          "complexity_cost": 0.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        },
+        "note": null,
+        "region_id": "tank_band"
+      },
+      "n_candidates_considered": 4,
+      "n_dev_samples": 120,
+      "n_eval_samples": 320,
+      "requirement_id": "sha256:31a467b0bd93cf841b877083",
+      "selection_rationale": [
+        "selected sha256:ce18672609604435957a6167 (decoding_accuracy=1.000, stability_false_change_rate=0.856, collision_rate=1.000, complexity_cost=21.0)",
+        "2 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:293896be938641a64da6737a",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:7674d28ac2e59e0e5fb87a26",
+          "decoding_accuracy": 0.7583333333333333,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.758 < required 0.950",
+            "100 of 120 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:99b15df3591aae52fe04aae1",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:bb61bc1a0c3b60a5e64c9ac5",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "max",
+          "candidate_id": "sha256:7674d28ac2e59e0e5fb87a26",
+          "complexity_cost": 252.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.853125,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.853 < required 0.950",
+            "275 of 320 samples produced a tied (ambiguous) decode under max aggregation"
+          ],
+          "stability_false_change_rate": 0.8208333333333333
+        }
+      },
+      "case": "tank_movement_magnitude",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:293896be938641a64da6737a",
+          "complexity_cost": 21.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        }
+      },
+      "domain": "arcade",
+      "evidence_kind": "exact_magnitude",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:293896be938641a64da6737a",
+          "complexity_cost": 21.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:99b15df3591aae52fe04aae1",
+          "complexity_cost": 0.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.8208333333333333
+        },
+        "note": null,
+        "region_id": "tank_band"
+      },
+      "n_candidates_considered": 4,
+      "n_dev_samples": 120,
+      "n_eval_samples": 320,
+      "requirement_id": "sha256:9f71d188b963c03037400537",
+      "selection_rationale": [
+        "selected sha256:293896be938641a64da6737a (decoding_accuracy=1.000, stability_false_change_rate=0.856, collision_rate=1.000, complexity_cost=21.0)",
+        "2 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:0080a20f3e0f8d6e0703396c",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:40da176e34ff9c9e90783eb3",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:55201c6e9e91b6bb236970b8",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:746f38fb4700f2a21907eb74",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:a0fc03c03aca27cbcebdcb0f",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:bb5e48c7ee60f0073ddc1b95",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:a0fc03c03aca27cbcebdcb0f",
+          "complexity_cost": 16.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "cooldown_value",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:40da176e34ff9c9e90783eb3",
+          "complexity_cost": 20.0,
+          "decoder_kind": "dominant_field_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "arcade",
+      "evidence_kind": "numeric_value",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:bb5e48c7ee60f0073ddc1b95",
+          "complexity_cost": 4.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 1,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:d1c7c0f12dea4d2f8a040c63",
+          "complexity_cost": 0.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "cooldown_region_manual_narrow"
+      },
+      "n_candidates_considered": 6,
+      "n_dev_samples": 120,
+      "n_eval_samples": 320,
+      "requirement_id": "sha256:b5192f8a9a8bf4ceeb0635f2",
+      "selection_rationale": [
+        "selected sha256:40da176e34ff9c9e90783eb3 (decoding_accuracy=1.000, stability_false_change_rate=0.000, collision_rate=0.000, complexity_cost=20.0)"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:0ce3e1173ccb2d441e4539d2",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:5cc5b7cbdd6cd7e0122ab098",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "exact_pattern",
+          "candidate_id": "sha256:0ce3e1173ccb2d441e4539d2",
+          "complexity_cost": 252.0,
+          "decoder_kind": "local_marker_pattern",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "alien_target_identity",
+      "compiled_strategy": {
+        "candidate": null,
+        "dev_accuracy": null,
+        "held_out_eval": null
+      },
+      "domain": "arcade",
+      "evidence_kind": "visible_identity",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:5cc5b7cbdd6cd7e0122ab098",
+          "complexity_cost": 14.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 3,
+          "field_width": 4
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [
+        "insufficient_observability: no representation can recover this property"
+      ],
+      "manual_strategy": {
+        "candidate": null,
+        "held_out_eval": null,
+        "note": "no manual representation was ever successfully hand-built for this property (hidden/unobservable limitation, not a resolution choice) -- nothing honest to compare",
+        "region_id": null
+      },
+      "n_candidates_considered": 2,
+      "n_dev_samples": 120,
+      "n_eval_samples": 320,
+      "requirement_id": "sha256:f5c7ad2f54e53661333002fe",
+      "selection_rationale": [
+        "every candidate produced a decoded value with no variation across development samples whose true values genuinely vary -- the permitted region/frames do not contain evidence for this property, regardless of resolution or aggregation"
+      ],
+      "status": "insufficient_observability"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:36cad99de48a4f2ce6eebbd4",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950",
+            "130 of 345 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:47dbf5b681e3e07b57a3d437",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:67973699bf6c57f0ccf3fd35",
+          "decoding_accuracy": 0.6231884057971014,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.623 < required 0.950",
+            "7 of 345 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:93ca0d7606e9a3f4bf2c13e5",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:dfc6700dab7691dd7679c453",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:e358cf7dcf388426a5faa12d",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "max",
+          "candidate_id": "sha256:36cad99de48a4f2ce6eebbd4",
+          "complexity_cost": 1800.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950",
+            "354 of 920 samples produced a tied (ambiguous) decode under max aggregation"
+          ],
+          "stability_false_change_rate": 0.090625
+        }
+      },
+      "case": "robot_position",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "centroid",
+          "candidate_id": "sha256:47dbf5b681e3e07b57a3d437",
+          "complexity_cost": 50.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "warehouse",
+      "evidence_kind": "spatial_position",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "centroid",
+          "candidate_id": "sha256:47dbf5b681e3e07b57a3d437",
+          "complexity_cost": 50.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:e358cf7dcf388426a5faa12d",
+          "complexity_cost": 0.0,
+          "decoder_kind": "argmax_field",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "interior_grid"
+      },
+      "n_candidates_considered": 6,
+      "n_dev_samples": 345,
+      "n_eval_samples": 920,
+      "requirement_id": "sha256:3312540ff9710a329956abd9",
+      "selection_rationale": [
+        "selected sha256:47dbf5b681e3e07b57a3d437 (decoding_accuracy=1.000, stability_false_change_rate=0.000, collision_rate=0.000, complexity_cost=50.0)",
+        "3 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:10d41a1924df63ea2447de5d",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:cd8a9abd7fd9086091818bef",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:d9c50afc8cc33da7a1c573cb",
+          "decoding_accuracy": 0.4811594202898551,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.481 < required 0.950",
+            "130 of 345 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:fd0fb75f041d3f2a71df6dbd",
+          "decoding_accuracy": 0.8115942028985508,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.812 < required 0.950",
+            "7 of 345 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:10d41a1924df63ea2447de5d",
+          "complexity_cost": 2700.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        }
+      },
+      "case": "robot_direction",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:cd8a9abd7fd9086091818bef",
+          "complexity_cost": 75.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        }
+      },
+      "domain": "warehouse",
+      "evidence_kind": "signed_delta",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:cd8a9abd7fd9086091818bef",
+          "complexity_cost": 75.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:cd8a9abd7fd9086091818bef",
+          "complexity_cost": 0.0,
+          "decoder_kind": "signed_delta_over_position",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        },
+        "note": null,
+        "region_id": "interior_grid"
+      },
+      "n_candidates_considered": 4,
+      "n_dev_samples": 345,
+      "n_eval_samples": 920,
+      "requirement_id": "sha256:bc9dee326de1a2b07e968d90",
+      "selection_rationale": [
+        "selected sha256:cd8a9abd7fd9086091818bef (decoding_accuracy=1.000, stability_false_change_rate=1.000, collision_rate=0.750, complexity_cost=75.0)",
+        "1 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:215e460f96a908c88f7c8f11",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:53625882ad79eda03eefa9d6",
+          "decoding_accuracy": 0.8,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.800 < required 0.950",
+            "7 of 345 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:ac1297ecd4e78ff1ff6a644a",
+          "decoding_accuracy": 0.4811594202898551,
+          "is_degenerate": false,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.481 < required 0.950",
+            "130 of 345 samples produced a tied (ambiguous) decode under max aggregation"
+          ]
+        },
+        {
+          "candidate_id": "sha256:b7d04b07b88c15e5b1b085e7",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:215e460f96a908c88f7c8f11",
+          "complexity_cost": 2700.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        }
+      },
+      "case": "robot_movement_magnitude",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:b7d04b07b88c15e5b1b085e7",
+          "complexity_cost": 75.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        }
+      },
+      "domain": "warehouse",
+      "evidence_kind": "exact_magnitude",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "max",
+          "candidate_id": "sha256:53625882ad79eda03eefa9d6",
+          "complexity_cost": 75.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 0.375,
+          "decoding_accuracy": 0.8097826086956522,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.810 < required 0.950",
+            "18 of 920 samples produced a tied (ambiguous) decode under max aggregation"
+          ],
+          "stability_false_change_rate": 1.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:b7d04b07b88c15e5b1b085e7",
+          "complexity_cost": 0.0,
+          "decoder_kind": "exact_delta_over_position",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 0.75,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 1.0
+        },
+        "note": null,
+        "region_id": "interior_grid"
+      },
+      "n_candidates_considered": 4,
+      "n_dev_samples": 345,
+      "n_eval_samples": 920,
+      "requirement_id": "sha256:6eccb92b9d0832e2c0584eed",
+      "selection_rationale": [
+        "selected sha256:b7d04b07b88c15e5b1b085e7 (decoding_accuracy=1.000, stability_false_change_rate=1.000, collision_rate=0.750, complexity_cost=75.0)",
+        "1 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:165e9dc6915a687061e217e1",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:946a9eeee5617ed86bea6db8",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:968daa42d38e1b8ac7e09805",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:a21939a9d3f06360f4319b09",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:cf70584502ecb926c0c183f0",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:f3eded99dce818fe034a1d98",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:165e9dc6915a687061e217e1",
+          "complexity_cost": 240.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "battery_value",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:968daa42d38e1b8ac7e09805",
+          "complexity_cost": 6.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 4,
+          "field_width": 10
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "warehouse",
+      "evidence_kind": "numeric_value",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:968daa42d38e1b8ac7e09805",
+          "complexity_cost": 6.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 4,
+          "field_width": 10
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:968daa42d38e1b8ac7e09805",
+          "complexity_cost": 0.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 4,
+          "field_width": 10
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "battery_strip"
+      },
+      "n_candidates_considered": 6,
+      "n_dev_samples": 345,
+      "n_eval_samples": 920,
+      "requirement_id": "sha256:18d6016733ef358aa8452523",
+      "selection_rationale": [
+        "selected sha256:968daa42d38e1b8ac7e09805 (decoding_accuracy=1.000, stability_false_change_rate=0.000, collision_rate=0.000, complexity_cost=6.0)",
+        "5 other candidate(s) also passed and were ranked lower"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:5089de64271f4739765734d3",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:55bcbf0d07ce38b964317e7c",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:c0bb8ac9c7ef11585e9834dd",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:d0d1fd33da29599b58fe9842",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        },
+        {
+          "candidate_id": "sha256:d5fa77ee180848fd2577de89",
+          "decoding_accuracy": 0.9565217391304348,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:da07ca2211df170b30e0eec8",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:d0d1fd33da29599b58fe9842",
+          "complexity_cost": 72.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "door_state",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:d5fa77ee180848fd2577de89",
+          "complexity_cost": 90.0,
+          "decoder_kind": "dominant_field_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "dev_accuracy": 0.9565217391304348,
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 0.9565217391304348,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "warehouse",
+      "evidence_kind": "categorical_state",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:55bcbf0d07ce38b964317e7c",
+          "complexity_cost": 2.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:558894416703447792b79266",
+          "complexity_cost": 0.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 0.9565217391304348,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "door_cell_manual_narrow"
+      },
+      "n_candidates_considered": 6,
+      "n_dev_samples": 345,
+      "n_eval_samples": 920,
+      "requirement_id": "sha256:032429050a01e18444c83e9b",
+      "selection_rationale": [
+        "selected sha256:d5fa77ee180848fd2577de89 (decoding_accuracy=0.957, stability_false_change_rate=0.000, collision_rate=0.000, complexity_cost=90.0)"
+      ],
+      "status": "compiled"
+    },
+    {
+      "all_dev_evaluations": [
+        {
+          "candidate_id": "sha256:4d3701c7cf7ac047f738031e",
+          "decoding_accuracy": 1.0,
+          "is_degenerate": false,
+          "passed": true,
+          "rejection_reasons": []
+        },
+        {
+          "candidate_id": "sha256:ed5ce3c17efa31da25decdd0",
+          "decoding_accuracy": 0.0,
+          "is_degenerate": true,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ]
+        }
+      ],
+      "always_pixel_strategy": {
+        "candidate": {
+          "aggregation": "exact_pattern",
+          "candidate_id": "sha256:4d3701c7cf7ac047f738031e",
+          "complexity_cost": 108.0,
+          "decoder_kind": "local_marker_pattern",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "case": "crate_identity",
+      "compiled_strategy": {
+        "candidate": {
+          "aggregation": "exact_pattern",
+          "candidate_id": "sha256:4d3701c7cf7ac047f738031e",
+          "complexity_cost": 108.0,
+          "decoder_kind": "local_marker_pattern",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "dev_accuracy": 1.0,
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "domain": "warehouse",
+      "evidence_kind": "visible_identity",
+      "fixed_coarse_strategy": {
+        "candidate": {
+          "aggregation": "mean",
+          "candidate_id": "sha256:ed5ce3c17efa31da25decdd0",
+          "complexity_cost": 2.0,
+          "decoder_kind": "nearest_permitted_value",
+          "field_height": 6,
+          "field_width": 6
+        },
+        "held_out_eval": {
+          "collision_rate": 1.0,
+          "decoding_accuracy": 0.0,
+          "passed": false,
+          "rejection_reasons": [
+            "decoding_accuracy 0.000 < required 0.950"
+          ],
+          "stability_false_change_rate": 0.0
+        }
+      },
+      "known_limitations": [],
+      "manual_strategy": {
+        "candidate": {
+          "aggregation": "exact_pattern",
+          "candidate_id": "sha256:4d3701c7cf7ac047f738031e",
+          "complexity_cost": 0.0,
+          "decoder_kind": "local_marker_pattern",
+          "field_height": 1,
+          "field_width": 1
+        },
+        "held_out_eval": {
+          "collision_rate": 0.0,
+          "decoding_accuracy": 1.0,
+          "passed": true,
+          "rejection_reasons": [],
+          "stability_false_change_rate": 0.0
+        },
+        "note": null,
+        "region_id": "crate_probe_cell"
+      },
+      "n_candidates_considered": 2,
+      "n_dev_samples": 45,
+      "n_eval_samples": 120,
+      "requirement_id": "sha256:bd8378871c7f26943f151a76",
+      "selection_rationale": [
+        "selected sha256:4d3701c7cf7ac047f738031e (decoding_accuracy=1.000, stability_false_change_rate=0.000, collision_rate=0.000, complexity_cost=108.0)"
+      ],
+      "status": "compiled"
+    }
+  ]
+}

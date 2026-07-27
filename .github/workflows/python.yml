@@ -68,6 +68,7 @@ jobs:
         id: quality_gate
         continue-on-error: true
         run: |
+          set -o pipefail
           mkdir -p build/ci
           python scripts/check_quality.py 2>&1 | tee build/ci/quality.log
 

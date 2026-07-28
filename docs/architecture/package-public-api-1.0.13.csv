@@ -868,7 +868,8 @@ zeromodel-observer,zeromodel.observer,evaluate_wake_policy_over_ledger,zeromodel
 zeromodel-observer,zeromodel.observer,execute_observer_fixture_step,zeromodel.observer,Function,zeromodel.observer.fixture_predictor,true
 zeromodel-observer,zeromodel.observer,predict_observer_fixture_transition,zeromodel.observer,Function,zeromodel.observer.fixture_predictor,true
 zeromodel-observer,zeromodel.observer,propose_observer_repair,zeromodel.observer,Function,zeromodel.observer.repair_service,true
-zeromodel-observer,zeromodel.observer,replay_observer_transition_ledger,zeromodel.observer,Function,zeromodel.observer.ledger,true
+zeromodel-observer,zeromodel.observer,replay_observer_fixture_ledger,zeromodel.observer,Function,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,run_observer_fixture_episode,zeromodel.observer,Function,zeromodel.observer.fixture_runtime,true
 zeromodel-observer,zeromodel.observer,verify_observer_transition,zeromodel.observer,Function,zeromodel.observer.transition_service,true
+zeromodel-observer,zeromodel.observer,verify_observer_transition_ledger_integrity,zeromodel.observer,Function,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,active_rule_for_step,zeromodel.observer,Function,zeromodel.observer.fixture_runtime,true

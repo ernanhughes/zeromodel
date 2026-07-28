@@ -16,8 +16,9 @@ from zeromodel.observer import (
     evaluate_wake_policy_over_ledger,
     execute_observer_fixture_step,
     predict_observer_fixture_transition,
-    replay_observer_transition_ledger,
+    replay_observer_fixture_ledger,
     run_observer_fixture_episode,
+    verify_observer_transition_ledger_integrity,
     verify_observer_transition,
 )
 
@@ -99,6 +100,7 @@ def one_entry(
         ledger_sequence=sequence,
         episode_id=state.episode_id,
         fixture_id=state.fixture_id,
+        source_state=state,
         source_state_id=state.fixture_state_id,
         action_id=move.fixture_action_id,
         predictor_rule_set_id=rule1.fixture_rule_set_id,
@@ -286,27 +288,71 @@ def test_ledger_append_sequence_immutability_and_snapshot_identity() -> None:
 def test_ledger_replay_detects_tampering() -> None:
     entry = one_entry()
     snapshot = build_observer_transition_ledger_snapshot(entries=(entry,))
-    tampered = ObserverTransitionLedgerEntryDTO.create(
-        ledger_sequence=entry.ledger_sequence,
-        episode_id=entry.episode_id,
-        fixture_id=entry.fixture_id,
-        source_state_id="state:other",
-        action_id=entry.action_id,
-        predictor_rule_set_id=entry.predictor_rule_set_id,
-        environment_rule_set_id=entry.environment_rule_set_id,
-        predicted_transition=entry.predicted_transition,
-        executed_step=entry.executed_step,
-        transition_verification=entry.transition_verification,
-        previous_ledger_entry_id=entry.previous_ledger_entry_id,
-        recorded_at_logical_step=entry.recorded_at_logical_step,
+    result = verify_observer_transition_ledger_integrity(
+        ledger_snapshot=snapshot, entries=(entry,)
     )
 
-    result = replay_observer_transition_ledger(
-        ledger_snapshot=snapshot, entries=(tampered,)
+    assert result.status == "verified"
+    with pytest.raises(ObserverFixtureError, match="source_state_id"):
+        ObserverTransitionLedgerEntryDTO.create(
+            ledger_sequence=entry.ledger_sequence,
+            episode_id=entry.episode_id,
+            fixture_id=entry.fixture_id,
+            source_state=entry.source_state,
+            source_state_id="state:other",
+            action_id=entry.action_id,
+            predictor_rule_set_id=entry.predictor_rule_set_id,
+            environment_rule_set_id=entry.environment_rule_set_id,
+            predicted_transition=entry.predicted_transition,
+            executed_step=entry.executed_step,
+            transition_verification=entry.transition_verification,
+            previous_ledger_entry_id=entry.previous_ledger_entry_id,
+            recorded_at_logical_step=entry.recorded_at_logical_step,
+        )
+
+
+def test_semantic_replay_rebuilds_fixture_predictions_and_verifications() -> None:
+    schema, rule1, rule2 = schema_and_rules()
+    result, entries = run_observer_fixture_episode(
+        initial_state=initial_state(rule1),
+        actions=(action(), action()),
+        predictor_rule_set=rule1,
+        environment_rule_schedule=(
+            ObserverFixtureRuleScheduleEntryDTO.create(
+                start_step=0, rule_set_id=rule1.fixture_rule_set_id
+            ),
+            ObserverFixtureRuleScheduleEntryDTO.create(
+                start_step=1, rule_set_id=rule2.fixture_rule_set_id
+            ),
+        ),
+        environment_rule_sets=(rule1, rule2),
+        observation_schema=schema,
+        comparison_recipe=build_observer_fixture_comparison_recipe(schema),
     )
 
-    assert result.status == "failed"
-    assert "source_state_mismatch" in result.failure_codes
+    replay = replay_observer_fixture_ledger(
+        ledger_snapshot=result.ledger_snapshot,
+        entries=entries,
+        observation_schema=schema,
+        comparison_recipe=build_observer_fixture_comparison_recipe(schema),
+        predictor_rule_sets={rule1.fixture_rule_set_id: rule1},
+        environment_rule_sets={
+            rule1.fixture_rule_set_id: rule1,
+            rule2.fixture_rule_set_id: rule2,
+        },
+    )
+    missing = replay_observer_fixture_ledger(
+        ledger_snapshot=result.ledger_snapshot,
+        entries=entries,
+        observation_schema=schema,
+        comparison_recipe=build_observer_fixture_comparison_recipe(schema),
+        predictor_rule_sets={rule1.fixture_rule_set_id: rule1},
+        environment_rule_sets={rule1.fixture_rule_set_id: rule1},
+    )
+
+    assert replay.status == "verified"
+    assert missing.status == "failed"
+    assert "missing_environment_rule_set" in missing.failure_codes
 
 
 def test_episode_runner_rule_schedule_and_wake_replay() -> None:

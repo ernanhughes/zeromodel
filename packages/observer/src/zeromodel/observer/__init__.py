@@ -52,7 +52,8 @@ from zeromodel.observer.ledger import (
     ObserverTransitionLedgerEntryDTO,
     ObserverTransitionLedgerSnapshotDTO,
     build_observer_transition_ledger_snapshot,
-    replay_observer_transition_ledger,
+    replay_observer_fixture_ledger,
+    verify_observer_transition_ledger_integrity,
 )
 from zeromodel.observer.repair import (
     ObserverProposedChangeDTO,
@@ -125,8 +126,9 @@ __all__ = [
     "execute_observer_fixture_step",
     "predict_observer_fixture_transition",
     "propose_observer_repair",
-    "replay_observer_transition_ledger",
+    "replay_observer_fixture_ledger",
     "run_observer_fixture_episode",
     "verify_observer_transition",
+    "verify_observer_transition_ledger_integrity",
     "active_rule_for_step",
 ]

@@ -8,10 +8,22 @@ from typing import Final, Mapping
 from zeromodel.observer._canonical import canonical_id
 from zeromodel.observer.fixture import (
     ObserverExecutedFixtureStepDTO,
+    ObserverFixtureActionDTO,
     ObserverFixtureError,
+    ObserverFixtureRuleSetDTO,
+    ObserverFixtureStateDTO,
 )
-from zeromodel.observer.fixture_predictor import ObserverPredictedTransitionDTO
-from zeromodel.observer.transition_service import ObserverTransitionVerificationDTO
+from zeromodel.observer.fixture_predictor import (
+    ObserverPredictedTransitionDTO,
+    execute_observer_fixture_step,
+    predict_observer_fixture_transition,
+)
+from zeromodel.observer.artifacts import ObserverObservationSchemaDTO
+from zeromodel.observer.comparison import ObserverComparisonRecipeDTO
+from zeromodel.observer.transition_service import (
+    ObserverTransitionVerificationDTO,
+    verify_observer_transition,
+)
 
 OBSERVER_TRANSITION_LEDGER_ENTRY_VERSION: Final = "observer-transition-ledger-entry/1"
 OBSERVER_TRANSITION_LEDGER_SNAPSHOT_VERSION: Final = (
@@ -30,6 +42,13 @@ LEDGER_FAILURE_CODES: Final = frozenset(
         "execution_identity_mismatch",
         "verification_identity_mismatch",
         "terminal_sequence_violation",
+        "snapshot_identity_mismatch",
+        "prediction_replay_mismatch",
+        "execution_replay_mismatch",
+        "verification_replay_mismatch",
+        "missing_predictor_rule_set",
+        "missing_environment_rule_set",
+        "missing_source_state",
     }
 )
 
@@ -42,6 +61,7 @@ class ObserverTransitionLedgerEntryDTO:
     ledger_sequence: int
     episode_id: str
     fixture_id: str
+    source_state: ObserverFixtureStateDTO
     source_state_id: str
     action_id: str
     predictor_rule_set_id: str
@@ -70,10 +90,70 @@ class ObserverTransitionLedgerEntryDTO:
         ):
             if not getattr(self, field_name):
                 raise ObserverFixtureError(f"{field_name} must be non-empty")
+        self._validate_embedded_object_invariants()
         expected_id = canonical_id(self.canonical_payload(include_id=False))
         if self.ledger_entry_id != expected_id:
             raise ObserverFixtureError(
                 "ledger_entry_id disagrees with canonical payload"
+            )
+
+    def _validate_embedded_object_invariants(self) -> None:
+        if self.source_state.fixture_state_id != self.source_state_id:
+            raise ObserverFixtureError("source_state_id does not match source_state")
+        if self.fixture_id != self.source_state.fixture_id:
+            raise ObserverFixtureError("fixture_id does not match source_state")
+        if self.episode_id != self.source_state.episode_id:
+            raise ObserverFixtureError("episode_id does not match source_state")
+        if self.source_state_id != self.predicted_transition.source_state_id:
+            raise ObserverFixtureError(
+                "source_state_id does not match predicted transition"
+            )
+        if self.source_state_id != self.executed_step.source_state_id:
+            raise ObserverFixtureError("source_state_id does not match executed step")
+        if self.action_id != self.predicted_transition.action_id:
+            raise ObserverFixtureError("action_id does not match predicted transition")
+        if self.action_id != self.executed_step.action_id:
+            raise ObserverFixtureError("action_id does not match executed step")
+        if (
+            self.predictor_rule_set_id
+            != self.predicted_transition.predictor_rule_set_id
+        ):
+            raise ObserverFixtureError(
+                "predictor_rule_set_id does not match predicted transition"
+            )
+        if self.environment_rule_set_id != self.executed_step.environment_rule_set_id:
+            raise ObserverFixtureError(
+                "environment_rule_set_id does not match executed step"
+            )
+        if (
+            self.transition_verification.predicted_observation_artifact_id
+            != self.predicted_transition.predicted_observation.observation_artifact_id
+        ):
+            raise ObserverFixtureError(
+                "verification predicted observation does not match prediction"
+            )
+        if (
+            self.transition_verification.observed_observation_artifact_id
+            != self.executed_step.actual_observation_id
+        ):
+            raise ObserverFixtureError(
+                "verification observed observation does not match execution"
+            )
+        record = self.transition_verification.transition_record
+        if record.state_before_id != self.source_state_id:
+            raise ObserverFixtureError(
+                "transition record state_before_id does not match source_state_id"
+            )
+        if (
+            record.predicted_state_after_id
+            != self.predicted_transition.predicted_observation.observation_artifact_id
+        ):
+            raise ObserverFixtureError(
+                "transition record predicted state id does not match prediction"
+            )
+        if record.observed_state_after_id != self.executed_step.actual_observation_id:
+            raise ObserverFixtureError(
+                "transition record observed state id does not match execution"
             )
 
     def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
@@ -88,6 +168,7 @@ class ObserverTransitionLedgerEntryDTO:
             "predictor_rule_set_id": self.predictor_rule_set_id,
             "previous_ledger_entry_id": self.previous_ledger_entry_id,
             "recorded_at_logical_step": self.recorded_at_logical_step,
+            "source_state": self.source_state.canonical_payload(),
             "source_state_id": self.source_state_id,
             "transition_verification": self.transition_verification.canonical_payload(),
             "version": self.version,
@@ -103,6 +184,7 @@ class ObserverTransitionLedgerEntryDTO:
         ledger_sequence: int,
         episode_id: str,
         fixture_id: str,
+        source_state: ObserverFixtureStateDTO,
         source_state_id: str,
         action_id: str,
         predictor_rule_set_id: str,
@@ -124,6 +206,7 @@ class ObserverTransitionLedgerEntryDTO:
             "predictor_rule_set_id": predictor_rule_set_id,
             "previous_ledger_entry_id": previous_ledger_entry_id,
             "recorded_at_logical_step": recorded_at_logical_step,
+            "source_state": source_state.canonical_payload(),
             "source_state_id": source_state_id,
             "transition_verification": transition_verification.canonical_payload(),
             "version": OBSERVER_TRANSITION_LEDGER_ENTRY_VERSION,
@@ -133,6 +216,7 @@ class ObserverTransitionLedgerEntryDTO:
             ledger_sequence=ledger_sequence,
             episode_id=episode_id,
             fixture_id=fixture_id,
+            source_state=source_state,
             source_state_id=source_state_id,
             action_id=action_id,
             predictor_rule_set_id=predictor_rule_set_id,
@@ -151,7 +235,7 @@ class ObserverTransitionLedgerSnapshotDTO:
 
     ledger_snapshot_id: str
     fixture_id: str
-    episode_ids: tuple[str, ...]
+    episode_id: str
     entry_ids: tuple[str, ...]
     head_entry_id: str | None
     entry_count: int
@@ -172,7 +256,7 @@ class ObserverTransitionLedgerSnapshotDTO:
         payload: dict[str, object] = {
             "entry_count": self.entry_count,
             "entry_ids": list(self.entry_ids),
-            "episode_ids": list(self.episode_ids),
+            "episode_id": self.episode_id,
             "fixture_id": self.fixture_id,
             "head_entry_id": self.head_entry_id,
             "version": self.version,
@@ -272,7 +356,7 @@ class InMemoryObserverTransitionLedger:
         return build_observer_transition_ledger_snapshot(entries=self.entries())
 
     def verify_integrity(self) -> ObserverLedgerReplayResultDTO:
-        return replay_observer_transition_ledger(
+        return verify_observer_transition_ledger_integrity(
             ledger_snapshot=self.snapshot(), entries=self.entries()
         )
 
@@ -281,12 +365,16 @@ def build_observer_transition_ledger_snapshot(
     *, entries: tuple[ObserverTransitionLedgerEntryDTO, ...]
 ) -> ObserverTransitionLedgerSnapshotDTO:
     fixture_id = "" if not entries else entries[0].fixture_id
-    episode_ids = tuple(sorted({entry.episode_id for entry in entries}))
+    episode_id = "" if not entries else entries[0].episode_id
+    if len({entry.fixture_id for entry in entries}) > 1:
+        raise ObserverFixtureError("snapshot entries must share one fixture_id")
+    if len({entry.episode_id for entry in entries}) > 1:
+        raise ObserverFixtureError("snapshot entries must share one episode_id")
     entry_ids = tuple(entry.ledger_entry_id for entry in entries)
     payload = {
         "entry_count": len(entries),
         "entry_ids": list(entry_ids),
-        "episode_ids": list(episode_ids),
+        "episode_id": episode_id,
         "fixture_id": fixture_id,
         "head_entry_id": None if not entries else entries[-1].ledger_entry_id,
         "version": OBSERVER_TRANSITION_LEDGER_SNAPSHOT_VERSION,
@@ -294,14 +382,14 @@ def build_observer_transition_ledger_snapshot(
     return ObserverTransitionLedgerSnapshotDTO(
         ledger_snapshot_id=canonical_id(payload),
         fixture_id=fixture_id,
-        episode_ids=episode_ids,
+        episode_id=episode_id,
         entry_ids=entry_ids,
         head_entry_id=None if not entries else entries[-1].ledger_entry_id,
         entry_count=len(entries),
     )
 
 
-def replay_observer_transition_ledger(
+def verify_observer_transition_ledger_integrity(
     *,
     ledger_snapshot: ObserverTransitionLedgerSnapshotDTO,
     entries: tuple[ObserverTransitionLedgerEntryDTO, ...],
@@ -319,6 +407,9 @@ def replay_observer_transition_ledger(
             failures.add("previous_link_mismatch")
             failed_entries.add(entry.ledger_entry_id)
         if entry.source_state_id != entry.predicted_transition.source_state_id:
+            failures.add("source_state_mismatch")
+            failed_entries.add(entry.ledger_entry_id)
+        if entry.source_state.fixture_state_id != entry.source_state_id:
             failures.add("source_state_mismatch")
             failed_entries.add(entry.ledger_entry_id)
         if (
@@ -351,6 +442,128 @@ def replay_observer_transition_ledger(
         previous_id = entry.ledger_entry_id
     if ledger_snapshot.entry_ids != tuple(entry.ledger_entry_id for entry in entries):
         failures.add("sequence_gap")
+    expected_snapshot = build_observer_transition_ledger_snapshot(entries=entries)
+    if ledger_snapshot.ledger_snapshot_id != expected_snapshot.ledger_snapshot_id:
+        failures.add("snapshot_identity_mismatch")
+    status = "verified" if not failures else "failed"
+    payload = {
+        "failed_entry_ids": sorted(failed_entries),
+        "failure_codes": sorted(failures),
+        "ledger_snapshot_id": ledger_snapshot.ledger_snapshot_id,
+        "replayed_entry_ids": replayed,
+        "status": status,
+        "version": OBSERVER_LEDGER_REPLAY_RESULT_VERSION,
+    }
+    return ObserverLedgerReplayResultDTO(
+        ledger_replay_result_id=canonical_id(payload),
+        ledger_snapshot_id=ledger_snapshot.ledger_snapshot_id,
+        status=status,
+        replayed_entry_ids=tuple(replayed),
+        failed_entry_ids=tuple(sorted(failed_entries)),
+        failure_codes=tuple(sorted(failures)),
+    )
+
+
+def replay_observer_fixture_ledger(
+    *,
+    ledger_snapshot: ObserverTransitionLedgerSnapshotDTO,
+    entries: tuple[ObserverTransitionLedgerEntryDTO, ...],
+    observation_schema: ObserverObservationSchemaDTO,
+    comparison_recipe: ObserverComparisonRecipeDTO,
+    predictor_rule_sets: Mapping[str, ObserverFixtureRuleSetDTO],
+    environment_rule_sets: Mapping[str, ObserverFixtureRuleSetDTO],
+) -> ObserverLedgerReplayResultDTO:
+    integrity = verify_observer_transition_ledger_integrity(
+        ledger_snapshot=ledger_snapshot, entries=entries
+    )
+    failures = set(integrity.failure_codes)
+    failed_entries = set(integrity.failed_entry_ids)
+    replayed: list[str] = []
+    expected_source_state: ObserverFixtureStateDTO | None = None
+    for entry in entries:
+        replayed.append(entry.ledger_entry_id)
+        source_state = entry.source_state
+        if expected_source_state is not None:
+            source_state = expected_source_state
+            if source_state.fixture_state_id != entry.source_state_id:
+                failures.add("missing_source_state")
+                failed_entries.add(entry.ledger_entry_id)
+                expected_source_state = entry.executed_step.actual_state
+                continue
+        predictor_rule_set = predictor_rule_sets.get(entry.predictor_rule_set_id)
+        if predictor_rule_set is None:
+            failures.add("missing_predictor_rule_set")
+            failed_entries.add(entry.ledger_entry_id)
+            expected_source_state = entry.executed_step.actual_state
+            continue
+        environment_rule_set = environment_rule_sets.get(entry.environment_rule_set_id)
+        if environment_rule_set is None:
+            failures.add("missing_environment_rule_set")
+            failed_entries.add(entry.ledger_entry_id)
+            expected_source_state = entry.executed_step.actual_state
+            continue
+        action = ObserverFixtureActionDTO.create(
+            action_name=entry.transition_verification.transition_record.action
+        )
+        if action.fixture_action_id != entry.action_id:
+            failures.add("action_identity_mismatch")
+            failed_entries.add(entry.ledger_entry_id)
+            expected_source_state = entry.executed_step.actual_state
+            continue
+        replayed_prediction = predict_observer_fixture_transition(
+            source_state=source_state,
+            action=action,
+            predictor_rule_set=predictor_rule_set,
+            observation_schema=observation_schema,
+        )
+        replayed_execution, replayed_observation = execute_observer_fixture_step(
+            source_state=source_state,
+            action=action,
+            environment_rule_set=environment_rule_set,
+            observation_schema=observation_schema,
+        )
+        record = entry.transition_verification.transition_record
+        missing_hidden = (
+            "missing_hidden_state_hypothesis_set"
+            in entry.transition_verification.comparison_result.inconclusive_reasons
+        )
+        contradiction = entry.transition_verification.contradiction_artifact
+        replayed_verification = verify_observer_transition(
+            recipe=comparison_recipe,
+            predicted_observation=replayed_prediction.predicted_observation,
+            observed_observation=replayed_observation,
+            policy_artifact_id=record.policy_artifact_id,
+            state_before_id=record.state_before_id,
+            action=record.action,
+            affected_policy_row_id=record.affected_policy_row_id,
+            hidden_state_hypothesis_set=(
+                None
+                if missing_hidden
+                else replayed_prediction.hidden_state_hypothesis_set
+            ),
+            reproduction=(
+                {} if contradiction is None else dict(contradiction.reproduction)
+            ),
+            relevant_context_keys=(
+                () if contradiction is None else contradiction.relevant_context_keys
+            ),
+        )
+        if (
+            replayed_prediction.predicted_transition_id
+            != entry.predicted_transition.predicted_transition_id
+        ):
+            failures.add("prediction_replay_mismatch")
+            failed_entries.add(entry.ledger_entry_id)
+        if replayed_execution.executed_step_id != entry.executed_step.executed_step_id:
+            failures.add("execution_replay_mismatch")
+            failed_entries.add(entry.ledger_entry_id)
+        if (
+            replayed_verification.verification_id
+            != entry.transition_verification.verification_id
+        ):
+            failures.add("verification_replay_mismatch")
+            failed_entries.add(entry.ledger_entry_id)
+        expected_source_state = replayed_execution.actual_state
     status = "verified" if not failures else "failed"
     payload = {
         "failed_entry_ids": sorted(failed_entries),

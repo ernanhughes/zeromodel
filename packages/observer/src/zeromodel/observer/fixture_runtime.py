@@ -206,6 +206,7 @@ def run_observer_fixture_episode(
             ledger_sequence=sequence,
             episode_id=state.episode_id,
             fixture_id=state.fixture_id,
+            source_state=state,
             source_state_id=state.fixture_state_id,
             action_id=action.fixture_action_id,
             predictor_rule_set_id=predictor_rule_set.fixture_rule_set_id,

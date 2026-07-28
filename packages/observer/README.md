@@ -333,9 +333,11 @@ wake-policy replay
 The predictor is deterministic and fixture-specific. The actual environment
 executor is separate, so tests can pin the predictor to `fixture-rule/1` while
 the environment switches to `fixture-rule/2` mid-episode. The ledger is
-currently in-memory and is the source of truth for replay. Wake policies are
-evaluated after the fact from stored evidence; replay does not rerun the
-environment.
+currently in-memory and is the source of truth for integrity validation.
+Semantic replay is separate: it reruns prediction, execution, and transition
+verification from the recorded source state, action, and declared rule-set
+identities. Wake policies are evaluated after the fact from stored evidence;
+wake replay does not rerun the environment.
 
 This stage does not create a graph, event bus, habit, repair candidate, policy
 activation, persistence layer, or claim about invocation savings.

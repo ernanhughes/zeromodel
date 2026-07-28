@@ -20,6 +20,7 @@ PRODUCTION_PACKAGE_KEYS = {
     "observation",
     "vision",
     "perception",
+    "observer",
     "video",
     "sqlalchemy",
     "artifacts",
@@ -48,7 +49,7 @@ def test_inventory_rows_cover_unique_modules_and_allowed_classifications() -> No
     )
 
 
-def test_all_ten_production_source_roots_are_discovered() -> None:
+def test_all_production_source_roots_are_discovered() -> None:
     """No production package may be silently omitted from discovery: every
     key configured in package-boundaries.toml must contribute at least one
     classified row."""
@@ -58,7 +59,7 @@ def test_all_ten_production_source_roots_are_discovered() -> None:
     assert discovered == PRODUCTION_PACKAGE_KEYS
 
 
-def test_all_ten_package_test_roots_are_discovered() -> None:
+def test_all_package_test_roots_are_discovered() -> None:
     boundaries = inventory.load_package_boundaries()
     data = inventory.make_inventory("2026-01-01T00:00:00Z")
     paths = {row["path"] for row in data["rows"]}

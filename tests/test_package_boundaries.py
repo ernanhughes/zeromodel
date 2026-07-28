@@ -13,7 +13,7 @@ sys.modules[SPEC.name] = checker
 SPEC.loader.exec_module(checker)
 
 
-def test_boundary_manifest_defines_all_ten_packages() -> None:
+def test_boundary_manifest_defines_all_packages() -> None:
     manifest = checker.load_manifest()
 
     assert set(manifest["packages"]) == {
@@ -22,6 +22,7 @@ def test_boundary_manifest_defines_all_ten_packages() -> None:
         "observation",
         "vision",
         "perception",
+        "observer",
         "video",
         "sqlalchemy",
         "artifacts",

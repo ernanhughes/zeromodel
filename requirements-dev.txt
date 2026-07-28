@@ -8,6 +8,7 @@ numpy>=1.23,<2.0
 -e ./packages/observation
 -e ./packages/vision
 -e ./packages/perception
+-e ./packages/observer
 -e ./packages/video
 -e ./packages/sqlalchemy
 -e ./packages/artifacts

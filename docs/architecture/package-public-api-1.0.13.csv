@@ -861,6 +861,7 @@ zeromodel-observer,zeromodel.observer,ObserverRepairProposalDTO,zeromodel.observ
 zeromodel-observer,zeromodel.observer,ObserverRepairProposalError,zeromodel.observer,Class,zeromodel.observer.repair,true
 zeromodel-observer,zeromodel.observer,ObserverReplacementPolicyArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,ObserverRuleChangeSurvivalDTO,zeromodel.observer,Class,zeromodel.observer.promotion,true
+zeromodel-observer,zeromodel.observer,ObserverRuleChangeTestDTO,zeromodel.observer,Class,zeromodel.observer.promotion,true
 zeromodel-observer,zeromodel.observer,ObserverRuleRegimeDTO,zeromodel.observer,Class,zeromodel.observer.promotion,true
 zeromodel-observer,zeromodel.observer,ObserverStateClassAssignmentDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
 zeromodel-observer,zeromodel.observer,ObserverStateClassDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true

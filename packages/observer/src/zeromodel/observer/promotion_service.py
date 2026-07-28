@@ -6,16 +6,19 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Iterable, Mapping
 
-from zeromodel.observer.artifacts import ObserverObservationArtifactDTO
+from zeromodel.observer.artifacts import (
+    ObserverObservationArtifactDTO,
+    ObserverObservationSchemaDTO,
+)
+from zeromodel.observer._observation_replay import (
+    source_observation_for_entry,
+    target_observation_for_entry,
+)
 from zeromodel.observer.graph import (
     ObserverObservationGraphBuildDTO,
     ObserverObservationGraphDTO,
     ObserverObservationGraphEdgeDTO,
     ObserverStateTransitionKeyDTO,
-)
-from zeromodel.observer.graph_service import (
-    _source_observation_for_entry,
-    _target_observation_for_entry,
 )
 from zeromodel.observer.grouping import (
     ObserverStateClassAssignmentDTO,
@@ -32,6 +35,7 @@ from zeromodel.observer.promotion import (
     ObserverPromotionCandidateDTO,
     ObserverPromotionEvidenceRecipeDTO,
     ObserverRuleChangeSurvivalDTO,
+    ObserverRuleChangeTestDTO,
     ObserverRuleRegimeDTO,
     ObserverTransitionOccurrenceDTO,
     ObserverTransitionRecurrenceDTO,
@@ -45,7 +49,7 @@ class _ObservationEvent:
     state_class_id: str
     ledger_entry_id: str
     ledger_sequence: int
-    role: str
+    role_order: int
 
 
 def analyze_observer_promotion_candidates(
@@ -55,6 +59,8 @@ def analyze_observer_promotion_candidates(
     graph_build: ObserverObservationGraphBuildDTO,
     grouping_recipe: ObserverStateGroupingRecipeDTO,
     promotion_recipe: ObserverPromotionEvidenceRecipeDTO,
+    observation_schema: ObserverObservationSchemaDTO,
+    rule_change_tests: tuple[ObserverRuleChangeTestDTO, ...] = (),
 ) -> ObserverPromotionAnalysisDTO:
     """Build deterministic novelty, recurrence, stability, and candidate evidence."""
 
@@ -65,6 +71,8 @@ def analyze_observer_promotion_candidates(
         graph=graph,
         grouping_recipe=grouping_recipe,
         promotion_recipe=promotion_recipe,
+        observation_schema=observation_schema,
+        rule_change_tests=rule_change_tests,
     )
     if failure_codes or graph is None:
         return _failed_analysis(
@@ -81,12 +89,16 @@ def analyze_observer_promotion_candidates(
         for assignment in graph_build.assignments
         if assignment.status == "assigned" and assignment.state_class_id is not None
     }
-    source_target = _source_target_observations(entries, assignments_by_observation)
+    source_target = _source_target_observations(
+        entries=entries,
+        observation_schema=observation_schema,
+    )
     novelty = _build_novelty_evidence(
         ledger_snapshot=ledger_snapshot,
         graph=graph,
         source_target=source_target,
         assignments_by_observation=assignments_by_observation,
+        entries_by_id=entries_by_id,
     )
     regimes: dict[str, ObserverRuleRegimeDTO] = {}
     occurrences: list[ObserverTransitionOccurrenceDTO] = []
@@ -186,8 +198,16 @@ def analyze_observer_promotion_candidates(
         )
         for recurrence in recurrences
     )
+    rule_change_test = _selected_rule_change_test(
+        promotion_recipe=promotion_recipe,
+        rule_change_tests=rule_change_tests,
+    )
     rule_change_results = tuple(
-        _build_rule_change(transition_key_id=key, occurrences=items)
+        _build_rule_change(
+            transition_key_id=key,
+            occurrences=items,
+            rule_change_test=rule_change_test,
+        )
         for key, items in sorted(by_key.items())
     )
     stability_by_key = {item.transition_key_id: item for item in stabilities}
@@ -251,6 +271,8 @@ def _initial_failure_codes(
     graph: ObserverObservationGraphDTO | None,
     grouping_recipe: ObserverStateGroupingRecipeDTO,
     promotion_recipe: ObserverPromotionEvidenceRecipeDTO,
+    observation_schema: ObserverObservationSchemaDTO,
+    rule_change_tests: tuple[ObserverRuleChangeTestDTO, ...],
 ) -> tuple[str, ...]:
     failures: set[str] = set()
     if graph_build.status != "built":
@@ -262,10 +284,19 @@ def _initial_failure_codes(
             failures.add("graph_ledger_mismatch")
         if graph.grouping_recipe_id != grouping_recipe.grouping_recipe_id:
             failures.add("graph_grouping_mismatch")
+        if graph.observation_schema_id != observation_schema.schema_id:
+            failures.add("schema_mismatch")
+        if grouping_recipe.observation_schema_id != observation_schema.schema_id:
+            failures.add("schema_mismatch")
         if promotion_recipe.observation_graph_id != graph.observation_graph_id:
             failures.add("graph_grouping_mismatch")
         if promotion_recipe.grouping_recipe_id != grouping_recipe.grouping_recipe_id:
             failures.add("graph_grouping_mismatch")
+    if promotion_recipe.rule_change_test_id is not None and not any(
+        item.rule_change_test_id == promotion_recipe.rule_change_test_id
+        for item in rule_change_tests
+    ):
+        failures.add("rule_change_test_missing")
     return tuple(sorted(failures))
 
 
@@ -297,8 +328,9 @@ def _failed_analysis(
 
 
 def _source_target_observations(
+    *,
     entries: tuple[ObserverTransitionLedgerEntryDTO, ...],
-    assignments_by_observation: Mapping[str, ObserverStateClassAssignmentDTO],
+    observation_schema: ObserverObservationSchemaDTO,
 ) -> dict[
     str,
     tuple[ObserverObservationArtifactDTO | None, ObserverObservationArtifactDTO | None],
@@ -306,20 +338,16 @@ def _source_target_observations(
     previous_target = None
     previous_effect = None
     result = {}
-    _ = assignments_by_observation
-    from zeromodel.observer.fixture_predictor import (
-        build_observer_fixture_observation_schema,
-    )
-
-    schema = build_observer_fixture_observation_schema()
     for entry in entries:
-        source = _source_observation_for_entry(
+        source = source_observation_for_entry(
             entry=entry,
-            observation_schema=schema,
+            observation_schema=observation_schema,
             previous_target_observation=previous_target,
             previous_target_action_effect=previous_effect,
         )
-        target = _target_observation_for_entry(entry=entry, observation_schema=schema)
+        target = target_observation_for_entry(
+            entry=entry, observation_schema=observation_schema
+        )
         result[entry.ledger_entry_id] = (source, target)
         previous_target = target
         previous_effect = (
@@ -340,41 +368,37 @@ def _build_novelty_evidence(
         ],
     ],
     assignments_by_observation: Mapping[str, ObserverStateClassAssignmentDTO],
+    entries_by_id: Mapping[str, ObserverTransitionLedgerEntryDTO],
 ) -> list[ObserverNoveltyEvidenceDTO]:
     events: dict[str, _ObservationEvent] = {}
     for ledger_entry_id, pair in source_target.items():
         for role, observation in (("source", pair[0]), ("target", pair[1])):
             if observation is None:
                 continue
+            entry = entries_by_id[ledger_entry_id]
             assignment = assignments_by_observation.get(
                 observation.observation_artifact_id
             )
             if assignment is None or assignment.state_class_id is None:
                 continue
-            entry_sequence = 0
-            for edge in graph.edges:
-                if ledger_entry_id in edge.supporting_ledger_entry_ids:
-                    entry_sequence = min(
-                        occurrence_sequence for occurrence_sequence in [entry_sequence]
-                    )
             current = _ObservationEvent(
                 observation_artifact_id=observation.observation_artifact_id,
                 state_class_id=assignment.state_class_id,
                 ledger_entry_id=ledger_entry_id,
-                ledger_sequence=observation.sequence_index,
-                role=role,
+                ledger_sequence=entry.ledger_sequence,
+                role_order=0 if role == "source" else 1,
             )
             existing = events.get(observation.observation_artifact_id)
-            if existing is None or (current.ledger_sequence, role) < (
+            if existing is None or (current.ledger_sequence, current.role_order) < (
                 existing.ledger_sequence,
-                existing.role,
+                existing.role_order,
             ):
                 events[observation.observation_artifact_id] = current
     by_order = sorted(
         events.values(),
         key=lambda item: (
             item.ledger_sequence,
-            0 if item.role == "source" else 1,
+            item.role_order,
             item.observation_artifact_id,
         ),
     )
@@ -593,22 +617,59 @@ def _build_independence(
     )
 
 
+def _selected_rule_change_test(
+    *,
+    promotion_recipe: ObserverPromotionEvidenceRecipeDTO,
+    rule_change_tests: tuple[ObserverRuleChangeTestDTO, ...],
+) -> ObserverRuleChangeTestDTO | None:
+    if promotion_recipe.rule_change_test_id is None:
+        return None
+    for item in rule_change_tests:
+        if item.rule_change_test_id == promotion_recipe.rule_change_test_id:
+            return item
+    return None
+
+
 def _build_rule_change(
     *,
     transition_key_id: str,
     occurrences: list[ObserverTransitionOccurrenceDTO],
+    rule_change_test: ObserverRuleChangeTestDTO | None,
 ) -> ObserverRuleChangeSurvivalDTO:
+    if rule_change_test is None:
+        return ObserverRuleChangeSurvivalDTO.create(
+            transition_key_id=transition_key_id,
+            pre_change_occurrence_ids=(),
+            post_change_occurrence_ids=(),
+            post_change_confirmed_occurrence_ids=(),
+            post_change_contradicted_occurrence_ids=(),
+            survived_rule_change=False,
+            status="not_tested",
+            reason_codes=("rule_change_not_observed",),
+        )
     pre = tuple(
         sorted(
             item.occurrence_id
             for item in occurrences
-            if item.predictor_rule_set_id == item.environment_rule_set_id
+            if item.ledger_sequence < rule_change_test.change_start_ledger_sequence
+            and item.environment_rule_set_id
+            == rule_change_test.baseline_environment_rule_set_id
+            and (
+                rule_change_test.predictor_rule_set_id is None
+                or item.predictor_rule_set_id == rule_change_test.predictor_rule_set_id
+            )
         )
     )
     post_items = [
         item
         for item in occurrences
-        if item.predictor_rule_set_id != item.environment_rule_set_id
+        if item.ledger_sequence >= rule_change_test.change_start_ledger_sequence
+        and item.environment_rule_set_id
+        == rule_change_test.changed_environment_rule_set_id
+        and (
+            rule_change_test.predictor_rule_set_id is None
+            or item.predictor_rule_set_id == rule_change_test.predictor_rule_set_id
+        )
     ]
     post = tuple(sorted(item.occurrence_id for item in post_items))
     post_confirmed = tuple(

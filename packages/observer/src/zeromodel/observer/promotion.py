@@ -10,6 +10,7 @@ from zeromodel.observer._canonical import canonical_id
 OBSERVER_PROMOTION_EVIDENCE_RECIPE_VERSION: Final = (
     "observer-promotion-evidence-recipe/1"
 )
+OBSERVER_RULE_CHANGE_TEST_VERSION: Final = "observer-rule-change-test/1"
 OBSERVER_NOVELTY_EVIDENCE_VERSION: Final = "observer-novelty-evidence/1"
 OBSERVER_RULE_REGIME_VERSION: Final = "observer-rule-regime/1"
 OBSERVER_TRANSITION_OCCURRENCE_VERSION: Final = "observer-transition-occurrence/1"
@@ -48,6 +49,8 @@ PROMOTION_ANALYSIS_FAILURE_CODES: Final = frozenset(
         "missing_graph",
         "graph_ledger_mismatch",
         "graph_grouping_mismatch",
+        "schema_mismatch",
+        "rule_change_test_missing",
         "edge_support_missing",
         "edge_occurrence_mismatch",
         "edge_count_mismatch",
@@ -136,6 +139,77 @@ def _ensure_non_negative(value: int, field_name: str) -> None:
 
 
 @dataclass(frozen=True)
+class ObserverRuleChangeTestDTO:
+    rule_change_test_id: str
+    baseline_environment_rule_set_id: str
+    changed_environment_rule_set_id: str
+    change_start_ledger_sequence: int
+    predictor_rule_set_id: str | None
+    version: str = OBSERVER_RULE_CHANGE_TEST_VERSION
+
+    def __post_init__(self) -> None:
+        if self.version != OBSERVER_RULE_CHANGE_TEST_VERSION:
+            raise ObserverPromotionAnalysisError("unsupported rule-change test version")
+        _require_non_empty(
+            self.baseline_environment_rule_set_id,
+            "baseline_environment_rule_set_id",
+        )
+        _require_non_empty(
+            self.changed_environment_rule_set_id,
+            "changed_environment_rule_set_id",
+        )
+        if (
+            self.baseline_environment_rule_set_id
+            == self.changed_environment_rule_set_id
+        ):
+            raise ObserverPromotionAnalysisError(
+                "rule-change test requires distinct environment rules"
+            )
+        _ensure_non_negative(
+            self.change_start_ledger_sequence, "change_start_ledger_sequence"
+        )
+        expected_id = canonical_id(self.canonical_payload(include_id=False))
+        if self.rule_change_test_id != expected_id:
+            raise ObserverPromotionAnalysisError("rule_change_test_id mismatch")
+
+    def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
+        payload = {
+            "baseline_environment_rule_set_id": self.baseline_environment_rule_set_id,
+            "changed_environment_rule_set_id": self.changed_environment_rule_set_id,
+            "change_start_ledger_sequence": self.change_start_ledger_sequence,
+            "predictor_rule_set_id": self.predictor_rule_set_id,
+            "version": self.version,
+        }
+        if include_id:
+            payload["rule_change_test_id"] = self.rule_change_test_id
+        return payload
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        baseline_environment_rule_set_id: str,
+        changed_environment_rule_set_id: str,
+        change_start_ledger_sequence: int,
+        predictor_rule_set_id: str | None = None,
+    ) -> "ObserverRuleChangeTestDTO":
+        payload = {
+            "baseline_environment_rule_set_id": baseline_environment_rule_set_id,
+            "changed_environment_rule_set_id": changed_environment_rule_set_id,
+            "change_start_ledger_sequence": change_start_ledger_sequence,
+            "predictor_rule_set_id": predictor_rule_set_id,
+            "version": OBSERVER_RULE_CHANGE_TEST_VERSION,
+        }
+        return cls(
+            rule_change_test_id=canonical_id(payload),
+            baseline_environment_rule_set_id=baseline_environment_rule_set_id,
+            changed_environment_rule_set_id=changed_environment_rule_set_id,
+            change_start_ledger_sequence=change_start_ledger_sequence,
+            predictor_rule_set_id=predictor_rule_set_id,
+        )
+
+
+@dataclass(frozen=True)
 class ObserverPromotionEvidenceRecipeDTO:
     promotion_recipe_id: str
     observation_graph_id: str
@@ -149,10 +223,8 @@ class ObserverPromotionEvidenceRecipeDTO:
     maximum_inconclusive_count: int
     minimum_confirmation_ratio_numerator: int
     minimum_confirmation_ratio_denominator: int
-    require_zero_missed_contradictions: bool
     require_post_rule_change_confirmation: bool
-    require_action_consistency: bool
-    eligible_verification_statuses: tuple[str, ...]
+    rule_change_test_id: str | None
     version: str = OBSERVER_PROMOTION_EVIDENCE_RECIPE_VERSION
 
     def __post_init__(self) -> None:
@@ -181,11 +253,13 @@ class ObserverPromotionEvidenceRecipeDTO:
             > self.minimum_confirmation_ratio_denominator
         ):
             raise ObserverPromotionAnalysisError("minimum confirmation ratio exceeds 1")
-        _ensure_sorted_unique(
-            self.eligible_verification_statuses, "eligible_verification_statuses"
-        )
-        if set(self.eligible_verification_statuses) - VERIFICATION_STATUSES:
-            raise ObserverPromotionAnalysisError("unsupported verification status")
+        if (
+            self.require_post_rule_change_confirmation
+            and self.rule_change_test_id is None
+        ):
+            raise ObserverPromotionAnalysisError(
+                "rule-change confirmation requires a rule_change_test_id"
+            )
         expected_id = canonical_id(self.canonical_payload(include_id=False))
         if self.promotion_recipe_id != expected_id:
             raise ObserverPromotionAnalysisError(
@@ -194,7 +268,6 @@ class ObserverPromotionEvidenceRecipeDTO:
 
     def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
         payload = {
-            "eligible_verification_statuses": list(self.eligible_verification_statuses),
             "grouping_recipe_id": self.grouping_recipe_id,
             "maximum_contradicted_count": self.maximum_contradicted_count,
             "maximum_inconclusive_count": self.maximum_inconclusive_count,
@@ -216,13 +289,10 @@ class ObserverPromotionEvidenceRecipeDTO:
             ),
             "minimum_traversal_count": self.minimum_traversal_count,
             "observation_graph_id": self.observation_graph_id,
-            "require_action_consistency": self.require_action_consistency,
             "require_post_rule_change_confirmation": (
                 self.require_post_rule_change_confirmation
             ),
-            "require_zero_missed_contradictions": (
-                self.require_zero_missed_contradictions
-            ),
+            "rule_change_test_id": self.rule_change_test_id,
             "version": self.version,
         }
         if include_id:
@@ -244,16 +314,10 @@ class ObserverPromotionEvidenceRecipeDTO:
         maximum_inconclusive_count: int = 0,
         minimum_confirmation_ratio_numerator: int = 1,
         minimum_confirmation_ratio_denominator: int = 1,
-        require_zero_missed_contradictions: bool = True,
         require_post_rule_change_confirmation: bool = False,
-        require_action_consistency: bool = True,
-        eligible_verification_statuses: tuple[str, ...] = ("confirmed",),
+        rule_change_test_id: str | None = None,
     ) -> "ObserverPromotionEvidenceRecipeDTO":
-        eligible_verification_statuses = tuple(
-            sorted(set(eligible_verification_statuses))
-        )
         payload = {
-            "eligible_verification_statuses": list(eligible_verification_statuses),
             "grouping_recipe_id": grouping_recipe_id,
             "maximum_contradicted_count": maximum_contradicted_count,
             "maximum_inconclusive_count": maximum_inconclusive_count,
@@ -269,11 +333,10 @@ class ObserverPromotionEvidenceRecipeDTO:
             "minimum_independent_episode_count": minimum_independent_episode_count,
             "minimum_traversal_count": minimum_traversal_count,
             "observation_graph_id": observation_graph_id,
-            "require_action_consistency": require_action_consistency,
             "require_post_rule_change_confirmation": (
                 require_post_rule_change_confirmation
             ),
-            "require_zero_missed_contradictions": require_zero_missed_contradictions,
+            "rule_change_test_id": rule_change_test_id,
             "version": OBSERVER_PROMOTION_EVIDENCE_RECIPE_VERSION,
         }
         return cls(
@@ -289,10 +352,8 @@ class ObserverPromotionEvidenceRecipeDTO:
             maximum_inconclusive_count=maximum_inconclusive_count,
             minimum_confirmation_ratio_numerator=minimum_confirmation_ratio_numerator,
             minimum_confirmation_ratio_denominator=minimum_confirmation_ratio_denominator,
-            require_zero_missed_contradictions=require_zero_missed_contradictions,
             require_post_rule_change_confirmation=require_post_rule_change_confirmation,
-            require_action_consistency=require_action_consistency,
-            eligible_verification_statuses=eligible_verification_statuses,
+            rule_change_test_id=rule_change_test_id,
         )
 
 

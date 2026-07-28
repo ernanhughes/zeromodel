@@ -8,6 +8,7 @@ from zeromodel.observer import (
     ObserverGroupingFeatureDTO,
     ObserverObservationGraphDTO,
     ObserverPromotionEvidenceRecipeDTO,
+    ObserverRuleChangeTestDTO,
     ObserverStateGroupingRecipeDTO,
     ObserverTransitionRecurrenceDTO,
     ObserverTransitionOccurrenceDTO,
@@ -20,7 +21,7 @@ from zeromodel.observer import (
 from zeromodel.observer.fixture import ObserverFixtureStateDTO
 from zeromodel.observer.graph import ObserverObservationGraphEdgeDTO
 from zeromodel.observer._canonical import canonical_id
-from zeromodel.observer.promotion_service import _build_stability
+from zeromodel.observer.promotion_service import _build_rule_change, _build_stability
 
 
 def action(name: str) -> ObserverFixtureActionDTO:
@@ -164,6 +165,7 @@ def recipe_for(build, group, **overrides):
         "minimum_confirmation_ratio_numerator": 1,
         "minimum_confirmation_ratio_denominator": 1,
         "require_post_rule_change_confirmation": False,
+        "rule_change_test_id": None,
     }
     values.update(overrides)
     return ObserverPromotionEvidenceRecipeDTO.create(**values)
@@ -178,6 +180,7 @@ def analyze(actions, **kwargs):
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=promotion_recipe,
+        observation_schema=schema,
     )
     assert analysis.status == "built"
     return schema, group, episode, entries, build, promotion_recipe, analysis
@@ -227,6 +230,7 @@ def test_stable_candidate_and_insufficient_traversal() -> None:
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=eligible_recipe,
+        observation_schema=schema,
     )
     assert any(item.status == "stable" for item in eligible.stabilities)
     assert any(item.disposition == "eligible" for item in eligible.promotion_candidates)
@@ -239,6 +243,7 @@ def test_stable_candidate_and_insufficient_traversal() -> None:
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=strict_recipe,
+        observation_schema=schema,
     )
     assert any(
         item.disposition == "insufficient_evidence"
@@ -264,6 +269,7 @@ def test_episode_independence_and_source_diversity_are_declared_proxies() -> Non
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=promotion_recipe,
+        observation_schema=schema,
     )
     assert any(item.status == "insufficient" for item in analysis.independence_results)
     assert any(
@@ -341,7 +347,7 @@ def test_contradiction_ratio_and_inconclusive_limits() -> None:
     assert below.status == "unstable"
     assert "confirmation_ratio_not_met" in below.reason_codes
 
-    _, group2, episode2, entries2, build2 = build_case(
+    schema2, group2, episode2, entries2, build2 = build_case(
         ("move_right", "move_right"), rule_switch=True, hidden=False
     )
     inconclusive_recipe = recipe_for(build2, group2, maximum_inconclusive_count=0)
@@ -351,29 +357,46 @@ def test_contradiction_ratio_and_inconclusive_limits() -> None:
         graph_build=build2,
         grouping_recipe=group2,
         promotion_recipe=inconclusive_recipe,
+        observation_schema=schema2,
     )
     assert not inconclusive.eligible_candidate_ids
 
 
 def test_rule_change_survival_modes() -> None:
-    _, group, episode, entries, build = build_case(
+    schema, rule1, rule2 = rules()
+    rule_change_test = ObserverRuleChangeTestDTO.create(
+        baseline_environment_rule_set_id=rule1.fixture_rule_set_id,
+        changed_environment_rule_set_id=rule2.fixture_rule_set_id,
+        change_start_ledger_sequence=1,
+    )
+    schema, group, episode, entries, build = build_case(
         ("wait", "wait"), rule_switch=True, position_only=True
     )
-    required = recipe_for(build, group, require_post_rule_change_confirmation=True)
+    required = recipe_for(
+        build,
+        group,
+        require_post_rule_change_confirmation=True,
+        rule_change_test_id=rule_change_test.rule_change_test_id,
+    )
     survived = analyze_observer_promotion_candidates(
         ledger_snapshot=episode.ledger_snapshot,
         entries=entries,
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=required,
+        observation_schema=schema,
+        rule_change_tests=(rule_change_test,),
     )
     assert any(item.status == "survived" for item in survived.rule_change_results)
 
-    _, group2, episode2, entries2, build2 = build_case(
+    schema2, group2, episode2, entries2, build2 = build_case(
         ("move_right", "move_right"), rule_switch=True
     )
     failed_recipe = recipe_for(
-        build2, group2, require_post_rule_change_confirmation=True
+        build2,
+        group2,
+        require_post_rule_change_confirmation=True,
+        rule_change_test_id=rule_change_test.rule_change_test_id,
     )
     failed = analyze_observer_promotion_candidates(
         ledger_snapshot=episode2.ledger_snapshot,
@@ -381,13 +404,18 @@ def test_rule_change_survival_modes() -> None:
         graph_build=build2,
         grouping_recipe=group2,
         promotion_recipe=failed_recipe,
+        observation_schema=schema2,
+        rule_change_tests=(rule_change_test,),
     )
     assert any(item.status == "failed" for item in failed.rule_change_results)
     assert not failed.eligible_candidate_ids
 
-    _, group3, episode3, entries3, build3 = build_case(("wait", "wait"))
+    schema3, group3, episode3, entries3, build3 = build_case(("wait", "wait"))
     not_tested_recipe = recipe_for(
-        build3, group3, require_post_rule_change_confirmation=True
+        build3,
+        group3,
+        require_post_rule_change_confirmation=True,
+        rule_change_test_id=rule_change_test.rule_change_test_id,
     )
     not_tested = analyze_observer_promotion_candidates(
         ledger_snapshot=episode3.ledger_snapshot,
@@ -395,6 +423,8 @@ def test_rule_change_survival_modes() -> None:
         graph_build=build3,
         grouping_recipe=group3,
         promotion_recipe=not_tested_recipe,
+        observation_schema=schema3,
+        rule_change_tests=(rule_change_test,),
     )
     assert any(item.status == "not_tested" for item in not_tested.rule_change_results)
     assert not not_tested.eligible_candidate_ids
@@ -407,8 +437,145 @@ def test_rule_change_survival_modes() -> None:
         graph_build=build3,
         grouping_recipe=group3,
         promotion_recipe=optional_recipe,
+        observation_schema=schema3,
     )
     assert optional.eligible_candidate_ids
+
+
+def test_rule_change_test_required_and_missing_reference_fails() -> None:
+    schema, group, episode, entries, build = build_case(("wait", "wait"))
+    _, rule1, rule2 = rules()
+    rule_change_test = ObserverRuleChangeTestDTO.create(
+        baseline_environment_rule_set_id=rule1.fixture_rule_set_id,
+        changed_environment_rule_set_id=rule2.fixture_rule_set_id,
+        change_start_ledger_sequence=1,
+    )
+    with pytest.raises(Exception):
+        recipe_for(build, group, require_post_rule_change_confirmation=True)
+
+    recipe = recipe_for(
+        build,
+        group,
+        require_post_rule_change_confirmation=True,
+        rule_change_test_id=rule_change_test.rule_change_test_id,
+    )
+    analysis = analyze_observer_promotion_candidates(
+        ledger_snapshot=episode.ledger_snapshot,
+        entries=entries,
+        graph_build=build,
+        grouping_recipe=group,
+        promotion_recipe=recipe,
+        observation_schema=schema,
+    )
+    assert analysis.status == "failed"
+    assert "rule_change_test_missing" in analysis.failure_codes
+
+
+def test_schema_mismatch_fails_before_replay() -> None:
+    schema, group, episode, entries, build = build_case(("wait", "wait"))
+    alternate_schema = type(schema).create(
+        schema_name="observer-fixture-alternate",
+        features=schema.features,
+    )
+    analysis = analyze_observer_promotion_candidates(
+        ledger_snapshot=episode.ledger_snapshot,
+        entries=entries,
+        graph_build=build,
+        grouping_recipe=group,
+        promotion_recipe=recipe_for(build, group),
+        observation_schema=alternate_schema,
+    )
+    assert analysis.status == "failed"
+    assert "schema_mismatch" in analysis.failure_codes
+
+
+def test_rule_change_test_uses_declared_chronology() -> None:
+    _, rule1, rule2 = rules()
+    test = ObserverRuleChangeTestDTO.create(
+        baseline_environment_rule_set_id=rule1.fixture_rule_set_id,
+        changed_environment_rule_set_id=rule2.fixture_rule_set_id,
+        change_start_ledger_sequence=10,
+    )
+
+    def occurrence(
+        occurrence_id: str,
+        *,
+        ledger_sequence: int,
+        predictor_rule_set_id: str,
+        environment_rule_set_id: str,
+        verification_status: str = "confirmed",
+    ) -> ObserverTransitionOccurrenceDTO:
+        return ObserverTransitionOccurrenceDTO.create(
+            transition_key_id="key",
+            graph_edge_id="edge",
+            ledger_entry_id=f"ledger:{occurrence_id}",
+            ledger_sequence=ledger_sequence,
+            episode_id="episode",
+            source_state_class_id="source",
+            source_observation_artifact_id=f"source:{occurrence_id}",
+            target_state_class_id="target",
+            target_observation_artifact_id=f"target:{occurrence_id}",
+            action="wait",
+            verification_status=verification_status,
+            comparison_result_id=f"comparison:{occurrence_id}",
+            predictor_rule_set_id=predictor_rule_set_id,
+            environment_rule_set_id=environment_rule_set_id,
+            rule_regime_id=f"regime:{occurrence_id}",
+        )
+
+    survived = _build_rule_change(
+        transition_key_id="key",
+        rule_change_test=test,
+        occurrences=[
+            occurrence(
+                "pre",
+                ledger_sequence=9,
+                predictor_rule_set_id=rule1.fixture_rule_set_id,
+                environment_rule_set_id=rule1.fixture_rule_set_id,
+            ),
+            occurrence(
+                "post",
+                ledger_sequence=10,
+                predictor_rule_set_id=rule2.fixture_rule_set_id,
+                environment_rule_set_id=rule2.fixture_rule_set_id,
+            ),
+        ],
+    )
+    assert survived.status == "survived"
+
+    no_mid_run_change = _build_rule_change(
+        transition_key_id="key",
+        rule_change_test=test,
+        occurrences=[
+            occurrence(
+                "already-changed",
+                ledger_sequence=0,
+                predictor_rule_set_id=rule1.fixture_rule_set_id,
+                environment_rule_set_id=rule2.fixture_rule_set_id,
+            )
+        ],
+    )
+    assert no_mid_run_change.status == "not_tested"
+
+    predictor_only_change = _build_rule_change(
+        transition_key_id="key",
+        rule_change_test=test,
+        occurrences=[
+            occurrence(
+                "pre",
+                ledger_sequence=9,
+                predictor_rule_set_id=rule1.fixture_rule_set_id,
+                environment_rule_set_id=rule1.fixture_rule_set_id,
+            ),
+            occurrence(
+                "post",
+                ledger_sequence=10,
+                predictor_rule_set_id=rule2.fixture_rule_set_id,
+                environment_rule_set_id=rule1.fixture_rule_set_id,
+            ),
+        ],
+    )
+    assert predictor_only_change.status == "not_tested"
 
 
 def replace_graph(graph: ObserverObservationGraphDTO, edges):
@@ -439,7 +606,7 @@ def replace_graph(graph: ObserverObservationGraphDTO, edges):
 
 
 def test_graph_count_tampering_missing_support_and_duplicate_occurrence_fail() -> None:
-    _, group, episode, entries, build = build_case(
+    schema, group, episode, entries, build = build_case(
         ("move_right", "move_right"), rule_switch=True, hidden=False
     )
     assert build.graph is not None
@@ -490,6 +657,7 @@ def test_graph_count_tampering_missing_support_and_duplicate_occurrence_fail() -
         graph_build=tampered_build,
         grouping_recipe=group,
         promotion_recipe=promotion_recipe,
+        observation_schema=schema,
     )
     assert tampered.status == "failed"
     assert "edge_count_mismatch" in tampered.failure_codes
@@ -500,6 +668,7 @@ def test_graph_count_tampering_missing_support_and_duplicate_occurrence_fail() -
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=recipe_for(build, group),
+        observation_schema=schema,
     )
     assert missing.status == "failed"
     assert "edge_support_missing" in missing.failure_codes
@@ -526,13 +695,14 @@ def test_graph_count_tampering_missing_support_and_duplicate_occurrence_fail() -
 
 
 def test_recipe_sensitivity_snapshot_immutability_empty_graph_and_replay() -> None:
-    _, group, episode, entries, build = build_case(("wait",))
+    schema, group, episode, entries, build = build_case(("wait",))
     loose = analyze_observer_promotion_candidates(
         ledger_snapshot=episode.ledger_snapshot,
         entries=entries,
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=recipe_for(build, group),
+        observation_schema=schema,
     )
     strict_recipe = recipe_for(build, group, minimum_traversal_count=2)
     strict = analyze_observer_promotion_candidates(
@@ -541,6 +711,7 @@ def test_recipe_sensitivity_snapshot_immutability_empty_graph_and_replay() -> No
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=strict_recipe,
+        observation_schema=schema,
     )
     assert loose.promotion_analysis_id != strict.promotion_analysis_id
     assert (
@@ -554,32 +725,37 @@ def test_recipe_sensitivity_snapshot_immutability_empty_graph_and_replay() -> No
         graph_build=build,
         grouping_recipe=group,
         promotion_recipe=recipe_for(build, group),
+        observation_schema=schema,
     )
     assert replay.promotion_analysis_id == loose.promotion_analysis_id
     assert [item.occurrence_id for item in replay.occurrences] == [
         item.occurrence_id for item in loose.occurrences
     ]
 
-    _, group2, episode2, entries2, build2 = build_case(("wait", "wait"))
+    schema2, group2, episode2, entries2, build2 = build_case(("wait", "wait"))
     newer = analyze_observer_promotion_candidates(
         ledger_snapshot=episode2.ledger_snapshot,
         entries=entries2,
         graph_build=build2,
         grouping_recipe=group2,
         promotion_recipe=recipe_for(build2, group2),
+        observation_schema=schema2,
     )
     assert (
         loose.promotion_candidates[0].promotion_candidate_id
         != newer.promotion_candidates[0].promotion_candidate_id
     )
 
-    _, empty_group, empty_episode, empty_entries, empty_build = build_case(())
+    empty_schema, empty_group, empty_episode, empty_entries, empty_build = build_case(
+        ()
+    )
     empty = analyze_observer_promotion_candidates(
         ledger_snapshot=empty_episode.ledger_snapshot,
         entries=empty_entries,
         graph_build=empty_build,
         grouping_recipe=empty_group,
         promotion_recipe=recipe_for(empty_build, empty_group),
+        observation_schema=empty_schema,
     )
     assert empty.status == "built"
     assert empty.promotion_candidates == ()

@@ -559,6 +559,7 @@ analysis = analyze_observer_promotion_candidates(
     graph_build=graph_build,
     grouping_recipe=grouping_recipe,
     promotion_recipe=promotion_recipe,
+    observation_schema=schema,
 )
 assert analysis.status == "built"
 ```

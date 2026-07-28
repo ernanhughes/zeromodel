@@ -24,9 +24,9 @@ from zeromodel.observer import (
     verify_observer_graph_rebuild,
 )
 from zeromodel.observer._canonical import canonical_id
-from zeromodel.observer.graph_service import (
-    _observation_for_fixture_state,
-    _source_observation_for_entry,
+from zeromodel.observer._observation_replay import (
+    observation_for_fixture_state,
+    source_observation_for_entry,
 )
 
 
@@ -649,7 +649,7 @@ def test_failed_prerequisites_emit_no_graph_artifacts() -> None:
 
 def test_source_chain_requires_full_observation_identity_not_only_sequence() -> None:
     schema, _, _, _, entries, _ = build_graph((action("move_right"), action("wait")))
-    previous_target = _observation_for_fixture_state(
+    previous_target = observation_for_fixture_state(
         state=entries[1].source_state,
         action_effect=entries[0].executed_step.action_effect,
         observation_schema=schema,
@@ -676,7 +676,7 @@ def test_source_chain_requires_full_observation_identity_not_only_sequence() -> 
     )
 
     assert (
-        _source_observation_for_entry(
+        source_observation_for_entry(
             entry=tampered_entry,
             observation_schema=schema,
             previous_target_observation=previous_target,

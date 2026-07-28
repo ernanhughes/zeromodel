@@ -639,6 +639,87 @@ if habit is not None:
     )
 ```
 
+## Stage O3.5 - Habit Admission and Controlled Activation
+
+Stage O3.5 introduces the first bounded path where an admitted habit may
+influence a fixture action:
+
+```text
+shadow-audited habit
+        ↓
+admission
+        ↓
+inactive registry entry
+        ↓
+atomic activation
+        ↓
+habit or fallback decision
+        ↓
+post-action verification
+        ↓
+suspension or rollback
+```
+
+Admission is not activation. Admission decisions are immutable and recompute
+thresholds from the exact shadow replay evidence named by the audit. Rejected
+or malformed evidence does not create a registry entry. Admitted habits enter
+the in-memory registry as `admitted_inactive`.
+
+Activation is fixture-bound and uses an expected source registry snapshot as a
+compare-and-swap token. Stage O3.5 permits one active habit per activation
+scope. Every registry status change creates an append-only event and a new
+immutable snapshot; rollback also creates new history instead of deleting old
+history.
+
+Active decisions always preserve the authoritative fallback action. A habit
+recommendation executes only when the active registry entry, activation scope,
+schema, grouping recipe, source state class, and guards all match. Abstention,
+invalid evaluation, ambiguity, suspension, or retired state uses the fallback
+path. Post-action transition verification is mandatory for active fixture
+execution. Wrong active outcomes can suspend the habit automatically according
+to the runtime safety recipe. Registry replay semantically reapplies every
+event to reconstruct snapshots instead of trusting snapshot references alone.
+This is a bounded fixture runtime, not a production policy engine, and it makes
+no empirical performance claim.
+
+```python
+from zeromodel.observer import (
+    InMemoryObserverHabitRegistry,
+    ObserverHabitActivationRequestDTO,
+    ObserverHabitActivationScopeDTO,
+    activate_observer_habit,
+    admit_observer_habit,
+)
+
+decision = admit_observer_habit(
+    habit_specification=habit,
+    shadow_audit=audit,
+    historical_shadow_replay=historical_shadow,
+    live_shadow_episodes=(live_shadow_episode,),
+    admission_recipe=admission_recipe,
+)
+
+registry = InMemoryObserverHabitRegistry()
+if decision.decision == "admit":
+    registry.register_admission(
+        habit_specification=habit,
+        admission_decision=decision,
+    )
+    snapshot = registry.current_snapshot()
+    request = ObserverHabitActivationRequestDTO.create(
+        habit_specification_id=habit.habit_specification_id,
+        expected_source_registry_snapshot_id=snapshot.habit_registry_snapshot_id,
+        activation_scope_id=activation_scope.habit_activation_scope_id,
+        reason_codes=("operator_activation",),
+    )
+    activation = activate_observer_habit(
+        registry=registry,
+        activation_scope=activation_scope,
+        activation_request=request,
+        habit_specification=habit,
+    )
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

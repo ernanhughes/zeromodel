@@ -37,10 +37,86 @@ The top-level public surface is:
 - `ObserverTransitionRecordDTO`
 - `ObserverContradictionArtifactDTO`
 - `ObserverReplacementPolicyArtifactDTO`
+- `ObserverTransitionVerificationDTO`
+- `ObserverTransitionVerificationError`
 - `compare_observer_transition`
 - `build_transition_record`
 - `build_contradiction_artifact`
 - `build_replacement_policy_artifact`
+- `verify_observer_transition`
+
+## Stage O1 - Transition Verification
+
+Stage O1 compares two already-created observation artifacts through a declared
+recipe and returns one canonical verification result. It does not predict
+observations, repair policies, persist records, call model providers, or
+implement habits.
+
+Feature keys are projected from observation artifacts with explicit namespaces:
+
+```text
+visible.agent_x
+history.previous_action
+hidden.cooldown
+```
+
+Missing required evidence is reported as `inconclusive`. It is not treated as a
+successful match and does not create a contradiction artifact.
+
+```python
+from zeromodel.observer import (
+    ObserverComparisonRecipeDTO,
+    ObserverObservationArtifactDTO,
+    verify_observer_transition,
+)
+
+recipe = ObserverComparisonRecipeDTO.create(
+    observable_feature_keys=("visible.agent_x", "visible.target_x"),
+    action_effect_keys=("visible.action_effect",),
+    policy_consequence_key="visible.next_action",
+    hidden_state_keys=("hidden.cooldown",),
+)
+
+predicted = ObserverObservationArtifactDTO.create(
+    visible_state_features={
+        "agent_x": 5,
+        "target_x": 9,
+        "action_effect": "moved_right",
+        "next_action": "move_right",
+    },
+    hidden_state_uncertainty={"cooldown": "clear"},
+    sequence_index=0,
+)
+
+observed = ObserverObservationArtifactDTO.create(
+    visible_state_features={
+        "agent_x": 5,
+        "target_x": 9,
+        "action_effect": "moved_right",
+        "next_action": "move_right",
+    },
+    hidden_state_uncertainty={"cooldown": "clear"},
+    sequence_index=1,
+)
+
+verification = verify_observer_transition(
+    recipe=recipe,
+    predicted_observation=predicted,
+    observed_observation=observed,
+    policy_artifact_id="policy:A",
+    state_before_id="state:before",
+    action="move_right",
+    affected_policy_row_id="row:before",
+    predicted_decision_margin=0.3,
+    observed_decision_margin=0.3,
+    hidden_state_hypotheses_remaining=1,
+)
+
+verification.verification_status
+verification.comparison_result
+verification.transition_record
+verification.contradiction_artifact
+```
 
 ## Design Position
 

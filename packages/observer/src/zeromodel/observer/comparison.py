@@ -41,9 +41,7 @@ class ObserverComparisonRecipeDTO:
             raise ObserverComparisonError("unsupported comparison recipe version")
         if not self.observable_feature_keys:
             raise ObserverComparisonError("observable_feature_keys must be non-empty")
-        _ensure_sorted_unique(
-            self.observable_feature_keys, "observable_feature_keys"
-        )
+        _ensure_sorted_unique(self.observable_feature_keys, "observable_feature_keys")
         _ensure_sorted_unique(self.action_effect_keys, "action_effect_keys")
         _ensure_sorted_unique(self.hidden_state_keys, "hidden_state_keys")
         if self.policy_consequence_key == "":
@@ -54,9 +52,7 @@ class ObserverComparisonRecipeDTO:
             )
         expected_id = canonical_id(self.canonical_payload(include_id=False))
         if self.recipe_id != expected_id:
-            raise ObserverComparisonError(
-                "recipe_id disagrees with canonical payload"
-            )
+            raise ObserverComparisonError("recipe_id disagrees with canonical payload")
 
     def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
         payload: dict[str, object] = {
@@ -114,9 +110,7 @@ class ObserverComparisonRecipeDTO:
             decision_margin_tolerance=decision_margin_tolerance,
             wake_on_observable_mismatch=wake_on_observable_mismatch,
             wake_on_action_effect_mismatch=wake_on_action_effect_mismatch,
-            wake_on_policy_consequence_mismatch=(
-                wake_on_policy_consequence_mismatch
-            ),
+            wake_on_policy_consequence_mismatch=(wake_on_policy_consequence_mismatch),
             wake_on_hidden_state_exhausted=wake_on_hidden_state_exhausted,
         )
 
@@ -135,6 +129,8 @@ class ObserverComparisonResultDTO:
     mismatched_feature_keys: tuple[str, ...]
     wake_required: bool
     contradiction: bool
+    missing_predicted_feature_keys: tuple[str, ...] = ()
+    missing_observed_feature_keys: tuple[str, ...] = ()
     version: str = OBSERVER_COMPARISON_RESULT_VERSION
 
     def __post_init__(self) -> None:
@@ -149,6 +145,12 @@ class ObserverComparisonResultDTO:
                 "hidden_state_hypotheses_remaining must be non-negative"
             )
         _ensure_sorted_unique(self.mismatched_feature_keys, "mismatched_feature_keys")
+        _ensure_sorted_unique(
+            self.missing_predicted_feature_keys, "missing_predicted_feature_keys"
+        )
+        _ensure_sorted_unique(
+            self.missing_observed_feature_keys, "missing_observed_feature_keys"
+        )
         expected_id = canonical_id(self.canonical_payload(include_id=False))
         if self.comparison_result_id != expected_id:
             raise ObserverComparisonError(
@@ -164,6 +166,8 @@ class ObserverComparisonResultDTO:
                 self.hidden_state_hypotheses_remaining
             ),
             "mismatched_feature_keys": list(self.mismatched_feature_keys),
+            "missing_observed_feature_keys": list(self.missing_observed_feature_keys),
+            "missing_predicted_feature_keys": list(self.missing_predicted_feature_keys),
             "next_action_equivalent": self.next_action_equivalent,
             "observable_feature_match": self.observable_feature_match,
             "recipe_id": self.recipe_id,
@@ -193,20 +197,46 @@ def compare_observer_transition(
             "hidden_state_hypotheses_remaining must be non-negative"
         )
 
+    required_keys = tuple(
+        sorted(
+            set(recipe.observable_feature_keys)
+            | set(recipe.action_effect_keys)
+            | set(recipe.hidden_state_keys)
+            | (
+                {recipe.policy_consequence_key}
+                if recipe.policy_consequence_key is not None
+                else set()
+            )
+        )
+    )
+    missing_predicted = tuple(
+        key for key in required_keys if key not in predicted_features
+    )
+    missing_observed = tuple(
+        key for key in required_keys if key not in observed_features
+    )
+    missing_evidence = bool(missing_predicted or missing_observed)
+
     observable_mismatches = tuple(
         key
         for key in recipe.observable_feature_keys
-        if predicted_features.get(key) != observed_features.get(key)
+        if key not in missing_predicted
+        and key not in missing_observed
+        and predicted_features[key] != observed_features[key]
     )
     action_effect_mismatches = tuple(
         key
         for key in recipe.action_effect_keys
-        if predicted_features.get(key) != observed_features.get(key)
+        if key not in missing_predicted
+        and key not in missing_observed
+        and predicted_features[key] != observed_features[key]
     )
     policy_mismatch = (
         recipe.policy_consequence_key is not None
-        and predicted_features.get(recipe.policy_consequence_key)
-        != observed_features.get(recipe.policy_consequence_key)
+        and recipe.policy_consequence_key not in missing_predicted
+        and recipe.policy_consequence_key not in missing_observed
+        and predicted_features[recipe.policy_consequence_key]
+        != observed_features[recipe.policy_consequence_key]
     )
     mismatches = tuple(
         sorted(
@@ -219,29 +249,40 @@ def compare_observer_transition(
             )
         )
     )
-    observable_feature_match = not observable_mismatches
-    action_effect_match = not action_effect_mismatches
+    observable_feature_match = not observable_mismatches and not any(
+        key in missing_predicted or key in missing_observed
+        for key in recipe.observable_feature_keys
+    )
+    action_effect_match = not action_effect_mismatches and not any(
+        key in missing_predicted or key in missing_observed
+        for key in recipe.action_effect_keys
+    )
     next_action_equivalent = not policy_mismatch
+    if recipe.policy_consequence_key is not None and (
+        recipe.policy_consequence_key in missing_predicted
+        or recipe.policy_consequence_key in missing_observed
+    ):
+        next_action_equivalent = False
     hidden_state_exhausted = (
         bool(recipe.hidden_state_keys) and hidden_state_hypotheses_remaining == 0
     )
     decision_margin_delta = abs(predicted_decision_margin - observed_decision_margin)
-    contradiction = (
-        not observable_feature_match
-        or not action_effect_match
-        or hidden_state_exhausted
-        or (
-            not next_action_equivalent
-            and decision_margin_delta > recipe.decision_margin_tolerance
+    contradiction = False
+    if not missing_evidence:
+        contradiction = (
+            not observable_feature_match
+            or not action_effect_match
+            or hidden_state_exhausted
+            or (
+                not next_action_equivalent
+                and decision_margin_delta > recipe.decision_margin_tolerance
+            )
         )
-    )
     wake_required = (
-        (recipe.wake_on_observable_mismatch and not observable_feature_match)
+        missing_evidence
+        or (recipe.wake_on_observable_mismatch and not observable_feature_match)
         or (recipe.wake_on_action_effect_mismatch and not action_effect_match)
-        or (
-            recipe.wake_on_policy_consequence_mismatch
-            and not next_action_equivalent
-        )
+        or (recipe.wake_on_policy_consequence_mismatch and not next_action_equivalent)
         or (recipe.wake_on_hidden_state_exhausted and hidden_state_exhausted)
     )
     payload = {
@@ -250,6 +291,8 @@ def compare_observer_transition(
         "decision_margin_delta": decision_margin_delta,
         "hidden_state_hypotheses_remaining": hidden_state_hypotheses_remaining,
         "mismatched_feature_keys": list(mismatches),
+        "missing_observed_feature_keys": list(missing_observed),
+        "missing_predicted_feature_keys": list(missing_predicted),
         "next_action_equivalent": next_action_equivalent,
         "observable_feature_match": observable_feature_match,
         "recipe_id": recipe.recipe_id,
@@ -267,4 +310,6 @@ def compare_observer_transition(
         mismatched_feature_keys=mismatches,
         wake_required=wake_required,
         contradiction=contradiction,
+        missing_predicted_feature_keys=missing_predicted,
+        missing_observed_feature_keys=missing_observed,
     )

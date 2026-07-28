@@ -19,6 +19,11 @@ from zeromodel.observer.comparison import (
     ObserverComparisonResultDTO,
     compare_observer_transition,
 )
+from zeromodel.observer.transition_service import (
+    ObserverTransitionVerificationDTO,
+    ObserverTransitionVerificationError,
+    verify_observer_transition,
+)
 
 __all__ = [
     "ObserverComparisonRecipeDTO",
@@ -27,8 +32,11 @@ __all__ = [
     "ObserverObservationArtifactDTO",
     "ObserverReplacementPolicyArtifactDTO",
     "ObserverTransitionRecordDTO",
+    "ObserverTransitionVerificationDTO",
+    "ObserverTransitionVerificationError",
     "build_contradiction_artifact",
     "build_replacement_policy_artifact",
     "build_transition_record",
     "compare_observer_transition",
+    "verify_observer_transition",
 ]

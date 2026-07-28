@@ -826,7 +826,10 @@ zeromodel-observer,zeromodel.observer,ObserverContradictionArtifactDTO,zeromodel
 zeromodel-observer,zeromodel.observer,ObserverObservationArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,ObserverReplacementPolicyArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,ObserverTransitionRecordDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,ObserverTransitionVerificationDTO,zeromodel.observer,Class,zeromodel.observer.transition_service,true
+zeromodel-observer,zeromodel.observer,ObserverTransitionVerificationError,zeromodel.observer,Class,zeromodel.observer.transition_service,true
 zeromodel-observer,zeromodel.observer,build_contradiction_artifact,zeromodel.observer,Function,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,build_replacement_policy_artifact,zeromodel.observer,Function,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,build_transition_record,zeromodel.observer,Function,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,compare_observer_transition,zeromodel.observer,Function,zeromodel.observer.comparison,true
+zeromodel-observer,zeromodel.observer,verify_observer_transition,zeromodel.observer,Function,zeromodel.observer.transition_service,true

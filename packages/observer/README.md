@@ -39,11 +39,16 @@ The top-level public surface is:
 - `ObserverReplacementPolicyArtifactDTO`
 - `ObserverTransitionVerificationDTO`
 - `ObserverTransitionVerificationError`
+- `ObserverRepairConstraintDTO`
+- `ObserverProposedChangeDTO`
+- `ObserverRepairProposalDTO`
+- `ObserverRepairProposalError`
 - `compare_observer_transition`
 - `build_transition_record`
 - `build_contradiction_artifact`
 - `build_replacement_policy_artifact`
 - `verify_observer_transition`
+- `propose_observer_repair`
 
 ## Stage O1 - Transition Verification
 
@@ -116,6 +121,68 @@ verification.verification_status
 verification.comparison_result
 verification.transition_record
 verification.contradiction_artifact
+```
+
+## Stage O2 - Bounded Repair Proposal
+
+Stage O2 converts a contradicted transition verification into a bounded repair
+proposal. It validates that a caller-supplied proposal is well-formed,
+traceable, and inside declared repair authority. It does not mutate a policy,
+verify a repair, create a replacement artifact, persist anything, or activate
+anything.
+
+`repairable` means eligible for the next stage of candidate generation and
+audit. It does not mean the proposed change is correct.
+`requested_changes` records caller intent. `proposed_changes` contains only
+changes executable under the current schema and constraints.
+
+```python
+from zeromodel.observer import (
+    ObserverProposedChangeDTO,
+    ObserverRepairConstraintDTO,
+    propose_observer_repair,
+)
+
+constraint = ObserverRepairConstraintDTO.create(
+    allowed_row_ids=("row:cooldown-sensitive",),
+    allowed_cell_ids=("row:cooldown-sensitive/action:move_right",),
+    allowed_context_keys=("hidden.cooldown",),
+    max_changed_rows=1,
+    max_changed_cells=1,
+    allow_action_value_change=True,
+    allow_new_context_precondition=True,
+)
+
+change = ObserverProposedChangeDTO.create(
+    target_kind="policy_cell",
+    target_id="row:cooldown-sensitive/action:move_right",
+    operation="replace",
+    field_name="action_value",
+    old_value="move_right",
+    proposed_value="wait",
+    condition_keys=("hidden.cooldown",),
+)
+
+proposal = propose_observer_repair(
+    verification=verification,
+    constraint=constraint,
+    available_policy_row_ids=("row:cooldown-sensitive",),
+    available_policy_cell_ids=("row:cooldown-sensitive/action:move_right",),
+    represented_context_keys=("hidden.cooldown",),
+    requested_changes=(change,),
+    rationale_codes=(
+        "action_effect_mismatch",
+        "affected_row_localised",
+        "repair_scope_bounded",
+    ),
+)
+
+proposal.disposition
+proposal.affected_row_ids
+proposal.required_context_keys
+proposal.missing_schema_keys
+proposal.requested_changes
+proposal.proposed_changes
 ```
 
 ## Design Position

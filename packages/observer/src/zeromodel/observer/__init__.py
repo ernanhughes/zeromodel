@@ -19,6 +19,13 @@ from zeromodel.observer.comparison import (
     ObserverComparisonResultDTO,
     compare_observer_transition,
 )
+from zeromodel.observer.repair import (
+    ObserverProposedChangeDTO,
+    ObserverRepairConstraintDTO,
+    ObserverRepairProposalDTO,
+    ObserverRepairProposalError,
+)
+from zeromodel.observer.repair_service import propose_observer_repair
 from zeromodel.observer.transition_service import (
     ObserverTransitionVerificationDTO,
     ObserverTransitionVerificationError,
@@ -30,6 +37,10 @@ __all__ = [
     "ObserverComparisonResultDTO",
     "ObserverContradictionArtifactDTO",
     "ObserverObservationArtifactDTO",
+    "ObserverProposedChangeDTO",
+    "ObserverRepairConstraintDTO",
+    "ObserverRepairProposalDTO",
+    "ObserverRepairProposalError",
     "ObserverReplacementPolicyArtifactDTO",
     "ObserverTransitionRecordDTO",
     "ObserverTransitionVerificationDTO",
@@ -38,5 +49,6 @@ __all__ = [
     "build_replacement_policy_artifact",
     "build_transition_record",
     "compare_observer_transition",
+    "propose_observer_repair",
     "verify_observer_transition",
 ]

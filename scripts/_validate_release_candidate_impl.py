@@ -36,9 +36,7 @@ PACKAGE_RELEASE_ARTIFACTS_PATH = (
     ARCHITECTURE_REPORT_DIR / f"package-release-artifacts-{VERSION}.json"
 )
 
-PACKAGE_PUBLIC_API_PATH = (
-    ARCHITECTURE_REPORT_DIR / f"package-public-api-{VERSION}.csv"
-)
+PACKAGE_PUBLIC_API_PATH = ARCHITECTURE_REPORT_DIR / f"package-public-api-{VERSION}.csv"
 
 PACKAGE_RELEASE_TEST_LAYERS_PATH = (
     ARCHITECTURE_REPORT_DIR / f"package-release-test-layers-{VERSION}.json"

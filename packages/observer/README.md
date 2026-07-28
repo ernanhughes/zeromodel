@@ -312,6 +312,108 @@ Stage O3.0 callers must construct `observer-comparison-recipe/2` with explicit
 `feature_comparisons`. `observer-observation-artifact/2` requires an
 `ObserverObservationSchemaDTO`.
 
+## Stage O3.1 - Deterministic Transition Ledger
+
+Stage O3.1 adds the first executable, replayable Observer fixture loop:
+
+```text
+fixture state
+        ↓
+deterministic prediction
+        ↓
+actual fixture step
+        ↓
+transition verification
+        ↓
+append-only ledger
+        ↓
+wake-policy replay
+```
+
+The predictor is deterministic and fixture-specific. The actual environment
+executor is separate, so tests can pin the predictor to `fixture-rule/1` while
+the environment switches to `fixture-rule/2` mid-episode. The ledger is
+currently in-memory and is the source of truth for replay. Wake policies are
+evaluated after the fact from stored evidence; replay does not rerun the
+environment.
+
+This stage does not create a graph, event bus, habit, repair candidate, policy
+activation, persistence layer, or claim about invocation savings.
+
+```python
+from zeromodel.observer import (
+    ObserverFixtureActionDTO,
+    ObserverFixtureRuleScheduleEntryDTO,
+    ObserverFixtureRuleSetDTO,
+    ObserverFixtureStateDTO,
+    ObserverWakePolicyDTO,
+    build_observer_fixture_comparison_recipe,
+    build_observer_fixture_observation_schema,
+    evaluate_wake_policy_over_ledger,
+    run_observer_fixture_episode,
+)
+
+schema = build_observer_fixture_observation_schema()
+rule_1 = ObserverFixtureRuleSetDTO.create(
+    fixture_id="fixture:line",
+    rule_version="fixture-rule/1",
+    minimum_position=0,
+    maximum_position=6,
+    cooldown_period=1,
+    cooldown_effect="block",
+    observation_schema_id=schema.schema_id,
+)
+rule_2 = ObserverFixtureRuleSetDTO.create(
+    fixture_id="fixture:line",
+    rule_version="fixture-rule/2",
+    minimum_position=0,
+    maximum_position=6,
+    cooldown_period=1,
+    cooldown_effect="reverse",
+    observation_schema_id=schema.schema_id,
+)
+initial = ObserverFixtureStateDTO.create(
+    fixture_id="fixture:line",
+    rule_set_id=rule_1.fixture_rule_set_id,
+    episode_id="episode:1",
+    step_index=0,
+    agent_x=1,
+    target_x=6,
+)
+
+episode, entries = run_observer_fixture_episode(
+    initial_state=initial,
+    actions=(
+        ObserverFixtureActionDTO.create(action_name="move_right"),
+        ObserverFixtureActionDTO.create(action_name="move_right"),
+    ),
+    predictor_rule_set=rule_1,
+    environment_rule_schedule=(
+        ObserverFixtureRuleScheduleEntryDTO.create(
+            start_step=0,
+            rule_set_id=rule_1.fixture_rule_set_id,
+        ),
+        ObserverFixtureRuleScheduleEntryDTO.create(
+            start_step=1,
+            rule_set_id=rule_2.fixture_rule_set_id,
+        ),
+    ),
+    environment_rule_sets=(rule_1, rule_2),
+    observation_schema=schema,
+    comparison_recipe=build_observer_fixture_comparison_recipe(schema),
+)
+
+policy = ObserverWakePolicyDTO.create(
+    policy_name="contradiction-only",
+    wake_on_contradiction=True,
+)
+replay = evaluate_wake_policy_over_ledger(
+    ledger_snapshot=episode.ledger_snapshot,
+    entries=entries,
+    wake_policy=policy,
+)
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

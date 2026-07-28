@@ -520,7 +520,6 @@ class ObserverComparisonRecipeDTO:
     action_effect_keys: tuple[str, ...] = ()
     hidden_state_keys: tuple[str, ...] = ()
     require_policy_consequence_evidence: bool = False
-    decision_margin_tolerance: float = 0.0
     wake_on_observable_mismatch: bool = True
     wake_on_action_effect_mismatch: bool = True
     wake_on_policy_consequence_mismatch: bool = False
@@ -557,13 +556,11 @@ class ObserverComparisonRecipeDTO:
             )
         )
         missing_specs = set(required_keys) - set(comparison_keys)
-        if missing_specs:
+        extra_specs = set(comparison_keys) - set(required_keys)
+        if missing_specs or extra_specs:
             raise ObserverComparisonError(
-                f"required feature keys lack comparison specs: {sorted(missing_specs)}"
-            )
-        if self.decision_margin_tolerance < 0.0:
-            raise ObserverComparisonError(
-                "decision_margin_tolerance must be non-negative"
+                "feature comparison specs must exactly match required feature keys "
+                f"(missing={sorted(missing_specs)}, extra={sorted(extra_specs)})"
             )
         expected_id = canonical_id(self.canonical_payload(include_id=False))
         if self.recipe_id != expected_id:
@@ -572,7 +569,6 @@ class ObserverComparisonRecipeDTO:
     def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
         payload: dict[str, object] = {
             "action_effect_keys": list(self.action_effect_keys),
-            "decision_margin_tolerance": self.decision_margin_tolerance,
             "feature_comparisons": [
                 item.canonical_payload() for item in self.feature_comparisons
             ],
@@ -602,7 +598,6 @@ class ObserverComparisonRecipeDTO:
         action_effect_keys: tuple[str, ...] = (),
         hidden_state_keys: tuple[str, ...] = (),
         require_policy_consequence_evidence: bool = False,
-        decision_margin_tolerance: float = 0.0,
         wake_on_observable_mismatch: bool = True,
         wake_on_action_effect_mismatch: bool = True,
         wake_on_policy_consequence_mismatch: bool = False,
@@ -613,7 +608,6 @@ class ObserverComparisonRecipeDTO:
         )
         payload = {
             "action_effect_keys": list(action_effect_keys),
-            "decision_margin_tolerance": decision_margin_tolerance,
             "feature_comparisons": [
                 item.canonical_payload() for item in feature_comparisons
             ],
@@ -635,7 +629,6 @@ class ObserverComparisonRecipeDTO:
             action_effect_keys=action_effect_keys,
             hidden_state_keys=hidden_state_keys,
             require_policy_consequence_evidence=require_policy_consequence_evidence,
-            decision_margin_tolerance=decision_margin_tolerance,
             wake_on_observable_mismatch=wake_on_observable_mismatch,
             wake_on_action_effect_mismatch=wake_on_action_effect_mismatch,
             wake_on_policy_consequence_mismatch=(wake_on_policy_consequence_mismatch),

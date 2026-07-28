@@ -222,8 +222,6 @@ def verify_observer_transition(
     state_before_id: str,
     action: str,
     affected_policy_row_id: str,
-    predicted_decision_margin: float,
-    observed_decision_margin: float,
     hidden_state_hypothesis_set: ObserverHiddenStateHypothesisSetDTO | None = None,
     policy_consequence_evidence: ObserverPolicyConsequenceEvidenceDTO | None = None,
     reproduction: Mapping[str, object] | None = None,
@@ -242,9 +240,11 @@ def verify_observer_transition(
     if hidden_state_hypothesis_set is not None and (
         hidden_state_hypothesis_set.observation_schema_id
         != predicted_observation.observation_schema_id
+        or hidden_state_hypothesis_set.observation_schema_id
+        != observed_observation.observation_schema_id
     ):
         raise ObserverTransitionVerificationError(
-            "hidden-state hypothesis set schema does not match predicted observation schema"
+            "hidden-state hypothesis set schema must match predicted and observed observation schemas"
         )
     if policy_consequence_evidence is not None:
         _validate_policy_consequence_evidence(

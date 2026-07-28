@@ -1,3 +1,5 @@
+import inspect
+
 import pytest
 
 from zeromodel.observer import (
@@ -72,8 +74,6 @@ def verify(
     recipe: ObserverComparisonRecipeDTO,
     predicted: ObserverObservationArtifactDTO,
     observed: ObserverObservationArtifactDTO,
-    predicted_margin: float = 0.3,
-    observed_margin: float = 0.3,
     hidden_remaining: int = 1,
     policy_evidence: ObserverPolicyConsequenceEvidenceDTO | None = None,
     reproduction: dict[str, object] | None = None,
@@ -87,8 +87,6 @@ def verify(
         state_before_id="state:before",
         action="move_right",
         affected_policy_row_id="row:before",
-        predicted_decision_margin=predicted_margin,
-        observed_decision_margin=observed_margin,
         hidden_state_hypothesis_set=ObserverHiddenStateHypothesisSetDTO.create(
             observation_schema_id=SCHEMA.schema_id,
             hypotheses=(
@@ -206,7 +204,6 @@ def test_hidden_cooldown_contradiction_builds_artifact() -> None:
         recipe=recipe,
         predicted=predicted,
         observed=observed,
-        observed_margin=0.12,
         reproduction={"episode_id": "episode:1", "step": 7},
         relevant_context_keys=("history.previous_action",),
     )
@@ -335,16 +332,12 @@ def test_recipe_sensitivity_changes_wake_and_ids() -> None:
         predicted=predicted,
         observed=observed,
         policy_evidence=policy_evidence,
-        predicted_margin=0.3,
-        observed_margin=0.29,
     )
     waking_result = verify(
         recipe=waking,
         predicted=predicted,
         observed=observed,
         policy_evidence=policy_evidence,
-        predicted_margin=0.3,
-        observed_margin=0.29,
     )
 
     assert passive_result.comparison_result.wake_required is False
@@ -416,6 +409,13 @@ def test_transition_service_public_api() -> None:
     assert hasattr(observer, "ObserverTransitionVerificationDTO")
     assert hasattr(observer, "ObserverTransitionVerificationError")
     assert hasattr(observer, "verify_observer_transition")
+
+
+def test_verifier_signature_has_no_dead_margin_inputs() -> None:
+    parameters = inspect.signature(verify_observer_transition).parameters
+
+    assert "predicted_decision_margin" not in parameters
+    assert "observed_decision_margin" not in parameters
 
 
 def test_canonical_payload_reconstruction_preserves_identity() -> None:

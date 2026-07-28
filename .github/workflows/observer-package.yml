@@ -48,16 +48,23 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build twine pytest ruff mypy "numpy<2.0"
 
+      - name: Install workspace
+        run: python -m pip install -r requirements-dev.txt
+
       - name: Observer quality
         run: |
           python -m ruff format --check packages/observer/src packages/observer/tests
           python -m ruff check packages/observer/src packages/observer/tests
+          python -m mypy packages/observer/src
 
       - name: Package boundaries
         run: python scripts/check_package_boundaries.py
 
       - name: Public API manifest
         run: python -m pytest -q tests/test_public_api_manifest.py
+
+      - name: Workflow coverage
+        run: python -m pytest -q tests/test_package_workflow_coverage.py
 
       - name: Observer tests
         run: python -m pytest -q packages/observer/tests

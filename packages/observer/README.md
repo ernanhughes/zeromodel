@@ -119,9 +119,6 @@ verification = verify_observer_transition(
     state_before_id="state:before",
     action="move_right",
     affected_policy_row_id="row:before",
-    predicted_decision_margin=0.3,
-    observed_decision_margin=0.3,
-    hidden_state_hypotheses_remaining=1,
 )
 
 verification.verification_status
@@ -306,8 +303,6 @@ verification = verify_observer_transition(
     state_before_id="state:before",
     action="move_right",
     affected_policy_row_id="row:before",
-    predicted_decision_margin=0.3,
-    observed_decision_margin=0.3,
     hidden_state_hypothesis_set=hypotheses,
 )
 ```

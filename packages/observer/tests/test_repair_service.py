@@ -68,7 +68,6 @@ def cooldown_recipe() -> ObserverComparisonRecipeDTO:
             "hidden.cooldown",
             "visible.action_effect",
             "visible.agent_x",
-            "visible.next_action",
             "visible.target_x",
         )
     )
@@ -121,8 +120,6 @@ def contradicted_verification():
         state_before_id="state:before",
         action="move_right",
         affected_policy_row_id=ROW_ID,
-        predicted_decision_margin=0.30,
-        observed_decision_margin=0.12,
         hidden_state_hypothesis_set=hypothesis_set(possible=True),
         reproduction={"episode_id": "episode:1", "step": 7},
         relevant_context_keys=("hidden.cooldown",),
@@ -156,8 +153,6 @@ def confirmed_verification():
         state_before_id="state:before",
         action="move_right",
         affected_policy_row_id=ROW_ID,
-        predicted_decision_margin=0.30,
-        observed_decision_margin=0.30,
         hidden_state_hypothesis_set=hypothesis_set(possible=True),
     )
 
@@ -179,8 +174,6 @@ def inconclusive_verification():
         state_before_id="state:before",
         action="move_right",
         affected_policy_row_id=ROW_ID,
-        predicted_decision_margin=0.30,
-        observed_decision_margin=0.30,
         hidden_state_hypothesis_set=hypothesis_set(possible=True),
     )
 

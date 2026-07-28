@@ -11,7 +11,9 @@ from zeromodel.observer import (
     ObserverObservationArtifactDTO,
     ObserverObservationSchemaDTO,
     ObserverPolicyConsequenceEvidenceDTO,
+    ObserverTransitionVerificationError,
     compare_observer_transition,
+    verify_observer_transition,
 )
 from zeromodel.observer.artifacts import ObserverArtifactError
 from zeromodel.observer.comparison import ObserverComparisonError
@@ -173,6 +175,17 @@ def test_recipe_identity_changes_with_comparison_semantics() -> None:
     assert all(item.recipe_id != baseline.recipe_id for item in variants)
 
 
+def test_recipe_rejects_unused_comparison_specs() -> None:
+    required = comparison("visible.score", mode="exact")
+    extra = comparison("visible.label", mode="exact")
+
+    with pytest.raises(ObserverComparisonError, match="exactly match"):
+        ObserverComparisonRecipeDTO.create(
+            feature_comparisons=(extra, required),
+            observable_feature_keys=("visible.score",),
+        )
+
+
 def test_per_feature_evidence_statuses() -> None:
     observation_schema = schema()
     spec = comparison("visible.label", mode="exact")
@@ -308,6 +321,46 @@ def test_hypothesis_set_evidence_controls_exhaustion_and_identity() -> None:
     assert still_possible.hidden_state_exhausted is False
     assert exhausted.hidden_state_exhausted is True
     assert still_possible.comparison_result_id != exhausted.comparison_result_id
+
+
+def test_transition_rejects_hypothesis_set_schema_mismatch_with_observed() -> None:
+    predicted_schema = schema(name="predicted")
+    observed_schema = schema(name="observed")
+    predicted = ObserverObservationArtifactDTO.create(
+        observation_schema=predicted_schema,
+        visible_state_features={"score": 1},
+    )
+    observed = ObserverObservationArtifactDTO.create(
+        observation_schema=observed_schema,
+        visible_state_features={"score": 1},
+    )
+    hypotheses = ObserverHiddenStateHypothesisSetDTO.create(
+        observation_schema_id=predicted_schema.schema_id,
+        hypotheses=(
+            ObserverHiddenStateHypothesisDTO.create(
+                state_key="hidden.cooldown", state_value="clear"
+            ),
+        ),
+    )
+
+    visible_score_recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=(comparison("visible.score", mode="exact"),),
+        observable_feature_keys=("visible.score",),
+    )
+
+    with pytest.raises(
+        ObserverTransitionVerificationError, match="predicted and observed"
+    ):
+        verify_observer_transition(
+            recipe=visible_score_recipe,
+            predicted_observation=predicted,
+            observed_observation=observed,
+            policy_artifact_id="policy:A",
+            state_before_id="state:before",
+            action="wait",
+            affected_policy_row_id="row:before",
+            hidden_state_hypothesis_set=hypotheses,
+        )
 
 
 def test_policy_consequence_evidence_is_required_and_validated() -> None:

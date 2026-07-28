@@ -2,7 +2,12 @@ import pytest
 
 from zeromodel.observer import (
     ObserverComparisonRecipeDTO,
+    ObserverFeatureComparisonDTO,
+    ObserverFeatureDefinitionDTO,
+    ObserverHiddenStateHypothesisDTO,
+    ObserverHiddenStateHypothesisSetDTO,
     ObserverObservationArtifactDTO,
+    ObserverObservationSchemaDTO,
     ObserverProposedChangeDTO,
     ObserverRepairConstraintDTO,
     ObserverRepairProposalError,
@@ -15,6 +20,32 @@ ROW_ID = "row:cooldown-sensitive"
 CELL_ID = f"{ROW_ID}/action:move_right"
 
 
+def observer_schema() -> ObserverObservationSchemaDTO:
+    return ObserverObservationSchemaDTO.create(
+        schema_name="stage-o3-repair",
+        features=(
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="hidden.cooldown", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.action_effect", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.agent_x", value_type="int", required=True
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.next_action", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.target_x", value_type="int", required=True
+            ),
+        ),
+    )
+
+
+SCHEMA = observer_schema()
+
+
 def observation(
     *,
     sequence_index: int = 1,
@@ -22,6 +53,7 @@ def observation(
     hidden: dict[str, object] | None = None,
 ) -> ObserverObservationArtifactDTO:
     return ObserverObservationArtifactDTO.create(
+        observation_schema=SCHEMA,
         visible_state_features=visible,
         hidden_state_uncertainty=hidden or {},
         provenance={"fixture": "stage-o2"},
@@ -30,12 +62,35 @@ def observation(
 
 
 def cooldown_recipe() -> ObserverComparisonRecipeDTO:
+    feature_comparisons = tuple(
+        ObserverFeatureComparisonDTO.create(feature_key=key, mode="exact")
+        for key in (
+            "hidden.cooldown",
+            "visible.action_effect",
+            "visible.agent_x",
+            "visible.next_action",
+            "visible.target_x",
+        )
+    )
     return ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_comparisons,
         observable_feature_keys=("visible.agent_x", "visible.target_x"),
         action_effect_keys=("visible.action_effect",),
-        policy_consequence_key="visible.next_action",
         hidden_state_keys=("hidden.cooldown",),
         wake_on_policy_consequence_mismatch=True,
+    )
+
+
+def hypothesis_set(*, possible: bool = True) -> ObserverHiddenStateHypothesisSetDTO:
+    return ObserverHiddenStateHypothesisSetDTO.create(
+        observation_schema_id=SCHEMA.schema_id,
+        hypotheses=(
+            ObserverHiddenStateHypothesisDTO.create(
+                state_key="hidden.cooldown",
+                state_value="clear",
+                status="possible" if possible else "eliminated",
+            ),
+        ),
     )
 
 
@@ -68,7 +123,7 @@ def contradicted_verification():
         affected_policy_row_id=ROW_ID,
         predicted_decision_margin=0.30,
         observed_decision_margin=0.12,
-        hidden_state_hypotheses_remaining=1,
+        hidden_state_hypothesis_set=hypothesis_set(possible=True),
         reproduction={"episode_id": "episode:1", "step": 7},
         relevant_context_keys=("hidden.cooldown",),
     )
@@ -103,7 +158,7 @@ def confirmed_verification():
         affected_policy_row_id=ROW_ID,
         predicted_decision_margin=0.30,
         observed_decision_margin=0.30,
-        hidden_state_hypotheses_remaining=1,
+        hidden_state_hypothesis_set=hypothesis_set(possible=True),
     )
 
 
@@ -126,7 +181,7 @@ def inconclusive_verification():
         affected_policy_row_id=ROW_ID,
         predicted_decision_margin=0.30,
         observed_decision_margin=0.30,
-        hidden_state_hypotheses_remaining=1,
+        hidden_state_hypothesis_set=hypothesis_set(possible=True),
     )
 
 

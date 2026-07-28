@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
+from numbers import Real
 from typing import Final, Mapping
 
 from zeromodel.observer._canonical import canonical_id
 from zeromodel.observer.comparison import ObserverComparisonResultDTO
 
-OBSERVER_OBSERVATION_ARTIFACT_VERSION: Final = "observer-observation-artifact/1"
+OBSERVER_FEATURE_DEFINITION_VERSION: Final = "observer-feature-definition/1"
+OBSERVER_OBSERVATION_SCHEMA_VERSION: Final = "observer-observation-schema/1"
+OBSERVER_OBSERVATION_ARTIFACT_VERSION: Final = "observer-observation-artifact/2"
 OBSERVER_TRANSITION_RECORD_VERSION: Final = "observer-transition-record/1"
 OBSERVER_CONTRADICTION_ARTIFACT_VERSION: Final = "observer-contradiction-artifact/1"
 OBSERVER_REPLACEMENT_POLICY_VERSION: Final = "observer-replacement-policy/1"
@@ -26,9 +30,202 @@ def _validate_mapping(value: Mapping[str, object], field_name: str) -> None:
             raise ObserverArtifactError(f"{field_name} keys must be non-empty strings")
 
 
+def _require_non_empty(value: str, field_name: str) -> None:
+    if not value:
+        raise ObserverArtifactError(f"{field_name} must be non-empty")
+
+
+def _validate_qualified_key(value: str) -> str:
+    if "." not in value:
+        raise ObserverArtifactError(f"qualified feature key is malformed: {value!r}")
+    namespace, local = value.split(".", 1)
+    if namespace not in {"visible", "history", "hidden"} or not local:
+        raise ObserverArtifactError(f"qualified feature key is malformed: {value!r}")
+    return namespace
+
+
+def _type_name(value: object) -> str:
+    if value is None:
+        return "none"
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, int):
+        return "int"
+    if isinstance(value, float):
+        return "float"
+    if isinstance(value, str):
+        return "str"
+    return type(value).__name__
+
+
+def _is_value_type(value: object, value_type: str) -> bool:
+    if value_type == "bool":
+        return isinstance(value, bool)
+    if value_type == "int":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if value_type == "float":
+        return isinstance(value, float) and math.isfinite(value)
+    if value_type == "number":
+        return (
+            isinstance(value, Real)
+            and not isinstance(value, bool)
+            and math.isfinite(value)
+        )
+    if value_type == "str":
+        return isinstance(value, str)
+    if value_type == "none":
+        return value is None
+    return False
+
+
+def _ensure_canonical_value(value: object, field_name: str) -> None:
+    from zeromodel.observer._canonical import canonical_json
+
+    try:
+        canonical_json({"value": value})
+    except (TypeError, ValueError) as exc:
+        raise ObserverArtifactError(
+            f"{field_name} must be canonical JSON compatible"
+        ) from exc
+
+
 def _ensure_sorted_unique(values: tuple[str, ...], field_name: str) -> None:
     if values != tuple(sorted(set(values))):
         raise ObserverArtifactError(f"{field_name} must be unique and sorted")
+
+
+@dataclass(frozen=True)
+class ObserverFeatureDefinitionDTO:
+    """Declared schema entry for one observation feature."""
+
+    feature_definition_id: str
+    qualified_key: str
+    namespace: str
+    value_type: str
+    required: bool
+    nullable: bool = False
+    comparison_id: str | None = None
+    description_code: str | None = None
+    version: str = OBSERVER_FEATURE_DEFINITION_VERSION
+
+    def __post_init__(self) -> None:
+        if self.version != OBSERVER_FEATURE_DEFINITION_VERSION:
+            raise ObserverArtifactError("unsupported feature definition version")
+        namespace = _validate_qualified_key(self.qualified_key)
+        if self.namespace != namespace:
+            raise ObserverArtifactError("namespace must match qualified_key prefix")
+        if self.value_type not in {"bool", "int", "float", "number", "str", "none"}:
+            raise ObserverArtifactError(
+                f"unsupported feature value_type: {self.value_type!r}"
+            )
+        if self.comparison_id == "":
+            raise ObserverArtifactError("comparison_id cannot be empty")
+        if self.description_code == "":
+            raise ObserverArtifactError("description_code cannot be empty")
+        expected_id = canonical_id(self.canonical_payload(include_id=False))
+        if self.feature_definition_id != expected_id:
+            raise ObserverArtifactError(
+                "feature_definition_id disagrees with canonical payload"
+            )
+
+    def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "comparison_id": self.comparison_id,
+            "description_code": self.description_code,
+            "namespace": self.namespace,
+            "nullable": self.nullable,
+            "qualified_key": self.qualified_key,
+            "required": self.required,
+            "value_type": self.value_type,
+            "version": self.version,
+        }
+        if include_id:
+            payload["feature_definition_id"] = self.feature_definition_id
+        return payload
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        qualified_key: str,
+        value_type: str,
+        required: bool,
+        nullable: bool = False,
+        comparison_id: str | None = None,
+        description_code: str | None = None,
+    ) -> "ObserverFeatureDefinitionDTO":
+        namespace = _validate_qualified_key(qualified_key)
+        payload = {
+            "comparison_id": comparison_id,
+            "description_code": description_code,
+            "namespace": namespace,
+            "nullable": nullable,
+            "qualified_key": qualified_key,
+            "required": required,
+            "value_type": value_type,
+            "version": OBSERVER_FEATURE_DEFINITION_VERSION,
+        }
+        return cls(
+            feature_definition_id=canonical_id(payload),
+            qualified_key=qualified_key,
+            namespace=namespace,
+            value_type=value_type,
+            required=required,
+            nullable=nullable,
+            comparison_id=comparison_id,
+            description_code=description_code,
+        )
+
+
+@dataclass(frozen=True)
+class ObserverObservationSchemaDTO:
+    """Versioned feature vocabulary for observation artifacts."""
+
+    schema_id: str
+    schema_name: str
+    features: tuple[ObserverFeatureDefinitionDTO, ...]
+    version: str = OBSERVER_OBSERVATION_SCHEMA_VERSION
+
+    def __post_init__(self) -> None:
+        if self.version != OBSERVER_OBSERVATION_SCHEMA_VERSION:
+            raise ObserverArtifactError("unsupported observation schema version")
+        _require_non_empty(self.schema_name, "schema_name")
+        keys = tuple(item.qualified_key for item in self.features)
+        if keys != tuple(sorted(set(keys))):
+            raise ObserverArtifactError("features must be unique and sorted by key")
+        expected_id = canonical_id(self.canonical_payload(include_id=False))
+        if self.schema_id != expected_id:
+            raise ObserverArtifactError("schema_id disagrees with canonical payload")
+
+    def definition_map(self) -> Mapping[str, ObserverFeatureDefinitionDTO]:
+        return {item.qualified_key: item for item in self.features}
+
+    def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
+        payload: dict[str, object] = {
+            "features": [item.canonical_payload() for item in self.features],
+            "schema_name": self.schema_name,
+            "version": self.version,
+        }
+        if include_id:
+            payload["schema_id"] = self.schema_id
+        return payload
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        schema_name: str,
+        features: tuple[ObserverFeatureDefinitionDTO, ...],
+    ) -> "ObserverObservationSchemaDTO":
+        features = tuple(sorted(features, key=lambda item: item.qualified_key))
+        payload = {
+            "features": [item.canonical_payload() for item in features],
+            "schema_name": schema_name,
+            "version": OBSERVER_OBSERVATION_SCHEMA_VERSION,
+        }
+        return cls(
+            schema_id=canonical_id(payload), schema_name=schema_name, features=features
+        )
 
 
 @dataclass(frozen=True)
@@ -36,6 +233,7 @@ class ObserverObservationArtifactDTO:
     """Encoded observation state separated from policy action scores."""
 
     observation_artifact_id: str
+    observation_schema_id: str
     visible_state_features: Mapping[str, object]
     recent_history_features: Mapping[str, object]
     hidden_state_uncertainty: Mapping[str, object]
@@ -48,6 +246,7 @@ class ObserverObservationArtifactDTO:
             raise ObserverArtifactError("unsupported observation artifact version")
         if self.sequence_index < 0:
             raise ObserverArtifactError("sequence_index must be non-negative")
+        _require_non_empty(self.observation_schema_id, "observation_schema_id")
         _validate_mapping(self.visible_state_features, "visible_state_features")
         _validate_mapping(self.recent_history_features, "recent_history_features")
         _validate_mapping(self.hidden_state_uncertainty, "hidden_state_uncertainty")
@@ -61,6 +260,7 @@ class ObserverObservationArtifactDTO:
     def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
         payload: dict[str, object] = {
             "hidden_state_uncertainty": dict(self.hidden_state_uncertainty),
+            "observation_schema_id": self.observation_schema_id,
             "provenance": dict(self.provenance),
             "recent_history_features": dict(self.recent_history_features),
             "sequence_index": self.sequence_index,
@@ -75,21 +275,63 @@ class ObserverObservationArtifactDTO:
     def create(
         cls,
         *,
+        observation_schema: ObserverObservationSchemaDTO,
         visible_state_features: Mapping[str, object],
         recent_history_features: Mapping[str, object] | None = None,
         hidden_state_uncertainty: Mapping[str, object] | None = None,
         provenance: Mapping[str, object] | None = None,
         sequence_index: int = 0,
     ) -> "ObserverObservationArtifactDTO":
+        visible = dict(visible_state_features)
+        history = dict(recent_history_features or {})
+        hidden = dict(hidden_state_uncertainty or {})
+        projected = {
+            **{f"visible.{key}": value for key, value in visible.items()},
+            **{f"history.{key}": value for key, value in history.items()},
+            **{f"hidden.{key}": value for key, value in hidden.items()},
+        }
+        definitions = observation_schema.definition_map()
+        undeclared = set(projected) - set(definitions)
+        if undeclared:
+            raise ObserverArtifactError(
+                f"observation contains undeclared feature keys: {sorted(undeclared)}"
+            )
+        missing_required = tuple(
+            item.qualified_key
+            for item in observation_schema.features
+            if item.required and item.qualified_key not in projected
+        )
+        if missing_required:
+            raise ObserverArtifactError(
+                f"observation is missing required feature keys: {list(missing_required)}"
+            )
+        for qualified_key, value in projected.items():
+            definition = definitions[qualified_key]
+            _ensure_canonical_value(value, qualified_key)
+            if value is None and definition.nullable:
+                continue
+            if not _is_value_type(value, definition.value_type):
+                raise ObserverArtifactError(
+                    f"{qualified_key} expected {definition.value_type}, got {_type_name(value)}"
+                )
         payload = {
-            "hidden_state_uncertainty": dict(hidden_state_uncertainty or {}),
+            "hidden_state_uncertainty": hidden,
+            "observation_schema_id": observation_schema.schema_id,
             "provenance": dict(provenance or {}),
-            "recent_history_features": dict(recent_history_features or {}),
+            "recent_history_features": history,
             "sequence_index": sequence_index,
             "version": OBSERVER_OBSERVATION_ARTIFACT_VERSION,
-            "visible_state_features": dict(visible_state_features),
+            "visible_state_features": visible,
         }
-        return cls(observation_artifact_id=canonical_id(payload), **payload)
+        return cls(
+            observation_artifact_id=canonical_id(payload),
+            observation_schema_id=observation_schema.schema_id,
+            visible_state_features=visible,
+            recent_history_features=history,
+            hidden_state_uncertainty=hidden,
+            provenance=dict(provenance or {}),
+            sequence_index=sequence_index,
+        )
 
 
 @dataclass(frozen=True)

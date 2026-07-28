@@ -7,7 +7,9 @@ does not widen the core VPM artifact contract.
 
 from zeromodel.observer.artifacts import (
     ObserverContradictionArtifactDTO,
+    ObserverFeatureDefinitionDTO,
     ObserverObservationArtifactDTO,
+    ObserverObservationSchemaDTO,
     ObserverReplacementPolicyArtifactDTO,
     ObserverTransitionRecordDTO,
     build_contradiction_artifact,
@@ -17,6 +19,11 @@ from zeromodel.observer.artifacts import (
 from zeromodel.observer.comparison import (
     ObserverComparisonRecipeDTO,
     ObserverComparisonResultDTO,
+    ObserverFeatureComparisonDTO,
+    ObserverFeatureComparisonResultDTO,
+    ObserverHiddenStateHypothesisDTO,
+    ObserverHiddenStateHypothesisSetDTO,
+    ObserverPolicyConsequenceEvidenceDTO,
     compare_observer_transition,
 )
 from zeromodel.observer.repair import (
@@ -36,7 +43,14 @@ __all__ = [
     "ObserverComparisonRecipeDTO",
     "ObserverComparisonResultDTO",
     "ObserverContradictionArtifactDTO",
+    "ObserverFeatureComparisonDTO",
+    "ObserverFeatureComparisonResultDTO",
+    "ObserverFeatureDefinitionDTO",
+    "ObserverHiddenStateHypothesisDTO",
+    "ObserverHiddenStateHypothesisSetDTO",
     "ObserverObservationArtifactDTO",
+    "ObserverObservationSchemaDTO",
+    "ObserverPolicyConsequenceEvidenceDTO",
     "ObserverProposedChangeDTO",
     "ObserverRepairConstraintDTO",
     "ObserverRepairProposalDTO",

@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 
 from zeromodel.observer import (
@@ -22,6 +24,10 @@ from zeromodel.observer import (
     verify_observer_graph_rebuild,
 )
 from zeromodel.observer._canonical import canonical_id
+from zeromodel.observer.graph_service import (
+    _observation_for_fixture_state,
+    _source_observation_for_entry,
+)
 
 
 def schema_and_rules():
@@ -578,3 +584,103 @@ def test_rejected_transition_reporting_and_duplicate_membership_guard() -> None:
             last_ledger_sequence=rejected.graph.nodes[0].last_ledger_sequence,
             visit_count=rejected.graph.nodes[0].visit_count + 1,
         )
+
+
+def test_failed_prerequisites_emit_no_graph_artifacts() -> None:
+    schema, rule1, rule2, episode, entries, _ = build_graph(
+        (action("move_right"), action("wait")), rule_switch=True
+    )
+    comparison_recipe = build_observer_fixture_comparison_recipe(schema)
+    grouping_recipe = recipe(schema.schema_id)
+
+    bad_snapshot = build_observer_transition_ledger_snapshot(entries=entries[:1])
+    integrity_failed = build_observer_observation_graph(
+        ledger_snapshot=bad_snapshot,
+        entries=entries,
+        grouping_recipe=grouping_recipe,
+        observation_schema=schema,
+        comparison_recipe=comparison_recipe,
+        predictor_rule_sets=(rule1,),
+        environment_rule_sets=(rule1, rule2),
+    )
+    assert integrity_failed.status == "failed"
+    assert "ledger_integrity_failed" in integrity_failed.failure_codes
+    assert integrity_failed.graph is None
+    assert integrity_failed.assignments == ()
+    assert integrity_failed.state_classes == ()
+
+    semantic_failed = build_observer_observation_graph(
+        ledger_snapshot=episode.ledger_snapshot,
+        entries=entries,
+        grouping_recipe=grouping_recipe,
+        observation_schema=schema,
+        comparison_recipe=comparison_recipe,
+        predictor_rule_sets=(),
+        environment_rule_sets=(rule1, rule2),
+    )
+    assert semantic_failed.status == "failed"
+    assert "ledger_semantic_replay_failed" in semantic_failed.failure_codes
+    assert semantic_failed.graph is None
+    assert semantic_failed.assignments == ()
+    assert semantic_failed.state_classes == ()
+
+    schema_failed = build_observer_observation_graph(
+        ledger_snapshot=episode.ledger_snapshot,
+        entries=entries,
+        grouping_recipe=ObserverStateGroupingRecipeDTO.create(
+            observation_schema_id="schema:other",
+            feature_groupings=(
+                ObserverGroupingFeatureDTO.create(
+                    feature_key="visible.agent_x", mode="exact"
+                ),
+            ),
+        ),
+        observation_schema=schema,
+        comparison_recipe=comparison_recipe,
+        predictor_rule_sets=(rule1,),
+        environment_rule_sets=(rule1, rule2),
+    )
+    assert schema_failed.status == "failed"
+    assert "schema_mismatch" in schema_failed.failure_codes
+    assert schema_failed.graph is None
+    assert schema_failed.assignments == ()
+    assert schema_failed.state_classes == ()
+
+
+def test_source_chain_requires_full_observation_identity_not_only_sequence() -> None:
+    schema, _, _, _, entries, _ = build_graph((action("move_right"), action("wait")))
+    previous_target = _observation_for_fixture_state(
+        state=entries[1].source_state,
+        action_effect=entries[0].executed_step.action_effect,
+        observation_schema=schema,
+    )
+    assert (
+        previous_target.observation_artifact_id
+        == entries[0].executed_step.actual_observation_id
+    )
+    assert previous_target.sequence_index == entries[1].source_state.step_index
+
+    tampered_source_state = entries[1].source_state.__class__.create(
+        fixture_id=entries[1].source_state.fixture_id,
+        rule_set_id=entries[1].source_state.rule_set_id,
+        episode_id=entries[1].source_state.episode_id,
+        step_index=entries[1].source_state.step_index,
+        agent_x=entries[1].source_state.agent_x + 1,
+        target_x=entries[1].source_state.target_x,
+        cooldown_remaining=entries[1].source_state.cooldown_remaining,
+        previous_action=entries[1].source_state.previous_action,
+        terminal=entries[1].source_state.terminal,
+    )
+    tampered_entry = SimpleNamespace(
+        source_state=tampered_source_state,
+    )
+
+    assert (
+        _source_observation_for_entry(
+            entry=tampered_entry,
+            observation_schema=schema,
+            previous_target_observation=previous_target,
+            previous_target_action_effect=entries[0].executed_step.action_effect,
+        )
+        is None
+    )

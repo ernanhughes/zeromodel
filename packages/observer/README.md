@@ -447,6 +447,10 @@ supporting ledger entries, and predictor/environment rule-set IDs. The graph is
 recipe-relative: the same ledger can produce a different graph under a different
 grouping recipe.
 
+If ledger integrity, semantic replay, or grouping/schema prerequisites fail, the
+build result is canonical failure evidence with `graph=None`; no node, edge, or
+assignment artifacts are emitted from invalid source evidence.
+
 This stage does not add an event bus, graph database, habit promotion, policy
 activation, graph-based action selection, embeddings, causal inference, or any
 claim about retrieval or invocation savings.

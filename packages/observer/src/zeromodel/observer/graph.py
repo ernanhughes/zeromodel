@@ -385,7 +385,7 @@ class ObserverObservationGraphBuildDTO:
     grouping_recipe_id: str
     assignments: tuple[ObserverStateClassAssignmentDTO, ...]
     state_classes: tuple[ObserverStateClassDTO, ...]
-    graph: ObserverObservationGraphDTO
+    graph: ObserverObservationGraphDTO | None
     status: str
     failure_codes: tuple[str, ...]
     version: str = OBSERVER_OBSERVATION_GRAPH_BUILD_VERSION
@@ -408,7 +408,7 @@ class ObserverObservationGraphBuildDTO:
         payload: dict[str, object] = {
             "assignments": [item.canonical_payload() for item in self.assignments],
             "failure_codes": list(self.failure_codes),
-            "graph": self.graph.canonical_payload(),
+            "graph": self.graph.canonical_payload() if self.graph is not None else None,
             "grouping_recipe_id": self.grouping_recipe_id,
             "ledger_integrity_result_id": self.ledger_integrity_result_id,
             "ledger_semantic_replay_result_id": self.ledger_semantic_replay_result_id,

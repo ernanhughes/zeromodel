@@ -72,6 +72,14 @@ def build_observer_observation_graph(
         failure_codes.add("ledger_semantic_replay_failed")
     if grouping_recipe.observation_schema_id != observation_schema.schema_id:
         failure_codes.add("schema_mismatch")
+    if failure_codes:
+        return _failed_build(
+            ledger_snapshot=ledger_snapshot,
+            ledger_integrity_result_id=integrity.ledger_replay_result_id,
+            ledger_semantic_replay_result_id=semantic.ledger_replay_result_id,
+            grouping_recipe=grouping_recipe,
+            failure_codes=tuple(sorted(failure_codes)),
+        )
 
     assignments_by_observation: dict[str, ObserverStateClassAssignmentDTO] = {}
     observation_support: dict[str, set[str]] = defaultdict(set)
@@ -80,12 +88,14 @@ def build_observer_observation_graph(
     target_observations: dict[str, ObserverObservationArtifactDTO] = {}
     rejected_entries: set[str] = set()
     previous_target_observation: ObserverObservationArtifactDTO | None = None
+    previous_target_action_effect: str | None = None
 
     for entry in entries:
         source = _source_observation_for_entry(
             entry=entry,
             observation_schema=observation_schema,
             previous_target_observation=previous_target_observation,
+            previous_target_action_effect=previous_target_action_effect,
         )
         target = _target_observation_for_entry(
             entry=entry, observation_schema=observation_schema
@@ -94,11 +104,15 @@ def build_observer_observation_graph(
             failure_codes.add("source_observation_unavailable")
             rejected_entries.add(entry.ledger_entry_id)
             previous_target_observation = target
+            previous_target_action_effect = (
+                entry.executed_step.action_effect if target is not None else None
+            )
             continue
         if target is None:
             failure_codes.add("target_observation_unavailable")
             rejected_entries.add(entry.ledger_entry_id)
             previous_target_observation = target
+            previous_target_action_effect = None
             continue
         source_observations[entry.ledger_entry_id] = source
         target_observations[entry.ledger_entry_id] = target
@@ -125,6 +139,7 @@ def build_observer_observation_graph(
                 failure_codes.add("assignment_rejected")
                 rejected_entries.add(entry.ledger_entry_id)
         previous_target_observation = target
+        previous_target_action_effect = entry.executed_step.action_effect
 
     assignments = tuple(
         sorted(
@@ -188,6 +203,40 @@ def build_observer_observation_graph(
     )
 
 
+def _failed_build(
+    *,
+    ledger_snapshot: ObserverTransitionLedgerSnapshotDTO,
+    ledger_integrity_result_id: str,
+    ledger_semantic_replay_result_id: str,
+    grouping_recipe: ObserverStateGroupingRecipeDTO,
+    failure_codes: tuple[str, ...],
+) -> ObserverObservationGraphBuildDTO:
+    payload = {
+        "assignments": [],
+        "failure_codes": list(failure_codes),
+        "graph": None,
+        "grouping_recipe_id": grouping_recipe.grouping_recipe_id,
+        "ledger_integrity_result_id": ledger_integrity_result_id,
+        "ledger_semantic_replay_result_id": ledger_semantic_replay_result_id,
+        "ledger_snapshot_id": ledger_snapshot.ledger_snapshot_id,
+        "state_classes": [],
+        "status": "failed",
+        "version": OBSERVER_OBSERVATION_GRAPH_BUILD_VERSION,
+    }
+    return ObserverObservationGraphBuildDTO(
+        graph_build_id=canonical_id(payload),
+        ledger_snapshot_id=ledger_snapshot.ledger_snapshot_id,
+        ledger_integrity_result_id=ledger_integrity_result_id,
+        ledger_semantic_replay_result_id=ledger_semantic_replay_result_id,
+        grouping_recipe_id=grouping_recipe.grouping_recipe_id,
+        assignments=(),
+        state_classes=(),
+        graph=None,
+        status="failed",
+        failure_codes=failure_codes,
+    )
+
+
 def verify_observer_graph_rebuild(
     *,
     expected_graph: ObserverObservationGraphDTO,
@@ -209,13 +258,25 @@ def verify_observer_graph_rebuild(
         environment_rule_sets=environment_rule_sets,
     ).graph
     failures: set[str] = set()
-    if expected_graph.observation_graph_id != rebuilt.observation_graph_id:
+    if rebuilt is None:
+        rebuilt_graph_id = ""
+        mismatched_nodes = expected_graph.node_ids
+        mismatched_edges = expected_graph.edge_ids
+        mismatched_assignments = expected_graph.assignment_ids
         failures.add("graph_id_mismatch")
-    mismatched_nodes = _symmetric_difference(expected_graph.node_ids, rebuilt.node_ids)
-    mismatched_edges = _symmetric_difference(expected_graph.edge_ids, rebuilt.edge_ids)
-    mismatched_assignments = _symmetric_difference(
-        expected_graph.assignment_ids, rebuilt.assignment_ids
-    )
+    else:
+        rebuilt_graph_id = rebuilt.observation_graph_id
+        if expected_graph.observation_graph_id != rebuilt_graph_id:
+            failures.add("graph_id_mismatch")
+        mismatched_nodes = _symmetric_difference(
+            expected_graph.node_ids, rebuilt.node_ids
+        )
+        mismatched_edges = _symmetric_difference(
+            expected_graph.edge_ids, rebuilt.edge_ids
+        )
+        mismatched_assignments = _symmetric_difference(
+            expected_graph.assignment_ids, rebuilt.assignment_ids
+        )
     if mismatched_nodes:
         failures.add("node_mismatch")
     if mismatched_edges:
@@ -229,14 +290,14 @@ def verify_observer_graph_rebuild(
         "mismatched_assignment_ids": list(mismatched_assignments),
         "mismatched_edge_ids": list(mismatched_edges),
         "mismatched_node_ids": list(mismatched_nodes),
-        "rebuilt_graph_id": rebuilt.observation_graph_id,
+        "rebuilt_graph_id": rebuilt_graph_id,
         "status": status,
         "version": OBSERVER_GRAPH_REBUILD_VERIFICATION_VERSION,
     }
     return ObserverGraphRebuildVerificationDTO(
         graph_rebuild_verification_id=canonical_id(payload),
         expected_graph_id=expected_graph.observation_graph_id,
-        rebuilt_graph_id=rebuilt.observation_graph_id,
+        rebuilt_graph_id=rebuilt_graph_id,
         status=status,
         mismatched_node_ids=mismatched_nodes,
         mismatched_edge_ids=mismatched_edges,
@@ -250,9 +311,20 @@ def _source_observation_for_entry(
     entry: ObserverTransitionLedgerEntryDTO,
     observation_schema: ObserverObservationSchemaDTO,
     previous_target_observation: ObserverObservationArtifactDTO | None,
+    previous_target_action_effect: str | None,
 ) -> ObserverObservationArtifactDTO | None:
     if previous_target_observation is not None:
-        if previous_target_observation.sequence_index != entry.source_state.step_index:
+        if previous_target_action_effect is None:
+            return None
+        expected_source = _observation_for_fixture_state(
+            state=entry.source_state,
+            action_effect=previous_target_action_effect,
+            observation_schema=observation_schema,
+        )
+        if (
+            previous_target_observation.observation_artifact_id
+            != expected_source.observation_artifact_id
+        ):
             return None
         return previous_target_observation
     return _observation_for_fixture_state(

@@ -146,7 +146,6 @@ class ObserverGroupingFeatureDTO:
     feature_key: str
     mode: str
     bucket_size: float | None
-    absolute_tolerance: float | None
     category_mapping: tuple[ObserverCategoryMappingDTO, ...]
     unmapped_category_policy: str
     include_in_class_key: bool
@@ -172,10 +171,6 @@ class ObserverGroupingFeatureDTO:
             raise ObserverObservationGraphError(
                 "bucket_size is only valid for numeric_bucket"
             )
-        if self.absolute_tolerance is not None:
-            raise ObserverObservationGraphError(
-                "absolute_tolerance is reserved and must be None"
-            )
         if self.category_mapping != tuple(
             sorted(self.category_mapping, key=lambda item: item.raw_value)
         ):
@@ -190,7 +185,6 @@ class ObserverGroupingFeatureDTO:
 
     def canonical_payload(self, *, include_id: bool = True) -> Mapping[str, object]:
         payload: dict[str, object] = {
-            "absolute_tolerance": self.absolute_tolerance,
             "bucket_size": self.bucket_size,
             "category_mapping": [
                 item.canonical_payload() for item in self.category_mapping
@@ -220,7 +214,6 @@ class ObserverGroupingFeatureDTO:
             sorted(category_mapping, key=lambda item: item.raw_value)
         )
         payload = {
-            "absolute_tolerance": None,
             "bucket_size": bucket_size,
             "category_mapping": [item.canonical_payload() for item in category_mapping],
             "feature_key": feature_key,
@@ -234,7 +227,6 @@ class ObserverGroupingFeatureDTO:
             feature_key=feature_key,
             mode=mode,
             bucket_size=bucket_size,
-            absolute_tolerance=None,
             category_mapping=category_mapping,
             unmapped_category_policy=unmapped_category_policy,
             include_in_class_key=include_in_class_key,

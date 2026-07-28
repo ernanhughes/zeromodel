@@ -68,6 +68,31 @@ from zeromodel.observer.grouping import (
     ObserverStateGroupingRecipeDTO,
     assign_observation_to_state_class,
 )
+from zeromodel.observer.habit import (
+    ObserverHabitCompilationRecipeDTO,
+    ObserverHabitCompilationResultDTO,
+    ObserverHabitCounterexampleCoverageDTO,
+    ObserverHabitCounterexampleDTO,
+    ObserverHabitError,
+    ObserverHabitEvaluationDTO,
+    ObserverHabitGuardDTO,
+    ObserverHabitGuardEvaluationDTO,
+    ObserverHabitShadowAuditDTO,
+    ObserverHabitShadowAuditRecipeDTO,
+    ObserverHabitShadowEpisodeDTO,
+    ObserverHabitShadowOccurrenceDTO,
+    ObserverHabitShadowReplayDTO,
+    ObserverHabitSpecificationDTO,
+)
+from zeromodel.observer.habit_service import (
+    compile_observer_habit_specification,
+    evaluate_observer_habit,
+)
+from zeromodel.observer.habit_shadow import (
+    audit_observer_habit_shadow,
+    evaluate_observer_habit_over_ledger,
+    run_observer_fixture_habit_shadow_episode,
+)
 from zeromodel.observer.ledger import (
     InMemoryObserverTransitionLedger,
     ObserverLedgerReplayResultDTO,
@@ -132,6 +157,20 @@ __all__ = [
     "ObserverGraphRebuildVerificationDTO",
     "ObserverGroupedFeatureValueDTO",
     "ObserverGroupingFeatureDTO",
+    "ObserverHabitCompilationRecipeDTO",
+    "ObserverHabitCompilationResultDTO",
+    "ObserverHabitCounterexampleCoverageDTO",
+    "ObserverHabitCounterexampleDTO",
+    "ObserverHabitError",
+    "ObserverHabitEvaluationDTO",
+    "ObserverHabitGuardDTO",
+    "ObserverHabitGuardEvaluationDTO",
+    "ObserverHabitShadowAuditDTO",
+    "ObserverHabitShadowAuditRecipeDTO",
+    "ObserverHabitShadowEpisodeDTO",
+    "ObserverHabitShadowOccurrenceDTO",
+    "ObserverHabitShadowReplayDTO",
+    "ObserverHabitSpecificationDTO",
     "ObserverHiddenStateHypothesisDTO",
     "ObserverHiddenStateHypothesisSetDTO",
     "ObserverLedgerReplayResultDTO",
@@ -197,4 +236,9 @@ __all__ = [
     "verify_observer_transition_ledger_integrity",
     "active_rule_for_step",
     "analyze_observer_promotion_candidates",
+    "audit_observer_habit_shadow",
+    "compile_observer_habit_specification",
+    "evaluate_observer_habit",
+    "evaluate_observer_habit_over_ledger",
+    "run_observer_fixture_habit_shadow_episode",
 ]

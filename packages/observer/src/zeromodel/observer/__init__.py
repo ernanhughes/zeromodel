@@ -84,6 +84,37 @@ from zeromodel.observer.habit import (
     ObserverHabitShadowReplayDTO,
     ObserverHabitSpecificationDTO,
 )
+from zeromodel.observer.habit_active_runtime import (
+    ObserverActiveHabitExecutionReportDTO,
+    ObserverActiveHabitOccurrenceDTO,
+    ObserverHabitRuntimeSafetyRecipeDTO,
+    run_observer_fixture_with_active_habit,
+)
+from zeromodel.observer.habit_activation import (
+    ObserverActiveHabitDecisionDTO,
+    ObserverHabitActivationRequestDTO,
+    ObserverHabitActivationResultDTO,
+    ObserverHabitActivationScopeDTO,
+    activate_observer_habit,
+    select_observer_active_action,
+)
+from zeromodel.observer.habit_admission import (
+    ObserverHabitAdmissionDecisionDTO,
+    ObserverHabitAdmissionRecipeDTO,
+    admit_observer_habit,
+)
+from zeromodel.observer.habit_registry import (
+    InMemoryObserverHabitRegistry,
+    ObserverHabitRegistryEntryDTO,
+    ObserverHabitRegistryError,
+    ObserverHabitRegistryEventDTO,
+    ObserverHabitRegistryReplayDTO,
+    ObserverHabitRegistrySnapshotDTO,
+    ObserverHabitRollbackRequestDTO,
+    ObserverHabitRollbackResultDTO,
+    empty_observer_habit_registry_snapshot,
+    replay_observer_habit_registry,
+)
 from zeromodel.observer.habit_service import (
     compile_observer_habit_specification,
     evaluate_observer_habit,
@@ -141,6 +172,9 @@ from zeromodel.observer.wake import (
 
 __all__ = [
     "ObserverComparisonRecipeDTO",
+    "ObserverActiveHabitDecisionDTO",
+    "ObserverActiveHabitExecutionReportDTO",
+    "ObserverActiveHabitOccurrenceDTO",
     "ObserverComparisonResultDTO",
     "ObserverContradictionArtifactDTO",
     "ObserverExecutedFixtureStepDTO",
@@ -165,6 +199,19 @@ __all__ = [
     "ObserverHabitEvaluationDTO",
     "ObserverHabitGuardDTO",
     "ObserverHabitGuardEvaluationDTO",
+    "ObserverHabitAdmissionDecisionDTO",
+    "ObserverHabitAdmissionRecipeDTO",
+    "ObserverHabitActivationRequestDTO",
+    "ObserverHabitActivationResultDTO",
+    "ObserverHabitActivationScopeDTO",
+    "ObserverHabitRegistryEntryDTO",
+    "ObserverHabitRegistryError",
+    "ObserverHabitRegistryEventDTO",
+    "ObserverHabitRegistryReplayDTO",
+    "ObserverHabitRegistrySnapshotDTO",
+    "ObserverHabitRollbackRequestDTO",
+    "ObserverHabitRollbackResultDTO",
+    "ObserverHabitRuntimeSafetyRecipeDTO",
     "ObserverHabitShadowAuditDTO",
     "ObserverHabitShadowAuditRecipeDTO",
     "ObserverHabitShadowEpisodeDTO",
@@ -213,6 +260,7 @@ __all__ = [
     "ObserverWakePolicyDTO",
     "ObserverWakePolicyReplayDTO",
     "InMemoryObserverTransitionLedger",
+    "InMemoryObserverHabitRegistry",
     "ObserverCategoryMappingDTO",
     "build_contradiction_artifact",
     "build_observer_observation_graph",
@@ -236,9 +284,15 @@ __all__ = [
     "verify_observer_transition_ledger_integrity",
     "active_rule_for_step",
     "analyze_observer_promotion_candidates",
+    "admit_observer_habit",
+    "activate_observer_habit",
     "audit_observer_habit_shadow",
     "compile_observer_habit_specification",
     "evaluate_observer_habit",
     "evaluate_observer_habit_over_ledger",
+    "empty_observer_habit_registry_snapshot",
+    "replay_observer_habit_registry",
     "run_observer_fixture_habit_shadow_episode",
+    "run_observer_fixture_with_active_habit",
+    "select_observer_active_action",
 ]

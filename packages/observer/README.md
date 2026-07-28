@@ -564,6 +564,81 @@ analysis = analyze_observer_promotion_candidates(
 assert analysis.status == "built"
 ```
 
+## Stage O3.4 - Habit Compilation and Shadow Execution
+
+Stage O3.4 converts one eligible promotion candidate into a bounded,
+inspectable habit specification and evaluates it without control authority:
+
+```text
+eligible promotion candidate
+        ↓
+bounded habit specification
+        ↓
+counterexample guards
+        ↓
+shadow evaluation
+        ↓
+admission-review eligibility
+```
+
+The habit is inactive. Shadow recommendations are recorded beside the
+authoritative action path, but the fixture still executes only the supplied
+authoritative actions. Source matching is recomputed through the exact grouping
+recipe, guards are derived from evidence, and known indistinguishable
+counterexamples block compilation rather than becoming invented runtime
+conditions. Agreement with authoritative actions is agreement only, not proof of
+optimality; expected-target agreement is scenario-bound. Admission and
+activation remain future stages.
+
+The fixture shadow helper runs the authoritative fixture episode first, records
+the actions that actually reached the ledger, and then performs deterministic
+post-hoc shadow replay over that resulting evidence. It is not an activation
+path and does not evaluate early enough to control the fixture.
+
+```python
+from zeromodel.observer import (
+    ObserverHabitCompilationRecipeDTO,
+    compile_observer_habit_specification,
+    evaluate_observer_habit_over_ledger,
+)
+
+compilation_recipe = ObserverHabitCompilationRecipeDTO.create(
+    promotion_recipe_id=promotion_recipe.promotion_recipe_id,
+    grouping_recipe_id=grouping_recipe.grouping_recipe_id,
+    observation_schema_id=schema.schema_id,
+    allowed_guard_feature_keys=("visible.agent_x", "visible.target_x"),
+    required_guard_feature_keys=(),
+    forbidden_guard_feature_keys=(),
+    maximum_guard_count=4,
+    maximum_counterexample_guard_count=2,
+    allow_exact_guards=True,
+    allow_categorical_guards=True,
+    allow_numeric_range_guards=True,
+    require_counterexample_guards=False,
+)
+
+compiled = compile_observer_habit_specification(
+    promotion_analysis=analysis,
+    promotion_candidate=analysis.promotion_candidates[0],
+    graph_build=graph_build,
+    grouping_recipe=grouping_recipe,
+    observation_schema=schema,
+    compilation_recipe=compilation_recipe,
+    ledger_snapshot=episode.ledger_snapshot,
+    entries=entries,
+)
+habit = compiled.habit_specification
+if habit is not None:
+    shadow = evaluate_observer_habit_over_ledger(
+        habit_specification=habit,
+        ledger_snapshot=episode.ledger_snapshot,
+        entries=entries,
+        graph_build=graph_build,
+        grouping_recipe=grouping_recipe,
+        observation_schema=schema,
+    )
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

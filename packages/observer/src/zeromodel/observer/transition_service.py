@@ -213,12 +213,12 @@ def verify_observer_transition(
     ):
         _require_non_empty(value, field_name)
     _ensure_sorted_unique(relevant_context_keys, "relevant_context_keys")
-    expected_sequence_index = predicted_observation.sequence_index + 1
-    if observed_observation.sequence_index != expected_sequence_index:
+    if observed_observation.sequence_index != predicted_observation.sequence_index:
         raise ObserverTransitionVerificationError(
-            "observed sequence_index must be predicted.sequence_index + 1 "
-            f"(expected {expected_sequence_index}, "
-            f"actual {observed_observation.sequence_index})"
+            "predicted and observed observations must describe the same "
+            "target sequence position "
+            f"(predicted {predicted_observation.sequence_index}, "
+            f"observed {observed_observation.sequence_index})"
         )
 
     try:

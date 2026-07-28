@@ -70,7 +70,7 @@ def test_confirmed_transition_replays_to_identical_ids() -> None:
         hidden={"cooldown": "clear"},
     )
     observed = observation(
-        sequence_index=3,
+        sequence_index=2,
         visible={
             "agent_x": 5,
             "target_x": 9,
@@ -112,7 +112,7 @@ def test_hidden_cooldown_contradiction_builds_artifact() -> None:
         wake_on_policy_consequence_mismatch=True,
     )
     predicted = observation(
-        sequence_index=0,
+        sequence_index=1,
         visible={
             "agent_x": 5,
             "target_x": 9,
@@ -160,7 +160,7 @@ def test_missing_required_feature_is_inconclusive_not_match_or_contradiction() -
         action_effect_keys=("visible.action_effect",),
     )
     predicted = observation(
-        sequence_index=0,
+        sequence_index=1,
         visible={"agent_x": 5, "target_x": 9, "action_effect": "moved_right"},
     )
     observed = observation(
@@ -186,7 +186,7 @@ def test_feature_projection_namespaces_visible_history_and_hidden_keys() -> None
         hidden_state_keys=("hidden.mode",),
     )
     predicted = observation(
-        sequence_index=0,
+        sequence_index=1,
         visible={"mode": "visible-ready"},
         history={"mode": "history-right"},
         hidden={"mode": "hidden-clear"},
@@ -214,14 +214,14 @@ def test_invalid_sequence_order_is_rejected() -> None:
 
     with pytest.raises(
         ObserverTransitionVerificationError,
-        match=r"predicted\.sequence_index \+ 1",
+        match="same target sequence position",
     ):
         verify(recipe=recipe, predicted=predicted, observed=observed)
 
 
 def test_recipe_sensitivity_changes_wake_and_ids() -> None:
     predicted = observation(
-        sequence_index=0,
+        sequence_index=1,
         visible={"agent_x": 4, "next_action": "move_right"},
     )
     observed = observation(
@@ -273,7 +273,7 @@ def test_contradiction_can_be_recorded_without_wake() -> None:
         observable_feature_keys=("visible.agent_x",),
         wake_on_observable_mismatch=False,
     )
-    predicted = observation(sequence_index=0, visible={"agent_x": 5})
+    predicted = observation(sequence_index=1, visible={"agent_x": 5})
     observed = observation(sequence_index=1, visible={"agent_x": 4})
 
     result = verify(recipe=recipe, predicted=predicted, observed=observed)
@@ -288,7 +288,7 @@ def test_verification_identity_changes_with_reproduction_evidence() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
         observable_feature_keys=("visible.agent_x",),
     )
-    predicted = observation(sequence_index=0, visible={"agent_x": 5})
+    predicted = observation(sequence_index=1, visible={"agent_x": 5})
     observed = observation(sequence_index=1, visible={"agent_x": 4})
 
     first = verify(
@@ -327,7 +327,7 @@ def test_canonical_payload_reconstruction_preserves_identity() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
         observable_feature_keys=("visible.agent_x",),
     )
-    predicted = observation(sequence_index=0, visible={"agent_x": 4})
+    predicted = observation(sequence_index=1, visible={"agent_x": 4})
     observed = observation(sequence_index=1, visible={"agent_x": 4})
     result = verify(recipe=recipe, predicted=predicted, observed=observed)
 

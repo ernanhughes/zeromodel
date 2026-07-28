@@ -85,7 +85,7 @@ predicted = ObserverObservationArtifactDTO.create(
         "next_action": "move_right",
     },
     hidden_state_uncertainty={"cooldown": "clear"},
-    sequence_index=0,
+    sequence_index=1,
 )
 
 observed = ObserverObservationArtifactDTO.create(

@@ -8,7 +8,7 @@ from typing import Final, Mapping
 from zeromodel.observer._canonical import canonical_id
 
 OBSERVER_COMPARISON_RECIPE_VERSION: Final = "observer-comparison-recipe/1"
-OBSERVER_COMPARISON_RESULT_VERSION: Final = "observer-comparison-result/1"
+OBSERVER_COMPARISON_RESULT_VERSION: Final = "observer-comparison-result/2"
 
 
 class ObserverComparisonError(ValueError):

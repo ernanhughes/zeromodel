@@ -820,3 +820,13 @@ zeromodel-vision,zeromodel.vision,build_visual_index,zeromodel.vision,Function,z
 zeromodel-vision,zeromodel.vision,extract_visual_features,zeromodel.vision,Function,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,visual_feature_digest,zeromodel.vision,Function,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,visual_input_digest,zeromodel.vision,Function,zeromodel.vision.visual,true
+zeromodel-observer,zeromodel.observer,ObserverComparisonRecipeDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
+zeromodel-observer,zeromodel.observer,ObserverComparisonResultDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
+zeromodel-observer,zeromodel.observer,ObserverContradictionArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,ObserverObservationArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,ObserverReplacementPolicyArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,ObserverTransitionRecordDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,build_contradiction_artifact,zeromodel.observer,Function,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,build_replacement_policy_artifact,zeromodel.observer,Function,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,build_transition_record,zeromodel.observer,Function,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,compare_observer_transition,zeromodel.observer,Function,zeromodel.observer.comparison,true

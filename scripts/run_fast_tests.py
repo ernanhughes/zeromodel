@@ -32,6 +32,7 @@ TEST_ROOTS = [
     "packages/observation/tests",
     "packages/vision/tests",
     "packages/perception/tests",
+    "packages/observer/tests",
     "packages/video/tests",
     "packages/sqlalchemy/tests",
     "packages/artifacts/tests",

@@ -85,6 +85,18 @@ PACKAGES = {
         },
         "depends_on": ("core", "observation"),
     },
+    "observer": {
+        "path": Path("packages/observer"),
+        "distribution": "zeromodel-observer",
+        "wheel_stem": "zeromodel_observer",
+        "namespace": "zeromodel.observer",
+        "requires": {
+            f"zeromodel=={VERSION}",
+            f"zeromodel-observation=={VERSION}",
+            f"zeromodel-perception=={VERSION}",
+        },
+        "depends_on": ("core", "observation", "perception"),
+    },
     "vision": {
         "path": Path("packages/vision"),
         "distribution": "zeromodel-vision",

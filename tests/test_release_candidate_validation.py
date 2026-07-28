@@ -139,12 +139,17 @@ def test_wheel_smoke_probe_namespaces_covers_every_configured_package() -> None:
     namespaces = validator.wheel_smoke_probe_namespaces()
     expected = {expected["namespace"] for expected in validator.PACKAGES.values()}
     assert set(namespaces) == expected
-    assert len(namespaces) == len(validator.PACKAGES) == 10
+    assert len(namespaces) == len(validator.PACKAGES) == 11
 
 
 def test_wheel_smoke_probe_namespaces_includes_the_new_packages() -> None:
     namespaces = set(validator.wheel_smoke_probe_namespaces())
-    for namespace in ("zeromodel.artifacts", "zeromodel.trust", "zeromodel.navigation"):
+    for namespace in (
+        "zeromodel.artifacts",
+        "zeromodel.trust",
+        "zeromodel.navigation",
+        "zeromodel.observer",
+    ):
         assert namespace in namespaces
 
 

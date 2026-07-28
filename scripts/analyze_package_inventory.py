@@ -26,6 +26,7 @@ for _name in dir(_implementation):
         globals()[_name] = getattr(_implementation, _name)
 
 _implementation.CLASSIFICATIONS.add("perception")
+_implementation.CLASSIFICATIONS.add("observer")
 
 if __name__ == "__main__":
     _implementation.main()

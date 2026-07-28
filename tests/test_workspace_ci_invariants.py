@@ -20,7 +20,7 @@ def _all_workflow_files() -> list[Path]:
     return sorted(WORKFLOWS_DIR.glob("*.yml"))
 
 
-def test_requirements_dev_installs_all_ten_packages_editable() -> None:
+def test_requirements_dev_installs_all_packages_editable() -> None:
     text = (REPO_ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
     for package in (
         "core",
@@ -28,6 +28,7 @@ def test_requirements_dev_installs_all_ten_packages_editable() -> None:
         "observation",
         "vision",
         "perception",
+        "observer",
         "video",
         "sqlalchemy",
         "artifacts",

@@ -11,9 +11,10 @@ from zeromodel.observer.artifacts import (
     ObserverObservationSchemaDTO,
 )
 from zeromodel.observer.comparison import ObserverComparisonRecipeDTO
-from zeromodel.observer.fixture import (
-    ObserverFixtureRuleSetDTO,
-    ObserverFixtureStateDTO,
+from zeromodel.observer.fixture import ObserverFixtureRuleSetDTO
+from zeromodel.observer._observation_replay import (
+    source_observation_for_entry,
+    target_observation_for_entry,
 )
 from zeromodel.observer.graph import (
     OBSERVER_GRAPH_REBUILD_VERIFICATION_VERSION,
@@ -91,13 +92,13 @@ def build_observer_observation_graph(
     previous_target_action_effect: str | None = None
 
     for entry in entries:
-        source = _source_observation_for_entry(
+        source = source_observation_for_entry(
             entry=entry,
             observation_schema=observation_schema,
             previous_target_observation=previous_target_observation,
             previous_target_action_effect=previous_target_action_effect,
         )
-        target = _target_observation_for_entry(
+        target = target_observation_for_entry(
             entry=entry, observation_schema=observation_schema
         )
         if source is None:
@@ -303,72 +304,6 @@ def verify_observer_graph_rebuild(
         mismatched_edge_ids=mismatched_edges,
         mismatched_assignment_ids=mismatched_assignments,
         failure_codes=tuple(sorted(failures)),
-    )
-
-
-def _source_observation_for_entry(
-    *,
-    entry: ObserverTransitionLedgerEntryDTO,
-    observation_schema: ObserverObservationSchemaDTO,
-    previous_target_observation: ObserverObservationArtifactDTO | None,
-    previous_target_action_effect: str | None,
-) -> ObserverObservationArtifactDTO | None:
-    if previous_target_observation is not None:
-        if previous_target_action_effect is None:
-            return None
-        expected_source = _observation_for_fixture_state(
-            state=entry.source_state,
-            action_effect=previous_target_action_effect,
-            observation_schema=observation_schema,
-        )
-        if (
-            previous_target_observation.observation_artifact_id
-            != expected_source.observation_artifact_id
-        ):
-            return None
-        return previous_target_observation
-    return _observation_for_fixture_state(
-        state=entry.source_state,
-        action_effect="initial",
-        observation_schema=observation_schema,
-    )
-
-
-def _target_observation_for_entry(
-    *,
-    entry: ObserverTransitionLedgerEntryDTO,
-    observation_schema: ObserverObservationSchemaDTO,
-) -> ObserverObservationArtifactDTO | None:
-    target = _observation_for_fixture_state(
-        state=entry.executed_step.actual_state,
-        action_effect=entry.executed_step.action_effect,
-        observation_schema=observation_schema,
-    )
-    if target.observation_artifact_id != entry.executed_step.actual_observation_id:
-        return None
-    return target
-
-
-def _observation_for_fixture_state(
-    *,
-    state: ObserverFixtureStateDTO,
-    action_effect: str,
-    observation_schema: ObserverObservationSchemaDTO,
-) -> ObserverObservationArtifactDTO:
-    history = {}
-    if state.previous_action is not None:
-        history["previous_action"] = state.previous_action
-    return ObserverObservationArtifactDTO.create(
-        observation_schema=observation_schema,
-        visible_state_features={
-            "action_effect": action_effect,
-            "agent_x": state.agent_x,
-            "target_x": state.target_x,
-        },
-        recent_history_features=history,
-        hidden_state_uncertainty={"cooldown_remaining": state.cooldown_remaining},
-        provenance={"fixture_id": state.fixture_id, "rule_set_id": state.rule_set_id},
-        sequence_index=state.step_index,
     )
 
 

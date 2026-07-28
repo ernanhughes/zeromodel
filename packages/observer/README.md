@@ -511,6 +511,59 @@ verification = verify_observer_graph_rebuild(
 )
 ```
 
+## Stage O3.3 - Promotion-Candidate Evidence
+
+Stage O3.3 derives bounded analytical evidence from a successful observation
+graph and its immutable ledger source:
+
+```text
+ledger
+    ↓
+observation graph
+    ↓
+novelty and recurrence
+    ↓
+stability and structural independence
+    ↓
+promotion candidate
+```
+
+Promotion candidates are content-addressed evidence snapshots under a declared
+`ObserverPromotionEvidenceRecipeDTO`. They do not execute, mutate the graph,
+alter policy, construct habits, or activate shortcuts. Recurrence means a
+declared transition pattern appeared again; it is not correctness. Episode and
+rule-regime diversity are structural independence proxies only, not statistical
+independence claims. Rule-change survival is scenario-bound evidence, and
+eligibility means only that a future compiler may inspect the candidate.
+
+```python
+from zeromodel.observer import (
+    ObserverPromotionEvidenceRecipeDTO,
+    analyze_observer_promotion_candidates,
+)
+
+promotion_recipe = ObserverPromotionEvidenceRecipeDTO.create(
+    observation_graph_id=graph_build.graph.observation_graph_id,
+    grouping_recipe_id=grouping_recipe.grouping_recipe_id,
+    minimum_traversal_count=2,
+    minimum_confirmed_count=2,
+    minimum_independent_episode_count=1,
+    maximum_contradicted_count=0,
+    minimum_confirmation_ratio_numerator=1,
+    minimum_confirmation_ratio_denominator=1,
+)
+
+analysis = analyze_observer_promotion_candidates(
+    ledger_snapshot=episode.ledger_snapshot,
+    entries=entries,
+    graph_build=graph_build,
+    grouping_recipe=grouping_recipe,
+    promotion_recipe=promotion_recipe,
+    observation_schema=schema,
+)
+assert analysis.status == "built"
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

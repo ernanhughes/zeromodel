@@ -823,6 +823,7 @@ zeromodel-vision,zeromodel.vision,visual_input_digest,zeromodel.vision,Function,
 zeromodel-observer,zeromodel.observer,ObserverComparisonRecipeDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
 zeromodel-observer,zeromodel.observer,ObserverComparisonResultDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
 zeromodel-observer,zeromodel.observer,ObserverContradictionArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,ObserverCategoryMappingDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
 zeromodel-observer,zeromodel.observer,ObserverExecutedFixtureStepDTO,zeromodel.observer,Class,zeromodel.observer.fixture,true
 zeromodel-observer,zeromodel.observer,ObserverFeatureComparisonDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
 zeromodel-observer,zeromodel.observer,ObserverFeatureComparisonResultDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
@@ -833,9 +834,17 @@ zeromodel-observer,zeromodel.observer,ObserverFixtureError,zeromodel.observer,Cl
 zeromodel-observer,zeromodel.observer,ObserverFixtureRuleScheduleEntryDTO,zeromodel.observer,Class,zeromodel.observer.fixture_runtime,true
 zeromodel-observer,zeromodel.observer,ObserverFixtureRuleSetDTO,zeromodel.observer,Class,zeromodel.observer.fixture,true
 zeromodel-observer,zeromodel.observer,ObserverFixtureStateDTO,zeromodel.observer,Class,zeromodel.observer.fixture,true
+zeromodel-observer,zeromodel.observer,ObserverGraphRebuildVerificationDTO,zeromodel.observer,Class,zeromodel.observer.graph,true
+zeromodel-observer,zeromodel.observer,ObserverGroupedFeatureValueDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
+zeromodel-observer,zeromodel.observer,ObserverGroupingFeatureDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
 zeromodel-observer,zeromodel.observer,ObserverHiddenStateHypothesisDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
 zeromodel-observer,zeromodel.observer,ObserverHiddenStateHypothesisSetDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
 zeromodel-observer,zeromodel.observer,ObserverLedgerReplayResultDTO,zeromodel.observer,Class,zeromodel.observer.ledger,true
+zeromodel-observer,zeromodel.observer,ObserverObservationGraphBuildDTO,zeromodel.observer,Class,zeromodel.observer.graph,true
+zeromodel-observer,zeromodel.observer,ObserverObservationGraphDTO,zeromodel.observer,Class,zeromodel.observer.graph,true
+zeromodel-observer,zeromodel.observer,ObserverObservationGraphEdgeDTO,zeromodel.observer,Class,zeromodel.observer.graph,true
+zeromodel-observer,zeromodel.observer,ObserverObservationGraphError,zeromodel.observer,Class,zeromodel.observer.grouping,true
+zeromodel-observer,zeromodel.observer,ObserverObservationGraphNodeDTO,zeromodel.observer,Class,zeromodel.observer.graph,true
 zeromodel-observer,zeromodel.observer,ObserverObservationArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,ObserverObservationSchemaDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,ObserverPolicyConsequenceEvidenceDTO,zeromodel.observer,Class,zeromodel.observer.comparison,true
@@ -845,6 +854,10 @@ zeromodel-observer,zeromodel.observer,ObserverRepairConstraintDTO,zeromodel.obse
 zeromodel-observer,zeromodel.observer,ObserverRepairProposalDTO,zeromodel.observer,Class,zeromodel.observer.repair,true
 zeromodel-observer,zeromodel.observer,ObserverRepairProposalError,zeromodel.observer,Class,zeromodel.observer.repair,true
 zeromodel-observer,zeromodel.observer,ObserverReplacementPolicyArtifactDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
+zeromodel-observer,zeromodel.observer,ObserverStateClassAssignmentDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
+zeromodel-observer,zeromodel.observer,ObserverStateClassDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
+zeromodel-observer,zeromodel.observer,ObserverStateGroupingRecipeDTO,zeromodel.observer,Class,zeromodel.observer.grouping,true
+zeromodel-observer,zeromodel.observer,ObserverStateTransitionKeyDTO,zeromodel.observer,Class,zeromodel.observer.graph,true
 zeromodel-observer,zeromodel.observer,ObserverTransitionLedgerEntryDTO,zeromodel.observer,Class,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,ObserverTransitionLedgerSnapshotDTO,zeromodel.observer,Class,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,ObserverTransitionRecordDTO,zeromodel.observer,Class,zeromodel.observer.artifacts,true
@@ -858,11 +871,13 @@ zeromodel-observer,zeromodel.observer,InMemoryObserverTransitionLedger,zeromodel
 zeromodel-observer,zeromodel.observer,build_contradiction_artifact,zeromodel.observer,Function,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,build_observer_fixture_comparison_recipe,zeromodel.observer,Function,zeromodel.observer.fixture_predictor,true
 zeromodel-observer,zeromodel.observer,build_observer_fixture_observation_schema,zeromodel.observer,Function,zeromodel.observer.fixture_predictor,true
+zeromodel-observer,zeromodel.observer,build_observer_observation_graph,zeromodel.observer,Function,zeromodel.observer.graph_service,true
 zeromodel-observer,zeromodel.observer,build_observer_transition_ledger_snapshot,zeromodel.observer,Function,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,build_replacement_policy_artifact,zeromodel.observer,Function,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,build_transition_record,zeromodel.observer,Function,zeromodel.observer.artifacts,true
 zeromodel-observer,zeromodel.observer,build_wake_policy_ablation,zeromodel.observer,Function,zeromodel.observer.wake,true
 zeromodel-observer,zeromodel.observer,compare_observer_transition,zeromodel.observer,Function,zeromodel.observer.comparison,true
+zeromodel-observer,zeromodel.observer,assign_observation_to_state_class,zeromodel.observer,Function,zeromodel.observer.grouping,true
 zeromodel-observer,zeromodel.observer,evaluate_wake_policy_for_entry,zeromodel.observer,Function,zeromodel.observer.wake,true
 zeromodel-observer,zeromodel.observer,evaluate_wake_policy_over_ledger,zeromodel.observer,Function,zeromodel.observer.wake,true
 zeromodel-observer,zeromodel.observer,execute_observer_fixture_step,zeromodel.observer,Function,zeromodel.observer.fixture_predictor,true
@@ -871,5 +886,6 @@ zeromodel-observer,zeromodel.observer,propose_observer_repair,zeromodel.observer
 zeromodel-observer,zeromodel.observer,replay_observer_fixture_ledger,zeromodel.observer,Function,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,run_observer_fixture_episode,zeromodel.observer,Function,zeromodel.observer.fixture_runtime,true
 zeromodel-observer,zeromodel.observer,verify_observer_transition,zeromodel.observer,Function,zeromodel.observer.transition_service,true
+zeromodel-observer,zeromodel.observer,verify_observer_graph_rebuild,zeromodel.observer,Function,zeromodel.observer.graph_service,true
 zeromodel-observer,zeromodel.observer,verify_observer_transition_ledger_integrity,zeromodel.observer,Function,zeromodel.observer.ledger,true
 zeromodel-observer,zeromodel.observer,active_rule_for_step,zeromodel.observer,Function,zeromodel.observer.fixture_runtime,true

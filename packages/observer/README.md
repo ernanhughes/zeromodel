@@ -416,6 +416,101 @@ replay = evaluate_wake_policy_over_ledger(
 )
 ```
 
+## Stage O3.2 - Rebuildable Observation Graph
+
+Stage O3.2 materializes a deterministic graph from immutable ledger evidence:
+
+```text
+transition ledger
+        ↓
+state-grouping recipe
+        ↓
+actual-observation assignments
+        ↓
+state classes
+        ↓
+action-labelled graph
+```
+
+The ledger remains the source of truth. The graph is a disposable materialized
+view that can be deleted and rebuilt from the ledger snapshot, exact ledger
+entries, grouping recipe, observation schema, and declared rule sets. Graph
+nodes are equivalence classes under `ObserverStateGroupingRecipeDTO`, not
+observation IDs; every exact observation artifact assigned to a node remains
+listed as evidence. Grouping semantics are intentionally separate from
+transition-comparison semantics.
+
+Graph nodes represent actual observed states. Predicted observations are kept as
+transition evidence and are not counted as traversed world states. Edges are
+labelled by action and aggregate traversal count, verification-status counts,
+supporting ledger entries, and predictor/environment rule-set IDs. The graph is
+recipe-relative: the same ledger can produce a different graph under a different
+grouping recipe.
+
+If ledger integrity, semantic replay, or grouping/schema prerequisites fail, the
+build result is canonical failure evidence with `graph=None`; no node, edge, or
+assignment artifacts are emitted from invalid source evidence.
+
+This stage does not add an event bus, graph database, habit promotion, policy
+activation, graph-based action selection, embeddings, causal inference, or any
+claim about retrieval or invocation savings.
+
+```python
+from zeromodel.observer import (
+    ObserverGroupingFeatureDTO,
+    ObserverStateGroupingRecipeDTO,
+    build_observer_fixture_comparison_recipe,
+    build_observer_observation_graph,
+    verify_observer_graph_rebuild,
+)
+
+grouping = ObserverStateGroupingRecipeDTO.create(
+    observation_schema_id=schema.schema_id,
+    missing_feature_policy="separate_class",
+    type_mismatch_policy="separate_class",
+    feature_groupings=(
+        ObserverGroupingFeatureDTO.create(
+            feature_key="hidden.cooldown_remaining",
+            mode="ignored",
+        ),
+        ObserverGroupingFeatureDTO.create(
+            feature_key="visible.action_effect",
+            mode="categorical",
+        ),
+        ObserverGroupingFeatureDTO.create(
+            feature_key="visible.agent_x",
+            mode="numeric_bucket",
+            bucket_size=2.0,
+        ),
+        ObserverGroupingFeatureDTO.create(
+            feature_key="visible.target_x",
+            mode="exact",
+        ),
+    ),
+)
+
+build = build_observer_observation_graph(
+    ledger_snapshot=episode.ledger_snapshot,
+    entries=entries,
+    grouping_recipe=grouping,
+    observation_schema=schema,
+    comparison_recipe=build_observer_fixture_comparison_recipe(schema),
+    predictor_rule_sets=(rule_1,),
+    environment_rule_sets=(rule_1, rule_2),
+)
+
+verification = verify_observer_graph_rebuild(
+    expected_graph=build.graph,
+    ledger_snapshot=episode.ledger_snapshot,
+    entries=entries,
+    grouping_recipe=grouping,
+    observation_schema=schema,
+    comparison_recipe=build_observer_fixture_comparison_recipe(schema),
+    predictor_rule_sets=(rule_1,),
+    environment_rule_sets=(rule_1, rule_2),
+)
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

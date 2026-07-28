@@ -18,10 +18,12 @@ from zeromodel.observer.comparison import (
     ObserverComparisonError,
     ObserverComparisonRecipeDTO,
     ObserverComparisonResultDTO,
+    ObserverHiddenStateHypothesisSetDTO,
+    ObserverPolicyConsequenceEvidenceDTO,
     compare_observer_transition,
 )
 
-OBSERVER_TRANSITION_VERIFICATION_VERSION: Final = "observer-transition-verification/1"
+OBSERVER_TRANSITION_VERIFICATION_VERSION: Final = "observer-transition-verification/2"
 OBSERVER_VERIFICATION_CONFIRMED: Final = "confirmed"
 OBSERVER_VERIFICATION_CONTRADICTED: Final = "contradicted"
 OBSERVER_VERIFICATION_INCONCLUSIVE: Final = "inconclusive"
@@ -67,13 +69,36 @@ def _project_feature_surface(
 def _derive_status(comparison: ObserverComparisonResultDTO) -> str:
     if comparison.contradiction:
         return OBSERVER_VERIFICATION_CONTRADICTED
-    if (
-        comparison.missing_predicted_feature_keys
-        or comparison.missing_observed_feature_keys
-        or comparison.wake_required
-    ):
+    if comparison.inconclusive_reasons or comparison.wake_required:
         return OBSERVER_VERIFICATION_INCONCLUSIVE
     return OBSERVER_VERIFICATION_CONFIRMED
+
+
+def _validate_policy_consequence_evidence(
+    *,
+    evidence: ObserverPolicyConsequenceEvidenceDTO,
+    policy_artifact_id: str,
+    predicted_observation: ObserverObservationArtifactDTO,
+    observed_observation: ObserverObservationArtifactDTO,
+) -> None:
+    if evidence.policy_artifact_id != policy_artifact_id:
+        raise ObserverTransitionVerificationError(
+            "policy consequence evidence policy_artifact_id does not match transition policy"
+        )
+    if (
+        evidence.predicted_state_artifact_id
+        != predicted_observation.observation_artifact_id
+    ):
+        raise ObserverTransitionVerificationError(
+            "policy consequence evidence predicted_state_artifact_id does not match"
+        )
+    if (
+        evidence.observed_state_artifact_id
+        != observed_observation.observation_artifact_id
+    ):
+        raise ObserverTransitionVerificationError(
+            "policy consequence evidence observed_state_artifact_id does not match"
+        )
 
 
 @dataclass(frozen=True)
@@ -197,9 +222,8 @@ def verify_observer_transition(
     state_before_id: str,
     action: str,
     affected_policy_row_id: str,
-    predicted_decision_margin: float,
-    observed_decision_margin: float,
-    hidden_state_hypotheses_remaining: int,
+    hidden_state_hypothesis_set: ObserverHiddenStateHypothesisSetDTO | None = None,
+    policy_consequence_evidence: ObserverPolicyConsequenceEvidenceDTO | None = None,
     reproduction: Mapping[str, object] | None = None,
     relevant_context_keys: tuple[str, ...] = (),
 ) -> ObserverTransitionVerificationDTO:
@@ -213,6 +237,22 @@ def verify_observer_transition(
     ):
         _require_non_empty(value, field_name)
     _ensure_sorted_unique(relevant_context_keys, "relevant_context_keys")
+    if hidden_state_hypothesis_set is not None and (
+        hidden_state_hypothesis_set.observation_schema_id
+        != predicted_observation.observation_schema_id
+        or hidden_state_hypothesis_set.observation_schema_id
+        != observed_observation.observation_schema_id
+    ):
+        raise ObserverTransitionVerificationError(
+            "hidden-state hypothesis set schema must match predicted and observed observation schemas"
+        )
+    if policy_consequence_evidence is not None:
+        _validate_policy_consequence_evidence(
+            evidence=policy_consequence_evidence,
+            policy_artifact_id=policy_artifact_id,
+            predicted_observation=predicted_observation,
+            observed_observation=observed_observation,
+        )
     if observed_observation.sequence_index != predicted_observation.sequence_index:
         raise ObserverTransitionVerificationError(
             "predicted and observed observations must describe the same "
@@ -224,11 +264,16 @@ def verify_observer_transition(
     try:
         comparison = compare_observer_transition(
             recipe=recipe,
+            predicted_observation_artifact_id=(
+                predicted_observation.observation_artifact_id
+            ),
+            observed_observation_artifact_id=observed_observation.observation_artifact_id,
+            predicted_observation_schema_id=predicted_observation.observation_schema_id,
+            observed_observation_schema_id=observed_observation.observation_schema_id,
             predicted_features=_project_feature_surface(predicted_observation),
             observed_features=_project_feature_surface(observed_observation),
-            predicted_decision_margin=predicted_decision_margin,
-            observed_decision_margin=observed_decision_margin,
-            hidden_state_hypotheses_remaining=hidden_state_hypotheses_remaining,
+            hidden_state_hypothesis_set=hidden_state_hypothesis_set,
+            policy_consequence_evidence=policy_consequence_evidence,
         )
         verification_status = _derive_status(comparison)
         transition = build_transition_record(

@@ -1,12 +1,55 @@
+import inspect
+
 import pytest
 
 from zeromodel.observer import (
+    ObserverFeatureComparisonDTO,
+    ObserverFeatureDefinitionDTO,
+    ObserverHiddenStateHypothesisDTO,
+    ObserverHiddenStateHypothesisSetDTO,
     ObserverComparisonRecipeDTO,
     ObserverObservationArtifactDTO,
+    ObserverObservationSchemaDTO,
+    ObserverPolicyConsequenceEvidenceDTO,
     ObserverTransitionVerificationDTO,
     ObserverTransitionVerificationError,
     verify_observer_transition,
 )
+
+
+def schema(*, name: str = "stage-o3") -> ObserverObservationSchemaDTO:
+    return ObserverObservationSchemaDTO.create(
+        schema_name=name,
+        features=(
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="hidden.cooldown", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="hidden.mode", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="history.mode", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.action_effect", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.agent_x", value_type="int", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.mode", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.next_action", value_type="str", required=False
+            ),
+            ObserverFeatureDefinitionDTO.create(
+                qualified_key="visible.target_x", value_type="int", required=False
+            ),
+        ),
+    )
+
+
+SCHEMA = schema()
 
 
 def observation(
@@ -17,6 +60,7 @@ def observation(
     hidden: dict[str, object] | None = None,
 ) -> ObserverObservationArtifactDTO:
     return ObserverObservationArtifactDTO.create(
+        observation_schema=SCHEMA,
         visible_state_features=visible,
         recent_history_features=history or {},
         hidden_state_uncertainty=hidden or {},
@@ -30,9 +74,8 @@ def verify(
     recipe: ObserverComparisonRecipeDTO,
     predicted: ObserverObservationArtifactDTO,
     observed: ObserverObservationArtifactDTO,
-    predicted_margin: float = 0.3,
-    observed_margin: float = 0.3,
     hidden_remaining: int = 1,
+    policy_evidence: ObserverPolicyConsequenceEvidenceDTO | None = None,
     reproduction: dict[str, object] | None = None,
     relevant_context_keys: tuple[str, ...] = (),
 ):
@@ -44,19 +87,39 @@ def verify(
         state_before_id="state:before",
         action="move_right",
         affected_policy_row_id="row:before",
-        predicted_decision_margin=predicted_margin,
-        observed_decision_margin=observed_margin,
-        hidden_state_hypotheses_remaining=hidden_remaining,
+        hidden_state_hypothesis_set=ObserverHiddenStateHypothesisSetDTO.create(
+            observation_schema_id=SCHEMA.schema_id,
+            hypotheses=(
+                ObserverHiddenStateHypothesisDTO.create(
+                    state_key="hidden.cooldown",
+                    state_value="clear",
+                    status="possible" if hidden_remaining else "eliminated",
+                ),
+            ),
+        ),
+        policy_consequence_evidence=policy_evidence,
         reproduction=reproduction,
         relevant_context_keys=relevant_context_keys,
     )
 
 
+def feature_specs(*keys: str) -> tuple[ObserverFeatureComparisonDTO, ...]:
+    return tuple(
+        ObserverFeatureComparisonDTO.create(feature_key=key, mode="exact")
+        for key in sorted(keys)
+    )
+
+
 def test_confirmed_transition_replays_to_identical_ids() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs(
+            "hidden.cooldown",
+            "visible.action_effect",
+            "visible.agent_x",
+            "visible.target_x",
+        ),
         observable_feature_keys=("visible.agent_x", "visible.target_x"),
         action_effect_keys=("visible.action_effect",),
-        policy_consequence_key="visible.next_action",
         hidden_state_keys=("hidden.cooldown",),
     )
     predicted = observation(
@@ -105,9 +168,14 @@ def test_confirmed_transition_replays_to_identical_ids() -> None:
 
 def test_hidden_cooldown_contradiction_builds_artifact() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs(
+            "hidden.cooldown",
+            "visible.action_effect",
+            "visible.agent_x",
+            "visible.target_x",
+        ),
         observable_feature_keys=("visible.agent_x", "visible.target_x"),
         action_effect_keys=("visible.action_effect",),
-        policy_consequence_key="visible.next_action",
         hidden_state_keys=("hidden.cooldown",),
         wake_on_policy_consequence_mismatch=True,
     )
@@ -136,7 +204,6 @@ def test_hidden_cooldown_contradiction_builds_artifact() -> None:
         recipe=recipe,
         predicted=predicted,
         observed=observed,
-        observed_margin=0.12,
         reproduction={"episode_id": "episode:1", "step": 7},
         relevant_context_keys=("history.previous_action",),
     )
@@ -156,6 +223,11 @@ def test_hidden_cooldown_contradiction_builds_artifact() -> None:
 
 def test_missing_required_feature_is_inconclusive_not_match_or_contradiction() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs(
+            "visible.action_effect",
+            "visible.agent_x",
+            "visible.target_x",
+        ),
         observable_feature_keys=("visible.agent_x", "visible.target_x"),
         action_effect_keys=("visible.action_effect",),
     )
@@ -181,6 +253,9 @@ def test_missing_required_feature_is_inconclusive_not_match_or_contradiction() -
 
 def test_feature_projection_namespaces_visible_history_and_hidden_keys() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs(
+            "hidden.mode", "history.mode", "visible.mode"
+        ),
         observable_feature_keys=("visible.mode",),
         action_effect_keys=("history.mode",),
         hidden_state_keys=("hidden.mode",),
@@ -207,6 +282,7 @@ def test_feature_projection_namespaces_visible_history_and_hidden_keys() -> None
 
 def test_invalid_sequence_order_is_rejected() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs("visible.agent_x"),
         observable_feature_keys=("visible.agent_x",),
     )
     predicted = observation(sequence_index=2, visible={"agent_x": 4})
@@ -228,14 +304,26 @@ def test_recipe_sensitivity_changes_wake_and_ids() -> None:
         sequence_index=1,
         visible={"agent_x": 4, "next_action": "wait"},
     )
+    policy_evidence = ObserverPolicyConsequenceEvidenceDTO.create(
+        policy_artifact_id="policy:A",
+        predicted_state_artifact_id=predicted.observation_artifact_id,
+        observed_state_artifact_id=observed.observation_artifact_id,
+        predicted_selected_action="move_right",
+        observed_selected_action="wait",
+        predicted_decision_trace_id="trace:predicted",
+        observed_decision_trace_id="trace:observed",
+        reader_contract_id="reader:v1",
+    )
     passive = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs("visible.agent_x"),
         observable_feature_keys=("visible.agent_x",),
-        policy_consequence_key="visible.next_action",
+        require_policy_consequence_evidence=True,
         wake_on_policy_consequence_mismatch=False,
     )
     waking = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs("visible.agent_x"),
         observable_feature_keys=("visible.agent_x",),
-        policy_consequence_key="visible.next_action",
+        require_policy_consequence_evidence=True,
         wake_on_policy_consequence_mismatch=True,
     )
 
@@ -243,15 +331,13 @@ def test_recipe_sensitivity_changes_wake_and_ids() -> None:
         recipe=passive,
         predicted=predicted,
         observed=observed,
-        predicted_margin=0.3,
-        observed_margin=0.29,
+        policy_evidence=policy_evidence,
     )
     waking_result = verify(
         recipe=waking,
         predicted=predicted,
         observed=observed,
-        predicted_margin=0.3,
-        observed_margin=0.29,
+        policy_evidence=policy_evidence,
     )
 
     assert passive_result.comparison_result.wake_required is False
@@ -270,6 +356,7 @@ def test_recipe_sensitivity_changes_wake_and_ids() -> None:
 
 def test_contradiction_can_be_recorded_without_wake() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs("visible.agent_x"),
         observable_feature_keys=("visible.agent_x",),
         wake_on_observable_mismatch=False,
     )
@@ -286,6 +373,7 @@ def test_contradiction_can_be_recorded_without_wake() -> None:
 
 def test_verification_identity_changes_with_reproduction_evidence() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs("visible.agent_x"),
         observable_feature_keys=("visible.agent_x",),
     )
     predicted = observation(sequence_index=1, visible={"agent_x": 5})
@@ -323,8 +411,16 @@ def test_transition_service_public_api() -> None:
     assert hasattr(observer, "verify_observer_transition")
 
 
+def test_verifier_signature_has_no_dead_margin_inputs() -> None:
+    parameters = inspect.signature(verify_observer_transition).parameters
+
+    assert "predicted_decision_margin" not in parameters
+    assert "observed_decision_margin" not in parameters
+
+
 def test_canonical_payload_reconstruction_preserves_identity() -> None:
     recipe = ObserverComparisonRecipeDTO.create(
+        feature_comparisons=feature_specs("visible.agent_x"),
         observable_feature_keys=("visible.agent_x",),
     )
     predicted = observation(sequence_index=1, visible={"agent_x": 4})

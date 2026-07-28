@@ -32,8 +32,15 @@ Observer is a consumer package. It depends on `core`, `observation`, and
 The top-level public surface is:
 
 - `ObserverObservationArtifactDTO`
+- `ObserverObservationSchemaDTO`
+- `ObserverFeatureDefinitionDTO`
 - `ObserverComparisonRecipeDTO`
+- `ObserverFeatureComparisonDTO`
+- `ObserverFeatureComparisonResultDTO`
 - `ObserverComparisonResultDTO`
+- `ObserverHiddenStateHypothesisDTO`
+- `ObserverHiddenStateHypothesisSetDTO`
+- `ObserverPolicyConsequenceEvidenceDTO`
 - `ObserverTransitionRecordDTO`
 - `ObserverContradictionArtifactDTO`
 - `ObserverReplacementPolicyArtifactDTO`
@@ -112,9 +119,6 @@ verification = verify_observer_transition(
     state_before_id="state:before",
     action="move_right",
     affected_policy_row_id="row:before",
-    predicted_decision_margin=0.3,
-    observed_decision_margin=0.3,
-    hidden_state_hypotheses_remaining=1,
 )
 
 verification.verification_status
@@ -184,6 +188,129 @@ proposal.missing_schema_keys
 proposal.requested_changes
 proposal.proposed_changes
 ```
+
+## Stage O3.0 - Contract Hardening
+
+Stage O3.0 hardens the evidence contracts used by transition verification. It
+still does not generate predictions, invoke an Observer, execute a wake policy,
+create a graph, promote habits, or materialize policy repairs.
+
+The hardened path is:
+
+```text
+observation schema
+  + schema-validated observations
+  + per-feature comparison specs
+  + hidden-state hypothesis set
+  + external policy consequence evidence
+        ↓
+versioned comparison result
+        ↓
+transition verification
+```
+
+Feature comparison semantics are declared per feature. `exact` requires strict
+type identity, so `True` does not equal `1`, and `1` does not equal `1.0`.
+`numeric_tolerance` requires explicit absolute and relative tolerances and
+rejects booleans, NaN, and infinity.
+
+Observation artifacts now carry an `observation_schema_id`. Construction rejects
+undeclared keys, missing required keys, mistyped values, and non-finite numeric
+values. Schema identity is part of observation identity; comparing observations
+from different schemas is inconclusive unless a later stage declares
+compatibility.
+
+Hidden-state exhaustion is derived from an
+`ObserverHiddenStateHypothesisSetDTO`. The public transition verifier no longer
+accepts a naked caller-supplied remaining count.
+
+Policy consequence equivalence is supplied as
+`ObserverPolicyConsequenceEvidenceDTO`, with external decision-trace IDs. A
+caller-authored feature such as `visible.next_action` is not proof of policy
+reader equivalence.
+
+```python
+from zeromodel.observer import (
+    ObserverComparisonRecipeDTO,
+    ObserverFeatureComparisonDTO,
+    ObserverFeatureDefinitionDTO,
+    ObserverHiddenStateHypothesisDTO,
+    ObserverHiddenStateHypothesisSetDTO,
+    ObserverObservationArtifactDTO,
+    ObserverObservationSchemaDTO,
+    verify_observer_transition,
+)
+
+agent_x = ObserverFeatureComparisonDTO.create(
+    feature_key="visible.agent_x",
+    mode="numeric_tolerance",
+    expected_type="number",
+    absolute_tolerance=0.0,
+    relative_tolerance=0.01,
+)
+
+schema = ObserverObservationSchemaDTO.create(
+    schema_name="cooldown-v1",
+    features=(
+        ObserverFeatureDefinitionDTO.create(
+            qualified_key="hidden.cooldown",
+            value_type="str",
+            required=False,
+        ),
+        ObserverFeatureDefinitionDTO.create(
+            qualified_key="visible.agent_x",
+            value_type="number",
+            required=True,
+            comparison_id=agent_x.comparison_id,
+        ),
+    ),
+)
+
+recipe = ObserverComparisonRecipeDTO.create(
+    feature_comparisons=(agent_x,),
+    observable_feature_keys=("visible.agent_x",),
+)
+
+predicted = ObserverObservationArtifactDTO.create(
+    observation_schema=schema,
+    visible_state_features={"agent_x": 5},
+    hidden_state_uncertainty={"cooldown": "clear"},
+    sequence_index=1,
+)
+observed = ObserverObservationArtifactDTO.create(
+    observation_schema=schema,
+    visible_state_features={"agent_x": 5},
+    hidden_state_uncertainty={"cooldown": "clear"},
+    sequence_index=1,
+)
+
+hypotheses = ObserverHiddenStateHypothesisSetDTO.create(
+    observation_schema_id=schema.schema_id,
+    hypotheses=(
+        ObserverHiddenStateHypothesisDTO.create(
+            state_key="hidden.cooldown",
+            state_value="clear",
+            status="possible",
+        ),
+    ),
+)
+
+verification = verify_observer_transition(
+    recipe=recipe,
+    predicted_observation=predicted,
+    observed_observation=observed,
+    policy_artifact_id="policy:A",
+    state_before_id="state:before",
+    action="move_right",
+    affected_policy_row_id="row:before",
+    hidden_state_hypothesis_set=hypotheses,
+)
+```
+
+Migration note: `observer-comparison-recipe/1` is not silently reinterpreted.
+Stage O3.0 callers must construct `observer-comparison-recipe/2` with explicit
+`feature_comparisons`. `observer-observation-artifact/2` requires an
+`ObserverObservationSchemaDTO`.
 
 ## Design Position
 

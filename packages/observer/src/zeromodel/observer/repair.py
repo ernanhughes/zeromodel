@@ -9,7 +9,7 @@ from zeromodel.observer._canonical import canonical_id
 
 OBSERVER_REPAIR_CONSTRAINT_VERSION: Final = "observer-repair-constraint/1"
 OBSERVER_PROPOSED_CHANGE_VERSION: Final = "observer-proposed-change/1"
-OBSERVER_REPAIR_PROPOSAL_VERSION: Final = "observer-repair-proposal/1"
+OBSERVER_REPAIR_PROPOSAL_VERSION: Final = "observer-repair-proposal/2"
 
 REPAIR_DISPOSITION_REPAIRABLE: Final = "repairable"
 REPAIR_DISPOSITION_REQUIRES_SCHEMA_EXTENSION: Final = "requires_schema_extension"
@@ -277,6 +277,7 @@ class ObserverRepairProposalDTO:
     affected_cell_ids: tuple[str, ...]
     required_context_keys: tuple[str, ...]
     missing_schema_keys: tuple[str, ...]
+    requested_changes: tuple[ObserverProposedChangeDTO, ...]
     proposed_changes: tuple[ObserverProposedChangeDTO, ...]
     rationale_codes: tuple[str, ...]
     evidence_ids: tuple[str, ...]
@@ -312,11 +313,12 @@ class ObserverRepairProposalDTO:
             raise ObserverRepairProposalError(
                 f"unsupported rationale_codes: {sorted(unknown_rationales)}"
             )
-        change_ids = tuple(change.change_id for change in self.proposed_changes)
-        if change_ids != tuple(sorted(set(change_ids))):
-            raise ObserverRepairProposalError(
-                "proposed_changes must have unique change IDs in sorted order"
-            )
+        for field_name in ("requested_changes", "proposed_changes"):
+            change_ids = tuple(change.change_id for change in getattr(self, field_name))
+            if change_ids != tuple(sorted(set(change_ids))):
+                raise ObserverRepairProposalError(
+                    f"{field_name} must have unique change IDs in sorted order"
+                )
         if (
             self.disposition == REPAIR_DISPOSITION_REPAIRABLE
             and self.missing_schema_keys
@@ -331,14 +333,7 @@ class ObserverRepairProposalDTO:
             raise ObserverRepairProposalError(
                 "requires_schema_extension proposals require missing_schema_keys"
             )
-        if (
-            self.disposition
-            in {
-                REPAIR_DISPOSITION_INSUFFICIENT_EVIDENCE,
-                REPAIR_DISPOSITION_UNSUPPORTED,
-            }
-            and self.proposed_changes
-        ):
+        if self.disposition != REPAIR_DISPOSITION_REPAIRABLE and self.proposed_changes:
             raise ObserverRepairProposalError(
                 f"{self.disposition} proposals cannot contain executable changes"
             )
@@ -361,6 +356,9 @@ class ObserverRepairProposalDTO:
             ],
             "rationale_codes": list(self.rationale_codes),
             "repair_constraint_id": self.repair_constraint_id,
+            "requested_changes": [
+                change.canonical_payload() for change in self.requested_changes
+            ],
             "required_context_keys": list(self.required_context_keys),
             "source_policy_artifact_id": self.source_policy_artifact_id,
             "transition_verification_id": self.transition_verification_id,

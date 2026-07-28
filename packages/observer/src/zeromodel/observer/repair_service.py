@@ -277,13 +277,8 @@ def propose_observer_repair(
         rationale_codes=rationale_codes,
     )
     executable_changes = (
-        ()
-        if disposition
-        in {REPAIR_DISPOSITION_INSUFFICIENT_EVIDENCE, REPAIR_DISPOSITION_UNSUPPORTED}
-        else requested_changes
+        requested_changes if disposition == REPAIR_DISPOSITION_REPAIRABLE else ()
     )
-    if disposition == REPAIR_DISPOSITION_REQUIRES_SCHEMA_EXTENSION:
-        executable_changes = requested_changes
 
     mandatory_evidence_ids = (
         verification.verification_id,
@@ -306,10 +301,13 @@ def propose_observer_repair(
         ],
         "rationale_codes": list(rationale_codes),
         "repair_constraint_id": constraint.repair_constraint_id,
+        "requested_changes": [
+            change.canonical_payload() for change in requested_changes
+        ],
         "required_context_keys": list(required_context_keys),
         "source_policy_artifact_id": source_policy_artifact_id,
         "transition_verification_id": verification.verification_id,
-        "version": "observer-repair-proposal/1",
+        "version": "observer-repair-proposal/2",
     }
     return ObserverRepairProposalDTO(
         repair_proposal_id=canonical_id(payload),
@@ -322,6 +320,7 @@ def propose_observer_repair(
         affected_cell_ids=affected_cell_ids,
         required_context_keys=required_context_keys,
         missing_schema_keys=effective_missing_schema_keys,
+        requested_changes=requested_changes,
         proposed_changes=executable_changes,
         rationale_codes=rationale_codes,
         evidence_ids=proposal_evidence_ids,

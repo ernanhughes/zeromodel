@@ -133,6 +133,8 @@ anything.
 
 `repairable` means eligible for the next stage of candidate generation and
 audit. It does not mean the proposed change is correct.
+`requested_changes` records caller intent. `proposed_changes` contains only
+changes executable under the current schema and constraints.
 
 ```python
 from zeromodel.observer import (
@@ -179,6 +181,7 @@ proposal.disposition
 proposal.affected_row_ids
 proposal.required_context_keys
 proposal.missing_schema_keys
+proposal.requested_changes
 proposal.proposed_changes
 ```
 

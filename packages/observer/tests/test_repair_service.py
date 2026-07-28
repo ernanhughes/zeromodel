@@ -226,6 +226,7 @@ def test_locally_repairable_cooldown_proposal_replays() -> None:
     assert first.affected_cell_ids == (CELL_ID,)
     assert first.required_context_keys == ("hidden.cooldown",)
     assert first.missing_schema_keys == ()
+    assert first.requested_changes == (change,)
     assert len(first.proposed_changes) == 1
     assert not hasattr(first, "replacement_policy_artifact_id")
     assert first.repair_proposal_id == second.repair_proposal_id
@@ -247,7 +248,8 @@ def test_requires_schema_extension_preserves_blocking_key() -> None:
 
     assert proposal.disposition == "requires_schema_extension"
     assert proposal.missing_schema_keys == ("hidden.actuator_mode",)
-    assert proposal.proposed_changes == (change,)
+    assert proposal.requested_changes == (change,)
+    assert proposal.proposed_changes == ()
     assert not hasattr(proposal, "replacement_policy_artifact_id")
 
 
@@ -261,6 +263,7 @@ def test_insufficient_evidence_has_no_executable_changes() -> None:
     )
 
     assert proposal.disposition == "insufficient_evidence"
+    assert proposal.requested_changes == ()
     assert proposal.proposed_changes == ()
     assert verification.contradiction_artifact.contradiction_artifact_id in (
         proposal.evidence_ids
@@ -327,6 +330,7 @@ def test_unsupported_repair_type_is_reported_without_changes() -> None:
     )
 
     assert proposal.disposition == "unsupported"
+    assert proposal.requested_changes == ()
     assert proposal.proposed_changes == ()
 
 
@@ -413,6 +417,9 @@ def test_replay_identity_canonicalizes_change_order() -> None:
     assert left.repair_constraint_id == right.repair_constraint_id
     assert tuple(change.change_id for change in left.proposed_changes) == tuple(
         change.change_id for change in right.proposed_changes
+    )
+    assert tuple(change.change_id for change in left.requested_changes) == tuple(
+        change.change_id for change in right.requested_changes
     )
     assert left.repair_proposal_id == right.repair_proposal_id
 

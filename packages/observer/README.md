@@ -791,14 +791,20 @@ unordered habit list. The conservative default blocks different-action
 overlaps, target conflicts, incomplete pair analysis, and unsupported strategy
 requests. Supported shadow strategies are `strict_unique_fire`,
 `most_specific_guard`, and `declared_order`; all fall back to the authoritative
-action on no-fire, ambiguity, or invalid habit evaluation.
+action on no-fire, ambiguity, invalid habit evaluation, or inapplicable plan
+membership. `most_specific_guard` uses only compiled specificity edges proven
+by pairwise subsumption analysis. A firing habit wins only when it is proven
+strictly narrower than every other firing habit.
 
 Historical and fixture shadow replays record what an arbitration plan would
 have selected while the fixture still executes the authoritative action stream.
-`audit_observer_habit_arbitration_shadow` aggregates replay and fixture
-evidence for operator review. Eligibility for multi-habit activation review is
-only an audit disposition; Stage O3.7 does not activate multiple habits and
-does not change the single-active-habit runtime path.
+Historical replay is bound to the exact ledger snapshot entry sequence, and
+reconstruction failures become explicit invalid shadow occurrences instead of
+being dropped. `audit_observer_habit_arbitration_shadow` recomputes aggregate
+counts from occurrences and rejects malformed replay or episode lineage
+evidence. Eligibility for multi-habit activation review is only an audit
+disposition; Stage O3.7 does not activate multiple habits and does not change
+the single-active-habit runtime path.
 
 ```python
 from zeromodel.observer import (

@@ -1,4 +1,5 @@
 from zeromodel.observer import (
+    ObserverHabitArbitrationPlanDTO,
     ObserverHabitArbitrationPlanRecipeDTO,
     compile_observer_habit_arbitration_plan,
     evaluate_observer_habit_arbitration,
@@ -231,6 +232,195 @@ def test_most_specific_guard_and_declared_order_are_deterministic() -> None:
     assert declared.decision == "selected_habit"
     assert declared.selected_habit_id == broad.habit_specification_id
     assert declared.selected_action == "move_left"
+
+
+def test_most_specific_requires_proven_specificity_edges() -> None:
+    schema, group, episode, graph, scope, habit = _case()
+    more_guards = _variant(
+        habit,
+        "more",
+        positive_guards=(
+            _guard("visible.action_effect", "initial", "str"),
+            _guard("visible.agent_x", 0),
+            _guard("visible.target_x", 6),
+        ),
+        recommended_action="move_left",
+    )
+    fewer_guards = _variant(
+        habit,
+        "fewer",
+        positive_guards=(_guard("visible.agent_x", 0),),
+        recommended_action="move_right",
+    )
+    observation = _observation(episode, schema)
+    plan = ObserverHabitArbitrationPlanDTO.create(
+        habit_specification_ids=(
+            fewer_guards.habit_specification_id,
+            more_guards.habit_specification_id,
+        ),
+        habit_overlap_analysis_id="analysis:manual",
+        activation_scope_id=scope.habit_activation_scope_id,
+        arbitration_strategy="most_specific_guard",
+        ordered_habit_ids=(
+            more_guards.habit_specification_id,
+            fewer_guards.habit_specification_id,
+        ),
+        specificity_edges=(),
+        tie_policy="fallback",
+        invalid_evaluation_policy="fallback",
+        no_fire_policy="fallback",
+        conflict_policy="fallback",
+        status="shadow_candidate",
+    )
+    result = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        habit_specifications=(more_guards, fewer_guards),
+        observation=observation,
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert result.decision == "fallback_ambiguous"
+    assert result.selected_action == "authoritative"
+
+
+def test_most_specific_selects_unique_habit_narrower_than_every_firing_peer() -> None:
+    schema, group, episode, graph, scope, habit = _case()
+    broad_agent = _variant(
+        habit,
+        "agent",
+        positive_guards=(_guard("visible.agent_x", 0),),
+        recommended_action="move_left",
+    )
+    broad_target = _variant(
+        habit,
+        "target",
+        positive_guards=(_guard("visible.target_x", 6),),
+        recommended_action="wait",
+    )
+    narrow = _variant(
+        habit,
+        "narrow",
+        positive_guards=(
+            _guard("visible.agent_x", 0),
+            _guard("visible.target_x", 6),
+        ),
+        recommended_action="move_right",
+    )
+    plan = _plan(
+        "most_specific_guard",
+        (broad_agent, broad_target, narrow),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    result = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        habit_specifications=(broad_agent, broad_target, narrow),
+        observation=_observation(episode, schema),
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert result.decision == "selected_habit"
+    assert result.selected_habit_id == narrow.habit_specification_id
+
+
+def test_most_specific_falls_back_when_winner_is_incomparable_with_a_firing_peer() -> (
+    None
+):
+    schema, group, episode, graph, scope, habit = _case()
+    broad = _variant(
+        habit,
+        "broad",
+        positive_guards=(_guard("visible.agent_x", 0),),
+    )
+    narrow = _variant(
+        habit,
+        "narrow",
+        positive_guards=(
+            _guard("visible.agent_x", 0),
+            _guard("visible.target_x", 6),
+        ),
+        recommended_action="move_left",
+    )
+    incomparable = _variant(
+        habit,
+        "incomparable",
+        positive_guards=(
+            _guard("visible.action_effect", "initial", "str"),
+            _guard("visible.target_x", 6),
+        ),
+        recommended_action="move_right",
+    )
+    plan = _plan(
+        "most_specific_guard",
+        (broad, narrow, incomparable),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    result = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        habit_specifications=(broad, narrow, incomparable),
+        observation=_observation(episode, schema),
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert result.decision == "fallback_ambiguous"
+
+
+def test_cyclic_specificity_evidence_falls_back_and_plan_membership_mismatch_is_bounded() -> (
+    None
+):
+    schema, group, episode, _, scope, habit = _case()
+    other = _variant(habit, "other")
+    plan = ObserverHabitArbitrationPlanDTO.create(
+        habit_specification_ids=(
+            habit.habit_specification_id,
+            other.habit_specification_id,
+        ),
+        habit_overlap_analysis_id="analysis:manual",
+        activation_scope_id=scope.habit_activation_scope_id,
+        arbitration_strategy="most_specific_guard",
+        ordered_habit_ids=(
+            habit.habit_specification_id,
+            other.habit_specification_id,
+        ),
+        specificity_edges=(
+            (habit.habit_specification_id, other.habit_specification_id),
+            (other.habit_specification_id, habit.habit_specification_id),
+        ),
+        tie_policy="fallback",
+        invalid_evaluation_policy="fallback",
+        no_fire_policy="fallback",
+        conflict_policy="fallback",
+        status="shadow_candidate",
+    )
+    cycle = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        habit_specifications=(habit, other),
+        observation=_observation(episode, schema),
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert cycle.decision == "fallback_ambiguous"
+
+    missing = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        habit_specifications=(habit,),
+        observation=_observation(episode, schema),
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert missing.decision == "fallback_plan_inapplicable"
 
 
 def test_invalid_lineage_and_identity_sensitivity() -> None:

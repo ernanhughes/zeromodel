@@ -461,6 +461,7 @@ def analyze_observer_habit_overlap(
     habits = tuple(
         sorted(habit_specifications, key=lambda item: item.habit_specification_id)
     )
+    decisions = {item.habit_specification_id: item for item in admission_decisions}
     pair_specs = tuple(combinations(habits, 2))
     pair_overlaps: list[ObserverHabitPairOverlapDTO] = []
     occurrences: list[ObserverHabitOverlapOccurrenceDTO] = []
@@ -483,12 +484,22 @@ def analyze_observer_habit_overlap(
                 )
             )
     status = _analysis_status(tuple(pair_overlaps), tuple(failures))
+    admission_decision_ids = tuple(
+        decisions[habit.habit_specification_id].habit_admission_decision_id
+        for habit in habits
+        if habit.habit_specification_id in decisions
+    ) + tuple(
+        sorted(
+            item.habit_admission_decision_id
+            for item in admission_decisions
+            if item.habit_specification_id
+            not in {habit.habit_specification_id for habit in habits}
+        )
+    )
     return ObserverHabitOverlapAnalysisDTO.create(
         habit_overlap_analysis_recipe_id=analysis_recipe.habit_overlap_analysis_recipe_id,
         habit_specification_ids=tuple(item.habit_specification_id for item in habits),
-        admission_decision_ids=tuple(
-            item.habit_admission_decision_id for item in admission_decisions
-        ),
+        admission_decision_ids=admission_decision_ids,
         activation_scope_id=activation_scope.habit_activation_scope_id,
         observation_schema_id=observation_schema.schema_id,
         grouping_recipe_id=grouping_recipe.grouping_recipe_id,
@@ -528,6 +539,8 @@ def _validate_inputs(
     decisions = {item.habit_specification_id: item for item in admission_decisions}
     if set(decisions) != set(habit_ids):
         failures.add("admission_decision_mismatch")
+    if observation_graph.ledger_snapshot_id != ledger_snapshot.ledger_snapshot_id:
+        failures.add("graph_ledger_lineage_mismatch")
     for habit in habit_specifications:
         decision = decisions.get(habit.habit_specification_id)
         if decision is None or decision.decision != "admit":

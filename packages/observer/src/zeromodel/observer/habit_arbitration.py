@@ -42,8 +42,15 @@ PLAN_COMPILATION_DISPOSITIONS: Final = frozenset(
     }
 )
 ARBITRATION_DECISIONS: Final = frozenset(
-    {"selected_habit", "fallback_no_fire", "fallback_ambiguous", "fallback_invalid"}
+    {
+        "selected_habit",
+        "fallback_no_fire",
+        "fallback_ambiguous",
+        "fallback_invalid",
+        "fallback_plan_inapplicable",
+    }
 )
+PLAN_POLICIES: Final = frozenset({"fallback"})
 
 
 def _sorted_unique(values: Sequence[str]) -> tuple[str, ...]:
@@ -142,6 +149,7 @@ class ObserverHabitArbitrationPlanDTO:
     activation_scope_id: str
     arbitration_strategy: str
     ordered_habit_ids: tuple[str, ...]
+    specificity_edges: tuple[tuple[str, str], ...]
     tie_policy: str
     invalid_evaluation_policy: str
     no_fire_policy: str
@@ -156,6 +164,38 @@ class ObserverHabitArbitrationPlanDTO:
             raise ObserverHabitError("arbitration plan must be shadow_candidate")
         if self.arbitration_strategy not in ARBITRATION_STRATEGIES:
             raise ObserverHabitError("unsupported arbitration strategy")
+        if len(self.habit_specification_ids) < 2:
+            raise ObserverHabitError("arbitration plan requires at least two habits")
+        if (
+            tuple(sorted(set(self.habit_specification_ids)))
+            != self.habit_specification_ids
+        ):
+            raise ObserverHabitError(
+                "habit_specification_ids must be sorted and unique"
+            )
+        if set(self.ordered_habit_ids) != set(self.habit_specification_ids) or len(
+            set(self.ordered_habit_ids)
+        ) != len(self.ordered_habit_ids):
+            raise ObserverHabitError("ordered_habit_ids must match habit membership")
+        if not self.activation_scope_id:
+            raise ObserverHabitError("activation_scope_id is required")
+        if not self.habit_overlap_analysis_id:
+            raise ObserverHabitError("habit_overlap_analysis_id is required")
+        if (
+            self.tie_policy not in PLAN_POLICIES
+            or self.invalid_evaluation_policy not in PLAN_POLICIES
+            or self.no_fire_policy not in PLAN_POLICIES
+            or self.conflict_policy not in PLAN_POLICIES
+        ):
+            raise ObserverHabitError("unsupported arbitration plan policy")
+        for narrower, broader in self.specificity_edges:
+            if (
+                narrower not in self.habit_specification_ids
+                or broader not in self.habit_specification_ids
+            ):
+                raise ObserverHabitError("specificity edge references unknown habit")
+            if narrower == broader:
+                raise ObserverHabitError("specificity edge cannot self-reference")
         expected = canonical_id(self.canonical_payload(include_id=False))
         if self.habit_arbitration_plan_id != expected:
             raise ObserverHabitError("habit_arbitration_plan_id mismatch")
@@ -171,6 +211,7 @@ class ObserverHabitArbitrationPlanDTO:
             invalid_evaluation_policy=self.invalid_evaluation_policy,
             no_fire_policy=self.no_fire_policy,
             ordered_habit_ids=list(self.ordered_habit_ids),
+            specificity_edges=[list(edge) for edge in self.specificity_edges],
             status=self.status,
             tie_policy=self.tie_policy,
         )
@@ -182,6 +223,18 @@ class ObserverHabitArbitrationPlanDTO:
     def create(cls, **values: object) -> "ObserverHabitArbitrationPlanDTO":
         for key in ("habit_specification_ids", "ordered_habit_ids"):
             values[key] = tuple(cast(Sequence[str], values[key]))
+        values["habit_specification_ids"] = tuple(
+            sorted(cast(tuple[str, ...], values["habit_specification_ids"]))
+        )
+        edges = tuple(
+            tuple(cast(Sequence[str], edge))
+            for edge in cast(
+                Sequence[Sequence[str]], values.get("specificity_edges", ())
+            )
+        )
+        values["specificity_edges"] = tuple(
+            sorted(set(cast(tuple[str, str], edge) for edge in edges))
+        )
         payload = _payload(
             OBSERVER_HABIT_ARBITRATION_PLAN_VERSION,
             activation_scope_id=values["activation_scope_id"],
@@ -194,6 +247,12 @@ class ObserverHabitArbitrationPlanDTO:
             invalid_evaluation_policy=values["invalid_evaluation_policy"],
             no_fire_policy=values["no_fire_policy"],
             ordered_habit_ids=list(cast(tuple[str, ...], values["ordered_habit_ids"])),
+            specificity_edges=[
+                list(edge)
+                for edge in cast(
+                    tuple[tuple[str, str], ...], values["specificity_edges"]
+                )
+            ],
             status=values["status"],
             tie_policy=values["tie_policy"],
         )
@@ -400,6 +459,7 @@ def compile_observer_habit_arbitration_plan(
         ) != len(declared_order):
             disposition, reasons = "invalid_declared_order", {"invalid_declared_order"}
     order = habit_ids if requested_strategy != "declared_order" else declared_order
+    specificity_edges = _specificity_edges(overlap_analysis)
     plan = None
     if disposition == "compiled":
         plan = ObserverHabitArbitrationPlanDTO.create(
@@ -408,6 +468,7 @@ def compile_observer_habit_arbitration_plan(
             activation_scope_id=overlap_analysis.activation_scope_id,
             arbitration_strategy=requested_strategy,
             ordered_habit_ids=order,
+            specificity_edges=specificity_edges,
             tie_policy="fallback",
             invalid_evaluation_policy="fallback",
             no_fire_policy="fallback",
@@ -433,11 +494,29 @@ def evaluate_observer_habit_arbitration(
     observation_schema: ObserverObservationSchemaDTO,
     authoritative_fallback_action: str,
 ) -> ObserverHabitArbitrationEvaluationDTO:
-    habits = {
-        item.habit_specification_id: item
-        for item in habit_specifications
-        if item.habit_specification_id in arbitration_plan.habit_specification_ids
-    }
+    supplied_ids = tuple(
+        sorted(item.habit_specification_id for item in habit_specifications)
+    )
+    if (
+        supplied_ids != arbitration_plan.habit_specification_ids
+        or set(arbitration_plan.ordered_habit_ids)
+        != set(arbitration_plan.habit_specification_ids)
+        or len(set(arbitration_plan.ordered_habit_ids))
+        != len(arbitration_plan.ordered_habit_ids)
+    ):
+        return ObserverHabitArbitrationEvaluationDTO.create(
+            habit_arbitration_plan_id=arbitration_plan.habit_arbitration_plan_id,
+            observation_artifact_id=observation.observation_artifact_id,
+            authoritative_fallback_action=authoritative_fallback_action,
+            fired_habit_ids=(),
+            invalid_habit_ids=(),
+            selected_habit_id=None,
+            selected_action=authoritative_fallback_action,
+            decision="fallback_plan_inapplicable",
+            reason_codes=("plan_habit_membership_mismatch",),
+            habit_evaluation_ids=(),
+        )
+    habits = {item.habit_specification_id: item for item in habit_specifications}
     evaluations = tuple(
         evaluate_observer_habit(
             habit_specification=habits[habit_id],
@@ -479,7 +558,7 @@ def evaluate_observer_habit_arbitration(
         decision = "selected_habit" if selected is not None else "fallback_no_fire"
         reasons.add("declared_order" if selected is not None else "no_habit_fired")
     else:
-        selected = _most_specific_winner(fired, habits)
+        selected = _most_specific_winner(fired, arbitration_plan.specificity_edges)
         if selected is None:
             decision = "fallback_no_fire" if not fired else "fallback_ambiguous"
             reasons.add("most_specific_no_unique_winner")
@@ -505,16 +584,32 @@ def evaluate_observer_habit_arbitration(
     )
 
 
+def _specificity_edges(
+    overlap_analysis: ObserverHabitOverlapAnalysisDTO,
+) -> tuple[tuple[str, str], ...]:
+    edges: set[tuple[str, str]] = set()
+    for pair in overlap_analysis.pair_overlaps:
+        if pair.guard_relation == "left_subsumes_right":
+            edges.add(
+                (pair.right_habit_specification_id, pair.left_habit_specification_id)
+            )
+        elif pair.guard_relation == "right_subsumes_left":
+            edges.add(
+                (pair.left_habit_specification_id, pair.right_habit_specification_id)
+            )
+    return tuple(sorted(edges))
+
+
 def _most_specific_winner(
-    fired: tuple[str, ...], habits: Mapping[str, ObserverHabitSpecificationDTO]
+    fired: tuple[str, ...], specificity_edges: tuple[tuple[str, str], ...]
 ) -> str | None:
     if not fired:
         return None
-    counts = {
-        habit_id: len(habits[habit_id].positive_guards)
-        + len(habits[habit_id].counterexample_guards)
+    fired_set = set(fired)
+    edges = set(specificity_edges)
+    winners = tuple(
+        habit_id
         for habit_id in fired
-    }
-    maximum = max(counts.values())
-    winners = tuple(habit_id for habit_id, count in counts.items() if count == maximum)
+        if all(other == habit_id or (habit_id, other) in edges for other in fired_set)
+    )
     return winners[0] if len(winners) == 1 else None

@@ -1,12 +1,14 @@
 from zeromodel.observer import (
     ObserverHabitArbitrationAuditRecipeDTO,
     ObserverHabitArbitrationShadowEpisodeDTO,
+    ObserverHabitArbitrationShadowReplayDTO,
     ObserverHabitActivationScopeDTO,
     ObserverFixtureRuleScheduleEntryDTO,
     audit_observer_habit_arbitration_shadow,
     build_observer_fixture_comparison_recipe,
     run_observer_fixture_arbitration_shadow_episode,
 )
+from zeromodel.observer._canonical import canonical_id
 
 from test_observer_habit import action, compile_first
 from test_observer_habit_arbitration import _plan
@@ -140,6 +142,161 @@ def test_audit_rejects_duplicate_shadow_evidence() -> None:
     )
     assert duplicate.disposition == "invalid_evidence"
     assert "duplicate_replay" in duplicate.reason_codes
+
+
+def test_shadow_replay_rejects_entries_that_do_not_match_snapshot() -> None:
+    schema, group, episode, graph, scope, habit = _case()
+    other = _variant(habit, "other")
+    plan = _plan(
+        "strict_unique_fire", (habit, other), schema, group, episode, graph, scope
+    )
+    entries = getattr(episode.ledger_snapshot, "entries")
+
+    omitted = evaluate_observer_habit_arbitration_over_ledger(
+        arbitration_plan=plan,
+        habit_specifications=(habit, other),
+        ledger_entries=entries[:1],
+        ledger_snapshot=episode.ledger_snapshot,
+        grouping_recipe=group,
+        observation_schema=schema,
+    )
+    assert omitted.status == "failed"
+    assert "ledger_snapshot_entry_mismatch" in omitted.failure_codes
+
+    duplicate = evaluate_observer_habit_arbitration_over_ledger(
+        arbitration_plan=plan,
+        habit_specifications=(habit, other),
+        ledger_entries=(entries[0], entries[0]),
+        ledger_snapshot=episode.ledger_snapshot,
+        grouping_recipe=group,
+        observation_schema=schema,
+    )
+    assert duplicate.status == "failed"
+    assert "duplicate_ledger_entry" in duplicate.failure_codes
+
+    reordered = evaluate_observer_habit_arbitration_over_ledger(
+        arbitration_plan=plan,
+        habit_specifications=(habit, other),
+        ledger_entries=tuple(reversed(entries)),
+        ledger_snapshot=episode.ledger_snapshot,
+        grouping_recipe=group,
+        observation_schema=schema,
+    )
+    assert reordered.status == "failed"
+    assert "ledger_snapshot_entry_mismatch" in reordered.failure_codes
+
+
+def test_shadow_replay_records_reconstruction_failure_without_skipping(
+    monkeypatch,
+) -> None:
+    schema, group, episode, graph, scope, habit = _case()
+    other = _variant(habit, "other")
+    plan = _plan(
+        "strict_unique_fire", (habit, other), schema, group, episode, graph, scope
+    )
+
+    import zeromodel.observer.habit_arbitration_shadow as shadow
+
+    def fail_once(**_kwargs):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(shadow, "_observation_for_state", fail_once)
+    replay = evaluate_observer_habit_arbitration_over_ledger(
+        arbitration_plan=plan,
+        habit_specifications=(habit, other),
+        ledger_entries=getattr(episode.ledger_snapshot, "entries"),
+        ledger_snapshot=episode.ledger_snapshot,
+        grouping_recipe=group,
+        observation_schema=schema,
+    )
+    assert replay.status == "completed_with_failures"
+    assert "entry_reconstruction_failed" in replay.failure_codes
+    assert replay.applicable_count == episode.ledger_snapshot.entry_count
+    assert replay.invalid_count == episode.ledger_snapshot.entry_count
+    assert all(
+        item.outcome == "invalid_evaluation" for item in replay.shadow_occurrences
+    )
+
+
+def test_audit_rejects_falsified_replay_aggregates_and_episode_ledger_mismatch() -> (
+    None
+):
+    schema, group, episode, graph, scope, habit = _case()
+    no_fire = _variant(
+        habit,
+        "no-fire",
+        positive_guards=(_guard("visible.agent_x", 99),),
+    )
+    plan = _plan(
+        "strict_unique_fire", (habit, no_fire), schema, group, episode, graph, scope
+    )
+    replay = evaluate_observer_habit_arbitration_over_ledger(
+        arbitration_plan=plan,
+        habit_specifications=(habit, no_fire),
+        ledger_entries=getattr(episode.ledger_snapshot, "entries"),
+        ledger_snapshot=episode.ledger_snapshot,
+        grouping_recipe=group,
+        observation_schema=schema,
+    )
+    payload = dict(replay.canonical_payload(include_id=False))
+    payload["applicable_count"] = 0
+    falsified = ObserverHabitArbitrationShadowReplayDTO(
+        habit_arbitration_shadow_replay_id=canonical_id(payload),
+        habit_arbitration_plan_id=replay.habit_arbitration_plan_id,
+        ledger_snapshot_id=replay.ledger_snapshot_id,
+        shadow_occurrences=replay.shadow_occurrences,
+        evaluated_entry_ids=replay.evaluated_entry_ids,
+        applicable_count=0,
+        habit_selection_count=replay.habit_selection_count,
+        fallback_count=replay.fallback_count,
+        correct_selection_count=replay.correct_selection_count,
+        wrong_action_count=0,
+        wrong_target_count=replay.wrong_target_count,
+        ambiguous_fallback_count=replay.ambiguous_fallback_count,
+        missed_opportunity_count=replay.missed_opportunity_count,
+        invalid_count=replay.invalid_count,
+        status=replay.status,
+        failure_codes=replay.failure_codes,
+    )
+    overlap = _analysis(
+        (habit, no_fire),
+        (_decision(habit), _decision(no_fire)),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    audit = audit_observer_habit_arbitration_shadow(
+        arbitration_plan=plan,
+        overlap_analysis=overlap,
+        historical_shadow_replay=falsified,
+        fixture_shadow_episodes=(),
+        audit_recipe=_eligible_recipe(),
+    )
+    assert audit.disposition == "invalid_evidence"
+    assert "replay_aggregate_mismatch" in audit.reason_codes
+
+    shadow_episode = ObserverHabitArbitrationShadowEpisodeDTO.create(
+        habit_arbitration_plan_id=plan.habit_arbitration_plan_id,
+        fixture_episode_result_id="episode:ledger-mismatch",
+        ledger_snapshot_id="ledger:foreign",
+        shadow_replay=replay,
+        authoritative_action_ids=tuple(
+            entry.action_id for entry in getattr(episode.ledger_snapshot, "entries")
+        ),
+        status="completed",
+        failure_codes=(),
+    )
+    episode_audit = audit_observer_habit_arbitration_shadow(
+        arbitration_plan=plan,
+        overlap_analysis=overlap,
+        historical_shadow_replay=replay,
+        fixture_shadow_episodes=(shadow_episode,),
+        audit_recipe=_eligible_recipe(),
+    )
+    assert episode_audit.disposition == "invalid_evidence"
+    assert "episode_replay_ledger_mismatch" in episode_audit.reason_codes
 
 
 def test_fixture_shadow_episode_preserves_authoritative_actions() -> None:

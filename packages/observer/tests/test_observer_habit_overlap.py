@@ -118,6 +118,30 @@ def test_two_admitted_habits_produce_canonical_pair_and_identity_ordering() -> N
     assert a.habit_overlap_analysis_id == b.habit_overlap_analysis_id
 
 
+def test_admission_decision_order_does_not_change_analysis_identity() -> None:
+    schema, group, episode, graph, scope, left = _case()
+    right = _variant(left, "right")
+    a = _analysis(
+        (left, right),
+        (_decision(left), _decision(right)),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    b = _analysis(
+        (left, right),
+        (_decision(right), _decision(left)),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    assert a.habit_overlap_analysis_id == b.habit_overlap_analysis_id
+
+
 def test_input_validation_failures() -> None:
     schema, group, episode, graph, scope, habit = _case()
     assert (

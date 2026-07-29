@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from typing import Final, Mapping, Sequence, cast
 
 from zeromodel.observer._canonical import canonical_id
-from zeromodel.observer.artifacts import ObserverObservationSchemaDTO
+from zeromodel.observer.artifacts import (
+    ObserverObservationArtifactDTO,
+    ObserverObservationSchemaDTO,
+)
 from zeromodel.observer.comparison import ObserverComparisonRecipeDTO
 from zeromodel.observer.fixture import (
     ObserverFixtureActionDTO,
@@ -57,6 +60,9 @@ SHADOW_OUTCOMES: Final = frozenset(
         "missed_opportunity",
         "invalid_evaluation",
     }
+)
+SHADOW_REPLAY_STATUSES: Final = frozenset(
+    {"completed", "completed_with_failures", "failed", "inconclusive"}
 )
 AUDIT_DISPOSITIONS: Final = frozenset(
     {
@@ -179,6 +185,8 @@ class ObserverHabitArbitrationShadowReplayDTO:
     def __post_init__(self) -> None:
         if self.version != OBSERVER_HABIT_ARBITRATION_SHADOW_REPLAY_VERSION:
             raise ObserverHabitError("unsupported arbitration shadow replay version")
+        if self.status not in SHADOW_REPLAY_STATUSES:
+            raise ObserverHabitError("unsupported arbitration shadow replay status")
         expected = canonical_id(self.canonical_payload(include_id=False))
         if self.habit_arbitration_shadow_replay_id != expected:
             raise ObserverHabitError("habit_arbitration_shadow_replay_id mismatch")
@@ -525,22 +533,59 @@ def evaluate_observer_habit_arbitration_over_ledger(
     grouping_recipe: ObserverStateGroupingRecipeDTO,
     observation_schema: ObserverObservationSchemaDTO,
 ) -> ObserverHabitArbitrationShadowReplayDTO:
-    occurrences: list[ObserverHabitArbitrationShadowOccurrenceDTO] = []
-    for entry in ledger_entries:
-        observation = _observation_for_state(
-            state=entry.source_state,
-            action_effect="initial" if entry.source_state.step_index == 0 else "source",
-            observation_schema=observation_schema,
-        )
-        action = _action_name(entry.action_id)
-        evaluation = evaluate_observer_habit_arbitration(
+    failures = set(
+        _validate_replay_inputs(
             arbitration_plan=arbitration_plan,
             habit_specifications=habit_specifications,
-            observation=observation,
+            ledger_entries=ledger_entries,
+            ledger_snapshot=ledger_snapshot,
             grouping_recipe=grouping_recipe,
             observation_schema=observation_schema,
-            authoritative_fallback_action=action,
         )
+    )
+    if failures:
+        return ObserverHabitArbitrationShadowReplayDTO.create(
+            habit_arbitration_plan_id=arbitration_plan.habit_arbitration_plan_id,
+            ledger_snapshot_id=ledger_snapshot.ledger_snapshot_id,
+            shadow_occurrences=(),
+            evaluated_entry_ids=tuple(item.ledger_entry_id for item in ledger_entries),
+            status="failed",
+            failure_codes=tuple(failures),
+        )
+    occurrences: list[ObserverHabitArbitrationShadowOccurrenceDTO] = []
+    for entry in ledger_entries:
+        action = _action_name(entry.action_id)
+        try:
+            observation = _observation_for_state(
+                state=entry.source_state,
+                action_effect="initial"
+                if entry.source_state.step_index == 0
+                else "source",
+                observation_schema=observation_schema,
+            )
+            evaluation = evaluate_observer_habit_arbitration(
+                arbitration_plan=arbitration_plan,
+                habit_specifications=habit_specifications,
+                observation=observation,
+                grouping_recipe=grouping_recipe,
+                observation_schema=observation_schema,
+                authoritative_fallback_action=action,
+            )
+        except Exception:
+            failures.add("entry_reconstruction_failed")
+            observation = _invalid_observation(observation_schema)
+            evaluation = ObserverHabitArbitrationEvaluationDTO.create(
+                habit_arbitration_plan_id=arbitration_plan.habit_arbitration_plan_id,
+                observation_artifact_id=observation.observation_artifact_id,
+                authoritative_fallback_action=action,
+                fired_habit_ids=(),
+                invalid_habit_ids=arbitration_plan.habit_specification_ids,
+                selected_habit_id=None,
+                selected_action=action,
+                decision="fallback_invalid",
+                reason_codes=("entry_reconstruction_failed",),
+                habit_evaluation_ids=(),
+            )
         occurrences.append(
             _shadow_occurrence(
                 arbitration_plan,
@@ -556,8 +601,8 @@ def evaluate_observer_habit_arbitration_over_ledger(
         ledger_snapshot_id=ledger_snapshot.ledger_snapshot_id,
         shadow_occurrences=tuple(occurrences),
         evaluated_entry_ids=tuple(item.ledger_entry_id for item in ledger_entries),
-        status="completed",
-        failure_codes=(),
+        status="completed_with_failures" if failures else "completed",
+        failure_codes=tuple(failures),
     )
 
 
@@ -620,8 +665,13 @@ def audit_observer_habit_arbitration_shadow(
         episode.shadow_replay for episode in fixture_shadow_episodes
     ]
     replay_ids = [item.habit_arbitration_shadow_replay_id for item in replays]
+    episode_ids = [
+        item.habit_arbitration_shadow_episode_id for item in fixture_shadow_episodes
+    ]
     if len(set(replay_ids)) != len(replay_ids):
         failures.add("duplicate_replay")
+    if len(set(episode_ids)) != len(episode_ids):
+        failures.add("duplicate_episode")
     if any(
         item.habit_arbitration_plan_id != arbitration_plan.habit_arbitration_plan_id
         for item in replays
@@ -632,19 +682,44 @@ def audit_observer_habit_arbitration_shadow(
         for episode in fixture_shadow_episodes
     ):
         failures.add("foreign_episode")
+    for episode in fixture_shadow_episodes:
+        if (
+            episode.shadow_replay.habit_arbitration_plan_id
+            != episode.habit_arbitration_plan_id
+        ):
+            failures.add("episode_replay_plan_mismatch")
+        if episode.shadow_replay.ledger_snapshot_id != episode.ledger_snapshot_id:
+            failures.add("episode_replay_ledger_mismatch")
+        if len(episode.authoritative_action_ids) != len(
+            episode.shadow_replay.evaluated_entry_ids
+        ):
+            failures.add("episode_action_count_mismatch")
+    if any(item.status not in {"completed"} for item in replays):
+        failures.add("unacceptable_replay_status")
+    if any(item.failure_codes for item in replays):
+        failures.add("replay_failure_codes_present")
+    if any(_replay_aggregate_mismatch(item) for item in replays):
+        failures.add("replay_aggregate_mismatch")
     if tuple(overlap_analysis.habit_specification_ids) != tuple(
         arbitration_plan.habit_specification_ids
     ):
         failures.add("overlap_plan_habit_mismatch")
-    applicable = sum(item.applicable_count for item in replays)
-    selections = sum(item.habit_selection_count for item in replays)
-    fallback = sum(item.fallback_count for item in replays)
-    correct = sum(item.correct_selection_count for item in replays)
-    wrong_action = sum(item.wrong_action_count for item in replays)
-    wrong_target = sum(item.wrong_target_count for item in replays)
-    ambiguity = sum(item.ambiguous_fallback_count for item in replays)
-    missed = sum(item.missed_opportunity_count for item in replays)
-    invalid = sum(item.invalid_count for item in replays)
+    all_occurrences = tuple(
+        occurrence for replay in replays for occurrence in replay.shadow_occurrences
+    )
+    applicable = len(all_occurrences)
+    selections = sum(
+        1 for item in all_occurrences if item.selected_habit_id is not None
+    )
+    fallback = sum(1 for item in all_occurrences if item.selected_habit_id is None)
+    correct = sum(1 for item in all_occurrences if item.outcome == "correct_selection")
+    wrong_action = sum(1 for item in all_occurrences if item.outcome == "wrong_action")
+    wrong_target = sum(1 for item in all_occurrences if item.outcome == "wrong_target")
+    ambiguity = sum(
+        1 for item in all_occurrences if item.outcome == "ambiguous_fallback"
+    )
+    missed = sum(1 for item in all_occurrences if item.outcome == "missed_opportunity")
+    invalid = sum(1 for item in all_occurrences if item.outcome == "invalid_evaluation")
     disposition = "eligible_for_multi_habit_activation_review"
     reasons: set[str] = {"eligible_for_multi_habit_activation_review"}
     if failures:
@@ -707,6 +782,84 @@ def audit_observer_habit_arbitration_shadow(
         ),
         disposition=disposition,
         reason_codes=tuple(reasons),
+    )
+
+
+def _validate_replay_inputs(
+    *,
+    arbitration_plan: ObserverHabitArbitrationPlanDTO,
+    habit_specifications: tuple[ObserverHabitSpecificationDTO, ...],
+    ledger_entries: tuple[ObserverTransitionLedgerEntryDTO, ...],
+    ledger_snapshot: ObserverTransitionLedgerSnapshotDTO,
+    grouping_recipe: ObserverStateGroupingRecipeDTO,
+    observation_schema: ObserverObservationSchemaDTO,
+) -> tuple[str, ...]:
+    failures: set[str] = set()
+    entry_ids = tuple(item.ledger_entry_id for item in ledger_entries)
+    if len(set(entry_ids)) != len(entry_ids):
+        failures.add("duplicate_ledger_entry")
+    if entry_ids != ledger_snapshot.entry_ids:
+        failures.add("ledger_snapshot_entry_mismatch")
+    try:
+        rebuilt = build_observer_transition_ledger_snapshot(entries=ledger_entries)
+        if rebuilt.canonical_payload() != ledger_snapshot.canonical_payload():
+            failures.add("ledger_snapshot_rebuild_mismatch")
+    except Exception:
+        failures.add("ledger_snapshot_rebuild_failed")
+    if any(item.fixture_id != ledger_snapshot.fixture_id for item in ledger_entries):
+        failures.add("fixture_mismatch")
+    supplied_ids = tuple(
+        sorted(item.habit_specification_id for item in habit_specifications)
+    )
+    if supplied_ids != arbitration_plan.habit_specification_ids:
+        failures.add("plan_habit_membership_mismatch")
+    for habit in habit_specifications:
+        if habit.grouping_recipe_id != grouping_recipe.grouping_recipe_id:
+            failures.add("habit_grouping_lineage_mismatch")
+        if habit.observation_schema_id != observation_schema.schema_id:
+            failures.add("habit_schema_lineage_mismatch")
+    return tuple(sorted(failures))
+
+
+def _invalid_observation(
+    observation_schema: ObserverObservationSchemaDTO,
+) -> ObserverObservationArtifactDTO:
+    return ObserverObservationArtifactDTO.create(
+        observation_schema=observation_schema,
+        visible_state_features={
+            "action_effect": "invalid",
+            "agent_x": 0,
+            "target_x": 0,
+        },
+        recent_history_features={},
+        hidden_state_uncertainty={},
+        provenance={"reconstruction": "failed"},
+        sequence_index=0,
+    )
+
+
+def _replay_aggregate_mismatch(
+    replay: ObserverHabitArbitrationShadowReplayDTO,
+) -> bool:
+    occurrences = replay.shadow_occurrences
+    return (
+        replay.applicable_count != len(occurrences)
+        or replay.habit_selection_count
+        != sum(1 for item in occurrences if item.selected_habit_id is not None)
+        or replay.fallback_count
+        != sum(1 for item in occurrences if item.selected_habit_id is None)
+        or replay.correct_selection_count
+        != sum(1 for item in occurrences if item.outcome == "correct_selection")
+        or replay.wrong_action_count
+        != sum(1 for item in occurrences if item.outcome == "wrong_action")
+        or replay.wrong_target_count
+        != sum(1 for item in occurrences if item.outcome == "wrong_target")
+        or replay.ambiguous_fallback_count
+        != sum(1 for item in occurrences if item.outcome == "ambiguous_fallback")
+        or replay.missed_opportunity_count
+        != sum(1 for item in occurrences if item.outcome == "missed_opportunity")
+        or replay.invalid_count
+        != sum(1 for item in occurrences if item.outcome == "invalid_evaluation")
     )
 
 

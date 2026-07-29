@@ -720,6 +720,64 @@ if decision.decision == "admit":
     )
 ```
 
+## Stage O3.6 - Durable Habit Registry
+
+Stage O3.6 adds a SQLite-backed implementation of the same habit registry
+contract used by `InMemoryObserverHabitRegistry`:
+
+```text
+in-memory registry semantics
+    -> shared event reducer
+    -> SQLite Store transaction
+    -> event + snapshot + entries + head
+    -> restart
+    -> semantic recovery and verification
+```
+
+SQLite is a durable Store implementation, not a separate semantic authority.
+The Store boundary remains DTO-only: public Store methods accept and return
+registry DTOs or primitive query parameters, never SQLite rows or cursors.
+Registry event, entry, and snapshot IDs remain content addressed through the
+existing canonical JSON identity rules.
+
+Every durable transition appends one immutable event, one immutable snapshot,
+that snapshot's immutable entry projection rows, and a guarded current-head
+update in a single SQLite transaction. Activation uses the source registry
+snapshot ID as the compare-and-swap token, so stale writers fail without
+persisting duplicate activation evidence. Current reads load the head and
+referenced snapshot in a read transaction and validate canonical payloads
+against relational projections.
+
+The durable registry supports one SQLite writer at a time. Concurrent readers
+observe committed snapshots only; lock contention can return the bounded
+`database_locked` Store disposition. Restart derives active, suspended, retired,
+generation, and rollback state from persisted registry history. Recovery is
+explicit and conservative: it may repair an unambiguous missing head pointer
+after semantic replay, but contradictory event or snapshot evidence is not
+repaired automatically.
+
+No distributed consensus, network coordination, background activation, or
+performance claim is made. The strongest supported claim is that registry state
+and activation decisions survive process restart and remain transactionally
+consistent under the tested SQLite scenarios.
+
+```python
+from zeromodel.observer import SqliteObserverHabitRegistry
+
+registry = SqliteObserverHabitRegistry.open("observer-habits.sqlite")
+registry.register_admission(
+    habit_specification=habit,
+    admission_decision=admission_decision,
+)
+source = registry.current_snapshot()
+registry.activate(
+    habit_specification_id=habit.habit_specification_id,
+    expected_source_registry_snapshot_id=source.habit_registry_snapshot_id,
+)
+assert registry.verify_integrity().status == "verified"
+registry.close()
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

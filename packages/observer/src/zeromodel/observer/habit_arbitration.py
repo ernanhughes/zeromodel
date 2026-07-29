@@ -488,6 +488,7 @@ def compile_observer_habit_arbitration_plan(
 def evaluate_observer_habit_arbitration(
     *,
     arbitration_plan: ObserverHabitArbitrationPlanDTO,
+    overlap_analysis: ObserverHabitOverlapAnalysisDTO,
     habit_specifications: tuple[ObserverHabitSpecificationDTO, ...],
     observation: ObserverObservationArtifactDTO,
     grouping_recipe: ObserverStateGroupingRecipeDTO,
@@ -497,12 +498,26 @@ def evaluate_observer_habit_arbitration(
     supplied_ids = tuple(
         sorted(item.habit_specification_id for item in habit_specifications)
     )
+    expected_specificity_edges = _specificity_edges(overlap_analysis)
+    reason = "plan_habit_membership_mismatch"
+    if (
+        arbitration_plan.habit_overlap_analysis_id
+        != overlap_analysis.habit_overlap_analysis_id
+    ):
+        reason = "overlap_analysis_mismatch"
+    elif arbitration_plan.specificity_edges != expected_specificity_edges:
+        reason = "specificity_evidence_mismatch"
     if (
         supplied_ids != arbitration_plan.habit_specification_ids
         or set(arbitration_plan.ordered_habit_ids)
         != set(arbitration_plan.habit_specification_ids)
         or len(set(arbitration_plan.ordered_habit_ids))
         != len(arbitration_plan.ordered_habit_ids)
+        or tuple(overlap_analysis.habit_specification_ids)
+        != arbitration_plan.habit_specification_ids
+        or arbitration_plan.habit_overlap_analysis_id
+        != overlap_analysis.habit_overlap_analysis_id
+        or arbitration_plan.specificity_edges != expected_specificity_edges
     ):
         return ObserverHabitArbitrationEvaluationDTO.create(
             habit_arbitration_plan_id=arbitration_plan.habit_arbitration_plan_id,
@@ -513,7 +528,7 @@ def evaluate_observer_habit_arbitration(
             selected_habit_id=None,
             selected_action=authoritative_fallback_action,
             decision="fallback_plan_inapplicable",
-            reason_codes=("plan_habit_membership_mismatch",),
+            reason_codes=(reason,),
             habit_evaluation_ids=(),
         )
     habits = {item.habit_specification_id: item for item in habit_specifications}

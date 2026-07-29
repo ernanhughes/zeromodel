@@ -834,6 +834,7 @@ compilation = compile_observer_habit_arbitration_plan(
 if compilation.arbitration_plan is not None:
     shadow = evaluate_observer_habit_arbitration_over_ledger(
         arbitration_plan=compilation.arbitration_plan,
+        overlap_analysis=overlap,
         habit_specifications=(left_habit, right_habit),
         ledger_entries=entries,
         ledger_snapshot=ledger_snapshot,

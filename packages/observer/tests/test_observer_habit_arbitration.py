@@ -49,7 +49,12 @@ def _plan(strategy, habits, schema, group, episode, graph, scope, **recipe):
         else (),
     )
     assert compilation.arbitration_plan is not None
+    object.__setattr__(compilation.arbitration_plan, "_overlap_analysis", analysis)
     return compilation.arbitration_plan
+
+
+def _plan_analysis(plan):
+    return plan._overlap_analysis
 
 
 def test_plan_compilation_blocks_conservative_action_and_target_conflicts() -> None:
@@ -121,6 +126,7 @@ def test_strict_unique_fire_selects_one_and_falls_back_on_ambiguity_or_no_fire()
     )
     unique = evaluate_observer_habit_arbitration(
         arbitration_plan=unique_plan,
+        overlap_analysis=_plan_analysis(unique_plan),
         habit_specifications=(habit, no_fire),
         observation=observation,
         grouping_recipe=group,
@@ -142,6 +148,7 @@ def test_strict_unique_fire_selects_one_and_falls_back_on_ambiguity_or_no_fire()
     )
     no_fire_eval = evaluate_observer_habit_arbitration(
         arbitration_plan=no_fire_plan,
+        overlap_analysis=_plan_analysis(no_fire_plan),
         habit_specifications=(no_fire, _variant(no_fire, "second")),
         observation=observation,
         grouping_recipe=group,
@@ -162,6 +169,7 @@ def test_strict_unique_fire_selects_one_and_falls_back_on_ambiguity_or_no_fire()
     )
     ambiguous = evaluate_observer_habit_arbitration(
         arbitration_plan=ambiguous_plan,
+        overlap_analysis=_plan_analysis(ambiguous_plan),
         habit_specifications=(habit, duplicate),
         observation=observation,
         grouping_recipe=group,
@@ -202,6 +210,7 @@ def test_most_specific_guard_and_declared_order_are_deterministic() -> None:
     )
     specific = evaluate_observer_habit_arbitration(
         arbitration_plan=specific_plan,
+        overlap_analysis=_plan_analysis(specific_plan),
         habit_specifications=(broad, narrow),
         observation=observation,
         grouping_recipe=group,
@@ -223,6 +232,7 @@ def test_most_specific_guard_and_declared_order_are_deterministic() -> None:
     )
     declared = evaluate_observer_habit_arbitration(
         arbitration_plan=declared_plan,
+        overlap_analysis=_plan_analysis(declared_plan),
         habit_specifications=(broad, narrow),
         observation=observation,
         grouping_recipe=group,
@@ -253,12 +263,21 @@ def test_most_specific_requires_proven_specificity_edges() -> None:
         recommended_action="move_right",
     )
     observation = _observation(episode, schema)
+    analysis = _analysis(
+        (more_guards, fewer_guards),
+        (_decision(more_guards), _decision(fewer_guards)),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
     plan = ObserverHabitArbitrationPlanDTO.create(
         habit_specification_ids=(
             fewer_guards.habit_specification_id,
             more_guards.habit_specification_id,
         ),
-        habit_overlap_analysis_id="analysis:manual",
+        habit_overlap_analysis_id=analysis.habit_overlap_analysis_id,
         activation_scope_id=scope.habit_activation_scope_id,
         arbitration_strategy="most_specific_guard",
         ordered_habit_ids=(
@@ -274,13 +293,15 @@ def test_most_specific_requires_proven_specificity_edges() -> None:
     )
     result = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=analysis,
         habit_specifications=(more_guards, fewer_guards),
         observation=observation,
         grouping_recipe=group,
         observation_schema=schema,
         authoritative_fallback_action="authoritative",
     )
-    assert result.decision == "fallback_ambiguous"
+    assert result.decision == "fallback_plan_inapplicable"
+    assert "specificity_evidence_mismatch" in result.reason_codes
     assert result.selected_action == "authoritative"
 
 
@@ -318,6 +339,7 @@ def test_most_specific_selects_unique_habit_narrower_than_every_firing_peer() ->
     )
     result = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=_plan_analysis(plan),
         habit_specifications=(broad_agent, broad_target, narrow),
         observation=_observation(episode, schema),
         grouping_recipe=group,
@@ -366,6 +388,7 @@ def test_most_specific_falls_back_when_winner_is_incomparable_with_a_firing_peer
     )
     result = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=_plan_analysis(plan),
         habit_specifications=(broad, narrow, incomparable),
         observation=_observation(episode, schema),
         grouping_recipe=group,
@@ -378,14 +401,23 @@ def test_most_specific_falls_back_when_winner_is_incomparable_with_a_firing_peer
 def test_cyclic_specificity_evidence_falls_back_and_plan_membership_mismatch_is_bounded() -> (
     None
 ):
-    schema, group, episode, _, scope, habit = _case()
+    schema, group, episode, graph, scope, habit = _case()
     other = _variant(habit, "other")
+    analysis = _analysis(
+        (habit, other),
+        (_decision(habit), _decision(other)),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
     plan = ObserverHabitArbitrationPlanDTO.create(
         habit_specification_ids=(
             habit.habit_specification_id,
             other.habit_specification_id,
         ),
-        habit_overlap_analysis_id="analysis:manual",
+        habit_overlap_analysis_id=analysis.habit_overlap_analysis_id,
         activation_scope_id=scope.habit_activation_scope_id,
         arbitration_strategy="most_specific_guard",
         ordered_habit_ids=(
@@ -404,16 +436,19 @@ def test_cyclic_specificity_evidence_falls_back_and_plan_membership_mismatch_is_
     )
     cycle = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=analysis,
         habit_specifications=(habit, other),
         observation=_observation(episode, schema),
         grouping_recipe=group,
         observation_schema=schema,
         authoritative_fallback_action="authoritative",
     )
-    assert cycle.decision == "fallback_ambiguous"
+    assert cycle.decision == "fallback_plan_inapplicable"
+    assert "specificity_evidence_mismatch" in cycle.reason_codes
 
     missing = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=analysis,
         habit_specifications=(habit,),
         observation=_observation(episode, schema),
         grouping_recipe=group,
@@ -421,6 +456,96 @@ def test_cyclic_specificity_evidence_falls_back_and_plan_membership_mismatch_is_
         authoritative_fallback_action="authoritative",
     )
     assert missing.decision == "fallback_plan_inapplicable"
+
+
+def test_evaluation_rejects_overlap_analysis_mismatch() -> None:
+    schema, group, episode, graph, scope, habit = _case()
+    other = _variant(habit, "other")
+    plan = _plan(
+        "strict_unique_fire", (habit, other), schema, group, episode, graph, scope
+    )
+    unrelated = _analysis(
+        (habit, _variant(habit, "unrelated")),
+        (_decision(habit), _decision(_variant(habit, "unrelated"))),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    result = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        overlap_analysis=unrelated,
+        habit_specifications=(habit, other),
+        observation=_observation(episode, schema),
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert result.decision == "fallback_plan_inapplicable"
+    assert "overlap_analysis_mismatch" in result.reason_codes
+
+
+def test_partially_overlapping_habits_cannot_win_through_forged_specificity_edge() -> (
+    None
+):
+    schema, group, episode, graph, scope, habit = _case()
+    left = _variant(
+        habit,
+        "left",
+        positive_guards=(
+            _guard("visible.agent_x", 0),
+            _guard("visible.action_effect", "initial", "str"),
+        ),
+    )
+    right = _variant(
+        habit,
+        "right",
+        positive_guards=(
+            _guard("visible.agent_x", 0),
+            _guard("visible.target_x", 6),
+        ),
+        recommended_action="move_left",
+    )
+    analysis = _analysis(
+        (left, right),
+        (_decision(left), _decision(right)),
+        schema,
+        group,
+        episode,
+        graph,
+        scope,
+    )
+    assert analysis.pair_overlaps[0].guard_relation == "partially_overlapping"
+    plan = ObserverHabitArbitrationPlanDTO.create(
+        habit_specification_ids=(
+            left.habit_specification_id,
+            right.habit_specification_id,
+        ),
+        habit_overlap_analysis_id=analysis.habit_overlap_analysis_id,
+        activation_scope_id=scope.habit_activation_scope_id,
+        arbitration_strategy="most_specific_guard",
+        ordered_habit_ids=(left.habit_specification_id, right.habit_specification_id),
+        specificity_edges=(
+            (left.habit_specification_id, right.habit_specification_id),
+        ),
+        tie_policy="fallback",
+        invalid_evaluation_policy="fallback",
+        no_fire_policy="fallback",
+        conflict_policy="fallback",
+        status="shadow_candidate",
+    )
+    result = evaluate_observer_habit_arbitration(
+        arbitration_plan=plan,
+        overlap_analysis=analysis,
+        habit_specifications=(left, right),
+        observation=_observation(episode, schema),
+        grouping_recipe=group,
+        observation_schema=schema,
+        authoritative_fallback_action="authoritative",
+    )
+    assert result.decision == "fallback_plan_inapplicable"
+    assert "specificity_evidence_mismatch" in result.reason_codes
 
 
 def test_invalid_lineage_and_identity_sensitivity() -> None:
@@ -433,6 +558,7 @@ def test_invalid_lineage_and_identity_sensitivity() -> None:
 
     valid = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=_plan_analysis(plan),
         habit_specifications=(habit, other),
         observation=observation,
         grouping_recipe=group,
@@ -441,6 +567,7 @@ def test_invalid_lineage_and_identity_sensitivity() -> None:
     )
     changed = evaluate_observer_habit_arbitration(
         arbitration_plan=plan,
+        overlap_analysis=_plan_analysis(plan),
         habit_specifications=(habit, other),
         observation=observation,
         grouping_recipe=group,

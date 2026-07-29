@@ -224,7 +224,7 @@ class ObserverHabitArbitrationShadowReplayDTO:
             tuple[ObserverHabitArbitrationShadowOccurrenceDTO, ...],
             values["shadow_occurrences"],
         )
-        values["evaluated_entry_ids"] = _sorted_unique(
+        values["evaluated_entry_ids"] = tuple(
             cast(Sequence[str], values.get("evaluated_entry_ids", ()))
         )
         values["failure_codes"] = _sorted_unique(
@@ -527,6 +527,7 @@ class ObserverHabitArbitrationAuditDTO:
 def evaluate_observer_habit_arbitration_over_ledger(
     *,
     arbitration_plan: ObserverHabitArbitrationPlanDTO,
+    overlap_analysis: ObserverHabitOverlapAnalysisDTO,
     habit_specifications: tuple[ObserverHabitSpecificationDTO, ...],
     ledger_entries: tuple[ObserverTransitionLedgerEntryDTO, ...],
     ledger_snapshot: ObserverTransitionLedgerSnapshotDTO,
@@ -565,6 +566,7 @@ def evaluate_observer_habit_arbitration_over_ledger(
             )
             evaluation = evaluate_observer_habit_arbitration(
                 arbitration_plan=arbitration_plan,
+                overlap_analysis=overlap_analysis,
                 habit_specifications=habit_specifications,
                 observation=observation,
                 grouping_recipe=grouping_recipe,
@@ -609,6 +611,7 @@ def evaluate_observer_habit_arbitration_over_ledger(
 def run_observer_fixture_arbitration_shadow_episode(
     *,
     arbitration_plan: ObserverHabitArbitrationPlanDTO,
+    overlap_analysis: ObserverHabitOverlapAnalysisDTO,
     habit_specifications: tuple[ObserverHabitSpecificationDTO, ...],
     initial_state: ObserverFixtureStateDTO,
     authoritative_actions: tuple[ObserverFixtureActionDTO, ...],
@@ -634,6 +637,7 @@ def run_observer_fixture_arbitration_shadow_episode(
     )
     replay = evaluate_observer_habit_arbitration_over_ledger(
         arbitration_plan=arbitration_plan,
+        overlap_analysis=overlap_analysis,
         habit_specifications=habit_specifications,
         ledger_entries=entries,
         ledger_snapshot=episode.ledger_snapshot,
@@ -700,6 +704,13 @@ def audit_observer_habit_arbitration_shadow(
         failures.add("replay_failure_codes_present")
     if any(_replay_aggregate_mismatch(item) for item in replays):
         failures.add("replay_aggregate_mismatch")
+    for replay in replays:
+        failures.update(_replay_evidence_failures(replay))
+    if (
+        arbitration_plan.habit_overlap_analysis_id
+        != overlap_analysis.habit_overlap_analysis_id
+    ):
+        failures.add("plan_overlap_analysis_mismatch")
     if tuple(overlap_analysis.habit_specification_ids) != tuple(
         arbitration_plan.habit_specification_ids
     ):
@@ -861,6 +872,27 @@ def _replay_aggregate_mismatch(
         or replay.invalid_count
         != sum(1 for item in occurrences if item.outcome == "invalid_evaluation")
     )
+
+
+def _replay_evidence_failures(
+    replay: ObserverHabitArbitrationShadowReplayDTO,
+) -> tuple[str, ...]:
+    failures: set[str] = set()
+    occurrence_entry_ids = tuple(
+        occurrence.ledger_entry_id for occurrence in replay.shadow_occurrences
+    )
+    if any(
+        occurrence.habit_arbitration_plan_id != replay.habit_arbitration_plan_id
+        for occurrence in replay.shadow_occurrences
+    ):
+        failures.add("occurrence_plan_mismatch")
+    if occurrence_entry_ids != replay.evaluated_entry_ids:
+        failures.add("replay_entry_occurrence_mismatch")
+    if len(set(occurrence_entry_ids)) != len(occurrence_entry_ids):
+        failures.add("duplicate_occurrence_entry")
+    if set(occurrence_entry_ids) - set(replay.evaluated_entry_ids):
+        failures.add("occurrence_not_evaluated")
+    return tuple(sorted(failures))
 
 
 def _shadow_occurrence(

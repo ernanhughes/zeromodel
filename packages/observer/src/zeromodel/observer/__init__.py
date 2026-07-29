@@ -115,6 +115,17 @@ from zeromodel.observer.habit_registry import (
     empty_observer_habit_registry_snapshot,
     replay_observer_habit_registry,
 )
+from zeromodel.observer.habit_registry_sqlite import (
+    SqliteObserverHabitRegistry,
+    SqliteObserverHabitRegistryStore,
+)
+from zeromodel.observer.habit_registry_store import (
+    ObserverHabitRegistryRecoveryDTO,
+    ObserverHabitRegistryStore,
+    ObserverHabitRegistryStoreCommitDTO,
+    ObserverHabitRegistryStoreError,
+    ObserverHabitRegistryStoreVerificationDTO,
+)
 from zeromodel.observer.habit_service import (
     compile_observer_habit_specification,
     evaluate_observer_habit,
@@ -209,6 +220,11 @@ __all__ = [
     "ObserverHabitRegistryEventDTO",
     "ObserverHabitRegistryReplayDTO",
     "ObserverHabitRegistrySnapshotDTO",
+    "ObserverHabitRegistryRecoveryDTO",
+    "ObserverHabitRegistryStore",
+    "ObserverHabitRegistryStoreCommitDTO",
+    "ObserverHabitRegistryStoreError",
+    "ObserverHabitRegistryStoreVerificationDTO",
     "ObserverHabitRollbackRequestDTO",
     "ObserverHabitRollbackResultDTO",
     "ObserverHabitRuntimeSafetyRecipeDTO",
@@ -261,6 +277,8 @@ __all__ = [
     "ObserverWakePolicyReplayDTO",
     "InMemoryObserverTransitionLedger",
     "InMemoryObserverHabitRegistry",
+    "SqliteObserverHabitRegistry",
+    "SqliteObserverHabitRegistryStore",
     "ObserverCategoryMappingDTO",
     "build_contradiction_artifact",
     "build_observer_observation_graph",

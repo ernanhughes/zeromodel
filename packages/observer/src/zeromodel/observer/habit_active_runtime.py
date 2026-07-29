@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, Mapping, Sequence, cast
+from typing import Final, Mapping, Protocol, Sequence, cast
 
 from zeromodel.observer._canonical import canonical_id
 from zeromodel.observer.artifacts import ObserverObservationSchemaDTO
@@ -33,7 +33,10 @@ from zeromodel.observer.habit_activation import (
     ObserverHabitActivationScopeDTO,
     select_observer_active_action,
 )
-from zeromodel.observer.habit_registry import InMemoryObserverHabitRegistry
+from zeromodel.observer.habit_registry import (
+    ObserverHabitRegistryEventDTO,
+    ObserverHabitRegistrySnapshotDTO,
+)
 from zeromodel.observer.ledger import (
     InMemoryObserverTransitionLedger,
     ObserverTransitionLedgerEntryDTO,
@@ -63,6 +66,14 @@ ACTIVE_OCCURRENCE_OUTCOMES: Final = frozenset(
 ACTIVE_REPORT_STATUSES: Final = frozenset(
     {"completed", "completed_with_suspension", "failed", "inconclusive"}
 )
+
+
+class ObserverActiveHabitRegistry(Protocol):
+    def current_snapshot(self) -> ObserverHabitRegistrySnapshotDTO: ...
+
+    def suspend(
+        self, *, habit_specification_id: str, reason_codes: tuple[str, ...]
+    ) -> ObserverHabitRegistryEventDTO: ...
 
 
 def _require_non_empty(value: str, field_name: str) -> None:
@@ -323,7 +334,7 @@ class ObserverActiveHabitExecutionReportDTO:
 
 def run_observer_fixture_with_active_habit(
     *,
-    registry: InMemoryObserverHabitRegistry,
+    registry: ObserverActiveHabitRegistry,
     activation_scope: ObserverHabitActivationScopeDTO,
     habits: tuple[ObserverHabitSpecificationDTO, ...],
     initial_state: ObserverFixtureStateDTO,

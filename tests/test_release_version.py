@@ -12,6 +12,22 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = release_version
 SPEC.loader.exec_module(release_version)
 
+VERSION_SENSITIVE_WORKFLOWS = (
+    "analysis-package.yml",
+    "artifacts-package.yml",
+    "core-package.yml",
+    "navigation-package.yml",
+    "observation-package.yml",
+    "observer-package.yml",
+    "package-integration.yml",
+    "perception-package.yml",
+    "python.yml",
+    "sqlalchemy-package.yml",
+    "trust-package.yml",
+    "video-package.yml",
+    "vision-package.yml",
+)
+
 
 def test_version_file_is_the_canonical_release_authority() -> None:
     version = release_version.read_version()
@@ -32,3 +48,11 @@ def test_workflows_do_not_embed_versioned_wheel_filenames() -> None:
         for workflow in workflows
     }
     assert {path: matches for path, matches in offenders.items() if matches} == {}
+
+
+def test_version_sensitive_workflows_watch_and_validate_version() -> None:
+    root = Path(".github/workflows")
+    for filename in VERSION_SENSITIVE_WORKFLOWS:
+        text = (root / filename).read_text(encoding="utf-8")
+        assert '"VERSION"' in text, filename
+        assert "python scripts/release_version.py check" in text, filename

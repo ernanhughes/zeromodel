@@ -3,10 +3,11 @@ from __future__ import annotations
 import inspect
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import zipfile
+from importlib.metadata import version
+from pathlib import Path
 
 import zeromodel.core as core
 
@@ -100,7 +101,10 @@ def test_core_wheel_contains_only_core_namespace_when_wheel_path_is_provided() -
         for prefix in forbidden_prefixes
         if name == prefix or name.startswith(prefix)
     ]
+    distribution_version = version("zeromodel")
+    dist_info_prefix = f"zeromodel-{distribution_version}.dist-info/"
+
     assert offenders == []
     assert "zeromodel/core/artifact.py" in names
     assert "zeromodel/core/policy_lookup.py" in names
-    assert any(name.startswith("zeromodel-1.0.13.dist-info/") for name in names)
+    assert any(name.startswith(dist_info_prefix) for name in names)

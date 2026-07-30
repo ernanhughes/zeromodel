@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import zipfile
+from importlib.metadata import version
 
 
 FORBIDDEN = {
@@ -55,11 +56,13 @@ def test_video_wheel_contains_only_video_namespace_when_path_is_provided() -> No
     with zipfile.ZipFile(wheel) as archive:
         names = set(archive.namelist())
 
+    distribution_version = version("zeromodel-video")
+    dist_info_prefix = f"zeromodel_video-{distribution_version}.dist-info/"
+
     assert "zeromodel/video/__init__.py" in names
     assert "zeromodel/__init__.py" not in names
     assert all(
-        name.startswith("zeromodel/video/")
-        or name.startswith("zeromodel_video-1.0.13.dist-info/")
+        name.startswith("zeromodel/video/") or name.startswith(dist_info_prefix)
         for name in names
     )
     assert not any(

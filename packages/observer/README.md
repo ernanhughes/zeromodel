@@ -778,6 +778,71 @@ assert registry.verify_integrity().status == "verified"
 registry.close()
 ```
 
+## Stage O3.7 - Multi-Habit Overlap and Shadow Arbitration
+
+Stage O3.7 analyzes admitted shadow habits in pairs before any multi-habit
+activation is allowed. `analyze_observer_habit_overlap` compares habit lineage,
+source state class, guard relation, recommended action, expected target class,
+and historical co-fire evidence from the transition ledger. The result is a
+content-addressed overlap analysis with deterministic pair and occurrence IDs.
+
+Arbitration plans are compiled from overlap analysis, not directly from an
+unordered habit list. The conservative default blocks different-action
+overlaps, target conflicts, incomplete pair analysis, and unsupported strategy
+requests. Supported shadow strategies are `strict_unique_fire`,
+`most_specific_guard`, and `declared_order`; all fall back to the authoritative
+action on no-fire, ambiguity, invalid habit evaluation, or inapplicable plan
+membership. `most_specific_guard` uses only compiled specificity edges proven
+by pairwise subsumption analysis. A firing habit wins only when it is proven
+strictly narrower than every other firing habit.
+
+Historical and fixture shadow replays record what an arbitration plan would
+have selected while the fixture still executes the authoritative action stream.
+Historical replay is bound to the exact ledger snapshot entry sequence, and
+reconstruction failures become explicit invalid shadow occurrences instead of
+being dropped. `audit_observer_habit_arbitration_shadow` recomputes aggregate
+counts from occurrences and rejects malformed replay or episode lineage
+evidence. Eligibility for multi-habit activation review is only an audit
+disposition; Stage O3.7 does not activate multiple habits and does not change
+the single-active-habit runtime path.
+
+```python
+from zeromodel.observer import (
+    ObserverHabitArbitrationPlanRecipeDTO,
+    ObserverHabitOverlapAnalysisRecipeDTO,
+    analyze_observer_habit_overlap,
+    compile_observer_habit_arbitration_plan,
+    evaluate_observer_habit_arbitration_over_ledger,
+)
+
+overlap = analyze_observer_habit_overlap(
+    habit_specifications=(left_habit, right_habit),
+    admission_decisions=(left_admission, right_admission),
+    activation_scope=activation_scope,
+    observation_schema=schema,
+    grouping_recipe=grouping,
+    ledger_snapshot=ledger_snapshot,
+    observation_graph=graph,
+    analysis_recipe=ObserverHabitOverlapAnalysisRecipeDTO.create(),
+)
+compilation = compile_observer_habit_arbitration_plan(
+    overlap_analysis=overlap,
+    habit_specifications=(left_habit, right_habit),
+    plan_recipe=ObserverHabitArbitrationPlanRecipeDTO.create(),
+    requested_strategy="strict_unique_fire",
+)
+if compilation.arbitration_plan is not None:
+    shadow = evaluate_observer_habit_arbitration_over_ledger(
+        arbitration_plan=compilation.arbitration_plan,
+        overlap_analysis=overlap,
+        habit_specifications=(left_habit, right_habit),
+        ledger_entries=entries,
+        ledger_snapshot=ledger_snapshot,
+        grouping_recipe=grouping,
+        observation_schema=schema,
+    )
+```
+
 ## Design Position
 
 The package is for the first experiment described by the Observer design note:

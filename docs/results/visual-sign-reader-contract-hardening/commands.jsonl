@@ -1,0 +1,13 @@
+{"command":"git fetch origin && git checkout main && git pull --ff-only","result":"passed","notes":"starting main SHA 68166bc3e8ace98e806bae98782ccaf5697123e6"}
+{"command":"python -m venv .venv-visual-sign-reader-contract-hardening","result":"passed"}
+{"command":"pip install -e packages/core -e packages/vision -e packages/video -e packages/analysis -e packages/artifacts -e packages/observation","result":"passed","notes":"local checkout imports verified"}
+{"command":"python scripts/audit/run_visual_acceptance_profiles.py --output docs/results/visual-sign-reader-contract-hardening/acceptance-profile-results.json","result":"passed"}
+{"command":"python scripts/audit/run_visual_feature_conformance.py --output docs/results/visual-sign-reader-contract-hardening/feature-conformance-results.json","result":"passed"}
+{"command":"python scripts/audit/run_visual_alias_analysis.py --output docs/results/visual-sign-reader-contract-hardening/alias-analysis.json","result":"passed"}
+{"command":"python scripts/audit/run_visual_contract_performance.py --output docs/results/visual-sign-reader-contract-hardening/performance-results.json --repeats 100","result":"passed"}
+{"command":"python -m pytest packages/vision/tests packages/core/tests/test_artifact_kernel.py packages/video/tests/test_video_policy_reader_contracts.py -q","result":"passed","notes":"32 passed"}
+{"command":"python -m ruff check touched production, test and audit files","result":"passed"}
+{"command":"python -m mypy packages/vision/src/zeromodel/vision","result":"passed"}
+{"command":"python scripts/release_version.py check","result":"passed","notes":"Release version check passed: 1.2.0"}
+{"command":"python -m build packages/vision","result":"passed","notes":"setuptools license deprecation warnings only"}
+{"command":"python scripts/run_fast_tests.py","result":"budget_exceeded","notes":"195 passed, 200 deselected before FAST_SUITE_BUDGET_SECONDS triggered at 120.4s; no test failure observed before timeout"}

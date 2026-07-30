@@ -1,0 +1,107 @@
+{
+  "feature_spec": {
+    "grayscale": "bt601-integer",
+    "implementation": "zeromodel.vision.visual.extract_visual_features/v1",
+    "input_height": 4,
+    "input_width": 4,
+    "pooling": "box-integer",
+    "quantization": "uniform-uint8",
+    "quantization_levels": 16,
+    "target_height": 2,
+    "target_width": 2,
+    "version": "zeromodel-visual-feature/v1"
+  },
+  "feature_spec_digest": "57193bb4ee96c8a2846a18e2714a80cf6926a37bc86f3355221035fd8d4cacdf",
+  "fixtures": [
+    {
+      "canonical_input_digest": "sha256:2a80ddd877da201213c4b4a10af90d77d4d70a4c5020ba5e29275fbe250c6ff4",
+      "dtype": "uint8",
+      "feature_digest": "sha256:38e333983d505667f51db037d1f21f16a414a3f5fb72c4aaa7df15217afa67be",
+      "features": [0, 0, 0, 0],
+      "name": "grayscale_min",
+      "raw_input_digest": "sha256:052b8af77f09f57da2cf6bcce5d89f40f87aa53a0913a6929dfde19b8fd3956e",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:80dec2f8820020f983c3a46198cc0644537673d2c63873815bc7c0ba20a7ed38",
+      "dtype": "uint8",
+      "feature_digest": "sha256:756dd7a59ce1d689149fc277b7705bcd2ddc3f2c32fdf4faf0ec4f10abbe489c",
+      "features": [15, 15, 15, 15],
+      "name": "grayscale_max",
+      "raw_input_digest": "sha256:5226cfef79cadf2bc6b9d3271f943050aaeb5d8c2de684edbdfdbef3e9ed09d6",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:641e009ec754039854b66d09e1c7abd6ecc07b72a29849dcb8557ff27168d3dc",
+      "dtype": "uint8",
+      "feature_digest": "sha256:fe8888bf6af29b66edb8c33025bc76135736791be9e0f37f806f39f7b4caa7e1",
+      "features": [0, 0, 1, 1],
+      "name": "rgb_gray",
+      "raw_input_digest": "sha256:b6b23b09f95cdcda33251e89b37df2331847e7a1b2a54b5300a7bb8a9f86a0c5",
+      "shape": [4, 4, 3]
+    },
+    {
+      "canonical_input_digest": "sha256:641e009ec754039854b66d09e1c7abd6ecc07b72a29849dcb8557ff27168d3dc",
+      "dtype": "uint8",
+      "feature_digest": "sha256:fe8888bf6af29b66edb8c33025bc76135736791be9e0f37f806f39f7b4caa7e1",
+      "features": [0, 0, 1, 1],
+      "name": "rgba_gray",
+      "raw_input_digest": "sha256:dda7761935494ecd579ef4481b838457b1f508daa078a7e84c8f8a7dae06fce5",
+      "shape": [4, 4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:f45be6aa7f5d31f4c7f5b1268f84c6ec9a8c481dfca2bea6910dcd6bb1bcf1b6",
+      "dtype": "uint8",
+      "feature_digest": "sha256:2781f3f17dbdaa4ebda794dce23a66a8b317d2993680f0383ae0425b6127db5b",
+      "features": [0, 0, 15, 15],
+      "name": "pooling_boundary",
+      "raw_input_digest": "sha256:0ef7b16b4179ec607f2592231e7cebe40d7bea55e4c813f069a471be3f8c8f87",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:0e34c30a09b8e3bb937c295ebb4de3247152fa7afdc32f114a49e45e83143df9",
+      "dtype": "uint8",
+      "feature_digest": "sha256:8ff724d35ddbf2ae3e7b8261f8e7890dd29d0455e80a4c0c7a1230b72ffc185f",
+      "features": [0, 0, 8, 8],
+      "name": "rounding_boundary",
+      "raw_input_digest": "sha256:9f2055a8dbb8488e6dfde49c895ddded84c2c9272cbfd5479fdee6de69193a1d",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:f9e0b7a5a4daaf6962a328e7d1321efdaae77b09ea4ed608977526ee9d7e2cce",
+      "dtype": "uint8",
+      "feature_digest": "sha256:7414d3bac61a803d3de7bd8507ad7d86822e3ab1bf70a8924d0dc08eb1bf2668",
+      "features": [2, 2, 11, 12],
+      "name": "quantization_boundary",
+      "raw_input_digest": "sha256:48d0bd75105fad92c190b87a9a4357c5d8f54e00499f96f35a651411da828f0f",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:b4536e444b10157538c685abc311b7985c08d496b0a8560abc41f23999c371bf",
+      "dtype": "uint8",
+      "feature_digest": "sha256:d69e04974c7a4f47cdfc4a58b6a4fc495b82c42bc7269a6b9f4d07727604763e",
+      "features": [1, 1, 2, 3],
+      "name": "non_contiguous_view",
+      "raw_input_digest": "sha256:899712067ca2b43d2745913b23999a391c497b62ec1182e580db1e8884bd227e",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:641e009ec754039854b66d09e1c7abd6ecc07b72a29849dcb8557ff27168d3dc",
+      "dtype": "int16",
+      "feature_digest": "sha256:fe8888bf6af29b66edb8c33025bc76135736791be9e0f37f806f39f7b4caa7e1",
+      "features": [0, 0, 1, 1],
+      "name": "signed_int_inside_range",
+      "raw_input_digest": "sha256:c091263bac352a3d2bb15265a5f7e584d5100b7da88fad96037067add20c7855",
+      "shape": [4, 4]
+    },
+    {
+      "canonical_input_digest": "sha256:641e009ec754039854b66d09e1c7abd6ecc07b72a29849dcb8557ff27168d3dc",
+      "dtype": "uint16",
+      "feature_digest": "sha256:fe8888bf6af29b66edb8c33025bc76135736791be9e0f37f806f39f7b4caa7e1",
+      "features": [0, 0, 1, 1],
+      "name": "larger_uint_inside_range",
+      "raw_input_digest": "sha256:18c36134fdaac38521b8884da3935d2a0725c3e0b3f5d099e6c1b472f1a2dd2e",
+      "shape": [4, 4]
+    }
+  ]
+}

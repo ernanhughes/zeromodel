@@ -1,0 +1,12 @@
+{
+  "machine": "Max",
+  "numpy": "2.4.6",
+  "packages": {
+    "zeromodel": "1.0.12",
+    "zeromodel-observation": "1.2.0",
+    "zeromodel-video": "1.2.0",
+    "zeromodel-vision": "1.2.0"
+  },
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.4"
+}

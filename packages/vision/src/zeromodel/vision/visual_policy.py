@@ -62,7 +62,10 @@ class DeterministicVisualAddressProvider:
             policy_artifact_id=reader.policy_artifact.artifact_id,
             source_scope=source_scope,
             replay_contract="exact_bytes",
-            metadata={"adapter": "VisualSignReader"},
+            metadata={
+                "adapter": "VisualSignReader",
+                "acceptance_profile": reader.acceptance_profile,
+            },
         )
 
     def contract(self) -> VisualAddressContract:
@@ -92,9 +95,12 @@ class DeterministicVisualAddressProvider:
                 checks.append("absolute_gap")
             if decision.exact_feature_match:
                 checks.append("exact_feature_codeword")
+            if decision.canonical_input_match:
+                checks.append("canonical_input")
+            checks.append("profile:" + decision.acceptance_profile)
         return VisualAddressDecision(
             accepted=decision.accepted,
-            reason=decision.reason,
+            reason="accepted" if decision.accepted else decision.reason,
             observation_digest=decision.input_digest,
             representation_digest=decision.feature_digest,
             provider_kind=self._contract.provider_kind,

@@ -1,0 +1,30 @@
+{
+  "build": {
+    "command": "python -m build packages/vision",
+    "result": "passed",
+    "notes": "setuptools license deprecation warnings only"
+  },
+  "feature_conformance": "10/10 golden fixtures passed",
+  "focused_tests": {
+    "command": "python -m pytest packages/vision/tests packages/core/tests/test_artifact_kernel.py packages/video/tests/test_video_policy_reader_contracts.py -q",
+    "result": "32 passed"
+  },
+  "full_fast_suite": {
+    "command": "python scripts/run_fast_tests.py",
+    "result": "budget_exceeded",
+    "observed": "195 passed, 200 deselected before FAST_SUITE_BUDGET_SECONDS triggered at 120.4s; no test failure observed before timeout"
+  },
+  "mypy": {
+    "command": "python -m mypy packages/vision/src/zeromodel/vision",
+    "result": "passed"
+  },
+  "release_version": {
+    "command": "python scripts/release_version.py check",
+    "result": "passed"
+  },
+  "ruff": {
+    "command": "python -m ruff check touched production, test and audit files",
+    "result": "passed"
+  },
+  "starting_main_sha": "68166bc3e8ace98e806bae98782ccaf5697123e6"
+}

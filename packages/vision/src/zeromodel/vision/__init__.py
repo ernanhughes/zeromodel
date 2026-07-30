@@ -9,6 +9,7 @@ from .visual import (
     VISUAL_FEATURE_VERSION,
     VISUAL_INDEX_VERSION,
     VISUAL_READER_VERSION,
+    VisualAcceptanceProfile,
     VisualDecision,
     VisualFeatureSpec,
     VisualIndexBuild,
@@ -18,6 +19,7 @@ from .visual import (
     extract_visual_features,
     visual_feature_digest,
     visual_input_digest,
+    visual_raw_input_digest,
 )
 from .visual_policy import (
     VISUAL_POLICY_DECISION_VERSION,
@@ -35,6 +37,7 @@ __all__ = [
     "VISUAL_POLICY_DECISION_VERSION",
     "VISUAL_READER_VERSION",
     "DeterministicVisualAddressProvider",
+    "VisualAcceptanceProfile",
     "VisualDecision",
     "VisualFeatureSpec",
     "VisualIndexBuild",
@@ -46,4 +49,5 @@ __all__ = [
     "extract_visual_features",
     "visual_feature_digest",
     "visual_input_digest",
+    "visual_raw_input_digest",
 ]

@@ -966,8 +966,10 @@ zeromodel-vision,zeromodel.vision,VisualIndexBuild,zeromodel.vision,Class,zeromo
 zeromodel-vision,zeromodel.vision,VisualIndexCalibration,zeromodel.vision,Class,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,VisualPolicyDecision,zeromodel.vision,Class,zeromodel.vision.visual_policy,true
 zeromodel-vision,zeromodel.vision,VisualPolicyReader,zeromodel.vision,Class,zeromodel.vision.visual_policy,true
+zeromodel-vision,zeromodel.vision,VisualAcceptanceProfile,zeromodel.vision,Class,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,VisualSignReader,zeromodel.vision,Class,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,build_visual_index,zeromodel.vision,Function,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,extract_visual_features,zeromodel.vision,Function,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,visual_feature_digest,zeromodel.vision,Function,zeromodel.vision.visual,true
 zeromodel-vision,zeromodel.vision,visual_input_digest,zeromodel.vision,Function,zeromodel.vision.visual,true
+zeromodel-vision,zeromodel.vision,visual_raw_input_digest,zeromodel.vision,Function,zeromodel.vision.visual,true

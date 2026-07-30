@@ -1,0 +1,54 @@
+- id: VSR-CONTRACT-001
+  title: Acceptance profiles separate policy execution guarantees
+  classification: positive result
+  evidence_state: implemented and tested
+  severity: medium
+  claim_affected: VisualSignReader runtime acceptance
+  source_paths:
+    - packages/vision/src/zeromodel/vision/visual.py
+  test_paths:
+    - packages/vision/tests/test_deterministic_visual_runtime.py
+  commands:
+    - python -m pytest packages/vision/tests/test_deterministic_visual_runtime.py -q
+  observed_result: canonical-only, exact-codeword, calibrated-nearest and evidence-only reads now produce distinct stable reasons and policy_executed state.
+  interpretation: accepted visual-address evidence is no longer automatically equivalent to canonical observation verification.
+  why_it_matters: downstream consumers can choose replay verification, finite codeword addressing, tolerant addressing, or shadow evidence without hidden Boolean behavior.
+  production_change: added VisualAcceptanceProfile, acceptance_profile, policy_executed and profile-specific reasons.
+  remaining_boundary: calibrated-nearest is still a bounded codebook lookup, not open-world recognition.
+  confidence: high
+- id: VSR-CONTRACT-002
+  title: Raw, canonical and feature identities are distinct
+  classification: positive result
+  evidence_state: implemented and tested
+  severity: medium
+  claim_affected: visual decision trace identity
+  source_paths:
+    - packages/vision/src/zeromodel/vision/visual.py
+  test_paths:
+    - packages/vision/tests/test_deterministic_visual_runtime.py
+  commands:
+    - python -m pytest packages/vision/tests/test_deterministic_visual_runtime.py -q
+  observed_result: raw_input_digest distinguishes RGB/RGBA/dtype encodings while canonical_input_digest and feature_digest preserve later pipeline identities.
+  interpretation: collisions at one pipeline layer no longer imply identity at another layer.
+  why_it_matters: aliases can be reported without overstating what the reader verified.
+  production_change: added visual_raw_input_digest and explicit raw_input_digest/canonical_input_digest decision fields.
+  remaining_boundary: canonicalization intentionally erases supported color-channel distinctions.
+  confidence: high
+- id: VSR-CONTRACT-003
+  title: Feature-codeword aliases remain a representational limitation
+  classification: negative result
+  evidence_state: measured
+  severity: medium
+  claim_affected: robustness of visual addressing
+  source_paths:
+    - scripts/audit/run_visual_alias_analysis.py
+  test_paths:
+    - docs/results/visual-sign-reader-contract-hardening/alias-analysis.json
+  commands:
+    - python scripts/audit/run_visual_alias_analysis.py --output docs/results/visual-sign-reader-contract-hardening/alias-analysis.json
+  observed_result: noncanonical variants can still be accepted under exact-codeword or calibrated-nearest profiles when they map to a valid feature address.
+  interpretation: threshold changes alone cannot prove canonical observation identity.
+  why_it_matters: open-world visual recognition remains unsupported by VisualSignReader alone.
+  production_change: aliases are exposed through canonical_input_match, nearest_input_digest, raw_input_digest and acceptance_profile.
+  remaining_boundary: resolving semantic corruption requires a separate perception/uncertainty contract.
+  confidence: high

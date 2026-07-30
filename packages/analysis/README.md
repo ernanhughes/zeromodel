@@ -1,17 +1,13 @@
 # zeromodel-analysis
 
-`zeromodel-analysis` contains deterministic analysis utilities for ZeroModel
-Visual Policy Map artifacts. It is the second package in the ZeroModel 1.0.13
-split and exposes its API through `zeromodel.analysis`.
+`zeromodel-analysis` contains deterministic analysis utilities for ZeroModel Visual Policy Map artifacts. It is part of the coordinated ZeroModel 1.2.0 Visual AI Computing package system and exposes its API through `zeromodel.analysis`.
 
-The package depends on the validated core distribution, `zeromodel==1.0.13`.
-Core data objects such as `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` should
-be imported from `zeromodel.core`, not re-exported from this package.
+The package depends on the validated core distribution, `zeromodel==1.2.0`. Core data objects such as `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` should be imported from `zeromodel.core`, not re-exported from this package.
 
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.0.13 zeromodel-analysis==1.0.13
+python -m pip install zeromodel==1.2.0 zeromodel-analysis==1.2.0
 ```
 
 ## Includes
@@ -28,14 +24,9 @@ python -m pip install zeromodel==1.0.13 zeromodel-analysis==1.0.13
 
 ## Excludes
 
-`zeromodel-analysis` deliberately excludes observation capture, vision encoders,
-video runtime/instrumentation, SQLAlchemy persistence, research orchestration,
-examples, Torch, TorchVision, Transformers, Pillow, and database runtimes.
+`zeromodel-analysis` deliberately excludes observation capture, vision encoders, perception contracts, video runtime/instrumentation, SQLAlchemy persistence, research orchestration, examples, Torch, TorchVision, Transformers, Pillow, and database runtimes.
 
-Analysis functions operate over numeric artifacts and bounded finite policies.
-They do not claim semantic reasoning, causal detection, continuous formal
-verification, or benchmark adjudication beyond the explicit deterministic
-contracts documented by each API.
+Analysis functions operate over numeric artifacts and bounded finite policies. They do not claim semantic reasoning, causal detection, continuous formal verification, or benchmark adjudication beyond the explicit deterministic contracts documented by each API.
 
 ## Minimal Comparison
 
@@ -105,3 +96,5 @@ report = PolicyPropertyChecker(artifact, action_metric_ids=("WAIT", "ACT")).chec
     [spec]
 )
 ```
+
+See the [system README](../../README.md) and [claims audit](../../docs/claims-audit.md) for the validated capability boundary.

@@ -3,6 +3,7 @@ name: Package integration
 on:
   pull_request:
     paths:
+      - "VERSION"
       - "packages/**"
       - "tests/**"
       - "tests/integration/**"
@@ -16,6 +17,7 @@ on:
     branches:
       - main
     paths:
+      - "VERSION"
       - "packages/**"
       - "tests/**"
       - "tests/integration/**"
@@ -32,7 +34,7 @@ permissions:
 
 jobs:
   package-integration:
-    name: nine-package release candidate / Python ${{ matrix.python-version }}
+    name: coordinated package release / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -51,6 +53,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
+
+      - name: Check coordinated release version
+        run: python scripts/release_version.py check
 
       - name: Fast suite
         run: |

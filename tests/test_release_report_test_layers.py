@@ -20,4 +20,3 @@ def test_pytest_count_parses_a_passed_summary_line() -> None:
     assert counts["passed"] > 0
     assert counts["failed"] == 0
     assert counts["returncode"] == 0
-

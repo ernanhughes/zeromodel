@@ -3,17 +3,21 @@ name: Core package
 on:
   pull_request:
     paths:
+      - "VERSION"
       - "packages/core/**"
       - "package-boundaries.toml"
       - "scripts/check_package_boundaries.py"
+      - "scripts/release_version.py"
       - ".github/workflows/core-package.yml"
   push:
     branches:
       - main
     paths:
+      - "VERSION"
       - "packages/core/**"
       - "package-boundaries.toml"
       - "scripts/check_package_boundaries.py"
+      - "scripts/release_version.py"
       - ".github/workflows/core-package.yml"
   workflow_dispatch:
 
@@ -36,6 +40,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build twine pytest ruff mypy "numpy<2.0"
 
+      - name: Check coordinated release version
+        run: python scripts/release_version.py check
+
       - name: Core quality
         run: |
           python -m ruff format --check packages/core/src packages/core/tests
@@ -56,7 +63,7 @@ jobs:
           python -m venv build/core-ci-venv
           build/core-ci-venv/bin/python -m pip install --upgrade pip
           build/core-ci-venv/bin/python -m pip install pytest
-          build/core-ci-venv/bin/python -m pip install packages/core/dist/zeromodel-1.0.13-py3-none-any.whl
+          python scripts/release_version.py install --python build/core-ci-venv/bin/python core
           build/core-ci-venv/bin/python -m pip check
-          CORE_WHEEL_PATH="$PWD/packages/core/dist/zeromodel-1.0.13-py3-none-any.whl" \
+          CORE_WHEEL_PATH="$(python scripts/release_version.py wheel-path core)" \
             build/core-ci-venv/bin/python -m pytest -q packages/core/tests

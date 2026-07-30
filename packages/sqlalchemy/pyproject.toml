@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeromodel-sqlalchemy"
-version = "1.1.0"
+version = "1.2.0"
 description = "ZeroModel SQLAlchemy and SQLite persistence adapter"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,9 +12,14 @@ license = {text = "MIT"}
 dependencies = [
     "numpy>=1.23",
     "SQLAlchemy>=2.0,<3",
-    "zeromodel==1.1.0",
-    "zeromodel-video==1.1.0",
+    "zeromodel==1.2.0",
+    "zeromodel-video==1.2.0",
 ]
+
+[project.urls]
+Homepage = "https://zeromodel.org/"
+Repository = "https://github.com/ernanhughes/zeromodel"
+Documentation = "https://zeromodel.org/"
 
 [tool.setuptools.packages.find]
 where = ["src"]

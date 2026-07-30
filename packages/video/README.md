@@ -1,36 +1,27 @@
 # zeromodel-video
 
-`zeromodel-video` provides ZeroModel's deterministic video runtime contracts,
-provider-neutral temporal policy reader, and video action-set domain DTO/Store
-architecture.
+`zeromodel-video` provides ZeroModel's deterministic video runtime contracts, provider-neutral temporal policy reader, and video action-set domain DTO/Store architecture.
 
 It depends on:
 
-- `zeromodel==1.0.13`
-- `zeromodel-observation==1.0.13`
+- `zeromodel==1.2.0`
+- `zeromodel-observation==1.2.0`
 - `numpy>=1.23`
 
-It does not depend on `zeromodel-analysis`, `zeromodel-vision`,
-`zeromodel-sqlalchemy`, SQLAlchemy, Torch, TorchVision, Transformers, Pillow,
-research modules, examples, or the repository root.
+It does not depend on `zeromodel-analysis`, `zeromodel-vision`, `zeromodel-perception`, `zeromodel-sqlalchemy`, SQLAlchemy, Torch, TorchVision, Transformers, Pillow, research modules, examples, or the repository root.
 
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.0.13 zeromodel-observation==1.0.13 zeromodel-video==1.0.13
+python -m pip install zeromodel==1.2.0 zeromodel-observation==1.2.0 zeromodel-video==1.2.0
 ```
 
 ## Includes
 
-- `VideoFrame`, `VideoFrameSource`, `InMemoryVideoFrameSource`, and
-  `VideoClipManifest` for immutable frame and clip identity.
-- `VideoPolicyReader`, `TemporalEvidence`, `VideoPolicyDecision`, and
-  `VideoPolicyTrace` for temporal policy over observation-owned visual address
-  contracts.
-- Video action-set DTOs for benchmark identity, episode plans, sealed final
-  split plans, observation ledgers, provider descriptors, and operation chains.
-- `VideoActionSetStore` and `InMemoryVideoActionSetStore` for DTO-only Store
-  semantics.
+- `VideoFrame`, `VideoFrameSource`, `InMemoryVideoFrameSource`, and `VideoClipManifest` for immutable frame and clip identity.
+- `VideoPolicyReader`, `TemporalEvidence`, `VideoPolicyDecision`, and `VideoPolicyTrace` for temporal policy over observation-owned visual address contracts.
+- Video action-set DTOs for benchmark identity, episode plans, sealed final split plans, observation ledgers, provider descriptors, and operation chains.
+- `VideoActionSetStore` and `InMemoryVideoActionSetStore` for DTO-only Store semantics.
 - `build_runtime()` for default in-memory runtime composition.
 
 ## Temporal Policy Example
@@ -95,13 +86,10 @@ assert runtime.video_action_set.get_identity(identity.seed_digest) == identity
 
 ## Exclusions
 
-Concrete visual providers are injected by callers. This package consumes
-provider-neutral observation contracts and does not import `zeromodel.vision`.
+Concrete visual providers are injected by callers. This package consumes provider-neutral observation contracts and does not import `zeromodel.vision` or `zeromodel.perception`.
 
-SQL persistence belongs to `zeromodel-sqlalchemy`. This package provides Store
-protocols and in-memory implementations only.
+SQL persistence belongs to `zeromodel-sqlalchemy`. This package provides Store protocols and in-memory implementations only.
 
-Research benchmark orchestration, provider comparison, evidence generation,
-large sweeps, committed-result reconstruction, and final cross-package
-integration remain outside this package.
+Research benchmark orchestration, provider comparison, evidence generation, large sweeps, committed-result reconstruction, and final cross-package integration remain outside this package.
 
+See the [system README](../../README.md), [provider-evaluation architecture](../../docs/architecture/provider-evaluation-rmdto.md), and [claims audit](../../docs/claims-audit.md).

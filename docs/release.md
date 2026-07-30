@@ -1,224 +1,133 @@
 # Release process
 
-## Current: v1.1.0 release-candidate validation preparation
+## Current: ZeroModel 1.2.0
 
-P18H closes the in-memory durability gap left by P18G for the perception package.
-The bounded claim is an in-process SQLite reference implementation that preserves
-admitted active state, activation receipts, rollback plans, rollback admissions,
-and rollback receipts across restart, and executes exact stored inverse rollback
-plans atomically only when the current active state still matches the activated
-state named by the plan.
+ZeroModel 1.2.0 is a coordinated eleven-distribution release of the Visual AI Computing foundation.
 
-This does not create distributed activation, multi-step historical rewind,
-production authorization, semantic safety recovery, or a production uptime/scale
-claim.
+The release includes:
 
-Before tagging or publishing `v1.1.0`, run the release-candidate gates below and
-record any unrelated failures separately:
-
-```powershell
-python scripts/validate_release_candidate.py
-python scripts/run_fast_tests.py
-python scripts/check_quality.py
-```
-
-## Historical: 1.0.13 nine-package release-candidate validation
-
-ZeroModel 1.0.13 uses a nine-distribution release-candidate workflow before any
-publish, tag, or GitHub release action:
-
-```powershell
-python scripts/validate_release_candidate.py
-python scripts/run_fast_tests.py
-python scripts/check_quality.py
-```
-
-The validator builds and checks all nine packages declared in
-`package-boundaries.toml` (the authoritative package configuration; the
-validator fails if its own package list drifts from that file):
-
-- `zeromodel` (core)
+- `zeromodel`
 - `zeromodel-analysis`
 - `zeromodel-observation`
 - `zeromodel-vision`
+- `zeromodel-perception`
+- `zeromodel-observer`
 - `zeromodel-video`
 - `zeromodel-sqlalchemy`
 - `zeromodel-artifacts`
 - `zeromodel-trust`
 - `zeromodel-navigation`
 
-It writes `docs/architecture/package-release-artifacts-1.0.13.json` and
-`docs/architecture/package-public-api-1.0.13.csv`. It does not upload to
-TestPyPI or PyPI, create tags, or create a GitHub release. No publication of
-the 1.0.13 nine-package release has occurred as of this writing; the workflow
-below (Phase 1/Phase 2, `scripts/create-release.ps1`) has not been adapted to
-drive a nine-package publish and should not be run against 1.0.13 without
-that work first — see "Historical: 1.0.12 single-package workflow" below.
+[`package-boundaries.toml`](../package-boundaries.toml) is the machine-readable authority for distribution names, namespaces, source roots, internal dependency edges, publication eligibility, and the coordinated release version.
 
-## Historical: 1.0.12 single-package workflow
+The exact release claim and boundaries are recorded in [`docs/releases/1.2.0.md`](releases/1.2.0.md). The authoritative public evidence posture remains [`docs/claims-audit.md`](claims-audit.md).
 
-The following two-phase PowerShell workflow published ZeroModel 1.0.12, when
-the repository still shipped one monolithic `zeromodel` distribution. It is
-recorded here as history and as a starting point for a future nine-package
-publish orchestrator, not as a currently runnable process:
-`scripts/create-release.ps1` still reads and rewrites `zeromodel\__init__.py`
-and a single root `pyproject.toml` version, both of which no longer exist in
-this checkout (each of the nine packages now carries its own
-`packages/*/pyproject.toml` and version). Do not run this script against the
-current tree until it is updated for the nine-package layout.
+## Required validation
+
+Before tagging or publishing `v1.2.0`, run from a clean checkout:
+
+```powershell
+python scripts/validate_release_candidate.py
+python scripts/run_fast_tests.py
+python scripts/check_quality.py
+```
+
+The coordinated validator must verify:
+
+- every package declares version `1.2.0`;
+- all internal dependencies use the coordinated `1.2.0` pin;
+- package metadata agrees with `package-boundaries.toml`;
+- bounded fast tests pass;
+- package-local tests pass;
+- cross-package integration tests pass;
+- visual-transition regression tests pass;
+- all wheels and source distributions build;
+- `twine check` passes;
+- clean-environment installation succeeds;
+- public API imports succeed;
+- release evidence is generated for the exact commit.
+
+The validator writes versioned package manifests and a release-candidate report under:
 
 ```text
-Prepare
-    ↓
-release pull request
-    ↓
-review + CI + merge
-    ↓
-Publish
-    ↓
-final integration validation
-    ↓
-PyPI upload
-    ↓
-Git tag
-    ↓
-GitHub release
+docs/architecture/package-release-artifacts-1.2.0.json
+docs/architecture/package-public-api-1.2.0.csv
+docs/architecture/package-release-test-layers-1.2.0.json
+docs/results/release-candidate-1.2.0/
 ```
 
-The workflow is implemented by:
+Generated evidence must not be copied from an older release line.
 
-```text
-scripts/create-release.ps1
-```
+## Release preparation
 
-The existing `scripts/publish-pypi.ps1` remains the low-level production PyPI uploader. The release orchestrator calls it only after the merged release commit and all release gates have been validated.
+The release pull request should contain only deliberate release and positioning changes:
 
-## Prerequisites
+1. coordinated package versions;
+2. coordinated internal dependency pins;
+3. `package-boundaries.toml` release version;
+4. release-validator version and generated paths;
+5. root and package README version references;
+6. changelog entry;
+7. release notes;
+8. generated release-candidate evidence after validation.
 
-Run releases from a clean Windows checkout with:
-
-- Git;
-- Python 3.10 or later;
-- GitHub CLI (`gh`) authenticated for `ernanhughes/zeromodel`;
-- permission to push release branches and tags;
-- a production PyPI token in `PYPI_API_TOKEN`, or available for secure interactive entry;
-- the intended release-notes file already committed on `main`.
-
-Check GitHub authentication with:
-
-```powershell
-gh auth status
-```
-
-## Phase 1: prepare the release pull request
-
-For ZeroModel 1.0.12:
-
-```powershell
-.\scripts\create-release.ps1 `
-    -Mode Prepare `
-    -Version 1.0.12
-```
-
-The prepare phase requires a clean, synchronized `main` branch. It then:
-
-1. creates `release/1.0.12`;
-2. updates `pyproject.toml`;
-3. updates `zeromodel\__init__.py`;
-4. updates the README production install pin;
-5. adds the release section to `CHANGELOG.md`;
-6. verifies the committed release-notes file;
-7. installs release dependencies;
-8. runs the repository quality gate;
-9. runs the bounded fast suite;
-10. runs the release demos;
-11. builds the source distribution and wheel;
-12. runs `twine check`;
-13. commits and pushes the release branch;
-14. opens the release pull request.
-
-The prepare phase does not upload to PyPI, create a tag, or create a GitHub release.
-
-### Dry-run preflight
-
-```powershell
-.\scripts\create-release.ps1 `
-    -Mode Prepare `
-    -Version 1.0.12 `
-    -DryRun
-```
-
-A dry run verifies the repository, branch, synchronization state, commands, and release-notes path without changing anything.
+The preparation PR must not upload to PyPI, create a tag, or create a GitHub release.
 
 ## Review and merge
 
-Review the generated release PR and require the normal `Python package` workflow to pass.
+Before merge:
 
-The release PR should contain only release metadata changes:
+- inspect the complete diff;
+- confirm historical `1.0.13` and `1.1.0` evidence records were not rewritten as if they belonged to 1.2.0;
+- confirm every public claim links to a proof and a boundary;
+- require the package and repository quality workflows to pass;
+- preserve failed or unsupported benchmark results;
+- verify all generated reports identify the exact release commit.
 
-- canonical version declarations;
-- README install pin;
-- changelog entry;
-- release notes.
+## Publish
 
-Merge the PR before starting the publish phase.
+After the release pull request is merged:
 
-## Phase 2: publish the merged release
+1. return to a clean, synchronized `main` checkout;
+2. rerun the complete release gate against the merged commit;
+3. confirm the built metadata declares `1.2.0` for all eleven distributions;
+4. publish the distributions in dependency order;
+5. install the published packages into a clean environment;
+6. run the public API and bounded smoke checks;
+7. create annotated tag `v1.2.0` at the exact validated commit;
+8. create the GitHub release and attach the built artifacts and release evidence.
 
-Return to `main`, pull the merged release commit, and run:
-
-```powershell
-.\scripts\create-release.ps1 `
-    -Mode Publish `
-    -Version 1.0.12
-```
-
-The publish phase requires the merged source tree to already declare `1.0.12`. It then:
-
-1. re-runs the local release gates;
-2. runs the bounded video-finalization integration validation against the exact merged commit;
-3. confirms `main` is synchronized with `origin/main`;
-4. pushes the merged commit if necessary;
-5. waits for the GitHub package workflow for that commit;
-6. checks whether `zeromodel==1.0.12` already exists on PyPI;
-7. invokes `scripts/publish-pypi.ps1` when upload is still required;
-8. performs the clean-environment PyPI smoke test;
-9. creates and pushes annotated tag `v1.0.12`;
-10. creates the GitHub release and attaches the built distributions.
-
-Before the irreversible step, the operator must type:
+Recommended dependency-aware publication order:
 
 ```text
-RELEASE 1.0.12
+zeromodel
+    ↓
+zeromodel-analysis
+zeromodel-observation
+zeromodel-artifacts
+    ↓
+zeromodel-vision
+zeromodel-perception
+zeromodel-video
+zeromodel-trust
+zeromodel-navigation
+    ↓
+zeromodel-observer
+zeromodel-sqlalchemy
 ```
 
-Use `-Yes` only in a controlled non-interactive release environment.
+Parallel publication inside the same level is acceptable only when the package index and automation handle dependency availability reliably.
 
 ## Recovery and repeatability
 
-The publish phase is designed to be safely repeatable after a partial failure:
+A partially completed publish must be recoverable without reusing immutable versions:
 
-- an existing PyPI version is detected and not uploaded again;
-- an existing tag is accepted only when it resolves to the expected release commit;
-- a conflicting local or remote tag is rejected;
-- an existing GitHub release is detected and not recreated.
-
-Do not delete or move a published tag. PyPI versions are immutable and cannot be reused.
-
-## Optional skips
-
-The script exposes narrowly scoped recovery switches:
-
-```text
--SkipQuality
--SkipTests
--SkipDemos
--SkipFinalizationIntegration
--SkipPyPI
--SkipGitHubRelease
-```
-
-These switches are not normal release posture. Use them only when the skipped gate has already passed for the exact release commit or when recovering a partially completed release.
+- do not delete or move a published tag;
+- do not upload different bytes under an existing package version;
+- verify an existing tag resolves to the expected release commit;
+- verify an existing GitHub release belongs to the expected tag;
+- record publication failures separately from package-validation failures;
+- rerun clean-environment installation after recovery.
 
 ## Claims boundary
 
@@ -226,21 +135,24 @@ A successful release proves package construction, installation, bounded runtime 
 
 It does not establish:
 
-- open-world visual recognition;
+- general or open-world visual recognition;
+- arbitrary image understanding;
 - scientific provider validity;
 - general formal verification;
+- semantic safety certification;
+- production authorization;
 - arbitrary image-transform survival;
 - planet-scale traversal;
 - constrained-device performance without named hardware measurements.
 
-`docs/claims-audit.md` remains the source of truth for public capability wording.
+## Historical release records
 
-## Next development version
+Historical records remain evidence for their original release lines and should not be renamed:
 
-The nine-package split described above is not future work: it is the current
-state of `main` at release-candidate version 1.0.13, and the removal of the
-legacy root compatibility import surface is already in effect in this
-checkout. There is no pending `2.0.0.dev0` package-architecture line still to
-begin. Any future major-version bump should be driven by a new breaking
-change identified after the 1.0.13 nine-package release candidate is
-published, not by the split itself.
+- [`docs/releases/1.1.0.md`](releases/1.1.0.md)
+- [`docs/architecture/package-system-1.1.0.md`](architecture/package-system-1.1.0.md)
+- [`docs/results/release-candidate-1.1.0/`](results/release-candidate-1.1.0/)
+- the unpublished 1.0.13 package-split evidence under `docs/architecture/`
+- [`docs/releases/1.0.12.md`](releases/1.0.12.md)
+
+The old single-package `scripts/create-release.ps1` workflow is historical and must not be used to publish the coordinated eleven-package system unless it is explicitly rewritten and validated for that topology.

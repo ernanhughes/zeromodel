@@ -14,6 +14,7 @@ FORMAT_LINT_PATHS = [
     Path("scripts/check_architecture.py"),
     Path("scripts/check_package_boundaries.py"),
     Path("scripts/check_quality.py"),
+    Path("scripts/release_version.py"),
     Path("packages/core/src"),
     Path("packages/core/tests"),
     Path("packages/analysis/src"),
@@ -109,10 +110,13 @@ def main() -> int:
     if not quality_limit_paths:
         raise SystemExit("No governed quality-limit paths exist")
 
-    # Execution order: format -> lint -> typing -> package boundaries ->
-    # architecture -> quality limits. A failure at any stage stops the gate
-    # immediately (run_step raises SystemExit), so a later, unrelated
-    # "passed" line can never mask an earlier failure.
+    # Execution order: release version -> format -> lint -> typing -> package
+    # boundaries -> architecture -> quality limits. A failure at any stage stops
+    # the gate immediately, so later checks cannot mask an earlier failure.
+    run_step(
+        "Release version",
+        [sys.executable, "scripts/release_version.py", "check"],
+    )
     run_step(
         "Ruff format check",
         [sys.executable, "-m", "ruff", "format", "--check", *governed_paths],

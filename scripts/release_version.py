@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import re
 import subprocess
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -101,9 +100,9 @@ def version_sync_errors() -> list[str]:
     manifest = load_manifest()
     errors: list[str] = []
 
-    if "release_version" in manifest:
+    if str(manifest.get("release_version", "")) != version:
         errors.append(
-            "package-boundaries.toml must not duplicate VERSION as release_version"
+            "package-boundaries.toml: release_version is not synchronized with VERSION"
         )
 
     for package_key, config in manifest["packages"].items():
@@ -157,8 +156,19 @@ def version_sync_errors() -> list[str]:
 
 def sync_version_mirrors() -> None:
     version = read_version()
-    manifest = load_manifest()
 
+    boundaries_text = BOUNDARIES_FILE.read_text(encoding="utf-8")
+    boundaries_text, boundary_count = re.subn(
+        r'(?m)^release_version = "[^"]+"$',
+        f'release_version = "{version}"',
+        boundaries_text,
+        count=1,
+    )
+    if boundary_count != 1:
+        raise SystemExit(f"Could not update release_version in {BOUNDARIES_FILE}")
+    BOUNDARIES_FILE.write_text(boundaries_text, encoding="utf-8")
+
+    manifest = load_manifest()
     for package_key in manifest["packages"]:
         pyproject = package_root(package_key, manifest) / "pyproject.toml"
         text = pyproject.read_text(encoding="utf-8")

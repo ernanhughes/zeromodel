@@ -34,6 +34,10 @@ def _paths(constant_name: str) -> list[str]:
     return [path.as_posix() for path in getattr(check_quality, constant_name)]
 
 
+def test_release_version_tool_is_covered_by_ruff() -> None:
+    assert "scripts/release_version.py" in _paths("FORMAT_LINT_PATHS")
+
+
 def test_sqlalchemy_is_covered_by_ruff_format_and_lint() -> None:
     paths = _paths("FORMAT_LINT_PATHS")
     assert "packages/sqlalchemy/src" in paths
@@ -78,6 +82,7 @@ def test_integration_tests_are_covered_by_ruff() -> None:
 def test_quality_gate_stages_run_in_the_required_order() -> None:
     source = SCRIPT.read_text(encoding="utf-8")
     stage_labels = [
+        "Release version",
         "Ruff format check",
         "Ruff lint check",
         "mypy",

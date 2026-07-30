@@ -27,6 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
 
+      - name: Check coordinated release version
+        run: python scripts/release_version.py check
+
       - name: Run integration tests
         run: >
           python -m pytest -q

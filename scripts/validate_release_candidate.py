@@ -56,7 +56,11 @@ globals()["RELEASE_CANDIDATE_REPORT_DIR"] = (
 
 for package in globals()["PACKAGES"].values():
     package["requires"] = {
-        requirement.replace("==1.1.0", f"=={_RELEASE_VERSION}")
+        (
+            f"{requirement.split('==', 1)[0]}=={_RELEASE_VERSION}"
+            if requirement.startswith("zeromodel") and "==" in requirement
+            else requirement
+        )
         for requirement in package["requires"]
     }
 

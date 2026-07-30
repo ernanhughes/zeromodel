@@ -14,7 +14,9 @@ SPEC.loader.exec_module(release_version)
 
 
 def test_version_file_is_the_canonical_release_authority() -> None:
-    assert release_version.read_version() == "1.2.0"
+    version = release_version.read_version()
+    assert release_version.VERSION_PATTERN.fullmatch(version)
+    assert release_version.load_manifest()["release_version"] == version
 
 
 def test_all_generated_version_mirrors_are_synchronized() -> None:

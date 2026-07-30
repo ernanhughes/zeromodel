@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from importlib.metadata import version
 import os
 import subprocess
 import sys
 import zipfile
+from importlib.metadata import version
 
 
 FORBIDDEN = {

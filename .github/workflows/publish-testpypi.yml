@@ -1,16 +1,8 @@
-name: TestPyPI release-candidate build check (publishing disabled)
+name: TestPyPI coordinated build check (publishing disabled)
 
-# This workflow previously tried to publish a single monolithic `zeromodel`
-# distribution built from the repository root. The repository root is no
-# longer a buildable distribution (it was split into six workspace
-# packages), so publishing was disabled here rather than left pointed at a
-# build target that cannot succeed.
-#
-# This workflow currently only builds and twine-checks the six workspace
-# distributions, as a manually triggerable dry run. Six-package TestPyPI/PyPI
-# publication is intentionally deferred to a dedicated release-process
-# remediation stage (see docs/reviews/post-split-main-audit.md finding F8 and
-# docs/reviews/post-split-stage-a1-validation.md) and is not implemented here.
+# This workflow is a manually triggered dry run. It builds and checks every
+# coordinated distribution but deliberately performs no upload. VERSION is the
+# release-number authority; package metadata is verified before any build.
 
 on:
   workflow_dispatch:
@@ -20,7 +12,7 @@ permissions:
 
 jobs:
   build-check:
-    name: build and check six-package distributions (no publish)
+    name: build and check coordinated distributions (no publish)
     runs-on: ubuntu-latest
 
     steps:
@@ -38,16 +30,19 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build twine
 
-      - name: Build source and wheel distributions for all six packages
+      - name: Check coordinated release version
+        run: python scripts/release_version.py check
+
+      - name: Build source and wheel distributions for all packages
         run: |
           set -e
-          for pkg in core analysis observation vision video sqlalchemy; do
+          for pkg in core analysis observation vision perception observer video sqlalchemy artifacts trust navigation; do
             python -m build "packages/$pkg"
           done
 
       - name: Check distribution metadata
         run: |
           set -e
-          for pkg in core analysis observation vision video sqlalchemy; do
+          for pkg in core analysis observation vision perception observer video sqlalchemy artifacts trust navigation; do
             python -m twine check "packages/$pkg/dist/"*
           done

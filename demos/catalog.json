@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "demos": [
+    {
+      "id": "vpm-artifact",
+      "title": "Build and inspect a Visual Policy Map",
+      "summary": "Compile the bounded arcade policy into a deterministic VPM, render its field, and trace a selected action back to its source cell.",
+      "notebook": "demos/notebooks/01-vpm-artifact.ipynb",
+      "source_examples": ["examples/arcade_shooter_policy.py"],
+      "packages": ["core", "video"],
+      "evidence_state": "defined",
+      "execution_profile": "fast",
+      "network": false,
+      "timeout_seconds": 120,
+      "website_order": 10,
+      "applications": ["inspectable decision artifacts", "policy compilation", "audit trails"]
+    },
+    {
+      "id": "visual-sign-reader",
+      "title": "Read policy signs from rendered observations",
+      "summary": "Render a bounded arcade state, address a calibrated visual index, and recover the corresponding policy action with an inspectable decision record.",
+      "notebook": "demos/notebooks/02-visual-sign-reader.ipynb",
+      "source_examples": ["examples/arcade_visual_sign_reader.py", "examples/arcade_shooter_policy.py"],
+      "packages": ["core", "vision", "video"],
+      "evidence_state": "defined",
+      "execution_profile": "fast",
+      "network": false,
+      "timeout_seconds": 180,
+      "website_order": 20,
+      "applications": ["visual policy addressing", "closed-world calibration", "observation-to-action tracing"]
+    },
+    {
+      "id": "lua-edge-policy",
+      "title": "Export a policy for a dependency-free Lua runtime",
+      "summary": "Compile the VPM-backed policy into a small Lua module with stable artifact and plan identities.",
+      "notebook": "demos/notebooks/03-lua-edge-policy.ipynb",
+      "source_examples": ["examples/lua_edge_policy.py", "examples/lua/run_arcade_policy.lua"],
+      "packages": ["core", "video"],
+      "evidence_state": "defined",
+      "execution_profile": "fast",
+      "network": false,
+      "timeout_seconds": 120,
+      "website_order": 30,
+      "applications": ["edge deployment", "embedded policy lookup", "cross-language policy consumption"]
+    }
+  ]
+}

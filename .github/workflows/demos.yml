@@ -1,0 +1,75 @@
+name: Executable demos
+
+on:
+  pull_request:
+    paths:
+      - "demos/**"
+      - "examples/arcade_shooter_policy.py"
+      - "examples/arcade_visual_sign_reader.py"
+      - "examples/lua_edge_policy.py"
+      - "examples/lua/**"
+      - "packages/core/**"
+      - "packages/observation/**"
+      - "packages/vision/**"
+      - "packages/video/**"
+      - "scripts/build_demos.py"
+      - "tests/test_demo_catalog.py"
+      - "site/**"
+      - ".github/workflows/demos.yml"
+  push:
+    branches: [main]
+    paths:
+      - "demos/**"
+      - "examples/arcade_shooter_policy.py"
+      - "examples/arcade_visual_sign_reader.py"
+      - "examples/lua_edge_policy.py"
+      - "examples/lua/**"
+      - "packages/core/**"
+      - "packages/observation/**"
+      - "packages/vision/**"
+      - "packages/video/**"
+      - "scripts/build_demos.py"
+      - "tests/test_demo_catalog.py"
+      - "site/**"
+      - ".github/workflows/demos.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fast-demos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install demo tooling and local packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r demos/requirements.txt
+          python -m pip install --no-deps \
+            -e packages/core \
+            -e packages/observation \
+            -e packages/vision \
+            -e packages/video
+      - name: Validate catalogue
+        run: |
+          python scripts/build_demos.py validate
+          python -m pytest tests/test_demo_catalog.py -q
+      - name: Execute, render, and assemble
+        run: python scripts/build_demos.py all --profile fast
+      - name: Verify generated website
+        run: |
+          test -f build/site/demos/index.html
+          test -f build/site/demos/catalog.json
+          test -f build/site/demos/vpm-artifact/index.html
+          test -f build/site/demos/visual-sign-reader/index.html
+          test -f build/site/demos/lua-edge-policy/index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zeromodel-fast-demos
+          path: |
+            build/site
+            docs/results/demos

@@ -1,0 +1,16 @@
+{"command": "git fetch origin; git checkout main; git pull --ff-only; git rev-parse HEAD; git status --short; git checkout -b analysis/visual-sign-reader-hardening", "exit_status": 0, "summary": "started from a45a62dcf4412009bab8b1401330f7708111aa66"}
+{"command": "python -m venv .venv-visual-sign-reader-hardening", "exit_status": 0, "summary": "created clean local venv"}
+{"command": ".venv python -m pip install -e packages/core -e packages/observation -e packages/vision -e packages/video -e packages/analysis pytest build", "exit_status": 0, "summary": "installed local editable packages for slice; no ZeroModel PyPI packages used"}
+{"command": "import location/version verification from outside repo", "exit_status": 0, "summary": "core/vision/video imported from C:\\Projects\\zeromodel\\packages; versions 1.2.0"}
+{"command": "pytest packages/vision/tests/test_deterministic_visual_runtime.py -q", "exit_status": 0, "summary": "baseline: 10 passed; hardened: 12 passed"}
+{"command": "pytest packages/core/tests/test_policy_lookup_lua.py packages/core/tests/test_artifact_kernel.py packages/video/tests/test_video_policy_reader_contracts.py -q", "exit_status": 0, "summary": "18 passed, 1 skipped before hardening; 30 passed, 1 skipped after adding vision tests"}
+{"command": "python examples/arcade_visual_sign_reader.py --output-dir docs/results/visual-sign-reader-hardening/baseline/example --exhaustive", "exit_status": 0, "summary": "baseline reproduced 2401/2401 waves and 31213 decisions"}
+{"command": "python scripts/audit/run_visual_sign_reader_perturbations.py --phase baseline --exhaustive", "exit_status": 0, "summary": "wrote baseline canonical, trajectory, rejection, identity, perturbation, calibration and performance evidence"}
+{"command": "python scripts/audit/run_visual_sign_reader_baselines.py", "exit_status": 0, "summary": "wrote conventional baseline comparison"}
+{"command": "python -m pip install -r requirements-dev.txt", "exit_status": 0, "summary": "installed repository dev toolchain into local venv"}
+{"command": "ruff check touched files", "exit_status": 0, "summary": "All checks passed"}
+{"command": "mypy packages/vision/src/zeromodel/vision", "exit_status": 0, "summary": "Success: no issues found in 3 source files"}
+{"command": "python scripts/release_version.py check", "exit_status": 0, "summary": "Release version check passed: 1.2.0"}
+{"command": "python examples/arcade_visual_sign_reader.py --output-dir docs/results/visual-sign-reader-hardening/hardened/example --exhaustive", "exit_status": 0, "summary": "hardened reproduced 2401/2401 waves and 31213 decisions"}
+{"command": "python scripts/run_fast_tests.py", "exit_status": 0, "summary": "1457 passed, 1 skipped, 200 deselected in 113.67s"}
+{"command": "python -m build packages/vision", "exit_status": 0, "summary": "built zeromodel_vision-1.2.0 sdist and wheel; setuptools emitted existing license deprecation warnings"}

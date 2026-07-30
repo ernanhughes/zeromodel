@@ -1,0 +1,40 @@
+{
+  "canonical_summary": {
+    "accepted_count": 112,
+    "correct_action_count": 112,
+    "correct_row_count": 112,
+    "distance_margin": {
+      "max": 2.0,
+      "median": 2.0,
+      "min": 2.0
+    },
+    "false_acceptance_count": 0,
+    "false_rejection_count": 0,
+    "incorrect_action_count": 0,
+    "incorrect_row_count": 0,
+    "nearest_distance": {
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0
+    },
+    "rejected_count": 0,
+    "rejection_reasons": {
+      "accepted": 112
+    },
+    "state_count": 112
+  },
+  "fast_suite": "1457 passed, 1 skipped, 200 deselected in 113.67s",
+  "focused_core_video": "30 passed, 1 skipped",
+  "focused_vision": "12 passed",
+  "lua_note": "Lua test skipped where applicable because no Lua interpreter was available.",
+  "mypy": "passed for packages/vision/src/zeromodel/vision",
+  "release_version_check": "passed",
+  "ruff": "passed on touched files",
+  "trajectory_summary": {
+    "failures": [],
+    "mode": "exhaustive",
+    "visual_decisions_compared": 31213,
+    "waves_cleared": 2401,
+    "waves_evaluated": 2401
+  }
+}

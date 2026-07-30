@@ -17,6 +17,7 @@ from zeromodel.observation import (
     VisualAddressProvider,
 )
 from zeromodel.vision import (
+    VISUAL_FEATURE_IMPLEMENTATION,
     VISUAL_FEATURE_VERSION,
     VISUAL_INDEX_VERSION,
     VISUAL_POLICY_DECISION_VERSION,
@@ -94,6 +95,7 @@ def test_feature_spec_round_trip_and_validation() -> None:
     restored = VisualFeatureSpec.from_dict(spec.to_dict())
 
     assert spec.version == VISUAL_FEATURE_VERSION
+    assert spec.implementation == VISUAL_FEATURE_IMPLEMENTATION
     assert restored.digest == spec.digest
     assert spec.feature_count == 1
     with pytest.raises(VPMValidationError):
@@ -112,6 +114,8 @@ def test_feature_spec_round_trip_and_validation() -> None:
             target_height=1,
             target_width=1,
         ).validate()
+    with pytest.raises(VPMValidationError):
+        VisualFeatureSpec.from_dict({**spec.to_dict(), "implementation": "alternate"})
 
 
 def test_feature_extraction_is_deterministic_and_immutable() -> None:
@@ -149,6 +153,9 @@ def test_visual_index_builds_deterministic_identity_and_calibration() -> None:
     assert first.calibration.feature_count == 1
     assert first.calibration.closest_pair_row_ids == ("left", "right")
     assert first.artifact.provenance["parents"][0]["artifact_id"] == policy.artifact_id
+    assert set(first.artifact.source.metadata["input_digests"]) == set(
+        policy.source.row_ids
+    )
 
     restored = VisualIndexCalibration.from_dict(first.calibration.to_dict())
     assert restored.digest == first.calibration.digest
@@ -207,11 +214,14 @@ def test_visual_reader_recovers_canonical_rows_and_rejects_ambiguous_inputs() ->
         assert decision.policy_artifact_id == policy.artifact_id
         assert decision.visual_index_artifact_id == index.artifact.artifact_id
         assert decision.exact_feature_match
+        assert decision.canonical_input_match
+        assert decision.nearest_input_digest == decision.input_digest
 
     ambiguous = reader.read(np.array([[1]], dtype=np.uint8))
     rejected += int(not ambiguous.accepted)
     assert ambiguous.reason == "ambiguous_visual_address"
     assert ambiguous.action is None
+    assert not ambiguous.canonical_input_match
     assert ambiguous.nearest_row_id == "left"
 
     far = reader.read(np.array([[255]], dtype=np.uint8))
@@ -221,6 +231,57 @@ def test_visual_reader_recovers_canonical_rows_and_rejects_ambiguous_inputs() ->
     assert recovered == 3
     assert rejected == 2
     assert wrong == 0
+
+
+def test_exact_feature_alias_records_noncanonical_input_digest() -> None:
+    table = ScoreTable(
+        values=[[1.0, 0.0], [0.0, 1.0]],
+        row_ids=("dark", "bright"),
+        metric_ids=ACTIONS,
+    )
+    recipe = LayoutRecipe.from_dict(
+        {
+            "version": "vpm-layout/0",
+            "name": "coarse-feature-test",
+            "row_order": {"kind": "source", "tie_break": "row_id"},
+            "column_order": {"kind": "source"},
+            "normalization": {"kind": "per_metric_minmax", "clip": True},
+        }
+    )
+    policy = build_vpm(table, recipe)
+    spec = VisualFeatureSpec(1, 1, 1, 1, quantization_levels=16)
+    index = build_visual_index(
+        policy,
+        {
+            "dark": np.array([[0]], dtype=np.uint8),
+            "bright": np.array([[255]], dtype=np.uint8),
+        },
+        spec,
+    )
+    reader = VisualSignReader(index.artifact, policy, action_metric_ids=ACTIONS)
+
+    decision = reader.read(np.array([[1]], dtype=np.uint8))
+
+    assert decision.accepted
+    assert decision.exact_feature_match
+    assert decision.matched_row_id == "dark"
+    assert not decision.canonical_input_match
+    assert decision.nearest_input_digest != decision.input_digest
+    assert decision.to_dict()["canonical_input_match"] is False
+
+
+def test_visual_reader_rejects_missing_input_digest_metadata() -> None:
+    policy, index, _visual_reader = _reader()
+    payload = index.artifact.to_dict()
+    payload["source"]["metadata"]["input_digests"].pop("left")
+    payload.pop("artifact_id")
+
+    with pytest.raises(VPMValidationError, match="input digests"):
+        VisualSignReader(
+            type(index.artifact).from_dict(payload),
+            policy,
+            action_metric_ids=ACTIONS,
+        )
 
 
 def test_deterministic_provider_and_visual_policy_reader_smoke() -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from .visual import (
     DISTANCE_METRIC,
     MARGIN_RULE,
+    VISUAL_FEATURE_IMPLEMENTATION,
     VISUAL_FEATURE_VERSION,
     VISUAL_INDEX_VERSION,
     VISUAL_READER_VERSION,
@@ -28,6 +29,7 @@ from .visual_policy import (
 __all__ = [
     "DISTANCE_METRIC",
     "MARGIN_RULE",
+    "VISUAL_FEATURE_IMPLEMENTATION",
     "VISUAL_FEATURE_VERSION",
     "VISUAL_INDEX_VERSION",
     "VISUAL_POLICY_DECISION_VERSION",

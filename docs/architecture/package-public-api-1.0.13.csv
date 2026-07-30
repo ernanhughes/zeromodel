@@ -955,6 +955,7 @@ zeromodel-video,zeromodel.video,build_runtime,zeromodel.video,Function,zeromodel
 zeromodel-vision,zeromodel.vision,DISTANCE_METRIC,zeromodel.vision,Constant,zeromodel.vision,false
 zeromodel-vision,zeromodel.vision,DeterministicVisualAddressProvider,zeromodel.vision,Class,zeromodel.vision.visual_policy,true
 zeromodel-vision,zeromodel.vision,MARGIN_RULE,zeromodel.vision,Constant,zeromodel.vision,false
+zeromodel-vision,zeromodel.vision,VISUAL_FEATURE_IMPLEMENTATION,zeromodel.vision,Constant,zeromodel.vision,false
 zeromodel-vision,zeromodel.vision,VISUAL_FEATURE_VERSION,zeromodel.vision,Constant,zeromodel.vision,false
 zeromodel-vision,zeromodel.vision,VISUAL_INDEX_VERSION,zeromodel.vision,Constant,zeromodel.vision,false
 zeromodel-vision,zeromodel.vision,VISUAL_POLICY_DECISION_VERSION,zeromodel.vision,Constant,zeromodel.vision,false

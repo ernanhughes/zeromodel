@@ -1,0 +1,201 @@
+{
+  "branch": "analysis/visual-sign-reader-hardening",
+  "commands_file": "docs/results/visual-sign-reader-hardening/commands.jsonl",
+  "final_branch_head_sha": "048ff853a61f7bee49f046958a538e2633722ca0",
+  "generated_at_utc": "2026-07-30T22:39:36.839624+00:00",
+  "local_package_paths": [
+    "packages/core",
+    "packages/observation",
+    "packages/vision",
+    "packages/video",
+    "packages/analysis"
+  ],
+  "modified_documentation_files": [
+    "docs/claims-audit.md",
+    "docs/architecture/package-public-api-1.0.13.csv"
+  ],
+  "modified_production_files": [
+    "packages/vision/src/zeromodel/vision/visual.py",
+    "packages/vision/src/zeromodel/vision/__init__.py"
+  ],
+  "modified_script_files": [
+    "scripts/audit/run_visual_sign_reader_perturbations.py",
+    "scripts/audit/run_visual_sign_reader_baselines.py"
+  ],
+  "modified_test_files": [
+    "packages/vision/tests/test_deterministic_visual_runtime.py"
+  ],
+  "outputs": [
+    {
+      "bytes": 200262,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\canonical-state-results.json",
+      "sha256": "58363e74faf237afdfc8077636b7cb9d9c85023417e9f1ae49c5cdb5fd3bd747"
+    },
+    {
+      "bytes": 2945,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\commands.jsonl",
+      "sha256": "aa38829c034148d321fd18b3610ada27c46e9cac9809a9e211248e25a4dde804"
+    },
+    {
+      "bytes": 642,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\environment.json",
+      "sha256": "2d39d948311372d9df28c08a16143b1280ad6b511ce779eaeffe4b7f4205e522"
+    },
+    {
+      "bytes": 1588,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\example\\arcade-policy.vpm",
+      "sha256": "f4693b1f26f02565785960bcb4c6d99592092b3cd6d9ab6dcd4eadca3a164397"
+    },
+    {
+      "bytes": 6112,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\example\\arcade-visual-index.vpm",
+      "sha256": "3dc1d828f17bb878b75a57ac0c46867d0e9b005086035fc8475d59a297260afa"
+    },
+    {
+      "bytes": 42950,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\example\\arcade-visual-run.json",
+      "sha256": "47f63a96c32b40480b8bf76bd0db1c58b568e02affe72b265684296ed195dcce"
+    },
+    {
+      "bytes": 1802,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\identity-results.json",
+      "sha256": "288052fda140dfa692a60359a13c4b76a0c2964485e621a60425717cdcfb044b"
+    },
+    {
+      "bytes": 1588,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\policy.vpm",
+      "sha256": "c0bc06ed3356168475eccb0da3726baf7674d6a55d029c14b5e58d1f25241eb7"
+    },
+    {
+      "bytes": 7076,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\rejection-results.json",
+      "sha256": "3ea4814aa1f7c121c7992951ad7c94630fed377aab7744baf01f43ae3088db60"
+    },
+    {
+      "bytes": 1120,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\test-summary.json",
+      "sha256": "2d4b7c262a890f13af7dea2d48e4b8812f66f27cbb58b340df8f41967032711f"
+    },
+    {
+      "bytes": 140,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\trajectory-results.json",
+      "sha256": "a5bfcf603aa88dd7de717fdeb974306292fbcd663fbd99bbf3403d1f09450654"
+    },
+    {
+      "bytes": 6112,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline\\visual-index.vpm",
+      "sha256": "73a192ecaca03cd5ee2444e48592bc318f22d6fd29b21e3e8c94677afe2f7230"
+    },
+    {
+      "bytes": 1542,
+      "path": "docs\\results\\visual-sign-reader-hardening\\baseline-comparison.json",
+      "sha256": "d97861acc6ad732a0f23483cfe56f4d440d0231b5a81370a2db2dddb58188d67"
+    },
+    {
+      "bytes": 5978,
+      "path": "docs\\results\\visual-sign-reader-hardening\\calibration-comparison.json",
+      "sha256": "22a8d86829a5195297a21fa6c0ee2eb31b9d1489a291bca88a45be4c8c178627"
+    },
+    {
+      "bytes": 2945,
+      "path": "docs\\results\\visual-sign-reader-hardening\\commands.jsonl",
+      "sha256": "aa38829c034148d321fd18b3610ada27c46e9cac9809a9e211248e25a4dde804"
+    },
+    {
+      "bytes": 642,
+      "path": "docs\\results\\visual-sign-reader-hardening\\environment.json",
+      "sha256": "2d39d948311372d9df28c08a16143b1280ad6b511ce779eaeffe4b7f4205e522"
+    },
+    {
+      "bytes": 5327,
+      "path": "docs\\results\\visual-sign-reader-hardening\\final-assessment.md",
+      "sha256": "582dcc4f62624c7420a9fea69c6bd2eace5d16980ae2b58536dc86ab7c4b0167"
+    },
+    {
+      "bytes": 2168,
+      "path": "docs\\results\\visual-sign-reader-hardening\\findings.yaml",
+      "sha256": "1c5cfa59d153178f61de8eac4ad623b2cf78b11aa5dfb1f8c3dfa7c258a7ed8a"
+    },
+    {
+      "bytes": 200262,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\canonical-state-results.json",
+      "sha256": "58363e74faf237afdfc8077636b7cb9d9c85023417e9f1ae49c5cdb5fd3bd747"
+    },
+    {
+      "bytes": 2945,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\commands.jsonl",
+      "sha256": "aa38829c034148d321fd18b3610ada27c46e9cac9809a9e211248e25a4dde804"
+    },
+    {
+      "bytes": 642,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\environment.json",
+      "sha256": "2d39d948311372d9df28c08a16143b1280ad6b511ce779eaeffe4b7f4205e522"
+    },
+    {
+      "bytes": 1588,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\example\\arcade-policy.vpm",
+      "sha256": "8439fc23deb3eaa4adb1fe45cf65a36455a01a2afc54cd505b50271f7adddbe5"
+    },
+    {
+      "bytes": 11679,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\example\\arcade-visual-index.vpm",
+      "sha256": "4e23c6ffc8e7e36bb7c2413e0eac9bf8eed3918326cc8220b6607ca59e2c42de"
+    },
+    {
+      "bytes": 46206,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\example\\arcade-visual-run.json",
+      "sha256": "a8c8f44b5f3a21bf49131ecf6e2adff85c0ac2067cc6a629956bba0c3d0e7b78"
+    },
+    {
+      "bytes": 1802,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\identity-results.json",
+      "sha256": "51d7110eec30a182a8254a25b535d0a473dba49c63bc8616919b5b455a118b9c"
+    },
+    {
+      "bytes": 1588,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\policy.vpm",
+      "sha256": "c3103ee52a3edfa9e4ffd4ef1c054bb0c23b534a373185238c820971b9ebdea5"
+    },
+    {
+      "bytes": 7800,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\rejection-results.json",
+      "sha256": "58a1bfacc43cf179742bcbe80dda63c7ba15abeb546624d69df2dee56227b44f"
+    },
+    {
+      "bytes": 1120,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\test-summary.json",
+      "sha256": "2d4b7c262a890f13af7dea2d48e4b8812f66f27cbb58b340df8f41967032711f"
+    },
+    {
+      "bytes": 140,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\trajectory-results.json",
+      "sha256": "a5bfcf603aa88dd7de717fdeb974306292fbcd663fbd99bbf3403d1f09450654"
+    },
+    {
+      "bytes": 11679,
+      "path": "docs\\results\\visual-sign-reader-hardening\\hardened\\visual-index.vpm",
+      "sha256": "978f943d6357fcdc9e5345128fc43c4b31d7fb067513e600c5502e42d9f987fd"
+    },
+    {
+      "bytes": 1295,
+      "path": "docs\\results\\visual-sign-reader-hardening\\identity-and-lineage-results.json",
+      "sha256": "43042866066be199c904a497c0ac4a4081a602a0f0a79f1d7410e755384acfd2"
+    },
+    {
+      "bytes": 262,
+      "path": "docs\\results\\visual-sign-reader-hardening\\performance-results.json",
+      "sha256": "e03ee73eca4102bc2a314ac7efa2f8b347d7abbcbb5fa7088b8c23cc4dc04657"
+    },
+    {
+      "bytes": 135998,
+      "path": "docs\\results\\visual-sign-reader-hardening\\perturbation-matrix.json",
+      "sha256": "1141a77fd68d7b84ae037c5a510c9aeeb5c492588354af38522d6eeaaf87f0a7"
+    },
+    {
+      "bytes": 1120,
+      "path": "docs\\results\\visual-sign-reader-hardening\\test-summary.json",
+      "sha256": "2d4b7c262a890f13af7dea2d48e4b8812f66f27cbb58b340df8f41967032711f"
+    }
+  ],
+  "starting_main_sha": "a45a62dcf4412009bab8b1401330f7708111aa66"
+}

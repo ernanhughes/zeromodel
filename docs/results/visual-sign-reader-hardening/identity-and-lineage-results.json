@@ -1,0 +1,39 @@
+{
+  "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+  "duplicate_feature_rejected": true,
+  "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "provenance_parents": [
+    {
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "relation": "addresses"
+    }
+  ],
+  "restored_canonical_summary": {
+    "accepted_count": 112,
+    "correct_action_count": 112,
+    "correct_row_count": 112,
+    "distance_margin": {
+      "max": 2.0,
+      "median": 2.0,
+      "min": 2.0
+    },
+    "false_acceptance_count": 0,
+    "false_rejection_count": 0,
+    "incorrect_action_count": 0,
+    "incorrect_row_count": 0,
+    "nearest_distance": {
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0
+    },
+    "rejected_count": 0,
+    "rejection_reasons": {
+      "accepted": 112
+    },
+    "state_count": 112
+  },
+  "trace_hardening": "VisualDecision now includes nearest_input_digest and canonical_input_match.",
+  "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0",
+  "wrong_policy_identity_rejected": true
+}

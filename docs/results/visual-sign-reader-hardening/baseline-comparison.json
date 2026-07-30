@@ -1,0 +1,46 @@
+{
+  "baseline_a_exact_codebook": {
+    "accepted_count": 112,
+    "correct_action_count": 112,
+    "correct_row_count": 112,
+    "identity_digest": "fc4208f9d159f1f13e89c2595cd74f73ba58a33ee24ae2faf15158d7f36a50ee",
+    "implementation": "feature bytes dictionary -> row_id",
+    "incorrect_action_count": 0,
+    "incorrect_row_count": 0,
+    "lookup_seconds": 0.00011749996338039637,
+    "rejected_count": 0,
+    "row_count": 112,
+    "serialized_size_bytes": 41580
+  },
+  "baseline_b_plain_nearest_neighbour": {
+    "accepted_count": 112,
+    "correct_action_count": 112,
+    "correct_row_count": 112,
+    "implementation": "NumPy exhaustive Euclidean distance with fixed threshold and margin",
+    "incorrect_action_count": 0,
+    "incorrect_row_count": 0,
+    "lookup_seconds": 0.0036702000070363283,
+    "rejected_count": 0,
+    "required_margin": 1.5,
+    "row_count": 112,
+    "threshold": 0.5
+  },
+  "baseline_c_direct_symbolic_state": {
+    "accepted_count": 112,
+    "correct_action_count": 112,
+    "correct_row_count": 112,
+    "implementation": "arcade fixture direct symbolic row_id",
+    "incorrect_action_count": 0,
+    "incorrect_row_count": 0,
+    "lookup_seconds": 8.9599983766675e-05,
+    "rejected_count": 0,
+    "row_count": 112
+  },
+  "zeromodel_adds": [
+    "policy and visual index artifact identities",
+    "policy/index mismatch rejection",
+    "accepted and rejected JSON-safe traces",
+    "bundle round-trip validation",
+    "calibration metadata and provenance"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "iterations": 11200,
+  "mean_lookup_seconds": 0.0002563505892820623,
+  "total_lookup_seconds": 2.871126599959098,
+  "visual_index_bundle_bytes": 11679,
+  "visual_index_bundle_sha256": "978f943d6357fcdc9e5345128fc43c4b31d7fb067513e600c5502e42d9f987fd"
+}

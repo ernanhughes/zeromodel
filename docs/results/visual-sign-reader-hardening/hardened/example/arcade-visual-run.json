@@ -1,0 +1,1327 @@
+{
+  "acceptance_threshold": 0.5,
+  "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+  "cleared": true,
+  "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+  "min_between_distance": 2.0,
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "required_margin": 1.5,
+  "score": 4,
+  "steps": 22,
+  "trace": [
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 1,
+        "tank_x": 2,
+        "target_x": 0
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 0,
+        "tank_x": 3,
+        "target_x": 0
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:e04ef387f779e2a12b720348fb79a4fd00befe424cf3f1cf65a70659615c4b3c",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:47f088e905cc25126f9de6ce5aabe6edb6f3c620ce8c3422f887c95651357e22",
+        "matched_row_id": "tank=3|target=0|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:47f088e905cc25126f9de6ce5aabe6edb6f3c620ce8c3422f887c95651357e22",
+        "nearest_row_id": "tank=3|target=0|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=3|target=0|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 50,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 50,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 2,
+        "tank_x": 1,
+        "target_x": 0
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 1,
+        "tank_x": 2,
+        "target_x": 0
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:70dc5775c16cf9bdebca1fdfcd041925c99106b0727bb4ef789fad12da91fedd",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:efc2edda3638111d83cdaea8b9fc9b7158fcba8ca4e568fab6c47bc6ac265bd4",
+        "matched_row_id": "tank=2|target=0|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:efc2edda3638111d83cdaea8b9fc9b7158fcba8ca4e568fab6c47bc6ac265bd4",
+        "nearest_row_id": "tank=2|target=0|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=2|target=0|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 34,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 34,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 3,
+        "tank_x": 0,
+        "target_x": 0
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 2,
+        "tank_x": 1,
+        "target_x": 0
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:3d65b6be0b6181cdacc41398ccab137ef8ab8a59c80772972997e2e546ef6b65",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:f2c82b2d955b7eee8db07050c91c1b52ac26653f63a2704cef2c25874723059e",
+        "matched_row_id": "tank=1|target=0|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:f2c82b2d955b7eee8db07050c91c1b52ac26653f63a2704cef2c25874723059e",
+        "nearest_row_id": "tank=1|target=0|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=1|target=0|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 18,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 18,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 1,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 4,
+        "tank_x": 0,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          0,
+          6,
+          1,
+          5
+        ],
+        "score": 0,
+        "step": 3,
+        "tank_x": 0,
+        "target_x": 0
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "FIRE",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 1.0,
+          "LEFT": 0.0,
+          "RIGHT": 0.0,
+          "STAY": 0.0
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:f7b8e966b99c7f22cf2b33debfec527e480e12232d5b5a7c6463917e4b5a0fe2",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:4d684e027d7478513f30c6a3d2ba437ea6de8cd405309196e96ec068e70830bc",
+        "matched_row_id": "tank=0|target=0|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:4d684e027d7478513f30c6a3d2ba437ea6de8cd405309196e96ec068e70830bc",
+        "nearest_row_id": "tank=0|target=0|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=0|target=0|cooldown=1",
+        "source_metric_index": 3,
+        "source_row_index": 2,
+        "value": 1.0,
+        "view_column": 3,
+        "view_row": 2,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 5,
+        "tank_x": 1,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 1,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 4,
+        "tank_x": 0,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:e9b6a2beb9d462a1fa1da4f9db6124f5a63adbb35f877435cbfcb20c751e483a",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:497ea00443e444c8823d857f2c05b09e14e8b05cf4ad09e68b767166ccc2588c",
+        "matched_row_id": "tank=0|target=6|cooldown=1",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:497ea00443e444c8823d857f2c05b09e14e8b05cf4ad09e68b767166ccc2588c",
+        "nearest_row_id": "tank=0|target=6|cooldown=1",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=0|target=6|cooldown=0",
+        "source_metric_index": 1,
+        "source_row_index": 15,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 15,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 6,
+        "tank_x": 2,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 5,
+        "tank_x": 1,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:c361016252c777c71ab6fcd940167656faa05318467bf7d2f3030ae358a46fff",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:7dba6655cdb9396c5b808cced52a4669189ee5abeb1284c74e682ad68f290a7b",
+        "matched_row_id": "tank=1|target=6|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:7dba6655cdb9396c5b808cced52a4669189ee5abeb1284c74e682ad68f290a7b",
+        "nearest_row_id": "tank=1|target=6|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=1|target=6|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 30,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 30,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 7,
+        "tank_x": 3,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 6,
+        "tank_x": 2,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:a9bc938f208b71ae895be6b8497b028bbbfc21e19ad15ac3bd0b8a13926348d9",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:e2b61e7f64c668d8fe6db72fec452a432ed384008d3a8bbf13b58cbfcf18a26e",
+        "matched_row_id": "tank=2|target=6|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:e2b61e7f64c668d8fe6db72fec452a432ed384008d3a8bbf13b58cbfcf18a26e",
+        "nearest_row_id": "tank=2|target=6|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=2|target=6|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 46,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 46,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 8,
+        "tank_x": 4,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 7,
+        "tank_x": 3,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:94d8835f9e1d5dc1148b71d2f93919967b3e9cf26add925cbea194e7597e377a",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:7c12a9de242b3df2663230b09e645f838fbf1be3a63bf32af2ac77fb56da3dc1",
+        "matched_row_id": "tank=3|target=6|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:7c12a9de242b3df2663230b09e645f838fbf1be3a63bf32af2ac77fb56da3dc1",
+        "nearest_row_id": "tank=3|target=6|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=3|target=6|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 62,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 62,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 9,
+        "tank_x": 5,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 8,
+        "tank_x": 4,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:53c6fd77ae8672107c901e279ce6c0b24e3148a2a186b6e783b0b887e7f5c740",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:662602d36732e494bdedf722f709abd72e86ef076dc48d6b0eafb088d4f9d356",
+        "matched_row_id": "tank=4|target=6|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:662602d36732e494bdedf722f709abd72e86ef076dc48d6b0eafb088d4f9d356",
+        "nearest_row_id": "tank=4|target=6|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=4|target=6|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 78,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 78,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 10,
+        "tank_x": 6,
+        "target_x": 6
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 9,
+        "tank_x": 5,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:a92a6a82462faf933b1c963199cc654c51643b220c52da6b4a04c858094e40a5",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:fb49e13f810550ccd584ebe72f7db544ee71965691b520191a5cbcce68f09390",
+        "matched_row_id": "tank=5|target=6|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:fb49e13f810550ccd584ebe72f7db544ee71965691b520191a5cbcce68f09390",
+        "nearest_row_id": "tank=5|target=6|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=5|target=6|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 94,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 94,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 1,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 11,
+        "tank_x": 6,
+        "target_x": 1
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          6,
+          1,
+          5
+        ],
+        "score": 1,
+        "step": 10,
+        "tank_x": 6,
+        "target_x": 6
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "FIRE",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 1.0,
+          "LEFT": 0.0,
+          "RIGHT": 0.0,
+          "STAY": 0.0
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:e5f01f044cf0d21abe07e66ed64fa92fb2337bb4e3e4080865362114bd2a625f",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:2b61a008cb2b99a5abb8d1b20099e8085e1077c6c0c53b7327ce909578383445",
+        "matched_row_id": "tank=6|target=6|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:2b61a008cb2b99a5abb8d1b20099e8085e1077c6c0c53b7327ce909578383445",
+        "nearest_row_id": "tank=6|target=6|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=6|target=6|cooldown=1",
+        "source_metric_index": 3,
+        "source_row_index": 110,
+        "value": 1.0,
+        "view_column": 3,
+        "view_row": 110,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 12,
+        "tank_x": 5,
+        "target_x": 1
+      },
+      "before": {
+        "cooldown": 1,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 11,
+        "tank_x": 6,
+        "target_x": 1
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:d2237a5c41f6b9aac11c8f4ec7dc8e5f384da26a5e249158db6d335da3df824e",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:25184acd25472e4260aa9a2a43927bb89059dab4c24858696b3053fd43aebf56",
+        "matched_row_id": "tank=6|target=1|cooldown=1",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:25184acd25472e4260aa9a2a43927bb89059dab4c24858696b3053fd43aebf56",
+        "nearest_row_id": "tank=6|target=1|cooldown=1",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=6|target=1|cooldown=0",
+        "source_metric_index": 0,
+        "source_row_index": 101,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 101,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 13,
+        "tank_x": 4,
+        "target_x": 1
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 12,
+        "tank_x": 5,
+        "target_x": 1
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:a6237ec0a6612105cfe9e371483608befadfc4dcfc6e538ddf25a5f5467aa1a0",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:d52191c2ae08ad4069bbf0c4ca4a3e774adf471c25a03536879b2cc7d8997f4a",
+        "matched_row_id": "tank=5|target=1|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:d52191c2ae08ad4069bbf0c4ca4a3e774adf471c25a03536879b2cc7d8997f4a",
+        "nearest_row_id": "tank=5|target=1|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=5|target=1|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 84,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 84,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 14,
+        "tank_x": 3,
+        "target_x": 1
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 13,
+        "tank_x": 4,
+        "target_x": 1
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:7ea4cd001caf2a5440b14be5f2634280b81b3fcd30ef25a9cd45af2814ad4f8b",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:bdc6efaed4c51467adb622e29e45173b0afdb881bd1106bd73f0d8e3e8f7c37b",
+        "matched_row_id": "tank=4|target=1|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:bdc6efaed4c51467adb622e29e45173b0afdb881bd1106bd73f0d8e3e8f7c37b",
+        "nearest_row_id": "tank=4|target=1|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=4|target=1|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 68,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 68,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 15,
+        "tank_x": 2,
+        "target_x": 1
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 14,
+        "tank_x": 3,
+        "target_x": 1
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:d51f9dd335174d3bc93ca4fad4efbc31800242f05d46f650a6c271f1cb57465f",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:f374a980a2a12ce61079413a98abac1ca946866e0d67068b7c4131fc2335b33e",
+        "matched_row_id": "tank=3|target=1|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:f374a980a2a12ce61079413a98abac1ca946866e0d67068b7c4131fc2335b33e",
+        "nearest_row_id": "tank=3|target=1|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=3|target=1|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 52,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 52,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 16,
+        "tank_x": 1,
+        "target_x": 1
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 15,
+        "tank_x": 2,
+        "target_x": 1
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "LEFT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 1.0,
+          "RIGHT": 0.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:bc9d3bd4bf50c350379d3bcb50a5116e039c8f0df95f120baec5be979e918077",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:17805add7432e0d7380821e468868accb8dfbaeaf5b16f5f8ffaba6fba91cdc1",
+        "matched_row_id": "tank=2|target=1|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:17805add7432e0d7380821e468868accb8dfbaeaf5b16f5f8ffaba6fba91cdc1",
+        "nearest_row_id": "tank=2|target=1|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=2|target=1|cooldown=1",
+        "source_metric_index": 0,
+        "source_row_index": 36,
+        "value": 1.0,
+        "view_column": 0,
+        "view_row": 36,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 1,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 17,
+        "tank_x": 1,
+        "target_x": 5
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          1,
+          5
+        ],
+        "score": 2,
+        "step": 16,
+        "tank_x": 1,
+        "target_x": 1
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "FIRE",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 1.0,
+          "LEFT": 0.0,
+          "RIGHT": 0.0,
+          "STAY": 0.0
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:b038baf503fa94baa66e995cc2fda0c86a975006559b2f56d992e461070957ff",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:85c52acda764fa99030b061ea9bca06a1d1ee8106e8ab41caaca4fb5b9ccf11c",
+        "matched_row_id": "tank=1|target=1|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:85c52acda764fa99030b061ea9bca06a1d1ee8106e8ab41caaca4fb5b9ccf11c",
+        "nearest_row_id": "tank=1|target=1|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=1|target=1|cooldown=1",
+        "source_metric_index": 3,
+        "source_row_index": 20,
+        "value": 1.0,
+        "view_column": 3,
+        "view_row": 20,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 18,
+        "tank_x": 2,
+        "target_x": 5
+      },
+      "before": {
+        "cooldown": 1,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 17,
+        "tank_x": 1,
+        "target_x": 5
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:806ebec52be14337df520ac5ef9fb8a9d882d1bd5c6d24c3ee5fb42ff00e8231",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:3acb612d71254c39ed72303c96efb8baa9ab4513296383db3d56eb0546b5a326",
+        "matched_row_id": "tank=1|target=5|cooldown=1",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:3acb612d71254c39ed72303c96efb8baa9ab4513296383db3d56eb0546b5a326",
+        "nearest_row_id": "tank=1|target=5|cooldown=1",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=1|target=5|cooldown=0",
+        "source_metric_index": 1,
+        "source_row_index": 29,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 29,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 19,
+        "tank_x": 3,
+        "target_x": 5
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 18,
+        "tank_x": 2,
+        "target_x": 5
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:5dcd57eefb95f9ea1ba502d850609cf2cffb7dea24bd4cb7c64da23533dfce4f",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:ef445940da3565022ce9ce687b45ec87480366fcf4147fb2c6b2f7dc6122a01f",
+        "matched_row_id": "tank=2|target=5|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:ef445940da3565022ce9ce687b45ec87480366fcf4147fb2c6b2f7dc6122a01f",
+        "nearest_row_id": "tank=2|target=5|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=2|target=5|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 44,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 44,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 20,
+        "tank_x": 4,
+        "target_x": 5
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 19,
+        "tank_x": 3,
+        "target_x": 5
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:3400f01111ef64d8f41d0f91af7bbc7eab1cae92cbfbfa41ee69946b71d5f0df",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:bb10fe97fea35c04472fa97caa2a4f01d07bd80dd748ef0ced3e50b1c4ee4eb7",
+        "matched_row_id": "tank=3|target=5|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:bb10fe97fea35c04472fa97caa2a4f01d07bd80dd748ef0ced3e50b1c4ee4eb7",
+        "nearest_row_id": "tank=3|target=5|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=3|target=5|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 60,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 60,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 21,
+        "tank_x": 5,
+        "target_x": 5
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 20,
+        "tank_x": 4,
+        "target_x": 5
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "RIGHT",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 0.0,
+          "LEFT": 0.0,
+          "RIGHT": 1.0,
+          "STAY": 0.1
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:0ad674dc3a6500d16b8adc3643f9587a4d8b3c33d31b0c2c9a75558bbfb4c6f0",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:9de249bf012f1c27c6c50dea1c9710eaf15bfcc1ba119fa37d7d0866a8f00924",
+        "matched_row_id": "tank=4|target=5|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:9de249bf012f1c27c6c50dea1c9710eaf15bfcc1ba119fa37d7d0866a8f00924",
+        "nearest_row_id": "tank=4|target=5|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=4|target=5|cooldown=1",
+        "source_metric_index": 1,
+        "source_row_index": 76,
+        "value": 1.0,
+        "view_column": 1,
+        "view_row": 76,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    },
+    {
+      "after": {
+        "cooldown": 1,
+        "remaining_aliens": [],
+        "score": 4,
+        "step": 22,
+        "tank_x": 5,
+        "target_x": null
+      },
+      "before": {
+        "cooldown": 0,
+        "remaining_aliens": [
+          5
+        ],
+        "score": 3,
+        "step": 21,
+        "tank_x": 5,
+        "target_x": 5
+      },
+      "visual_decision": {
+        "acceptance_threshold": 0.5,
+        "accepted": true,
+        "action": "FIRE",
+        "calibration_digest": "534f82ed6375bd7ff3a9cdc28ebfe1bf6345e19e98c1ab28fcdc1509139fee4f",
+        "candidates": {
+          "FIRE": 1.0,
+          "LEFT": 0.0,
+          "RIGHT": 0.0,
+          "STAY": 0.0
+        },
+        "canonical_input_match": true,
+        "distance_margin": 2.0,
+        "evidence": {},
+        "exact_feature_match": true,
+        "feature_digest": "sha256:279e0376cdbc5527b987fd6b16133b98a141a5f8356618ad80a2064023fa975d",
+        "feature_spec_digest": "a2e674ebe1fb830b98cb995543acc1a3ae09b34ed9558b9ff9ac85697f16fcb5",
+        "input_digest": "sha256:e1b87a22e16e3b01a5f7424d59df7a58dddca2afeeee4bfc6af63b86e7e6a683",
+        "matched_row_id": "tank=5|target=5|cooldown=0",
+        "nearest_distance": 0.0,
+        "nearest_input_digest": "sha256:e1b87a22e16e3b01a5f7424d59df7a58dddca2afeeee4bfc6af63b86e7e6a683",
+        "nearest_row_id": "tank=5|target=5|cooldown=0",
+        "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+        "reader_version": "zeromodel-visual-sign-reader/v2",
+        "reason": "accepted",
+        "required_margin": 1.5,
+        "second_nearest_distance": 2.0,
+        "second_nearest_row_id": "tank=5|target=5|cooldown=1",
+        "source_metric_index": 3,
+        "source_row_index": 92,
+        "value": 1.0,
+        "view_column": 3,
+        "view_row": 92,
+        "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+      }
+    }
+  ],
+  "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0"
+}

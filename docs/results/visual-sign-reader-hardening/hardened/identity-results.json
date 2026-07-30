@@ -1,0 +1,43 @@
+{
+  "duplicate_feature_error": "VPMValidationError: visual states are not separable: min_between_distance must be positive",
+  "duplicate_feature_rejected": true,
+  "metadata_addresses_policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "policy_bundle_sha256": "c3103ee52a3edfa9e4ffd4ef1c054bb0c23b534a373185238c820971b9ebdea5",
+  "provenance_parents": [
+    {
+      "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+      "relation": "addresses"
+    }
+  ],
+  "restored_canonical_summary": {
+    "accepted_count": 112,
+    "correct_action_count": 112,
+    "correct_row_count": 112,
+    "distance_margin": {
+      "max": 2.0,
+      "median": 2.0,
+      "min": 2.0
+    },
+    "false_acceptance_count": 0,
+    "false_rejection_count": 0,
+    "incorrect_action_count": 0,
+    "incorrect_row_count": 0,
+    "nearest_distance": {
+      "max": 0.0,
+      "median": 0.0,
+      "min": 0.0
+    },
+    "rejected_count": 0,
+    "rejection_reasons": {
+      "accepted": 112
+    },
+    "state_count": 112
+  },
+  "restored_record_count": 112,
+  "restored_visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0",
+  "visual_index_artifact_id": "cce9cf330743a31ef2876ae05955e7e8124678f023f258a14fdc0b2fc524f9b0",
+  "visual_index_bundle_sha256": "4d162fe7b0b7c70c6ce5179e9738874f211094bf068e1c589e7b084fedc1d0e6",
+  "wrong_policy_identity_error": "VPMValidationError: visual index addresses policy eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e, not bba968a8f4736daa20d001a29c52620398254b83010672e0018777fea8ba8880",
+  "wrong_policy_identity_rejected": true
+}

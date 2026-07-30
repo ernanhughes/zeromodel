@@ -31,6 +31,7 @@ from zeromodel.core.artifact import (
 from zeromodel.core.policy_lookup import VPMPolicyLookup
 
 VISUAL_FEATURE_VERSION = "zeromodel-visual-feature/v1"
+VISUAL_FEATURE_IMPLEMENTATION = "zeromodel.vision.visual.extract_visual_features/v1"
 VISUAL_INDEX_VERSION = "zeromodel-visual-index/v2"
 VISUAL_READER_VERSION = "zeromodel-visual-sign-reader/v2"
 DISTANCE_METRIC = "euclidean"
@@ -72,6 +73,7 @@ class VisualFeatureSpec:
     grayscale: str = "bt601-integer"
     pooling: str = "box-integer"
     quantization: str = "uniform-uint8"
+    implementation: str = VISUAL_FEATURE_IMPLEMENTATION
 
     def validate(self) -> None:
         if self.version != VISUAL_FEATURE_VERSION:
@@ -87,6 +89,10 @@ class VisualFeatureSpec:
         if self.quantization != "uniform-uint8":
             raise VPMValidationError(
                 "Unsupported visual quantization contract: %r" % self.quantization
+            )
+        if self.implementation != VISUAL_FEATURE_IMPLEMENTATION:
+            raise VPMValidationError(
+                "Unsupported visual feature implementation: %r" % self.implementation
             )
         for name, value in (
             ("input_height", self.input_height),
@@ -120,6 +126,7 @@ class VisualFeatureSpec:
             "grayscale": self.grayscale,
             "pooling": self.pooling,
             "quantization": self.quantization,
+            "implementation": self.implementation,
         }
 
     @classmethod
@@ -134,6 +141,9 @@ class VisualFeatureSpec:
             grayscale=str(data.get("grayscale", "bt601-integer")),
             pooling=str(data.get("pooling", "box-integer")),
             quantization=str(data.get("quantization", "uniform-uint8")),
+            implementation=str(
+                data.get("implementation", VISUAL_FEATURE_IMPLEMENTATION)
+            ),
         )
         spec.validate()
         return spec
@@ -304,6 +314,8 @@ class VisualDecision:
     acceptance_threshold: float
     required_margin: float
     exact_feature_match: bool
+    nearest_input_digest: Optional[str] = None
+    canonical_input_match: bool = False
     matched_row_id: Optional[str] = None
     action: Optional[str] = None
     value: Optional[float] = None
@@ -333,6 +345,8 @@ class VisualDecision:
             "acceptance_threshold": float(self.acceptance_threshold),
             "required_margin": float(self.required_margin),
             "exact_feature_match": bool(self.exact_feature_match),
+            "nearest_input_digest": self.nearest_input_digest,
+            "canonical_input_match": bool(self.canonical_input_match),
             "matched_row_id": self.matched_row_id,
             "action": self.action,
             "value": None if self.value is None else float(self.value),
@@ -483,6 +497,10 @@ def build_visual_index(
         extract_visual_features(frames_by_row_id[row_id], feature_spec)
         for row_id in policy_row_ids
     ]
+    input_digests = {
+        row_id: visual_input_digest(frames_by_row_id[row_id], feature_spec)
+        for row_id in policy_row_ids
+    }
     matrix = np.asarray(feature_rows, dtype=np.float64)
     if matrix.shape != (
         len(policy_row_ids),
@@ -523,6 +541,7 @@ def build_visual_index(
             "addresses_policy_artifact_id": (policy_artifact.artifact_id),
             "feature_spec": feature_spec.to_dict(),
             "feature_spec_digest": feature_spec.digest,
+            "input_digests": input_digests,
             "calibration": calibration.to_dict(),
             "calibration_digest": calibration.digest,
         },
@@ -624,6 +643,24 @@ class VisualSignReader:
         calibration = VisualIndexCalibration.from_dict(calibration_data)
         if str(metadata.get("feature_spec_digest")) != feature_spec.digest:
             raise VPMValidationError("visual feature spec digest mismatch")
+        input_digest_data = metadata.get("input_digests")
+        if not isinstance(input_digest_data, Mapping):
+            raise VPMValidationError("visual index metadata requires input_digests")
+        digest_rows = {str(row_id) for row_id in input_digest_data}
+        artifact_rows = {str(row_id) for row_id in visual_index_artifact.source.row_ids}
+        if digest_rows != artifact_rows:
+            raise VPMValidationError(
+                "visual input digests must cover visual index rows exactly"
+            )
+        input_digest_by_row = {
+            str(row_id): str(input_digest_data[row_id])
+            for row_id in visual_index_artifact.source.row_ids
+        }
+        for row_id, digest in input_digest_by_row.items():
+            if not digest.startswith("sha256:") or len(digest) != len("sha256:") + 64:
+                raise VPMValidationError(
+                    "invalid visual input digest for row_id %s" % row_id
+                )
         if str(metadata.get("calibration_digest")) != calibration.digest:
             raise VPMValidationError("visual calibration digest mismatch")
         if calibration.state_count != len(visual_index_artifact.source.row_ids):
@@ -654,6 +691,9 @@ class VisualSignReader:
         self.calibration = calibration
         self._matrix = matrix
         self._row_ids = tuple(visual_index_artifact.source.row_ids)
+        self._input_digest_by_row = {
+            row_id: input_digest_by_row[row_id] for row_id in self._row_ids
+        }
         self._row_norms = np.sum(matrix**2, axis=1)
         self._exact_rows = {
             np.asarray(matrix[index], dtype=np.uint8).tobytes(order="C"): index
@@ -726,6 +766,8 @@ class VisualSignReader:
         margin = second_nearest - nearest
         nearest_row_id = self._row_ids[first]
         second_row_id = self._row_ids[second]
+        nearest_input_digest = self._input_digest_by_row[nearest_row_id]
+        canonical_input_match = input_digest == nearest_input_digest
 
         distance_ok = nearest <= self.calibration.acceptance_threshold + 1e-12
         margin_ok = margin + 1e-12 >= self.calibration.required_margin
@@ -753,6 +795,8 @@ class VisualSignReader:
                 acceptance_threshold=(self.calibration.acceptance_threshold),
                 required_margin=(self.calibration.required_margin),
                 exact_feature_match=exact,
+                nearest_input_digest=nearest_input_digest,
+                canonical_input_match=canonical_input_match,
             )
 
         policy_decision = self.policy_lookup.read(nearest_row_id)
@@ -774,6 +818,8 @@ class VisualSignReader:
             acceptance_threshold=(self.calibration.acceptance_threshold),
             required_margin=self.calibration.required_margin,
             exact_feature_match=exact,
+            nearest_input_digest=nearest_input_digest,
+            canonical_input_match=canonical_input_match,
             matched_row_id=nearest_row_id,
             action=policy_decision.action,
             value=policy_decision.value,

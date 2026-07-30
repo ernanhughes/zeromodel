@@ -18,15 +18,38 @@ The release includes:
 - `zeromodel-trust`
 - `zeromodel-navigation`
 
-[`package-boundaries.toml`](../package-boundaries.toml) is the machine-readable authority for distribution names, namespaces, source roots, internal dependency edges, publication eligibility, and the coordinated release version.
+The root [`VERSION`](../VERSION) file is the only human-edited authority for the coordinated release number.
+
+[`package-boundaries.toml`](../package-boundaries.toml) remains the machine-readable authority for distribution names, namespaces, source roots, internal dependency edges, and publication eligibility. Its `release_version`, every package `pyproject.toml` version, internal dependency pins, and public package-version constants are generated mirrors of `VERSION`.
 
 The exact release claim and boundaries are recorded in [`docs/releases/1.2.0.md`](releases/1.2.0.md). The authoritative public evidence posture remains [`docs/claims-audit.md`](claims-audit.md).
 
-## Required validation
+## Changing the release version
 
-Before tagging or publishing `v1.2.0`, run from a clean checkout:
+Edit only `VERSION`, then synchronize the generated mirrors:
 
 ```powershell
+Set-Content VERSION "1.3.0"
+python scripts/release_version.py sync
+python scripts/release_version.py check
+```
+
+Do not manually change wheel filenames in GitHub Actions. Package workflows resolve the exact built wheel through `scripts/release_version.py wheel-path` and install coordinated wheel sets through `scripts/release_version.py install`.
+
+The version check rejects:
+
+- package metadata that differs from `VERSION`;
+- stale internal `zeromodel-*` dependency pins;
+- a stale `package-boundaries.toml` release mirror;
+- stale public package-version constants;
+- any GitHub Actions workflow containing a semantic version inside a ZeroModel wheel filename.
+
+## Required validation
+
+Before tagging or publishing, run from a clean checkout:
+
+```powershell
+python scripts/release_version.py check
 python scripts/validate_release_candidate.py
 python scripts/run_fast_tests.py
 python scripts/check_quality.py
@@ -34,8 +57,8 @@ python scripts/check_quality.py
 
 The coordinated validator must verify:
 
-- every package declares version `1.2.0`;
-- all internal dependencies use the coordinated `1.2.0` pin;
+- every package declares the version in `VERSION`;
+- all internal dependencies use the coordinated version pin;
 - package metadata agrees with `package-boundaries.toml`;
 - bounded fast tests pass;
 - package-local tests pass;
@@ -47,7 +70,7 @@ The coordinated validator must verify:
 - public API imports succeed;
 - release evidence is generated for the exact commit.
 
-The validator writes versioned package manifests and a release-candidate report under:
+For 1.2.0, the validator writes versioned package manifests and a release-candidate report under:
 
 ```text
 docs/architecture/package-release-artifacts-1.2.0.json
@@ -62,14 +85,13 @@ Generated evidence must not be copied from an older release line.
 
 The release pull request should contain only deliberate release and positioning changes:
 
-1. coordinated package versions;
-2. coordinated internal dependency pins;
-3. `package-boundaries.toml` release version;
-4. release-validator version and generated paths;
-5. root and package README version references;
-6. changelog entry;
-7. release notes;
-8. generated release-candidate evidence after validation.
+1. the root `VERSION` change;
+2. generated package versions and internal dependency pins from `release_version.py sync`;
+3. generated release paths and evidence;
+4. root and package README version references;
+5. changelog entry;
+6. release notes;
+7. generated release-candidate evidence after validation.
 
 The preparation PR must not upload to PyPI, create a tag, or create a GitHub release.
 
@@ -78,6 +100,8 @@ The preparation PR must not upload to PyPI, create a tag, or create a GitHub rel
 Before merge:
 
 - inspect the complete diff;
+- confirm `python scripts/release_version.py check` passes;
+- confirm no workflow contains a hard-coded versioned wheel filename;
 - confirm historical `1.0.13` and `1.1.0` evidence records were not rewritten as if they belonged to 1.2.0;
 - confirm every public claim links to a proof and a boundary;
 - require the package and repository quality workflows to pass;
@@ -90,11 +114,11 @@ After the release pull request is merged:
 
 1. return to a clean, synchronized `main` checkout;
 2. rerun the complete release gate against the merged commit;
-3. confirm the built metadata declares `1.2.0` for all eleven distributions;
+3. confirm the built metadata declares the root `VERSION` for all eleven distributions;
 4. publish the distributions in dependency order;
 5. install the published packages into a clean environment;
 6. run the public API and bounded smoke checks;
-7. create annotated tag `v1.2.0` at the exact validated commit;
+7. create an annotated `v<VERSION>` tag at the exact validated commit;
 8. create the GitHub release and attach the built artifacts and release evidence.
 
 Recommended dependency-aware publication order:

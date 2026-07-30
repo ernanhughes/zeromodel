@@ -4,3 +4,4 @@ nbconvert>=7.16,<8
 nbformat>=5.10,<6
 numpy>=1.26,<3
 pillow>=10,<13
+pytest>=8,<9

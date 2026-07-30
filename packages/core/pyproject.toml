@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ernanhughes/zeromodel"
+Homepage = "https://zeromodel.org/"
 Repository = "https://github.com/ernanhughes/zeromodel"
 Documentation = "https://zeromodel.org/"
 

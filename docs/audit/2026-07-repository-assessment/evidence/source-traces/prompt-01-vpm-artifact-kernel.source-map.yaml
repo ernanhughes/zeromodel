@@ -1,0 +1,45 @@
+C1_deterministic_artifact:
+  public_symbols: [ScoreTable, LayoutRecipe, VPMArtifact, build_vpm]
+  implementation_files: [packages/core/src/zeromodel/core/artifact.py]
+  tests: [packages/core/tests/test_artifact_kernel.py]
+  examples: [examples/arcade_shooter_policy.py, examples/criticality_verification.py]
+  documentation: [README.md, docs/claims-audit.md, docs/spec/vpm-artifact-v0.md]
+  generated_results: [audit-output/adversarial-results.json]
+C2_cell_traceability:
+  public_symbols: [VPMArtifact.cell, VPMCell, VPMArtifact.region]
+  implementation_files: [packages/core/src/zeromodel/core/artifact.py]
+  tests: [packages/core/tests/test_artifact_kernel.py, packages/core/tests/test_policy_lookup_lua.py]
+  examples: [examples/arcade_shooter_policy.py]
+  generated_results: [audit-output/adversarial-results.json]
+C3_multiple_deterministic_views:
+  public_symbols: [ViewProfile, ViewSet, build_view, build_views]
+  implementation_files: [packages/core/src/zeromodel/core/views.py]
+  tests: [packages/core/tests/test_views_bundle_render.py]
+  examples: [examples/criticality_verification.py]
+C4_bounded_policy_compilation:
+  public_symbols: [VPMPolicyLookup, SignReader]
+  implementation_files: [packages/core/src/zeromodel/core/policy_lookup.py, packages/video/src/zeromodel/video/arcade_policy/model.py]
+  tests: [packages/core/tests/test_policy_lookup_lua.py]
+  examples: [examples/arcade_shooter_policy.py]
+C5_decision_evidence:
+  public_symbols: [PolicyLookupDecision, VPMPolicyLookup.read, VPMPolicyLookup.trace]
+  implementation_files: [packages/core/src/zeromodel/core/policy_lookup.py]
+  tests: [packages/core/tests/test_policy_lookup_lua.py, packages/analysis/tests/test_policy_properties.py]
+  examples: [examples/criticality_verification.py]
+C6_identity_preserving_persistence:
+  public_symbols: [to_bundle, from_bundle, bundle_manifest]
+  implementation_files: [packages/core/src/zeromodel/core/bundle.py]
+  tests: [packages/core/tests/test_views_bundle_render.py, packages/analysis/tests/test_policy_properties.py]
+  examples: [examples/criticality_verification.py]
+C7_portable_deterministic_consumer:
+  public_symbols: [VPMPolicyLookup.to_compiled_plan, compiled_plan_id, lua_policy_source, write_lua_policy]
+  implementation_files: [packages/core/src/zeromodel/core/policy_lookup.py, packages/core/src/zeromodel/core/lua.py]
+  tests: [packages/core/tests/test_policy_lookup_lua.py]
+  examples: [examples/lua_edge_policy.py, examples/lua/run_arcade_policy.lua]
+  generated_results: [audit-output/generated_arcade_policy.lua]
+C8_useful_abstraction:
+  public_symbols: [ScoreTable, VPMArtifact, VPMPolicyLookup, to_bundle, build_view]
+  implementation_files: [packages/core/src/zeromodel/core/*.py]
+  tests: [all above]
+  examples: [examples/arcade_shooter_policy.py, examples/criticality_verification.py, examples/lua_edge_policy.py]
+  evidence_status: supported as integration contract, not as independently novel mechanism

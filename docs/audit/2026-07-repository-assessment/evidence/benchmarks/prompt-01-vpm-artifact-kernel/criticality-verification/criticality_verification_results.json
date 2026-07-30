@@ -1,0 +1,60 @@
+{
+  "counterexamples": [
+    {
+      "action": "FIRE",
+      "candidates": {
+        "FIRE": 4.0,
+        "LEFT": -1.0,
+        "RIGHT": 3.0,
+        "STAY": 0.5
+      },
+      "evidence": {
+        "criticality": 5.0,
+        "decision_margin": 1.0
+      },
+      "row_id": "tank=0|target=1|cooldown=0",
+      "source_metric_index": 3,
+      "source_row_index": 4,
+      "state": {
+        "cooldown": 0,
+        "tank": 0,
+        "target": 1
+      },
+      "value": 4.0,
+      "view_column": 3,
+      "view_row": 4
+    }
+  ],
+  "critical_decision": {
+    "action": "FIRE",
+    "artifact_id": "7990f2b08dad72242a3d47b0f23d676f1442a26bbabaaa06f2df3b03835d41b3",
+    "candidates": {
+      "FIRE": 5.0,
+      "LEFT": -1.0,
+      "RIGHT": -1.0,
+      "STAY": 0.0
+    },
+    "evidence": {
+      "criticality": 6.0,
+      "decision_margin": 5.0
+    },
+    "metric_id": "FIRE",
+    "row_id": "tank=3|target=3|cooldown=0",
+    "source_metric_index": 3,
+    "source_row_index": 56,
+    "value": 5.0,
+    "view_column": 3,
+    "view_row": 56
+  },
+  "criticality_view_id": "30decad69e7ef2f8b61ddf8bead6419f7bc6202376c57996ca6914f19d995b94",
+  "failed_verification_id": "7a276086434e9b3f702176ef91c86282f723196aeaf38544a26fbb7492def783",
+  "original_passed": true,
+  "original_policy_id": "7990f2b08dad72242a3d47b0f23d676f1442a26bbabaaa06f2df3b03835d41b3",
+  "original_verification_id": "0bbbec433b719a1fca93bdd21ac3b6d2122d1655e79927e74759a602676df6b9",
+  "repaired_passed": true,
+  "repaired_policy_id": "7748e031af813755b72212351e678a01c3ce91e10e26be8e79126fe78f69e4cd",
+  "repaired_verification_id": "9f4d5789f5f99c2bd8c8eedfe8b188007e8da5ab10a843c8b03074c96253d99d",
+  "unsafe_passed": false,
+  "unsafe_policy_id": "4eaf9be5dfa635089185619096307c9d06349c21412d078ca4a7767b9f21d727",
+  "version": "1.0.11"
+}

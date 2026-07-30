@@ -1,0 +1,102 @@
+- id: F01
+  title: VPM artifact identity is deterministic and sensitive to core content fields
+  classification: positive result
+  evidence_state: confirmed by execution
+  claim_affected: [C1, C6]
+  repository_sha: 2b12b58096676baa8dfb5d59b512e07b161612d4
+  source_paths: [packages/core/src/zeromodel/core/artifact.py, packages/core/tests/test_artifact_kernel.py, audit-output/adversarial-results.json]
+  symbols: [ScoreTable, LayoutRecipe, VPMArtifact, build_vpm]
+  commands: [python -m pytest packages/core/tests/test_artifact_kernel.py packages/core/tests/test_views_bundle_render.py packages/core/tests/test_policy_lookup_lua.py -q, adversarial probe]
+  observed_result: Golden ID test passed; probe changed identity for raw value, IDs, order, recipe name, metadata, provenance, and parent relationship; canonical reconstruction stayed stable.
+  interpretation: Canonical content identity is implemented and validated for bounded synthetic cases.
+  why_it_matters: Artifact IDs can be used as reproducible content references.
+  does_it_invalidate_the_bounded_claim: false
+  smallest_corrective_action: none
+  test_that_would_prove_correction: current tests plus broader numeric edge fixtures
+  claims_audit_change_required: none
+  confidence: high
+- id: F02
+  title: Source/view cell mapping survives alternate layouts and bundle restoration
+  classification: positive result
+  evidence_state: confirmed by execution
+  claim_affected: [C2, C3, C6]
+  repository_sha: 2b12b58096676baa8dfb5d59b512e07b161612d4
+  source_paths: [packages/core/src/zeromodel/core/artifact.py, packages/core/src/zeromodel/core/views.py, packages/core/tests/test_views_bundle_render.py, audit-output/adversarial-results.json]
+  symbols: [VPMArtifact.cell, build_view, to_bundle, from_bundle]
+  commands: [focused core pytest, adversarial probe]
+  observed_result: Reordered cells resolved to expected row_id, metric_id, source indices, raw values, normalized values before and after .vpm restoration.
+  interpretation: Mapping is reliable for tested complete permutations.
+  why_it_matters: Inspection and trace claims depend on this mapping.
+  does_it_invalidate_the_bounded_claim: false
+  smallest_corrective_action: none
+  test_that_would_prove_correction: add property-style permutation tests over larger matrices
+  claims_audit_change_required: none
+  confidence: high
+- id: F03
+  title: Bundle format is lossless but minimal
+  classification: boundary clarification
+  evidence_state: confirmed by source inspection
+  claim_affected: [C6]
+  repository_sha: 2b12b58096676baa8dfb5d59b512e07b161612d4
+  source_paths: [packages/core/src/zeromodel/core/bundle.py, packages/core/tests/test_views_bundle_render.py]
+  symbols: [to_bundle, from_bundle, bundle_manifest]
+  commands: [focused core pytest, adversarial probe]
+  observed_result: .vpm is a zip containing manifest.json with full artifact JSON; unsupported version and tampered artifact content are rejected via version check or artifact ID mismatch.
+  interpretation: Persistence preserves identity, but there is no multi-file manifest closure, signature, or rich bundle schema in this slice.
+  why_it_matters: Claims should say lossless bundle, not authenticated or self-describing visual container.
+  does_it_invalidate_the_bounded_claim: false
+  smallest_corrective_action: document minimal bundle scope
+  test_that_would_prove_correction: tests for missing manifest, malformed zip, extra files, and duplicate zip members
+  claims_audit_change_required: minor wording only if stronger wording appears
+  confidence: high
+- id: F04
+  title: Policy lookup uses raw source values by default and excludes declared evidence metrics
+  classification: positive result
+  evidence_state: confirmed by execution
+  claim_affected: [C4, C5]
+  repository_sha: 2b12b58096676baa8dfb5d59b512e07b161612d4
+  source_paths: [packages/core/src/zeromodel/core/policy_lookup.py, packages/analysis/tests/test_policy_diagnostics.py]
+  symbols: [VPMPolicyLookup, PolicyLookupDecision]
+  commands: [focused tests, adversarial probe]
+  observed_result: Reads returned action, value, all candidates, evidence, source/view coordinates; evidence column with value 9.0 did not participate in argmax.
+  interpretation: Decision trace is complete for the bounded finite policy model.
+  why_it_matters: Prevents rendered normalization or diagnostics from accidentally changing policy semantics by default.
+  does_it_invalidate_the_bounded_claim: false
+  smallest_corrective_action: none
+  test_that_would_prove_correction: add explicit normalized-value lookup tests when intended
+  claims_audit_change_required: none
+  confidence: high
+- id: F05
+  title: Lua export was generated reproducibly, but runtime parity was not reproduced here
+  classification: negative result
+  evidence_state: not reproducible
+  claim_affected: [C7]
+  repository_sha: 2b12b58096676baa8dfb5d59b512e07b161612d4
+  source_paths: [packages/core/src/zeromodel/core/lua.py, packages/core/tests/test_policy_lookup_lua.py, examples/lua_edge_policy.py, examples/lua/run_arcade_policy.lua]
+  symbols: [write_lua_policy, lua_policy_source, compiled_plan_id]
+  commands: [python examples/lua_edge_policy.py --output audit-output/generated_arcade_policy.lua, focused core pytest]
+  observed_result: Lua module was written with artifact eb7523f... and plan a7f318...; pytest Lua execution skipped because no Lua interpreter was installed.
+  interpretation: Source export and identity linking are confirmed; standard Lua runtime consumption is not confirmed in this environment.
+  why_it_matters: Cross-language portability requires an actual Lua runtime check.
+  does_it_invalidate_the_bounded_claim: false
+  smallest_corrective_action: install Lua 5.4 and run examples/lua/run_arcade_policy.lua against generated module
+  test_that_would_prove_correction: lua5.4 examples/lua/run_arcade_policy.lua audit-output/generated_arcade_policy.lua
+  claims_audit_change_required: no repository claim change, but this audit must mark local reproduction incomplete
+  confidence: high
+- id: F06
+  title: Utility over a conventional table is integration value, not a novel primitive
+  classification: boundary clarification
+  evidence_state: confirmed by source inspection
+  claim_affected: [C8]
+  repository_sha: 2b12b58096676baa8dfb5d59b512e07b161612d4
+  source_paths: [README.md, docs/claims-audit.md, packages/core/src/zeromodel/core/*.py]
+  symbols: [ScoreTable, VPMArtifact, VPMPolicyLookup]
+  commands: [source inspection, examples]
+  observed_result: Most mechanics can be reproduced by a fair matrix/dict baseline; ZeroModel's value is bundling identity, layout, mapping, provenance, rendering, traces, and Lua export.
+  interpretation: The capability is coherent supporting infrastructure, not independently proven core product.
+  why_it_matters: Prevents overclaiming from passing implementation tests alone.
+  does_it_invalidate_the_bounded_claim: false
+  smallest_corrective_action: keep product wording bounded and add human/operational utility experiments
+  test_that_would_prove_correction: controlled workflow comparing table baseline vs VPM for audit/review tasks
+  claims_audit_change_required: none if supporting-infrastructure framing is accepted
+  confidence: medium-high

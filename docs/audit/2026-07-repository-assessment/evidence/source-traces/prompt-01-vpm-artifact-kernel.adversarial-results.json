@@ -1,0 +1,147 @@
+{
+  "base_artifact_id": "6c75cdcb81801191a5ebae888f13cdd264406c93a58a0d3dc264f2df0619f54e",
+  "bundle_round_trip_same_id": true,
+  "bundle_sha256": "9ac772b2fa4dedc3a079b962ce7da0378caad4488ca7b252e25b22ef98c4b252",
+  "identity_sensitivity": {
+    "canonical_reconstruction": true,
+    "column_order_source_data": true,
+    "metadata": true,
+    "metric_id": true,
+    "parent_relationship": true,
+    "provenance": true,
+    "raw_value": true,
+    "recipe_name": true,
+    "row_id": true,
+    "row_order_source_data": true
+  },
+  "lookup": {
+    "duplicate_action_metrics": "VPMValidationError: action_metric_ids must be unique",
+    "metadata_excludes_evidence_action": {
+      "action": "A",
+      "artifact_id": "05215b708c777f246b7bf31616c52524c607c26e6fec2946ccd9ce24a6973f9d",
+      "candidates": {
+        "A": 1.0,
+        "B": 1.0
+      },
+      "evidence": {
+        "evidence": 9.0
+      },
+      "metric_id": "A",
+      "row_id": "s1",
+      "source_metric_index": 0,
+      "source_row_index": 0,
+      "value": 1.0,
+      "view_column": 0,
+      "view_row": 0
+    },
+    "metric_id_tie": "A",
+    "metric_order_tie": "A",
+    "overlap_action_evidence": "VPMValidationError: Evidence metrics cannot also be action metrics: A",
+    "unknown_row": "VPMValidationError: Unknown policy row_id: missing"
+  },
+  "lua": {
+    "artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+    "module_sha256": "1b3857e089b9a2ac3f4a2ac24121e7123d0aa71cf915af2353c9b980a5e8cf90",
+    "parity_exit": "skipped_no_lua",
+    "plan_id": "a7f318d764ebdb7d509cae9728aa5ecbd4a0b89ea51a72067885427e94cc01b7",
+    "runtime": null
+  },
+  "mapping": {
+    "reordered_cells": [
+      {
+        "metric_id": "B",
+        "normalized_value": 1.0,
+        "raw_value": 3.0,
+        "row_id": "r2",
+        "source_metric_index": 1,
+        "source_row_index": 1,
+        "view_column": 0,
+        "view_row": 0
+      },
+      {
+        "metric_id": "A",
+        "normalized_value": 1.0,
+        "raw_value": 2.0,
+        "row_id": "r2",
+        "source_metric_index": 0,
+        "source_row_index": 1,
+        "view_column": 1,
+        "view_row": 0
+      },
+      {
+        "metric_id": "B",
+        "normalized_value": 0.0,
+        "raw_value": 1.0,
+        "row_id": "r1",
+        "source_metric_index": 1,
+        "source_row_index": 0,
+        "view_column": 0,
+        "view_row": 1
+      },
+      {
+        "metric_id": "A",
+        "normalized_value": 0.0,
+        "raw_value": 0.0,
+        "row_id": "r1",
+        "source_metric_index": 0,
+        "source_row_index": 0,
+        "view_column": 1,
+        "view_row": 1
+      }
+    ],
+    "restored_reordered_cells": [
+      {
+        "metric_id": "B",
+        "normalized_value": 1.0,
+        "raw_value": 3.0,
+        "row_id": "r2",
+        "source_metric_index": 1,
+        "source_row_index": 1,
+        "view_column": 0,
+        "view_row": 0
+      },
+      {
+        "metric_id": "A",
+        "normalized_value": 1.0,
+        "raw_value": 2.0,
+        "row_id": "r2",
+        "source_metric_index": 0,
+        "source_row_index": 1,
+        "view_column": 1,
+        "view_row": 0
+      },
+      {
+        "metric_id": "B",
+        "normalized_value": 0.0,
+        "raw_value": 1.0,
+        "row_id": "r1",
+        "source_metric_index": 1,
+        "source_row_index": 0,
+        "view_column": 0,
+        "view_row": 1
+      },
+      {
+        "metric_id": "A",
+        "normalized_value": 0.0,
+        "raw_value": 0.0,
+        "row_id": "r1",
+        "source_metric_index": 0,
+        "source_row_index": 0,
+        "view_column": 1,
+        "view_row": 1
+      }
+    ]
+  },
+  "validation": {
+    "bad_artifact_id_rejected": "VPMValidationError: artifact_id mismatch: expected 6c75cdcb81801191a5ebae888f13cdd264406c93a58a0d3dc264f2df0619f54e, got 0000000000000000000",
+    "changed_manifest_artifact_id": "VPMValidationError: artifact_id mismatch: expected 6c75cdcb81801191a5ebae888f13cdd264406c93a58a0d3dc264f2df0619f54e, got 0000000000000000000",
+    "changed_matrix": "VPMValidationError: artifact_id mismatch: expected 3a114ceef9b9badd41c7939a53d537d725f284d180dcb3bc83abb80d8285a3a6, got 6c75cdcb81801191a5e",
+    "duplicate_metrics_rejected": "VPMValidationError: Duplicate metric identifiers: A",
+    "duplicate_rows_rejected": "VPMValidationError: Duplicate row identifiers: x",
+    "explicit_duplicate_recipe_rows_rejected": "VPMValidationError: Duplicate explicit row identifiers: r1",
+    "explicit_incomplete_rows_rejected": "VPMValidationError: explicit row_order must be a complete permutation of the table row_ids",
+    "nan_rejected": "VPMValidationError: ScoreTable values must be finite unless a missing-value policy is declared",
+    "shape_mismatch_rejected": "VPMValidationError: normalized_values must have source shape after view ordering (shape=(1, 1), source=(2, 2))",
+    "unsupported_bundle_version": "ValueError: Unsupported bundle_version: 'vpm-bundle/999'"
+  }
+}

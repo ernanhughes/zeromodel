@@ -1,0 +1,30 @@
+id: vpm-artifact-kernel
+claim:
+  text: A bounded scored table can be compiled into an identified deterministic VPM with stable mappings and consumed by a finite policy reader.
+  qualifier: closed finite tables, explicit layout recipes, JSON-serializable metadata/provenance, Python runtime; Lua source export reproduced, Lua execution not reproduced here.
+implementation:
+  owning_packages: [zeromodel.core, zeromodel.analysis, zeromodel.video]
+  public_symbols: [ScoreTable, LayoutRecipe, VPMArtifact, VPMCell, ViewProfile, VPMPolicyLookup, PolicyLookupDecision, to_bundle, from_bundle, compiled_plan_id, write_lua_policy]
+  source_files: [packages/core/src/zeromodel/core/artifact.py, packages/core/src/zeromodel/core/bundle.py, packages/core/src/zeromodel/core/render.py, packages/core/src/zeromodel/core/views.py, packages/core/src/zeromodel/core/policy_lookup.py, packages/core/src/zeromodel/core/lua.py, packages/video/src/zeromodel/video/arcade_policy/model.py]
+  tests: [packages/core/tests/test_artifact_kernel.py, packages/core/tests/test_views_bundle_render.py, packages/core/tests/test_policy_lookup_lua.py, packages/analysis/tests/test_policy_diagnostics.py, packages/analysis/tests/test_policy_properties.py]
+  examples: [examples/arcade_shooter_policy.py, examples/criticality_verification.py, examples/lua_edge_policy.py]
+evidence:
+  status: validated within bounded conditions, with Lua runtime execution not reproducible in this environment
+  commands: [see audit-output/commands.jsonl]
+  committed_results: [docs/claims-audit.md, docs/results/arcade-validation.md, docs/examples/lua-edge-policy.md, demos/catalog.json]
+  reproduced: true
+baseline:
+  primary: NumPy matrix or dict plus row_ids, metric_ids, JSON metadata, deterministic argmax, content hash, JSON/zip serialization
+  implementation: specified in audit-output/baseline-comparison.md
+  material_differences: [built-in source/view mapping, canonical identity bytes, recipe validation, provenance/parent conventions, decision traces, compiled Lua consumer identity]
+  unnecessary_differences: [visual terminology for non-visual tables, PNG rendering if not inspected by humans, full artifact wrapping for one-off in-process lookup]
+utility:
+  plausible_users: [embedded controller developer, safety reviewer of finite decision tables, audit engineer tracking policy versions, demo/education user]
+  concrete_workflows: [compile reviewed finite policy, distribute immutable lookup bundle, inspect trace/counterexample, export compact Lua reader]
+  essential_advantages: [identity-bound artifact, source/view traceability, persistence round-trip, action/evidence separation, cross-language plan export]
+  unresolved_questions: [human inspection benefit, larger policy performance, operational governance outside local hashes, Lua parity in this environment]
+boundaries: [no open-world generalization, no semantic proof of scores, no authorship/authenticity, no guarantee unknown states can be handled except explicit failure]
+review_disposition:
+  status: supporting infrastructure
+  rationale: coherent and useful for other ZeroModel policy/evidence paths, but not independently compelling over a fair conventional table baseline for simple use cases.
+  confidence: high

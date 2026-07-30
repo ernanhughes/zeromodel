@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import inspect
-from importlib.metadata import version
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import zipfile
+from importlib.metadata import version
+from pathlib import Path
 
 import zeromodel.core as core
 

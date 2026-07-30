@@ -3,19 +3,23 @@ name: video-package
 on:
   push:
     paths:
+      - "VERSION"
       - "packages/core/**"
       - "packages/observation/**"
       - "packages/video/**"
       - "scripts/check_package_boundaries.py"
+      - "scripts/release_version.py"
       - "package-boundaries.toml"
       - "pyproject.toml"
       - ".github/workflows/video-package.yml"
   pull_request:
     paths:
+      - "VERSION"
       - "packages/core/**"
       - "packages/observation/**"
       - "packages/video/**"
       - "scripts/check_package_boundaries.py"
+      - "scripts/release_version.py"
       - "package-boundaries.toml"
       - "pyproject.toml"
       - ".github/workflows/video-package.yml"
@@ -33,6 +37,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install build twine pytest ruff mypy "numpy<2.0"
           python -c "import numpy; print('NumPy', numpy.__version__)"
+      - name: Check coordinated release version
+        run: python scripts/release_version.py check
       - name: Build dependency and video wheels
         run: |
           python -m build packages/core
@@ -66,11 +72,9 @@ jobs:
           $python = "build/video-ci-venv/Scripts/python.exe"
           & $python -m pip install --upgrade pip
           & $python -m pip install pytest
-          & $python -m pip install packages/core/dist/zeromodel-1.0.13-py3-none-any.whl
-          & $python -m pip install packages/observation/dist/zeromodel_observation-1.0.13-py3-none-any.whl
-          & $python -m pip install packages/video/dist/zeromodel_video-1.0.13-py3-none-any.whl
+          python scripts/release_version.py install --python $python core observation video
           & $python -m pip check
-          $env:VIDEO_WHEEL_PATH = "$PWD/packages/video/dist/zeromodel_video-1.0.13-py3-none-any.whl"
+          $env:VIDEO_WHEEL_PATH = (& python scripts/release_version.py wheel-path video).Trim()
           & $python -m pytest -q packages/video/tests
       - name: Verify installed import locations
         shell: pwsh

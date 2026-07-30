@@ -49,6 +49,12 @@ def package_root(package_key: str, manifest: dict[str, Any] | None = None) -> Pa
     return REPO_ROOT / source_root.parent
 
 
+def version_constant_files() -> list[Path]:
+    # Only package entry points carry the coordinated public package version.
+    # Historical staged API modules may retain the version of the stage they record.
+    return sorted((REPO_ROOT / "packages").glob("*/src/**/__init__.py"))
+
+
 def wheel_stem(distribution: str) -> str:
     return re.sub(r"[-.]+", "_", distribution)
 
@@ -73,9 +79,9 @@ def built_wheel_path(package_key: str) -> Path:
 
 
 def install_built_wheels(python_executable: str, package_keys: list[str]) -> None:
-    if not package_keys:
-        raise SystemExit("At least one package key is required")
     wheels = [str(built_wheel_path(package_key)) for package_key in package_keys]
+    if not wheels:
+        raise SystemExit("At least one package key is required")
     subprocess.run(
         [python_executable, "-m", "pip", "install", *wheels],
         cwd=REPO_ROOT,
@@ -107,8 +113,7 @@ def version_sync_errors() -> list[str]:
 
     for package_key, config in manifest["packages"].items():
         pyproject = package_root(package_key, manifest) / "pyproject.toml"
-        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
-        project = data["project"]
+        project = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]
         if project["name"] != config["distribution"]:
             errors.append(
                 f"{pyproject.relative_to(REPO_ROOT)}: project.name is "
@@ -119,21 +124,19 @@ def version_sync_errors() -> list[str]:
                 f"{pyproject.relative_to(REPO_ROOT)}: project.version is "
                 f"{project['version']!r}, expected VERSION {version!r}"
             )
-
-        dependencies = set(project.get("dependencies", []))
-        expected_internal = expected_internal_requirements(package_key, manifest, version)
         actual_internal = {
             requirement
-            for requirement in dependencies
+            for requirement in project.get("dependencies", [])
             if requirement.startswith("zeromodel")
         }
+        expected_internal = expected_internal_requirements(package_key, manifest, version)
         if actual_internal != expected_internal:
             errors.append(
                 f"{pyproject.relative_to(REPO_ROOT)}: internal dependencies are "
                 f"{sorted(actual_internal)!r}, expected {sorted(expected_internal)!r}"
             )
 
-    for source_file in sorted((REPO_ROOT / "packages").glob("*/src/**/*.py")):
+    for source_file in version_constant_files():
         text = source_file.read_text(encoding="utf-8")
         for match in PACKAGE_VERSION_CONSTANT_PATTERN.finditer(text):
             if match.group("version") != version:
@@ -142,29 +145,26 @@ def version_sync_errors() -> list[str]:
                     f"{match.group('version')!r}, expected VERSION {version!r}"
                 )
 
-    workflows_root = REPO_ROOT / ".github" / "workflows"
-    for workflow in sorted(workflows_root.glob("*.yml")):
+    for workflow in sorted((REPO_ROOT / ".github" / "workflows").glob("*.yml")):
         text = workflow.read_text(encoding="utf-8")
         for match in HARDCODED_WORKFLOW_WHEEL_PATTERN.finditer(text):
             errors.append(
                 f"{workflow.relative_to(REPO_ROOT)}: hard-coded wheel path "
                 f"{match.group(0)!r}; use scripts/release_version.py"
             )
-
     return errors
 
 
 def sync_version_mirrors() -> None:
     version = read_version()
-
     boundaries_text = BOUNDARIES_FILE.read_text(encoding="utf-8")
-    boundaries_text, boundary_count = re.subn(
+    boundaries_text, count = re.subn(
         r'(?m)^release_version = "[^"]+"$',
         f'release_version = "{version}"',
         boundaries_text,
         count=1,
     )
-    if boundary_count != 1:
+    if count != 1:
         raise SystemExit(f"Could not update release_version in {BOUNDARIES_FILE}")
     BOUNDARIES_FILE.write_text(boundaries_text, encoding="utf-8")
 
@@ -172,20 +172,20 @@ def sync_version_mirrors() -> None:
     for package_key in manifest["packages"]:
         pyproject = package_root(package_key, manifest) / "pyproject.toml"
         text = pyproject.read_text(encoding="utf-8")
-        text, version_count = re.subn(
+        text, count = re.subn(
             r'(?m)^version = "[^"]+"$',
             f'version = "{version}"',
             text,
             count=1,
         )
-        if version_count != 1:
+        if count != 1:
             raise SystemExit(f"Could not update one project version in {pyproject}")
         text = INTERNAL_REQUIREMENT_PATTERN.sub(
             lambda match: f"{match.group('name')}=={version}", text
         )
         pyproject.write_text(text, encoding="utf-8")
 
-    for source_file in sorted((REPO_ROOT / "packages").glob("*/src/**/*.py")):
+    for source_file in version_constant_files():
         text = source_file.read_text(encoding="utf-8")
         updated = PACKAGE_VERSION_CONSTANT_PATTERN.sub(
             lambda match: f'{match.group("name")} = "{version}"', text
@@ -209,21 +209,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Manage the repository-wide ZeroModel release version."
     )
-    subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("show", help="Print the canonical release version")
-    subparsers.add_parser("check", help="Verify all generated version mirrors")
-    subparsers.add_parser("sync", help="Update package metadata from VERSION")
-
-    wheel_parser = subparsers.add_parser(
-        "wheel-path", help="Print the exact built wheel path for a package"
-    )
-    wheel_parser.add_argument("package")
-
-    install_parser = subparsers.add_parser(
-        "install", help="Install exact built wheels into a target Python environment"
-    )
-    install_parser.add_argument("--python", required=True, dest="python_executable")
-    install_parser.add_argument("packages", nargs="+")
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("show", help="Print the canonical release version")
+    commands.add_parser("check", help="Verify all generated version mirrors")
+    commands.add_parser("sync", help="Update package metadata from VERSION")
+    wheel = commands.add_parser("wheel-path", help="Print an exact built wheel path")
+    wheel.add_argument("package")
+    install = commands.add_parser("install", help="Install exact built wheels")
+    install.add_argument("--python", required=True, dest="python_executable")
+    install.add_argument("packages", nargs="+")
     return parser
 
 

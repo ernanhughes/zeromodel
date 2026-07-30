@@ -62,8 +62,7 @@ def test_video_wheel_contains_only_video_namespace_when_path_is_provided() -> No
     assert "zeromodel/video/__init__.py" in names
     assert "zeromodel/__init__.py" not in names
     assert all(
-        name.startswith("zeromodel/video/")
-        or name.startswith(dist_info_prefix)
+        name.startswith("zeromodel/video/") or name.startswith(dist_info_prefix)
         for name in names
     )
     assert not any(

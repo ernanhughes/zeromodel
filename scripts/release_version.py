@@ -45,7 +45,9 @@ def package_root(package_key: str, manifest: dict[str, Any] | None = None) -> Pa
         source_root = Path(manifest["packages"][package_key]["source_root"])
     except KeyError as exc:
         known = ", ".join(sorted(manifest["packages"]))
-        raise SystemExit(f"Unknown package {package_key!r}; expected one of: {known}") from exc
+        raise SystemExit(
+            f"Unknown package {package_key!r}; expected one of: {known}"
+        ) from exc
     return REPO_ROOT / source_root.parent
 
 
@@ -70,7 +72,9 @@ def built_wheel_path(package_key: str) -> Path:
     pattern = f"{wheel_stem(config['distribution'])}-{version}-*.whl"
     matches = sorted(dist_dir.glob(pattern))
     if len(matches) != 1:
-        found = ", ".join(path.name for path in sorted(dist_dir.glob("*.whl"))) or "none"
+        found = (
+            ", ".join(path.name for path in sorted(dist_dir.glob("*.whl"))) or "none"
+        )
         raise SystemExit(
             f"Expected exactly one {package_key} wheel matching {pattern!r} in "
             f"{dist_dir}; found {len(matches)} matching wheel(s), all wheels: {found}"
@@ -129,7 +133,9 @@ def version_sync_errors() -> list[str]:
             for requirement in project.get("dependencies", [])
             if requirement.startswith("zeromodel")
         }
-        expected_internal = expected_internal_requirements(package_key, manifest, version)
+        expected_internal = expected_internal_requirements(
+            package_key, manifest, version
+        )
         if actual_internal != expected_internal:
             errors.append(
                 f"{pyproject.relative_to(REPO_ROOT)}: internal dependencies are "

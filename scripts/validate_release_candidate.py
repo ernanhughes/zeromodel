@@ -37,9 +37,10 @@ globals()["PACKAGE_RELEASE_ARTIFACTS_PATH"] = globals()["ARCHITECTURE_REPORT_DIR
 globals()["PACKAGE_PUBLIC_API_PATH"] = globals()["ARCHITECTURE_REPORT_DIR"] / (
     f"package-public-api-{_RELEASE_VERSION}.csv"
 )
-globals()["PACKAGE_RELEASE_TEST_LAYERS_PATH"] = globals()[
-    "ARCHITECTURE_REPORT_DIR"
-] / f"package-release-test-layers-{_RELEASE_VERSION}.json"
+globals()["PACKAGE_RELEASE_TEST_LAYERS_PATH"] = (
+    globals()["ARCHITECTURE_REPORT_DIR"]
+    / f"package-release-test-layers-{_RELEASE_VERSION}.json"
+)
 globals()["RELEASE_CANDIDATE_REPORT_DIR"] = (
     globals()["REPO_ROOT"]
     / "docs"

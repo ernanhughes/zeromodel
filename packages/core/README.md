@@ -1,15 +1,15 @@
 # ZeroModel Core
 
-`zeromodel` is the lightweight core distribution for ZeroModel 1.0.13. It owns the `zeromodel.core` import namespace.
+`zeromodel` is the lightweight core distribution for ZeroModel 1.2.0. It owns the `zeromodel.core` import namespace and provides the deterministic artifact kernel beneath the Visual AI Computing package system.
 
 Core includes deterministic VPM artifact construction, stable artifact and matrix identities, basic views, `.vpm` bundle serialization, lightweight PNG/SVG rendering, exact bounded policy lookup, and Lua export for compiled policy plans.
 
-Core deliberately excludes analysis, observation contracts, vision providers, video domains, SQLAlchemy persistence, benchmarks, and research evidence tooling. Those live in separate distributions.
+Core deliberately excludes analysis, observation contracts, vision providers, perception, observer applications, video domains, SQLAlchemy persistence, artifact stores, trust, navigation, benchmarks, and research evidence tooling. Those live in separate distributions.
 
 ## Install
 
 ```powershell
-pip install zeromodel
+pip install zeromodel==1.2.0
 ```
 
 Runtime dependency: NumPy.
@@ -51,4 +51,17 @@ decision = reader.read("candidate-a")
 print(decision.action, decision.value)
 ```
 
-Use `zeromodel.analysis`, `zeromodel.observation`, `zeromodel.vision`, `zeromodel.video`, and `zeromodel.persistence.sqlalchemy` for the higher-level packages.
+Use the owning namespaces directly for higher-level capabilities:
+
+- `zeromodel.analysis`
+- `zeromodel.observation`
+- `zeromodel.vision`
+- `zeromodel.perception`
+- `zeromodel.observer`
+- `zeromodel.video`
+- `zeromodel.persistence.sqlalchemy`
+- `zeromodel.artifacts`
+- `zeromodel.trust`
+- `zeromodel.navigation`
+
+See the [system README](../../README.md) and [claims audit](../../docs/claims-audit.md).

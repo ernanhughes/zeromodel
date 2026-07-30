@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeromodel-observer"
-version = "1.1.0"
+version = "1.2.0"
 description = "ZeroModel Observer demonstration package"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,15 +31,15 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "zeromodel==1.1.0",
-    "zeromodel-observation==1.1.0",
-    "zeromodel-perception==1.1.0",
+    "zeromodel==1.2.0",
+    "zeromodel-observation==1.2.0",
+    "zeromodel-perception==1.2.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/ernanhughes/zeromodel"
+Homepage = "https://zeromodel.org/"
 Repository = "https://github.com/ernanhughes/zeromodel"
-Documentation = "https://ernanhughes.github.io/zeromodel/"
+Documentation = "https://zeromodel.org/"
 
 [tool.setuptools.packages.find]
 where = ["src"]

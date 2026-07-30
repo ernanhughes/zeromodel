@@ -1,8 +1,44 @@
 # Changelog
 
-## Unreleased
+## 1.2.0 - Unreleased
 
-No unreleased changes have been recorded since the preparation of ZeroModel 1.1.0.
+See the [ZeroModel 1.2.0 release posture](docs/releases/1.2.0.md).
+
+ZeroModel 1.2.0 establishes the coordinated foundation for Visual AI Computing.
+
+### Product and architecture
+
+* Rewrites the repository README around the exact bounded 1.2.0 headline claim.
+* Adds a system-wide package and repository architecture map.
+* Introduces the five-state evidence ladder prominently.
+* Links major capabilities to their implementation proof, demonstration programme, and explicit boundary.
+* Defines the coordinated relationship between `zeromodel`, `zeromodel-demos`, `zeromodel.org`, and `zeromodel.github.io`.
+
+### Package system
+
+* Coordinates eleven distributions at version `1.2.0`:
+
+  * `zeromodel`
+  * `zeromodel-analysis`
+  * `zeromodel-observation`
+  * `zeromodel-vision`
+  * `zeromodel-perception`
+  * `zeromodel-observer`
+  * `zeromodel-video`
+  * `zeromodel-sqlalchemy`
+  * `zeromodel-artifacts`
+  * `zeromodel-trust`
+  * `zeromodel-navigation`
+* Updates all internal package dependency pins to `1.2.0`.
+* Updates public package documentation links to `https://zeromodel.org/`.
+* Makes the observer package an explicit part of the coordinated architecture and install surface.
+* Updates release validation and release documentation for the eleven-package topology.
+
+### Claim boundary
+
+* Retains the claims audit as the authoritative evidence record.
+* Preserves unsupported, refuted, and insufficient-observability findings as first-class results.
+* Positions 1.2.0 as the **foundation for Visual AI Computing**, not as proof of general open-world Visual AI.
 
 ## 1.1.0 - 2026-07-27
 

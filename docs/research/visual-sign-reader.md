@@ -175,9 +175,11 @@ The reader compiles:
 
 Canonical frames take the exact feature path. Non-exact frames use deterministic exhaustive nearest-neighbour search, which is appropriate for 112 rows.
 
-## Acceptance and rejection
+## Acceptance profiles and rejection
 
-A frame is accepted only when both conditions hold:
+The default reader profile is `calibrated_nearest`, preserving the original
+distance and margin behavior. In that profile a frame is accepted only when both
+conditions hold:
 
 ```text
 nearest distance <= compiled acceptance threshold
@@ -199,9 +201,19 @@ Rejection is a normal trace outcome, not an exception. It records:
 
 A rejected frame produces no action.
 
+The explicit profiles are:
+
+- `canonical_only`: execute policy only when the canonical input digest matches
+  the registered digest for the addressed row.
+- `exact_codeword`: execute policy on exact feature-codeword equality while
+  recording whether the canonical input matched.
+- `calibrated_nearest`: execute policy when the compiled distance and margin
+  checks pass.
+- `evidence_only`: return visual-address evidence without policy execution.
+
 ## Exact frame versus exact feature codeword
 
-`exact_feature_match=True` means the canonical quantized feature vector exactly matches a visual-index row. It does **not** mean the raw input bytes are identical to the original canonical frame.
+`exact_feature_match=True` means the canonical quantized feature vector exactly matches a visual-index row. It does **not** mean the raw input bytes are identical to the original canonical frame. A decision now records `raw_input_digest`, `canonical_input_digest`, and `feature_digest`; the older `input_digest` field remains the canonical digest.
 
 A sub-quantization input change may therefore produce:
 
@@ -234,7 +246,8 @@ It does not yet demonstrate accepted, non-exact nearest-neighbour tolerance. Tha
 
 An accepted `VisualDecision` adds the visual-address evidence to the normal policy trace:
 
-- input and feature digests;
+- raw input, canonical input, and feature digests;
+- acceptance profile and policy execution state;
 - exact-feature flag;
 - matched row ID;
 - nearest/second-nearest evidence;

@@ -21,6 +21,7 @@ from zeromodel.vision import (
     VISUAL_FEATURE_VERSION,
     VISUAL_INDEX_VERSION,
     VISUAL_POLICY_DECISION_VERSION,
+    VisualAcceptanceProfile,
     DeterministicVisualAddressProvider,
     VisualFeatureSpec,
     VisualIndexCalibration,
@@ -31,6 +32,7 @@ from zeromodel.vision import (
     extract_visual_features,
     visual_feature_digest,
     visual_input_digest,
+    visual_raw_input_digest,
 )
 
 
@@ -209,7 +211,11 @@ def test_visual_reader_recovers_canonical_rows_and_rejects_ambiguous_inputs() ->
         decision = reader.read(frame)
         recovered += int(decision.accepted)
         wrong += int(decision.matched_row_id != row_id)
-        assert decision.reason == "accepted"
+        assert decision.reason == "accepted_canonical_input"
+        assert decision.acceptance_profile == VisualAcceptanceProfile.CALIBRATED_NEAREST
+        assert decision.policy_executed
+        assert decision.raw_input_digest
+        assert decision.canonical_input_digest == decision.input_digest
         assert decision.action == lookup.choose(row_id)
         assert decision.policy_artifact_id == policy.artifact_id
         assert decision.visual_index_artifact_id == index.artifact.artifact_id
@@ -268,6 +274,124 @@ def test_exact_feature_alias_records_noncanonical_input_digest() -> None:
     assert not decision.canonical_input_match
     assert decision.nearest_input_digest != decision.input_digest
     assert decision.to_dict()["canonical_input_match"] is False
+
+
+def test_acceptance_profiles_separate_canonical_alias_approximate_and_rejection() -> (
+    None
+):
+    policy = _policy()
+    spec = VisualFeatureSpec(1, 1, 1, 1, quantization_levels=16)
+    index = build_visual_index(
+        policy,
+        {
+            "left": np.array([[0]], dtype=np.uint8),
+            "right": np.array([[128]], dtype=np.uint8),
+            "stay": np.array([[255]], dtype=np.uint8),
+        },
+        spec,
+        threshold_fraction=0.25,
+        margin_fraction=0.75,
+    )
+    reader = VisualSignReader(index.artifact, policy, action_metric_ids=ACTIONS)
+
+    canonical = reader.read(
+        np.array([[0]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.CANONICAL_ONLY,
+    )
+    alias = reader.read(
+        np.array([[1]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.EXACT_CODEWORD,
+    )
+    alias_strict = reader.read(
+        np.array([[1]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.CANONICAL_ONLY,
+    )
+    approximate = reader.read(
+        np.array([[17]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.CALIBRATED_NEAREST,
+    )
+    approximate_exact = reader.read(
+        np.array([[17]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.EXACT_CODEWORD,
+    )
+    evidence = reader.read(
+        np.array([[17]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.EVIDENCE_ONLY,
+    )
+    distant = reader.read(
+        np.array([[90]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.CALIBRATED_NEAREST,
+    )
+    _ambiguous_policy, _ambiguous_index, ambiguous_reader = _reader()
+    ambiguous = ambiguous_reader.read(
+        np.array([[1]], dtype=np.uint8),
+        acceptance_profile=VisualAcceptanceProfile.CALIBRATED_NEAREST,
+    )
+
+    assert canonical.accepted and canonical.policy_executed
+    assert canonical.reason == "accepted_canonical_input"
+    assert alias.accepted and alias.policy_executed
+    assert alias.reason == "accepted_exact_feature_codeword"
+    assert not alias.canonical_input_match
+    assert not alias_strict.accepted
+    assert alias_strict.reason == "canonical_input_mismatch"
+    assert alias_strict.action is None
+    assert approximate.accepted and approximate.policy_executed
+    assert approximate.reason == "accepted_calibrated_nearest"
+    assert not approximate.exact_feature_match
+    assert not approximate_exact.accepted
+    assert approximate_exact.reason == "feature_not_exact"
+    assert evidence.accepted and not evidence.policy_executed
+    assert evidence.reason == "evidence_only"
+    assert evidence.action is None
+    assert evidence.matched_row_id is None
+    assert evidence.candidates == {}
+    assert not distant.accepted
+    assert distant.reason == "visual_distance_above_threshold"
+    assert ambiguous.reason == "ambiguous_visual_address"
+
+
+def test_visual_decision_invariants_and_json_round_trip() -> None:
+    _policy, _index, reader = _reader()
+    decision = reader.read(np.array([[4]], dtype=np.uint8))
+    restored = type(decision).from_dict(decision.to_dict())
+
+    assert restored.to_dict() == decision.to_dict()
+    payload = decision.to_dict()
+    payload["accepted"] = False
+    with pytest.raises(VPMValidationError, match="only accepted decisions"):
+        type(decision).from_dict(payload)
+
+    rejected = reader.read(np.array([[255]], dtype=np.uint8)).to_dict()
+    rejected["action"] = "A"
+    with pytest.raises(VPMValidationError, match="non-executed decision"):
+        type(decision).from_dict(rejected)
+
+
+def test_raw_canonical_and_feature_digests_are_domain_separated() -> None:
+    spec = VisualFeatureSpec(1, 1, 1, 1, quantization_levels=16)
+    rgb = np.array([[[1, 1, 1]]], dtype=np.uint8)
+    rgba = np.array([[[1, 1, 1, 255]]], dtype=np.uint8)
+    gray_one = np.array([[1]], dtype=np.uint8)
+    gray_two = np.array([[2]], dtype=np.uint8)
+
+    assert visual_raw_input_digest(rgb, spec) != visual_raw_input_digest(rgba, spec)
+    assert visual_raw_input_digest(rgb, spec) != visual_raw_input_digest(gray_one, spec)
+    assert visual_input_digest(rgb, spec) == visual_input_digest(rgba, spec)
+    assert visual_input_digest(rgb, spec) == visual_input_digest(gray_one, spec)
+    assert visual_input_digest(gray_one, spec) != visual_input_digest(gray_two, spec)
+    assert np.array_equal(
+        extract_visual_features(gray_one, spec),
+        extract_visual_features(gray_two, spec),
+    )
+    assert visual_feature_digest(
+        extract_visual_features(gray_one, spec),
+        spec,
+    ) == visual_feature_digest(extract_visual_features(gray_two, spec), spec)
+    assert visual_input_digest(gray_one, spec) != visual_feature_digest(
+        extract_visual_features(gray_one, spec),
+        spec,
+    )
 
 
 def test_visual_reader_rejects_missing_input_digest_metadata() -> None:

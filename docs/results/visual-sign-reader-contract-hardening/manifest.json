@@ -1,0 +1,24 @@
+{
+  "generated_files": [
+    "acceptance-profile-results.json",
+    "alias-analysis.json",
+    "commands.jsonl",
+    "digest-layer-results.json",
+    "environment.json",
+    "feature-conformance-results.json",
+    "final-assessment.md",
+    "findings.yaml",
+    "manifest.json",
+    "performance-results.json",
+    "restoration-compatibility-results.json",
+    "test-summary.json"
+  ],
+  "generators": [
+    "scripts/audit/run_visual_acceptance_profiles.py",
+    "scripts/audit/run_visual_alias_analysis.py",
+    "scripts/audit/run_visual_feature_conformance.py",
+    "scripts/audit/run_visual_contract_performance.py"
+  ],
+  "name": "visual-sign-reader-contract-hardening",
+  "starting_main_sha": "68166bc3e8ace98e806bae98782ccaf5697123e6"
+}

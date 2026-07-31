@@ -1,0 +1,13 @@
+{
+  "compatibility_policy": "strict_version_rejection",
+  "result": "passed",
+  "tested_by": [
+    "packages/vision/tests/test_deterministic_visual_runtime.py::test_visual_reader_rejects_missing_input_digest_metadata"
+  ],
+  "policy": [
+    "VisualSignReader accepts only visual index artifacts declaring the current visual_index_version.",
+    "Missing feature-spec identity, calibration identity, parent policy identity, or complete canonical input digest metadata is rejected.",
+    "Missing identity-relevant fields are not reconstructed with defaults during restoration.",
+    "Older or incomplete artifacts must be rebuilt explicitly before they can claim canonical input identity."
+  ]
+}

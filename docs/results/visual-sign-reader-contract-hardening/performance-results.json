@@ -1,0 +1,44 @@
+{
+  "environment": {
+    "machine": "Max",
+    "numpy": "2.4.6",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.4"
+  },
+  "measurements": {
+    "calibrated_nearest_read": {
+      "median_us": 136.89999999999998,
+      "p95_us": 279.2
+    },
+    "canonical_digest_generation": {
+      "median_us": 15.649999999999999,
+      "p95_us": 20.6
+    },
+    "canonical_only_read": {
+      "median_us": 156.0,
+      "p95_us": 263.0
+    },
+    "decision_serialization": {
+      "median_us": 1.5,
+      "p95_us": 2.1
+    },
+    "exact_codeword_read": {
+      "median_us": 178.05,
+      "p95_us": 276.7
+    },
+    "feature_extraction": {
+      "median_us": 13.149999999999999,
+      "p95_us": 27.4
+    },
+    "raw_digest_generation": {
+      "median_us": 18.6,
+      "p95_us": 28.0
+    }
+  },
+  "repeats": 100,
+  "sizes": {
+    "input_digest_metadata_json_bytes": 11579,
+    "state_count": 112,
+    "visual_index_artifact_json_bytes": 121778
+  }
+}

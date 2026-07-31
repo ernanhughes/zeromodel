@@ -17,7 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import json
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, ClassVar, Dict, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -38,6 +38,33 @@ DISTANCE_METRIC = "euclidean"
 MARGIN_RULE = "absolute-gap"
 
 
+class VisualAcceptanceProfile:
+    """Validated public acceptance profile names for deterministic visual reads."""
+
+    CANONICAL_ONLY: ClassVar[str] = "canonical_only"
+    EXACT_CODEWORD: ClassVar[str] = "exact_codeword"
+    CALIBRATED_NEAREST: ClassVar[str] = "calibrated_nearest"
+    EVIDENCE_ONLY: ClassVar[str] = "evidence_only"
+
+    _ALLOWED: ClassVar[frozenset[str]] = frozenset(
+        {
+            CANONICAL_ONLY,
+            EXACT_CODEWORD,
+            CALIBRATED_NEAREST,
+            EVIDENCE_ONLY,
+        }
+    )
+
+    @classmethod
+    def validate(cls, value: str) -> str:
+        profile = str(value)
+        if profile not in cls._ALLOWED:
+            raise VPMValidationError(
+                "unsupported visual acceptance profile: %r" % value
+            )
+        return profile
+
+
 def _canonical_json_bytes(value: Any) -> bytes:
     try:
         return json.dumps(
@@ -53,6 +80,18 @@ def _canonical_json_bytes(value: Any) -> bytes:
 
 def _sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
+
+
+def _is_sha256_digest(value: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    if not value.startswith("sha256:") or len(value) != len("sha256:") + 64:
+        return False
+    try:
+        int(value.removeprefix("sha256:"), 16)
+    except ValueError:
+        return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -300,7 +339,11 @@ class VisualDecision:
     accepted: bool
     reason: str
     input_digest: str
+    raw_input_digest: str
+    canonical_input_digest: str
     feature_digest: str
+    acceptance_profile: str
+    policy_executed: bool
     reader_version: str
     visual_index_artifact_id: str
     policy_artifact_id: str
@@ -326,12 +369,69 @@ class VisualDecision:
     candidates: Mapping[str, float] = field(default_factory=dict)
     evidence: Mapping[str, float] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        VisualAcceptanceProfile.validate(self.acceptance_profile)
+        if self.input_digest != self.canonical_input_digest:
+            raise VPMValidationError("input_digest must equal canonical_input_digest")
+        for name, digest in (
+            ("raw_input_digest", self.raw_input_digest),
+            ("canonical_input_digest", self.canonical_input_digest),
+            ("feature_digest", self.feature_digest),
+        ):
+            if not _is_sha256_digest(digest):
+                raise VPMValidationError("invalid %s" % name)
+        if not self.reason:
+            raise VPMValidationError("visual decision reason is required")
+        executable_fields = (
+            self.matched_row_id,
+            self.action,
+            self.value,
+            self.source_row_index,
+            self.source_metric_index,
+            self.view_row,
+            self.view_column,
+        )
+        has_execution = any(value is not None for value in executable_fields)
+        if self.policy_executed:
+            if not self.accepted:
+                raise VPMValidationError("only accepted decisions can execute policy")
+            if any(value is None for value in executable_fields):
+                raise VPMValidationError("accepted policy execution is incomplete")
+            if not self.candidates:
+                raise VPMValidationError(
+                    "accepted policy execution requires candidates"
+                )
+        else:
+            if has_execution:
+                raise VPMValidationError(
+                    "non-executed decision cannot include policy fields"
+                )
+            if self.candidates:
+                raise VPMValidationError(
+                    "non-executed decision cannot include candidates"
+                )
+            if self.evidence:
+                raise VPMValidationError(
+                    "non-executed decision cannot include evidence"
+                )
+        if self.accepted and not self.policy_executed:
+            if self.reason != "evidence_only":
+                raise VPMValidationError(
+                    "accepted non-executed visual decisions must be evidence_only"
+                )
+        if not self.accepted and self.policy_executed:
+            raise VPMValidationError("rejected visual decisions cannot execute policy")
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "accepted": bool(self.accepted),
             "reason": self.reason,
             "input_digest": self.input_digest,
+            "raw_input_digest": self.raw_input_digest,
+            "canonical_input_digest": self.canonical_input_digest,
             "feature_digest": self.feature_digest,
+            "acceptance_profile": self.acceptance_profile,
+            "policy_executed": bool(self.policy_executed),
             "reader_version": self.reader_version,
             "visual_index_artifact_id": self.visual_index_artifact_id,
             "policy_artifact_id": self.policy_artifact_id,
@@ -361,6 +461,67 @@ class VisualDecision:
                 str(key): float(value) for key, value in self.evidence.items()
             },
         }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "VisualDecision":
+        return cls(
+            accepted=bool(data["accepted"]),
+            reason=str(data["reason"]),
+            input_digest=str(data["input_digest"]),
+            raw_input_digest=str(data["raw_input_digest"]),
+            canonical_input_digest=str(data["canonical_input_digest"]),
+            feature_digest=str(data["feature_digest"]),
+            acceptance_profile=str(data["acceptance_profile"]),
+            policy_executed=bool(data["policy_executed"]),
+            reader_version=str(data["reader_version"]),
+            visual_index_artifact_id=str(data["visual_index_artifact_id"]),
+            policy_artifact_id=str(data["policy_artifact_id"]),
+            feature_spec_digest=str(data["feature_spec_digest"]),
+            calibration_digest=str(data["calibration_digest"]),
+            nearest_row_id=str(data["nearest_row_id"]),
+            nearest_distance=float(data["nearest_distance"]),
+            second_nearest_row_id=str(data["second_nearest_row_id"]),
+            second_nearest_distance=float(data["second_nearest_distance"]),
+            distance_margin=float(data["distance_margin"]),
+            acceptance_threshold=float(data["acceptance_threshold"]),
+            required_margin=float(data["required_margin"]),
+            exact_feature_match=bool(data["exact_feature_match"]),
+            nearest_input_digest=(
+                None
+                if data.get("nearest_input_digest") is None
+                else str(data["nearest_input_digest"])
+            ),
+            canonical_input_match=bool(data.get("canonical_input_match", False)),
+            matched_row_id=(
+                None
+                if data.get("matched_row_id") is None
+                else str(data["matched_row_id"])
+            ),
+            action=None if data.get("action") is None else str(data["action"]),
+            value=None if data.get("value") is None else float(data["value"]),
+            source_row_index=(
+                None
+                if data.get("source_row_index") is None
+                else int(data["source_row_index"])
+            ),
+            source_metric_index=(
+                None
+                if data.get("source_metric_index") is None
+                else int(data["source_metric_index"])
+            ),
+            view_row=None if data.get("view_row") is None else int(data["view_row"]),
+            view_column=(
+                None if data.get("view_column") is None else int(data["view_column"])
+            ),
+            candidates={
+                str(key): float(value)
+                for key, value in data.get("candidates", {}).items()
+            },
+            evidence={
+                str(key): float(value)
+                for key, value in data.get("evidence", {}).items()
+            },
+        )
 
 
 def _grayscale_uint8(frame: Any, spec: VisualFeatureSpec) -> np.ndarray:
@@ -399,6 +560,51 @@ def _grayscale_uint8(frame: Any, spec: VisualFeatureSpec) -> np.ndarray:
     owned = np.array(gray, dtype=np.uint8, order="C", copy=True)
     owned.flags.writeable = False
     return owned
+
+
+def _raw_input_digest(frame: Any, spec: VisualFeatureSpec) -> str:
+    spec.validate()
+    array = np.asarray(frame)
+    if array.dtype.kind not in {"u", "i"}:
+        raise VPMValidationError(
+            "visual frames must contain integer samples in the [0, 255] range"
+        )
+    if array.size == 0:
+        raise VPMValidationError("visual frame cannot be empty")
+    if int(array.min()) < 0 or int(array.max()) > 255:
+        raise VPMValidationError("visual frame samples must be in the [0, 255] range")
+    expected_shape: Tuple[int, ...]
+    if array.ndim == 2:
+        channel_count = 1
+        expected_shape = (spec.input_height, spec.input_width)
+    elif array.ndim == 3 and array.shape[2] in {3, 4}:
+        channel_count = int(array.shape[2])
+        expected_shape = (spec.input_height, spec.input_width, channel_count)
+    else:
+        raise VPMValidationError("visual frame must be HxW grayscale or HxWx3/4 RGB(A)")
+    if tuple(array.shape) != expected_shape:
+        raise VPMValidationError(
+            "visual frame shape must be %s; got %s"
+            % (expected_shape, tuple(array.shape))
+        )
+    contiguous = np.ascontiguousarray(array)
+    descriptor = _canonical_json_bytes(
+        {
+            "shape": [int(value) for value in contiguous.shape],
+            "dtype": str(contiguous.dtype),
+            "channel_count": channel_count,
+            "feature_spec_digest": spec.digest,
+        }
+    )
+    payload = b"".join(
+        (
+            b"zeromodel.visual-raw-input.v1\0",
+            len(descriptor).to_bytes(4, "big"),
+            descriptor,
+            contiguous.tobytes(order="C"),
+        )
+    )
+    return "sha256:" + _sha256(payload)
 
 
 def _features_from_gray(gray: np.ndarray, spec: VisualFeatureSpec) -> np.ndarray:
@@ -446,6 +652,12 @@ def visual_input_digest(frame: Any, spec: VisualFeatureSpec) -> str:
     """Digest the canonical grayscale observation under the feature contract."""
 
     return _input_digest_from_gray(_grayscale_uint8(frame, spec), spec)
+
+
+def visual_raw_input_digest(frame: Any, spec: VisualFeatureSpec) -> str:
+    """Digest the supplied supported frame encoding before grayscale canonicalization."""
+
+    return _raw_input_digest(frame, spec)
 
 
 def visual_feature_digest(features: np.ndarray, spec: VisualFeatureSpec) -> str:
@@ -596,7 +808,9 @@ class VisualSignReader:
         value_source: str = "raw",
         evidence_value_source: str = "raw",
         tie_break: str = "metric_order",
+        acceptance_profile: str = VisualAcceptanceProfile.CALIBRATED_NEAREST,
     ) -> None:
+        self.acceptance_profile = VisualAcceptanceProfile.validate(acceptance_profile)
         visual_index_artifact.validate()
         policy_artifact.validate()
         metadata = visual_index_artifact.source.metadata
@@ -657,7 +871,7 @@ class VisualSignReader:
             for row_id in visual_index_artifact.source.row_ids
         }
         for row_id, digest in input_digest_by_row.items():
-            if not digest.startswith("sha256:") or len(digest) != len("sha256:") + 64:
+            if not _is_sha256_digest(digest):
                 raise VPMValidationError(
                     "invalid visual input digest for row_id %s" % row_id
                 )
@@ -751,7 +965,16 @@ class VisualSignReader:
             False,
         )
 
-    def read(self, frame: Any) -> VisualDecision:
+    def read(
+        self,
+        frame: Any,
+        *,
+        acceptance_profile: Optional[str] = None,
+    ) -> VisualDecision:
+        profile = self.acceptance_profile
+        if acceptance_profile is not None:
+            profile = VisualAcceptanceProfile.validate(acceptance_profile)
+        raw_input_digest = _raw_input_digest(frame, self.feature_spec)
         gray = _grayscale_uint8(frame, self.feature_spec)
         features = _features_from_gray(gray, self.feature_spec)
         input_digest = _input_digest_from_gray(gray, self.feature_spec)
@@ -771,17 +994,57 @@ class VisualSignReader:
 
         distance_ok = nearest <= self.calibration.acceptance_threshold + 1e-12
         margin_ok = margin + 1e-12 >= self.calibration.required_margin
-        if not distance_ok or not margin_ok:
-            reason = (
-                "visual_distance_above_threshold"
-                if not distance_ok
-                else "ambiguous_visual_address"
-            )
+        reason: str
+        execute_policy = False
+        accepted = False
+        if profile == VisualAcceptanceProfile.EVIDENCE_ONLY:
+            accepted = True
+            reason = "evidence_only"
+        elif profile == VisualAcceptanceProfile.CANONICAL_ONLY:
+            if canonical_input_match:
+                accepted = True
+                execute_policy = True
+                reason = "accepted_canonical_input"
+            else:
+                reason = "canonical_input_mismatch"
+        elif profile == VisualAcceptanceProfile.EXACT_CODEWORD:
+            if exact:
+                accepted = True
+                execute_policy = True
+                reason = (
+                    "accepted_canonical_input"
+                    if canonical_input_match
+                    else "accepted_exact_feature_codeword"
+                )
+            else:
+                reason = "feature_not_exact"
+        else:
+            if distance_ok and margin_ok:
+                accepted = True
+                execute_policy = True
+                if canonical_input_match:
+                    reason = "accepted_canonical_input"
+                elif exact:
+                    reason = "accepted_exact_feature_codeword"
+                else:
+                    reason = "accepted_calibrated_nearest"
+            else:
+                reason = (
+                    "visual_distance_above_threshold"
+                    if not distance_ok
+                    else "ambiguous_visual_address"
+                )
+
+        if not execute_policy:
             return VisualDecision(
-                accepted=False,
+                accepted=accepted,
                 reason=reason,
                 input_digest=input_digest,
+                raw_input_digest=raw_input_digest,
+                canonical_input_digest=input_digest,
                 feature_digest=feature_digest,
+                acceptance_profile=profile,
+                policy_executed=False,
                 reader_version=VISUAL_READER_VERSION,
                 visual_index_artifact_id=(self.visual_index_artifact.artifact_id),
                 policy_artifact_id=(self.policy_artifact.artifact_id),
@@ -802,9 +1065,13 @@ class VisualSignReader:
         policy_decision = self.policy_lookup.read(nearest_row_id)
         return VisualDecision(
             accepted=True,
-            reason="accepted",
+            reason=reason,
             input_digest=input_digest,
+            raw_input_digest=raw_input_digest,
+            canonical_input_digest=input_digest,
             feature_digest=feature_digest,
+            acceptance_profile=profile,
+            policy_executed=True,
             reader_version=VISUAL_READER_VERSION,
             visual_index_artifact_id=(self.visual_index_artifact.artifact_id),
             policy_artifact_id=self.policy_artifact.artifact_id,

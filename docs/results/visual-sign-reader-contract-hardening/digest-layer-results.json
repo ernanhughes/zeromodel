@@ -1,0 +1,12 @@
+{
+  "result": "passed",
+  "tested_by": [
+    "packages/vision/tests/test_deterministic_visual_runtime.py::test_raw_canonical_and_feature_digests_are_domain_separated"
+  ],
+  "observations": [
+    "RGB and RGBA encodings with the same visible grayscale samples have distinct raw_input_digest values.",
+    "Those same RGB and RGBA encodings share the canonical_input_digest and feature_digest.",
+    "Different canonical grayscale inputs can share the same quantized feature_digest.",
+    "The raw, canonical, and feature digest domains are separated by independent payload prefixes."
+  ]
+}

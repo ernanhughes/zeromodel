@@ -1,0 +1,98 @@
+{
+  "feature_spec_digest": "57193bb4ee96c8a2846a18e2714a80cf6926a37bc86f3355221035fd8d4cacdf",
+  "fixture_count": 10,
+  "fixture_path": "packages\\vision\\tests\\fixtures\\visual_feature_contract_v1.json",
+  "passed_count": 10,
+  "rows": [
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "grayscale_min"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "grayscale_max"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "rgb_gray"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "rgba_gray"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "pooling_boundary"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "rounding_boundary"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "quantization_boundary"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "non_contiguous_view"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "signed_int_inside_range"
+    },
+    {
+      "checks": {
+        "canonical_input_digest": true,
+        "feature_digest": true,
+        "features": true,
+        "raw_input_digest": true
+      },
+      "name": "larger_uint_inside_range"
+    }
+  ]
+}

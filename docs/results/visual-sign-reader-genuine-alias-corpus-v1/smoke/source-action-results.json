@@ -1,0 +1,89 @@
+{
+  "FIRE": {
+    "count": 204,
+    "summary": {
+      "acceptance_rate": 0.4803921568627451,
+      "accepted_case_count": 98,
+      "accepted_wrong_row_count": 7,
+      "accepted_wrong_row_per_1000_transformations": 34.31372549019608,
+      "action_changing_alias_rate": 0.10638297872340426,
+      "action_equivalent_alias_rate": 0.0425531914893617,
+      "exact_row_accuracy_among_accepted": 0.851063829787234,
+      "executed_case_count": 204,
+      "failed_transformation_count": 0,
+      "generated_case_count": 204,
+      "policy_action_accuracy_among_accepted": 0.8936170212765957,
+      "rejection_rate": 0.5196078431372549,
+      "unique_matched_rows_receiving_aliases": 3,
+      "unique_source_matched_row_pairs": 3,
+      "unique_source_rows_producing_aliases": 1,
+      "wrong_row_accepted_rate": 0.14893617021276595,
+      "wrong_row_different_action_count": 5,
+      "wrong_row_same_action_count": 2,
+      "wrong_row_wilson_interval": {
+        "count": 7,
+        "denominator": 47,
+        "high": 0.2768589657111277,
+        "low": 0.07406626087497505
+      }
+    }
+  },
+  "RIGHT": {
+    "count": 816,
+    "summary": {
+      "acceptance_rate": 0.4950980392156863,
+      "accepted_case_count": 404,
+      "accepted_wrong_row_count": 32,
+      "accepted_wrong_row_per_1000_transformations": 39.21568627450981,
+      "action_changing_alias_rate": 0.06,
+      "action_equivalent_alias_rate": 0.1,
+      "exact_row_accuracy_among_accepted": 0.84,
+      "executed_case_count": 816,
+      "failed_transformation_count": 0,
+      "generated_case_count": 816,
+      "policy_action_accuracy_among_accepted": 0.94,
+      "rejection_rate": 0.5049019607843137,
+      "unique_matched_rows_receiving_aliases": 8,
+      "unique_source_matched_row_pairs": 12,
+      "unique_source_rows_producing_aliases": 4,
+      "wrong_row_accepted_rate": 0.16,
+      "wrong_row_different_action_count": 12,
+      "wrong_row_same_action_count": 20,
+      "wrong_row_wilson_interval": {
+        "count": 32,
+        "denominator": 200,
+        "high": 0.2171418619390124,
+        "low": 0.11567342208544587
+      }
+    }
+  },
+  "STAY": {
+    "count": 612,
+    "summary": {
+      "acceptance_rate": 0.4934640522875817,
+      "accepted_case_count": 302,
+      "accepted_wrong_row_count": 19,
+      "accepted_wrong_row_per_1000_transformations": 31.045751633986928,
+      "action_changing_alias_rate": 0.040268456375838924,
+      "action_equivalent_alias_rate": 0.087248322147651,
+      "exact_row_accuracy_among_accepted": 0.87248322147651,
+      "executed_case_count": 612,
+      "failed_transformation_count": 0,
+      "generated_case_count": 612,
+      "policy_action_accuracy_among_accepted": 0.959731543624161,
+      "rejection_rate": 0.5065359477124183,
+      "unique_matched_rows_receiving_aliases": 5,
+      "unique_source_matched_row_pairs": 7,
+      "unique_source_rows_producing_aliases": 3,
+      "wrong_row_accepted_rate": 0.12751677852348994,
+      "wrong_row_different_action_count": 6,
+      "wrong_row_same_action_count": 13,
+      "wrong_row_wilson_interval": {
+        "count": 19,
+        "denominator": 149,
+        "high": 0.19058206334500705,
+        "low": 0.08317586643327324
+      }
+    }
+  }
+}

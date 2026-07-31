@@ -1,0 +1,29 @@
+{
+  "fast_suite": {
+    "command": "python scripts/run_fast_tests.py",
+    "deselected": 200,
+    "failed": 0,
+    "passed": 1479,
+    "runtime_seconds": 116.72,
+    "skipped": 1
+  },
+  "focused_tests": {
+    "command": "python -m pytest examples/visual_transition_benchmark/tests/test_alias_discovery.py -q",
+    "failed": 0,
+    "passed": 11
+  },
+  "git_diff_check": {
+    "command": "git diff --check",
+    "status": "passed"
+  },
+  "mode": "discovery",
+  "release_version_check": {
+    "command": "python scripts/release_version.py check",
+    "status": "passed"
+  },
+  "ruff": {
+    "command": "python -m ruff check .",
+    "status": "passed"
+  },
+  "status": "passed"
+}

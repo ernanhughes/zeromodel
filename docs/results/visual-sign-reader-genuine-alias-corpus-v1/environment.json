@@ -1,0 +1,22 @@
+{
+  "calibration_digest": "73bc2b2dc6944dd0e19e2c1242768c356b09ca73a8bb7e9a1680114c4591369a",
+  "current_git_sha": "c5b7e9c176b4a11f9bd86969afe8518e2614489b",
+  "feature_spec_digest": "ec280f467544cacc4eb2717df2008f601f83be03b337f0b459498161a5fd64b7",
+  "numpy": "1.26.4",
+  "pillow": "11.0.0",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+  "starting_main_sha": "38aee1edba9bc3e5a291f186407bebb349f9dd4a",
+  "visual_index_artifact_id": "87aa3e39e9c5fadec0853c5ad8fb1d6dd64c2a05c52f2f62f3cb611e06a191c8",
+  "zeromodel_package_paths": {
+    "zeromodel.perception": "C:\\Projects\\zeromodel\\packages\\perception\\src\\zeromodel\\perception\\__init__.py",
+    "zeromodel.video": "C:\\Projects\\zeromodel\\packages\\video\\src\\zeromodel\\video\\__init__.py",
+    "zeromodel.vision": "C:\\Projects\\zeromodel\\packages\\vision\\src\\zeromodel\\vision\\__init__.py"
+  },
+  "zeromodel_versions": {
+    "zeromodel-perception": "1.2.0",
+    "zeromodel-video": "1.2.0",
+    "zeromodel-vision": "1.2.0"
+  }
+}

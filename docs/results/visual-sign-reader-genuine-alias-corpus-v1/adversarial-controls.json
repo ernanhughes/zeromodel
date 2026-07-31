@@ -1,0 +1,47 @@
+{
+  "calibration_digest_mismatch": {
+    "status": "passed"
+  },
+  "duplicate_case_identity_rejected": {
+    "status": "passed"
+  },
+  "feature_spec_mismatch": {
+    "status": "passed"
+  },
+  "matched_row_evaluation_mutates_corpus_membership": {
+    "status": "passed"
+  },
+  "nondeterministic_seeded_transform": {
+    "status": "passed"
+  },
+  "policy_artifact_mismatch": {
+    "status": "passed"
+  },
+  "same_transform_chain_different_output": {
+    "status": "passed"
+  },
+  "source_and_transformed_observations_swapped": {
+    "status": "passed"
+  },
+  "source_row_metadata_changed_after_rendering_no_membership_effect": {
+    "status": "passed"
+  },
+  "target_row_argument_prohibited": {
+    "status": "passed"
+  },
+  "target_row_pixel_copy_not_in_registry": {
+    "status": "passed"
+  },
+  "transformed_observation_file_digest_mismatch": {
+    "status": "passed"
+  },
+  "transition_result_mutates_corpus_membership": {
+    "status": "passed"
+  },
+  "visual_decision_from_another_observation": {
+    "status": "passed"
+  },
+  "visual_decision_from_another_visual_index": {
+    "status": "passed"
+  }
+}

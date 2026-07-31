@@ -1,0 +1,118 @@
+{
+  "FIRE": {
+    "count": 612,
+    "summary": {
+      "acceptance_rate": 0.47875816993464054,
+      "accepted_case_count": 293,
+      "accepted_wrong_row_count": 17,
+      "accepted_wrong_row_per_1000_transformations": 27.77777777777778,
+      "action_changing_alias_rate": 0.09285714285714286,
+      "action_equivalent_alias_rate": 0.02857142857142857,
+      "exact_row_accuracy_among_accepted": 0.8785714285714286,
+      "executed_case_count": 612,
+      "failed_transformation_count": 0,
+      "generated_case_count": 612,
+      "policy_action_accuracy_among_accepted": 0.9071428571428571,
+      "rejection_rate": 0.5212418300653595,
+      "unique_matched_rows_receiving_aliases": 7,
+      "unique_source_matched_row_pairs": 7,
+      "unique_source_rows_producing_aliases": 3,
+      "wrong_row_accepted_rate": 0.12142857142857143,
+      "wrong_row_different_action_count": 13,
+      "wrong_row_same_action_count": 4,
+      "wrong_row_wilson_interval": {
+        "count": 17,
+        "denominator": 140,
+        "high": 0.18586630398493986,
+        "low": 0.07721197100643955
+      }
+    }
+  },
+  "LEFT": {
+    "count": 4488,
+    "summary": {
+      "acceptance_rate": 0.481951871657754,
+      "accepted_case_count": 2163,
+      "accepted_wrong_row_count": 140,
+      "accepted_wrong_row_per_1000_transformations": 31.194295900178254,
+      "action_changing_alias_rate": 0.06340057636887608,
+      "action_equivalent_alias_rate": 0.07108549471661864,
+      "exact_row_accuracy_among_accepted": 0.8655139289145053,
+      "executed_case_count": 4488,
+      "failed_transformation_count": 0,
+      "generated_case_count": 4488,
+      "policy_action_accuracy_among_accepted": 0.9365994236311239,
+      "rejection_rate": 0.518048128342246,
+      "unique_matched_rows_receiving_aliases": 34,
+      "unique_source_matched_row_pairs": 49,
+      "unique_source_rows_producing_aliases": 22,
+      "wrong_row_accepted_rate": 0.1344860710854947,
+      "wrong_row_different_action_count": 66,
+      "wrong_row_same_action_count": 74,
+      "wrong_row_wilson_interval": {
+        "count": 140,
+        "denominator": 1041,
+        "high": 0.15656100137360504,
+        "low": 0.11509893253408013
+      }
+    }
+  },
+  "RIGHT": {
+    "count": 3468,
+    "summary": {
+      "acceptance_rate": 0.4864475201845444,
+      "accepted_case_count": 1687,
+      "accepted_wrong_row_count": 125,
+      "accepted_wrong_row_per_1000_transformations": 36.043829296424455,
+      "action_changing_alias_rate": 0.07926829268292683,
+      "action_equivalent_alias_rate": 0.07317073170731707,
+      "exact_row_accuracy_among_accepted": 0.8475609756097561,
+      "executed_case_count": 3468,
+      "failed_transformation_count": 0,
+      "generated_case_count": 3468,
+      "policy_action_accuracy_among_accepted": 0.9207317073170732,
+      "rejection_rate": 0.5135524798154556,
+      "unique_matched_rows_receiving_aliases": 28,
+      "unique_source_matched_row_pairs": 46,
+      "unique_source_rows_producing_aliases": 17,
+      "wrong_row_accepted_rate": 0.1524390243902439,
+      "wrong_row_different_action_count": 65,
+      "wrong_row_same_action_count": 60,
+      "wrong_row_wilson_interval": {
+        "count": 125,
+        "denominator": 820,
+        "high": 0.178658427547951,
+        "low": 0.12946099735120434
+      }
+    }
+  },
+  "STAY": {
+    "count": 2244,
+    "summary": {
+      "acceptance_rate": 0.4893048128342246,
+      "accepted_case_count": 1098,
+      "accepted_wrong_row_count": 67,
+      "accepted_wrong_row_per_1000_transformations": 29.857397504456326,
+      "action_changing_alias_rate": 0.0521415270018622,
+      "action_equivalent_alias_rate": 0.07262569832402235,
+      "exact_row_accuracy_among_accepted": 0.8752327746741154,
+      "executed_case_count": 2244,
+      "failed_transformation_count": 0,
+      "generated_case_count": 2244,
+      "policy_action_accuracy_among_accepted": 0.9478584729981379,
+      "rejection_rate": 0.5106951871657754,
+      "unique_matched_rows_receiving_aliases": 19,
+      "unique_source_matched_row_pairs": 23,
+      "unique_source_rows_producing_aliases": 11,
+      "wrong_row_accepted_rate": 0.12476722532588454,
+      "wrong_row_different_action_count": 28,
+      "wrong_row_same_action_count": 39,
+      "wrong_row_wilson_interval": {
+        "count": 67,
+        "denominator": 537,
+        "high": 0.15541025233295808,
+        "low": 0.09945475805085857
+      }
+    }
+  }
+}

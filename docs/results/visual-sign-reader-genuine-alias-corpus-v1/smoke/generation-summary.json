@@ -1,0 +1,29 @@
+{
+  "acceptance_rate": 0.49264705882352944,
+  "accepted_case_count": 804,
+  "accepted_wrong_row_count": 58,
+  "accepted_wrong_row_per_1000_transformations": 35.53921568627451,
+  "action_changing_alias_rate": 0.05808080808080808,
+  "action_equivalent_alias_rate": 0.08838383838383838,
+  "duplicate_count": 256,
+  "exact_row_accuracy_among_accepted": 0.8535353535353535,
+  "executed_case_count": 1632,
+  "failed_transformation_count": 0,
+  "generated_case_count": 1632,
+  "policy_action_accuracy_among_accepted": 0.9419191919191919,
+  "rejection_rate": 0.5073529411764706,
+  "runtime_seconds": 1.146353,
+  "unique_matched_rows_receiving_aliases": 12,
+  "unique_source_matched_row_pairs": 22,
+  "unique_source_rows_producing_aliases": 8,
+  "unique_transformed_observation_count": 1376,
+  "wrong_row_accepted_rate": 0.14646464646464646,
+  "wrong_row_different_action_count": 23,
+  "wrong_row_same_action_count": 35,
+  "wrong_row_wilson_interval": {
+    "count": 58,
+    "denominator": 396,
+    "high": 0.18468426403876537,
+    "low": 0.11503842614654797
+  }
+}

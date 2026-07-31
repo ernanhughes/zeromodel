@@ -1,0 +1,2584 @@
+{
+  "case_count": 198,
+  "passed": true,
+  "rows": [
+    {
+      "case_id": "sha256:d663ef769f9e6851592331d5f263cca651b746c766f41088137a4f61f0153a2c",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7a61faa6bfd6da92e7eff9f26321c1588c7852eeeb26349b54cd9b9a43f7e0a7",
+      "dtype": "uint8",
+      "file_digest": "sha256:b72ae03d49f9895be2bed98018348a65ba27bb7d25d06baf003871373dc94634",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d663ef769f9e6851592331d5f263cca651b746c766f41088137a4f61f0153a2c.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:57aaa43f5c9c1d08b5e9a4519564d45969367f09a882d8e6a00d04301db23b0e",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7a61faa6bfd6da92e7eff9f26321c1588c7852eeeb26349b54cd9b9a43f7e0a7",
+      "dtype": "uint8",
+      "file_digest": "sha256:b72ae03d49f9895be2bed98018348a65ba27bb7d25d06baf003871373dc94634",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\57aaa43f5c9c1d08b5e9a4519564d45969367f09a882d8e6a00d04301db23b0e.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4bce563c881aa2d25351bb1f254dc20f4458553d12cdf184e19809c5d62e0c31",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:159c86a759736521803a3749bdb00ab822e643871ab15aea07c68fe386d78cc4",
+      "dtype": "uint8",
+      "file_digest": "sha256:c9f50db898d1d33d08fdbfb52478b383bc41a1b5d5dd4a2493c2e2f5624828ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4bce563c881aa2d25351bb1f254dc20f4458553d12cdf184e19809c5d62e0c31.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:aad7daeedeee566ba95b6b885bbb02b87927c3a9117a6a9ad1626cbb2e9f7ace",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:159c86a759736521803a3749bdb00ab822e643871ab15aea07c68fe386d78cc4",
+      "dtype": "uint8",
+      "file_digest": "sha256:c9f50db898d1d33d08fdbfb52478b383bc41a1b5d5dd4a2493c2e2f5624828ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\aad7daeedeee566ba95b6b885bbb02b87927c3a9117a6a9ad1626cbb2e9f7ace.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4feee64ccdeb86234995937b71e8c9fd6a3cf70152bd2a0070877df285df154a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:d8c1a21278037f4fd2d9f376a46d08e47a6d6abdbc82c4b677bd1ca39ab64e79",
+      "dtype": "uint8",
+      "file_digest": "sha256:f6b0304e464bc7164fcd886316d40b0452761133a7a8d6aeeef8ed92a1c7c33a",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4feee64ccdeb86234995937b71e8c9fd6a3cf70152bd2a0070877df285df154a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:949f1cb1611f6b4df5e35704ecfd6ba4a53043e7332da31c721d116f51718979",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:d8c1a21278037f4fd2d9f376a46d08e47a6d6abdbc82c4b677bd1ca39ab64e79",
+      "dtype": "uint8",
+      "file_digest": "sha256:f6b0304e464bc7164fcd886316d40b0452761133a7a8d6aeeef8ed92a1c7c33a",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\949f1cb1611f6b4df5e35704ecfd6ba4a53043e7332da31c721d116f51718979.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:3825e1aafdf8653820ce8eb1c44bb01437da6e7c46c2a649448a771003e80fca",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\3825e1aafdf8653820ce8eb1c44bb01437da6e7c46c2a649448a771003e80fca.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:10f3127f643ab8321fc78078d3b6c4a5658abc588d3513a43cbd2e60706a1182",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\10f3127f643ab8321fc78078d3b6c4a5658abc588d3513a43cbd2e60706a1182.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a8b901a0a2338ba9526c9b298b37423b1852d85422658f97676ef1921cbc38fa",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a8b901a0a2338ba9526c9b298b37423b1852d85422658f97676ef1921cbc38fa.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f011f5ec342ff4265b0473aef2eeede883f5dedf02c0aade100b89ea0af6e5dd",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:d8c1a21278037f4fd2d9f376a46d08e47a6d6abdbc82c4b677bd1ca39ab64e79",
+      "dtype": "uint8",
+      "file_digest": "sha256:f6b0304e464bc7164fcd886316d40b0452761133a7a8d6aeeef8ed92a1c7c33a",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f011f5ec342ff4265b0473aef2eeede883f5dedf02c0aade100b89ea0af6e5dd.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:73eebf40e2ff1678f99b9af6e32d5c33ccb011eaa123e5d85fe9d0d631c65ba2",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:d8c1a21278037f4fd2d9f376a46d08e47a6d6abdbc82c4b677bd1ca39ab64e79",
+      "dtype": "uint8",
+      "file_digest": "sha256:f6b0304e464bc7164fcd886316d40b0452761133a7a8d6aeeef8ed92a1c7c33a",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\73eebf40e2ff1678f99b9af6e32d5c33ccb011eaa123e5d85fe9d0d631c65ba2.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:bddfd590b48a6e77d56eb00b3d08bcf901ddcb255fd7ef652b6156c9e3b60ebd",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:79ffd4f8b37e175292bead1a0f19ed858e15d12380ad7f0e336ba00f17bd02f6",
+      "dtype": "uint8",
+      "file_digest": "sha256:4e7c5323d871019c33f6a0bb3ec34c25e8604c64e0c94d61f4fbeba12526157b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\bddfd590b48a6e77d56eb00b3d08bcf901ddcb255fd7ef652b6156c9e3b60ebd.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:9040455e83fb991af5554b229f517f88e2cf1486c88f53f8bcc92af113325176",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:79ffd4f8b37e175292bead1a0f19ed858e15d12380ad7f0e336ba00f17bd02f6",
+      "dtype": "uint8",
+      "file_digest": "sha256:4e7c5323d871019c33f6a0bb3ec34c25e8604c64e0c94d61f4fbeba12526157b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\9040455e83fb991af5554b229f517f88e2cf1486c88f53f8bcc92af113325176.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:25d499d8d00df12c860c7fff6f4a81b92d373cf8a071e878506ece2f6f78dc6f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:371bf1782a99696e694f41bf32cc8305a47c6d8125a443047d74cf39f1c34480",
+      "dtype": "uint8",
+      "file_digest": "sha256:5cb051125d23739e35a6e0653c66dccbb0afcf6bf5a13e741649675d1517686c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\25d499d8d00df12c860c7fff6f4a81b92d373cf8a071e878506ece2f6f78dc6f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:9e1ef7a1c753fc3f60ff349b3dc826a995b9e4f5efad7dd9c3a5c180e0386e21",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:371bf1782a99696e694f41bf32cc8305a47c6d8125a443047d74cf39f1c34480",
+      "dtype": "uint8",
+      "file_digest": "sha256:5cb051125d23739e35a6e0653c66dccbb0afcf6bf5a13e741649675d1517686c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\9e1ef7a1c753fc3f60ff349b3dc826a995b9e4f5efad7dd9c3a5c180e0386e21.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:bd162943ac2a493f2d1f5aa238093060ad7c1cc1351843c91dadff58ac227e9e",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\bd162943ac2a493f2d1f5aa238093060ad7c1cc1351843c91dadff58ac227e9e.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d3356b7867de07439541a5363364a23bc89a939e1818a6d4f793aedf64296e60",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d3356b7867de07439541a5363364a23bc89a939e1818a6d4f793aedf64296e60.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:23de6ed81b0fc92d0b69423274457398d6a4e951209a752b4b4f9dd8700a4827",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\23de6ed81b0fc92d0b69423274457398d6a4e951209a752b4b4f9dd8700a4827.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2ba35900feb2bc75ff680fb6be1fade011020b56765c3720659f951b93b8cee8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:747d8f8373d544724d4318ba1f781248d1ee970e3c08651559d254ec7f3ecfa9",
+      "dtype": "uint8",
+      "file_digest": "sha256:e993d34d984744bdb2907cecc402c345fb1dda3a64b427fdacfd58c314778acb",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2ba35900feb2bc75ff680fb6be1fade011020b56765c3720659f951b93b8cee8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8583361562628efcb70ad04fb32bfd34cc26ee7bf4379fdd5fa87b00a21c91c8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:747d8f8373d544724d4318ba1f781248d1ee970e3c08651559d254ec7f3ecfa9",
+      "dtype": "uint8",
+      "file_digest": "sha256:e993d34d984744bdb2907cecc402c345fb1dda3a64b427fdacfd58c314778acb",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8583361562628efcb70ad04fb32bfd34cc26ee7bf4379fdd5fa87b00a21c91c8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:b2b580ae20b7b7f96a932c21d1afbd6260a1f1f6d53e74d88524a3debc19c62b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ee483b315a8259754c58f14c09a8802c8f29b4f6ce668cae34b8c2e89e545d91",
+      "dtype": "uint8",
+      "file_digest": "sha256:c3a9a5a8bef79de525a61253dcf33c18e2b6e72375cdd649fb6a60633640f951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\b2b580ae20b7b7f96a932c21d1afbd6260a1f1f6d53e74d88524a3debc19c62b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c9920796af894f1231d8f7e4b7b46553ad94e9818177a983dd09e4d0ea298df3",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ee483b315a8259754c58f14c09a8802c8f29b4f6ce668cae34b8c2e89e545d91",
+      "dtype": "uint8",
+      "file_digest": "sha256:c3a9a5a8bef79de525a61253dcf33c18e2b6e72375cdd649fb6a60633640f951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c9920796af894f1231d8f7e4b7b46553ad94e9818177a983dd09e4d0ea298df3.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f273f30d1b92d57a6ea4d8d370d57751ec8137b4df57573a0e64137b97a48398",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f273f30d1b92d57a6ea4d8d370d57751ec8137b4df57573a0e64137b97a48398.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:41168cbf2da1fe994b33fb8823d91dc54215cc79bd5995c39b189dfc5fa81d60",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\41168cbf2da1fe994b33fb8823d91dc54215cc79bd5995c39b189dfc5fa81d60.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a3165d43f61143c0edf9050365ef01ad0189598445eb74fe68c8f72dabec556b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a3165d43f61143c0edf9050365ef01ad0189598445eb74fe68c8f72dabec556b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ad255f22240f98b1886d5d925375b2025733f12f1a79643b9fc9ece7d157c381",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ad6b23360300f951a1671c6b409cbf3e258b116640bfa72248f1bad9ced0e847",
+      "dtype": "uint8",
+      "file_digest": "sha256:7947d2cb691f62e8791222c58f8451866716902306a58ee287f6cf36bda603cf",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ad255f22240f98b1886d5d925375b2025733f12f1a79643b9fc9ece7d157c381.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a56e867837d42f2686cdeb3568652897ab3997644d1878c5bd66e789c9e6b5e6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ad6b23360300f951a1671c6b409cbf3e258b116640bfa72248f1bad9ced0e847",
+      "dtype": "uint8",
+      "file_digest": "sha256:7947d2cb691f62e8791222c58f8451866716902306a58ee287f6cf36bda603cf",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a56e867837d42f2686cdeb3568652897ab3997644d1878c5bd66e789c9e6b5e6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c046ec67442d566311439aba1ca70df7daf5d9f87f12ffefb2a27bb1056f0e17",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:a3401cda4503378d26195c9665a24b21a4453d760dd53c7a8bd1e01c82665406",
+      "dtype": "uint8",
+      "file_digest": "sha256:0aaaae1236aa46554a6174ef7891000b9470513736bed4bfa7380d23d4b630b6",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c046ec67442d566311439aba1ca70df7daf5d9f87f12ffefb2a27bb1056f0e17.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:909101c57725075a45b9230da9767b370d47481e9fc3cbd95b809ea139849e03",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:a3401cda4503378d26195c9665a24b21a4453d760dd53c7a8bd1e01c82665406",
+      "dtype": "uint8",
+      "file_digest": "sha256:0aaaae1236aa46554a6174ef7891000b9470513736bed4bfa7380d23d4b630b6",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\909101c57725075a45b9230da9767b370d47481e9fc3cbd95b809ea139849e03.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:019f552c73a39512787f274be8669e277d63ca28bef6dfb3f322707ced5b523d",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\019f552c73a39512787f274be8669e277d63ca28bef6dfb3f322707ced5b523d.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:20c64bc546bf2a661cad8fd853ec3b88858b9527ad6a6eff0f3264dc67de4a0b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\20c64bc546bf2a661cad8fd853ec3b88858b9527ad6a6eff0f3264dc67de4a0b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:e3dbef3a027c74b2a91b1cedc5433887cc8d542a1daa76d69a30004fc5be453b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\e3dbef3a027c74b2a91b1cedc5433887cc8d542a1daa76d69a30004fc5be453b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:85fc0233cc2e1f4e85d945136ae33461d135ca4fac34412b46277704d7281cd6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:a3401cda4503378d26195c9665a24b21a4453d760dd53c7a8bd1e01c82665406",
+      "dtype": "uint8",
+      "file_digest": "sha256:0aaaae1236aa46554a6174ef7891000b9470513736bed4bfa7380d23d4b630b6",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\85fc0233cc2e1f4e85d945136ae33461d135ca4fac34412b46277704d7281cd6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:9a179e6a3e76755d26f91ded9b37a291095a7c101a89cb4eaafcbccfceb33d8b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:a3401cda4503378d26195c9665a24b21a4453d760dd53c7a8bd1e01c82665406",
+      "dtype": "uint8",
+      "file_digest": "sha256:0aaaae1236aa46554a6174ef7891000b9470513736bed4bfa7380d23d4b630b6",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\9a179e6a3e76755d26f91ded9b37a291095a7c101a89cb4eaafcbccfceb33d8b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4a1d2b748573b618a38c30eb0aa071f02315af90d19a532146b3e212ac7dab18",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f596aefad9a6953f1edf1347c23cab441c9b71dd0ffc0ad4e56d3d45648f3af4",
+      "dtype": "uint8",
+      "file_digest": "sha256:a324cd1cc821e96ddd853bf75c2751c697f3ae28c352c89643e97113b894f86c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4a1d2b748573b618a38c30eb0aa071f02315af90d19a532146b3e212ac7dab18.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:50c4e3947ef3abcb8d79c7e8be48f49e8eee5043cd913eef7c98912dce461d43",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f596aefad9a6953f1edf1347c23cab441c9b71dd0ffc0ad4e56d3d45648f3af4",
+      "dtype": "uint8",
+      "file_digest": "sha256:a324cd1cc821e96ddd853bf75c2751c697f3ae28c352c89643e97113b894f86c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\50c4e3947ef3abcb8d79c7e8be48f49e8eee5043cd913eef7c98912dce461d43.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4bec0aea5a280481af4342cbaf40503d99d38c20e9cae0f36c5ff65786f10e88",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4bec0aea5a280481af4342cbaf40503d99d38c20e9cae0f36c5ff65786f10e88.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:09f27454d589e685425c9cf3d4d0d728662318cadf40abba442c8efe2f0cd413",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\09f27454d589e685425c9cf3d4d0d728662318cadf40abba442c8efe2f0cd413.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:aab57059d189ed8503538f558a5d633be80f08eaa8a78709a888205d23079a59",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:76d6b55ab164806fa6d621e669de37b60b9cbd8f8fff2bbb610b6b0e034461f0",
+      "dtype": "uint8",
+      "file_digest": "sha256:2edf3277e883e18632f3c7e450946a8bf579719fbc461eee3fff7b14784f6f88",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\aab57059d189ed8503538f558a5d633be80f08eaa8a78709a888205d23079a59.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:e88110571de8d30639b8d504e120232be159a7ed204f9fced18ef92fa6b998b5",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:159c86a759736521803a3749bdb00ab822e643871ab15aea07c68fe386d78cc4",
+      "dtype": "uint8",
+      "file_digest": "sha256:c9f50db898d1d33d08fdbfb52478b383bc41a1b5d5dd4a2493c2e2f5624828ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\e88110571de8d30639b8d504e120232be159a7ed204f9fced18ef92fa6b998b5.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:6293c7c4c35455fa296a23e84f95a4d65de8bb3a359df7738d28ccc05011012a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:159c86a759736521803a3749bdb00ab822e643871ab15aea07c68fe386d78cc4",
+      "dtype": "uint8",
+      "file_digest": "sha256:c9f50db898d1d33d08fdbfb52478b383bc41a1b5d5dd4a2493c2e2f5624828ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\6293c7c4c35455fa296a23e84f95a4d65de8bb3a359df7738d28ccc05011012a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8b124b25865d55a8cee5454c938fc6176edf085f2a730bb8ae3ef7012ac39d99",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:14533d08f1abea8bef04a3d9e51991325527491fbfac27ecefcaa402b28e52f2",
+      "dtype": "uint8",
+      "file_digest": "sha256:6fb16d10b5959903e1a7c4a763986571242ec60a3a096961b3055e2a05570792",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8b124b25865d55a8cee5454c938fc6176edf085f2a730bb8ae3ef7012ac39d99.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c1d15e10dde7d591690e8582ca7682a0c1ad8f5dc1a304161d7e14a0a345ba02",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:14533d08f1abea8bef04a3d9e51991325527491fbfac27ecefcaa402b28e52f2",
+      "dtype": "uint8",
+      "file_digest": "sha256:6fb16d10b5959903e1a7c4a763986571242ec60a3a096961b3055e2a05570792",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c1d15e10dde7d591690e8582ca7682a0c1ad8f5dc1a304161d7e14a0a345ba02.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:978c2bcc55bc1cf03b395cf289a9b83b714df97c2f9f8d8f2609404087f50b5b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\978c2bcc55bc1cf03b395cf289a9b83b714df97c2f9f8d8f2609404087f50b5b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7f01da764b80ec3f910a45c6184053fa5b0c3d29194d6ddfa5618b50b408ff6a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7f01da764b80ec3f910a45c6184053fa5b0c3d29194d6ddfa5618b50b408ff6a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:0558051acc7dae24ac01a7959370416534d62895114fe60f08c5fefd77079eb6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6170d693f571210bb02918cb4dba8be19dcc91ad842383e3c531fd7f2210bb2f",
+      "dtype": "uint8",
+      "file_digest": "sha256:ef4050c5a3a584961478afb2f20be54c6c8052baec7c552ecb7d11777307ad78",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\0558051acc7dae24ac01a7959370416534d62895114fe60f08c5fefd77079eb6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7ae2b960c17a3db565578bb9bda15b12d8d76a33bc2578359c628777fad31177",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:14533d08f1abea8bef04a3d9e51991325527491fbfac27ecefcaa402b28e52f2",
+      "dtype": "uint8",
+      "file_digest": "sha256:6fb16d10b5959903e1a7c4a763986571242ec60a3a096961b3055e2a05570792",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7ae2b960c17a3db565578bb9bda15b12d8d76a33bc2578359c628777fad31177.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:fb73d7b5fb54f89254a9bafed04dc679d1fb3909b4c44af1d87a2fd1312c8d14",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:14533d08f1abea8bef04a3d9e51991325527491fbfac27ecefcaa402b28e52f2",
+      "dtype": "uint8",
+      "file_digest": "sha256:6fb16d10b5959903e1a7c4a763986571242ec60a3a096961b3055e2a05570792",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\fb73d7b5fb54f89254a9bafed04dc679d1fb3909b4c44af1d87a2fd1312c8d14.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a5369f8f517907960727eb44ff3a33ebd4afae9ffd570d1f9233792457783fd0",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:159c86a759736521803a3749bdb00ab822e643871ab15aea07c68fe386d78cc4",
+      "dtype": "uint8",
+      "file_digest": "sha256:c9f50db898d1d33d08fdbfb52478b383bc41a1b5d5dd4a2493c2e2f5624828ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a5369f8f517907960727eb44ff3a33ebd4afae9ffd570d1f9233792457783fd0.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a01a6c911c3a8aea7c1a9af8e49da8e5d1ece9270b254697c6735255308dfc26",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:159c86a759736521803a3749bdb00ab822e643871ab15aea07c68fe386d78cc4",
+      "dtype": "uint8",
+      "file_digest": "sha256:c9f50db898d1d33d08fdbfb52478b383bc41a1b5d5dd4a2493c2e2f5624828ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a01a6c911c3a8aea7c1a9af8e49da8e5d1ece9270b254697c6735255308dfc26.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:440f2219f3640e76860fcfbe7852e6b57191653300aad44d3c78c1d5f4d9474e",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:80bc7c3976e7773f99b84746278c037e2abd9d657859285352f7c9e84800016b",
+      "dtype": "uint8",
+      "file_digest": "sha256:bce93b02fd702d4fe2ae87f210df4d45e5f1f38ac58e867d50ccba26ac0a4525",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\440f2219f3640e76860fcfbe7852e6b57191653300aad44d3c78c1d5f4d9474e.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7353b7fdb97bda3666a980475df82ccc8f4af35033350bafa530d981c2e888b6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:80bc7c3976e7773f99b84746278c037e2abd9d657859285352f7c9e84800016b",
+      "dtype": "uint8",
+      "file_digest": "sha256:bce93b02fd702d4fe2ae87f210df4d45e5f1f38ac58e867d50ccba26ac0a4525",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7353b7fdb97bda3666a980475df82ccc8f4af35033350bafa530d981c2e888b6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:aee8473b87b93c41cfd3ea50e34f2b94504bf897d3aabe58d078f7d7848bb339",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\aee8473b87b93c41cfd3ea50e34f2b94504bf897d3aabe58d078f7d7848bb339.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:1d94d3995aa5c79a00091fd9aee26a6b242ad315d7716c5fb174bdca726b0302",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\1d94d3995aa5c79a00091fd9aee26a6b242ad315d7716c5fb174bdca726b0302.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f77310d31f889a6149c7bc7d122df1e3ef654994966338ba4396eae4a6434ff1",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e7019fee1dc6074448c4ea337c9a77182e25ff6ad43b06fe9ff47866bbca332e",
+      "dtype": "uint8",
+      "file_digest": "sha256:c583b5c2aa686fcc2ac29df771cd7943af622ab3050e933829952cea174b9922",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f77310d31f889a6149c7bc7d122df1e3ef654994966338ba4396eae4a6434ff1.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:9d8872baf78978001eb19a5ec631f972f0e4f25cdbc461778a78d9aa7bd7067d",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e7019fee1dc6074448c4ea337c9a77182e25ff6ad43b06fe9ff47866bbca332e",
+      "dtype": "uint8",
+      "file_digest": "sha256:c583b5c2aa686fcc2ac29df771cd7943af622ab3050e933829952cea174b9922",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\9d8872baf78978001eb19a5ec631f972f0e4f25cdbc461778a78d9aa7bd7067d.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:5b01d5340463725e7c3ebba00d79e914dc46194e06f438065687c37179833107",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\5b01d5340463725e7c3ebba00d79e914dc46194e06f438065687c37179833107.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:21afc38fa8aa3d8047bba6845bd8c37567b817a54f392a6c21a146e9f349201f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\21afc38fa8aa3d8047bba6845bd8c37567b817a54f392a6c21a146e9f349201f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:1c81b0feebc0dd0ce0afe1ba32e64682bf4224ea55eef71e0835ac800b7fb0ae",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\1c81b0feebc0dd0ce0afe1ba32e64682bf4224ea55eef71e0835ac800b7fb0ae.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:70d5dbd26766e3fda8850358501739b848e9d6bf5f8fb94c3e15c9ef20aea5f3",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7807c8df70a1054913d660c2a4ca0ba6ad8f2d5c08bb32c507459d1bd2f63798",
+      "dtype": "uint8",
+      "file_digest": "sha256:535aa5bbc7a6f0e31ea09e389f382b7e2832e595f7ddf023f7e76fc1603dca86",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\70d5dbd26766e3fda8850358501739b848e9d6bf5f8fb94c3e15c9ef20aea5f3.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:16c02796e7d94939ce26d409241ace6d4149331879b8b5a1fbe13f93c9596865",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7807c8df70a1054913d660c2a4ca0ba6ad8f2d5c08bb32c507459d1bd2f63798",
+      "dtype": "uint8",
+      "file_digest": "sha256:535aa5bbc7a6f0e31ea09e389f382b7e2832e595f7ddf023f7e76fc1603dca86",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\16c02796e7d94939ce26d409241ace6d4149331879b8b5a1fbe13f93c9596865.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:0c61d33e21a23ed87f1a37be9e5059aa61cfbc182798ea966d8abcd614376ba4",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6f4309de691e34e164134935013231632d70aebbe977d14c7a76da12f5d5a7c0",
+      "dtype": "uint8",
+      "file_digest": "sha256:903829dd97c0e53c72b330892a864ea49d41c563ce2a28f549833604eadc3c51",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\0c61d33e21a23ed87f1a37be9e5059aa61cfbc182798ea966d8abcd614376ba4.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:30dbb94600548bdae79642db24407fe8f2cfc8a4345b649c8090a18fafc3c21b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6f4309de691e34e164134935013231632d70aebbe977d14c7a76da12f5d5a7c0",
+      "dtype": "uint8",
+      "file_digest": "sha256:903829dd97c0e53c72b330892a864ea49d41c563ce2a28f549833604eadc3c51",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\30dbb94600548bdae79642db24407fe8f2cfc8a4345b649c8090a18fafc3c21b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ca041a45384a0eb6e8fda5286bc01f43008ce16f2f953651dc664016d3254e59",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ca041a45384a0eb6e8fda5286bc01f43008ce16f2f953651dc664016d3254e59.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:fc0c2aae64b0f16abe8bb818caeaa694d7d939b05b754521870a8218938da678",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\fc0c2aae64b0f16abe8bb818caeaa694d7d939b05b754521870a8218938da678.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8f17eb9630f5f0ab3c8c64c5d900e27263d686a050148fb26b192d16a39c6ee1",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8f17eb9630f5f0ab3c8c64c5d900e27263d686a050148fb26b192d16a39c6ee1.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:cfc34caf6a906b6839513dddfdc590e113069f28b5db26ca8a98ea7756bbe983",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c4e5385675c453ecaee125d5338ff4119e72759d9dcf5b6ac75fd59a2cd1e3c9",
+      "dtype": "uint8",
+      "file_digest": "sha256:b364a916af162c27d3746efd4e3036715889af4fe4c53ac5304eef50473e2300",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\cfc34caf6a906b6839513dddfdc590e113069f28b5db26ca8a98ea7756bbe983.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:b9c93c078b29103b4ae880b5742fd9ca4b9191cf510e76937653cebc68551880",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c4e5385675c453ecaee125d5338ff4119e72759d9dcf5b6ac75fd59a2cd1e3c9",
+      "dtype": "uint8",
+      "file_digest": "sha256:b364a916af162c27d3746efd4e3036715889af4fe4c53ac5304eef50473e2300",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\b9c93c078b29103b4ae880b5742fd9ca4b9191cf510e76937653cebc68551880.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c784ef0f22929aa9a9ecbdf71cffd14e878412b6d39c7a32e3ac83c720489441",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:8bb714ae6dd58b70394e1f4974d6e2f95d620b8884e0805cd238429b44d03773",
+      "dtype": "uint8",
+      "file_digest": "sha256:9b31500b2118cb7761e9ead48c024ed356962019d4180888651ef5de2f9e9c76",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c784ef0f22929aa9a9ecbdf71cffd14e878412b6d39c7a32e3ac83c720489441.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7593ffb5ddaaa89d4f92015f4f878eb9241136ee5cf666b127e2c4144f8d4656",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:8bb714ae6dd58b70394e1f4974d6e2f95d620b8884e0805cd238429b44d03773",
+      "dtype": "uint8",
+      "file_digest": "sha256:9b31500b2118cb7761e9ead48c024ed356962019d4180888651ef5de2f9e9c76",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7593ffb5ddaaa89d4f92015f4f878eb9241136ee5cf666b127e2c4144f8d4656.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8b1d22f12fefce00abd434f9fbb9fb546914bbe0fc84a9be7cab3d9462deaa3a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8b1d22f12fefce00abd434f9fbb9fb546914bbe0fc84a9be7cab3d9462deaa3a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:280095a23a432d658905f5c56d4d55afb30fbe643a9280f269b232cdf0e620b6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\280095a23a432d658905f5c56d4d55afb30fbe643a9280f269b232cdf0e620b6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4a4746b9b167a907317736991d976b83c214b88b46f3b42cdceb924075f345f5",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4a4746b9b167a907317736991d976b83c214b88b46f3b42cdceb924075f345f5.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ec62e0c79fbe8913f36ce494399a9c5f187f192edb354b12288b19110eb6b182",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:8bb714ae6dd58b70394e1f4974d6e2f95d620b8884e0805cd238429b44d03773",
+      "dtype": "uint8",
+      "file_digest": "sha256:9b31500b2118cb7761e9ead48c024ed356962019d4180888651ef5de2f9e9c76",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ec62e0c79fbe8913f36ce494399a9c5f187f192edb354b12288b19110eb6b182.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c792791e9a458632f5d688f22e22749a76b8ae0bc68c050ea07cb448c2c93610",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:8bb714ae6dd58b70394e1f4974d6e2f95d620b8884e0805cd238429b44d03773",
+      "dtype": "uint8",
+      "file_digest": "sha256:9b31500b2118cb7761e9ead48c024ed356962019d4180888651ef5de2f9e9c76",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c792791e9a458632f5d688f22e22749a76b8ae0bc68c050ea07cb448c2c93610.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a77e42fc7bee2f0bf1c4cacf444b13c4017d90cf50188812e33660b83b03a52a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c4e5385675c453ecaee125d5338ff4119e72759d9dcf5b6ac75fd59a2cd1e3c9",
+      "dtype": "uint8",
+      "file_digest": "sha256:b364a916af162c27d3746efd4e3036715889af4fe4c53ac5304eef50473e2300",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a77e42fc7bee2f0bf1c4cacf444b13c4017d90cf50188812e33660b83b03a52a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:aae10f3dcc77718035ec7d60ec5f37e98d44fa6765bece01df8f5659563f05f0",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c4e5385675c453ecaee125d5338ff4119e72759d9dcf5b6ac75fd59a2cd1e3c9",
+      "dtype": "uint8",
+      "file_digest": "sha256:b364a916af162c27d3746efd4e3036715889af4fe4c53ac5304eef50473e2300",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\aae10f3dcc77718035ec7d60ec5f37e98d44fa6765bece01df8f5659563f05f0.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:01d06ddfe1f98dfd67c842694adf3587e410cb1c939f5a1a0d9f0f649917082f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:8e71b4d2fc55a851841686c8bae14a772c3fca0b3dfbdd56ecfe6cbbc8380330",
+      "dtype": "uint8",
+      "file_digest": "sha256:6e93ec1f91c2fb4cdef900b75c9144337142e2504b7dcd6776e9d3ff1de9f002",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\01d06ddfe1f98dfd67c842694adf3587e410cb1c939f5a1a0d9f0f649917082f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f46fd4a5a7473105752751efdcfc4b50aca755c07710b9aa70be6d7fe5c5e7d8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:8e71b4d2fc55a851841686c8bae14a772c3fca0b3dfbdd56ecfe6cbbc8380330",
+      "dtype": "uint8",
+      "file_digest": "sha256:6e93ec1f91c2fb4cdef900b75c9144337142e2504b7dcd6776e9d3ff1de9f002",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f46fd4a5a7473105752751efdcfc4b50aca755c07710b9aa70be6d7fe5c5e7d8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:1df2ec86011e6141f6346c0ba9c6e5198c16470a7898a4f6019bd789df9af1e2",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\1df2ec86011e6141f6346c0ba9c6e5198c16470a7898a4f6019bd789df9af1e2.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d712a1912d930c781d305f14c06d0000e0a23e5e2dab7408ad3257c76fb0ad52",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d712a1912d930c781d305f14c06d0000e0a23e5e2dab7408ad3257c76fb0ad52.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:aa4f00a86349a3da30eaa0c4b5634adb6b1afcd3a61524aa7cbf74112d7caef7",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\aa4f00a86349a3da30eaa0c4b5634adb6b1afcd3a61524aa7cbf74112d7caef7.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:78548c1318e32e80b73b442c3e908b3ff82367954afc70d8b077513452b930a8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:dea5d6e6b4eb68a8c1eb36d840f59663029748a460f417f136dafa4bea1e7e55",
+      "dtype": "uint8",
+      "file_digest": "sha256:3a2acaa6f95398a18c76b626a4d96168c657e914b7539b8cb19f38894080ceba",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\78548c1318e32e80b73b442c3e908b3ff82367954afc70d8b077513452b930a8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:6d462c6ed2f663cf78a2327bef3c9e6d343927a3ae97549f44a2039f2eb7d2c9",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:dea5d6e6b4eb68a8c1eb36d840f59663029748a460f417f136dafa4bea1e7e55",
+      "dtype": "uint8",
+      "file_digest": "sha256:3a2acaa6f95398a18c76b626a4d96168c657e914b7539b8cb19f38894080ceba",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\6d462c6ed2f663cf78a2327bef3c9e6d343927a3ae97549f44a2039f2eb7d2c9.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:277b5b3e855421786b4fecacc65df2d71c417fbc207bb68e1a56206dd8b33b10",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:20ede9afb7149a0bc31d9ac744644a662178e43ab39fd2c0b739c10ad03cd30e",
+      "dtype": "uint8",
+      "file_digest": "sha256:72759ce24620bd5072c97b43e7103097106211b10b7be487586e7c88c454cedd",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\277b5b3e855421786b4fecacc65df2d71c417fbc207bb68e1a56206dd8b33b10.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:de37b4bd9955be29cf1b1fc8ae81361d37b25d40c380e137a753c049ca333d1b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:20ede9afb7149a0bc31d9ac744644a662178e43ab39fd2c0b739c10ad03cd30e",
+      "dtype": "uint8",
+      "file_digest": "sha256:72759ce24620bd5072c97b43e7103097106211b10b7be487586e7c88c454cedd",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\de37b4bd9955be29cf1b1fc8ae81361d37b25d40c380e137a753c049ca333d1b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2a7bc306fdd279b6e593e4a1cba7d2ca44aaa86f034015aa6901af412dbc076d",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2a7bc306fdd279b6e593e4a1cba7d2ca44aaa86f034015aa6901af412dbc076d.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:828d55190b4201441f4c2140e155f4e182fadc6f6f693b8c4fae56ed4c3b233a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\828d55190b4201441f4c2140e155f4e182fadc6f6f693b8c4fae56ed4c3b233a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2fe482e9dd5125de29846d88903501120a7146c474c07d6c17dac36dafc993ec",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2fe482e9dd5125de29846d88903501120a7146c474c07d6c17dac36dafc993ec.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d4fe2f23e777c2e24582c569667aa8ca260a0b42d4fd3b7b840f5db49b15d5c6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:20ede9afb7149a0bc31d9ac744644a662178e43ab39fd2c0b739c10ad03cd30e",
+      "dtype": "uint8",
+      "file_digest": "sha256:72759ce24620bd5072c97b43e7103097106211b10b7be487586e7c88c454cedd",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d4fe2f23e777c2e24582c569667aa8ca260a0b42d4fd3b7b840f5db49b15d5c6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ff8be9b500e2527dab7dfbb24b64f5e082ec1e0ab26bd9a54ba1887942cf8796",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:20ede9afb7149a0bc31d9ac744644a662178e43ab39fd2c0b739c10ad03cd30e",
+      "dtype": "uint8",
+      "file_digest": "sha256:72759ce24620bd5072c97b43e7103097106211b10b7be487586e7c88c454cedd",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ff8be9b500e2527dab7dfbb24b64f5e082ec1e0ab26bd9a54ba1887942cf8796.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:289938cd3f017ff17fb4ae0360bcbcfd3c7cffc8e6bf8d8995094337ab4a3fe7",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:dea5d6e6b4eb68a8c1eb36d840f59663029748a460f417f136dafa4bea1e7e55",
+      "dtype": "uint8",
+      "file_digest": "sha256:3a2acaa6f95398a18c76b626a4d96168c657e914b7539b8cb19f38894080ceba",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\289938cd3f017ff17fb4ae0360bcbcfd3c7cffc8e6bf8d8995094337ab4a3fe7.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:63867b463400eac5db4cf1fecb9313c05ad85c4df12c4d0472f20f3530142d33",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:dea5d6e6b4eb68a8c1eb36d840f59663029748a460f417f136dafa4bea1e7e55",
+      "dtype": "uint8",
+      "file_digest": "sha256:3a2acaa6f95398a18c76b626a4d96168c657e914b7539b8cb19f38894080ceba",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\63867b463400eac5db4cf1fecb9313c05ad85c4df12c4d0472f20f3530142d33.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:1597f28415dd409b648fc22513150c51832b01703c9354d7e2db7c466824cabd",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\1597f28415dd409b648fc22513150c51832b01703c9354d7e2db7c466824cabd.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:bbcfc2f790f083aa7459049f908286d7a14c4910df836fb18c9c1ad5b1eb9b8f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\bbcfc2f790f083aa7459049f908286d7a14c4910df836fb18c9c1ad5b1eb9b8f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:933d51fb0bef0e7d86d1f253b90432b0e423e12ccc10036e14fc7ef8a5ffec93",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:24e298d4e321ce41752dcc92b8e5e13902ee2e8408b96ad8177186b4a990f7ff",
+      "dtype": "uint8",
+      "file_digest": "sha256:b9d75edd60b0fab5c479b02b18627fe12f9d5f92f75f34cfa6a01aae718d1336",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\933d51fb0bef0e7d86d1f253b90432b0e423e12ccc10036e14fc7ef8a5ffec93.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ee6f5947bec8ecb6acd0f18ae9deecc60e4529a0eafa9575336a851f46bc4cce",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ee6f5947bec8ecb6acd0f18ae9deecc60e4529a0eafa9575336a851f46bc4cce.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d598a71541c7366c7bb80bb56b703fcdaafd5b806c499d528d2b518c52bee94b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d598a71541c7366c7bb80bb56b703fcdaafd5b806c499d528d2b518c52bee94b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ef4523da22627832cbcdf7a31755b62cedf5b2474cee6e7eb9e8a1814dfb4178",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:aed04ec2cf2055012b07fd3e9f27794119257532d873e0c333b7f653e3d07bc8",
+      "dtype": "uint8",
+      "file_digest": "sha256:4b2928635a4f55a275d7995f46e387058ed621b400a47ef50bdeac1ce7a838d5",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ef4523da22627832cbcdf7a31755b62cedf5b2474cee6e7eb9e8a1814dfb4178.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:3b0cffc879af33a5cd4399e10d94e74a9455e97b5956ca7fc4238abac3113602",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:aed04ec2cf2055012b07fd3e9f27794119257532d873e0c333b7f653e3d07bc8",
+      "dtype": "uint8",
+      "file_digest": "sha256:4b2928635a4f55a275d7995f46e387058ed621b400a47ef50bdeac1ce7a838d5",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\3b0cffc879af33a5cd4399e10d94e74a9455e97b5956ca7fc4238abac3113602.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:74b6ce783a69614751df09e4e7a35bea30daa8afc0de203e4340a6052b70eee4",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\74b6ce783a69614751df09e4e7a35bea30daa8afc0de203e4340a6052b70eee4.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:dfde8234dd11d3463848292776e3ca59e05ccab263ed65ef179a89d459038c76",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\dfde8234dd11d3463848292776e3ca59e05ccab263ed65ef179a89d459038c76.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7cf1060b2b07da133e01af30c08b190678f4cc12d8e3b88cc8e56bef8a52a975",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:753277a9b096da2d80914c65fa73d04145cb251b6e0e0542d2e5affb6b83cc28",
+      "dtype": "uint8",
+      "file_digest": "sha256:32754b9cdbefa13bca027cacf6a2e09e2c826f5cf58102838681d6db6b025b22",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7cf1060b2b07da133e01af30c08b190678f4cc12d8e3b88cc8e56bef8a52a975.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c61d2af1a74e4e6e0852f17a4d4effeae3511c64230f6c0e0430d189ca97fd28",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:aed04ec2cf2055012b07fd3e9f27794119257532d873e0c333b7f653e3d07bc8",
+      "dtype": "uint8",
+      "file_digest": "sha256:4b2928635a4f55a275d7995f46e387058ed621b400a47ef50bdeac1ce7a838d5",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c61d2af1a74e4e6e0852f17a4d4effeae3511c64230f6c0e0430d189ca97fd28.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c37d8106e4bbe82f379dec74a7421de8fe7690840f05cd3b207d45d795296e4f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:aed04ec2cf2055012b07fd3e9f27794119257532d873e0c333b7f653e3d07bc8",
+      "dtype": "uint8",
+      "file_digest": "sha256:4b2928635a4f55a275d7995f46e387058ed621b400a47ef50bdeac1ce7a838d5",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c37d8106e4bbe82f379dec74a7421de8fe7690840f05cd3b207d45d795296e4f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:0f758e66edbef96e1f3c04219eca5b39e023582977b2a8b90e0c93b5bc7ba0ca",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\0f758e66edbef96e1f3c04219eca5b39e023582977b2a8b90e0c93b5bc7ba0ca.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:48be92ca7d6fa18473498bd484e77d9b37a62e7022dec0d4a9e2c0fb01c1d3c5",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\48be92ca7d6fa18473498bd484e77d9b37a62e7022dec0d4a9e2c0fb01c1d3c5.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:001731677391a3f9db4c08c1eb708f5dc37f06f2e7beda050bbf0df13bcbb0f8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\001731677391a3f9db4c08c1eb708f5dc37f06f2e7beda050bbf0df13bcbb0f8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:6d67ccc647b31198baba3315b751091da6944018ddc3aa3e0fca526b18583a47",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\6d67ccc647b31198baba3315b751091da6944018ddc3aa3e0fca526b18583a47.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c97ab9ce0f4522683cd5b30a6f295deabbc52abf9efffe5b0d834faa0ef6a05d",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c97ab9ce0f4522683cd5b30a6f295deabbc52abf9efffe5b0d834faa0ef6a05d.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a89707a6123447f071c6ee0686829d7ff77b35605e6f4aea19a681715a4db424",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a89707a6123447f071c6ee0686829d7ff77b35605e6f4aea19a681715a4db424.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8c983ff89f886c5c401daf5f93615b988941bc333bc0f5ce14e31efd90c1d551",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8c983ff89f886c5c401daf5f93615b988941bc333bc0f5ce14e31efd90c1d551.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:35b43c45a66b90ad746522c5425b18ebf66032eb2db2b08fdc1437a7cdb4194a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c05860306be21986b838f0cf1afb6faf8563529ca903e920c5eebaa20a5e7249",
+      "dtype": "uint8",
+      "file_digest": "sha256:aa5698b0334cd7a29995f30c72d88eca450a6db4f0f3a59b6dc29dff49b74593",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\35b43c45a66b90ad746522c5425b18ebf66032eb2db2b08fdc1437a7cdb4194a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:455187c49e47ef724bbf8612554d8f6878a91ad7031759aadcf8e81c5709d225",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c05860306be21986b838f0cf1afb6faf8563529ca903e920c5eebaa20a5e7249",
+      "dtype": "uint8",
+      "file_digest": "sha256:aa5698b0334cd7a29995f30c72d88eca450a6db4f0f3a59b6dc29dff49b74593",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\455187c49e47ef724bbf8612554d8f6878a91ad7031759aadcf8e81c5709d225.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ecca5dcf7ec4871e8ed4c53f7c33b68d464d256fc81ad3caac7302d24c9ebf45",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:03b08524cab61120bfe5c0ade3a57f1e86180a801b3ed27ca582ce57c5d0de92",
+      "dtype": "uint8",
+      "file_digest": "sha256:b292c209f6c5f4b752078fbbcf9ad11e163aad75c7c8dffc4b051d4f3a3b4f9d",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ecca5dcf7ec4871e8ed4c53f7c33b68d464d256fc81ad3caac7302d24c9ebf45.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:81db0ac76813e439e38497ae15b6b423fae150974f8302cfe328da8eedfe12cc",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:03b08524cab61120bfe5c0ade3a57f1e86180a801b3ed27ca582ce57c5d0de92",
+      "dtype": "uint8",
+      "file_digest": "sha256:b292c209f6c5f4b752078fbbcf9ad11e163aad75c7c8dffc4b051d4f3a3b4f9d",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\81db0ac76813e439e38497ae15b6b423fae150974f8302cfe328da8eedfe12cc.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c27de6410e94d67f3be4b85e83140838743e7a06a3ef1240c0ab6a22cd602665",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c27de6410e94d67f3be4b85e83140838743e7a06a3ef1240c0ab6a22cd602665.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:386611a7128e7dd5105350d74987e313bd5a205fe02eed422f4374597b7e4c44",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\386611a7128e7dd5105350d74987e313bd5a205fe02eed422f4374597b7e4c44.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a343cc98b9f13d43d82750c0dee169566e311e5ba444f5e7fdb85299e6c8229b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a343cc98b9f13d43d82750c0dee169566e311e5ba444f5e7fdb85299e6c8229b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f543fc76673033261caa5400e1be20c69ed1e61edcf58e23a340f103efc56359",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:03b08524cab61120bfe5c0ade3a57f1e86180a801b3ed27ca582ce57c5d0de92",
+      "dtype": "uint8",
+      "file_digest": "sha256:b292c209f6c5f4b752078fbbcf9ad11e163aad75c7c8dffc4b051d4f3a3b4f9d",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f543fc76673033261caa5400e1be20c69ed1e61edcf58e23a340f103efc56359.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:464e7592bd44920e8d9a07eaba66ccbc32b379162ca8a08237ede8915bce550f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:03b08524cab61120bfe5c0ade3a57f1e86180a801b3ed27ca582ce57c5d0de92",
+      "dtype": "uint8",
+      "file_digest": "sha256:b292c209f6c5f4b752078fbbcf9ad11e163aad75c7c8dffc4b051d4f3a3b4f9d",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\464e7592bd44920e8d9a07eaba66ccbc32b379162ca8a08237ede8915bce550f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:eaccc785ef5eebea453c0893a3c5f224d2c30d977d2f727f72972f90d21c171d",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c05860306be21986b838f0cf1afb6faf8563529ca903e920c5eebaa20a5e7249",
+      "dtype": "uint8",
+      "file_digest": "sha256:aa5698b0334cd7a29995f30c72d88eca450a6db4f0f3a59b6dc29dff49b74593",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\eaccc785ef5eebea453c0893a3c5f224d2c30d977d2f727f72972f90d21c171d.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:66afb474567aee192f68715f8267c807f1787cbaf81bcac0bbc657bcb54b370f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:c05860306be21986b838f0cf1afb6faf8563529ca903e920c5eebaa20a5e7249",
+      "dtype": "uint8",
+      "file_digest": "sha256:aa5698b0334cd7a29995f30c72d88eca450a6db4f0f3a59b6dc29dff49b74593",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\66afb474567aee192f68715f8267c807f1787cbaf81bcac0bbc657bcb54b370f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8ab78bcced1b59b6d96f12edee0c0ad2c6b9206968b7fe4821ebbab170465844",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8ab78bcced1b59b6d96f12edee0c0ad2c6b9206968b7fe4821ebbab170465844.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f6dcdc717f05208e6286feb432d70bb7331d43f2a0af59df00c48f061ed305af",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f6dcdc717f05208e6286feb432d70bb7331d43f2a0af59df00c48f061ed305af.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:e07df1bbdcd89e78aa8a8f0fec96ffa1dd2dd469a4d10bb1dc671d03a8f2218a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\e07df1bbdcd89e78aa8a8f0fec96ffa1dd2dd469a4d10bb1dc671d03a8f2218a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:9fa608b2a826a9055e812064a9fad388d0993e19d636991ab0270406db6b28e1",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f2153aa2799abbd86c7bc0f0b2373228fa55dc994514509c31936dc66c6f2dab",
+      "dtype": "uint8",
+      "file_digest": "sha256:b6ca019918382039dd07e3332ed8998a54049336d70b9c5c8ed59ea99901ef7e",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\9fa608b2a826a9055e812064a9fad388d0993e19d636991ab0270406db6b28e1.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:39e24bf7a949ca2b09b1e0725ab8806dbe10e7a2b1d858cf7aaa30b03f52f6a6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f2153aa2799abbd86c7bc0f0b2373228fa55dc994514509c31936dc66c6f2dab",
+      "dtype": "uint8",
+      "file_digest": "sha256:b6ca019918382039dd07e3332ed8998a54049336d70b9c5c8ed59ea99901ef7e",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\39e24bf7a949ca2b09b1e0725ab8806dbe10e7a2b1d858cf7aaa30b03f52f6a6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ec71c0ab8423e3432fe125416d363ba9a6feef0867e65df00ac0752bc021a57f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ec71c0ab8423e3432fe125416d363ba9a6feef0867e65df00ac0752bc021a57f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:222e82d97787ca8646c711a8c07f083c31bd84fdcc707ed437390063fe690307",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\222e82d97787ca8646c711a8c07f083c31bd84fdcc707ed437390063fe690307.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:42b9cb6ea9c788d8384c88ae8d33d99e6eb3a941c8e0bbd616b8b9d7cafa08f7",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\42b9cb6ea9c788d8384c88ae8d33d99e6eb3a941c8e0bbd616b8b9d7cafa08f7.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:3ca92629b41af3491e83a799f0ccab24cd9c79257fadad6dbbee62b1472bac3a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:116f7411e57fe6acccc09363f88cbeb901c09b7e4006afe665f859008acc201b",
+      "dtype": "uint8",
+      "file_digest": "sha256:de8a99899dad3fab842f9e159f3f1224129faa5f6fdf0b67f67a8be792a674ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\3ca92629b41af3491e83a799f0ccab24cd9c79257fadad6dbbee62b1472bac3a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c618bd98f262fbbca97b6ab9bfbd99ce8fbace954c1dc51f7976434a7671025a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:116f7411e57fe6acccc09363f88cbeb901c09b7e4006afe665f859008acc201b",
+      "dtype": "uint8",
+      "file_digest": "sha256:de8a99899dad3fab842f9e159f3f1224129faa5f6fdf0b67f67a8be792a674ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c618bd98f262fbbca97b6ab9bfbd99ce8fbace954c1dc51f7976434a7671025a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:21d5022781c5caa41bda48e6515e6d14ba0c0a53d320c48953b2acaf725fd566",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:79ffd4f8b37e175292bead1a0f19ed858e15d12380ad7f0e336ba00f17bd02f6",
+      "dtype": "uint8",
+      "file_digest": "sha256:4e7c5323d871019c33f6a0bb3ec34c25e8604c64e0c94d61f4fbeba12526157b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\21d5022781c5caa41bda48e6515e6d14ba0c0a53d320c48953b2acaf725fd566.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:96820b6cff11448db2bbc4321c54adc1823fd042fd07b3bdfa23fc5a1352cf96",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:79ffd4f8b37e175292bead1a0f19ed858e15d12380ad7f0e336ba00f17bd02f6",
+      "dtype": "uint8",
+      "file_digest": "sha256:4e7c5323d871019c33f6a0bb3ec34c25e8604c64e0c94d61f4fbeba12526157b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\96820b6cff11448db2bbc4321c54adc1823fd042fd07b3bdfa23fc5a1352cf96.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c6961710d908485600d0fd33bf62efe097c2b6af938d0143cf0dae64f65d116a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c6961710d908485600d0fd33bf62efe097c2b6af938d0143cf0dae64f65d116a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:575b692baf72783c1663c762e7443e06a0f50c6d915020ce85abd11dfc2985e3",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\575b692baf72783c1663c762e7443e06a0f50c6d915020ce85abd11dfc2985e3.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4432548eaced8e5c33be6883f249daa71de79d4ac5475f60d81ffaa48ecf8145",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4432548eaced8e5c33be6883f249daa71de79d4ac5475f60d81ffaa48ecf8145.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:dffaaceb8bb31c1817bd10b782c86cedc081edfccd771b9f0deb84dc92773058",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:79ffd4f8b37e175292bead1a0f19ed858e15d12380ad7f0e336ba00f17bd02f6",
+      "dtype": "uint8",
+      "file_digest": "sha256:4e7c5323d871019c33f6a0bb3ec34c25e8604c64e0c94d61f4fbeba12526157b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\dffaaceb8bb31c1817bd10b782c86cedc081edfccd771b9f0deb84dc92773058.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:c9aa445d62ee351b3f5c1635d7ae9e441d9b92a3665a9661c645a905a677d9ff",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:79ffd4f8b37e175292bead1a0f19ed858e15d12380ad7f0e336ba00f17bd02f6",
+      "dtype": "uint8",
+      "file_digest": "sha256:4e7c5323d871019c33f6a0bb3ec34c25e8604c64e0c94d61f4fbeba12526157b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\c9aa445d62ee351b3f5c1635d7ae9e441d9b92a3665a9661c645a905a677d9ff.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:3f7ba4e1b783850450079f1297c2913667fa171fd5ef1c5448ef6bc409bf7987",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:116f7411e57fe6acccc09363f88cbeb901c09b7e4006afe665f859008acc201b",
+      "dtype": "uint8",
+      "file_digest": "sha256:de8a99899dad3fab842f9e159f3f1224129faa5f6fdf0b67f67a8be792a674ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\3f7ba4e1b783850450079f1297c2913667fa171fd5ef1c5448ef6bc409bf7987.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:1e3a6a4dc7164815903934e8a880f318f0d7b61bd8d9b45a309bf356b9e10d21",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:116f7411e57fe6acccc09363f88cbeb901c09b7e4006afe665f859008acc201b",
+      "dtype": "uint8",
+      "file_digest": "sha256:de8a99899dad3fab842f9e159f3f1224129faa5f6fdf0b67f67a8be792a674ed",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\1e3a6a4dc7164815903934e8a880f318f0d7b61bd8d9b45a309bf356b9e10d21.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2e9a779fda3f478e636f4c1268391c8dbf9f011503da8d35b4b938a853844fbc",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ad6b23360300f951a1671c6b409cbf3e258b116640bfa72248f1bad9ced0e847",
+      "dtype": "uint8",
+      "file_digest": "sha256:7947d2cb691f62e8791222c58f8451866716902306a58ee287f6cf36bda603cf",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2e9a779fda3f478e636f4c1268391c8dbf9f011503da8d35b4b938a853844fbc.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:e0f0c389bd30e473e741b2084465526afd99e30cc86f32129183987b155b3fef",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ad6b23360300f951a1671c6b409cbf3e258b116640bfa72248f1bad9ced0e847",
+      "dtype": "uint8",
+      "file_digest": "sha256:7947d2cb691f62e8791222c58f8451866716902306a58ee287f6cf36bda603cf",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\e0f0c389bd30e473e741b2084465526afd99e30cc86f32129183987b155b3fef.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:4d9b3b9d1d684f3e0ee6679137e1b43ba2593902eb75416d88f5d034cf9ab192",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\4d9b3b9d1d684f3e0ee6679137e1b43ba2593902eb75416d88f5d034cf9ab192.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:817ead82971ff7fcbf7abfefde0272ee5cc353011dc44f717f4b70f6ad2930fc",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\817ead82971ff7fcbf7abfefde0272ee5cc353011dc44f717f4b70f6ad2930fc.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a3daf14c86a09082db9c5d57d0cc734b56a8a3a4933983e9fc8901d6c74c280f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a3daf14c86a09082db9c5d57d0cc734b56a8a3a4933983e9fc8901d6c74c280f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:b27c4784c654bb9575d7e5ec8016fb25ffa08fa560810840da0368c61db161c0",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ad6b23360300f951a1671c6b409cbf3e258b116640bfa72248f1bad9ced0e847",
+      "dtype": "uint8",
+      "file_digest": "sha256:7947d2cb691f62e8791222c58f8451866716902306a58ee287f6cf36bda603cf",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\b27c4784c654bb9575d7e5ec8016fb25ffa08fa560810840da0368c61db161c0.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:dd64b48fdc289ecaccd2111d49b48466d97e3b885910ccb873ab50691fb4a45f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:ad6b23360300f951a1671c6b409cbf3e258b116640bfa72248f1bad9ced0e847",
+      "dtype": "uint8",
+      "file_digest": "sha256:7947d2cb691f62e8791222c58f8451866716902306a58ee287f6cf36bda603cf",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\dd64b48fdc289ecaccd2111d49b48466d97e3b885910ccb873ab50691fb4a45f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:5dacd91b8e9d3f7d4b4dfc88b901d4ca10fe5101061ca5d69f8bccfcf976bb78",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\5dacd91b8e9d3f7d4b4dfc88b901d4ca10fe5101061ca5d69f8bccfcf976bb78.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:fb18dad0cd00a2c4ccf08410cd6df6f950cf1da248461d23106bcf09d9f969bf",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\fb18dad0cd00a2c4ccf08410cd6df6f950cf1da248461d23106bcf09d9f969bf.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:ec88068863883ff20e839d8499054fa72e1d754ac363616888112c638ef69c09",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\ec88068863883ff20e839d8499054fa72e1d754ac363616888112c638ef69c09.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f9a04735b0c81d4a8900d0bdca9a1e1fbe6660ea8eeca709f65b83226d7026d2",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f9a04735b0c81d4a8900d0bdca9a1e1fbe6660ea8eeca709f65b83226d7026d2.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:25da80a6396ef0455506d637bb8ab6ab1ea0c6eb37641363cd9e4cea013536b1",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:37ee00c4dd64ee24294c9a4e2b73eaca9c94c406cff2148c0b1985cf9a3dd12f",
+      "dtype": "uint8",
+      "file_digest": "sha256:614b6d0a829f77c1ba3b102ce595db62c030c49af211a7aacaadc89609a1e3cc",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\25da80a6396ef0455506d637bb8ab6ab1ea0c6eb37641363cd9e4cea013536b1.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:75f1e5bbb8f6a6469cfa9d2d566a2a488ee529efcf75a149927dbb34e5051ff7",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\75f1e5bbb8f6a6469cfa9d2d566a2a488ee529efcf75a149927dbb34e5051ff7.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7cfce6e55eb30b1988de7f3ce23245b1686813121033ce9835d6afb13c53850f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7cfce6e55eb30b1988de7f3ce23245b1686813121033ce9835d6afb13c53850f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:6ee6879678be634da48e3dbcddc614b2c84b7fe0cc106704d92d5309f8ea47e6",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f596aefad9a6953f1edf1347c23cab441c9b71dd0ffc0ad4e56d3d45648f3af4",
+      "dtype": "uint8",
+      "file_digest": "sha256:a324cd1cc821e96ddd853bf75c2751c697f3ae28c352c89643e97113b894f86c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\6ee6879678be634da48e3dbcddc614b2c84b7fe0cc106704d92d5309f8ea47e6.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:369db6b2aa14e122b1d1503f91dc957499e9ddae75227435e0ada7dc6352ebf3",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f596aefad9a6953f1edf1347c23cab441c9b71dd0ffc0ad4e56d3d45648f3af4",
+      "dtype": "uint8",
+      "file_digest": "sha256:a324cd1cc821e96ddd853bf75c2751c697f3ae28c352c89643e97113b894f86c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\369db6b2aa14e122b1d1503f91dc957499e9ddae75227435e0ada7dc6352ebf3.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:039af1a82b165254bd188ef1d34fb3bb8bb8d40d754f172cdba1b698d43e5cf8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\039af1a82b165254bd188ef1d34fb3bb8bb8d40d754f172cdba1b698d43e5cf8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7b67032b59365c46648c6f5e83abc95cd73fd6324f5fab47aff71183a1e669c2",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7b67032b59365c46648c6f5e83abc95cd73fd6324f5fab47aff71183a1e669c2.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:adbf528d413df9788de9d3f831a0a306291f8ff7eec1bcafed03dc14907e7273",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:115579f8795f1b26805fb72ed7b3c45b6b823ee9f0af8ee362f8531df36497be",
+      "dtype": "uint8",
+      "file_digest": "sha256:26251be8dddaf5096e40fb6ddb9575ad6413ac30cc69e7aaf71361fa9ba8fed9",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\adbf528d413df9788de9d3f831a0a306291f8ff7eec1bcafed03dc14907e7273.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:5c3882069817cada9d4f68ee8ee4a28b820e60ebca1d32272fc2e148861f8165",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f596aefad9a6953f1edf1347c23cab441c9b71dd0ffc0ad4e56d3d45648f3af4",
+      "dtype": "uint8",
+      "file_digest": "sha256:a324cd1cc821e96ddd853bf75c2751c697f3ae28c352c89643e97113b894f86c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\5c3882069817cada9d4f68ee8ee4a28b820e60ebca1d32272fc2e148861f8165.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:deaaa067be4af731859fde153b1a6727f238645efc333270dcddf00ac1b62b22",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:f596aefad9a6953f1edf1347c23cab441c9b71dd0ffc0ad4e56d3d45648f3af4",
+      "dtype": "uint8",
+      "file_digest": "sha256:a324cd1cc821e96ddd853bf75c2751c697f3ae28c352c89643e97113b894f86c",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\deaaa067be4af731859fde153b1a6727f238645efc333270dcddf00ac1b62b22.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d51c43ae51826a0fc7314b1524221c697b73390da4998eb9e5dec99140ec984b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d51c43ae51826a0fc7314b1524221c697b73390da4998eb9e5dec99140ec984b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:80155f4078290cd556edf8775c86a425f0e71cd54176ef1f3699914c07b9f15c",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:2859ab81a658f898f55681e1f89789b7c29f98e8ff59a9785eeb0d2dca2f9d16",
+      "dtype": "uint8",
+      "file_digest": "sha256:4ad7f5e7a9d93cf13d614e8042c5f4892329f4a4759759ff5e6f870b35395656",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\80155f4078290cd556edf8775c86a425f0e71cd54176ef1f3699914c07b9f15c.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:cfc64f5717a4507ff96be5681d17a76b2e33e9ac65bef44243428254aed16caf",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\cfc64f5717a4507ff96be5681d17a76b2e33e9ac65bef44243428254aed16caf.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:6ff8205d4deec26e098dc62e433c3384260897d6a9a87f25ea2b2ae3e5771e95",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\6ff8205d4deec26e098dc62e433c3384260897d6a9a87f25ea2b2ae3e5771e95.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:87056651f0ccb0108bde1a37a3f303c636d2485f52dddce3dedfe8ca7f764856",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\87056651f0ccb0108bde1a37a3f303c636d2485f52dddce3dedfe8ca7f764856.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2f426994844d5822fd25392011efbf2a6ba5ccc3b55479805aec71c5a6fa23be",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:12f028268a8133050b37a4db57baa1cc139d335607562363d81aff6aa002979d",
+      "dtype": "uint8",
+      "file_digest": "sha256:e6ec1de0bf9aee2dc6ec2259956b045602cfb5564c68a2cdc7c136629b6b1be4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2f426994844d5822fd25392011efbf2a6ba5ccc3b55479805aec71c5a6fa23be.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8834c7ebf30ad3af98085dba1b2bc743172894e0dd1093738783e82e095d6f39",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6ade971b9cc0929a3bc7c72f6c4a9e0e4db333959ced71e1c2315897ebb431a4",
+      "dtype": "uint8",
+      "file_digest": "sha256:159da202d95694aeb23cd2cf23e6d3d8aa2d50537b8c136bfdfd63dd8e87e507",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8834c7ebf30ad3af98085dba1b2bc743172894e0dd1093738783e82e095d6f39.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:eaaba0c9b6bc2ee0a9354292e923ad7fca6e0655ad96e72e1f8949454875d4ba",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:6ade971b9cc0929a3bc7c72f6c4a9e0e4db333959ced71e1c2315897ebb431a4",
+      "dtype": "uint8",
+      "file_digest": "sha256:159da202d95694aeb23cd2cf23e6d3d8aa2d50537b8c136bfdfd63dd8e87e507",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\eaaba0c9b6bc2ee0a9354292e923ad7fca6e0655ad96e72e1f8949454875d4ba.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:7f375a788410e31a544ddeca6cb91f671de3bec4b09fcd30c580cc891f809cb8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:117fb81fc15fc88a428aa6582a65e5f996ca3d355e1d0285502084a90032cc7d",
+      "dtype": "uint8",
+      "file_digest": "sha256:9bb4e6350206447567306bc0719899d9b93860305c8ca845b003c894d0c3a636",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\7f375a788410e31a544ddeca6cb91f671de3bec4b09fcd30c580cc891f809cb8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:b013b6ab3f16d4dbf964d056514980215a2aa697be665e2adb0c8e46cc23a10c",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:117fb81fc15fc88a428aa6582a65e5f996ca3d355e1d0285502084a90032cc7d",
+      "dtype": "uint8",
+      "file_digest": "sha256:9bb4e6350206447567306bc0719899d9b93860305c8ca845b003c894d0c3a636",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\b013b6ab3f16d4dbf964d056514980215a2aa697be665e2adb0c8e46cc23a10c.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:0f489a5ac1e5868b4dd2dbffc5f72ba19c09c7c7e868bfcc4ebb7093134c821e",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:117fb81fc15fc88a428aa6582a65e5f996ca3d355e1d0285502084a90032cc7d",
+      "dtype": "uint8",
+      "file_digest": "sha256:9bb4e6350206447567306bc0719899d9b93860305c8ca845b003c894d0c3a636",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\0f489a5ac1e5868b4dd2dbffc5f72ba19c09c7c7e868bfcc4ebb7093134c821e.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:6bb16cf4d4da4d967b0a0f764593fde5c795d590a717715a26edd5737cd38d13",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e9261d3b4ba5a501379991a8428f4bf61c3abac1f619762c43702ecb7cce8388",
+      "dtype": "uint8",
+      "file_digest": "sha256:c4cdcc98315c9652693765c8a023ccbaedc34fe68524d8166a7fee3b4ccc6d31",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\6bb16cf4d4da4d967b0a0f764593fde5c795d590a717715a26edd5737cd38d13.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:47ac978877c0683db1d9d4a04e8e60c4ce5d5b94aa4bfcb2e294da77cd1e0a5c",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e9261d3b4ba5a501379991a8428f4bf61c3abac1f619762c43702ecb7cce8388",
+      "dtype": "uint8",
+      "file_digest": "sha256:c4cdcc98315c9652693765c8a023ccbaedc34fe68524d8166a7fee3b4ccc6d31",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\47ac978877c0683db1d9d4a04e8e60c4ce5d5b94aa4bfcb2e294da77cd1e0a5c.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2d89f6a9c2f9e6a95edb0f9baced33c1a0cab16b87a345e38ee3cd5c9e23a1c3",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:1e003e4602924476db785a73dbe6341713e5f7bb58578b47d8bcbfc45c37f8b1",
+      "dtype": "uint8",
+      "file_digest": "sha256:58d4b925a66323a9f78d07ba50dc1ca0c7220b36986b69c9b683c0a453671ba4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2d89f6a9c2f9e6a95edb0f9baced33c1a0cab16b87a345e38ee3cd5c9e23a1c3.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f1e8b05c47d572fa6d3fa3e0a27565b2eb86c6cba9cbc0ee28a165006d80c06a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:1e003e4602924476db785a73dbe6341713e5f7bb58578b47d8bcbfc45c37f8b1",
+      "dtype": "uint8",
+      "file_digest": "sha256:58d4b925a66323a9f78d07ba50dc1ca0c7220b36986b69c9b683c0a453671ba4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f1e8b05c47d572fa6d3fa3e0a27565b2eb86c6cba9cbc0ee28a165006d80c06a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:734020e7a1d0f6d609dd31766f081e643a279af6648b511d2b8a0e070422362b",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e379272cbf0ce4d8d27c4a293474a90b6fcce842dd6f308ba161e38b2f51eb21",
+      "dtype": "uint8",
+      "file_digest": "sha256:6ad715b69e8297148690d213dde544c81ea1694f1f5ba6e03b16521250c47951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\734020e7a1d0f6d609dd31766f081e643a279af6648b511d2b8a0e070422362b.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:80fecf460c775fba442c173340d25c3505f641a66ff65d79d8073712781ae350",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e379272cbf0ce4d8d27c4a293474a90b6fcce842dd6f308ba161e38b2f51eb21",
+      "dtype": "uint8",
+      "file_digest": "sha256:6ad715b69e8297148690d213dde544c81ea1694f1f5ba6e03b16521250c47951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\80fecf460c775fba442c173340d25c3505f641a66ff65d79d8073712781ae350.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a261fb8fc8cea2be4e7ff74c8a26ca4f340c2bf9e363e983c357a98326d76205",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e379272cbf0ce4d8d27c4a293474a90b6fcce842dd6f308ba161e38b2f51eb21",
+      "dtype": "uint8",
+      "file_digest": "sha256:6ad715b69e8297148690d213dde544c81ea1694f1f5ba6e03b16521250c47951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a261fb8fc8cea2be4e7ff74c8a26ca4f340c2bf9e363e983c357a98326d76205.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:608f55c82b90344ecbe0af6c1afa3d5c98836d0873001556b1670070ede7f983",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:1e003e4602924476db785a73dbe6341713e5f7bb58578b47d8bcbfc45c37f8b1",
+      "dtype": "uint8",
+      "file_digest": "sha256:58d4b925a66323a9f78d07ba50dc1ca0c7220b36986b69c9b683c0a453671ba4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\608f55c82b90344ecbe0af6c1afa3d5c98836d0873001556b1670070ede7f983.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d429407327a318c4d3c108dc578f53826390095ffffff4e4d30aef9137b83298",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:1e003e4602924476db785a73dbe6341713e5f7bb58578b47d8bcbfc45c37f8b1",
+      "dtype": "uint8",
+      "file_digest": "sha256:58d4b925a66323a9f78d07ba50dc1ca0c7220b36986b69c9b683c0a453671ba4",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d429407327a318c4d3c108dc578f53826390095ffffff4e4d30aef9137b83298.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:efbaf0d9e815908d3130b7b4b650662d4aa334bec1fca3cf3fed742c19149392",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:5632bab0b6acc61859aa4d6123ddd1a09ea3f49997c53a0539cb793b3244d5f3",
+      "dtype": "uint8",
+      "file_digest": "sha256:f764668ba50d8cd62ea91eb8aa34b4dc1930526e6244de2079ea6d1313815b39",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\efbaf0d9e815908d3130b7b4b650662d4aa334bec1fca3cf3fed742c19149392.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:69f8d821ecb4842ab8a130cc14858ec46974e395aa0a475664708b6bccc766e4",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:5632bab0b6acc61859aa4d6123ddd1a09ea3f49997c53a0539cb793b3244d5f3",
+      "dtype": "uint8",
+      "file_digest": "sha256:f764668ba50d8cd62ea91eb8aa34b4dc1930526e6244de2079ea6d1313815b39",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\69f8d821ecb4842ab8a130cc14858ec46974e395aa0a475664708b6bccc766e4.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:fa99d80eae626b375cffe4e9933df2d0aa3ce269f709859427e6e3daf9758a06",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7807c8df70a1054913d660c2a4ca0ba6ad8f2d5c08bb32c507459d1bd2f63798",
+      "dtype": "uint8",
+      "file_digest": "sha256:535aa5bbc7a6f0e31ea09e389f382b7e2832e595f7ddf023f7e76fc1603dca86",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\fa99d80eae626b375cffe4e9933df2d0aa3ce269f709859427e6e3daf9758a06.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:2a759d42b85d9f78b485bc1f8a230203e6d8ef5313abf0fe41331373935a6b7a",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7807c8df70a1054913d660c2a4ca0ba6ad8f2d5c08bb32c507459d1bd2f63798",
+      "dtype": "uint8",
+      "file_digest": "sha256:535aa5bbc7a6f0e31ea09e389f382b7e2832e595f7ddf023f7e76fc1603dca86",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2a759d42b85d9f78b485bc1f8a230203e6d8ef5313abf0fe41331373935a6b7a.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:318c72fcb320f4bdd71f1c9bfb1a749400c6646b5c3348da48a0a4bbb624c27f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e379272cbf0ce4d8d27c4a293474a90b6fcce842dd6f308ba161e38b2f51eb21",
+      "dtype": "uint8",
+      "file_digest": "sha256:6ad715b69e8297148690d213dde544c81ea1694f1f5ba6e03b16521250c47951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\318c72fcb320f4bdd71f1c9bfb1a749400c6646b5c3348da48a0a4bbb624c27f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:e4765aaf8c91804ead2d1796d5c513d17fe2064bbdcf4fce7ffa6eff6b0c1e4f",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e379272cbf0ce4d8d27c4a293474a90b6fcce842dd6f308ba161e38b2f51eb21",
+      "dtype": "uint8",
+      "file_digest": "sha256:6ad715b69e8297148690d213dde544c81ea1694f1f5ba6e03b16521250c47951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\e4765aaf8c91804ead2d1796d5c513d17fe2064bbdcf4fce7ffa6eff6b0c1e4f.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:b9b79d219061b0910dddf9c8a415523c3b36035016234af1e1f56e31136e1063",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:e379272cbf0ce4d8d27c4a293474a90b6fcce842dd6f308ba161e38b2f51eb21",
+      "dtype": "uint8",
+      "file_digest": "sha256:6ad715b69e8297148690d213dde544c81ea1694f1f5ba6e03b16521250c47951",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\b9b79d219061b0910dddf9c8a415523c3b36035016234af1e1f56e31136e1063.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:a1992d3c904fd3ff5284507c7c84780abd8c31f43b4adc3c3db5bebc7ed4af58",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7807c8df70a1054913d660c2a4ca0ba6ad8f2d5c08bb32c507459d1bd2f63798",
+      "dtype": "uint8",
+      "file_digest": "sha256:535aa5bbc7a6f0e31ea09e389f382b7e2832e595f7ddf023f7e76fc1603dca86",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\a1992d3c904fd3ff5284507c7c84780abd8c31f43b4adc3c3db5bebc7ed4af58.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:8662c4c292bc8815d57a372ea436750482f24a2df0731b775dd22ef6331dec11",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:7807c8df70a1054913d660c2a4ca0ba6ad8f2d5c08bb32c507459d1bd2f63798",
+      "dtype": "uint8",
+      "file_digest": "sha256:535aa5bbc7a6f0e31ea09e389f382b7e2832e595f7ddf023f7e76fc1603dca86",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\8662c4c292bc8815d57a372ea436750482f24a2df0731b775dd22ef6331dec11.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:d097857a8ae0ac6eb37b217395eeddfb8ecdddf04bca52a4179cb7c7ed219da8",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:cdc7dabe5b52adb633562a138e0e1d4b7a678f5d864209c742962f9b518100a7",
+      "dtype": "uint8",
+      "file_digest": "sha256:ddcee07c41384f3d277ab3388fe9dd39123d679c47ba54c907b62fedb836dd0b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\d097857a8ae0ac6eb37b217395eeddfb8ecdddf04bca52a4179cb7c7ed219da8.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:f23a783c322211dd7ace4bdbe5f96ea46064e171031a7547b07c67dbb896f0ef",
+      "channel_count": 1,
+      "decoded_array_digest": "sha256:cdc7dabe5b52adb633562a138e0e1d4b7a678f5d864209c742962f9b518100a7",
+      "dtype": "uint8",
+      "file_digest": "sha256:ddcee07c41384f3d277ab3388fe9dd39123d679c47ba54c907b62fedb836dd0b",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\f23a783c322211dd7ace4bdbe5f96ea46064e171031a7547b07c67dbb896f0ef.npz",
+      "shape": [
+        16,
+        28
+      ]
+    },
+    {
+      "case_id": "sha256:b718672e5abe70addc5db4ce5ceb3dfcf4697f1813f41ca7dc5623ffb93472c3",
+      "channel_count": 3,
+      "decoded_array_digest": "sha256:9c1c44a5ab27b982114b0aff5b788a053791413fc6f336b272bfad69e9ea1560",
+      "dtype": "uint8",
+      "file_digest": "sha256:87b82bc6a831a4762698c1e8896857f56a9cb84ff86d0edeac29e2195cd23906",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\b718672e5abe70addc5db4ce5ceb3dfcf4697f1813f41ca7dc5623ffb93472c3.npz",
+      "shape": [
+        16,
+        28,
+        3
+      ]
+    },
+    {
+      "case_id": "sha256:19d860fd7a6fb1034239b89be3412a7c6dafa5886513058961d4eb18b179f17a",
+      "channel_count": 3,
+      "decoded_array_digest": "sha256:9c1c44a5ab27b982114b0aff5b788a053791413fc6f336b272bfad69e9ea1560",
+      "dtype": "uint8",
+      "file_digest": "sha256:87b82bc6a831a4762698c1e8896857f56a9cb84ff86d0edeac29e2195cd23906",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\19d860fd7a6fb1034239b89be3412a7c6dafa5886513058961d4eb18b179f17a.npz",
+      "shape": [
+        16,
+        28,
+        3
+      ]
+    },
+    {
+      "case_id": "sha256:2999b1c6edeb8e086c78a8b424b1a8367a4c5c53125d315f94adbfab5cbf558c",
+      "channel_count": 3,
+      "decoded_array_digest": "sha256:9c1c44a5ab27b982114b0aff5b788a053791413fc6f336b272bfad69e9ea1560",
+      "dtype": "uint8",
+      "file_digest": "sha256:87b82bc6a831a4762698c1e8896857f56a9cb84ff86d0edeac29e2195cd23906",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\2999b1c6edeb8e086c78a8b424b1a8367a4c5c53125d315f94adbfab5cbf558c.npz",
+      "shape": [
+        16,
+        28,
+        3
+      ]
+    },
+    {
+      "case_id": "sha256:45a3bc04bd182fb62f3e25855bbf76c3e4f7e8c8ed131db6995ae6d641546a58",
+      "channel_count": 3,
+      "decoded_array_digest": "sha256:9c1c44a5ab27b982114b0aff5b788a053791413fc6f336b272bfad69e9ea1560",
+      "dtype": "uint8",
+      "file_digest": "sha256:87b82bc6a831a4762698c1e8896857f56a9cb84ff86d0edeac29e2195cd23906",
+      "passed": true,
+      "path": "docs\\results\\visual-sign-reader-genuine-alias-corpus-v1\\discovery\\observations\\45a3bc04bd182fb62f3e25855bbf76c3e4f7e8c8ed131db6995ae6d641546a58.npz",
+      "shape": [
+        16,
+        28,
+        3
+      ]
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+id: visual-sign-reader-genuine-alias-corpus-v1
+title: Genuine Visual Sign Reader alias discovery corpus
+classification: positive result
+evidence_state: frozen confirmation
+severity: medium
+capability: visual address robustness
+claim_affected: bounded target-agnostic perturbation alias discovery
+source_paths:
+  - examples/visual_transition_benchmark/alias_discovery
+test_paths:
+  - examples/visual_transition_benchmark/tests/test_alias_discovery.py
+commands:
+  - python -m visual_transition_benchmark.alias_discovery.run --mode confirmation
+registry_id: sha256:25186b831961e93eed63fbd2124917ac83dc253862113f5631e3806eff020890
+profiles:
+  - canonical_only
+  - exact_codeword
+  - calibrated_nearest
+  - evidence_only
+transform_families: registry-v1
+source_rows: exhaustive confirmation split
+generated_case_count: 5712
+unique_case_count: 5712
+accepted_wrong_row_count: 194
+action_equivalent_count: 108
+action_changing_count: 86
+observed_result: 194 accepted wrong-row aliases
+interpretation: Result is bounded by the committed deterministic transform registry.
+why_it_matters: Establishes whether a real static misaddress corpus exists before transition adjudication.
+production_change: No production API changes were required.
+remaining_boundary: Does not cover open-world images or adaptive target-directed attacks.
+confidence: medium

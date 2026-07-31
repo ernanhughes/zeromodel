@@ -1,0 +1,118 @@
+{
+  "calibrated_nearest": {
+    "count": 1428,
+    "summary": {
+      "acceptance_rate": 0.37815126050420167,
+      "accepted_case_count": 540,
+      "accepted_wrong_row_count": 85,
+      "accepted_wrong_row_per_1000_transformations": 59.523809523809526,
+      "action_changing_alias_rate": 0.05740740740740741,
+      "action_equivalent_alias_rate": 0.1,
+      "exact_row_accuracy_among_accepted": 0.8425925925925926,
+      "executed_case_count": 1428,
+      "failed_transformation_count": 0,
+      "generated_case_count": 1428,
+      "policy_action_accuracy_among_accepted": 0.9425925925925925,
+      "rejection_rate": 0.6218487394957983,
+      "unique_matched_rows_receiving_aliases": 36,
+      "unique_source_matched_row_pairs": 72,
+      "unique_source_rows_producing_aliases": 28,
+      "wrong_row_accepted_rate": 0.1574074074074074,
+      "wrong_row_different_action_count": 31,
+      "wrong_row_same_action_count": 54,
+      "wrong_row_wilson_interval": {
+        "count": 85,
+        "denominator": 540,
+        "high": 0.19053138327374858,
+        "low": 0.12912345740044773
+      }
+    }
+  },
+  "canonical_only": {
+    "count": 1428,
+    "summary": {
+      "acceptance_rate": 0.17857142857142858,
+      "accepted_case_count": 255,
+      "accepted_wrong_row_count": 24,
+      "accepted_wrong_row_per_1000_transformations": 16.80672268907563,
+      "action_changing_alias_rate": 0.09411764705882353,
+      "action_equivalent_alias_rate": 0.0,
+      "exact_row_accuracy_among_accepted": 0.9058823529411765,
+      "executed_case_count": 1428,
+      "failed_transformation_count": 0,
+      "generated_case_count": 1428,
+      "policy_action_accuracy_among_accepted": 0.9058823529411765,
+      "rejection_rate": 0.8214285714285714,
+      "unique_matched_rows_receiving_aliases": 8,
+      "unique_source_matched_row_pairs": 24,
+      "unique_source_rows_producing_aliases": 24,
+      "wrong_row_accepted_rate": 0.09411764705882353,
+      "wrong_row_different_action_count": 24,
+      "wrong_row_same_action_count": 0,
+      "wrong_row_wilson_interval": {
+        "count": 24,
+        "denominator": 255,
+        "high": 0.13622018095331867,
+        "low": 0.06406292655335721
+      }
+    }
+  },
+  "evidence_only": {
+    "count": 1428,
+    "summary": {
+      "acceptance_rate": 1.0,
+      "accepted_case_count": 1428,
+      "accepted_wrong_row_count": 0,
+      "accepted_wrong_row_per_1000_transformations": 0.0,
+      "action_changing_alias_rate": 0.0,
+      "action_equivalent_alias_rate": 0.0,
+      "exact_row_accuracy_among_accepted": 0.0,
+      "executed_case_count": 1428,
+      "failed_transformation_count": 0,
+      "generated_case_count": 1428,
+      "policy_action_accuracy_among_accepted": 0.0,
+      "rejection_rate": 0.0,
+      "unique_matched_rows_receiving_aliases": 0,
+      "unique_source_matched_row_pairs": 0,
+      "unique_source_rows_producing_aliases": 0,
+      "wrong_row_accepted_rate": 0.0,
+      "wrong_row_different_action_count": 0,
+      "wrong_row_same_action_count": 0,
+      "wrong_row_wilson_interval": {
+        "count": 0,
+        "denominator": 0,
+        "high": 0.0,
+        "low": 0.0
+      }
+    }
+  },
+  "exact_codeword": {
+    "count": 1428,
+    "summary": {
+      "acceptance_rate": 0.37815126050420167,
+      "accepted_case_count": 540,
+      "accepted_wrong_row_count": 85,
+      "accepted_wrong_row_per_1000_transformations": 59.523809523809526,
+      "action_changing_alias_rate": 0.05740740740740741,
+      "action_equivalent_alias_rate": 0.1,
+      "exact_row_accuracy_among_accepted": 0.8425925925925926,
+      "executed_case_count": 1428,
+      "failed_transformation_count": 0,
+      "generated_case_count": 1428,
+      "policy_action_accuracy_among_accepted": 0.9425925925925925,
+      "rejection_rate": 0.6218487394957983,
+      "unique_matched_rows_receiving_aliases": 36,
+      "unique_source_matched_row_pairs": 72,
+      "unique_source_rows_producing_aliases": 28,
+      "wrong_row_accepted_rate": 0.1574074074074074,
+      "wrong_row_different_action_count": 31,
+      "wrong_row_same_action_count": 54,
+      "wrong_row_wilson_interval": {
+        "count": 85,
+        "denominator": 540,
+        "high": 0.19053138327374858,
+        "low": 0.12912345740044773
+      }
+    }
+  }
+}

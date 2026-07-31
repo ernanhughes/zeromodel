@@ -140,8 +140,13 @@ def test_discovery_and_confirmation_split_integrity():
 def test_modified_registry_rejected_in_confirmation_mode():
     registry_path = REGISTRY_FILE
     write_default_registry(registry_path)
-    with pytest.raises(SystemExit):
-        _assert_confirmation_registry_clean(registry_path)
+    original = registry_path.read_text(encoding="utf-8")
+    try:
+        registry_path.write_text(original + "\n", encoding="utf-8")
+        with pytest.raises(SystemExit):
+            _assert_confirmation_registry_clean(registry_path)
+    finally:
+        registry_path.write_text(original, encoding="utf-8")
 
 
 def test_binary_artifact_digest_verification(tmp_path: Path):

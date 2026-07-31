@@ -58,6 +58,18 @@ When reviewing or extending this repo, check these first:
 
 ## Fast Commands
 
+For every newly created virtual environment, install the complete repository
+development environment before running any repository-wide test command:
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements-dev.txt
+```
+
+Do not replace this with a hand-written list of editable package installs.
+`requirements-dev.txt` installs every workspace package and all test,
+rendering, cryptography, build, lint, and typing dependencies.
+
 ```powershell
 python scripts/release_version.py check
 python scripts/run_fast_tests.py

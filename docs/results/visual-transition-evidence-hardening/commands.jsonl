@@ -1,0 +1,20 @@
+{"command":"git fetch origin","status":"passed"}
+{"command":"git checkout main; git pull --ff-only; git rev-parse HEAD; git status --short","status":"passed","starting_main_sha":"85d4fd50607cbef607ddbe4a5f73c1468ad76955"}
+{"command":"python -m venv .venv-transition-hardening","status":"passed"}
+{"command":"pip install -e packages/core -e packages/observation -e packages/vision -e packages/perception -e packages/video -e packages/analysis","status":"passed"}
+{"command":"pytest perception transition p18a/p18b focused tests","status":"passed","tests":10}
+{"command":"pytest focused vision/video contract tests","status":"passed","tests":28}
+{"command":"pytest visual_transition_benchmark smoke tests","status":"passed","tests":3}
+{"command":"pytest compiler end-to-end focused bundle","status":"timeout","timeout_seconds":60}
+{"command":"visual_transition_benchmark.run --dev-episodes 2 --eval-episodes 4 --skip-render","status":"passed"}
+{"command":"visual_transition_benchmark.value_run --dev-episodes 2 --eval-episodes 4 --skip-render","status":"passed"}
+{"command":"visual_transition_benchmark.cross_domain_run --arcade-dev-episodes 1 --arcade-eval-episodes 2 --warehouse-dev-episodes 1 --warehouse-eval-episodes 2 --skip-render","status":"passed"}
+{"command":"visual_transition_benchmark.compiler_run --dev-samples 2 --eval-samples 3","status":"passed","duration_seconds":213.815,"case_count":12,"compiled":11,"insufficient_observability":1}
+{"command":"pytest transition_analysis_composition + p18a/p18b","status":"passed","tests":12}
+{"command":"python scripts/audit/run_transition_identity_checks.py","status":"passed"}
+{"command":"python scripts/run_fast_tests.py","status":"passed","passed":1470,"skipped":1,"deselected":200,"duration_seconds":105.97}
+{"command":"python -m build packages/perception","status":"passed","artifact":"packages/perception/dist/zeromodel_perception-1.2.0-py3-none-any.whl"}
+{"command": "pytest fast-suite preflight/bootstrap + transition composition + public API focused tests", "status": "passed", "tests": 40}
+{"command": "python scripts/audit/run_transition_identity_checks.py", "status": "passed", "remediation": true}
+{"command":"python scripts/run_fast_tests.py","status":"passed","passed":1479,"skipped":1,"deselected":200,"duration_seconds":92.69}
+{"command":"python -m build packages/perception","status":"passed","artifact":"packages/perception/dist/zeromodel_perception-1.2.0-py3-none-any.whl","remediation":true}

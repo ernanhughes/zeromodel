@@ -1,0 +1,10 @@
+{
+  "baselines": [
+    "raw pixel difference",
+    "privileged symbolic",
+    "zeromodel component",
+    "zeromodel value"
+  ],
+  "note": "Detailed metrics are in arcade/cross-domain result files; no superiority claim is made beyond named smoke metrics.",
+  "status": "smoke_reproduced"
+}

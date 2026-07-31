@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import subprocess
@@ -10,6 +11,15 @@ from pathlib import Path
 
 FAST_SUITE_BUDGET_SECONDS = 120
 FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
+BOOTSTRAP_COMMAND = "python scripts/bootstrap_dev_environment.py"
+REQUIRED_DEV_IMPORTS = {
+    "pytest": "pytest",
+    "numpy": "numpy",
+    "PIL": "Pillow",
+    "matplotlib": "matplotlib",
+    "cryptography": "cryptography",
+    "sqlalchemy": "SQLAlchemy",
+}
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -73,6 +83,40 @@ def evaluate_summary(
     return (subprocess_returncode, "")
 
 
+def missing_dev_dependencies(
+    importer=importlib.import_module,
+) -> tuple[str, ...]:
+    missing: list[str] = []
+    for module_name, package_name in REQUIRED_DEV_IMPORTS.items():
+        try:
+            importer(module_name)
+        except ModuleNotFoundError as exc:
+            if exc.name == module_name or module_name.startswith(exc.name + "."):
+                missing.append(package_name)
+            else:
+                raise
+    return tuple(missing)
+
+
+def format_missing_dependency_message(missing: tuple[str, ...]) -> str:
+    lines = [
+        "Fast-suite development dependencies are incomplete.",
+        "",
+        "Missing:",
+    ]
+    lines.extend(f"  - {name}" for name in missing)
+    lines.extend(
+        [
+            "",
+            "Run:",
+            f"  {BOOTSTRAP_COMMAND}",
+            "",
+            "The fast runner does not install dependencies automatically.",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def main() -> int:
     forbidden = [
         argument for argument in sys.argv[1:] if argument in FORBIDDEN_INTEGRATION_FLAGS
@@ -87,6 +131,11 @@ def main() -> int:
             "Run integration or slow tests explicitly with pytest instead.",
             file=sys.stderr,
         )
+        return 2
+
+    missing = missing_dev_dependencies()
+    if missing:
+        print(format_missing_dependency_message(missing), file=sys.stderr)
         return 2
 
     print("Fast-suite test roots:")

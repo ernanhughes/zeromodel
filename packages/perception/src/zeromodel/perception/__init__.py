@@ -210,6 +210,19 @@ from .transition_evidence import (  # noqa: F401
     TransitionFieldEvidenceDTO,
     build_transition_evidence_vpm,
 )
+from .transition_analysis import (  # noqa: F401
+    TRANSITION_ACTION_DECLARATION_VERSION,
+    TRANSITION_EXPECTATION_SET_VERSION,
+    VISUAL_READER_ACCEPTANCE_PROFILES,
+    VISUAL_TRANSITION_ANALYSIS_STATUSES,
+    VISUAL_TRANSITION_ANALYSIS_VERSION,
+    VISUAL_TRANSITION_READER_TRACE_VERSION,
+    PerceptionTransitionAnalysisError,
+    TransitionActionDeclarationDTO,
+    TransitionExpectationSetDTO,
+    VisualTransitionAnalysisDTO,
+    VisualTransitionReaderTraceDTO,
+)
 
 PERCEPTION_PACKAGE_VERSION = "1.2.0"
 PERCEPTION_STAGE = "P18H"

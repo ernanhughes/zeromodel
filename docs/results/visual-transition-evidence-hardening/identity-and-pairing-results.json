@@ -1,0 +1,33 @@
+{
+  "action_identity": {
+    "action_id": "sha256:e3ea8cf1782e4f38c0f26c53070c6919e8a51025f6c3d8a4542cc79fa4f7a15c",
+    "changed_payload_action_id": "sha256:10184b341eeb231ed71a4a6e2f8790a267c5462c697797a7c2d4e71a04384cd3",
+    "identity_changed": true,
+    "nested_non_string_payload_key_rejected": true,
+    "non_string_payload_key_rejected": true
+  },
+  "analysis_binding": {
+    "analysis_id": "sha256:2ba54204fbc2804a061122fc7bce1089849f8537108d03b34549ee20dd5cf973",
+    "embedded_transition_evidence_preserved": true,
+    "report_from_other_evidence_rejected": true,
+    "round_trip_preserves_identity": true
+  },
+  "before_after_ordered": {
+    "field_id": "sha256:be98e7879facf8e4a38f894e09eb26c9db82a58155feee23f78d7619bc883642",
+    "identity_changed": true,
+    "signed_change": 1.0,
+    "swapped_signed_change": -1.0,
+    "swapped_transition_evidence_id": "sha256:3938fe11301180799393b639b1247fe29c4f2a47455b98341a7df0abfb2c44f4",
+    "transition_evidence_id": "sha256:93c2ed2584ca547fd985e59eb21937d09ea67177ca087cdb3cab283e516f968e"
+  },
+  "expectation_set_identity": {
+    "changed_threshold_changes_identity": true,
+    "changed_threshold_expectation_id": "sha256:0fbcaf2c3034b40f36a75097350b3e6181614a6cf01c1033342a0729b218967f",
+    "duplicate_expectations_rejected": true,
+    "expectation_set_id": "sha256:6764001bbb2d30c6c2a480497b7b21505a2d1f0c25f4a31d5e63930ec83385a6"
+  },
+  "visual_reader_boundary": {
+    "evidence_only_policy_executed_rejected": true,
+    "invalid_digest_rejected": true
+  }
+}

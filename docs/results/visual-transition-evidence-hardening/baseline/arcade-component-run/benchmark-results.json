@@ -1,0 +1,3460 @@
+{
+  "environment": {
+    "categories": [
+      "tank_moves_left",
+      "tank_moves_right",
+      "tank_remains_stationary_at_boundary",
+      "fire_hits_advances_target",
+      "fire_hits_clears_wave",
+      "fire_miss_activates_cooldown",
+      "cooldown_clears",
+      "no_op",
+      "fire_no_projectile",
+      "fire_no_cooldown",
+      "alien_disappears_without_hit",
+      "tank_moves_wrong_action",
+      "tank_moves_wrong_direction",
+      "cooldown_changes_incorrectly",
+      "unrelated_alien_change",
+      "background_changes_unexpectedly",
+      "expected_target_remains_unchanged",
+      "extra_component_changes_alongside"
+    ],
+    "command": "C:\\Projects\\zeromodel\\examples\\visual_transition_benchmark\\run.py --dev-episodes 2 --eval-episodes 4 --skip-render --output-dir docs/results/visual-transition-evidence-hardening/baseline/arcade-component-run",
+    "dev_episode_count": 2,
+    "dev_seeds": [
+      0,
+      1
+    ],
+    "dev_transition_count": 36,
+    "duration_seconds": 0.882,
+    "eval_episode_count": 4,
+    "eval_seeds": [
+      1000000,
+      1000001,
+      1000002,
+      1000003
+    ],
+    "eval_transition_count": 72,
+    "git_commit": "85d4fd50607cbef607ddbe4a5f73c1468ad76955",
+    "numpy_version": "2.4.6",
+    "python_version": "3.11.4",
+    "warning_count": 0
+  },
+  "metrics": {
+    "all": {
+      "component_attribution": {
+        "pixel_diff": {
+          "exact_set_accuracy": 0.8888888888888888,
+          "micro_f1": 0.9375,
+          "micro_precision": 1.0,
+          "micro_recall": 0.8823529411764706,
+          "n": 72
+        },
+        "privileged": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 72
+        },
+        "zeromodel": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 72
+        }
+      },
+      "false_implicated_components": {
+        "pixel_diff": {
+          "mean_count": 0.0,
+          "median_count": 0.0,
+          "pct_zero": 1.0
+        },
+        "privileged": {
+          "mean_count": 0.16666666666666666,
+          "median_count": 0.0,
+          "pct_zero": 0.8333333333333334
+        },
+        "zeromodel": {
+          "mean_count": 0.16666666666666666,
+          "median_count": 0.0,
+          "pct_zero": 0.8333333333333334
+        }
+      },
+      "field_level": {
+        "pixel_diff": {
+          "mean_precision": 0.9444444444444444,
+          "mean_recall": 0.9375,
+          "n": 72
+        },
+        "privileged": {
+          "mean_precision": 0.8933576433576432,
+          "mean_recall": 1.0,
+          "n": 72
+        },
+        "unit": "P4A field tile (4x1 px)",
+        "zeromodel": {
+          "mean_precision": 1.0,
+          "mean_recall": 1.0,
+          "n": 72
+        }
+      },
+      "improvement_over_pixel_diff": {
+        "better": 16,
+        "equal": 56,
+        "n": 72,
+        "pct_better": 0.2222222222222222,
+        "pct_equal": 0.7777777777777778,
+        "pct_worse": 0.0,
+        "worse": 0
+      },
+      "missing_expected_change_detection": {
+        "pixel_diff": {
+          "detection_rate": 0.0,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 12
+        },
+        "privileged": {
+          "detection_rate": 1.0,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 12
+        },
+        "zeromodel": {
+          "detection_rate": 0.6666666666666666,
+          "false_alarm_rate_on_correct": 0.125,
+          "n_relevant": 12
+        }
+      },
+      "n": 72,
+      "unexpected_change_detection": {
+        "pixel_diff": {
+          "detection_rate": 0.0,
+          "fault_localization_rate": 0.6666666666666666,
+          "n_relevant": 24,
+          "precision": 1.0,
+          "recall": 0.0
+        },
+        "privileged": {
+          "detection_rate": 1.0,
+          "fault_localization_rate": 1.0,
+          "n_relevant": 24,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "zeromodel": {
+          "detection_rate": 0.5,
+          "fault_localization_rate": 1.0,
+          "n_relevant": 24,
+          "precision": 1.0,
+          "recall": 0.5
+        }
+      }
+    },
+    "by_category": {
+      "alien_disappears_without_hit": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          }
+        }
+      },
+      "background_changes_unexpectedly": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 0.0,
+            "micro_f1": 0.0,
+            "micro_precision": 1.0,
+            "micro_recall": 0.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 0.0,
+            "mean_recall": 0.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 0.009009009009009009,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "cooldown_changes_incorrectly": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          }
+        }
+      },
+      "cooldown_clears": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "expected_target_remains_unchanged": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          },
+          "zeromodel": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "extra_component_changes_alongside": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 0.0,
+            "micro_f1": 0.6666666666666666,
+            "micro_precision": 1.0,
+            "micro_recall": 0.5,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 0.875,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 0.07142857142857142,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_hits_advances_target": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_hits_clears_wave": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_miss_activates_cooldown": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_no_cooldown": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          },
+          "zeromodel": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_no_projectile": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "no_op": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_moves_left": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_moves_right": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_moves_wrong_action": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_moves_wrong_direction": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_remains_stationary_at_boundary": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 1.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "unrelated_alien_change": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          }
+        }
+      }
+    },
+    "by_fault_type": {
+      "alien_disappears_without_hit": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          }
+        }
+      },
+      "background_changes_unexpectedly": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 0.0,
+            "micro_f1": 0.0,
+            "micro_precision": 1.0,
+            "micro_recall": 0.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 0.0,
+            "mean_recall": 0.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 0.009009009009009009,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "cooldown_changes_incorrectly": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          }
+        }
+      },
+      "expected_target_remains_unchanged": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          },
+          "zeromodel": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "extra_component_changes_alongside": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 0.0,
+            "micro_f1": 0.6666666666666666,
+            "micro_precision": 1.0,
+            "micro_recall": 0.5,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 0.875,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 0.07142857142857142,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_no_cooldown": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          },
+          "zeromodel": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 4,
+          "equal": 0,
+          "n": 4,
+          "pct_better": 1.0,
+          "pct_equal": 0.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "fire_no_projectile": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 1.0,
+            "median_count": 1.0,
+            "pct_zero": 0.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 4
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_moves_wrong_action": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "tank_moves_wrong_direction": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 0.0,
+            "n_relevant": 0,
+            "precision": 1.0,
+            "recall": 1.0
+          }
+        }
+      },
+      "unrelated_alien_change": {
+        "component_attribution": {
+          "pixel_diff": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          },
+          "zeromodel": {
+            "exact_set_accuracy": 1.0,
+            "micro_f1": 1.0,
+            "micro_precision": 1.0,
+            "micro_recall": 1.0,
+            "n": 4
+          }
+        },
+        "false_implicated_components": {
+          "pixel_diff": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "privileged": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          },
+          "zeromodel": {
+            "mean_count": 0.0,
+            "median_count": 0.0,
+            "pct_zero": 1.0
+          }
+        },
+        "field_level": {
+          "pixel_diff": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "privileged": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          },
+          "unit": "P4A field tile (4x1 px)",
+          "zeromodel": {
+            "mean_precision": 1.0,
+            "mean_recall": 1.0,
+            "n": 4
+          }
+        },
+        "improvement_over_pixel_diff": {
+          "better": 0,
+          "equal": 4,
+          "n": 4,
+          "pct_better": 0.0,
+          "pct_equal": 1.0,
+          "pct_worse": 0.0,
+          "worse": 0
+        },
+        "missing_expected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "privileged": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "false_alarm_rate_on_correct": 0.0,
+            "n_relevant": 0
+          }
+        },
+        "n": 4,
+        "unexpected_change_detection": {
+          "pixel_diff": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          },
+          "privileged": {
+            "detection_rate": 1.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 1.0
+          },
+          "zeromodel": {
+            "detection_rate": 0.0,
+            "fault_localization_rate": 1.0,
+            "n_relevant": 4,
+            "precision": 1.0,
+            "recall": 0.0
+          }
+        }
+      }
+    },
+    "faulty": {
+      "component_attribution": {
+        "pixel_diff": {
+          "exact_set_accuracy": 0.8,
+          "micro_f1": 0.8750000000000001,
+          "micro_precision": 1.0,
+          "micro_recall": 0.7777777777777778,
+          "n": 40
+        },
+        "privileged": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 40
+        },
+        "zeromodel": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 40
+        }
+      },
+      "false_implicated_components": {
+        "pixel_diff": {
+          "mean_count": 0.0,
+          "median_count": 0.0,
+          "pct_zero": 1.0
+        },
+        "privileged": {
+          "mean_count": 0.3,
+          "median_count": 0.0,
+          "pct_zero": 0.7
+        },
+        "zeromodel": {
+          "mean_count": 0.2,
+          "median_count": 0.0,
+          "pct_zero": 0.8
+        }
+      },
+      "field_level": {
+        "pixel_diff": {
+          "mean_precision": 0.9,
+          "mean_recall": 0.8875,
+          "n": 40
+        },
+        "privileged": {
+          "mean_precision": 0.808043758043758,
+          "mean_recall": 1.0,
+          "n": 40
+        },
+        "unit": "P4A field tile (4x1 px)",
+        "zeromodel": {
+          "mean_precision": 1.0,
+          "mean_recall": 1.0,
+          "n": 40
+        }
+      },
+      "improvement_over_pixel_diff": {
+        "better": 16,
+        "equal": 24,
+        "n": 40,
+        "pct_better": 0.4,
+        "pct_equal": 0.6,
+        "pct_worse": 0.0,
+        "worse": 0
+      },
+      "missing_expected_change_detection": {
+        "pixel_diff": {
+          "detection_rate": 0.0,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 12
+        },
+        "privileged": {
+          "detection_rate": 1.0,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 12
+        },
+        "zeromodel": {
+          "detection_rate": 0.6666666666666666,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 12
+        }
+      },
+      "n": 40,
+      "unexpected_change_detection": {
+        "pixel_diff": {
+          "detection_rate": 0.0,
+          "fault_localization_rate": 0.6666666666666666,
+          "n_relevant": 24,
+          "precision": 1.0,
+          "recall": 0.0
+        },
+        "privileged": {
+          "detection_rate": 1.0,
+          "fault_localization_rate": 1.0,
+          "n_relevant": 24,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "zeromodel": {
+          "detection_rate": 0.5,
+          "fault_localization_rate": 1.0,
+          "n_relevant": 24,
+          "precision": 1.0,
+          "recall": 0.5
+        }
+      }
+    },
+    "ordinary": {
+      "component_attribution": {
+        "pixel_diff": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 32
+        },
+        "privileged": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 32
+        },
+        "zeromodel": {
+          "exact_set_accuracy": 1.0,
+          "micro_f1": 1.0,
+          "micro_precision": 1.0,
+          "micro_recall": 1.0,
+          "n": 32
+        }
+      },
+      "false_implicated_components": {
+        "pixel_diff": {
+          "mean_count": 0.0,
+          "median_count": 0.0,
+          "pct_zero": 1.0
+        },
+        "privileged": {
+          "mean_count": 0.0,
+          "median_count": 0.0,
+          "pct_zero": 1.0
+        },
+        "zeromodel": {
+          "mean_count": 0.125,
+          "median_count": 0.0,
+          "pct_zero": 0.875
+        }
+      },
+      "field_level": {
+        "pixel_diff": {
+          "mean_precision": 1.0,
+          "mean_recall": 1.0,
+          "n": 32
+        },
+        "privileged": {
+          "mean_precision": 1.0,
+          "mean_recall": 1.0,
+          "n": 32
+        },
+        "unit": "P4A field tile (4x1 px)",
+        "zeromodel": {
+          "mean_precision": 1.0,
+          "mean_recall": 1.0,
+          "n": 32
+        }
+      },
+      "improvement_over_pixel_diff": {
+        "better": 0,
+        "equal": 32,
+        "n": 32,
+        "pct_better": 0.0,
+        "pct_equal": 1.0,
+        "pct_worse": 0.0,
+        "worse": 0
+      },
+      "missing_expected_change_detection": {
+        "pixel_diff": {
+          "detection_rate": 0.0,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 0
+        },
+        "privileged": {
+          "detection_rate": 0.0,
+          "false_alarm_rate_on_correct": 0.0,
+          "n_relevant": 0
+        },
+        "zeromodel": {
+          "detection_rate": 0.0,
+          "false_alarm_rate_on_correct": 0.125,
+          "n_relevant": 0
+        }
+      },
+      "n": 32,
+      "unexpected_change_detection": {
+        "pixel_diff": {
+          "detection_rate": 0.0,
+          "fault_localization_rate": 0.0,
+          "n_relevant": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "privileged": {
+          "detection_rate": 0.0,
+          "fault_localization_rate": 0.0,
+          "n_relevant": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        },
+        "zeromodel": {
+          "detection_rate": 0.0,
+          "fault_localization_rate": 0.0,
+          "n_relevant": 0,
+          "precision": 1.0,
+          "recall": 1.0
+        }
+      }
+    }
+  }
+}

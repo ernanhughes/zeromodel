@@ -1,0 +1,7 @@
+{
+  "zeromodel.core": "C:\\Projects\\zeromodel\\packages\\core\\src\\zeromodel\\core\\__init__.py",
+  "zeromodel.observation": "C:\\Projects\\zeromodel\\packages\\observation\\src\\zeromodel\\observation\\__init__.py",
+  "zeromodel.perception": "C:\\Projects\\zeromodel\\packages\\perception\\src\\zeromodel\\perception\\__init__.py",
+  "zeromodel.video": "C:\\Projects\\zeromodel\\packages\\video\\src\\zeromodel\\video\\__init__.py",
+  "zeromodel.vision": "C:\\Projects\\zeromodel\\packages\\vision\\src\\zeromodel\\vision\\__init__.py"
+}

@@ -171,10 +171,15 @@ The coordinated 1.2.0 packages are not assumed to be available from a package in
 ```bash
 git clone https://github.com/ernanhughes/zeromodel.git
 cd zeromodel
-python -m pip install -r requirements-dev.txt
+python scripts/bootstrap_dev_environment.py
 ```
 
-`requirements-dev.txt` installs all eleven packages in editable mode plus the development toolchain.
+`scripts/bootstrap_dev_environment.py` upgrades `pip`, installs
+`requirements-dev.txt`, verifies the critical test imports, and prints the
+installed ZeroModel package paths and versions. `requirements-dev.txt` remains
+the single development-dependency authority: it installs all eleven packages in
+editable mode plus the test, rendering, cryptography, build, lint, and typing
+toolchain.
 
 For a non-editable local installation:
 
@@ -197,6 +202,12 @@ Verify the checkout:
 
 ```bash
 python scripts/run_fast_tests.py
+```
+
+For a fresh environment, bootstrap and verify in one command:
+
+```bash
+python scripts/bootstrap_dev_environment.py --run-fast-tests
 ```
 
 Run the heavier coordinated release gate only when preparing a release candidate:

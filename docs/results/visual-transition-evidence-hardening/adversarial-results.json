@@ -1,0 +1,11 @@
+{
+  "covered": [
+    "changed action payload",
+    "duplicate expectations",
+    "report from other transition evidence",
+    "evidence_only policy execution",
+    "swapped before/after identity"
+  ],
+  "remaining": "Full mutation matrix remains future work.",
+  "status": "focused_identity_attacks_added"
+}

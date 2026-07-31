@@ -1,0 +1,20 @@
+{
+  "numpy_version": "2.4.6",
+  "packages": {
+    "zeromodel": "1.0.12",
+    "zeromodel-observation": "1.2.0",
+    "zeromodel-perception": "1.2.0",
+    "zeromodel-video": "1.2.0",
+    "zeromodel-vision": "1.2.0"
+  },
+  "paths": {
+    "zeromodel.core": "C:\\Projects\\zeromodel\\packages\\core\\src\\zeromodel\\core\\__init__.py",
+    "zeromodel.observation": "C:\\Projects\\zeromodel\\packages\\observation\\src\\zeromodel\\observation\\__init__.py",
+    "zeromodel.perception": "C:\\Projects\\zeromodel\\packages\\perception\\src\\zeromodel\\perception\\__init__.py",
+    "zeromodel.video": "C:\\Projects\\zeromodel\\packages\\video\\src\\zeromodel\\video\\__init__.py",
+    "zeromodel.vision": "C:\\Projects\\zeromodel\\packages\\vision\\src\\zeromodel\\vision\\__init__.py"
+  },
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+  "python_executable": "C:\\Projects\\zeromodel\\.venv-transition-hardening\\Scripts\\python.exe"
+}

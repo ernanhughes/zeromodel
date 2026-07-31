@@ -1,0 +1,38 @@
+{
+  "focused_tests": [
+    {
+      "name": "perception transition p18a/p18b",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "name": "vision/video contract tests",
+      "status": "passed",
+      "tests": 28
+    },
+    {
+      "name": "benchmark smoke tests",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "name": "compiler focused bundle",
+      "status": "timeout",
+      "timeout_seconds": 60
+    },
+    {
+      "name": "transition analysis p18h + p18a/p18b",
+      "status": "passed",
+      "tests": 12
+    }
+  ],
+  "full_fast_suite": {
+    "collected": 1671,
+    "deselected": 200,
+    "duration_seconds": 105.97,
+    "failed": 0,
+    "passed": 1470,
+    "skipped": 1,
+    "status": "passed"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "episodes": [
+    {
+      "candidates": [],
+      "episode_id": "eval-0000",
+      "n_observations": 18,
+      "status": "no_candidates"
+    },
+    {
+      "candidates": [],
+      "episode_id": "eval-0001",
+      "n_observations": 18,
+      "status": "no_candidates"
+    },
+    {
+      "candidates": [],
+      "episode_id": "eval-0002",
+      "n_observations": 18,
+      "status": "no_candidates"
+    },
+    {
+      "candidates": [],
+      "episode_id": "eval-0003",
+      "n_observations": 18,
+      "status": "no_candidates"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "reason": "Prompt 03 alias comparison requires a dedicated generator; current production change preserves reader trace fields needed for it.",
+  "status": "not_reproduced"
+}

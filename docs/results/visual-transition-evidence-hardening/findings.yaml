@@ -1,0 +1,72 @@
+- id: vteh-001
+  title: Ordered fieldwise transition evidence is already production-capable
+  classification: positive result
+  evidence_state: reproduced
+  severity: low
+  capability: fieldwise change evidence
+  claim_affected: deterministic identity-bearing fieldwise evidence
+  source_paths:
+    - packages/perception/src/zeromodel/perception/transition_evidence.py
+  test_paths:
+    - packages/perception/tests/test_transition_evidence_p18a.py
+  commands:
+    - python -m pytest packages/perception/tests/test_transition_evidence_p18a.py -q
+  domains:
+    - synthetic
+  categories:
+    - before_after_ordering
+    - fieldwise_change
+  observed_result: Focused P18A tests passed and identity checks show swapped before/after changes transition evidence identity.
+  interpretation: The reusable kernel is already in perception, not benchmark code.
+  why_it_matters: Downstream reports can bind to exact visual evidence instead of loose frame pairs.
+  production_change: Added VisualTransitionAnalysisDTO composition identity.
+  remaining_boundary: Does not imply causal diagnosis or open-world perception.
+  confidence: high
+- id: vteh-002
+  title: Action and expectation identities were the smallest missing production bindings
+  classification: defect
+  evidence_state: fixed
+  severity: medium
+  capability: transition identity chain
+  claim_affected: before/action/after contract binding
+  source_paths:
+    - packages/perception/src/zeromodel/perception/transition_analysis.py
+  test_paths:
+    - packages/perception/tests/test_transition_analysis_p18h.py
+  commands:
+    - python scripts/audit/run_transition_identity_checks.py
+  domains:
+    - synthetic
+  categories:
+    - action_identity
+    - expectation_set_identity
+  observed_result: Changed action payload and changed expectation threshold change identity; duplicate expectations are rejected.
+  interpretation: The transition analysis identity now includes declared action and exact expectation set.
+  why_it_matters: The same observations cannot be silently reinterpreted under another action or contract.
+  production_change: Added TransitionActionDeclarationDTO and TransitionExpectationSetDTO.
+  remaining_boundary: Domain-specific action meaning remains outside production.
+  confidence: high
+- id: vteh-003
+  title: Compiler evidence was not locally reproduced within budget
+  classification: negative result
+  evidence_state: timeout
+  severity: medium
+  capability: representation compiler
+  claim_affected: compiler replication
+  source_paths:
+    - examples/visual_transition_benchmark/compiler_run.py
+  test_paths:
+    - examples/visual_transition_benchmark/tests/test_compiler_end_to_end.py
+  commands:
+    - python -m visual_transition_benchmark.compiler_run --dev-samples 2 --eval-samples 3
+  domains:
+    - arcade
+    - warehouse
+  categories:
+    - compiler
+  observed_result: Compiler run exceeded the local 180-second development budget.
+  interpretation: Historical compiler results remain historical in this package.
+  why_it_matters: Compiler abstractions were not promoted.
+  production_change: None.
+  remaining_boundary: Run the compiler evidence job separately before strengthening compiler claims.
+  confidence: high

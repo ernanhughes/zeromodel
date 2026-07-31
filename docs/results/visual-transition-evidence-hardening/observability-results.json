@@ -1,0 +1,4 @@
+{
+  "finding": "Visual reader evidence_only cannot be represented as policy_executed; compiler insufficient-observability historical claim not reproduced in this local run due timeout.",
+  "status": "boundary_recorded"
+}

@@ -182,6 +182,24 @@ Additional claims to avoid:
 
 ## Recommended validation backlog
 
+### Visual transition evidence hardening update
+
+The `docs/results/visual-transition-evidence-hardening/` package strengthens a
+bounded production claim: ZeroModel can bind exact before/action/after evidence
+to a declared expectation set and conformance report through stable identities.
+The safe wording is:
+
+> ZeroModel can construct deterministic, identity-bearing fieldwise transition
+> evidence from exact observations and localize selected contract deviations to
+> declared fields, components, or relations under a declared action and exact
+> expectation set.
+
+Keep unsupported: causal root-cause diagnosis, hidden-event detection from
+insufficient frames, open-world transition understanding, universal target
+identity, and general superiority over region-aware conventional baselines. The
+compiler portion was not locally reproduced in this hardening run and remains a
+historical claim pending a separately budgeted evidence execution.
+
 1. **Complete the v1 evidence package** — attach the original full JSON, traces, log, exact command, evaluated commit, and environment manifest. Preserve the disclosed PowerShell provenance defect rather than reconstructing it silently.
 2. **Visual failure atlas** — generate score/coverage/FAR/FRR curves, accepted row/action precision, top-1 ranking metrics before rejection, paired B-versus-D outcomes, translation-family confusion, and state/family-clustered uncertainty.
 3. **Value-aware visual transition contracts** — extend the committed transition benchmark from component-presence changes to typed component values and relations. Measure wrong-direction movement, incorrect cooldown values, wrong-target removal, and expected state deltas against the same raw-pixel and privileged-state baselines. Keep episode-disjoint development and evaluation splits and report visible attribution separately from value-level fault localization. **Completed** for wrong-direction, wrong-cooldown-value, and wrong-magnitude; wrong-target-identity remains open. See `docs/research/value-aware-transition-contracts.md` and the two new rows above.

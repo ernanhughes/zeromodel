@@ -1,0 +1,46 @@
+{
+  "environment": {
+    "categories": [
+      "tank_moves_left",
+      "tank_moves_right",
+      "tank_remains_stationary_at_boundary",
+      "fire_hits_advances_target",
+      "fire_hits_clears_wave",
+      "fire_miss_activates_cooldown",
+      "cooldown_clears",
+      "no_op",
+      "fire_no_projectile",
+      "fire_no_cooldown",
+      "alien_disappears_without_hit",
+      "tank_moves_wrong_action",
+      "tank_moves_wrong_direction",
+      "cooldown_changes_incorrectly",
+      "unrelated_alien_change",
+      "background_changes_unexpectedly",
+      "expected_target_remains_unchanged",
+      "extra_component_changes_alongside"
+    ],
+    "command": "C:\\Projects\\zeromodel\\examples\\visual_transition_benchmark\\run.py --dev-episodes 2 --eval-episodes 4 --skip-render --output-dir docs/results/visual-transition-evidence-hardening/baseline/arcade-component-run",
+    "dev_episode_count": 2,
+    "dev_seeds": [
+      0,
+      1
+    ],
+    "dev_transition_count": 36,
+    "duration_seconds": 0.882,
+    "eval_episode_count": 4,
+    "eval_seeds": [
+      1000000,
+      1000001,
+      1000002,
+      1000003
+    ],
+    "eval_transition_count": 72,
+    "git_commit": "85d4fd50607cbef607ddbe4a5f73c1468ad76955",
+    "numpy_version": "2.4.6",
+    "python_version": "3.11.4",
+    "warning_count": 0
+  },
+  "rendered_artifact_count": 0,
+  "warnings": []
+}

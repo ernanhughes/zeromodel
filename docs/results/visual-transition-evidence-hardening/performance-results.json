@@ -1,0 +1,4 @@
+{
+  "reason": "Focused implementation measured test/runtime smoke only; no embedded or latency claim made.",
+  "status": "not_measured"
+}

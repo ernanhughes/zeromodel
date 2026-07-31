@@ -1,0 +1,10 @@
+{
+  "environment": {
+    "git_commit": "85d4fd50607cbef607ddbe4a5f73c1468ad76955",
+    "command": "python -m visual_transition_benchmark.compiler_run --dev-samples 2 --eval-samples 3",
+    "status": "timeout",
+    "timeout_seconds": 180
+  },
+  "results": [],
+  "interpretation": "Compiler smoke reproduction did not complete within the local 180-second development budget. Historical compiler results remain recorded under docs/results/evidence-contract-compiler-v1/ and are not reasserted as reproduced here."
+}

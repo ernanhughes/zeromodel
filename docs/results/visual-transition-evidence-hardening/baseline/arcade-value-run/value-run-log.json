@@ -1,0 +1,24 @@
+{
+  "environment": {
+    "command": "C:\\Projects\\zeromodel\\examples\\visual_transition_benchmark\\value_run.py --dev-episodes 2 --eval-episodes 4 --skip-render --output-dir docs/results/visual-transition-evidence-hardening/baseline/arcade-value-run",
+    "dev_episode_count": 2,
+    "duration_seconds": 2.188,
+    "eval_episode_count": 4,
+    "eval_transition_count": 92,
+    "git_commit": "85d4fd50607cbef607ddbe4a5f73c1468ad76955",
+    "new_value_fault_transition_count": 20,
+    "numpy_version": "2.4.6",
+    "python_version": "3.11.4",
+    "reused_stage1_transition_count": 72,
+    "value_fault_categories": [
+      "tank_moves_too_far",
+      "cooldown_activates_with_wrong_value",
+      "cooldown_decreases_to_wrong_value",
+      "wrong_alien_disappears",
+      "two_aliens_disappear_instead_of_one"
+    ],
+    "warning_count": 0
+  },
+  "rendered_artifact_count": 0,
+  "warnings": []
+}

@@ -1,4 +1,6 @@
 {
+  "calibration_rule_mismatch_count": 0,
+  "calibration_rule_mismatches": [],
   "case_count": 1428,
   "curves": [
     {

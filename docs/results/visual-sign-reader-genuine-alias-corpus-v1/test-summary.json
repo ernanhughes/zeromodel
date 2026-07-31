@@ -10,7 +10,7 @@
   "focused_tests": {
     "command": "python -m pytest examples/visual_transition_benchmark/tests/test_alias_discovery.py -q",
     "failed": 0,
-    "passed": 11
+    "passed": 12
   },
   "git_diff_check": {
     "command": "git diff --check",

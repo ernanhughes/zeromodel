@@ -79,6 +79,8 @@ class VisualAliasCase:
     nearest_distance: float
     second_nearest_distance: float
     distance_margin: float
+    acceptance_threshold: float
+    required_margin: float
     matched_row_id: str | None
     matched_action: str | None
     alias_status: str
@@ -134,6 +136,8 @@ class VisualAliasCase:
             "nearest_distance": self.nearest_distance,
             "second_nearest_distance": self.second_nearest_distance,
             "distance_margin": self.distance_margin,
+            "acceptance_threshold": self.acceptance_threshold,
+            "required_margin": self.required_margin,
             "matched_row_id": self.matched_row_id,
             "matched_action": self.matched_action,
             "alias_status": self.alias_status,
@@ -233,6 +237,7 @@ def build_case(
     split: str,
     source_row_id: str,
     transform: TransformSpec,
+    transform_registry_id: str,
     seed: int | None,
     severity_rank: int,
     profile: str,
@@ -270,7 +275,7 @@ def build_case(
         transformed_observation_raw_digest=visual_raw_input_digest(transformed, context.feature_spec),
         transformed_observation_canonical_digest=visual_input_digest(transformed, context.feature_spec),
         transformed_feature_digest=visual_feature_digest(transformed_features, context.feature_spec),
-        transform_registry_id=registry_id(),
+        transform_registry_id=transform_registry_id,
         transform_chain_id=transform_chain_id,
         transform_id=transform.transform_id,
         transform_family=transform.family,
@@ -297,6 +302,8 @@ def build_case(
         nearest_distance=float(decision.nearest_distance),
         second_nearest_distance=float(decision.second_nearest_distance),
         distance_margin=float(decision.distance_margin),
+        acceptance_threshold=float(decision.acceptance_threshold),
+        required_margin=float(decision.required_margin),
         matched_row_id=decision.matched_row_id,
         matched_action=decision.action,
         alias_status=alias_status,
@@ -308,7 +315,10 @@ def build_case(
 
 
 def generate_cases(
-    *, mode: str, registry: tuple[TransformSpec, ...] | None = None
+    *,
+    mode: str,
+    registry: tuple[TransformSpec, ...] | None = None,
+    transform_registry_id: str | None = None,
 ) -> tuple[list[VisualAliasCase], dict[str, np.ndarray], ReaderContext]:
     context = build_context()
     specs = registry or ()
@@ -321,6 +331,7 @@ def generate_cases(
         "visual_transition_benchmark.alias_discovery.registry",
         fromlist=["default_registry"],
     ).default_registry()
+    rid = transform_registry_id or registry_id(specs)
     cases: list[VisualAliasCase] = []
     observations: dict[str, np.ndarray] = {}
     for row_id in rows:
@@ -334,6 +345,7 @@ def generate_cases(
                         split=split,
                         source_row_id=row_id,
                         transform=transform,
+                        transform_registry_id=rid,
                         seed=seed,
                         severity_rank=severity_rank,
                         profile=profile,

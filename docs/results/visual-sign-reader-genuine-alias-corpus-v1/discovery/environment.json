@@ -1,6 +1,6 @@
 {
   "calibration_digest": "73bc2b2dc6944dd0e19e2c1242768c356b09ca73a8bb7e9a1680114c4591369a",
-  "current_git_sha": "c5b7e9c176b4a11f9bd86969afe8518e2614489b",
+  "current_git_sha": "d182f46d1dba6b26331a996971ff1cd04ce009c1",
   "feature_spec_digest": "ec280f467544cacc4eb2717df2008f601f83be03b337f0b459498161a5fd64b7",
   "numpy": "1.26.4",
   "pillow": "11.0.0",

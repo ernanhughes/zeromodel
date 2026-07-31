@@ -1027,5 +1027,6 @@
     }
   ],
   "generated_case_count": 1632,
-  "unique_transformed_observation_count": 1376
+  "unique_transformed_observation_count": 1376,
+  "unique_wrong_row_visual_alias_count": 22
 }

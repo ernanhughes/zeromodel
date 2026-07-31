@@ -36,7 +36,8 @@
     "test-summary.json",
     "transform-family-results.json",
     "transform-registry-digest.json",
-    "transform-registry.json"
+    "transform-registry.json",
+    "unique-accepted-wrong-row-aliases.jsonl"
   ],
   "result_files": [
     "manifest.json",
@@ -52,6 +53,7 @@
     "all-cases.jsonl",
     "accepted-cases.jsonl",
     "accepted-wrong-row-cases.jsonl",
+    "unique-accepted-wrong-row-aliases.jsonl",
     "accepted-action-equivalent-aliases.jsonl",
     "accepted-action-changing-aliases.jsonl",
     "rejected-cases.jsonl",

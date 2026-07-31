@@ -72,6 +72,7 @@ def test_canonical_source_and_transformed_observation_provenance_replay():
         split=split_for_row(row_id),
         source_row_id=row_id,
         transform=transform,
+        transform_registry_id=registry_id(default_registry()),
         seed=None,
         severity_rank=1,
         profile=VisualAcceptanceProfile.EXACT_CODEWORD,
@@ -95,9 +96,17 @@ def test_profile_specific_invariants_enforced():
         if case.acceptance_profile == VisualAcceptanceProfile.EXACT_CODEWORD and case.policy_executed:
             assert case.exact_feature_match
         if case.acceptance_profile == VisualAcceptanceProfile.CALIBRATED_NEAREST and case.policy_executed:
-            assert case.nearest_distance <= case.nearest_distance + 1e-12
+            assert case.nearest_distance <= case.acceptance_threshold + 1e-12
+            assert case.distance_margin + 1e-12 >= case.required_margin
         if case.acceptance_profile == VisualAcceptanceProfile.EVIDENCE_ONLY:
             assert not case.policy_executed
+
+
+def test_loaded_registry_identity_propagates_to_cases():
+    specs = default_registry()
+    rid = registry_id(specs)
+    cases, _, _ = generate_cases(mode="smoke", registry=specs, transform_registry_id=rid)
+    assert {case.transform_registry_id for case in cases} == {rid}
 
 
 def test_deduplication_determinism_and_duplicate_provenance_retention():

@@ -1,25 +1,28 @@
 {
   "cases": [
     {
-      "case_id": "canonical-exact-reader_local-component",
+      "case_id": "canonical-only-accepted-reader_local-component",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "correct-noncanonical-reader_local-component",
+      "case_id": "exact-codeword-canonical-reader_local-component",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "wrong-action-changing-reader_local-component",
-      "region_signature": []
+      "case_id": "exact-codeword-noncanonical-correct-reader_local-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
     },
     {
-      "case_id": "wrong-action-equivalent-reader_local-component",
+      "case_id": "calibrated-nearest-correct-reader_local-component",
       "region_signature": [
         "tank"
       ]
@@ -35,25 +38,28 @@
       ]
     },
     {
-      "case_id": "canonical-exact-policy_action-component",
+      "case_id": "canonical-only-accepted-policy_action-component",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "correct-noncanonical-policy_action-component",
+      "case_id": "exact-codeword-canonical-policy_action-component",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "wrong-action-changing-policy_action-component",
-      "region_signature": []
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
     },
     {
-      "case_id": "wrong-action-equivalent-policy_action-component",
+      "case_id": "calibrated-nearest-correct-policy_action-component",
       "region_signature": [
         "tank"
       ]
@@ -69,25 +75,28 @@
       ]
     },
     {
-      "case_id": "canonical-exact-reader_local-value",
+      "case_id": "canonical-only-accepted-reader_local-value",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "correct-noncanonical-reader_local-value",
+      "case_id": "exact-codeword-canonical-reader_local-value",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "wrong-action-changing-reader_local-value",
-      "region_signature": []
+      "case_id": "exact-codeword-noncanonical-correct-reader_local-value",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
     },
     {
-      "case_id": "wrong-action-equivalent-reader_local-value",
+      "case_id": "calibrated-nearest-correct-reader_local-value",
       "region_signature": [
         "tank"
       ]
@@ -103,25 +112,28 @@
       ]
     },
     {
-      "case_id": "canonical-exact-policy_action-value",
+      "case_id": "canonical-only-accepted-policy_action-value",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "correct-noncanonical-policy_action-value",
+      "case_id": "exact-codeword-canonical-policy_action-value",
       "region_signature": [
         "alien",
         "cooldown"
       ]
     },
     {
-      "case_id": "wrong-action-changing-policy_action-value",
-      "region_signature": []
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-value",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
     },
     {
-      "case_id": "wrong-action-equivalent-policy_action-value",
+      "case_id": "calibrated-nearest-correct-policy_action-value",
       "region_signature": [
         "tank"
       ]
@@ -142,6 +154,10 @@
     },
     {
       "case_id": "evidence-only-no-execution",
+      "region_signature": []
+    },
+    {
+      "case_id": "calibrated-nearest-rejected-distant",
       "region_signature": []
     }
   ]

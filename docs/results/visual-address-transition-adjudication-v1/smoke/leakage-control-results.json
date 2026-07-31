@@ -1,4 +1,16 @@
 {
-  "after_frame_mutation_changes_runtime_output": true,
-  "runtime_outputs_ignore_privileged_truth": true
+  "after_frame_mutation_changes_runtime_output": {
+    "baseline_result_id": "sha256:d7ec44ab1d734ed451511adeba2d50333da7f00ee6f58f5c514f96977df4527a",
+    "expected_relationship": "different",
+    "mutated_result_id": "sha256:12654bf7f2607df86964a6d448c5caa8685b4a860233a9caabdcbd57a0dc414b",
+    "observed_relationship": "different",
+    "passed": true
+  },
+  "runtime_outputs_ignore_privileged_truth": {
+    "baseline_result_id": "sha256:d7ec44ab1d734ed451511adeba2d50333da7f00ee6f58f5c514f96977df4527a",
+    "expected_relationship": "equal",
+    "mutated_result_id": "sha256:d7ec44ab1d734ed451511adeba2d50333da7f00ee6f58f5c514f96977df4527a",
+    "observed_relationship": "equal",
+    "passed": true
+  }
 }

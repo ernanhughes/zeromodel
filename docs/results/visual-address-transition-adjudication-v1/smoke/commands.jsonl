@@ -1,1 +1,1 @@
-{"command": "$env:PYTHONPATH='examples'; python -m visual_transition_benchmark.adjudication.run --mode smoke --output-dir docs/results/visual-address-transition-adjudication-v1/smoke", "mode": "smoke", "status": "passed"}
+{"command": "$env:PYTHONPATH='examples'; python -m visual_transition_benchmark.adjudication.run", "mode": "smoke", "status": "passed"}

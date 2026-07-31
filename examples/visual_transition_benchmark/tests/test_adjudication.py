@@ -45,6 +45,9 @@ def _run(case):
             visual_decision=case.visual_decision,
             candidate_universe=case.candidate_universe,
             evidence_mode=case.evidence_mode,
+            addressed_observation=case.observed_frame,
+            addressed_observation_transform_id=case.observation_transform_id,
+            feature_spec=case.feature_spec,
             frame_before=case.true_before_frame,
             frame_after=case.true_after_frame,
             action=action,
@@ -63,7 +66,7 @@ def _case(prefix: str, *, universe: str = "reader_local", mode: str = "component
 
 
 def test_candidate_ordering_determinism_and_identity():
-    case = _case("wrong-action-changing")
+    case = _case("exact-codeword-canonical")
     first = candidate_rows(case.candidate_universe, case.visual_decision)
     second = candidate_rows(case.candidate_universe, case.visual_decision)
     assert first == tuple(sorted(first))
@@ -86,18 +89,25 @@ def test_contract_identity_is_deterministic():
 
 
 def test_correct_canonical_and_noncanonical_address_retained():
-    assert _run(_case("canonical-exact")).addressed_candidate_status == "retained"
-    assert _run(_case("correct-noncanonical")).addressed_candidate_status == "retained"
+    assert _run(_case("canonical-only-accepted")).addressed_candidate_status == "retained"
+    assert (
+        _run(_case("exact-codeword-noncanonical-correct")).addressed_candidate_status
+        == "retained"
+    )
 
 
-def test_wrong_action_changing_address_contradicted():
-    result = _run(_case("wrong-action-changing", universe="policy_action"))
-    assert result.addressed_candidate_status == "contradicted"
-    assert result.runtime_adjudication_status == "address_contradicted"
+def test_genuine_true_observation_perturbations_do_not_create_wrong_row_aliases():
+    wrong = [
+        case
+        for case in build_case_corpus()
+        if case.visual_decision.policy_executed
+        and case.visual_decision.matched_row_id != case.true_row_id
+    ]
+    assert wrong == []
 
 
 def test_action_equivalent_address_remains_unresolved():
-    result = _run(_case("wrong-action-equivalent", universe="policy_action"))
+    result = _run(_case("no-effect-unresolved", universe="policy_action"))
     assert result.runtime_adjudication_status in {
         "action_equivalent_unresolved",
         "transition_signature_collision",
@@ -138,7 +148,7 @@ def test_reader_rejection_and_evidence_only_produce_no_execution_adjudication():
 
 
 def test_wrong_action_identity_and_payload_rejected():
-    case = _case("canonical-exact")
+    case = _case("canonical-only-accepted")
     wrong_action = TransitionActionDeclarationDTO.create(
         action_type="LEFT", payload={"row_id": "wrong"}
     )
@@ -148,6 +158,9 @@ def test_wrong_action_identity_and_payload_rejected():
             visual_decision=case.visual_decision,
             candidate_universe=case.candidate_universe,
             evidence_mode=case.evidence_mode,
+            addressed_observation=case.observed_frame,
+            addressed_observation_transform_id=case.observation_transform_id,
+            feature_spec=case.feature_spec,
             frame_before=case.true_before_frame,
             frame_after=case.true_after_frame,
             action=wrong_action,
@@ -161,13 +174,16 @@ def test_wrong_action_identity_and_payload_rejected():
 
 
 def test_wrong_transition_evidence_and_swap_detected():
-    case = _case("canonical-exact")
+    case = _case("canonical-only-accepted")
     result = adjudicate_address_transition(
         RuntimeAdjudicationInput(
             case_id=case.case_id,
             visual_decision=case.visual_decision,
             candidate_universe=case.candidate_universe,
             evidence_mode=case.evidence_mode,
+            addressed_observation=case.observed_frame,
+            addressed_observation_transform_id=case.observation_transform_id,
+            feature_spec=case.feature_spec,
             frame_before=case.true_before_frame,
             frame_after=case.true_after_frame,
             action=TransitionActionDeclarationDTO.create(
@@ -183,21 +199,50 @@ def test_wrong_transition_evidence_and_swap_detected():
     assert "invalid_transition_evidence" in result.reason_codes
 
 
+def test_decision_bound_to_exact_addressed_observation():
+    case = _case("canonical-only-accepted")
+    result = adjudicate_address_transition(
+        RuntimeAdjudicationInput(
+            case_id=case.case_id,
+            visual_decision=case.visual_decision,
+            candidate_universe=case.candidate_universe,
+            evidence_mode=case.evidence_mode,
+            addressed_observation=np.array(case.true_after_frame, copy=True),
+            addressed_observation_transform_id="canonical",
+            feature_spec=case.feature_spec,
+            frame_before=case.true_before_frame,
+            frame_after=case.true_after_frame,
+            action=TransitionActionDeclarationDTO.create(
+                action_type=str(case.addressed_action),
+                payload={"row_id": case.visual_decision.matched_row_id},
+                provider_id="visual-sign-reader",
+            ),
+            transition_evidence=_transition(
+                case.true_before_frame, case.true_after_frame
+            ),
+        )
+    )
+    assert result.runtime_adjudication_status == "invalid_transition_evidence"
+    assert {"reader_observation_mismatch", "stale_before_observation"} <= set(
+        result.reason_codes
+    )
+
+
 def test_serialization_round_trip_runtime_dict():
-    result = _run(_case("canonical-exact"))
+    result = _run(_case("canonical-only-accepted"))
     assert result.result_id
     assert result.runtime_dict()["case_id"] == result.case_id
 
 
 def test_true_row_absent_from_runtime_input_and_label_mutation_noop():
-    case = _case("wrong-action-changing")
+    case = _case("exact-codeword-noncanonical-correct")
     result = _run(case)
     mutated_truth = replace(case, true_row_id="tank=6|target=6|cooldown=1")
     assert _run(mutated_truth).runtime_dict() == result.runtime_dict()
 
 
 def test_after_frame_mutation_changes_runtime_output():
-    case = _case("canonical-exact")
+    case = _case("canonical-only-accepted")
     result = _run(case)
     mutated_after = np.array(case.true_after_frame, copy=True)
     mutated_after[6, 0] = 90
@@ -206,6 +251,6 @@ def test_after_frame_mutation_changes_runtime_output():
 
 
 def test_wrong_reader_trace_rejected_by_production_trace_invariant():
-    case = _case("canonical-exact")
+    case = _case("canonical-only-accepted")
     with pytest.raises(Exception):
         replace(case.visual_decision, policy_executed=True, matched_row_id=None)

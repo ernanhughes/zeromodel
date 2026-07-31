@@ -13,6 +13,12 @@ def summarize(rows: Iterable[Mapping[str, object]]) -> dict[str, object]:
     accepted = [row for row in items if row["policy_executed"]]
     wrong = [row for row in accepted if not row["exact_address"]]
     correct = [row for row in accepted if row["exact_address"]]
+    initially_covered = [
+        row for row in accepted if bool(row.get("true_row_initially_present"))
+    ]
+    initially_absent = [
+        row for row in accepted if not bool(row.get("true_row_initially_present"))
+    ]
     unresolved = [
         row
         for row in items
@@ -89,6 +95,37 @@ def summarize(rows: Iterable[Mapping[str, object]]) -> dict[str, object]:
         ),
         "false_confirmation_rate": rate(
             sum(bool(row["false_confirmation"]) for row in accepted), len(accepted)
+        ),
+        "initial_true_row_coverage_rate": rate(len(initially_covered), len(accepted)),
+        "true_row_retention_given_initial_coverage": rate(
+            sum(bool(row["true_row_retained"]) for row in initially_covered),
+            len(initially_covered),
+        ),
+        "true_row_elimination_given_initial_coverage": rate(
+            sum(not bool(row["true_row_retained"]) for row in initially_covered),
+            len(initially_covered),
+        ),
+        "false_confirmation_when_truth_initially_present": rate(
+            sum(bool(row["false_confirmation"]) for row in initially_covered),
+            len(initially_covered),
+        ),
+        "false_confirmation_when_truth_initially_absent": rate(
+            sum(bool(row["false_confirmation"]) for row in initially_absent),
+            len(initially_absent),
+        ),
+        "candidate_reduction_with_truth_preserved": rate(
+            sum(
+                bool(row["candidate_reduction"]) and bool(row["true_row_retained"])
+                for row in accepted
+            ),
+            len(accepted),
+        ),
+        "candidate_reduction_with_truth_removed": rate(
+            sum(
+                bool(row["candidate_reduction"]) and not bool(row["true_row_retained"])
+                for row in accepted
+            ),
+            len(accepted),
         ),
         "unresolved_rate": rate(len(unresolved), len(items)),
         "transition_signature_collision_rate": rate(

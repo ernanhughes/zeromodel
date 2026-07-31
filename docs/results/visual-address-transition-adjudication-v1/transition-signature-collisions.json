@@ -1,23 +1,30 @@
 {
   "groups": [
     {
-      "case_id": "canonical-exact-policy_action-component",
+      "case_id": "canonical-only-accepted-policy_action-component",
       "collision_ids": [
         "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
       ],
       "status": "transition_signature_collision"
     },
     {
-      "case_id": "correct-noncanonical-policy_action-component",
+      "case_id": "exact-codeword-canonical-policy_action-component",
       "collision_ids": [
         "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
       ],
       "status": "transition_signature_collision"
     },
     {
-      "case_id": "wrong-action-equivalent-policy_action-component",
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-component",
       "collision_ids": [
-        "sha256:04e21301aab3679b153eecbceff4d5776f8573f6d575d0688fa5eb61ad56776b"
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "calibrated-nearest-correct-policy_action-component",
+      "collision_ids": [
+        "sha256:95dff08d9faa19a53399fdb1c1eac3cd880469734ed594a8f2427adb1cc415cc"
       ],
       "status": "transition_signature_collision"
     },
@@ -36,23 +43,30 @@
       "status": "transition_signature_collision"
     },
     {
-      "case_id": "canonical-exact-policy_action-value",
+      "case_id": "canonical-only-accepted-policy_action-value",
       "collision_ids": [
         "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
       ],
       "status": "transition_signature_collision"
     },
     {
-      "case_id": "correct-noncanonical-policy_action-value",
+      "case_id": "exact-codeword-canonical-policy_action-value",
       "collision_ids": [
         "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
       ],
       "status": "transition_signature_collision"
     },
     {
-      "case_id": "wrong-action-equivalent-policy_action-value",
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-value",
       "collision_ids": [
-        "sha256:04e21301aab3679b153eecbceff4d5776f8573f6d575d0688fa5eb61ad56776b"
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "calibrated-nearest-correct-policy_action-value",
+      "collision_ids": [
+        "sha256:95dff08d9faa19a53399fdb1c1eac3cd880469734ed594a8f2427adb1cc415cc"
       ],
       "status": "transition_signature_collision"
     },

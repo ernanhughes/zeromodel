@@ -1,5 +1,17 @@
 {
-  "reader_rejection_status": true,
-  "wrong_action_identity_rejected": true,
-  "wrong_transition_evidence_rejected": true
+  "reader_observation_mismatch_rejected": {
+    "passed": true,
+    "result_id": "sha256:fdc65aedca928e0dd6b3ea893429f214ec8eb4c315a820d6a00209f91eae53bb",
+    "status": "invalid_transition_evidence"
+  },
+  "wrong_action_identity_rejected": {
+    "passed": true,
+    "result_id": "sha256:538f9cc367e89715c4ba347eedf4ca8728fbff2710b3b71ca44ef0853e980538",
+    "status": "invalid_transition_evidence"
+  },
+  "wrong_transition_evidence_rejected": {
+    "passed": true,
+    "result_id": "sha256:dbd1a1aa90ae02853109d368a5c7db114a23c34e03f306233f9cae3594748be5",
+    "status": "invalid_transition_evidence"
+  }
 }

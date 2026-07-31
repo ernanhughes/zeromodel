@@ -26,6 +26,8 @@ class AddressAliasCase:
     case_id: str
     true_row_id: str
     supplied_row_id: str
+    observation_source_row_id: str
+    observation_transform_id: str
     alias_class: str
     profile: str
     candidate_universe: str
@@ -34,6 +36,7 @@ class AddressAliasCase:
     true_before_frame: np.ndarray
     true_after_frame: np.ndarray
     visual_decision: VisualDecision
+    feature_spec: VisualFeatureSpec
     true_action: str
     addressed_action: str | None
 
@@ -83,11 +86,23 @@ def build_reader(
     )
 
 
+def build_feature_spec() -> VisualFeatureSpec:
+    config = ShooterConfig()
+    return VisualFeatureSpec(
+        input_height=16,
+        input_width=config.width * 4,
+        target_height=4,
+        target_width=7,
+        quantization_levels=16,
+    )
+
+
 def _make_case(
     *,
     case_id: str,
     true_row_id: str,
     supplied_row_id: str,
+    transform: str,
     alias_class: str,
     profile: str,
     candidate_universe: str,
@@ -95,7 +110,15 @@ def _make_case(
 ) -> AddressAliasCase:
     config = ShooterConfig()
     reader = build_reader(profile)
-    observed = _noncanonical_exact(_frame_for_row(supplied_row_id, config=config))
+    true_frame = _frame_for_row(true_row_id, config=config)
+    if transform == "canonical":
+        observed = true_frame
+    elif transform == "noncanonical_exact_background_pixel":
+        observed = _noncanonical_exact(true_frame)
+    elif transform == "distant_inversion":
+        observed = np.array(255 - true_frame, dtype=np.uint8, copy=True)
+    else:
+        raise ValueError(f"unsupported observation transform: {transform}")
     decision = reader.read(observed, acceptance_profile=profile)
     true_state = _state_from_row(true_row_id)
     addressed_action = decision.action if decision.policy_executed else None
@@ -113,6 +136,8 @@ def _make_case(
         case_id=case_id,
         true_row_id=true_row_id,
         supplied_row_id=supplied_row_id,
+        observation_source_row_id=true_row_id,
+        observation_transform_id=transform,
         alias_class=alias_class,
         profile=profile,
         candidate_universe=candidate_universe,
@@ -121,6 +146,7 @@ def _make_case(
         true_before_frame=render(true_state),
         true_after_frame=render(true_after),
         visual_decision=decision,
+        feature_spec=reader.feature_spec,
         true_action=str(true_action),
         addressed_action=addressed_action,
     )
@@ -129,61 +155,71 @@ def _make_case(
 def build_case_corpus() -> tuple[AddressAliasCase, ...]:
     rows = {
         "canonical_fire_hit": "tank=0|target=0|cooldown=0",
-        "wrong_action_change": "tank=1|target=0|cooldown=0",
-        "wrong_action_equivalent": "tank=2|target=0|cooldown=0",
         "wait_no_effect_a": "tank=0|target=none|cooldown=0",
-        "wait_no_effect_b": "tank=1|target=none|cooldown=0",
         "blocked_left": "tank=0|target=3|cooldown=0",
     }
     specs = [
         (
-            "canonical-exact",
+            "canonical-only-accepted",
             rows["canonical_fire_hit"],
             rows["canonical_fire_hit"],
+            "canonical",
             "canonical exact",
+            VisualAcceptanceProfile.CANONICAL_ONLY,
         ),
         (
-            "correct-noncanonical",
+            "exact-codeword-canonical",
             rows["canonical_fire_hit"],
             rows["canonical_fire_hit"],
+            "canonical",
+            "canonical exact",
+            VisualAcceptanceProfile.EXACT_CODEWORD,
+        ),
+        (
+            "exact-codeword-noncanonical-correct",
+            rows["canonical_fire_hit"],
+            rows["canonical_fire_hit"],
+            "noncanonical_exact_background_pixel",
             "exact feature codeword, correct row",
+            VisualAcceptanceProfile.EXACT_CODEWORD,
         ),
         (
-            "wrong-action-changing",
-            rows["canonical_fire_hit"],
-            rows["wrong_action_change"],
-            "wrong row, different policy action",
-        ),
-        (
-            "wrong-action-equivalent",
-            rows["wrong_action_equivalent"],
-            rows["wrong_action_change"],
-            "wrong row, same policy action",
+            "calibrated-nearest-correct",
+            rows["blocked_left"],
+            rows["blocked_left"],
+            "noncanonical_exact_background_pixel",
+            "nearest accepted, correct row",
+            VisualAcceptanceProfile.CALIBRATED_NEAREST,
         ),
         (
             "no-effect-unresolved",
             rows["wait_no_effect_a"],
-            rows["wait_no_effect_b"],
-            "wrong row, same policy action",
+            rows["wait_no_effect_a"],
+            "canonical",
+            "canonical exact",
+            VisualAcceptanceProfile.EXACT_CODEWORD,
         ),
         (
             "insufficient-observability",
             rows["blocked_left"],
             rows["blocked_left"],
+            "canonical",
             "insufficient observability",
+            VisualAcceptanceProfile.EXACT_CODEWORD,
         ),
     ]
     cases = []
     for mode in ("component", "value"):
         for universe in ("reader_local", "policy_action"):
-            for case_id, true_row, supplied_row, alias_class in specs:
+            for case_id, true_row, supplied_row, transform, alias_class, profile in specs:
                 cases.append(
                     _make_case(
                         case_id=f"{case_id}-{universe}-{mode}",
                         true_row_id=true_row,
                         supplied_row_id=supplied_row,
+                        transform=transform,
                         alias_class=alias_class,
-                        profile=VisualAcceptanceProfile.EXACT_CODEWORD,
+                        profile=profile,
                         candidate_universe=universe,
                         evidence_mode=mode,
                     )
@@ -192,7 +228,8 @@ def build_case_corpus() -> tuple[AddressAliasCase, ...]:
         _make_case(
             case_id="reader-rejected-canonical-only",
             true_row_id=rows["canonical_fire_hit"],
-            supplied_row_id=rows["wrong_action_change"],
+            supplied_row_id=rows["canonical_fire_hit"],
+            transform="noncanonical_exact_background_pixel",
             alias_class="reader rejected",
             profile=VisualAcceptanceProfile.CANONICAL_ONLY,
             candidate_universe="reader_local",
@@ -204,8 +241,21 @@ def build_case_corpus() -> tuple[AddressAliasCase, ...]:
             case_id="evidence-only-no-execution",
             true_row_id=rows["canonical_fire_hit"],
             supplied_row_id=rows["canonical_fire_hit"],
+            transform="noncanonical_exact_background_pixel",
             alias_class="exact feature codeword, correct row",
             profile=VisualAcceptanceProfile.EVIDENCE_ONLY,
+            candidate_universe="reader_local",
+            evidence_mode="component",
+        )
+    )
+    cases.append(
+        _make_case(
+            case_id="calibrated-nearest-rejected-distant",
+            true_row_id=rows["canonical_fire_hit"],
+            supplied_row_id=rows["canonical_fire_hit"],
+            transform="distant_inversion",
+            alias_class="reader rejected",
+            profile=VisualAcceptanceProfile.CALIBRATED_NEAREST,
             candidate_universe="reader_local",
             evidence_mode="component",
         )

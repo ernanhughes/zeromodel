@@ -13,6 +13,7 @@
     "final-assessment.md",
     "findings.yaml",
     "leakage-control-results.json",
+    "manifest.json",
     "observability-results.json",
     "package-paths.json",
     "performance-results.json",

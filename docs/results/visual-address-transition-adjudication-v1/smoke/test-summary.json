@@ -1,9 +1,4 @@
 {
   "experiment_mode": "smoke",
-  "focused_tests": {
-    "command": "python -m pytest examples/visual_transition_benchmark/tests/test_adjudication.py -q",
-    "passed": 14,
-    "status": "passed"
-  },
   "status": "passed"
 }

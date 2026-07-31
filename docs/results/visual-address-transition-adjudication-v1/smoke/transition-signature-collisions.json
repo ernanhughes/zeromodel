@@ -1,14 +1,14 @@
 {
   "groups": [
     {
-      "case_id": "canonical-exact-policy_action-component",
+      "case_id": "canonical-only-accepted-policy_action-component",
       "collision_ids": [
         "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
       ],
       "status": "transition_signature_collision"
     },
     {
-      "case_id": "correct-noncanonical-policy_action-component",
+      "case_id": "exact-codeword-canonical-policy_action-component",
       "collision_ids": [
         "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
       ],

@@ -11,6 +11,7 @@ from zeromodel.perception.transition_analysis import (
 )
 from zeromodel.perception.transition_evidence import TransitionEvidenceVPMDTO
 from zeromodel.perception.representation import encode_source_array
+from zeromodel.vision import VisualFeatureSpec, visual_input_digest, visual_raw_input_digest
 
 from visual_transition_benchmark import zeromodel_adapter as component_zm
 from visual_transition_benchmark.adjudication._json import digest
@@ -27,6 +28,9 @@ class RuntimeAdjudicationInput:
     visual_decision: object
     candidate_universe: str
     evidence_mode: str
+    addressed_observation: np.ndarray
+    addressed_observation_transform_id: str
+    feature_spec: VisualFeatureSpec
     frame_before: np.ndarray
     frame_after: np.ndarray
     action: TransitionActionDeclarationDTO
@@ -39,8 +43,10 @@ class CandidateAdjudicationResult:
     row_id: str
     transition_consistent: bool
     reason_codes: tuple[str, ...]
-    transition_signature_id: str
+    expected_transition_signature_id: str
+    observed_transition_signature_id: str
     contract_id: str
+    analysis_id: str | None = None
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -48,8 +54,10 @@ class CandidateAdjudicationResult:
             "row_id": self.row_id,
             "transition_consistent": self.transition_consistent,
             "reason_codes": list(self.reason_codes),
-            "transition_signature_id": self.transition_signature_id,
+            "expected_transition_signature_id": self.expected_transition_signature_id,
+            "observed_transition_signature_id": self.observed_transition_signature_id,
             "contract_id": self.contract_id,
+            "analysis_id": self.analysis_id,
         }
 
 
@@ -61,6 +69,7 @@ class AddressTransitionAdjudicationResult:
     addressed_action: str | None
     action_id: str
     transition_evidence_id: str
+    addressed_observation_digest: str | None
     candidate_universe: str
     evidence_mode: str
     candidate_results: tuple[CandidateAdjudicationResult, ...]
@@ -82,6 +91,7 @@ class AddressTransitionAdjudicationResult:
             "addressed_action": self.addressed_action,
             "action_id": self.action_id,
             "transition_evidence_id": self.transition_evidence_id,
+            "addressed_observation_digest": self.addressed_observation_digest,
             "candidate_universe": self.candidate_universe,
             "evidence_mode": self.evidence_mode,
             "candidate_results": [item.to_dict() for item in self.candidate_results],
@@ -123,7 +133,9 @@ def _transition_evidence_matches_frames(
 def _collision_ids(results: tuple[CandidateAdjudicationResult, ...]) -> tuple[str, ...]:
     by_signature: dict[str, list[str]] = {}
     for item in results:
-        by_signature.setdefault(item.transition_signature_id, []).append(item.row_id)
+        by_signature.setdefault(item.expected_transition_signature_id, []).append(
+            item.row_id
+        )
     groups = [
         digest({"transition_signature_collision": sorted(rows)})
         for rows in by_signature.values()
@@ -191,6 +203,28 @@ def adjudicate_address_transition(
     else:
         rows = candidate_rows(input_data.candidate_universe, decision)
 
+    addressed_raw_digest = visual_raw_input_digest(
+        input_data.addressed_observation,
+        input_data.feature_spec,
+    )
+    addressed_canonical_digest = visual_input_digest(
+        input_data.addressed_observation,
+        input_data.feature_spec,
+    )
+    if addressed_raw_digest != trace.raw_input_digest:
+        reasons.append("reader_observation_mismatch")
+    if addressed_canonical_digest != trace.canonical_input_digest:
+        reasons.append("reader_observation_mismatch")
+    before_canonical_digest = visual_input_digest(
+        input_data.frame_before,
+        input_data.feature_spec,
+    )
+    if (
+        addressed_canonical_digest != before_canonical_digest
+        and input_data.addressed_observation_transform_id != "noncanonical_exact_background_pixel"
+    ):
+        reasons.append("stale_before_observation")
+
     if len(rows) != len(set(rows)):
         reasons.append("duplicate_candidate_rows")
     rows = tuple(sorted(set(rows)))
@@ -210,10 +244,13 @@ def adjudicate_address_transition(
             str(addressed_action),
             evidence_mode=input_data.evidence_mode,  # type: ignore[arg-type]
         )
-        ok, result_reasons, signature = contract_matches_observation(
+        ok, result_reasons, expected_signature, observed_signature, analysis_id = contract_matches_observation(
             contract,
             input_data.frame_before,
             input_data.frame_after,
+            transition_evidence=input_data.transition_evidence,
+            action=input_data.action,
+            reader_trace=trace,
         )
         candidate_results.append(
             CandidateAdjudicationResult(
@@ -221,8 +258,10 @@ def adjudicate_address_transition(
                 row_id=row_id,
                 transition_consistent=ok,
                 reason_codes=result_reasons,
-                transition_signature_id=signature,
+                expected_transition_signature_id=expected_signature,
+                observed_transition_signature_id=observed_signature,
                 contract_id=contract.candidate_id,
+                analysis_id=analysis_id,
             )
         )
 
@@ -262,6 +301,7 @@ def adjudicate_address_transition(
         "addressed_action": addressed_action,
         "action_id": input_data.action.action_id,
         "transition_evidence_id": input_data.transition_evidence.transition_evidence_id,
+        "addressed_observation_digest": addressed_canonical_digest,
         "candidate_universe": input_data.candidate_universe,
         "evidence_mode": input_data.evidence_mode,
         "candidate_results": [item.to_dict() for item in ordered_results],
@@ -285,6 +325,7 @@ def adjudicate_address_transition(
         addressed_action=addressed_action,
         action_id=input_data.action.action_id,
         transition_evidence_id=input_data.transition_evidence.transition_evidence_id,
+        addressed_observation_digest=addressed_canonical_digest,
         candidate_universe=input_data.candidate_universe,
         evidence_mode=input_data.evidence_mode,
         candidate_results=ordered_results,

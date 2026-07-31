@@ -5,6 +5,17 @@ from typing import Literal, Mapping
 
 import numpy as np
 
+from zeromodel.perception.transition_analysis import (
+    TransitionActionDeclarationDTO,
+    TransitionExpectationSetDTO,
+    VisualTransitionAnalysisDTO,
+    VisualTransitionReaderTraceDTO,
+)
+from zeromodel.perception.transition_conformance import (
+    TransitionExpectationDTO,
+    evaluate_transition_conformance,
+)
+from zeromodel.perception.transition_evidence import TransitionEvidenceVPMDTO
 from zeromodel.video.arcade_policy import ShooterConfig, next_rows, parse_state_row_id
 
 from visual_transition_benchmark import zeromodel_adapter as component_zm
@@ -30,6 +41,7 @@ class CandidateTransitionContract:
     expected_cooldown_level: str | None
     observable_fields: tuple[str, ...]
     source: str
+    expectations: tuple[TransitionExpectationDTO, ...] = ()
 
     def to_runtime_dict(self) -> dict[str, object]:
         return {
@@ -43,6 +55,7 @@ class CandidateTransitionContract:
             "expected_cooldown_level": self.expected_cooldown_level,
             "observable_fields": list(self.observable_fields),
             "source": self.source,
+            "expectation_ids": [item.expectation_id for item in self.expectations],
         }
 
 
@@ -91,20 +104,54 @@ def build_candidate_contract(
         "observable_fields": observable,
         "source": "predeclared_tiny_arcade_transition_rules",
     }
+    expectations = _component_expectations(expected_components_tuple)
     return CandidateTransitionContract(
         candidate_id=digest(payload),
         row_id=row_id,
         action=action,
         evidence_mode=evidence_mode,
         expectation_signature=digest(
-            {k: payload[k] for k in sorted(payload) if k != "row_id"}
+            {
+                k: payload[k]
+                for k in sorted(payload)
+                if k not in {"row_id", "next_row_projection"}
+            }
         ),
         expected_components=expected_components_tuple,
         expected_tank_delta=expected_delta,
         expected_cooldown_level=expected_cooldown,
         observable_fields=tuple(observable),
         source="predeclared_tiny_arcade_transition_rules",
+        expectations=expectations,
     )
+
+
+def _component_expectations(
+    expected_components: tuple[str, ...],
+) -> tuple[TransitionExpectationDTO, ...]:
+    expectations = []
+    for name in component_zm.COMPONENT_NAMES:
+        if name in expected_components:
+            expectations.append(
+                TransitionExpectationDTO.create(
+                    field_schema_id=component_zm.FIELD_SCHEMA.field_schema_id,
+                    annotation_ids=(component_zm.ANNOTATIONS[name].annotation_id,),
+                    expected_change="change",
+                    minimum_mean_absolute_change=component_zm.FIELD_MIN_MEAN_ABS,
+                    minimum_changed_fraction=component_zm.FIELD_MIN_CHANGED_FRACTION,
+                )
+            )
+        else:
+            expectations.append(
+                TransitionExpectationDTO.create(
+                    field_schema_id=component_zm.FIELD_SCHEMA.field_schema_id,
+                    annotation_ids=(component_zm.ANNOTATIONS[name].annotation_id,),
+                    expected_change="stable",
+                    maximum_mean_absolute_change=component_zm.STABLE_MAX_MEAN_ABS,
+                    maximum_changed_fraction=component_zm.STABLE_MAX_FRACTION,
+                )
+            )
+    return tuple(sorted(expectations, key=lambda item: item.expectation_id))
 
 
 def observed_component_signature(
@@ -135,19 +182,62 @@ def observed_value_signature(
     }
 
 
+def component_analysis_for_contract(
+    *,
+    contract: CandidateTransitionContract,
+    transition_evidence: TransitionEvidenceVPMDTO,
+    action: TransitionActionDeclarationDTO,
+    reader_trace: VisualTransitionReaderTraceDTO,
+) -> VisualTransitionAnalysisDTO:
+    expectation_set = TransitionExpectationSetDTO.create(contract.expectations)
+    report = evaluate_transition_conformance(
+        transition_evidence,
+        contract.expectations,
+        component_zm.ANNOTATIONS_TUPLE,
+        relations=(),
+        minimum_unexplained_mean_absolute_change=component_zm.UNEXPLAINED_MIN_MEAN_ABS,
+        minimum_unexplained_changed_fraction=component_zm.UNEXPLAINED_MIN_FRACTION,
+    )
+    return VisualTransitionAnalysisDTO.create(
+        transition=transition_evidence,
+        action=action,
+        expectation_set=expectation_set,
+        conformance_report=report,
+        before_reader_trace=reader_trace,
+    )
+
+
 def contract_matches_observation(
     contract: CandidateTransitionContract,
     frame_before: np.ndarray,
     frame_after: np.ndarray,
-) -> tuple[bool, tuple[str, ...], str]:
+    *,
+    transition_evidence: TransitionEvidenceVPMDTO | None = None,
+    action: TransitionActionDeclarationDTO | None = None,
+    reader_trace: VisualTransitionReaderTraceDTO | None = None,
+) -> tuple[bool, tuple[str, ...], str, str, str | None]:
+    expected_signature = contract.expectation_signature
     if contract.evidence_mode == "component":
+        if transition_evidence is not None and action is not None and reader_trace is not None:
+            analysis = component_analysis_for_contract(
+                contract=contract,
+                transition_evidence=transition_evidence,
+                action=action,
+                reader_trace=reader_trace,
+            )
+            ok = analysis.status == "conformant"
+            reasons = () if ok else ("component_contract_mismatch",)
+            return ok, reasons, expected_signature, analysis.analysis_id, analysis.analysis_id
         observed = observed_component_signature(frame_before, frame_after)
+        observed_signature = digest({"mode": "component", "observed": observed})
         if tuple(sorted(contract.expected_components)) == observed:
-            return True, (), digest({"mode": "component", "observed": observed})
+            return True, (), expected_signature, observed_signature, None
         return (
             False,
             ("component_contract_mismatch",),
-            digest({"mode": "component", "observed": observed}),
+            expected_signature,
+            observed_signature,
+            None,
         )
 
     observed = observed_value_signature(frame_before, frame_after)
@@ -166,5 +256,7 @@ def contract_matches_observation(
     return (
         not reasons,
         tuple(sorted(reasons)),
+        expected_signature,
         digest({"mode": "value", "observed": observed}),
+        None,
     )

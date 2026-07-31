@@ -1,5 +1,6 @@
 {
   "acceptance_profiles": [
+    "calibrated_nearest",
     "canonical_only",
     "evidence_only",
     "exact_codeword"
@@ -10,7 +11,7 @@
   ],
   "case_counts": {
     "mode": "evidence",
-    "total": 26
+    "total": 27
   },
   "evidence_modes": [
     "component",
@@ -25,7 +26,7 @@
   "platform": "Windows-10-10.0.26200-SP0",
   "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
   "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
-  "starting_commit": "bd3d5f8d0213095d4a1df0fc9d419e027fd1c606",
+  "starting_commit": "966292ddfe23fa13bd6efca56c48a17a9c57e363",
   "versions": {
     "zeromodel-perception": "1.2.0",
     "zeromodel-video": "1.2.0",

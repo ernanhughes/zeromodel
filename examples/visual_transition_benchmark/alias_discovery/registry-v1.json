@@ -1,0 +1,956 @@
+{
+  "registry_kind": "target_agnostic_static_observation_transforms",
+  "registry_version": "visual-alias-transform-registry/v1",
+  "target_row_leakage_policy": "transform inputs are source observation, transform spec, and optional fixed seed only",
+  "transforms": [
+    {
+      "canonical_identity_expected": true,
+      "family": "representation",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {},
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "identity",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": true,
+      "family": "representation",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28,
+        3
+      ],
+      "parameters": {},
+      "raw_format_effect": "channel encoding",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "grayscale_to_rgb",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": true,
+      "family": "representation",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {},
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "contiguous_copy",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": true,
+      "family": "representation",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {},
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "noncontiguous_roundtrip",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": true,
+      "family": "representation",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {},
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "uint_roundtrip",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": true,
+      "family": "representation",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {},
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "png_roundtrip",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "dx": 1,
+        "dy": 0,
+        "fill": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "translate",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "dx": -1,
+        "dy": 0,
+        "fill": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "translate",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "dx": 0,
+        "dy": 1,
+        "fill": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "translate",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "dx": 0,
+        "dy": -1,
+        "fill": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "translate",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "method": "nearest",
+        "scale": 0.5
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "downsample_restore",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "method": "bilinear",
+        "scale": 0.5
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "downsample_restore",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "fill": 0,
+        "pixels": 1
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "crop_pad",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "direction": "horizontal"
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "shear",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "geometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "direction": "vertical"
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "shear",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "offset": 16
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "brightness",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "offset": -16
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "brightness",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "factor": 0.75
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "contrast",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "factor": 1.25
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "contrast",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "gamma": 0.8
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "gamma",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "gamma": 1.25
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "gamma",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "photometric",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "levels": 8
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "quantize",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "blur_compression",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "radius": 1
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "box_blur",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "blur_compression",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "radius": 0.75
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "gaussian_blur",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "blur_compression",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "size": 3
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "median_filter",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "blur_compression",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "quality": 70
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "jpeg_roundtrip",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "occlusion",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "fill": 0,
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "occlusion",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "occlusion",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "fill": 0,
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "occlusion",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "occlusion",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "fill": 0,
+        "h": 3,
+        "w": 8,
+        "x": 8,
+        "y": 11
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "occlusion",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "occlusion",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "fill": 0,
+        "h": 2,
+        "w": 8,
+        "x": 20,
+        "y": 7
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "occlusion",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "noise",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "count": 12
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "salt_pepper",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "noise",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "amount": 20
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "uniform_noise",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "noise",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "sigma": 12.0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "gaussian_noise",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "noise",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "fill": 0,
+        "fraction": 0.08
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "dropout",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "noise",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "every": 5,
+        "fill": 255
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "stripe_noise",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "value": 1,
+        "x": 0,
+        "y": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "pixel_mutation",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "size": 2,
+        "value": 255,
+        "x": 10,
+        "y": 10
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "square_mutation",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "value": 255,
+        "y": 8
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "row_stripe",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "value": 255,
+        "x": 4
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "column_stripe",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "value": 255
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "checkerboard",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "band": "tank",
+        "value": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "band_mask",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "band": "alien",
+        "value": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "band_mask",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "local_corruption",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "band": "cooldown",
+        "value": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "band_mask",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "negative_control",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {},
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "invert",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "negative_control",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "dx": 8,
+        "dy": 0,
+        "fill": 0
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "translate",
+      "version": "v1"
+    },
+    {
+      "canonical_identity_expected": false,
+      "family": "negative_control",
+      "input_shape": [
+        16,
+        28
+      ],
+      "output_shape": [
+        16,
+        28
+      ],
+      "parameters": {
+        "amount": 120
+      },
+      "raw_format_effect": "pixel values/layout",
+      "seed_use": "fixed seed where stochastic, otherwise unused",
+      "severity_definition": "family-local predeclared parameter plus pixel deltas",
+      "transform_id": "uniform_noise",
+      "version": "v1"
+    }
+  ],
+  "transition_leakage_policy": "no after frames or transition outcomes are inputs to discovery or membership"
+}

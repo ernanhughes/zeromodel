@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "case_id": "canonical-only-accepted-reader_local-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "exact-codeword-canonical-reader_local-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "exact-codeword-noncanonical-correct-reader_local-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "calibrated-nearest-correct-reader_local-component",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "no-effect-unresolved-reader_local-component",
+      "region_signature": []
+    },
+    {
+      "case_id": "insufficient-observability-reader_local-component",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "canonical-only-accepted-policy_action-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "exact-codeword-canonical-policy_action-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    }
+  ]
+}

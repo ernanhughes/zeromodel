@@ -1,0 +1,166 @@
+{
+  "cases": [
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "canonical-only-accepted-reader_local-component",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-canonical-reader_local-component",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-noncanonical-correct-reader_local-component",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "calibrated-nearest-correct-reader_local-component",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "no-effect-unresolved-reader_local-component",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "insufficient-observability-reader_local-component",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "canonical-only-accepted-policy_action-component",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-canonical-policy_action-component",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-component",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "calibrated-nearest-correct-policy_action-component",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "no-effect-unresolved-policy_action-component",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "insufficient-observability-policy_action-component",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "canonical-only-accepted-reader_local-value",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-canonical-reader_local-value",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-noncanonical-correct-reader_local-value",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "calibrated-nearest-correct-reader_local-value",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "no-effect-unresolved-reader_local-value",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "insufficient-observability-reader_local-value",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "canonical-only-accepted-policy_action-value",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-canonical-policy_action-value",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-value",
+      "changed_pixel_count": 11,
+      "global_absolute_difference": 2020
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "calibrated-nearest-correct-policy_action-value",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "no-effect-unresolved-policy_action-value",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "insufficient-observability-policy_action-value",
+      "changed_pixel_count": 16,
+      "global_absolute_difference": 4080
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "reader-rejected-canonical-only",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "evidence-only-no-execution",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    },
+    {
+      "can_contradict_candidate_without_regions": false,
+      "case_id": "calibrated-nearest-rejected-distant",
+      "changed_pixel_count": 0,
+      "global_absolute_difference": 0
+    }
+  ]
+}

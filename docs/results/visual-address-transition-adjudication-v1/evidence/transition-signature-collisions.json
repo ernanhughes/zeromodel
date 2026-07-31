@@ -1,0 +1,88 @@
+{
+  "groups": [
+    {
+      "case_id": "canonical-only-accepted-policy_action-component",
+      "collision_ids": [
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "exact-codeword-canonical-policy_action-component",
+      "collision_ids": [
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-component",
+      "collision_ids": [
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "calibrated-nearest-correct-policy_action-component",
+      "collision_ids": [
+        "sha256:95dff08d9faa19a53399fdb1c1eac3cd880469734ed594a8f2427adb1cc415cc"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "no-effect-unresolved-policy_action-component",
+      "collision_ids": [
+        "sha256:561b923ff87405df3619a75f52f2830d9b4cefa0eba3964a269d954faff7bb5c"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "insufficient-observability-policy_action-component",
+      "collision_ids": [
+        "sha256:95dff08d9faa19a53399fdb1c1eac3cd880469734ed594a8f2427adb1cc415cc"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "canonical-only-accepted-policy_action-value",
+      "collision_ids": [
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "exact-codeword-canonical-policy_action-value",
+      "collision_ids": [
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "exact-codeword-noncanonical-correct-policy_action-value",
+      "collision_ids": [
+        "sha256:e43de7ce18c1105ec563a1419ca0585ec05343ac50e2c0bfe835ed5ef46959d9"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "calibrated-nearest-correct-policy_action-value",
+      "collision_ids": [
+        "sha256:95dff08d9faa19a53399fdb1c1eac3cd880469734ed594a8f2427adb1cc415cc"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "no-effect-unresolved-policy_action-value",
+      "collision_ids": [
+        "sha256:561b923ff87405df3619a75f52f2830d9b4cefa0eba3964a269d954faff7bb5c"
+      ],
+      "status": "transition_signature_collision"
+    },
+    {
+      "case_id": "insufficient-observability-policy_action-value",
+      "collision_ids": [
+        "sha256:95dff08d9faa19a53399fdb1c1eac3cd880469734ed594a8f2427adb1cc415cc"
+      ],
+      "status": "transition_signature_collision"
+    }
+  ]
+}

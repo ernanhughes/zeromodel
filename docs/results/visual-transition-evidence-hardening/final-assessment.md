@@ -18,7 +18,7 @@ Given exact before/after observations, a field schema, annotations or relations,
 
 ## 5. Baseline reproduction
 
-Focused P18A/P18B tests passed. Focused Visual Sign Reader and video policy reader tests passed. Arcade component/value and cross-domain smoke runs completed. The compiler run timed out locally and is not claimed as reproduced.
+Focused P18A/P18B tests passed. Focused Visual Sign Reader and video policy reader tests passed. Arcade component/value and cross-domain smoke runs completed. The compiler smoke run completed in 213.815 seconds with 11 compiled cases and 1 insufficient-observability case.
 
 ## 6. Production versus benchmark ownership
 
@@ -52,7 +52,7 @@ Value-level benchmark results are reproduced at smoke scale only through `value_
 
 ## 13. Representation compiler assessment
 
-The compiler smoke/evidence run timed out in this local pass. Compiler abstractions were intentionally not promoted.
+The compiler smoke run completed and reproduced the historical outcome shape at small sample counts. Compiler abstractions were still intentionally not promoted because the runtime is high for the fast tier and the compiler remains benchmark/research machinery.
 
 ## 14. Observability and representation outcomes
 
@@ -76,7 +76,7 @@ Cross-domain arcade and warehouse smoke runs completed. The results remain per-d
 
 ## 19. Performance and evidence size
 
-No detailed latency or size benchmark was completed. Existing command durations are recorded in generated result files.
+No detailed latency or size benchmark was completed. Existing command durations are recorded in generated result files, and the full fast suite completed successfully in 92.69 seconds.
 
 ## 20. Production changes
 
@@ -96,11 +96,11 @@ The transition identity claim is strengthened: the analysis object now prevents 
 
 ## 24. Claims reduced or refuted
 
-Compiler replication is not reasserted from this run due timeout.
+No compiler production abstraction was promoted from this run; the compiler remains benchmark-owned despite smoke reproduction.
 
 ## 25. Remaining risks
 
-The full adversarial matrix, static-address alias comparison, detailed performance measurements, and full fast-suite validation remain incomplete.
+The full adversarial matrix, static-address alias comparison, and detailed performance measurements remain incomplete. Full fast-suite validation passed.
 
 ## 26. Recommended disposition
 
@@ -112,7 +112,7 @@ Strongest immediate use: visual regression and simulator/game debugging where op
 
 ## 28. Next capability stage
 
-Complete the static-address versus transition alias comparison and the full adversarial matrix, then run the compiler evidence job under an explicit longer budget.
+Complete the static-address versus transition alias comparison and the full adversarial matrix, then run any larger compiler evidence job under an explicit longer budget.
 
 ## 29. Complete command and artifact index
 

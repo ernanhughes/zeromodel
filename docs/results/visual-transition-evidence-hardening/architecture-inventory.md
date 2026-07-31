@@ -16,7 +16,7 @@ Starting main SHA: `85d4fd50607cbef607ddbe4a5f73c1468ad76955`
 - `TransitionActionDeclarationDTO` gives declared actions canonical identity without claiming causality.
 - `TransitionExpectationSetDTO` gives the exact expectation set a canonical identity and rejects duplicate/conflicting targets.
 - `VisualTransitionReaderTraceDTO` preserves Visual Sign Reader evidence fields, including `evidence_only` and `policy_executed`.
-- `VisualTransitionAnalysisDTO` binds ordered transition evidence, action identity, expectation-set identity, and conformance report identity into one replayable artifact identity.
+- `VisualTransitionAnalysisDTO` embeds the exact ordered transition evidence object and binds it to action identity, expectation-set identity, and conformance report identity in one replayable artifact identity.
 
 ## Benchmark Ownership
 

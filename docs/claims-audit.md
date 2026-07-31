@@ -197,8 +197,8 @@ The safe wording is:
 Keep unsupported: causal root-cause diagnosis, hidden-event detection from
 insufficient frames, open-world transition understanding, universal target
 identity, and general superiority over region-aware conventional baselines. The
-compiler portion was not locally reproduced in this hardening run and remains a
-historical claim pending a separately budgeted evidence execution.
+compiler portion was reproduced only at smoke scale in this hardening run and
+remains benchmark-owned pending a separately budgeted larger evidence execution.
 
 1. **Complete the v1 evidence package** — attach the original full JSON, traces, log, exact command, evaluated commit, and environment manifest. Preserve the disclosed PowerShell provenance defect rather than reconstructing it silently.
 2. **Visual failure atlas** — generate score/coverage/FAR/FRR curves, accepted row/action precision, top-1 ranking metrics before rejection, paired B-versus-D outcomes, translation-family confusion, and state/family-clustered uncertainty.

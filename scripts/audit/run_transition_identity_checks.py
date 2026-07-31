@@ -24,6 +24,10 @@ from zeromodel.perception import (
 )
 
 
+def _sha(label: str) -> str:
+    return "sha256:" + label * 64
+
+
 def _source(values: list[int]):
     return encode_source_array(
         np.array([values], dtype=np.uint8),
@@ -74,11 +78,16 @@ def _case():
         schema_version="audit/v1",
     )
     trace = VisualTransitionReaderTraceDTO(
-        raw_input_digest="sha256:raw",
-        canonical_input_digest="sha256:canonical",
-        feature_digest="sha256:feature",
+        accepted=True,
+        reason="evidence_only",
+        raw_input_digest=_sha("0"),
+        canonical_input_digest=_sha("1"),
+        feature_digest=_sha("2"),
+        reader_version="reader/audit",
         visual_index_artifact_id="visual-index",
         policy_artifact_id="policy",
+        feature_spec_digest="feature-spec",
+        calibration_digest="calibration",
         acceptance_profile="evidence_only",
         policy_executed=False,
     )
@@ -149,6 +158,18 @@ def main(argv: list[str] | None = None) -> int:
             "action_id": action.action_id,
             "changed_payload_action_id": changed_action.action_id,
             "identity_changed": action.action_id != changed_action.action_id,
+            "non_string_payload_key_rejected": _rejects(
+                lambda: TransitionActionDeclarationDTO.create(
+                    action_type="MOVE",
+                    payload={1: "collides"},  # type: ignore[dict-item]
+                )
+            ),
+            "nested_non_string_payload_key_rejected": _rejects(
+                lambda: TransitionActionDeclarationDTO.create(
+                    action_type="MOVE",
+                    payload={"outer": {1: "nested"}},  # type: ignore[dict-item]
+                )
+            ),
         },
         "expectation_set_identity": {
             "expectation_set_id": expectation_set.expectation_set_id,
@@ -173,19 +194,44 @@ def main(argv: list[str] | None = None) -> int:
                     conformance_report=report,
                 )
             ),
+            "embedded_transition_evidence_preserved": (
+                analysis.transition_evidence.transition_evidence_id
+                == transition.transition_evidence_id
+            ),
         },
         "visual_reader_boundary": {
             "evidence_only_policy_executed_rejected": _rejects(
                 lambda: VisualTransitionReaderTraceDTO(
-                    raw_input_digest="raw",
-                    canonical_input_digest="canonical",
-                    feature_digest="feature",
+                    accepted=True,
+                    reason="evidence_only",
+                    raw_input_digest=_sha("a"),
+                    canonical_input_digest=_sha("b"),
+                    feature_digest=_sha("c"),
+                    reader_version="reader/audit",
                     visual_index_artifact_id="index",
                     policy_artifact_id="policy",
+                    feature_spec_digest="feature-spec",
+                    calibration_digest="calibration",
                     acceptance_profile="evidence_only",
                     policy_executed=True,
                 )
-            )
+            ),
+            "invalid_digest_rejected": _rejects(
+                lambda: VisualTransitionReaderTraceDTO(
+                    accepted=False,
+                    reason="rejected",
+                    raw_input_digest="raw",
+                    canonical_input_digest=_sha("b"),
+                    feature_digest=_sha("c"),
+                    reader_version="reader/audit",
+                    visual_index_artifact_id="index",
+                    policy_artifact_id="policy",
+                    feature_spec_digest="feature-spec",
+                    calibration_digest="calibration",
+                    acceptance_profile="calibrated_nearest",
+                    policy_executed=False,
+                )
+            ),
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)

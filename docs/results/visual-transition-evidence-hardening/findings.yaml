@@ -32,7 +32,7 @@
   source_paths:
     - packages/perception/src/zeromodel/perception/transition_analysis.py
   test_paths:
-    - packages/perception/tests/test_transition_analysis_p18h.py
+    - packages/perception/tests/test_transition_analysis_composition.py
   commands:
     - python scripts/audit/run_transition_identity_checks.py
   domains:
@@ -47,10 +47,10 @@
   remaining_boundary: Domain-specific action meaning remains outside production.
   confidence: high
 - id: vteh-003
-  title: Compiler evidence was not locally reproduced within budget
-  classification: negative result
-  evidence_state: timeout
-  severity: medium
+  title: Compiler evidence was reproduced at smoke scale with a longer budget
+  classification: positive result
+  evidence_state: reproduced
+  severity: low
   capability: representation compiler
   claim_affected: compiler replication
   source_paths:
@@ -64,9 +64,9 @@
     - warehouse
   categories:
     - compiler
-  observed_result: Compiler run exceeded the local 180-second development budget.
-  interpretation: Historical compiler results remain historical in this package.
-  why_it_matters: Compiler abstractions were not promoted.
+  observed_result: Compiler run completed in 213.815 seconds with 11 compiled cases and 1 insufficient_observability case.
+  interpretation: Smoke-scale compiler behavior matches the historical shape, but this remains insufficient to promote compiler abstractions.
+  why_it_matters: The evidence package no longer contains contradictory timeout and completed compiler records.
   production_change: None.
-  remaining_boundary: Run the compiler evidence job separately before strengthening compiler claims.
+  remaining_boundary: Full-scale compiler evidence and static-address alias comparison remain future work.
   confidence: high

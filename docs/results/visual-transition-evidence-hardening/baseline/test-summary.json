@@ -17,21 +17,21 @@
     },
     {
       "name": "compiler focused bundle",
-      "status": "timeout",
-      "timeout_seconds": 60
+      "reason": "Compiler CLI completed separately in 213.815 seconds.",
+      "status": "not_rerun_after_timeout"
     },
     {
-      "name": "transition analysis p18h + p18a/p18b",
+      "name": "transition analysis composition + p18a/p18b",
       "status": "passed",
-      "tests": 12
+      "tests": 14
     }
   ],
   "full_fast_suite": {
-    "collected": 1671,
+    "collected": 1680,
     "deselected": 200,
-    "duration_seconds": 105.97,
+    "duration_seconds": 92.69,
     "failed": 0,
-    "passed": 1470,
+    "passed": 1479,
     "skipped": 1,
     "status": "passed"
   }

@@ -18,7 +18,7 @@ from .transition_conformance import (
     TransitionConformanceReportDTO,
     TransitionExpectationDTO,
 )
-from .transition_evidence import TransitionEvidenceVPMDTO
+from .transition_evidence import TransitionEvidenceVPMDTO, TransitionFieldEvidenceDTO
 
 TRANSITION_ACTION_DECLARATION_VERSION: Final = (
     "perception-transition-action-declaration/1"
@@ -48,7 +48,7 @@ class PerceptionTransitionAnalysisError(ValueError):
 
 def _thaw(value: Any) -> Any:
     if isinstance(value, Mapping):
-        return {str(key): _thaw(item) for key, item in value.items()}
+        return {key: _thaw(item) for key, item in value.items()}
     if isinstance(value, tuple):
         return [_thaw(item) for item in value]
     return value
@@ -56,9 +56,14 @@ def _thaw(value: Any) -> Any:
 
 def _freeze(value: Any) -> Any:
     if isinstance(value, Mapping):
-        return MappingProxyType(
-            {str(key): _freeze(item) for key, item in value.items()}
-        )
+        frozen: dict[str, Any] = {}
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise PerceptionTransitionAnalysisError(
+                    "transition action payload mapping keys must be strings"
+                )
+            frozen[key] = _freeze(item)
+        return MappingProxyType(frozen)
     if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     if isinstance(value, (str, int, float, bool)) or value is None:
@@ -100,6 +105,77 @@ def _payload(value: object, identity_field: str) -> dict[str, object]:
 def _ordered(name: str, values: tuple[str, ...]) -> None:
     if values != tuple(sorted(set(values))):
         raise PerceptionTransitionAnalysisError(f"{name} must be unique and sorted")
+
+
+def _sha256_digest(value: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    if not value.startswith("sha256:") or len(value) != len("sha256:") + 64:
+        return False
+    try:
+        int(value.removeprefix("sha256:"), 16)
+    except ValueError:
+        return False
+    return True
+
+
+def _transition_field_from_dict(
+    data: Mapping[str, object],
+) -> TransitionFieldEvidenceDTO:
+    return TransitionFieldEvidenceDTO(
+        field_id=str(data["field_id"]),
+        before_mean=float(data["before_mean"]),
+        after_mean=float(data["after_mean"]),
+        mean_absolute_change=float(data["mean_absolute_change"]),
+        mean_signed_change=float(data["mean_signed_change"]),
+        changed_fraction=float(data["changed_fraction"]),
+        changed_value_count=int(data["changed_value_count"]),
+        total_value_count=int(data["total_value_count"]),
+        annotation_ids=tuple(data.get("annotation_ids") or ()),  # type: ignore[arg-type]
+        change_semantics=str(data["change_semantics"]),
+        signed_change_semantics=str(data["signed_change_semantics"]),
+        changed_fraction_semantics=str(data["changed_fraction_semantics"]),
+        version=str(data["version"]),
+    )
+
+
+def _transition_evidence_to_dict(
+    transition: TransitionEvidenceVPMDTO,
+) -> dict[str, object]:
+    return {
+        **dict(transition.canonical_payload()),
+        "transition_evidence_id": transition.transition_evidence_id,
+        "png_bytes_hex": transition.png_bytes.hex(),
+    }
+
+
+def _transition_evidence_from_dict(
+    data: Mapping[str, object],
+) -> TransitionEvidenceVPMDTO:
+    return TransitionEvidenceVPMDTO(
+        transition_evidence_id=str(data["transition_evidence_id"]),
+        before_source_vpm_id=str(data["before_source_vpm_id"]),
+        after_source_vpm_id=str(data["after_source_vpm_id"]),
+        before_pixel_digest=str(data["before_pixel_digest"]),
+        after_pixel_digest=str(data["after_pixel_digest"]),
+        field_schema_id=str(data["field_schema_id"]),
+        source_encoder_spec_id=str(data["source_encoder_spec_id"]),
+        change_threshold=int(data["change_threshold"]),
+        width=int(data["width"]),
+        height=int(data["height"]),
+        fields=tuple(
+            _transition_field_from_dict(item)
+            for item in data["fields"]  # type: ignore[index]
+        ),
+        annotation_ids=tuple(data["annotation_ids"]),  # type: ignore[index]
+        png_digest=str(data["png_digest"]),
+        png_bytes=bytes.fromhex(str(data["png_bytes_hex"])),
+        change_semantics=str(data["change_semantics"]),
+        signed_change_semantics=str(data["signed_change_semantics"]),
+        changed_fraction_semantics=str(data["changed_fraction_semantics"]),
+        render_semantics=str(data["render_semantics"]),
+        version=str(data["version"]),
+    )
 
 
 @dataclass(frozen=True)
@@ -295,11 +371,16 @@ class TransitionExpectationSetDTO:
 class VisualTransitionReaderTraceDTO:
     """Visual Sign Reader evidence preserved at transition-analysis level."""
 
+    accepted: bool
+    reason: str
     raw_input_digest: str
     canonical_input_digest: str
     feature_digest: str
+    reader_version: str
     visual_index_artifact_id: str
     policy_artifact_id: str
+    feature_spec_digest: str
+    calibration_digest: str
     acceptance_profile: str
     policy_executed: bool
     nearest_row_id: str | None = None
@@ -313,13 +394,26 @@ class VisualTransitionReaderTraceDTO:
             "raw_input_digest",
             "canonical_input_digest",
             "feature_digest",
+            "reader_version",
             "visual_index_artifact_id",
             "policy_artifact_id",
+            "feature_spec_digest",
+            "calibration_digest",
             "acceptance_profile",
+            "reason",
         ):
             if not getattr(self, name):
                 raise PerceptionTransitionAnalysisError(
                     f"visual reader trace {name} must be non-empty"
+                )
+        for name in (
+            "raw_input_digest",
+            "canonical_input_digest",
+            "feature_digest",
+        ):
+            if not _sha256_digest(getattr(self, name)):
+                raise PerceptionTransitionAnalysisError(
+                    f"visual reader trace {name} must be a sha256 digest"
                 )
         if self.acceptance_profile not in VISUAL_READER_ACCEPTANCE_PROFILES:
             raise PerceptionTransitionAnalysisError(
@@ -328,6 +422,34 @@ class VisualTransitionReaderTraceDTO:
         if self.acceptance_profile == "evidence_only" and self.policy_executed:
             raise PerceptionTransitionAnalysisError(
                 "evidence_only reader traces cannot execute policy"
+            )
+        if self.policy_executed and self.matched_row_id is None:
+            raise PerceptionTransitionAnalysisError(
+                "policy-executed reader traces require matched_row_id"
+            )
+        if not self.policy_executed and self.matched_row_id is not None:
+            raise PerceptionTransitionAnalysisError(
+                "non-executed reader traces cannot include matched_row_id"
+            )
+        if (
+            self.acceptance_profile == "canonical_only"
+            and self.policy_executed
+            and not self.canonical_input_match
+        ):
+            raise PerceptionTransitionAnalysisError(
+                "canonical_only policy execution requires canonical input match"
+            )
+        if (
+            self.acceptance_profile == "exact_codeword"
+            and self.policy_executed
+            and not self.exact_feature_match
+        ):
+            raise PerceptionTransitionAnalysisError(
+                "exact_codeword policy execution requires exact feature match"
+            )
+        if self.canonical_input_match and not self.exact_feature_match:
+            raise PerceptionTransitionAnalysisError(
+                "canonical input match requires exact feature match"
             )
         if self.version != VISUAL_TRANSITION_READER_TRACE_VERSION:
             raise PerceptionTransitionAnalysisError(
@@ -340,11 +462,16 @@ class VisualTransitionReaderTraceDTO:
     @classmethod
     def from_visual_decision(cls, decision: object) -> "VisualTransitionReaderTraceDTO":
         return cls(
+            accepted=bool(getattr(decision, "accepted")),
+            reason=str(getattr(decision, "reason")),
             raw_input_digest=str(getattr(decision, "raw_input_digest")),
             canonical_input_digest=str(getattr(decision, "canonical_input_digest")),
             feature_digest=str(getattr(decision, "feature_digest")),
+            reader_version=str(getattr(decision, "reader_version")),
             visual_index_artifact_id=str(getattr(decision, "visual_index_artifact_id")),
             policy_artifact_id=str(getattr(decision, "policy_artifact_id")),
+            feature_spec_digest=str(getattr(decision, "feature_spec_digest")),
+            calibration_digest=str(getattr(decision, "calibration_digest")),
             acceptance_profile=str(getattr(decision, "acceptance_profile")),
             policy_executed=bool(getattr(decision, "policy_executed")),
             nearest_row_id=getattr(decision, "nearest_row_id"),
@@ -356,11 +483,16 @@ class VisualTransitionReaderTraceDTO:
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "VisualTransitionReaderTraceDTO":
         return cls(
+            accepted=bool(data["accepted"]),
+            reason=str(data["reason"]),
             raw_input_digest=str(data["raw_input_digest"]),
             canonical_input_digest=str(data["canonical_input_digest"]),
             feature_digest=str(data["feature_digest"]),
+            reader_version=str(data["reader_version"]),
             visual_index_artifact_id=str(data["visual_index_artifact_id"]),
             policy_artifact_id=str(data["policy_artifact_id"]),
+            feature_spec_digest=str(data["feature_spec_digest"]),
+            calibration_digest=str(data["calibration_digest"]),
             acceptance_profile=str(data["acceptance_profile"]),
             policy_executed=bool(data["policy_executed"]),
             nearest_row_id=data.get("nearest_row_id"),  # type: ignore[arg-type]
@@ -384,6 +516,7 @@ class VisualTransitionAnalysisDTO:
     expectation_set_id: str
     conformance_report_id: str
     status: str
+    transition_evidence: TransitionEvidenceVPMDTO
     action: TransitionActionDeclarationDTO
     expectation_set: TransitionExpectationSetDTO
     conformance_report: TransitionConformanceReportDTO
@@ -402,6 +535,25 @@ class VisualTransitionAnalysisDTO:
             )
         if self.action_id != self.action.action_id:
             raise PerceptionTransitionAnalysisError("analysis action identity mismatch")
+        if (
+            self.transition_evidence_id
+            != self.transition_evidence.transition_evidence_id
+        ):
+            raise PerceptionTransitionAnalysisError(
+                "analysis embedded transition evidence identity mismatch"
+            )
+        if self.before_source_vpm_id != self.transition_evidence.before_source_vpm_id:
+            raise PerceptionTransitionAnalysisError(
+                "analysis before source identity mismatch"
+            )
+        if self.after_source_vpm_id != self.transition_evidence.after_source_vpm_id:
+            raise PerceptionTransitionAnalysisError(
+                "analysis after source identity mismatch"
+            )
+        if self.field_schema_id != self.transition_evidence.field_schema_id:
+            raise PerceptionTransitionAnalysisError(
+                "analysis embedded transition field schema mismatch"
+            )
         if self.expectation_set_id != self.expectation_set.expectation_set_id:
             raise PerceptionTransitionAnalysisError(
                 "analysis expectation set identity mismatch"
@@ -448,6 +600,7 @@ class VisualTransitionAnalysisDTO:
         after_reader_trace: VisualTransitionReaderTraceDTO | None = None,
     ) -> "VisualTransitionAnalysisDTO":
         values: dict[str, object] = {
+            "transition_evidence": _transition_evidence_to_dict(transition),
             "transition_evidence_id": transition.transition_evidence_id,
             "before_source_vpm_id": transition.before_source_vpm_id,
             "after_source_vpm_id": transition.after_source_vpm_id,
@@ -466,6 +619,7 @@ class VisualTransitionAnalysisDTO:
         }
         return cls(
             analysis_id=_digest(values),
+            transition_evidence=transition,
             action=action,
             expectation_set=expectation_set,
             conformance_report=conformance_report,
@@ -474,7 +628,13 @@ class VisualTransitionAnalysisDTO:
             **{
                 k: v
                 for k, v in values.items()
-                if k not in {"before_reader_trace", "after_reader_trace", "version"}
+                if k
+                not in {
+                    "before_reader_trace",
+                    "after_reader_trace",
+                    "transition_evidence",
+                    "version",
+                }
             },  # type: ignore[arg-type]
         )
 
@@ -493,6 +653,9 @@ class VisualTransitionAnalysisDTO:
             "expectation_set_id": self.expectation_set_id,
             "field_schema_id": self.field_schema_id,
             "status": self.status,
+            "transition_evidence": _transition_evidence_to_dict(
+                self.transition_evidence
+            ),
             "transition_evidence_id": self.transition_evidence_id,
             "version": self.version,
         }
@@ -509,6 +672,9 @@ class VisualTransitionAnalysisDTO:
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> "VisualTransitionAnalysisDTO":
         report_data = data["conformance_report"]  # type: ignore[index]
+        transition_evidence = _transition_evidence_from_dict(
+            data["transition_evidence"]  # type: ignore[arg-type]
+        )
         findings = tuple(
             TransitionConformanceFindingDTO(
                 finding_id=str(item["finding_id"]),
@@ -574,6 +740,7 @@ class VisualTransitionAnalysisDTO:
             expectation_set_id=str(data["expectation_set_id"]),
             conformance_report_id=str(data["conformance_report_id"]),
             status=str(data["status"]),
+            transition_evidence=transition_evidence,
             action=TransitionActionDeclarationDTO.from_dict(data["action"]),  # type: ignore[arg-type]
             expectation_set=TransitionExpectationSetDTO.from_dict(
                 data["expectation_set"]  # type: ignore[arg-type]

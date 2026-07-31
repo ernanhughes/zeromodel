@@ -110,3 +110,53 @@ def test_clean_run_propagates_pytests_return_code() -> None:
         {"collected": 5, "collection_errors": 0, "deselected": 1}, 1
     )
     assert exit_code == 1
+
+
+def test_dependency_preflight_passes_when_all_imports_resolve() -> None:
+    assert runner.missing_dev_dependencies(lambda name: object()) == ()
+
+
+def test_dependency_preflight_reports_one_missing_dependency() -> None:
+    def importer(name: str):
+        if name == "cryptography":
+            raise ModuleNotFoundError(name="cryptography")
+        return object()
+
+    assert runner.missing_dev_dependencies(importer) == ("cryptography",)
+
+
+def test_dependency_preflight_reports_multiple_missing_dependencies() -> None:
+    def importer(name: str):
+        if name in {"cryptography", "matplotlib"}:
+            raise ModuleNotFoundError(name=name)
+        return object()
+
+    assert runner.missing_dev_dependencies(importer) == (
+        "matplotlib",
+        "cryptography",
+    )
+
+
+def test_missing_dependency_message_contains_bootstrap_command() -> None:
+    message = runner.format_missing_dependency_message(("cryptography", "matplotlib"))
+
+    assert "cryptography" in message
+    assert "matplotlib" in message
+    assert "python scripts/bootstrap_dev_environment.py" in message
+    assert "does not install dependencies automatically" in message
+
+
+def test_fast_runner_stops_before_pytest_when_preflight_fails(monkeypatch) -> None:
+    calls = []
+    monkeypatch.setattr(runner.sys, "argv", ["run_fast_tests.py"])
+    monkeypatch.setattr(
+        runner,
+        "missing_dev_dependencies",
+        lambda: ("cryptography",),
+    )
+    monkeypatch.setattr(
+        runner.subprocess, "run", lambda *args, **kwargs: calls.append(args)
+    )
+
+    assert runner.main() == 2
+    assert calls == []

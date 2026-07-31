@@ -1,0 +1,4 @@
+{
+  "after_frame_mutation_changes_runtime_output": true,
+  "runtime_outputs_ignore_privileged_truth": true
+}

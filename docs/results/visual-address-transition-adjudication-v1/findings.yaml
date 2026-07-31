@@ -1,0 +1,32 @@
+- id: visual-address-transition-adjudication-v1
+  title: One-step transition evidence adjudicates selected static visual address hypotheses
+  classification: positive result
+  evidence_state: smoke/evidence command generated
+  severity: bounded
+  capability: static visual address adjudication through transition evidence
+  claim_affected: bounded deterministic address hypotheses can be retained, contradicted, narrowed, or left unresolved
+  source_paths:
+    - examples/visual_transition_benchmark/adjudication
+  test_paths:
+    - examples/visual_transition_benchmark/tests/test_adjudication.py
+  commands:
+    - python -m visual_transition_benchmark.adjudication.run --mode smoke --output-dir docs/results/visual-address-transition-adjudication-v1/smoke
+  profiles:
+    - exact_codeword
+    - canonical_only
+    - evidence_only
+  alias_classes:
+    - canonical exact
+    - wrong row, same policy action
+    - wrong row, different policy action
+  actions:
+    - FIRE
+    - LEFT
+    - RIGHT
+    - STAY
+  observed_result: action-changing aliases can be contradicted when candidate contracts imply different observable consequences; action-equivalent and no-effect aliases often remain unresolved.
+  interpretation: transition consistency is distinct from exact row correctness and action equivalence.
+  why_it_matters: prevents static visual-address confidence from being overstated after a normal policy action.
+  production_change: none
+  remaining_boundary: one-step evidence cannot resolve visually indistinguishable or action-equivalent transition-signature collisions.
+  confidence: medium

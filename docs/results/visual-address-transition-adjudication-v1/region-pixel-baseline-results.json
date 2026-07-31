@@ -1,0 +1,148 @@
+{
+  "cases": [
+    {
+      "case_id": "canonical-exact-reader_local-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "correct-noncanonical-reader_local-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "wrong-action-changing-reader_local-component",
+      "region_signature": []
+    },
+    {
+      "case_id": "wrong-action-equivalent-reader_local-component",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "no-effect-unresolved-reader_local-component",
+      "region_signature": []
+    },
+    {
+      "case_id": "insufficient-observability-reader_local-component",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "canonical-exact-policy_action-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "correct-noncanonical-policy_action-component",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "wrong-action-changing-policy_action-component",
+      "region_signature": []
+    },
+    {
+      "case_id": "wrong-action-equivalent-policy_action-component",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "no-effect-unresolved-policy_action-component",
+      "region_signature": []
+    },
+    {
+      "case_id": "insufficient-observability-policy_action-component",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "canonical-exact-reader_local-value",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "correct-noncanonical-reader_local-value",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "wrong-action-changing-reader_local-value",
+      "region_signature": []
+    },
+    {
+      "case_id": "wrong-action-equivalent-reader_local-value",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "no-effect-unresolved-reader_local-value",
+      "region_signature": []
+    },
+    {
+      "case_id": "insufficient-observability-reader_local-value",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "canonical-exact-policy_action-value",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "correct-noncanonical-policy_action-value",
+      "region_signature": [
+        "alien",
+        "cooldown"
+      ]
+    },
+    {
+      "case_id": "wrong-action-changing-policy_action-value",
+      "region_signature": []
+    },
+    {
+      "case_id": "wrong-action-equivalent-policy_action-value",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "no-effect-unresolved-policy_action-value",
+      "region_signature": []
+    },
+    {
+      "case_id": "insufficient-observability-policy_action-value",
+      "region_signature": [
+        "tank"
+      ]
+    },
+    {
+      "case_id": "reader-rejected-canonical-only",
+      "region_signature": []
+    },
+    {
+      "case_id": "evidence-only-no-execution",
+      "region_signature": []
+    }
+  ]
+}

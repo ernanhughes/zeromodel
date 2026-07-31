@@ -1,0 +1,18 @@
+{
+  "experiment_mode": "evidence",
+  "focused_tests": {
+    "command": "python -m pytest examples/visual_transition_benchmark/tests/test_adjudication.py -q",
+    "passed": 14,
+    "status": "passed"
+  },
+  "full_fast_suite": {
+    "collected": 1680,
+    "deselected": 200,
+    "duration_seconds": 116.19,
+    "failed": 0,
+    "passed": 1479,
+    "skipped": 1,
+    "status": "passed"
+  },
+  "status": "passed"
+}

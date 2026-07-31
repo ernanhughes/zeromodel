@@ -1,0 +1,6 @@
+{"command": "$env:PYTHONPATH='examples'; python -m visual_transition_benchmark.adjudication.run --mode evidence --output-dir docs/results/visual-address-transition-adjudication-v1", "mode": "evidence", "status": "passed"}
+{"command": "python -m pytest examples/visual_transition_benchmark/tests/test_adjudication.py -q", "passed": 14, "status": "passed"}
+{"command": "python -m ruff check .", "status": "passed"}
+{"command": "python scripts/release_version.py check", "status": "passed"}
+{"command": "git diff --check", "status": "passed"}
+{"command": "python scripts/run_fast_tests.py", "passed": 1479, "skipped": 1, "deselected": 200, "duration_seconds": 116.19, "status": "passed"}

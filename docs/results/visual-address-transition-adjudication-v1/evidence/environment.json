@@ -1,0 +1,34 @@
+{
+  "acceptance_profiles": [
+    "canonical_only",
+    "evidence_only",
+    "exact_codeword"
+  ],
+  "candidate_universe_modes": [
+    "policy_action",
+    "reader_local"
+  ],
+  "case_counts": {
+    "mode": "evidence",
+    "total": 26
+  },
+  "evidence_modes": [
+    "component",
+    "value"
+  ],
+  "numpy": "1.26.4",
+  "package_paths": {
+    "zeromodel.perception": "C:\\Projects\\zeromodel\\packages\\perception\\src\\zeromodel\\perception\\__init__.py",
+    "zeromodel.video": "C:\\Projects\\zeromodel\\packages\\video\\src\\zeromodel\\video\\__init__.py",
+    "zeromodel.vision": "C:\\Projects\\zeromodel\\packages\\vision\\src\\zeromodel\\vision\\__init__.py"
+  },
+  "platform": "Windows-10-10.0.26200-SP0",
+  "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
+  "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
+  "starting_commit": "bd3d5f8d0213095d4a1df0fc9d419e027fd1c606",
+  "versions": {
+    "zeromodel-perception": "1.2.0",
+    "zeromodel-video": "1.2.0",
+    "zeromodel-vision": "1.2.0"
+  }
+}

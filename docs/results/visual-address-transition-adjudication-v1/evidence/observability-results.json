@@ -1,0 +1,59 @@
+{
+  "insufficient_observability": {
+    "accepted_case_count": 10,
+    "addressed_row_retention_rate": 1.0,
+    "candidate_set_reduction_rate": 0.6,
+    "case_count": 10,
+    "correct_address_false_contradiction_rate": 0.0,
+    "exact_row_accuracy": 0.6,
+    "false_confirmation_rate": 0.0,
+    "mean_candidate_count_after": 12.6,
+    "mean_candidate_count_before": 23.8,
+    "policy_action_accuracy": 1.0,
+    "rejection_rate": 0.0,
+    "status_counts": {
+      "transition_signature_collision": 10
+    },
+    "transition_signature_collision_rate": 1.0,
+    "true_row_elimination_rate": 0.0,
+    "true_row_retention_rate": 1.0,
+    "unique_correction_to_true_row_rate": 0.0,
+    "unique_resolution_to_wrong_row_rate": 0.0,
+    "unique_transition_consistent_candidate_rate": 0.0,
+    "unresolved_rate": 1.0,
+    "wrong_address_contradiction_rate": 0.0,
+    "wrong_row_accepted_rate": 0.4,
+    "wrong_row_different_action_rate": 0.0,
+    "wrong_row_same_action_rate": 1.0
+  },
+  "observable": {
+    "accepted_case_count": 14,
+    "addressed_row_retention_rate": 0.7142857142857143,
+    "candidate_set_reduction_rate": 1.0,
+    "case_count": 16,
+    "correct_address_false_contradiction_rate": 0.0,
+    "exact_row_accuracy": 0.42857142857142855,
+    "false_confirmation_rate": 0.2857142857142857,
+    "mean_candidate_count_after": 0.7142857142857143,
+    "mean_candidate_count_before": 7.714285714285714,
+    "policy_action_accuracy": 0.7142857142857143,
+    "rejection_rate": 0.125,
+    "status_counts": {
+      "address_contradicted": 4,
+      "address_transition_consistent": 10,
+      "policy_not_executed": 1,
+      "reader_rejected": 1
+    },
+    "transition_signature_collision_rate": 0.0,
+    "true_row_elimination_rate": 0.5714285714285714,
+    "true_row_retention_rate": 0.42857142857142855,
+    "unique_correction_to_true_row_rate": 0.0,
+    "unique_resolution_to_wrong_row_rate": 0.2857142857142857,
+    "unique_transition_consistent_candidate_rate": 0.0,
+    "unresolved_rate": 0.0,
+    "wrong_address_contradiction_rate": 0.5,
+    "wrong_row_accepted_rate": 0.5714285714285714,
+    "wrong_row_different_action_rate": 0.5,
+    "wrong_row_same_action_rate": 0.5
+  }
+}

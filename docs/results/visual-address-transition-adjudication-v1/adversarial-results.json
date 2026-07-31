@@ -1,0 +1,5 @@
+{
+  "reader_rejection_status": true,
+  "wrong_action_identity_rejected": true,
+  "wrong_transition_evidence_rejected": true
+}

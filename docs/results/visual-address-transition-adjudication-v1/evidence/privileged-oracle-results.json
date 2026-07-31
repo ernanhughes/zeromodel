@@ -1,0 +1,33 @@
+{
+  "upper_reference": {
+    "accepted_case_count": 24,
+    "addressed_row_retention_rate": 0.8333333333333334,
+    "candidate_set_reduction_rate": 0.8333333333333334,
+    "case_count": 26,
+    "correct_address_false_contradiction_rate": 0.0,
+    "exact_row_accuracy": 0.5,
+    "false_confirmation_rate": 0.16666666666666666,
+    "mean_candidate_count_after": 5.666666666666667,
+    "mean_candidate_count_before": 14.416666666666666,
+    "policy_action_accuracy": 0.8333333333333334,
+    "rejection_rate": 0.07692307692307693,
+    "status_counts": {
+      "address_contradicted": 4,
+      "address_transition_consistent": 10,
+      "policy_not_executed": 1,
+      "reader_rejected": 1,
+      "transition_signature_collision": 10
+    },
+    "transition_signature_collision_rate": 0.38461538461538464,
+    "true_row_elimination_rate": 0.3333333333333333,
+    "true_row_retention_rate": 0.6666666666666666,
+    "unique_correction_to_true_row_rate": 0.0,
+    "unique_resolution_to_wrong_row_rate": 0.16666666666666666,
+    "unique_transition_consistent_candidate_rate": 0.0,
+    "unresolved_rate": 0.38461538461538464,
+    "wrong_address_contradiction_rate": 0.3333333333333333,
+    "wrong_row_accepted_rate": 0.5,
+    "wrong_row_different_action_rate": 0.3333333333333333,
+    "wrong_row_same_action_rate": 0.6666666666666666
+  }
+}

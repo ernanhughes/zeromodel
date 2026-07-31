@@ -1,0 +1,7 @@
+{
+  "accepted_case_count": 24,
+  "accepted_wrong_row_rate": 0.5,
+  "action_accuracy": 0.8333333333333334,
+  "action_equivalent_wrong_row_rate": 0.6666666666666666,
+  "row_accuracy": 0.5
+}

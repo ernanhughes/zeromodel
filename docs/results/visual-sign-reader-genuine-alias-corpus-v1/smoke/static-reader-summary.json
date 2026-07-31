@@ -15,7 +15,7 @@
   "policy_executed_accepted_count": 396,
   "reader_accepted_case_count": 804,
   "rejection_rate": 0.5073529411764706,
-  "runtime_seconds": 0.644462,
+  "runtime_seconds": 0.70177,
   "transformation_case_count": 1632,
   "unique_matched_rows_receiving_aliases": 12,
   "unique_source_matched_row_pairs": 22,

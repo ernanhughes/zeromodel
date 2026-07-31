@@ -21,7 +21,11 @@ from visual_transition_benchmark.alias_discovery.corpus import (
     generate_cases,
     split_for_row,
 )
-from visual_transition_benchmark.alias_discovery.deduplication import deduplicate
+from visual_transition_benchmark.alias_discovery.deduplication import (
+    deduplicate,
+    unique_wrong_row_aliases,
+    visual_alias_identity_payload,
+)
 from visual_transition_benchmark.alias_discovery.registry import (
     REGISTRY_FILE,
     default_registry,
@@ -119,6 +123,17 @@ def test_deduplication_determinism_and_duplicate_provenance_retention():
         group = first["duplicate_groups"][0]
         assert group["representative_case_id"]
         assert group["all_transform_chain_ids"]
+
+
+def test_visual_alias_identity_is_profile_independent():
+    cases, _, _ = generate_cases(mode="smoke")
+    aliases = unique_wrong_row_aliases(cases)
+    assert aliases
+    by_case_id = {case.case_id: case for case in cases}
+    for alias in aliases:
+        representative = by_case_id[str(alias["representative_profile_case_id"])]
+        assert alias["visual_alias_id"] == digest(visual_alias_identity_payload(representative))
+        assert str(alias["visual_alias_id"]) not in set(alias["profile_case_ids"])
 
 
 def test_case_identity_determinism_and_duplicate_identity_detection():

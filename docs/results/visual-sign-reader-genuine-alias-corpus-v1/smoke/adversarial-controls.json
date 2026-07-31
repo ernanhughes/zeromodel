@@ -1,122 +1,64 @@
 {
-  "calibration_digest_mismatch": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "calibration digest mismatch",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
+  "case_count": 6,
+  "controls": {
+    "matched_row_evaluation_mutates_corpus_membership": {
+      "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
+      "expected_result": "case ids remain unique and are not recomputed from evaluation labels",
+      "mutated_input": "post-reader matched row/action labels",
+      "observed_result": "True",
+      "passed": true,
+      "test_or_command": "generated case identity scan; test_case_identity_determinism_and_duplicate_identity_detection"
+    },
+    "nondeterministic_seeded_transform": {
+      "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
+      "expected_result": "same transform chain id has one transformed raw digest",
+      "mutated_input": "same seed replay",
+      "observed_result": "True",
+      "passed": true,
+      "test_or_command": "generated transform-chain scan; test_seeded_transform_determinism_and_chain_stability"
+    },
+    "same_transform_chain_different_output": {
+      "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
+      "expected_result": "same transform chain id never maps to multiple feature digests",
+      "mutated_input": "same transform chain replay",
+      "observed_result": "True",
+      "passed": true,
+      "test_or_command": "generated transform-chain scan; test_seeded_transform_determinism_and_chain_stability"
+    },
+    "source_row_metadata_changed_after_rendering_no_membership_effect": {
+      "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
+      "expected_result": "transform-chain ids recompute from source observation and transform inputs only",
+      "mutated_input": "matched row/action metadata omitted from transform-chain identity",
+      "observed_result": "True",
+      "passed": true,
+      "test_or_command": "generated transform-chain identity recomputation"
+    },
+    "target_row_argument_prohibited": {
+      "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
+      "expected_result": "transform_frame has no target row parameter",
+      "mutated_input": "unexpected target_row keyword",
+      "observed_result": "True",
+      "passed": true,
+      "test_or_command": "generated signature inspection; test_source_only_transform_interface_and_target_argument_prohibited"
+    },
+    "target_row_pixel_copy_not_in_registry": {
+      "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
+      "expected_result": "no transform declares target-copy behavior",
+      "mutated_input": "registry transform family scan",
+      "observed_result": "True",
+      "passed": true,
+      "test_or_command": "generated registry scan"
+    }
   },
-  "duplicate_case_identity_rejected": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "case identity uniqueness sample",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "feature_spec_mismatch": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "feature spec digest mismatch",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "matched_row_evaluation_mutates_corpus_membership": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "post-reader label inspection",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "nondeterministic_seeded_transform": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "same seed replay",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "policy_artifact_mismatch": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "policy artifact digest mismatch",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "same_transform_chain_different_output": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "same chain replay",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "source_and_transformed_observations_swapped": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "raw digest mismatch",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "source_row_metadata_changed_after_rendering_no_membership_effect": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "membership id comparison",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "target_row_argument_prohibited": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "unexpected target_row keyword",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "target_row_pixel_copy_not_in_registry": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "registry transform family scan",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "transformed_observation_file_digest_mismatch": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "artifact tamper append",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "transition_result_mutates_corpus_membership": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "transition payload mutation",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "visual_decision_from_another_observation": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "digest replay mismatch",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  },
-  "visual_decision_from_another_visual_index": {
-    "baseline_identity": "sha256:de3f18e2773dce8fc1b9e70a1fdce6213cf0bf89ee6762df47a0dc24854fe9b8",
-    "expected_result": "explicit rejection or unchanged membership",
-    "mutated_input": "visual index digest mismatch",
-    "observed_result": "passed by focused executable test or static registry assertion",
-    "passed": true,
-    "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py"
-  }
+  "passed": true,
+  "removed_declarative_controls": [
+    "visual_decision_from_another_observation",
+    "visual_decision_from_another_visual_index",
+    "policy_artifact_mismatch",
+    "feature_spec_mismatch",
+    "calibration_digest_mismatch",
+    "source_and_transformed_observations_swapped",
+    "transition_result_mutates_corpus_membership",
+    "transformed_observation_file_digest_mismatch"
+  ]
 }

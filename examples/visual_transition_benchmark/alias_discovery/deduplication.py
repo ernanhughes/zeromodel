@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 
+from visual_transition_benchmark.alias_discovery._json import digest
 from visual_transition_benchmark.alias_discovery.corpus import VisualAliasCase
 
 
@@ -15,6 +16,16 @@ def visual_alias_key(case: VisualAliasCase) -> tuple[str, str, str, str, str | N
     )
 
 
+def visual_alias_identity_payload(case: VisualAliasCase) -> dict[str, str | None]:
+    return {
+        "source_row_id": case.source_row_id,
+        "transformed_observation_raw_digest": case.transformed_observation_raw_digest,
+        "transformed_observation_canonical_digest": case.transformed_observation_canonical_digest,
+        "transformed_feature_digest": case.transformed_feature_digest,
+        "matched_row_id": case.matched_row_id,
+    }
+
+
 def unique_wrong_row_aliases(cases: list[VisualAliasCase]) -> list[dict[str, object]]:
     groups: dict[tuple[str, str, str, str, str | None], list[VisualAliasCase]] = defaultdict(list)
     for case in cases:
@@ -25,7 +36,8 @@ def unique_wrong_row_aliases(cases: list[VisualAliasCase]) -> list[dict[str, obj
         representative = sorted(group, key=lambda item: item.case_id)[0]
         aliases.append(
             {
-                "visual_alias_id": representative.case_id,
+                "visual_alias_id": digest(visual_alias_identity_payload(representative)),
+                "representative_profile_case_id": representative.case_id,
                 "source_row_id": representative.source_row_id,
                 "source_action": representative.source_action,
                 "matched_row_id": representative.matched_row_id,

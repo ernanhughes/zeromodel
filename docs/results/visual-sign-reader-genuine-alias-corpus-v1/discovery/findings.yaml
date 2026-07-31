@@ -21,10 +21,11 @@ transform_families: registry-v1
 source_rows: exhaustive confirmation split
 generated_case_count: 5712
 unique_case_count: 5712
-accepted_wrong_row_count: 194
-action_equivalent_count: 108
-action_changing_count: 86
-observed_result: 194 accepted wrong-row aliases
+wrong_row_profile_case_count: 194
+unique_wrong_row_observation_count: 72
+action_equivalent_profile_case_count: 108
+action_changing_profile_case_count: 86
+observed_result: 194 accepted wrong-row profile cases representing 72 unique visual aliases
 interpretation: Result is bounded by the committed deterministic transform registry.
 why_it_matters: Establishes whether a real static misaddress corpus exists before transition adjudication.
 production_change: No production API changes were required.

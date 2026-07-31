@@ -1,16 +1,17 @@
 {
+  "evidence_generated_git_sha": "21eb8219a801ee883a68f05e046f120376681505",
   "fast_suite": {
+    "budget_seconds": 120,
     "command": "python scripts/run_fast_tests.py",
-    "deselected": 200,
     "failed": 0,
-    "passed": 1479,
-    "runtime_seconds": 116.72,
-    "skipped": 1
+    "observed_result": "No assertion failure observed before the runner failed its hard budget.",
+    "runtime_seconds": 120.1,
+    "status": "budget_exceeded"
   },
   "focused_tests": {
     "command": "python -m pytest examples/visual_transition_benchmark/tests/test_alias_discovery.py -q",
     "failed": 0,
-    "passed": 12
+    "passed": 13
   },
   "git_diff_check": {
     "command": "git diff --check",
@@ -25,5 +26,5 @@
     "command": "python -m ruff check .",
     "status": "passed"
   },
-  "status": "passed"
+  "status": "partial_fast_suite_budget_exceeded"
 }

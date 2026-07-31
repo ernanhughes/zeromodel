@@ -104,7 +104,7 @@ def _save_observation(path: Path, array: np.ndarray) -> dict[str, object]:
 
 def _replay(output_dir: Path, cases, observations, context) -> dict[str, object]:
     unique_wrong_ids = {
-        str(alias["visual_alias_id"]) for alias in unique_wrong_row_aliases(cases)
+        str(alias["representative_profile_case_id"]) for alias in unique_wrong_row_aliases(cases)
     }
     wrong = [case for case in cases if case.case_id in unique_wrong_ids]
     selected_controls = [case for case in cases if case.transform_id in {"grayscale_to_rgb", "invert"}][:4]
@@ -142,12 +142,13 @@ def _handoff(cases, replay: dict[str, object]) -> dict[str, object]:
         and case.matched_row_id != case.source_row_id
     ]
     by_alias = {
-        str(alias["visual_alias_id"]): alias
+        str(alias["representative_profile_case_id"]): alias
         for alias in unique_wrong_row_aliases(wrong)
     }
     rows = [
         {
-            "visual_alias_id": case.case_id,
+            "visual_alias_id": by_alias[case.case_id]["visual_alias_id"],
+            "representative_profile_case_id": case.case_id,
             "source_row_id": case.source_row_id,
             "source_action": case.source_action,
             "matched_row_id": case.matched_row_id,
@@ -155,7 +156,9 @@ def _handoff(cases, replay: dict[str, object]) -> dict[str, object]:
             "action_equivalent": case.action_equivalent,
             "accepting_profiles": by_alias[case.case_id]["accepting_profiles"],
             "profile_case_ids": by_alias[case.case_id]["profile_case_ids"],
-            "transform_chain_id": case.transform_chain_id,
+            "representative_transform_chain_id": case.transform_chain_id,
+            "transform_chain_ids": by_alias[case.case_id]["transform_chain_ids"],
+            "transform_families": by_alias[case.case_id]["transform_families"],
             "transformed_observation_path": next(row["path"] for row in replay["rows"] if row["case_id"] == case.case_id),
             "transformed_observation_digest": case.transformed_observation_raw_digest,
             "visual_decision_identity": {
@@ -212,10 +215,12 @@ def _environment(context) -> dict[str, object]:
 
 
 def _write_findings(path: Path, summary: dict[str, object], rid: str) -> None:
+    wrong = int(summary["wrong_row_profile_case_count"])
+    unique_wrong = int(summary["unique_wrong_row_observation_count"])
     path.write_text(
         f"""id: visual-sign-reader-genuine-alias-corpus-v1
 title: Genuine Visual Sign Reader alias discovery corpus
-classification: {'positive result' if summary['accepted_wrong_row_count'] else 'negative result'}
+classification: {'positive result' if wrong else 'negative result'}
 evidence_state: frozen confirmation
 severity: medium
 capability: visual address robustness
@@ -236,10 +241,11 @@ transform_families: registry-v1
 source_rows: exhaustive confirmation split
 generated_case_count: {summary['generated_case_count']}
 unique_case_count: {summary['generated_case_count']}
-accepted_wrong_row_count: {summary['accepted_wrong_row_count']}
-action_equivalent_count: {summary['wrong_row_same_action_count']}
-action_changing_count: {summary['wrong_row_different_action_count']}
-observed_result: {summary['accepted_wrong_row_count']} accepted wrong-row aliases
+wrong_row_profile_case_count: {wrong}
+unique_wrong_row_observation_count: {unique_wrong}
+action_equivalent_profile_case_count: {summary['wrong_row_same_action_count']}
+action_changing_profile_case_count: {summary['wrong_row_different_action_count']}
+observed_result: {wrong} accepted wrong-row profile cases representing {unique_wrong} unique visual aliases
 interpretation: Result is bounded by the committed deterministic transform registry.
 why_it_matters: Establishes whether a real static misaddress corpus exists before transition adjudication.
 production_change: No production API changes were required.
@@ -293,7 +299,7 @@ def _assessment(summary: dict[str, object], output_dir: Path, rid: str) -> str:
         "Source-state analysis": "Source-action and state-family breakdowns are preserved in source-action-results.json and state-family-results.json.",
         "Row-pair analysis": "Row-pair-results.json records source-to-matched directionality; mappings are not assumed symmetric.",
         "Negative controls": "Negative controls did not all reject. Accepted wrong-row negative-control outcomes are reported as negative-control failures, not hidden.",
-        "Adversarial controls": "Adversarial-controls.json records baseline identity, mutated input, expected result, observed result, pass/fail, and responsible focused test/static assertion.",
+        "Adversarial controls": "Adversarial-controls.json records only generated checks executed by the evidence generator and lists prior declarative controls that were removed rather than reported as passes.",
         "Replay validation": "Replay artifacts preserve transformed observations for wrong-row aliases and selected controls; replay-results.json verifies raw/canonical/feature digests and VisualDecision outputs.",
         "Failure atlas": "The atlas groups accepted wrong-row aliases when present, otherwise closest rejected/low-margin cases.",
         "Production changes": "No production API changes were required.",
@@ -378,12 +384,14 @@ def run(output_dir: Path, *, mode: str, registry_file: Path | None = None, dev_r
 
 
 def _validation_summary(mode: str) -> dict[str, object]:
+    sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     return {
-        "status": "passed",
+        "status": "partial_fast_suite_budget_exceeded",
         "mode": mode,
+        "evidence_generated_git_sha": sha,
         "focused_tests": {
             "command": "python -m pytest examples/visual_transition_benchmark/tests/test_alias_discovery.py -q",
-            "passed": 12,
+            "passed": 13,
             "failed": 0,
         },
         "ruff": {"command": "python -m ruff check .", "status": "passed"},
@@ -394,11 +402,11 @@ def _validation_summary(mode: str) -> dict[str, object]:
         "git_diff_check": {"command": "git diff --check", "status": "passed"},
         "fast_suite": {
             "command": "python scripts/run_fast_tests.py",
-            "passed": 1479,
-            "skipped": 1,
-            "deselected": 200,
+            "status": "budget_exceeded",
             "failed": 0,
-            "runtime_seconds": 116.72,
+            "runtime_seconds": 120.1,
+            "budget_seconds": 120,
+            "observed_result": "No assertion failure observed before the runner failed its hard budget.",
         },
     }
 

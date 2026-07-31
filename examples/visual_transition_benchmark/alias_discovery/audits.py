@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import inspect
 from collections import defaultdict
 
 from zeromodel.vision import extract_visual_features, visual_feature_digest, visual_input_digest, visual_raw_input_digest
 
+from visual_transition_benchmark.alias_discovery._json import digest
 from visual_transition_benchmark.alias_discovery.corpus import ReaderContext, VisualAliasCase
+from visual_transition_benchmark.alias_discovery.registry import default_registry
+from visual_transition_benchmark.alias_discovery.transforms import transform_frame
 
 
 def feature_collision_audit(context: ReaderContext) -> dict[str, object]:
@@ -127,32 +131,127 @@ def negative_controls(cases: list[VisualAliasCase]) -> dict[str, object]:
     }
 
 
-def adversarial_controls(cases: list[VisualAliasCase] | None = None) -> dict[str, object]:
-    baseline = cases[0].case_id if cases else None
+def _control_record(
+    *,
+    baseline: str | None,
+    mutated_input: str,
+    expected_result: str,
+    observed_result: str,
+    passed: bool,
+    test_or_command: str,
+) -> dict[str, object]:
     return {
-        name: {
-            "baseline_identity": baseline,
-            "mutated_input": mutation,
-            "expected_result": "explicit rejection or unchanged membership",
-            "observed_result": "passed by focused executable test or static registry assertion",
-            "passed": True,
-            "test_or_command": "examples/visual_transition_benchmark/tests/test_alias_discovery.py",
-        }
-        for name, mutation in {
-            "target_row_argument_prohibited": "unexpected target_row keyword",
-            "target_row_pixel_copy_not_in_registry": "registry transform family scan",
-            "source_row_metadata_changed_after_rendering_no_membership_effect": "membership id comparison",
-            "transition_result_mutates_corpus_membership": "transition payload mutation",
-            "matched_row_evaluation_mutates_corpus_membership": "post-reader label inspection",
-            "duplicate_case_identity_rejected": "case identity uniqueness sample",
-            "nondeterministic_seeded_transform": "same seed replay",
-            "same_transform_chain_different_output": "same chain replay",
-            "visual_decision_from_another_observation": "digest replay mismatch",
-            "visual_decision_from_another_visual_index": "visual index digest mismatch",
-            "policy_artifact_mismatch": "policy artifact digest mismatch",
-            "feature_spec_mismatch": "feature spec digest mismatch",
-            "calibration_digest_mismatch": "calibration digest mismatch",
-            "source_and_transformed_observations_swapped": "raw digest mismatch",
-            "transformed_observation_file_digest_mismatch": "artifact tamper append",
-        }.items()
+        "baseline_identity": baseline,
+        "mutated_input": mutated_input,
+        "expected_result": expected_result,
+        "observed_result": observed_result,
+        "passed": passed,
+        "test_or_command": test_or_command,
+    }
+
+
+def adversarial_controls(cases: list[VisualAliasCase] | None = None) -> dict[str, object]:
+    items = list(cases or [])
+    baseline = items[0].case_id if items else None
+    signature = inspect.signature(transform_frame)
+    registry = default_registry()
+    specs_by_id_and_params = {
+        (spec.transform_id, tuple(sorted(spec.parameters.items()))): spec for spec in registry
+    }
+    source_only_chain_identity = all(
+        case.transform_chain_id
+        == digest(
+            {
+                "source_row_id": case.source_row_id,
+                "source_raw_digest": case.source_observation_raw_digest,
+                "transform": specs_by_id_and_params[
+                    (case.transform_id, tuple(sorted(case.transform_parameters.items())))
+                ].to_dict(),
+                "seed": case.transform_seed,
+            }
+        )
+        for case in items
+    )
+    records = {
+        "target_row_argument_prohibited": _control_record(
+            baseline=baseline,
+            mutated_input="unexpected target_row keyword",
+            expected_result="transform_frame has no target row parameter",
+            observed_result=str("target_row" not in signature.parameters and "target" not in signature.parameters),
+            passed="target_row" not in signature.parameters and "target" not in signature.parameters,
+            test_or_command="generated signature inspection; test_source_only_transform_interface_and_target_argument_prohibited",
+        ),
+        "target_row_pixel_copy_not_in_registry": _control_record(
+            baseline=baseline,
+            mutated_input="registry transform family scan",
+            expected_result="no transform declares target-copy behavior",
+            observed_result=str(
+                all("target" not in spec.transform_id and "copy_target" not in spec.transform_id for spec in registry)
+            ),
+            passed=all("target" not in spec.transform_id and "copy_target" not in spec.transform_id for spec in registry),
+            test_or_command="generated registry scan",
+        ),
+        "source_row_metadata_changed_after_rendering_no_membership_effect": _control_record(
+            baseline=baseline,
+            mutated_input="matched row/action metadata omitted from transform-chain identity",
+            expected_result="transform-chain ids recompute from source observation and transform inputs only",
+            observed_result=str(source_only_chain_identity),
+            passed=source_only_chain_identity,
+            test_or_command="generated transform-chain identity recomputation",
+        ),
+        "matched_row_evaluation_mutates_corpus_membership": _control_record(
+            baseline=baseline,
+            mutated_input="post-reader matched row/action labels",
+            expected_result="case ids remain unique and are not recomputed from evaluation labels",
+            observed_result=str(len({case.case_id for case in items}) == len(items)),
+            passed=len({case.case_id for case in items}) == len(items),
+            test_or_command="generated case identity scan; test_case_identity_determinism_and_duplicate_identity_detection",
+        ),
+        "nondeterministic_seeded_transform": _control_record(
+            baseline=baseline,
+            mutated_input="same seed replay",
+            expected_result="same transform chain id has one transformed raw digest",
+            observed_result=str(
+                all(
+                    len({case.transformed_observation_raw_digest for case in items if case.transform_chain_id == chain_id}) == 1
+                    for chain_id in {case.transform_chain_id for case in items}
+                )
+            ),
+            passed=all(
+                len({case.transformed_observation_raw_digest for case in items if case.transform_chain_id == chain_id}) == 1
+                for chain_id in {case.transform_chain_id for case in items}
+            ),
+            test_or_command="generated transform-chain scan; test_seeded_transform_determinism_and_chain_stability",
+        ),
+        "same_transform_chain_different_output": _control_record(
+            baseline=baseline,
+            mutated_input="same transform chain replay",
+            expected_result="same transform chain id never maps to multiple feature digests",
+            observed_result=str(
+                all(
+                    len({case.transformed_feature_digest for case in items if case.transform_chain_id == chain_id}) == 1
+                    for chain_id in {case.transform_chain_id for case in items}
+                )
+            ),
+            passed=all(
+                len({case.transformed_feature_digest for case in items if case.transform_chain_id == chain_id}) == 1
+                for chain_id in {case.transform_chain_id for case in items}
+            ),
+            test_or_command="generated transform-chain scan; test_seeded_transform_determinism_and_chain_stability",
+        ),
+    }
+    return {
+        "case_count": len(records),
+        "passed": all(bool(record["passed"]) for record in records.values()),
+        "controls": records,
+        "removed_declarative_controls": [
+            "visual_decision_from_another_observation",
+            "visual_decision_from_another_visual_index",
+            "policy_artifact_mismatch",
+            "feature_spec_mismatch",
+            "calibration_digest_mismatch",
+            "source_and_transformed_observations_swapped",
+            "transition_result_mutates_corpus_membership",
+            "transformed_observation_file_digest_mismatch",
+        ],
     }

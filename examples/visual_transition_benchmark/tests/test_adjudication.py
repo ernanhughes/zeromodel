@@ -143,7 +143,10 @@ def test_reader_rejection_and_evidence_only_produce_no_execution_adjudication():
         for case in build_case_corpus()
         if case.case_id == "evidence-only-no-execution"
     )
-    assert _run(rejected).runtime_adjudication_status == "reader_rejected"
+    rejected_result = _run(rejected)
+    assert not rejected.visual_decision.policy_executed
+    assert rejected_result.runtime_adjudication_status == "invalid_transition_evidence"
+    assert "stale_before_observation" in rejected_result.reason_codes
     assert _run(evidence_only).runtime_adjudication_status == "policy_not_executed"
 
 
@@ -226,6 +229,35 @@ def test_decision_bound_to_exact_addressed_observation():
     assert {"reader_observation_mismatch", "stale_before_observation"} <= set(
         result.reason_codes
     )
+
+
+def test_spoofed_transform_name_cannot_bypass_before_frame_binding():
+    decision_case = _case("canonical-only-accepted")
+    stale_case = _case("calibrated-nearest-correct")
+    result = adjudicate_address_transition(
+        RuntimeAdjudicationInput(
+            case_id=decision_case.case_id,
+            visual_decision=decision_case.visual_decision,
+            candidate_universe=decision_case.candidate_universe,
+            evidence_mode=decision_case.evidence_mode,
+            addressed_observation=decision_case.observed_frame,
+            addressed_observation_transform_id="noncanonical_exact_background_pixel",
+            feature_spec=decision_case.feature_spec,
+            frame_before=stale_case.true_before_frame,
+            frame_after=stale_case.true_after_frame,
+            action=TransitionActionDeclarationDTO.create(
+                action_type=str(decision_case.addressed_action),
+                payload={"row_id": decision_case.visual_decision.matched_row_id},
+                provider_id="visual-sign-reader",
+            ),
+            transition_evidence=_transition(
+                stale_case.true_before_frame, stale_case.true_after_frame
+            ),
+        )
+    )
+    assert result.runtime_adjudication_status == "invalid_transition_evidence"
+    assert "stale_before_observation" in result.reason_codes
+    assert "reader_observation_mismatch" not in result.reason_codes
 
 
 def test_serialization_round_trip_runtime_dict():

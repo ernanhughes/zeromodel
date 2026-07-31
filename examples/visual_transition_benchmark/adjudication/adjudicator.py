@@ -219,10 +219,7 @@ def adjudicate_address_transition(
         input_data.frame_before,
         input_data.feature_spec,
     )
-    if (
-        addressed_canonical_digest != before_canonical_digest
-        and input_data.addressed_observation_transform_id != "noncanonical_exact_background_pixel"
-    ):
+    if addressed_canonical_digest != before_canonical_digest:
         reasons.append("stale_before_observation")
 
     if len(rows) != len(set(rows)):

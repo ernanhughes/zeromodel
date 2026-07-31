@@ -24,7 +24,7 @@
   "platform": "Windows-10-10.0.26200-SP0",
   "policy_artifact_id": "eb7523f406b45ac30b478fe9528db8f89a548693b0add2fc8d3e51c4badd857e",
   "python": "3.11.4 (tags/v3.11.4:d2340ef, Jun  7 2023, 05:45:37) [MSC v.1934 64 bit (AMD64)]",
-  "starting_commit": "966292ddfe23fa13bd6efca56c48a17a9c57e363",
+  "starting_commit": "74bb078e9ba72c0f678bc511e5e9aacb9ab42132",
   "versions": {
     "zeromodel-perception": "1.2.0",
     "zeromodel-video": "1.2.0",

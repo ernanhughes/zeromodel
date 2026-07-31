@@ -56,6 +56,10 @@ def _frame_for_row(row_id: str, *, config: ShooterConfig) -> np.ndarray:
 
 
 def _noncanonical_exact(frame: np.ndarray) -> np.ndarray:
+    return np.stack((frame, frame, frame), axis=-1).astype(np.uint8, copy=False)
+
+
+def _canonical_changed_background_pixel(frame: np.ndarray) -> np.ndarray:
     mutated = np.array(frame, dtype=np.uint8, copy=True)
     mutated[0, 0] = 1 if mutated[0, 0] == 0 else mutated[0, 0]
     return mutated
@@ -115,6 +119,8 @@ def _make_case(
         observed = true_frame
     elif transform == "noncanonical_exact_background_pixel":
         observed = _noncanonical_exact(true_frame)
+    elif transform == "canonical_changed_background_pixel":
+        observed = _canonical_changed_background_pixel(true_frame)
     elif transform == "distant_inversion":
         observed = np.array(255 - true_frame, dtype=np.uint8, copy=True)
     else:
@@ -229,7 +235,7 @@ def build_case_corpus() -> tuple[AddressAliasCase, ...]:
             case_id="reader-rejected-canonical-only",
             true_row_id=rows["canonical_fire_hit"],
             supplied_row_id=rows["canonical_fire_hit"],
-            transform="noncanonical_exact_background_pixel",
+            transform="canonical_changed_background_pixel",
             alias_class="reader rejected",
             profile=VisualAcceptanceProfile.CANONICAL_ONLY,
             candidate_universe="reader_local",

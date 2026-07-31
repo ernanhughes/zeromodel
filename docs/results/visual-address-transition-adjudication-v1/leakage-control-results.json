@@ -1,15 +1,15 @@
 {
   "after_frame_mutation_changes_runtime_output": {
-    "baseline_result_id": "sha256:d7ec44ab1d734ed451511adeba2d50333da7f00ee6f58f5c514f96977df4527a",
+    "baseline_result_id": "sha256:27fcdb1b29ac6a73bfb23ed9194271e052e7f1e6394b947736373b379380814e",
     "expected_relationship": "different",
-    "mutated_result_id": "sha256:12654bf7f2607df86964a6d448c5caa8685b4a860233a9caabdcbd57a0dc414b",
+    "mutated_result_id": "sha256:817781a12d30eed8c0d41cd887ddb92c7c15dc537f543435840a6e4cfdb02075",
     "observed_relationship": "different",
     "passed": true
   },
   "runtime_outputs_ignore_privileged_truth": {
-    "baseline_result_id": "sha256:d7ec44ab1d734ed451511adeba2d50333da7f00ee6f58f5c514f96977df4527a",
+    "baseline_result_id": "sha256:27fcdb1b29ac6a73bfb23ed9194271e052e7f1e6394b947736373b379380814e",
     "expected_relationship": "equal",
-    "mutated_result_id": "sha256:d7ec44ab1d734ed451511adeba2d50333da7f00ee6f58f5c514f96977df4527a",
+    "mutated_result_id": "sha256:27fcdb1b29ac6a73bfb23ed9194271e052e7f1e6394b947736373b379380814e",
     "observed_relationship": "equal",
     "passed": true
   }

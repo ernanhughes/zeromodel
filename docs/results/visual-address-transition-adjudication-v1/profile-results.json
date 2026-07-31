@@ -54,7 +54,7 @@
     "rejection_rate": 0.2,
     "status_counts": {
       "address_transition_consistent": 2,
-      "reader_rejected": 1,
+      "invalid_transition_evidence": 1,
       "transition_signature_collision": 2
     },
     "transition_signature_collision_rate": 0.4,

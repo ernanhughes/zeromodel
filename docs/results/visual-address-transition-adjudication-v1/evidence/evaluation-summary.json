@@ -1,5 +1,7 @@
 {
-  "upper_reference": {
+  "equivalent_baseline_comparison": "not_completed",
+  "note": "Ordinary adjudication summary; not a privileged oracle.",
+  "summary": {
     "accepted_case_count": 24,
     "addressed_row_retention_rate": 1.0,
     "candidate_reduction_with_truth_preserved": 0.75,
@@ -18,9 +20,8 @@
     "rejection_rate": 0.1111111111111111,
     "status_counts": {
       "address_transition_consistent": 12,
-      "invalid_transition_evidence": 1,
+      "invalid_transition_evidence": 2,
       "policy_not_executed": 1,
-      "reader_rejected": 1,
       "transition_signature_collision": 12
     },
     "transition_signature_collision_rate": 0.4444444444444444,

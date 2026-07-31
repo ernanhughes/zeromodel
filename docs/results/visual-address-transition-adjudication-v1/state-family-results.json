@@ -158,8 +158,7 @@
     "policy_action_accuracy": 0.0,
     "rejection_rate": 1.0,
     "status_counts": {
-      "invalid_transition_evidence": 1,
-      "reader_rejected": 1
+      "invalid_transition_evidence": 2
     },
     "transition_signature_collision_rate": 0.0,
     "true_row_elimination_given_initial_coverage": 0.0,

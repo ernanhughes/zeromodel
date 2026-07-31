@@ -1,14 +1,8 @@
 # ZeroModel executable demonstrations
 
-This directory turns production examples into executable explanations, reproducibility records, HTML pages, and a static website catalogue.
+The demo catalogue turns production examples into executed notebooks, evidence records, static HTML, and pages for `zeromodel.org`.
 
-```text
-production example -> notebook -> executed evidence -> website page
-```
-
-The notebooks import the existing implementations under `examples/` and the package APIs. They do not fork application logic.
-
-## Build
+## Commands
 
 ```bash
 python -m pip install -r demos/requirements.txt
@@ -19,25 +13,37 @@ python -m http.server 4173 -d build/site
 
 Open `http://localhost:4173/demos/`.
 
-## Contract
+## Source ownership
 
-Every notebook must include:
+- `examples/` remains the executable production, benchmark, integration, and research source.
+- `demos/notebooks/` explains and exercises those sources.
+- `demos/catalog.json` controls published notebooks.
+- `demos/example-inventory.json` classifies example entrypoints and records their publication status.
+- `docs/results/demos/` stores executed notebooks, HTML, and execution metadata.
+- `build/site/` is the deployable static site assembled from `site/` and the executed catalogue.
 
-- what it demonstrates;
-- why it matters;
-- source and package mapping;
-- a concrete application;
-- boundaries and limitations;
-- a reproduction record.
+## Notebook contract
 
-Every notebook declares an evidence state (`defined`, `measured`, or `hypothesis`) and an execution profile (`fast`, `extended`, `external`, or `research`).
+Every public notebook must include:
 
-Generated execution records and HTML are written beneath `docs/results/demos/`. The assembled static website is written beneath `build/site/`.
+- What this demonstrates
+- Why it matters
+- Source and package mapping
+- Application
+- Boundaries and limitations
+- Reproduction record
+
+The catalogue uses the evidence states `defined`, `measured`, and `hypothesis`, and the execution profiles `fast`, `extended`, `external`, and `research`.
+
+## Publication
+
+The Pages workflow executes the fast catalogue and deploys `build/site`. The separate Executable demos workflow remains the focused evidence check and uploads the generated site plus `docs/results/demos/` as a workflow artifact.
 
 ## Adding a demo
 
-1. Keep reusable implementation in `examples/` or a package.
-2. Add an entry to `demos/catalog.json`.
-3. Copy `demos/notebooks/_template.ipynb`.
-4. Match the notebook `zeromodel_demo` metadata to the catalogue.
-5. Validate and execute the appropriate profile.
+1. Keep reusable logic in `examples/` or a production package.
+2. Add or update its inventory entry.
+3. Create a notebook from `_template.ipynb`.
+4. Register the notebook in `catalog.json`.
+5. Run `python scripts/build_demos.py validate`.
+6. Run the appropriate execution profile.

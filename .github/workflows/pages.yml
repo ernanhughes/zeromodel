@@ -3,12 +3,30 @@ name: ZeroModel website
 on:
   pull_request:
     paths:
+      - "demos/**"
+      - "examples/**"
+      - "packages/core/**"
+      - "packages/analysis/**"
+      - "packages/observation/**"
+      - "packages/vision/**"
+      - "packages/video/**"
+      - "scripts/build_demos.py"
+      - "tests/test_demo_catalog.py"
       - "site/**"
       - ".github/workflows/pages.yml"
   push:
     branches:
       - main
     paths:
+      - "demos/**"
+      - "examples/**"
+      - "packages/core/**"
+      - "packages/analysis/**"
+      - "packages/observation/**"
+      - "packages/vision/**"
+      - "packages/video/**"
+      - "scripts/build_demos.py"
+      - "tests/test_demo_catalog.py"
       - "site/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -19,56 +37,79 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Validate static site
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install demo tooling and local packages
         run: |
-          test -f site/index.html
-          test -f site/styles.css
-          test -f site/app.js
+          python -m pip install --upgrade pip
+          python -m pip install -r demos/requirements.txt
+          python -m pip install --no-deps \
+            -e packages/core \
+            -e packages/analysis \
+            -e packages/observation \
+            -e packages/vision \
+            -e packages/video
+
+      - name: Validate and build executable website
+        run: |
+          python scripts/build_demos.py validate
+          python -m pytest tests/test_demo_catalog.py -q
+          python scripts/build_demos.py all --profile fast
+
+      - name: Validate generated static site
+        run: |
+          test -f build/site/index.html
+          test -f build/site/styles.css
+          test -f build/site/app.js
+          test -f build/site/demos/index.html
+          test -f build/site/demos/catalog.json
+          test -f build/site/demos/inventory/index.html
           python - <<'PY'
           from pathlib import Path
 
-          html = Path("site/index.html").read_text(encoding="utf-8")
+          html = Path("build/site/index.html").read_text(encoding="utf-8")
           required = [
               'href="styles.css"',
               'src="app.js"',
               'id="vpm-canvas"',
               'id="recipe-json"',
+              'href="demos/"',
           ]
           missing = [token for token in required if token not in html]
           if missing:
               raise SystemExit(f"Missing required site hooks: {missing}")
           PY
 
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/site
+
   deploy:
     if: github.event_name != 'pull_request'
-    needs: validate
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
       - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-
-      - name: Upload static site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
 
       - name: Deploy to GitHub Pages
         id: deployment

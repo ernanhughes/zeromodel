@@ -30,6 +30,7 @@ def test_release_manifest_lists_all_distributions() -> None:
         "navigation",
         "perception",
         "observer",
+        "search",
     }
     assert all(
         item["distribution"].startswith("zeromodel")

@@ -11,7 +11,11 @@ from zeromodel.perception.transition_analysis import (
 )
 from zeromodel.perception.transition_evidence import TransitionEvidenceVPMDTO
 from zeromodel.perception.representation import encode_source_array
-from zeromodel.vision import VisualFeatureSpec, visual_input_digest, visual_raw_input_digest
+from zeromodel.vision import (
+    VisualFeatureSpec,
+    visual_input_digest,
+    visual_raw_input_digest,
+)
 
 from visual_transition_benchmark import zeromodel_adapter as component_zm
 from visual_transition_benchmark.adjudication._json import digest
@@ -241,13 +245,15 @@ def adjudicate_address_transition(
             str(addressed_action),
             evidence_mode=input_data.evidence_mode,  # type: ignore[arg-type]
         )
-        ok, result_reasons, expected_signature, observed_signature, analysis_id = contract_matches_observation(
-            contract,
-            input_data.frame_before,
-            input_data.frame_after,
-            transition_evidence=input_data.transition_evidence,
-            action=input_data.action,
-            reader_trace=trace,
+        ok, result_reasons, expected_signature, observed_signature, analysis_id = (
+            contract_matches_observation(
+                contract,
+                input_data.frame_before,
+                input_data.frame_after,
+                transition_evidence=input_data.transition_evidence,
+                action=input_data.action,
+                reader_trace=trace,
+            )
         )
         candidate_results.append(
             CandidateAdjudicationResult(

@@ -1,6 +1,8 @@
 # ZeroModel claims audit
 
-**Scope note:** the main claim matrix in this audit predates the nine-package split and primarily covers the legacy `zeromodel` root package's claims: VPM artifacts, policy lookup, visual addressing, learning and training traces, and related consumers. The newer `zeromodel-artifacts`, `zeromodel-trust`, `zeromodel-navigation`, and `zeromodel-perception` distributions carry their own claims-boundary sections in package READMEs and stage-completion reports. They are not comprehensively folded into the legacy matrix below.
+**Scope note:** the main claim matrix in this audit predates the current package split and primarily covers the legacy `zeromodel` root package's claims: VPM artifacts, policy lookup, visual addressing, learning and training traces, and related consumers. The newer `zeromodel-artifacts`, `zeromodel-trust`, `zeromodel-navigation`, `zeromodel-search`, and `zeromodel-perception` distributions carry their own claims-boundary sections in package READMEs and stage-completion reports. They are not comprehensively folded into the legacy matrix below.
+
+`zeromodel-search` evidence state: validated within deterministic synthetic fixtures for declared relation-specific readout compilation, exact relation ranking, VPM inspection, and receipt replay. This does not establish universal semantic search, automatic relation discovery, scalable candidate filtering, or superiority over cosine.
 
 A limited **Cross-package perception benchmark evidence** section is included after the main matrix to record independently executable empirical results that materially affect ZeroModel's public claims. Inclusion in that section does not expand the entire legacy claim matrix to cover every newer package.
 

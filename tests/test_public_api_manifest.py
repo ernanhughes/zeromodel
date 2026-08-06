@@ -61,6 +61,7 @@ def test_manifest_contains_all_distributions() -> None:
         "zeromodel-artifacts",
         "zeromodel-trust",
         "zeromodel-navigation",
+        "zeromodel-search",
     }
 
 
@@ -88,6 +89,7 @@ def test_manifest_is_not_a_placeholder() -> None:
         "zeromodel.artifacts",
         "zeromodel.trust",
         "zeromodel.navigation",
+        "zeromodel.search",
     ],
 )
 def test_every_actual_all_symbol_appears_exactly_once(namespace: str) -> None:

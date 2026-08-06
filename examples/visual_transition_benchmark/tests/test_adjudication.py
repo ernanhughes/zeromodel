@@ -89,7 +89,9 @@ def test_contract_identity_is_deterministic():
 
 
 def test_correct_canonical_and_noncanonical_address_retained():
-    assert _run(_case("canonical-only-accepted")).addressed_candidate_status == "retained"
+    assert (
+        _run(_case("canonical-only-accepted")).addressed_candidate_status == "retained"
+    )
     assert (
         _run(_case("exact-codeword-noncanonical-correct")).addressed_candidate_status
         == "retained"

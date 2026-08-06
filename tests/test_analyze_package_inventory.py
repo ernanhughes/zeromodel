@@ -26,6 +26,7 @@ PRODUCTION_PACKAGE_KEYS = {
     "artifacts",
     "trust",
     "navigation",
+    "search",
 }
 
 

@@ -2,7 +2,7 @@
 
 ## Current: ZeroModel 1.2.0
 
-ZeroModel 1.2.0 is a coordinated eleven-distribution release of the Visual AI Computing foundation.
+ZeroModel 1.2.0 is a coordinated twelve-distribution release of the Visual AI Computing foundation.
 
 The release includes:
 
@@ -114,7 +114,7 @@ After the release pull request is merged:
 
 1. return to a clean, synchronized `main` checkout;
 2. rerun the complete release gate against the merged commit;
-3. confirm the built metadata declares the root `VERSION` for all eleven distributions;
+3. confirm the built metadata declares the root `VERSION` for all twelve distributions;
 4. publish the distributions in dependency order;
 5. install the published packages into a clean environment;
 6. run the public API and bounded smoke checks;
@@ -179,4 +179,4 @@ Historical records remain evidence for their original release lines and should n
 - the unpublished 1.0.13 package-split evidence under `docs/architecture/`
 - [`docs/releases/1.0.12.md`](releases/1.0.12.md)
 
-The old single-package `scripts/create-release.ps1` workflow is historical and must not be used to publish the coordinated eleven-package system unless it is explicitly rewritten and validated for that topology.
+The old single-package `scripts/create-release.ps1` workflow is historical and must not be used to publish the coordinated twelve-package system unless it is explicitly rewritten and validated for that topology.

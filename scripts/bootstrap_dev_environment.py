@@ -32,6 +32,7 @@ ZEROMODEL_IMPORTS = (
     "zeromodel.artifacts",
     "zeromodel.trust",
     "zeromodel.navigation",
+    "zeromodel.search",
 )
 VERSION_DISTRIBUTIONS = (
     "zeromodel",
@@ -45,6 +46,7 @@ VERSION_DISTRIBUTIONS = (
     "zeromodel-artifacts",
     "zeromodel-trust",
     "zeromodel-navigation",
+    "zeromodel-search",
 )
 
 

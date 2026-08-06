@@ -28,6 +28,7 @@ def test_boundary_manifest_defines_all_packages() -> None:
         "artifacts",
         "trust",
         "navigation",
+        "search",
     }
     assert manifest["release_version"]
 

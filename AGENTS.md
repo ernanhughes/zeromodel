@@ -4,7 +4,7 @@
 
 ZeroModel builds deterministic Visual Policy Map (VPM) artifacts from scored tables and extends them through observation, perception, policy, persistence, trust, navigation, and application-layer packages.
 
-The repository is split into eleven namespace-package distributions, each under its own `packages/<key>/` directory with its own `pyproject.toml`, `src/`, and `tests/`.
+The repository is split into twelve namespace-package distributions, each under its own `packages/<key>/` directory with its own `pyproject.toml`, `src/`, and `tests/`.
 
 Two root files have separate authority:
 
@@ -33,6 +33,7 @@ Keep the core artifact kernel conservative. Most new behavior should be added in
 - `packages/artifacts/src/zeromodel/artifacts`: content-addressed artifact storage and reference identity. Depends on core.
 - `packages/trust/src/zeromodel/trust`: signature envelopes, trust receipts, revocation. Depends on core, artifacts. Leaf package; does not depend on navigation.
 - `packages/navigation/src/zeromodel/navigation`: finite artifact navigation over the artifacts store. Depends on core, artifacts. Leaf package; does not depend on trust.
+- `packages/search/src/zeromodel/search`: relation-aware exact search over identified frozen representations with readout artifacts, VPM inspection, receipts, and a Navigation rule adapter. Depends on core, artifacts, navigation.
 - `tests/`: repository-wide and cross-package contract tests, run alongside each package's `packages/*/tests/`.
 - `tests/integration/`: cross-package production behavior requiring multiple distributions together.
 - `research/`: benchmark, evidence, and unpromoted experimental machinery; excluded from the production package contract and fast/quality gates unless explicitly promoted.

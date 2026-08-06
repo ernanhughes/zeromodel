@@ -37,6 +37,8 @@ FORMAT_LINT_PATHS = [
     Path("packages/trust/tests"),
     Path("packages/navigation/src"),
     Path("packages/navigation/tests"),
+    Path("packages/search/src"),
+    Path("packages/search/tests"),
     Path("tests/integration"),
 ]
 
@@ -52,6 +54,7 @@ TYPING_PATHS = [
     Path("packages/artifacts/src"),
     Path("packages/trust/src"),
     Path("packages/navigation/src"),
+    Path("packages/search/src"),
 ]
 
 QUALITY_LIMIT_PATHS = [
@@ -74,6 +77,8 @@ QUALITY_LIMIT_PATHS = [
     Path("packages/trust/tests"),
     Path("packages/navigation/src"),
     Path("packages/navigation/tests"),
+    Path("packages/search/src"),
+    Path("packages/search/tests"),
 ]
 
 
@@ -145,6 +150,7 @@ def main() -> int:
             "packages/artifacts/src",
             "packages/trust/src",
             "packages/navigation/src",
+            "packages/search/src",
         ],
     )
     run_step(
@@ -160,6 +166,7 @@ def main() -> int:
             "packages/artifacts/src",
             "packages/trust/src",
             "packages/navigation/src",
+            "packages/search/src",
         ],
     )
     run_step(

@@ -14,6 +14,7 @@ numpy>=1.23,<2.0
 -e ./packages/artifacts
 -e ./packages/trust
 -e ./packages/navigation
+-e ./packages/search
 
 build
 twine

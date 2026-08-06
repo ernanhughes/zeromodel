@@ -172,6 +172,19 @@ PACKAGES = {
         },
         "depends_on": ("core", "artifacts"),
     },
+    "search": {
+        "path": Path("packages/search"),
+        "distribution": "zeromodel-search",
+        "wheel_stem": "zeromodel_search",
+        "namespace": "zeromodel.search",
+        "requires": {
+            "numpy>=1.23",
+            f"zeromodel=={VERSION}",
+            f"zeromodel-artifacts=={VERSION}",
+            f"zeromodel-navigation=={VERSION}",
+        },
+        "depends_on": ("core", "artifacts", "navigation"),
+    },
 }
 PUBLIC_API_CSV_COLUMNS = [
     "distribution",

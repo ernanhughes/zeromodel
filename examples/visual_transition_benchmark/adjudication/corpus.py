@@ -217,7 +217,14 @@ def build_case_corpus() -> tuple[AddressAliasCase, ...]:
     cases = []
     for mode in ("component", "value"):
         for universe in ("reader_local", "policy_action"):
-            for case_id, true_row, supplied_row, transform, alias_class, profile in specs:
+            for (
+                case_id,
+                true_row,
+                supplied_row,
+                transform,
+                alias_class,
+                profile,
+            ) in specs:
                 cases.append(
                     _make_case(
                         case_id=f"{case_id}-{universe}-{mode}",

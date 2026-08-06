@@ -17,6 +17,7 @@ PACKAGE_WORKFLOWS = {
     "artifacts": "artifacts-package.yml",
     "core": "core-package.yml",
     "navigation": "navigation-package.yml",
+    "search": "search-package.yml",
     "observation": "observation-package.yml",
     "observer": "observer-package.yml",
     "perception": "perception-package.yml",

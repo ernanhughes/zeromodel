@@ -34,6 +34,7 @@ def test_requirements_dev_installs_all_packages_editable() -> None:
         "artifacts",
         "trust",
         "navigation",
+        "search",
     ):
         assert f"-e ./packages/{package}" in text, (
             f"missing editable install for {package}"

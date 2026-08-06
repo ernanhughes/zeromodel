@@ -191,15 +191,15 @@ def validate_inventory(
             errors.append(f"inventory: published path lacks a demo id: {entry.path}")
         unknown = sorted(set(entry.demo_ids) - demo_ids)
         if unknown:
-            errors.append(
-                f"inventory: unknown demo ids for {entry.path}: {unknown}"
-            )
+            errors.append(f"inventory: unknown demo ids for {entry.path}: {unknown}")
 
     for demo in demos:
         for source in demo.source_examples:
             entry = by_path.get(source)
             if entry is None:
-                errors.append(f"{demo.id}: source is absent from example inventory: {source}")
+                errors.append(
+                    f"{demo.id}: source is absent from example inventory: {source}"
+                )
             elif demo.id not in entry.demo_ids:
                 errors.append(
                     f"{demo.id}: inventory source is not linked to demo: {source}"
@@ -348,7 +348,8 @@ def _catalog_html(demos: Iterable[Demo]) -> str:
             + html.escape(demo.id)
             + "/'>Open demonstration →</a></article>"
         )
-    return """<!doctype html><html lang="en"><head><meta charset="utf-8">
+    return (
+        """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ZeroModel demonstrations</title><style>
 body{margin:0;background:#0c1015;color:#eef3f8;font:16px system-ui}
@@ -365,7 +366,9 @@ article p{color:#b9c4cf}.badge{text-transform:uppercase;letter-spacing:.08em}
 <p>EXECUTABLE EVIDENCE CATALOGUE</p>
 <h1>See what ZeroModel does, then inspect how it did it.</h1>
 <p>Every page is generated from an executed notebook linked to production code.</p>
-<p class="meta"><span>""" + str(len(demos)) + """ published demos</span>
+<p class="meta"><span>"""
+        + str(len(demos))
+        + """ published demos</span>
 <a href="inventory/">Browse the example inventory →</a></p>
 <div class="toolbar" aria-label="Filter demonstrations">
 <button type="button" data-filter="all" aria-pressed="true">All</button>
@@ -375,7 +378,9 @@ article p{color:#b9c4cf}.badge{text-transform:uppercase;letter-spacing:.08em}
 <button type="button" data-filter="analysis" aria-pressed="false">Analysis</button>
 <button type="button" data-filter="vision" aria-pressed="false">Vision</button>
 <button type="button" data-filter="video" aria-pressed="false">Video</button>
-</div><section class="grid">""" + "".join(cards) + """</section></main>
+</div><section class="grid">"""
+        + "".join(cards)
+        + """</section></main>
 <script>
 const buttons=[...document.querySelectorAll("[data-filter]")];
 const cards=[...document.querySelectorAll("article")];
@@ -389,10 +394,13 @@ for(const button of buttons){button.addEventListener("click",()=>{
  }
 });}
 </script></body></html>"""
+    )
 
 
 def _inventory_html(entries: Iterable[ExampleEntry]) -> str:
-    entries = tuple(sorted(entries, key=lambda entry: (entry.status, entry.role, entry.path)))
+    entries = tuple(
+        sorted(entries, key=lambda entry: (entry.status, entry.role, entry.path))
+    )
     rows = "".join(
         "<tr><td><code>"
         + html.escape(entry.path)
@@ -409,7 +417,8 @@ def _inventory_html(entries: Iterable[ExampleEntry]) -> str:
         + "</td></tr>"
         for entry in entries
     )
-    return """<!doctype html><html lang="en"><head><meta charset="utf-8">
+    return (
+        """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ZeroModel example inventory</title><style>
 body{margin:0;background:#0c1015;color:#eef3f8;font:15px system-ui}
@@ -422,27 +431,28 @@ th{background:#17212c}code{font-size:.88em}p{color:#b9c4cf}
 <p>Each entrypoint is classified before it becomes a public notebook. Supporting
 runners remain linked to their parent demonstration rather than becoming duplicate pages.</p>
 <table><thead><tr><th>Path</th><th>Role</th><th>Profile</th><th>Status</th>
-<th>Demo</th><th>Notes</th></tr></thead><tbody>""" + rows + """</tbody></table>
+<th>Demo</th><th>Notes</th></tr></thead><tbody>"""
+        + rows
+        + """</tbody></table>
 </main></body></html>"""
+    )
 
 
 def _inject_demo_links() -> None:
     index = SITE_BUILD / "index.html"
     source = index.read_text(encoding="utf-8")
     replacements = {
-        '      <a href="#evidence">Evidence</a>':
-            '      <a href="#evidence">Evidence</a>\n'
-            '      <a href="demos/">Demonstrations</a>',
-        '<a class="button secondary" href="https://github.com/ernanhughes/zeromodel/blob/main/docs/spec/vpm-artifact-v0.md">Read the draft spec</a>':
-            '<a class="button secondary" href="demos/">Browse executed demos</a>',
-        '<span class="pending">Benchmarks being rebuilt</span>':
-            '<a href="demos/">Open executable evidence</a>',
-        '<a class="button primary" href="https://github.com/ernanhughes/zeromodel">View the rebuild on GitHub</a>':
-            '<a class="button primary" href="demos/">Browse demonstrations</a>',
+        '      <a href="#evidence">Evidence</a>': '      <a href="#evidence">Evidence</a>\n'
+        '      <a href="demos/">Demonstrations</a>',
+        '<a class="button secondary" href="https://github.com/ernanhughes/zeromodel/blob/main/docs/spec/vpm-artifact-v0.md">Read the draft spec</a>': '<a class="button secondary" href="demos/">Browse executed demos</a>',
+        '<span class="pending">Benchmarks being rebuilt</span>': '<a href="demos/">Open executable evidence</a>',
+        '<a class="button primary" href="https://github.com/ernanhughes/zeromodel">View the rebuild on GitHub</a>': '<a class="button primary" href="demos/">Browse demonstrations</a>',
     }
     for old, new in replacements.items():
         if old not in source:
-            raise SystemExit(f"site/index.html is missing expected demo-link hook: {old}")
+            raise SystemExit(
+                f"site/index.html is missing expected demo-link hook: {old}"
+            )
         source = source.replace(old, new, 1)
     index.write_text(source, encoding="utf-8")
 

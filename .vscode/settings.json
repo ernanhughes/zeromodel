@@ -11,7 +11,8 @@
     "${workspaceFolder}/packages/sqlalchemy/src",
     "${workspaceFolder}/packages/artifacts/src",
     "${workspaceFolder}/packages/trust/src",
-    "${workspaceFolder}/packages/navigation/src"
+    "${workspaceFolder}/packages/navigation/src",
+    "${workspaceFolder}/packages/search/src"
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
@@ -27,7 +28,8 @@
     "packages/sqlalchemy/tests",
     "packages/artifacts/tests",
     "packages/trust/tests",
-    "packages/navigation/tests"
+    "packages/navigation/tests",
+    "packages/search/tests"
   ],
   "python-envs.pythonProjects": [
     {

@@ -92,3 +92,11 @@ source_root = "packages/navigation/src"
 depends_on = ["core", "artifacts"]
 publishable = true
 owned_prefixes = ["zeromodel.navigation"]
+
+[packages.search]
+distribution = "zeromodel-search"
+namespace = "zeromodel.search"
+source_root = "packages/search/src"
+depends_on = ["core", "artifacts", "navigation"]
+publishable = true
+owned_prefixes = ["zeromodel.search"]

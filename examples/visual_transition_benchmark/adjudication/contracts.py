@@ -218,7 +218,11 @@ def contract_matches_observation(
 ) -> tuple[bool, tuple[str, ...], str, str, str | None]:
     expected_signature = contract.expectation_signature
     if contract.evidence_mode == "component":
-        if transition_evidence is not None and action is not None and reader_trace is not None:
+        if (
+            transition_evidence is not None
+            and action is not None
+            and reader_trace is not None
+        ):
             analysis = component_analysis_for_contract(
                 contract=contract,
                 transition_evidence=transition_evidence,
@@ -233,7 +237,13 @@ def contract_matches_observation(
             )
             ok = analysis.status == "conformant"
             reasons = () if ok else ("component_contract_mismatch",)
-            return ok, reasons, expected_signature, observed_signature, analysis.analysis_id
+            return (
+                ok,
+                reasons,
+                expected_signature,
+                observed_signature,
+                analysis.analysis_id,
+            )
         observed = observed_component_signature(frame_before, frame_after)
         observed_signature = digest({"mode": "component", "observed": observed})
         if tuple(sorted(contract.expected_components)) == observed:

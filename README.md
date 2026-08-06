@@ -62,6 +62,7 @@ flowchart TB
     ARTIFACTS["zeromodel.artifacts\ncontent-addressed storage and artifact references"]
     TRUST["zeromodel.trust\nsignatures · receipts · revocation · deployment scope"]
     NAVIGATION["zeromodel.navigation\nfinite artifact hierarchy and traversal"]
+    SEARCH["zeromodel.search\nrelation readouts · exact relation ranking · replay receipts"]
 
     DEMOS["zeromodel-demos\nreproducible demos · apps · showcases · labs"]
     WEBSITE["zeromodel.org\nproduct · documentation · research · evidence"]
@@ -81,6 +82,8 @@ flowchart TB
     VIDEO --> SQL
     ARTIFACTS --> TRUST
     ARTIFACTS --> NAVIGATION
+    ARTIFACTS --> SEARCH
+    NAVIGATION --> SEARCH
 
     CORE --> DEMOS
     ANALYSIS --> DEMOS
@@ -90,6 +93,7 @@ flowchart TB
     VIDEO --> DEMOS
     TRUST --> DEMOS
     NAVIGATION --> DEMOS
+    SEARCH --> DEMOS
 
     DEMOS --> WEBSITE
 ```
@@ -138,13 +142,14 @@ The core repository is the source of truth for implementation and evidence. The 
 | **Artifact storage and identity** | Canonical references and content-addressed storage preserve artifact identity independently of presentation. | [`packages/artifacts/README.md`](packages/artifacts/README.md) | [Provenance and Replay](https://github.com/ernanhughes/zeromodel-demos) | Content identity is not authenticity or approval. |
 | **Trust contracts** | Signature envelopes, trust receipts, revocation, and deployment-scope contracts can bind decisions to identified artifacts. | [`packages/trust/README.md`](packages/trust/README.md) | [Provenance and Replay](https://github.com/ernanhughes/zeromodel-demos) | Trust DTOs and signatures do not constitute organizational authorization by themselves. |
 | **Finite artifact navigation** | Identified artifact corpora can be compiled into deterministic finite hierarchies and traversed. | [`packages/navigation/README.md`](packages/navigation/README.md) | [Representation and provenance labs](https://github.com/ernanhughes/zeromodel-demos) | Search, planet-scale traversal, and constant-time navigation are not validated claims. |
+| **Relation-aware Search** | Declared relation-specific readouts over frozen representations can rank identified candidates deterministically within synthetic fixtures, materialize a VPM, and replay a receipt. | [`packages/search/README.md`](packages/search/README.md) | Not yet promoted to a public demo | Does not generate embeddings, discover relations, guarantee improvement over cosine, or validate scalable candidate filtering. |
 | **Observer application layer** | Transition inspection can combine policy expectation, visual evidence, representation boundaries, contract results, and provenance metadata. | [`packages/observer/README.md`](packages/observer/README.md) | [Transition Inspector](https://github.com/ernanhughes/zeromodel-demos/tree/main/apps/transition-inspector) | The browser reconstruction is not yet the production compiler, ledger, or replay runtime. |
 
 ---
 
 ## Package system
 
-ZeroModel 1.2.0 is coordinated across eleven namespace-package distributions:
+ZeroModel 1.2.0 is coordinated across twelve namespace-package distributions:
 
 | Distribution | Import namespace | Purpose |
 |---|---|---|
@@ -159,6 +164,7 @@ ZeroModel 1.2.0 is coordinated across eleven namespace-package distributions:
 | `zeromodel-artifacts` | `zeromodel.artifacts` | Artifact references, resolution, and content-addressed storage. |
 | `zeromodel-trust` | `zeromodel.trust` | Authenticity, trust receipts, revocation, and deployment scope. |
 | `zeromodel-navigation` | `zeromodel.navigation` | Finite artifact hierarchy compilation and traversal. |
+| `zeromodel-search` | `zeromodel.search` | Deterministic relation-aware exact search over identified frozen representations. |
 
 The legacy root compatibility surface that re-exported every capability from `zeromodel/__init__.py` has been removed. Import from the owning package namespace directly.
 
@@ -177,7 +183,7 @@ python scripts/bootstrap_dev_environment.py
 `scripts/bootstrap_dev_environment.py` upgrades `pip`, installs
 `requirements-dev.txt`, verifies the critical test imports, and prints the
 installed ZeroModel package paths and versions. `requirements-dev.txt` remains
-the single development-dependency authority: it installs all eleven packages in
+the single development-dependency authority: it installs all twelve packages in
 editable mode plus the test, rendering, cryptography, build, lint, and typing
 toolchain.
 
@@ -195,7 +201,8 @@ python -m pip install \
   ./packages/sqlalchemy \
   ./packages/artifacts \
   ./packages/trust \
-  ./packages/navigation
+  ./packages/navigation \
+  ./packages/search
 ```
 
 Verify the checkout:

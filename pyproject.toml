@@ -14,6 +14,7 @@ pythonpath = [
     "packages/artifacts/src",
     "packages/trust/src",
     "packages/navigation/src",
+    "packages/search/src",
     ".",
 ]
 addopts = "--strict-markers"
@@ -33,5 +34,5 @@ select = ["E4", "E7", "E9", "F"]
 
 [tool.mypy]
 python_version = "3.10"
-mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/perception/src", "packages/observer/src", "packages/video/src", "packages/sqlalchemy/src", "packages/artifacts/src", "packages/trust/src", "packages/navigation/src"]
+mypy_path = ["packages/core/src", "packages/analysis/src", "packages/observation/src", "packages/vision/src", "packages/perception/src", "packages/observer/src", "packages/video/src", "packages/sqlalchemy/src", "packages/artifacts/src", "packages/trust/src", "packages/navigation/src", "packages/search/src"]
 explicit_package_bases = true

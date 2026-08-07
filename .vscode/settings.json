@@ -12,7 +12,8 @@
     "${workspaceFolder}/packages/artifacts/src",
     "${workspaceFolder}/packages/trust/src",
     "${workspaceFolder}/packages/navigation/src",
-    "${workspaceFolder}/packages/search/src"
+    "${workspaceFolder}/packages/search/src",
+    "${workspaceFolder}/packages/critic/src"
   ],
   "python.testing.pytestEnabled": true,
   "python.testing.unittestEnabled": false,
@@ -29,7 +30,8 @@
     "packages/artifacts/tests",
     "packages/trust/tests",
     "packages/navigation/tests",
-    "packages/search/tests"
+    "packages/search/tests",
+    "packages/critic/tests"
   ],
   "python-envs.pythonProjects": [
     {

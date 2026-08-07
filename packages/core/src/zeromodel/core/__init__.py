@@ -30,6 +30,11 @@ from .content_identity import (
     prototype_universe_identity,
     sha256_digest,
 )
+from .decision_adjudication import (
+    DecisionAdjudication as DecisionAdjudication,
+    DecisionAdjudicationOutcome as DecisionAdjudicationOutcome,
+    adjudicate_decision as adjudicate_decision,
+)
 from .lua import (
     POLICY_LUA_FORMAT,
     compiled_plan_id,

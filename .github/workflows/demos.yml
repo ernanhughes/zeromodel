@@ -10,6 +10,8 @@ on:
       - "packages/observation/**"
       - "packages/vision/**"
       - "packages/video/**"
+      - "packages/artifacts/**"
+      - "packages/critic/**"
       - "scripts/build_demos.py"
       - "tests/test_demo_catalog.py"
       - "site/**"
@@ -24,6 +26,8 @@ on:
       - "packages/observation/**"
       - "packages/vision/**"
       - "packages/video/**"
+      - "packages/artifacts/**"
+      - "packages/critic/**"
       - "scripts/build_demos.py"
       - "tests/test_demo_catalog.py"
       - "site/**"
@@ -52,7 +56,9 @@ jobs:
             -e packages/analysis \
             -e packages/observation \
             -e packages/vision \
-            -e packages/video
+            -e packages/video \
+            -e packages/artifacts \
+            -e packages/critic
 
       - name: Validate catalogue and inventory
         run: |
@@ -74,6 +80,8 @@ jobs:
           test -f build/site/demos/criticality-verification/index.html
           test -f build/site/demos/policy-lookup-benchmark/index.html
           test -f build/site/demos/bertin-pattern-detection/index.html
+          test -f build/site/demos/fx-triangular-arbitrage/index.html
+          test -f build/site/demos/tiny-critic/index.html
 
       - uses: actions/upload-artifact@v4
         with:

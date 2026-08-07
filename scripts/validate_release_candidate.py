@@ -48,6 +48,26 @@ globals()["RELEASE_CANDIDATE_REPORT_DIR"] = (
     / f"release-candidate-{_RELEASE_VERSION}"
 )
 
+# Critic was introduced after the stable release-harness implementation was
+# split out. Keep the current-release package registry aligned with
+# package-boundaries.toml so release validation covers the package rather than
+# silently validating the older twelve-package workspace.
+globals()["PACKAGES"].setdefault(
+    "critic",
+    {
+        "path": Path("packages/critic"),
+        "distribution": "zeromodel-critic",
+        "wheel_stem": "zeromodel_critic",
+        "namespace": "zeromodel.critic",
+        "requires": {
+            "numpy>=1.23",
+            f"zeromodel=={_RELEASE_VERSION}",
+            f"zeromodel-artifacts=={_RELEASE_VERSION}",
+        },
+        "depends_on": ("core", "artifacts"),
+    },
+)
+
 for package in globals()["PACKAGES"].values():
     package["requires"] = {
         (

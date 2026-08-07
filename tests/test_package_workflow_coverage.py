@@ -24,6 +24,7 @@ PACKAGE_WORKFLOWS = {
     "sqlalchemy": "sqlalchemy-package.yml",
     "trust": "trust-package.yml",
     "video": "video-package.yml",
+    "critic": "critic-package.yml",
     "vision": "vision-package.yml",
 }
 

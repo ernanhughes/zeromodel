@@ -15,6 +15,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import math
 
+from zeromodel.core import (
+    DecisionAdjudication,
+    DecisionAdjudicationOutcome,
+    adjudicate_decision,
+)
 from zeromodel.core.artifact import VPMValidationError
 from zeromodel.video.domains.video_action_set.canonical_json import canonical_sha256
 from zeromodel.video.domains.video_action_set.contracts import (
@@ -43,10 +48,10 @@ from zeromodel.video.domains.video_action_set.provider_evaluation_common import 
 )
 
 
-CASE_OUTCOME_EXACT = "exact"
-CASE_OUTCOME_ACTION_EQUIVALENT = "action_equivalent"
-CASE_OUTCOME_ACTION_CHANGING = "action_changing"
-CASE_OUTCOME_REJECTED = "rejected"
+CASE_OUTCOME_EXACT = DecisionAdjudicationOutcome.EXACT.value
+CASE_OUTCOME_ACTION_EQUIVALENT = DecisionAdjudicationOutcome.ACTION_EQUIVALENT.value
+CASE_OUTCOME_ACTION_CHANGING = DecisionAdjudicationOutcome.ACTION_CHANGING.value
+CASE_OUTCOME_REJECTED = DecisionAdjudicationOutcome.REJECTED.value
 CASE_OUTCOMES = frozenset(
     {
         CASE_OUTCOME_EXACT,
@@ -136,12 +141,15 @@ def _derive_case_outcome(
     expected_action: str,
     predicted_action: str | None,
 ) -> tuple[bool, bool, dict[str, bool], str]:
-    if not accepted:
-        return False, False, {}, CASE_OUTCOME_REJECTED
-    exact = predicted_state == expected_state
-    action_match = predicted_action == expected_action
+    adjudication = adjudicate_decision(
+        accepted=accepted,
+        expected_state=expected_state,
+        resolved_state=predicted_state,
+        expected_action=expected_action,
+        selected_action=predicted_action,
+    )
     factor_matches: dict[str, bool] = {}
-    if isinstance(expected_state, Mapping):
+    if accepted and isinstance(expected_state, Mapping):
         predicted_mapping = (
             predicted_state if isinstance(predicted_state, Mapping) else {}
         )
@@ -149,13 +157,12 @@ def _derive_case_outcome(
             factor_matches[key] = (
                 key in predicted_mapping and predicted_mapping[key] == value
             )
-    if not action_match:
-        outcome = CASE_OUTCOME_ACTION_CHANGING
-    elif exact:
-        outcome = CASE_OUTCOME_EXACT
-    else:
-        outcome = CASE_OUTCOME_ACTION_EQUIVALENT
-    return exact, action_match, factor_matches, outcome
+    return (
+        adjudication.state_match,
+        adjudication.action_match,
+        factor_matches,
+        adjudication.outcome.value,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -310,6 +317,20 @@ class ProviderEvaluationCaseDTO:
             raise VPMValidationError("case factor matches mismatch")
         if self.outcome not in CASE_OUTCOMES or self.outcome != outcome:
             raise VPMValidationError("case outcome mismatch")
+
+    @property
+    def adjudication(self) -> DecisionAdjudication:
+        """Canonical core adjudication projected from the persisted case fields."""
+
+        return adjudicate_decision(
+            accepted=self.accepted,
+            expected_state=self.expected_state.to_value(),
+            resolved_state=(
+                None if self.predicted_state is None else self.predicted_state.to_value()
+            ),
+            expected_action=self.expected_action,
+            selected_action=self.predicted_action,
+        )
 
     @property
     def provider_confidence(self) -> float | None:

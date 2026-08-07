@@ -13,11 +13,6 @@ STATE_CLAIMS_SEMANTICS: Final = (
 OBSERVATION_ARTIFACT_VERSION: Final = "perception-observation-artifact/1"
 EVIDENCE_REQUIREMENT_VERSION: Final = "perception-evidence-requirement/1"
 FIELD_EVIDENCE_VERSION: Final = "perception-field-evidence/1"
-OBSERVATION_VALIDITY_REPORT_VERSION: Final = "perception-observation-validity/1"
-PANEL_REGISTRATION_RESULT_VERSION: Final = "perception-panel-registration/1"
-FIELD_MEASUREMENT_VERSION: Final = "perception-field-measurement/1"
-EVIDENCE_COMPILATION_REPORT_VERSION: Final = "perception-evidence-compilation/1"
-STATE_DECISION_RECEIPT_VERSION: Final = "perception-state-decision-receipt/1"
 STATE_SPECIFICATION_VERSION: Final = "perception-state-specification/1"
 STATE_CLAIM_SET_VERSION: Final = "perception-state-claim-set/1"
 POLICY_COMPATIBILITY_REPORT_VERSION: Final = "perception-policy-compatibility/1"
@@ -118,9 +113,6 @@ class FieldEvidence:
     source_region: str
     observation_id: str
     compiler_id: str
-    registered_panel_id: str = ""
-    decoder_id: str = ""
-    raw_measurement: Mapping[str, object] | None = None
     reason: str = ""
     evidence_id: str = ""
     version: str = FIELD_EVIDENCE_VERSION
@@ -165,171 +157,10 @@ class FieldEvidence:
                 "source_region": self.source_region,
                 "observation_id": self.observation_id,
                 "compiler_id": self.compiler_id,
-                "registered_panel_id": self.registered_panel_id,
-                "decoder_id": self.decoder_id,
-                "raw_measurement": self.raw_measurement or {},
                 "reason": self.reason,
                 "version": self.version,
             }
             object.__setattr__(self, "evidence_id", _digest(payload))
-
-
-@dataclass(frozen=True, slots=True)
-class ObservationValidityReport:
-    observation_id: str
-    valid: bool
-    invalid_reasons: tuple[str, ...]
-    measurement: Mapping[str, object]
-    report_id: str = ""
-    version: str = OBSERVATION_VALIDITY_REPORT_VERSION
-
-    def __post_init__(self) -> None:
-        if not self.observation_id:
-            raise PerceptionStateClaimError("observation_id must be non-empty")
-        object.__setattr__(
-            self,
-            "invalid_reasons",
-            _unique_sorted(self.invalid_reasons, name="invalid_reasons"),
-        )
-        if self.valid and self.invalid_reasons:
-            raise PerceptionStateClaimError("valid observations cannot have reasons")
-        if not self.valid and not self.invalid_reasons:
-            raise PerceptionStateClaimError("invalid observations need reasons")
-        if not self.report_id:
-            object.__setattr__(
-                self,
-                "report_id",
-                _digest(
-                    {
-                        "observation_id": self.observation_id,
-                        "valid": self.valid,
-                        "invalid_reasons": self.invalid_reasons,
-                        "measurement": self.measurement,
-                        "version": self.version,
-                    }
-                ),
-            )
-
-
-@dataclass(frozen=True, slots=True)
-class PanelRegistrationResult:
-    observation_id: str
-    panel_layout_id: str
-    registration_method_id: str
-    registered_panel_id: str
-    valid: bool
-    anchor_count: int
-    source_corners: tuple[tuple[float, float], ...]
-    reason: str = ""
-    version: str = PANEL_REGISTRATION_RESULT_VERSION
-
-    def __post_init__(self) -> None:
-        if not all(
-            (
-                self.observation_id,
-                self.panel_layout_id,
-                self.registration_method_id,
-                self.registered_panel_id,
-            )
-        ):
-            raise PerceptionStateClaimError("registration identities must be non-empty")
-        if self.anchor_count < 0:
-            raise PerceptionStateClaimError("anchor_count must be non-negative")
-        if self.valid and self.anchor_count < 4:
-            raise PerceptionStateClaimError("valid registration requires four anchors")
-        if not self.valid and not self.reason:
-            raise PerceptionStateClaimError("invalid registration needs a reason")
-
-
-@dataclass(frozen=True, slots=True)
-class FieldMeasurement:
-    field_id: str
-    observation_id: str
-    registered_panel_id: str
-    source_region: str
-    decoder_id: str
-    raw_measurement: Mapping[str, object]
-    measurement_id: str = ""
-    version: str = FIELD_MEASUREMENT_VERSION
-
-    def __post_init__(self) -> None:
-        if not all(
-            (
-                self.field_id,
-                self.observation_id,
-                self.registered_panel_id,
-                self.source_region,
-                self.decoder_id,
-            )
-        ):
-            raise PerceptionStateClaimError("field measurement ids must be non-empty")
-        if not self.raw_measurement:
-            raise PerceptionStateClaimError("field measurements must preserve raw data")
-        if not self.measurement_id:
-            object.__setattr__(
-                self,
-                "measurement_id",
-                _digest(
-                    {
-                        "field_id": self.field_id,
-                        "observation_id": self.observation_id,
-                        "registered_panel_id": self.registered_panel_id,
-                        "source_region": self.source_region,
-                        "decoder_id": self.decoder_id,
-                        "raw_measurement": self.raw_measurement,
-                        "version": self.version,
-                    }
-                ),
-            )
-
-
-@dataclass(frozen=True, slots=True)
-class EvidenceCompilationReport:
-    observation_id: str
-    panel_layout_id: str
-    calibration_id: str
-    compiler_id: str
-    validity_report: ObservationValidityReport
-    registration_result: PanelRegistrationResult
-    measurements: tuple[FieldMeasurement, ...]
-    evidence: tuple[FieldEvidence, ...]
-    report_id: str = ""
-    version: str = EVIDENCE_COMPILATION_REPORT_VERSION
-
-    def __post_init__(self) -> None:
-        if not all(
-            (
-                self.observation_id,
-                self.panel_layout_id,
-                self.calibration_id,
-                self.compiler_id,
-            )
-        ):
-            raise PerceptionStateClaimError("evidence report ids must be non-empty")
-        if not self.report_id:
-            object.__setattr__(
-                self,
-                "report_id",
-                _digest(
-                    {
-                        "observation_id": self.observation_id,
-                        "panel_layout_id": self.panel_layout_id,
-                        "calibration_id": self.calibration_id,
-                        "compiler_id": self.compiler_id,
-                        "validity_report_id": self.validity_report.report_id,
-                        "registered_panel_id": (
-                            self.registration_result.registered_panel_id
-                        ),
-                        "measurement_ids": tuple(
-                            item.measurement_id for item in self.measurements
-                        ),
-                        "evidence_ids": tuple(
-                            item.evidence_id for item in self.evidence
-                        ),
-                        "version": self.version,
-                    }
-                ),
-            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -463,46 +294,6 @@ class PolicyCompatibilityReport:
                 "version": self.version,
             }
             object.__setattr__(self, "report_id", _digest(payload))
-
-
-@dataclass(frozen=True, slots=True)
-class StateDecisionReceipt:
-    observation_id: str
-    evidence_report_id: str
-    claim_set_id: str
-    policy_report_id: str
-    decision: str
-    receipt_id: str = ""
-    version: str = STATE_DECISION_RECEIPT_VERSION
-
-    def __post_init__(self) -> None:
-        if not all(
-            (
-                self.observation_id,
-                self.evidence_report_id,
-                self.claim_set_id,
-                self.policy_report_id,
-                self.decision,
-            )
-        ):
-            raise PerceptionStateClaimError(
-                "state decision receipt ids must be non-empty"
-            )
-        if not self.receipt_id:
-            object.__setattr__(
-                self,
-                "receipt_id",
-                _digest(
-                    {
-                        "observation_id": self.observation_id,
-                        "evidence_report_id": self.evidence_report_id,
-                        "claim_set_id": self.claim_set_id,
-                        "policy_report_id": self.policy_report_id,
-                        "decision": self.decision,
-                        "version": self.version,
-                    }
-                ),
-            )
 
 
 def build_state_claim_set(

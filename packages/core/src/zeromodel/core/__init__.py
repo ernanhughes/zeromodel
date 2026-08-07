@@ -30,6 +30,11 @@ from .content_identity import (
     prototype_universe_identity,
     sha256_digest,
 )
+from .decision_adjudication import (
+    DecisionAdjudication,
+    DecisionAdjudicationOutcome,
+    adjudicate_decision,
+)
 from .lua import (
     POLICY_LUA_FORMAT,
     compiled_plan_id,
@@ -78,6 +83,8 @@ from .views import (
 __all__ = [
     "BUNDLE_VERSION",
     "CANONICAL_METRICS",
+    "DecisionAdjudication",
+    "DecisionAdjudicationOutcome",
     "LAYOUT_VERSION",
     "LayoutRecipe",
     "MANIFEST_NAME",
@@ -105,6 +112,7 @@ __all__ = [
     "VPMValidationError",
     "ViewProfile",
     "ViewSet",
+    "adjudicate_decision",
     "array_content_digest",
     "as_field",
     "build_view",

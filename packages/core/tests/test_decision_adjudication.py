@@ -97,6 +97,16 @@ def test_inconsistent_adjudication_cannot_be_constructed() -> None:
         )
 
 
+def test_rejected_adjudication_cannot_claim_correctness() -> None:
+    with pytest.raises(ValueError, match="rejected adjudication"):
+        DecisionAdjudication(
+            accepted=False,
+            state_match=True,
+            action_match=False,
+            outcome=DecisionAdjudicationOutcome.REJECTED,
+        )
+
+
 def test_outcome_values_are_stable_serialization_strings() -> None:
     assert DecisionAdjudicationOutcome.EXACT.value == "exact"
     assert (

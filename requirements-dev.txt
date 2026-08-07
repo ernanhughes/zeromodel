@@ -15,6 +15,7 @@ numpy>=1.23,<2.0
 -e ./packages/trust
 -e ./packages/navigation
 -e ./packages/search
+-e ./packages/critic
 
 build
 twine

@@ -28,6 +28,7 @@ PACKAGE_TEST_ROOTS = [
     "packages/trust/tests",
     "packages/navigation/tests",
     "packages/search/tests",
+    "packages/critic/tests",
 ]
 
 
@@ -60,6 +61,7 @@ def test_package_local_suite_cannot_silently_shrink() -> None:
         "packages/trust/tests",
         "packages/navigation/tests",
         "packages/search/tests",
+        "packages/critic/tests",
     ]
 
 

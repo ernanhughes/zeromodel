@@ -100,3 +100,11 @@ source_root = "packages/search/src"
 depends_on = ["core", "artifacts", "navigation"]
 publishable = true
 owned_prefixes = ["zeromodel.search"]
+
+[packages.critic]
+distribution = "zeromodel-critic"
+namespace = "zeromodel.critic"
+source_root = "packages/critic/src"
+depends_on = ["core", "artifacts"]
+publishable = true
+owned_prefixes = ["zeromodel.critic"]

@@ -49,6 +49,7 @@ TEST_ROOTS = [
     "packages/trust/tests",
     "packages/navigation/tests",
     "packages/search/tests",
+    "packages/critic/tests",
 ]
 
 REPORT_PATH = REPO_ROOT / "build" / "reports" / "fast-test-summary.json"

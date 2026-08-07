@@ -1,0 +1,18 @@
+from __future__ import annotations
+
+MATRIX_BLOB_ARTIFACT_KIND = "zeromodel.core.matrix_blob"
+CRITIC_FEATURE_SPEC_ARTIFACT_KIND = "zeromodel.critic.feature_spec"
+CRITIC_FEATURE_BATCH_ARTIFACT_KIND = "zeromodel.critic.feature_batch"
+CRITIC_CONTRACT_ARTIFACT_KIND = "zeromodel.critic.contract"
+CRITIC_LABEL_BATCH_ARTIFACT_KIND = "zeromodel.critic.label_batch"
+CRITIC_FIT_SPEC_ARTIFACT_KIND = "zeromodel.critic.fit_spec"
+CRITIC_READOUT_ARTIFACT_KIND = "zeromodel.critic.readout"
+CRITIC_CALIBRATION_ARTIFACT_KIND = "zeromodel.critic.calibration"
+CRITIC_SCORE_REQUEST_ARTIFACT_KIND = "zeromodel.critic.score_request"
+CRITIC_SCORE_RESULT_ARTIFACT_KIND = "zeromodel.critic.score_result"
+CRITIC_SCORE_RECEIPT_ARTIFACT_KIND = "zeromodel.critic.score_receipt"
+CRITIC_EVALUATION_SET_ARTIFACT_KIND = "zeromodel.critic.evaluation_set"
+CRITIC_EVALUATION_RESULT_ARTIFACT_KIND = "zeromodel.critic.evaluation_result"
+CRITIC_PROMOTION_POLICY_ARTIFACT_KIND = "zeromodel.critic.promotion_policy"
+CRITIC_PROMOTION_DECISION_ARTIFACT_KIND = "zeromodel.critic.promotion_decision"
+CRITIC_COUNTEREXAMPLE_BATCH_ARTIFACT_KIND = "zeromodel.critic.counterexample_batch"

@@ -35,8 +35,8 @@ Every public notebook must include:
 
 The catalogue uses the evidence states `defined`, `measured`, and `hypothesis`, and the execution profiles `fast`, `extended`, `external`, and `research`.
 
-Current fast notebooks run from `01` through `08`; `08-fx-triangular-arbitrage`
-is the deterministic offline market-opportunity sign demonstration.
+Current fast notebooks run from `01` through `09`; `09-tiny-critic`
+is the deterministic offline judgement-readout demonstration.
 
 ## Publication
 

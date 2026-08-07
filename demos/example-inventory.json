@@ -1,1 +1,348 @@
-{"schema_version":1,"entries":[{"path":"examples/arcade_shooter_policy.py","role":"public_demo","execution_profile":"fast","status":"published","notes":"Canonical bounded policy fixture.","demo_ids":["vpm-artifact","visual-sign-reader","signs-rendering","policy-lookup-benchmark"]},{"path":"examples/arcade_visual_sign_reader.py","role":"public_demo","execution_profile":"fast","status":"published","notes":"Rendered observation to calibrated visual address.","demo_ids":["visual-sign-reader"]},{"path":"examples/lua_edge_policy.py","role":"public_demo","execution_profile":"fast","status":"published","notes":"Exports the compiled policy for Lua.","demo_ids":["lua-edge-policy"]},{"path":"examples/lua/run_arcade_policy.lua","role":"runtime_helper","execution_profile":"fast","status":"published","notes":"Dependency-free Lua consumer.","demo_ids":["lua-edge-policy"]},{"path":"examples/render_signs_demo.py","role":"public_demo","execution_profile":"fast","status":"published","notes":"Produces the visual signs asset family.","demo_ids":["signs-rendering"]},{"path":"examples/criticality_verification.py","role":"public_demo","execution_profile":"fast","status":"published","notes":"Finite policy properties, counterexample, repair.","demo_ids":["criticality-verification"]},{"path":"examples/policy_lookup_benchmark.py","role":"benchmark","execution_profile":"fast","status":"published","notes":"Separates action-only and trace-rich lookup costs.","demo_ids":["policy-lookup-benchmark"]},{"path":"examples/bertin_pattern_detection.py","role":"research","execution_profile":"fast","status":"published","notes":"Bounded planted-structure recovery fixture.","demo_ids":["bertin-pattern-detection"]},{"path":"examples/fx_triangular_arbitrage.py","role":"public_demo","execution_profile":"fast","status":"published","notes":"Deterministic bid/ask FX triangular-arbitrage VPM sign.","demo_ids":["fx-triangular-arbitrage"]},{"path":"examples/learning_trace_demo.py","role":"public_demo","execution_profile":"fast","status":"planned","notes":"Candidate notebook for learning traces.","demo_ids":[]},{"path":"examples/training_progress_demo.py","role":"public_demo","execution_profile":"fast","status":"planned","notes":"Candidate notebook for training progress.","demo_ids":[]},{"path":"examples/writer_report_adapters_demo.py","role":"integration","execution_profile":"fast","status":"planned","notes":"Writer report adapter integration.","demo_ids":[]},{"path":"examples/training_tracker_adapters_demo.py","role":"integration","execution_profile":"fast","status":"planned","notes":"Training tracker adapter integration.","demo_ids":[]},{"path":"examples/provider_evaluation_report_adapter.py","role":"integration","execution_profile":"extended","status":"planned","notes":"Provider report adapter.","demo_ids":[]},{"path":"examples/end_to_end_learning_trace.py","role":"supporting_runner","execution_profile":"extended","status":"supporting","notes":"End-to-end driver for learning trace flows.","demo_ids":[]},{"path":"examples/end_to_end_training_progress.py","role":"supporting_runner","execution_profile":"extended","status":"supporting","notes":"End-to-end driver for training progress.","demo_ids":[]},{"path":"examples/research_multiview_dense_artifact.py","role":"research","execution_profile":"research","status":"planned","notes":"Dense multiview artifact experiment.","demo_ids":[]},{"path":"examples/research_hallucination_energy_vpm.py","role":"research","execution_profile":"research","status":"planned","notes":"Hallucination-energy research experiment.","demo_ids":[]},{"path":"examples/research_decision_manifold.py","role":"research","execution_profile":"research","status":"planned","notes":"Decision manifold research example.","demo_ids":[]},{"path":"examples/research_spatial_optimizer.py","role":"research","execution_profile":"research","status":"planned","notes":"Spatial optimizer research example.","demo_ids":[]},{"path":"examples/local_model_zero_arcade_test.py","role":"external","execution_profile":"external","status":"planned","notes":"Requires a local model/provider environment.","demo_ids":[]},{"path":"examples/analyze_visual_address_report.py","role":"supporting_runner","execution_profile":"extended","status":"supporting","notes":"Post-analysis for visual address reports.","demo_ids":[]},{"path":"examples/arcade_visual_video_baseline.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Baseline temporal visual reader.","demo_ids":[]},{"path":"examples/arcade_png_representation_benchmark.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Controlled representation comparison.","demo_ids":[]},{"path":"examples/arcade_png_representation_runner.py","role":"supporting_runner","execution_profile":"extended","status":"supporting","notes":"Runner used by the PNG benchmark.","demo_ids":[]},{"path":"examples/arcade_png_interventions.py","role":"supporting_runner","execution_profile":"extended","status":"supporting","notes":"Interventions used by representation experiments.","demo_ids":[]},{"path":"examples/arcade_visual_address_benchmark.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Visual address benchmark.","demo_ids":[]},{"path":"examples/arcade_visual_registered_calibration_v2.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Registered calibration experiment.","demo_ids":[]},{"path":"examples/arcade_visual_system_b_adjudication.py","role":"research","execution_profile":"research","status":"planned","notes":"System-B adjudication experiment.","demo_ids":[]},{"path":"examples/arcade_visual_local_baseline_postanalysis.py","role":"supporting_runner","execution_profile":"extended","status":"supporting","notes":"Post-analysis for local baseline results.","demo_ids":[]},{"path":"examples/arcade_visual_local_baseline_showdown.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Local baseline comparison.","demo_ids":[]},{"path":"examples/arcade_visual_local_evidence_benchmark.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Local evidence benchmark.","demo_ids":[]},{"path":"examples/arcade_visual_action_set_reachability_benchmark.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Action-set reachability benchmark.","demo_ids":[]},{"path":"examples/arcade_visual_video_discriminative_evidence_benchmark.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Discriminative temporal evidence benchmark.","demo_ids":[]},{"path":"examples/visual_transition_benchmark/README.md","role":"documentation","execution_profile":"extended","status":"supporting","notes":"Visual transition benchmark overview.","demo_ids":[]},{"path":"examples/visual_transition_benchmark/run.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Primary visual transition benchmark entrypoint.","demo_ids":[]},{"path":"examples/visual_transition_benchmark/value_run.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Value-focused transition experiment.","demo_ids":[]},{"path":"examples/visual_transition_benchmark/compiler_run.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Compiler-path transition experiment.","demo_ids":[]},{"path":"examples/visual_transition_benchmark/cross_domain_run.py","role":"benchmark","execution_profile":"extended","status":"planned","notes":"Cross-domain transition experiment.","demo_ids":[]}]}
+{
+  "entries": [
+    {
+      "demo_ids": [
+        "vpm-artifact",
+        "visual-sign-reader",
+        "signs-rendering",
+        "policy-lookup-benchmark"
+      ],
+      "execution_profile": "fast",
+      "notes": "Canonical bounded policy fixture.",
+      "path": "examples/arcade_shooter_policy.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "visual-sign-reader"
+      ],
+      "execution_profile": "fast",
+      "notes": "Rendered observation to calibrated visual address.",
+      "path": "examples/arcade_visual_sign_reader.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "lua-edge-policy"
+      ],
+      "execution_profile": "fast",
+      "notes": "Exports the compiled policy for Lua.",
+      "path": "examples/lua_edge_policy.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "lua-edge-policy"
+      ],
+      "execution_profile": "fast",
+      "notes": "Dependency-free Lua consumer.",
+      "path": "examples/lua/run_arcade_policy.lua",
+      "role": "runtime_helper",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "signs-rendering"
+      ],
+      "execution_profile": "fast",
+      "notes": "Produces the visual signs asset family.",
+      "path": "examples/render_signs_demo.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "criticality-verification"
+      ],
+      "execution_profile": "fast",
+      "notes": "Finite policy properties, counterexample, repair.",
+      "path": "examples/criticality_verification.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "policy-lookup-benchmark"
+      ],
+      "execution_profile": "fast",
+      "notes": "Separates action-only and trace-rich lookup costs.",
+      "path": "examples/policy_lookup_benchmark.py",
+      "role": "benchmark",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "bertin-pattern-detection"
+      ],
+      "execution_profile": "fast",
+      "notes": "Bounded planted-structure recovery fixture.",
+      "path": "examples/bertin_pattern_detection.py",
+      "role": "research",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "fx-triangular-arbitrage"
+      ],
+      "execution_profile": "fast",
+      "notes": "Deterministic bid/ask FX triangular-arbitrage VPM sign.",
+      "path": "examples/fx_triangular_arbitrage.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [
+        "tiny-critic"
+      ],
+      "execution_profile": "fast",
+      "notes": "Deterministic held-out Tiny Critic fixture with portable scoring, VPM, evaluation evidence, and replay.",
+      "path": "examples/tiny_critic.py",
+      "role": "public_demo",
+      "status": "published"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "fast",
+      "notes": "Candidate notebook for learning traces.",
+      "path": "examples/learning_trace_demo.py",
+      "role": "public_demo",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "fast",
+      "notes": "Candidate notebook for training progress.",
+      "path": "examples/training_progress_demo.py",
+      "role": "public_demo",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "fast",
+      "notes": "Writer report adapter integration.",
+      "path": "examples/writer_report_adapters_demo.py",
+      "role": "integration",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "fast",
+      "notes": "Training tracker adapter integration.",
+      "path": "examples/training_tracker_adapters_demo.py",
+      "role": "integration",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Provider report adapter.",
+      "path": "examples/provider_evaluation_report_adapter.py",
+      "role": "integration",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "End-to-end driver for learning trace flows.",
+      "path": "examples/end_to_end_learning_trace.py",
+      "role": "supporting_runner",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "End-to-end driver for training progress.",
+      "path": "examples/end_to_end_training_progress.py",
+      "role": "supporting_runner",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "research",
+      "notes": "Dense multiview artifact experiment.",
+      "path": "examples/research_multiview_dense_artifact.py",
+      "role": "research",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "research",
+      "notes": "Hallucination-energy research experiment.",
+      "path": "examples/research_hallucination_energy_vpm.py",
+      "role": "research",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "research",
+      "notes": "Decision manifold research example.",
+      "path": "examples/research_decision_manifold.py",
+      "role": "research",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "research",
+      "notes": "Spatial optimizer research example.",
+      "path": "examples/research_spatial_optimizer.py",
+      "role": "research",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "external",
+      "notes": "Requires a local model/provider environment.",
+      "path": "examples/local_model_zero_arcade_test.py",
+      "role": "external",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Post-analysis for visual address reports.",
+      "path": "examples/analyze_visual_address_report.py",
+      "role": "supporting_runner",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Baseline temporal visual reader.",
+      "path": "examples/arcade_visual_video_baseline.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Controlled representation comparison.",
+      "path": "examples/arcade_png_representation_benchmark.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Runner used by the PNG benchmark.",
+      "path": "examples/arcade_png_representation_runner.py",
+      "role": "supporting_runner",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Interventions used by representation experiments.",
+      "path": "examples/arcade_png_interventions.py",
+      "role": "supporting_runner",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Visual address benchmark.",
+      "path": "examples/arcade_visual_address_benchmark.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Registered calibration experiment.",
+      "path": "examples/arcade_visual_registered_calibration_v2.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "research",
+      "notes": "System-B adjudication experiment.",
+      "path": "examples/arcade_visual_system_b_adjudication.py",
+      "role": "research",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Post-analysis for local baseline results.",
+      "path": "examples/arcade_visual_local_baseline_postanalysis.py",
+      "role": "supporting_runner",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Local baseline comparison.",
+      "path": "examples/arcade_visual_local_baseline_showdown.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Local evidence benchmark.",
+      "path": "examples/arcade_visual_local_evidence_benchmark.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Action-set reachability benchmark.",
+      "path": "examples/arcade_visual_action_set_reachability_benchmark.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Discriminative temporal evidence benchmark.",
+      "path": "examples/arcade_visual_video_discriminative_evidence_benchmark.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Visual transition benchmark overview.",
+      "path": "examples/visual_transition_benchmark/README.md",
+      "role": "documentation",
+      "status": "supporting"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Primary visual transition benchmark entrypoint.",
+      "path": "examples/visual_transition_benchmark/run.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Value-focused transition experiment.",
+      "path": "examples/visual_transition_benchmark/value_run.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Compiler-path transition experiment.",
+      "path": "examples/visual_transition_benchmark/compiler_run.py",
+      "role": "benchmark",
+      "status": "planned"
+    },
+    {
+      "demo_ids": [],
+      "execution_profile": "extended",
+      "notes": "Cross-domain transition experiment.",
+      "path": "examples/visual_transition_benchmark/cross_domain_run.py",
+      "role": "benchmark",
+      "status": "planned"
+    }
+  ],
+  "schema_version": 1
+}

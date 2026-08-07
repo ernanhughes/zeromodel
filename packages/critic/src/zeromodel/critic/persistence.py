@@ -11,6 +11,8 @@ from zeromodel.core.matrix_blob import MatrixBlob
 from zeromodel.critic.dto import (
     CriticCalibrationDTO,
     CriticContractDTO,
+    CriticEvaluationResultDTO,
+    CriticEvaluationSetDTO,
     CriticFeatureBatchDTO,
     CriticFeatureSpecDTO,
     CriticFitSpecDTO,
@@ -29,6 +31,8 @@ from zeromodel.critic.errors import (
 from zeromodel.critic.kinds import (
     CRITIC_CALIBRATION_ARTIFACT_KIND,
     CRITIC_CONTRACT_ARTIFACT_KIND,
+    CRITIC_EVALUATION_RESULT_ARTIFACT_KIND,
+    CRITIC_EVALUATION_SET_ARTIFACT_KIND,
     CRITIC_FEATURE_BATCH_ARTIFACT_KIND,
     CRITIC_FEATURE_SPEC_ARTIFACT_KIND,
     CRITIC_FIT_SPEC_ARTIFACT_KIND,
@@ -228,6 +232,40 @@ def load_critic_score_receipt(
     )
 
 
+def store_critic_evaluation_set(
+    store: ArtifactStore, dto: CriticEvaluationSetDTO
+) -> ArtifactRef:
+    return store_dto(store, CRITIC_EVALUATION_SET_ARTIFACT_KIND, dto)
+
+
+def load_critic_evaluation_set(
+    resolver: ArtifactResolver, ref: ArtifactRef
+) -> CriticEvaluationSetDTO:
+    return _load_dto(
+        resolver,
+        ref,
+        CRITIC_EVALUATION_SET_ARTIFACT_KIND,
+        CriticEvaluationSetDTO.from_dict,
+    )
+
+
+def store_critic_evaluation_result(
+    store: ArtifactStore, dto: CriticEvaluationResultDTO
+) -> ArtifactRef:
+    return store_dto(store, CRITIC_EVALUATION_RESULT_ARTIFACT_KIND, dto)
+
+
+def load_critic_evaluation_result(
+    resolver: ArtifactResolver, ref: ArtifactRef
+) -> CriticEvaluationResultDTO:
+    return _load_dto(
+        resolver,
+        ref,
+        CRITIC_EVALUATION_RESULT_ARTIFACT_KIND,
+        CriticEvaluationResultDTO.from_dict,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ResolvedCriticFeatureBatchAggregate:
     batch: CriticFeatureBatchDTO
@@ -265,6 +303,21 @@ class ResolvedCriticReadoutAggregate:
     calibration: CriticCalibrationDTO | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class ResolvedCriticEvaluationSetAggregate:
+    evaluation_set: CriticEvaluationSetDTO
+    features: ResolvedCriticFeatureBatchAggregate
+    labels: ResolvedCriticLabelBatchAggregate
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedCriticEvaluationResultAggregate:
+    evaluation_result: CriticEvaluationResultDTO
+    evaluation_set: ResolvedCriticEvaluationSetAggregate
+    readout: ResolvedCriticReadoutAggregate
+    score_result: CriticScoreResultDTO
+
+
 def load_critic_feature_batch_aggregate(
     ref: ArtifactRef, resolver: ArtifactResolver
 ) -> ResolvedCriticFeatureBatchAggregate:
@@ -294,6 +347,29 @@ def load_critic_label_batch_aggregate(
         raise CriticContractMismatchError("labels must be a binary 1D vector")
     return ResolvedCriticLabelBatchAggregate(
         batch=batch, contract=contract, labels_blob=blob
+    )
+
+
+def load_critic_evaluation_set_aggregate(
+    ref: ArtifactRef, resolver: ArtifactResolver
+) -> ResolvedCriticEvaluationSetAggregate:
+    evaluation_set = load_critic_evaluation_set(resolver, ref)
+    features = load_critic_feature_batch_aggregate(
+        evaluation_set.feature_batch_ref, resolver
+    )
+    labels = load_critic_label_batch_aggregate(evaluation_set.label_batch_ref, resolver)
+    if features.batch.item_refs != labels.batch.item_refs:
+        raise CriticReadoutIntegrityError("evaluation rows are not exactly aligned")
+    if evaluation_set.group_ids and len(evaluation_set.group_ids) != len(
+        features.batch.item_refs
+    ):
+        raise CriticReadoutIntegrityError(
+            "evaluation group_ids must match evaluation row count"
+        )
+    return ResolvedCriticEvaluationSetAggregate(
+        evaluation_set=evaluation_set,
+        features=features,
+        labels=labels,
     )
 
 
@@ -369,3 +445,35 @@ def validate_critic_readout_aggregate(
         raise CriticReadoutIntegrityError("readout arrays must be finite")
     if np.any(scale <= 0.0):
         raise CriticReadoutIntegrityError("scale must be positive")
+
+
+def load_critic_evaluation_result_aggregate(
+    ref: ArtifactRef, resolver: ArtifactResolver
+) -> ResolvedCriticEvaluationResultAggregate:
+    result = load_critic_evaluation_result(resolver, ref)
+    evaluation_set = load_critic_evaluation_set_aggregate(
+        result.evaluation_set_ref, resolver
+    )
+    readout = load_critic_readout_aggregate(result.readout_ref, resolver)
+    score_result = load_critic_score_result(resolver, result.score_result_ref)
+    if score_result.readout_ref.artifact_id != result.readout_ref.artifact_id:
+        raise CriticReadoutIntegrityError(
+            "evaluation score result does not close over readout"
+        )
+    if (
+        score_result.feature_batch_ref.artifact_id
+        != evaluation_set.evaluation_set.feature_batch_ref.artifact_id
+    ):
+        raise CriticReadoutIntegrityError(
+            "evaluation score result does not close over evaluation features"
+        )
+    if score_result.items and tuple(
+        item.artifact_ref for item in score_result.items
+    ) != (evaluation_set.features.batch.item_refs):
+        raise CriticReadoutIntegrityError("evaluation score rows are not aligned")
+    return ResolvedCriticEvaluationResultAggregate(
+        evaluation_result=result,
+        evaluation_set=evaluation_set,
+        readout=readout,
+        score_result=score_result,
+    )

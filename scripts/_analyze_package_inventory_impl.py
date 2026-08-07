@@ -51,6 +51,7 @@ CLASSIFICATIONS = {
     "artifacts",
     "trust",
     "navigation",
+    "critic",
     "research",
     "examples",
     "tooling",

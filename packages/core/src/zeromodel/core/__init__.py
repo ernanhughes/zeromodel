@@ -83,8 +83,6 @@ from .views import (
 __all__ = [
     "BUNDLE_VERSION",
     "CANONICAL_METRICS",
-    "DecisionAdjudication",
-    "DecisionAdjudicationOutcome",
     "LAYOUT_VERSION",
     "LayoutRecipe",
     "MANIFEST_NAME",
@@ -112,7 +110,6 @@ __all__ = [
     "VPMValidationError",
     "ViewProfile",
     "ViewSet",
-    "adjudicate_decision",
     "array_content_digest",
     "as_field",
     "build_view",

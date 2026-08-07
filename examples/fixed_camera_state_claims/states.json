@@ -1,0 +1,14 @@
+[
+  {"state_id": "state-001", "power": "green", "mode": "auto", "temperature": "normal", "door": "closed", "alarm": "inactive", "action": "CONTINUE"},
+  {"state_id": "state-002", "power": "green", "mode": "auto", "temperature": "normal", "door": "open", "alarm": "inactive", "action": "CONTINUE"},
+  {"state_id": "state-003", "power": "green", "mode": "manual", "temperature": "normal", "door": "closed", "alarm": "inactive", "action": "CONTINUE"},
+  {"state_id": "state-004", "power": "green", "mode": "maintenance", "temperature": "normal", "door": "open", "alarm": "inactive", "action": "INSPECT"},
+  {"state_id": "state-005", "power": "green", "mode": "auto", "temperature": "elevated", "door": "closed", "alarm": "inactive", "action": "INSPECT"},
+  {"state_id": "state-006", "power": "green", "mode": "auto", "temperature": "elevated", "door": "open", "alarm": "inactive", "action": "INSPECT"},
+  {"state_id": "state-007", "power": "green", "mode": "auto", "temperature": "critical", "door": "closed", "alarm": "active", "action": "SHUT_DOWN"},
+  {"state_id": "state-008", "power": "green", "mode": "auto", "temperature": "critical", "door": "open", "alarm": "active", "action": "SHUT_DOWN"},
+  {"state_id": "state-009", "power": "red", "mode": "manual", "temperature": "normal", "door": "closed", "alarm": "active", "action": "RESTART"},
+  {"state_id": "state-010", "power": "red", "mode": "maintenance", "temperature": "elevated", "door": "closed", "alarm": "active", "action": "SHUT_DOWN"},
+  {"state_id": "state-011", "power": "off", "mode": "maintenance", "temperature": "normal", "door": "closed", "alarm": "inactive", "action": "WAIT"},
+  {"state_id": "state-012", "power": "off", "mode": "auto", "temperature": "normal", "door": "open", "alarm": "inactive", "action": "INSPECT"}
+]

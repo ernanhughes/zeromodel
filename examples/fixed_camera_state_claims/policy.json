@@ -1,0 +1,11 @@
+{
+  "policy_id": "fixed-camera-panel-policy-v1",
+  "actions": ["CONTINUE", "INSPECT", "RESTART", "SHUT_DOWN", "WAIT"],
+  "criticality": {
+    "CONTINUE": 1,
+    "WAIT": 1,
+    "INSPECT": 2,
+    "RESTART": 3,
+    "SHUT_DOWN": 4
+  }
+}

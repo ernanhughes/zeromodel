@@ -326,7 +326,9 @@ class ProviderEvaluationCaseDTO:
             accepted=self.accepted,
             expected_state=self.expected_state.to_value(),
             resolved_state=(
-                None if self.predicted_state is None else self.predicted_state.to_value()
+                None
+                if self.predicted_state is None
+                else self.predicted_state.to_value()
             ),
             expected_action=self.expected_action,
             selected_action=self.predicted_action,

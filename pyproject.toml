@@ -1,3 +1,37 @@
+[project]
+name = "zeromodel-workspace"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+zeromodel = { workspace = true }
+zeromodel-analysis = { workspace = true }
+zeromodel-artifacts = { workspace = true }
+zeromodel-critic = { workspace = true }
+zeromodel-navigation = { workspace = true }
+zeromodel-observation = { workspace = true }
+zeromodel-observer = { workspace = true }
+zeromodel-perception = { workspace = true }
+zeromodel-search = { workspace = true }
+zeromodel-sqlalchemy = { workspace = true }
+zeromodel-trust = { workspace = true }
+zeromodel-video = { workspace = true }
+zeromodel-vision = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+]
+
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "INFO"

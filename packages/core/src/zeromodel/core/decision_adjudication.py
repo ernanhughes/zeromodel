@@ -60,6 +60,8 @@ class DecisionAdjudication:
             raise TypeError("action_match must be bool")
         if not isinstance(self.outcome, DecisionAdjudicationOutcome):
             raise TypeError("outcome must be DecisionAdjudicationOutcome")
+        if not self.accepted and (self.state_match or self.action_match):
+            raise ValueError("rejected adjudication cannot carry correctness flags")
 
         expected = _outcome_from_flags(
             accepted=self.accepted,
@@ -133,6 +135,10 @@ def adjudicate_decision(
 
     state_match = resolved_state == expected_state
     action_match = selected_action == expected_action
+    if not isinstance(state_match, bool):
+        raise TypeError("state equality must produce bool")
+    if not isinstance(action_match, bool):
+        raise TypeError("action equality must produce bool")
     outcome = _outcome_from_flags(
         accepted=True,
         state_match=state_match,

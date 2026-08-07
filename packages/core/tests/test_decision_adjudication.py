@@ -109,9 +109,6 @@ def test_rejected_adjudication_cannot_claim_correctness() -> None:
 
 def test_outcome_values_are_stable_serialization_strings() -> None:
     assert DecisionAdjudicationOutcome.EXACT.value == "exact"
-    assert (
-        DecisionAdjudicationOutcome.ACTION_EQUIVALENT.value
-        == "action_equivalent"
-    )
+    assert DecisionAdjudicationOutcome.ACTION_EQUIVALENT.value == "action_equivalent"
     assert DecisionAdjudicationOutcome.ACTION_CHANGING.value == "action_changing"
     assert DecisionAdjudicationOutcome.REJECTED.value == "rejected"

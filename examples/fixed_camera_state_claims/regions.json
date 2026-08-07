@@ -1,0 +1,135 @@
+{
+  "anchors": {
+    "bottom_left": [
+      48,
+      406,
+      74,
+      432
+    ],
+    "bottom_right": [
+      646,
+      406,
+      672,
+      432
+    ],
+    "top_left": [
+      48,
+      48,
+      74,
+      74
+    ],
+    "top_right": [
+      646,
+      48,
+      672,
+      74
+    ]
+  },
+  "fields": {
+    "alarm": {
+      "allowed_values": [
+        "active",
+        "inactive"
+      ],
+      "diamond": [
+        592,
+        314,
+        642,
+        364
+      ],
+      "region_id": "alarm-diamond"
+    },
+    "door": {
+      "allowed_values": [
+        "closed",
+        "open"
+      ],
+      "closed_region": [
+        270,
+        303,
+        340,
+        366
+      ],
+      "open_region": [
+        450,
+        303,
+        544,
+        366
+      ],
+      "region_id": "door-geometry"
+    },
+    "mode": {
+      "allowed_values": [
+        "auto",
+        "maintenance",
+        "manual"
+      ],
+      "boxes": {
+        "auto": [
+          260,
+          134,
+          356,
+          190
+        ],
+        "maintenance": [
+          496,
+          134,
+          622,
+          190
+        ],
+        "manual": [
+          378,
+          134,
+          474,
+          190
+        ]
+      },
+      "region_id": "mode-position"
+    },
+    "power": {
+      "allowed_values": [
+        "green",
+        "off",
+        "red"
+      ],
+      "led": [
+        104,
+        143,
+        148,
+        187
+      ],
+      "region_id": "power-led"
+    },
+    "temperature": {
+      "allowed_values": [
+        "critical",
+        "elevated",
+        "normal"
+      ],
+      "region_id": "temperature-bar",
+      "segments": {
+        "critical": [
+          472,
+          226,
+          562,
+          260
+        ],
+        "elevated": [
+          366,
+          226,
+          456,
+          260
+        ],
+        "normal": [
+          260,
+          226,
+          350,
+          260
+        ]
+      }
+    }
+  },
+  "height": 480,
+  "panel_layout_id": "fixed-camera-status-panel-layout/v2",
+  "width": 720
+}

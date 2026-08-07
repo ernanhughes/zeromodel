@@ -1,0 +1,13 @@
+{
+  "calibration_id": "fixed-camera-status-panel-calibration/v1",
+  "maximum_glare_fraction": 0.18,
+  "maximum_valid_brightness": 245.0,
+  "minimum_anchor_dark_fraction": 0.72,
+  "minimum_bar_occupancy": 0.35,
+  "minimum_colour_saturation": 0.28,
+  "minimum_marker_margin": 0.14,
+  "minimum_marker_occupancy": 0.18,
+  "minimum_shape_margin": 0.08,
+  "minimum_shape_occupancy": 0.12,
+  "minimum_valid_brightness": 30.0
+}

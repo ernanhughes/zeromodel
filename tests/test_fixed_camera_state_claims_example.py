@@ -13,8 +13,9 @@ def test_fixed_camera_state_claims_renderer_writes_manifests() -> None:
     assert len(records) == 12
     first = records[0]
     assert first["image"] == (
-        "captures/development/state-001/canonical-render-01.png"
+        "captures/development/state-001/canonical-panel-fixture-01.png"
     )
+    assert first["condition"] == "canonical-panel-fixture"
     assert first["ground_truth"] == {
         "power": "green",
         "mode": "auto",

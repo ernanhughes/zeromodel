@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from zeromodel.core import DecisionAdjudicationOutcome
+from zeromodel.core.decision_adjudication import DecisionAdjudicationOutcome
 from zeromodel.video.domains.video_action_set.provider_evaluation_case_dto import (
     CASE_OUTCOME_ACTION_EQUIVALENT,
     CASE_OUTCOME_REJECTED,

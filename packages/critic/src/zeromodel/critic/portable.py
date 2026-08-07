@@ -70,11 +70,19 @@ def score_portable(
 ) -> dict[str, float | None]:
     data = load_portable_critic(payload)
     if isinstance(values, Mapping):
-        # Portable payloads do not carry missing-value policy; producers must supply compatible rows.
-        row = np.asarray(
-            [float(values[feature_id]) for feature_id in data["feature_ids"]],
-            dtype=np.float64,
-        )
+        # Portable payloads do not carry missing-value policy;
+        # producers must supply complete compatible rows.
+        resolved_values: list[float] = []
+
+        for feature_id in data["feature_ids"]:
+            value = values[feature_id]
+            if value is None:
+                raise CriticValidationError(
+                    f"portable value for feature {feature_id!r} must not be missing"
+                )
+            resolved_values.append(float(value))
+
+        row = np.asarray(resolved_values, dtype=np.float64)
     else:
         row = np.asarray(values, dtype=np.float64)
     if (

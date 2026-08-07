@@ -39,3 +39,5 @@ Documentation = "https://zeromodel.org/"
 where = ["src"]
 include = ["zeromodel.critic*"]
 
+[tool.setuptools.package-data]
+"zeromodel.critic" = ["py.typed"]

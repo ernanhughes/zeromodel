@@ -4,13 +4,15 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping, Sequence
 
 import numpy as np
+from numpy.typing import ArrayLike, NDArray
 
 from zeromodel.critic.errors import CriticEvaluationError
 
 
 def _arrays(
-    labels: Sequence[float], scores: Sequence[float]
-) -> tuple[np.ndarray, np.ndarray]:
+    labels: ArrayLike,
+    scores: ArrayLike,
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     y = np.asarray(labels, dtype=np.float64)
     s = np.asarray(scores, dtype=np.float64)
     if y.ndim != 1 or s.ndim != 1 or y.size != s.size or y.size == 0:
@@ -23,18 +25,21 @@ def _arrays(
 
 
 def accuracy(
-    labels: Sequence[float], scores: Sequence[float], *, threshold: float = 0.5
+    labels: ArrayLike, scores: ArrayLike, *, threshold: float = 0.5
 ) -> float:
     y, s = _arrays(labels, scores)
     return float(np.mean((s >= threshold) == (y == 1.0)))
 
 
-def brier_score(labels: Sequence[float], scores: Sequence[float]) -> float:
+def brier_score(
+    labels: ArrayLike,
+    scores: ArrayLike,
+) -> float:
     y, s = _arrays(labels, scores)
     return float(np.mean((s - y) ** 2))
 
 
-def auroc(labels: Sequence[float], scores: Sequence[float]) -> float:
+def auroc(labels: ArrayLike, scores: ArrayLike) -> float:
     y, s = _arrays(labels, scores)
     positives = np.sum(y == 1.0)
     negatives = np.sum(y == 0.0)
@@ -59,7 +64,7 @@ def auroc(labels: Sequence[float], scores: Sequence[float]) -> float:
 
 
 def expected_calibration_error(
-    labels: Sequence[float], scores: Sequence[float], *, bin_count: int = 10
+    labels: ArrayLike, scores: ArrayLike, *, bin_count: int = 10
 ) -> float:
     y, s = _arrays(labels, scores)
     if bin_count <= 0:
@@ -78,7 +83,7 @@ def expected_calibration_error(
 
 
 def evaluate_binary_critic(
-    labels: Sequence[float], scores: Sequence[float], *, bin_count: int = 10
+    labels: ArrayLike, scores: ArrayLike, *, bin_count: int = 10
 ) -> dict[str, float | int | str]:
     y, s = _arrays(labels, scores)
     return {
@@ -94,7 +99,7 @@ def evaluate_binary_critic(
 
 
 def grouped_selection_metrics(
-    group_ids: Sequence[str], labels: Sequence[float], scores: Sequence[float]
+    group_ids: Sequence[str], labels: ArrayLike, scores: ArrayLike
 ) -> dict[str, float | int]:
     y, s = _arrays(labels, scores)
     groups: dict[str, list[int]] = {}
@@ -132,7 +137,7 @@ def grouped_selection_metrics(
 
 
 def budget_selection_metrics(
-    labels: Sequence[float], scores: Sequence[float], budgets: Sequence[float]
+    labels: ArrayLike, scores: ArrayLike, budgets: ArrayLike
 ) -> list[dict[str, float | int]]:
     y, s = _arrays(labels, scores)
     order = sorted(range(y.size), key=lambda index: (-float(s[index]), str(index)))

@@ -131,10 +131,7 @@ def render_dataset(
         records: list[dict[str, object]] = []
         for state in states:
             image_path = (
-                CAPTURES
-                / session
-                / state["state_id"]
-                / "canonical-render-01.png"
+                CAPTURES / session / state["state_id"] / "canonical-render-01.png"
             )
             render_panel(state, image_path)
             records.append(

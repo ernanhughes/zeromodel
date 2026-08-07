@@ -1,0 +1,84 @@
+name: critic-package
+
+on:
+  push:
+    paths:
+      - "VERSION"
+      - "packages/core/**"
+      - "packages/artifacts/**"
+      - "packages/critic/**"
+      - "scripts/check_package_boundaries.py"
+      - "scripts/release_version.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/critic-package.yml"
+
+  pull_request:
+    paths:
+      - "VERSION"
+      - "packages/core/**"
+      - "packages/artifacts/**"
+      - "packages/critic/**"
+      - "scripts/check_package_boundaries.py"
+      - "scripts/release_version.py"
+      - "package-boundaries.toml"
+      - "pyproject.toml"
+      - ".github/workflows/critic-package.yml"
+
+jobs:
+  validate-critic:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine pytest ruff mypy "numpy<2.0"
+
+      - name: Check coordinated release version
+        run: python scripts/release_version.py check
+
+      - name: Build dependency and Critic wheels
+        run: |
+          python -m build packages/core
+          python -m twine check packages/core/dist/*
+
+          python -m build packages/artifacts
+          python -m twine check packages/artifacts/dist/*
+
+          python -m build packages/critic
+          python -m twine check packages/critic/dist/*
+
+      - name: Lint and type-check Critic package
+        run: |
+          python -m ruff check packages/critic/src packages/critic/tests
+          python -m ruff format --check packages/critic/src packages/critic/tests
+          python -m mypy packages/critic/src
+
+      - name: Check package boundaries
+        run: python scripts/check_package_boundaries.py
+
+      - name: Install wheels in clean environment
+        shell: pwsh
+        run: |
+          python -m venv build/critic-ci-venv
+          $python = "build/critic-ci-venv/Scripts/python.exe"
+          & $python -m pip install --upgrade pip
+          & $python -m pip install pytest
+
+          python scripts/release_version.py install --python $python core artifacts critic
+
+          & $python -m pip check
+          & $python -m pytest -q packages/critic/tests
+
+      - name: Verify installed import locations
+        shell: pwsh
+        run: |
+          $python = "build/critic-ci-venv/Scripts/python.exe"
+          & $python -c "import inspect, zeromodel.core, zeromodel.artifacts, zeromodel.critic; print(inspect.getfile(zeromodel.core)); print(inspect.getfile(zeromodel.artifacts)); print(inspect.getfile(zeromodel.critic))"

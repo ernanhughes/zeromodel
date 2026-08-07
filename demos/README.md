@@ -35,6 +35,9 @@ Every public notebook must include:
 
 The catalogue uses the evidence states `defined`, `measured`, and `hypothesis`, and the execution profiles `fast`, `extended`, `external`, and `research`.
 
+Current fast notebooks run from `01` through `08`; `08-fx-triangular-arbitrage`
+is the deterministic offline market-opportunity sign demonstration.
+
 ## Publication
 
 The Pages workflow executes the fast catalogue and deploys `build/site`. The separate Executable demos workflow remains the focused evidence check and uploads the generated site plus `docs/results/demos/` as a workflow artifact.

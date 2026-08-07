@@ -166,6 +166,30 @@
         "seriation inspection",
         "bounded hypothesis testing"
       ]
+    },
+    {
+      "id": "fx-triangular-arbitrage",
+      "title": "Compile an FX arbitrage opportunity into a sign",
+      "summary": "Calculate deterministic triangular FX opportunities from identified bid/ask snapshots, reject stale or uneconomic candidates, compile the opportunity surface into a VPM, and recover the strongest eligible trade with its complete quote and calculation trace.",
+      "notebook": "demos/notebooks/08-fx-triangular-arbitrage.ipynb",
+      "source_examples": [
+        "examples/fx_triangular_arbitrage.py"
+      ],
+      "packages": [
+        "core",
+        "artifacts"
+      ],
+      "evidence_state": "measured",
+      "execution_profile": "fast",
+      "network": false,
+      "timeout_seconds": 120,
+      "website_order": 80,
+      "applications": [
+        "market opportunity inspection",
+        "deterministic financial calculations",
+        "decision provenance",
+        "rejection-aware trade signals"
+      ]
     }
   ]
 }

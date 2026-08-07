@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from zeromodel.core import (
+from zeromodel.core.decision_adjudication import (
     DecisionAdjudication,
     DecisionAdjudicationOutcome,
     adjudicate_decision,

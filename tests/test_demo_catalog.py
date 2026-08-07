@@ -19,7 +19,7 @@ def test_demo_catalogue_and_inventory_are_valid() -> None:
     build_demos.validate(demos)
 
 
-def test_catalogue_contains_eight_fast_demos() -> None:
+def test_catalogue_contains_nine_fast_demos() -> None:
     demos = build_demos.load_catalog()
     assert [demo.id for demo in demos] == [
         "vpm-artifact",
@@ -30,6 +30,7 @@ def test_catalogue_contains_eight_fast_demos() -> None:
         "policy-lookup-benchmark",
         "bertin-pattern-detection",
         "fx-triangular-arbitrage",
+        "tiny-critic",
     ]
     assert all(demo.execution_profile == "fast" for demo in demos)
     assert all(not demo.network for demo in demos)
@@ -53,6 +54,7 @@ def test_example_inventory_tracks_published_and_planned_work() -> None:
         "policy-lookup-benchmark",
         "bertin-pattern-detection",
         "fx-triangular-arbitrage",
+        "tiny-critic",
     }
     assert any(entry.status == "planned" for entry in entries)
     assert any(entry.status == "supporting" for entry in entries)

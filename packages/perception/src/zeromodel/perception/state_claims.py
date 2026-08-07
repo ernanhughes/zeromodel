@@ -13,6 +13,10 @@ STATE_CLAIMS_SEMANTICS: Final = (
 OBSERVATION_ARTIFACT_VERSION: Final = "perception-observation-artifact/1"
 EVIDENCE_REQUIREMENT_VERSION: Final = "perception-evidence-requirement/1"
 FIELD_EVIDENCE_VERSION: Final = "perception-field-evidence/1"
+FIELD_MEASUREMENT_VERSION: Final = "perception-field-measurement/1"
+OBSERVATION_VALIDITY_REPORT_VERSION: Final = "perception-observation-validity/1"
+PANEL_REGISTRATION_RESULT_VERSION: Final = "perception-panel-registration/1"
+EVIDENCE_COMPILATION_REPORT_VERSION: Final = "perception-evidence-compilation/1"
 STATE_SPECIFICATION_VERSION: Final = "perception-state-specification/1"
 STATE_CLAIM_SET_VERSION: Final = "perception-state-claim-set/1"
 POLICY_COMPATIBILITY_REPORT_VERSION: Final = "perception-policy-compatibility/1"
@@ -104,6 +108,29 @@ class EvidenceRequirement:
 
 
 @dataclass(frozen=True, slots=True)
+class FieldMeasurement:
+    field_id: str
+    observation_id: str
+    registered_panel_id: str
+    source_region: str
+    decoder_id: str
+    raw_measurement: Mapping[str, object]
+    version: str = FIELD_MEASUREMENT_VERSION
+
+    def __post_init__(self) -> None:
+        if not all(
+            (
+                self.field_id,
+                self.observation_id,
+                self.registered_panel_id,
+                self.source_region,
+                self.decoder_id,
+            )
+        ):
+            raise PerceptionStateClaimError("field measurement ids must be non-empty")
+
+
+@dataclass(frozen=True, slots=True)
 class FieldEvidence:
     field_id: str
     status: str
@@ -113,6 +140,9 @@ class FieldEvidence:
     source_region: str
     observation_id: str
     compiler_id: str
+    registered_panel_id: str = ""
+    decoder_id: str = ""
+    raw_measurement: Mapping[str, object] | None = None
     reason: str = ""
     evidence_id: str = ""
     version: str = FIELD_EVIDENCE_VERSION
@@ -157,10 +187,90 @@ class FieldEvidence:
                 "source_region": self.source_region,
                 "observation_id": self.observation_id,
                 "compiler_id": self.compiler_id,
+                "registered_panel_id": self.registered_panel_id,
+                "decoder_id": self.decoder_id,
+                "raw_measurement": dict(self.raw_measurement or {}),
                 "reason": self.reason,
                 "version": self.version,
             }
             object.__setattr__(self, "evidence_id", _digest(payload))
+
+
+@dataclass(frozen=True, slots=True)
+class ObservationValidityReport:
+    observation_id: str
+    valid: bool
+    invalid_reasons: tuple[str, ...]
+    measurement: Mapping[str, object]
+    version: str = OBSERVATION_VALIDITY_REPORT_VERSION
+
+    def __post_init__(self) -> None:
+        if not self.observation_id:
+            raise PerceptionStateClaimError("observation_id must be non-empty")
+        object.__setattr__(
+            self,
+            "invalid_reasons",
+            _unique_sorted(self.invalid_reasons, name="invalid_reasons")
+            if self.invalid_reasons
+            else (),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class PanelRegistrationResult:
+    observation_id: str
+    panel_layout_id: str
+    registration_method_id: str
+    registered_panel_id: str
+    valid: bool
+    anchor_count: int
+    source_corners: tuple[tuple[float, float], ...]
+    reason: str = ""
+    version: str = PANEL_REGISTRATION_RESULT_VERSION
+
+    def __post_init__(self) -> None:
+        if not all(
+            (
+                self.observation_id,
+                self.panel_layout_id,
+                self.registration_method_id,
+                self.registered_panel_id,
+            )
+        ):
+            raise PerceptionStateClaimError("registration ids must be non-empty")
+        if self.anchor_count < 0:
+            raise PerceptionStateClaimError("anchor_count must be non-negative")
+        object.__setattr__(
+            self,
+            "source_corners",
+            tuple((float(x), float(y)) for x, y in self.source_corners),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceCompilationReport:
+    observation_id: str
+    panel_layout_id: str
+    calibration_id: str
+    compiler_id: str
+    validity_report: ObservationValidityReport
+    registration_result: PanelRegistrationResult
+    measurements: tuple[FieldMeasurement, ...]
+    evidence: tuple[FieldEvidence, ...]
+    version: str = EVIDENCE_COMPILATION_REPORT_VERSION
+
+    def __post_init__(self) -> None:
+        if not all(
+            (
+                self.observation_id,
+                self.panel_layout_id,
+                self.calibration_id,
+                self.compiler_id,
+            )
+        ):
+            raise PerceptionStateClaimError("compilation report ids must be non-empty")
+        object.__setattr__(self, "measurements", tuple(self.measurements))
+        object.__setattr__(self, "evidence", tuple(self.evidence))
 
 
 @dataclass(frozen=True, slots=True)

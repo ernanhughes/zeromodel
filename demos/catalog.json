@@ -190,6 +190,31 @@
         "decision provenance",
         "rejection-aware trade signals"
       ]
+    },
+    {
+      "id": "tiny-critic",
+      "title": "Compile evidence into a portable Tiny Critic",
+      "summary": "Fit an identified lightweight critic over deterministic numeric evidence, evaluate it on a held-out fixture, inspect feature contributions and VPM ranking, export an arithmetic-only portable payload, and replay the exact scoring decision.",
+      "notebook": "demos/notebooks/09-tiny-critic.ipynb",
+      "source_examples": [
+        "examples/tiny_critic.py"
+      ],
+      "packages": [
+        "core",
+        "artifacts",
+        "critic"
+      ],
+      "evidence_state": "measured",
+      "execution_profile": "fast",
+      "network": false,
+      "timeout_seconds": 120,
+      "website_order": 90,
+      "applications": [
+        "lightweight judgement readouts",
+        "review triage",
+        "portable edge inference",
+        "decision provenance"
+      ]
     }
   ]
 }

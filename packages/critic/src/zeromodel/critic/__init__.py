@@ -3,6 +3,8 @@ from __future__ import annotations
 from zeromodel.critic.compiler import compile_critic_readout
 from zeromodel.critic.dto import (
     CriticContractDTO,
+    CriticEvaluationResultDTO,
+    CriticEvaluationSetDTO,
     CriticFeatureBatchDTO,
     CriticFeatureContributionDTO,
     CriticFeatureDTO,
@@ -36,6 +38,12 @@ from zeromodel.critic.evaluation import (
 )
 from zeromodel.critic.linear import CompiledCriticReadout
 from zeromodel.critic.persistence import load_critic_readout_aggregate
+from zeromodel.critic.persistence import (
+    load_critic_evaluation_result_aggregate,
+    load_critic_evaluation_set_aggregate,
+    store_critic_evaluation_result,
+    store_critic_evaluation_set,
+)
 from zeromodel.critic.portable import (
     export_portable_critic,
     load_portable_critic,
@@ -59,6 +67,8 @@ __all__ = [
     "CriticCalibrationError",
     "CriticContractDTO",
     "CriticContractMismatchError",
+    "CriticEvaluationResultDTO",
+    "CriticEvaluationSetDTO",
     "CriticEvaluationError",
     "CriticFeatureBatchDTO",
     "CriticFeatureContributionDTO",
@@ -91,10 +101,14 @@ __all__ = [
     "export_portable_critic",
     "grouped_selection_metrics",
     "load_critic_readout_aggregate",
+    "load_critic_evaluation_result_aggregate",
+    "load_critic_evaluation_set_aggregate",
     "load_portable_critic",
     "rank_by_critic",
     "replay_critic_score",
     "score_critic",
     "score_portable",
+    "store_critic_evaluation_result",
+    "store_critic_evaluation_set",
     "triage_by_budget",
 ]

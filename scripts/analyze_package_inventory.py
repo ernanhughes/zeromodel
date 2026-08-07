@@ -28,6 +28,7 @@ for _name in dir(_implementation):
 _implementation.CLASSIFICATIONS.add("perception")
 _implementation.CLASSIFICATIONS.add("observer")
 _implementation.CLASSIFICATIONS.add("search")
+_implementation.CLASSIFICATIONS.add("critic")
 
 if __name__ == "__main__":
     _implementation.main()

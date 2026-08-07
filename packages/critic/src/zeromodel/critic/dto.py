@@ -918,5 +918,136 @@ def compute_critic_score_receipt_id(receipt: CriticScoreReceiptDTO) -> str:
     )
 
 
+@dataclass(frozen=True, slots=True)
+class CriticEvaluationSetDTO:
+    feature_batch_ref: ArtifactRef
+    label_batch_ref: ArtifactRef
+    split_id: str
+    evaluation_contract: Mapping[str, Any] = field(default_factory=dict)
+    group_ids: Tuple[str, ...] = field(default_factory=tuple)
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+    evaluation_set_id: str = ""
+    spec_version: str = CRITIC_SPEC_VERSION
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "split_id", require_nonempty(self.split_id, "split_id")
+        )
+        object.__setattr__(
+            self, "evaluation_contract", freeze_json(self.evaluation_contract)
+        )
+        object.__setattr__(self, "group_ids", tuple(str(v) for v in self.group_ids))
+        object.__setattr__(self, "metadata", freeze_json(self.metadata))
+        expected = compute_critic_evaluation_set_id(self)
+        object.__setattr__(
+            self, "evaluation_set_id", self.evaluation_set_id or expected
+        )
+        check_id(self.evaluation_set_id, expected, "evaluation_set_id")
+
+    def identity_payload(self) -> dict[str, Any]:
+        return {
+            "spec_version": self.spec_version,
+            "feature_batch_ref": ref_payload(self.feature_batch_ref),
+            "label_batch_ref": ref_payload(self.label_batch_ref),
+            "split_id": self.split_id,
+            "evaluation_contract": thaw_json(self.evaluation_contract),
+            "group_ids": list(self.group_ids),
+            "metadata": thaw_json(self.metadata),
+        }
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = self.identity_payload()
+        payload["evaluation_set_id"] = self.evaluation_set_id
+        return payload
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "CriticEvaluationSetDTO":
+        return cls(
+            feature_batch_ref=ref_from_dict(data["feature_batch_ref"]),
+            label_batch_ref=ref_from_dict(data["label_batch_ref"]),
+            split_id=str(data["split_id"]),
+            evaluation_contract=data.get("evaluation_contract") or {},
+            group_ids=tuple(str(v) for v in data.get("group_ids") or ()),
+            metadata=data.get("metadata") or {},
+            evaluation_set_id=str(data.get("evaluation_set_id") or ""),
+            spec_version=str(data.get("spec_version", CRITIC_SPEC_VERSION)),
+        )
+
+
+def compute_critic_evaluation_set_id(evaluation_set: CriticEvaluationSetDTO) -> str:
+    return digest_payload(
+        "zeromodel.critic.evaluation_set.v1", evaluation_set.identity_payload()
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CriticEvaluationResultDTO:
+    readout_ref: ArtifactRef
+    evaluation_set_ref: ArtifactRef
+    score_result_ref: ArtifactRef
+    metrics: Mapping[str, Any]
+    baseline_metrics: Mapping[str, Any] = field(default_factory=dict)
+    budget_results: Tuple[Mapping[str, Any], ...] = field(default_factory=tuple)
+    group_results: Mapping[str, Any] = field(default_factory=dict)
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+    evaluation_result_id: str = ""
+    spec_version: str = CRITIC_SPEC_VERSION
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "metrics", freeze_json(self.metrics))
+        object.__setattr__(self, "baseline_metrics", freeze_json(self.baseline_metrics))
+        object.__setattr__(
+            self,
+            "budget_results",
+            tuple(freeze_json(dict(item)) for item in self.budget_results),
+        )
+        object.__setattr__(self, "group_results", freeze_json(self.group_results))
+        object.__setattr__(self, "metadata", freeze_json(self.metadata))
+        expected = compute_critic_evaluation_result_id(self)
+        object.__setattr__(
+            self, "evaluation_result_id", self.evaluation_result_id or expected
+        )
+        check_id(self.evaluation_result_id, expected, "evaluation_result_id")
+
+    def identity_payload(self) -> dict[str, Any]:
+        return {
+            "spec_version": self.spec_version,
+            "readout_ref": ref_payload(self.readout_ref),
+            "evaluation_set_ref": ref_payload(self.evaluation_set_ref),
+            "score_result_ref": ref_payload(self.score_result_ref),
+            "metrics": thaw_json(self.metrics),
+            "baseline_metrics": thaw_json(self.baseline_metrics),
+            "budget_results": [thaw_json(item) for item in self.budget_results],
+            "group_results": thaw_json(self.group_results),
+            "metadata": thaw_json(self.metadata),
+        }
+
+    def to_dict(self) -> dict[str, Any]:
+        payload = self.identity_payload()
+        payload["evaluation_result_id"] = self.evaluation_result_id
+        return payload
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> "CriticEvaluationResultDTO":
+        return cls(
+            readout_ref=ref_from_dict(data["readout_ref"]),
+            evaluation_set_ref=ref_from_dict(data["evaluation_set_ref"]),
+            score_result_ref=ref_from_dict(data["score_result_ref"]),
+            metrics=data["metrics"],
+            baseline_metrics=data.get("baseline_metrics") or {},
+            budget_results=tuple(data.get("budget_results") or ()),
+            group_results=data.get("group_results") or {},
+            metadata=data.get("metadata") or {},
+            evaluation_result_id=str(data.get("evaluation_result_id") or ""),
+            spec_version=str(data.get("spec_version", CRITIC_SPEC_VERSION)),
+        )
+
+
+def compute_critic_evaluation_result_id(result: CriticEvaluationResultDTO) -> str:
+    return digest_payload(
+        "zeromodel.critic.evaluation_result.v1", result.identity_payload()
+    )
+
+
 def canonical_dto_bytes(dto: Any) -> bytes:
     return canonical_json_bytes(dto.to_dict())

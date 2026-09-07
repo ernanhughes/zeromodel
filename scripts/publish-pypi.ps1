@@ -109,6 +109,7 @@ function Get-PackageDefinitions {
 
             $Current = [ordered]@{
                 Key          = $Matches[1]
+                Kind         = "runtime"
                 Distribution = $null
                 Namespace    = $null
                 SourceRoot   = $null
@@ -129,7 +130,12 @@ function Get-PackageDefinitions {
             continue
         }
 
-        if ($Line -match '^namespace\s*=\s*"([^"]+)"$') {
+        if ($Line -match '^kind\s*=\s*"([^"]+)"$') {
+            $Current.Kind = $Matches[1]
+            continue
+        }
+
+        if ($Line -match '^namespace\s*=\s*"([^"]*)"$') {
             $Current.Namespace = $Matches[1]
             continue
         }
@@ -138,14 +144,12 @@ function Get-PackageDefinitions {
             $Current.SourceRoot = $Matches[1]
 
             $Normalized = $Matches[1].Replace("\", "/")
-            if ($Normalized -notmatch '^(.+)/src$') {
-                Fail "Package '$($Current.Key)' has unsupported source_root '$Normalized'."
+            if ($Normalized -match '^(.+)/src$') {
+                $Current.PackageRoot = $Matches[1]
             }
-
-            $Current.PackageRoot = $Matches[1].Substring(
-                0,
-                $Matches[1].Length - 4
-            )
+            else {
+                $Current.PackageRoot = $Current.SourceRoot
+            }
 
             continue
         }
@@ -184,11 +188,14 @@ function Get-PackageDefinitions {
     foreach ($Package in $Publishable) {
         if (
             -not $Package.Distribution -or
-            -not $Package.Namespace -or
             -not $Package.SourceRoot -or
             -not $Package.PackageRoot
         ) {
             Fail "Incomplete package definition for '$($Package.Key)'."
+        }
+
+        if ($Package.Kind -ne "meta" -and -not $Package.Namespace) {
+            Fail "Runtime package '$($Package.Key)' must declare a namespace."
         }
 
         $AbsoluteRoot = Join-Path $Root $Package.PackageRoot

@@ -183,6 +183,7 @@ function Get-PackageDefinitions {
 
             $Current = [ordered]@{
                 Key          = $Matches[1]
+                Kind         = "runtime"
                 Distribution = $null
                 Namespace    = $null
                 SourceRoot   = $null
@@ -203,6 +204,11 @@ function Get-PackageDefinitions {
             continue
         }
 
+        if ($Line -match '^kind\s*=\s*"([^"]+)"$') {
+            $Current.Kind = $Matches[1]
+            continue
+        }
+
         if ($Line -match '^namespace\s*=\s*"([^"]+)"$') {
             $Current.Namespace = $Matches[1]
             continue
@@ -212,12 +218,12 @@ function Get-PackageDefinitions {
             $Current.SourceRoot = $Matches[1]
             $Normalized = $Matches[1].Replace("\", "/")
 
-            if ($Normalized -notmatch '^(.+)/src$') {
-                Fail "Unsupported source_root: $Normalized"
+            if ($Normalized -match '^(.+)/src$') {
+                $Current.PackageRoot = $Matches[1]
             }
-
-            # The regex capture already contains the package root.
-            $Current.PackageRoot = $Matches[1]
+            else {
+                $Current.PackageRoot = $Current.SourceRoot
+            }
             continue
         }
 

@@ -48,7 +48,27 @@ def package_root(package_key: str, manifest: dict[str, Any] | None = None) -> Pa
         raise SystemExit(
             f"Unknown package {package_key!r}; expected one of: {known}"
         ) from exc
-    return REPO_ROOT / source_root.parent
+    if source_root.name == "src":
+        return REPO_ROOT / source_root.parent
+    return REPO_ROOT / source_root
+
+
+def implementation_package_keys(manifest: dict[str, Any] | None = None) -> list[str]:
+    manifest = load_manifest() if manifest is None else manifest
+    return [
+        key
+        for key, config in manifest["packages"].items()
+        if config.get("kind", "runtime") == "runtime"
+    ]
+
+
+def publishable_package_keys(manifest: dict[str, Any] | None = None) -> list[str]:
+    manifest = load_manifest() if manifest is None else manifest
+    return [
+        key
+        for key, config in manifest["packages"].items()
+        if config.get("publishable") is True
+    ]
 
 
 def version_constant_files() -> list[Path]:

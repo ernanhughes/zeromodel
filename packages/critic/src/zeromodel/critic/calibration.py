@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from zeromodel.critic.dto import CriticCalibrationDTO
 from zeromodel.critic.linear import CompiledCriticReadout, stable_sigmoid
@@ -8,8 +9,8 @@ from zeromodel.critic.linear import CompiledCriticReadout, stable_sigmoid
 
 def fit_platt_calibration(
     runtime: CompiledCriticReadout,
-    features: object,
-    labels: object,
+    features: ArrayLike,
+    labels: ArrayLike,
     *,
     feature_spec_id: str,
     calibration_set_ref: object,

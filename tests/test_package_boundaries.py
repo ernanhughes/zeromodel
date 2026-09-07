@@ -30,6 +30,7 @@ def test_boundary_manifest_defines_all_packages() -> None:
         "navigation",
         "search",
         "critic",
+        "meta",
     }
     assert manifest["release_version"]
 

@@ -8,6 +8,10 @@ import sys
 import time
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[no-redef]
 
 FAST_SUITE_BUDGET_SECONDS = 120
 FORBIDDEN_INTEGRATION_FLAGS = {"--run-integration", "--run-slow"}
@@ -28,29 +32,19 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 # and research tiers remain opt-in outside this fast runner.
 MARKER_EXPRESSION = "not slow and not external and not research"
 
-# The canonical production fast suite: the repository-wide test root
-# plus every one of the package-local suites. `tests/` contains the current
-# `tests/integration/` cross-package integration root, but this runner does
-# not pass --run-integration, so those tests stay in the explicit integration
-# gate instead of consuming the 120-second fast budget.
-# A package cannot silently
-# disappear from this list without a reviewer noticing the diff.
-TEST_ROOTS = [
-    "tests",
-    "packages/core/tests",
-    "packages/analysis/tests",
-    "packages/observation/tests",
-    "packages/vision/tests",
-    "packages/perception/tests",
-    "packages/observer/tests",
-    "packages/video/tests",
-    "packages/sqlalchemy/tests",
-    "packages/artifacts/tests",
-    "packages/trust/tests",
-    "packages/navigation/tests",
-    "packages/search/tests",
-    "packages/critic/tests",
-]
+def _test_roots_from_manifest() -> list[str]:
+    manifest = tomllib.loads(
+        (REPO_ROOT / "package-boundaries.toml").read_text(encoding="utf-8")
+    )
+    roots = ["tests"]
+    for key, config in manifest["packages"].items():
+        if config.get("kind", "runtime") == "meta":
+            continue
+        roots.append((Path(config["source_root"]).parent / "tests").as_posix())
+    return roots
+
+
+TEST_ROOTS = _test_roots_from_manifest()
 
 REPORT_PATH = REPO_ROOT / "build" / "reports" / "fast-test-summary.json"
 

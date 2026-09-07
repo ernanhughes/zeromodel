@@ -193,15 +193,4 @@ jobs:
         run: python scripts/release_version.py check
 
       - name: Build source and wheel distributions for all packages
-        run: |
-          set -e
-          for pkg in core analysis observation vision perception observer video sqlalchemy artifacts trust navigation; do
-            python -m build "packages/$pkg"
-          done
-
-      - name: Check distribution metadata
-        run: |
-          set -e
-          for pkg in core analysis observation vision perception observer video sqlalchemy artifacts trust navigation; do
-            python -m twine check "packages/$pkg/dist/"*
-          done
+        run: python scripts/validate_packaging_contract.py --skip-upgrade

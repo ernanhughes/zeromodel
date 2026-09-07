@@ -10,8 +10,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[no-redef]
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REQUIREMENTS_DEV = REPO_ROOT / "requirements-dev.txt"
+BOUNDARIES = REPO_ROOT / "package-boundaries.toml"
 CRITICAL_IMPORTS = (
     "pytest",
     "numpy",
@@ -20,34 +26,24 @@ CRITICAL_IMPORTS = (
     "cryptography",
     "sqlalchemy",
 )
-ZEROMODEL_IMPORTS = (
-    "zeromodel.core",
-    "zeromodel.analysis",
-    "zeromodel.observation",
-    "zeromodel.vision",
-    "zeromodel.perception",
-    "zeromodel.observer",
-    "zeromodel.video",
-    "zeromodel.persistence.sqlalchemy",
-    "zeromodel.artifacts",
-    "zeromodel.trust",
-    "zeromodel.navigation",
-    "zeromodel.search",
-)
-VERSION_DISTRIBUTIONS = (
-    "zeromodel",
-    "zeromodel-analysis",
-    "zeromodel-observation",
-    "zeromodel-vision",
-    "zeromodel-perception",
-    "zeromodel-observer",
-    "zeromodel-video",
-    "zeromodel-sqlalchemy",
-    "zeromodel-artifacts",
-    "zeromodel-trust",
-    "zeromodel-navigation",
-    "zeromodel-search",
-)
+def _manifest_packages() -> dict[str, object]:
+    return tomllib.loads(BOUNDARIES.read_text(encoding="utf-8"))["packages"]
+
+
+def _zeromodel_imports() -> tuple[str, ...]:
+    return tuple(
+        config["namespace"]
+        for config in _manifest_packages().values()
+        if config.get("kind", "runtime") == "runtime"
+    )
+
+
+def _version_distributions() -> tuple[str, ...]:
+    return tuple(
+        config["distribution"]
+        for config in _manifest_packages().values()
+        if config.get("publishable") is True
+    )
 
 
 def _run(command: list[str]) -> None:
@@ -72,12 +68,12 @@ def install_requirements() -> None:
 
 def verify_imports() -> dict[str, object]:
     modules = {}
-    for module_name in CRITICAL_IMPORTS + ZEROMODEL_IMPORTS:
+    for module_name in CRITICAL_IMPORTS + _zeromodel_imports():
         module = importlib.import_module(module_name)
         modules[module_name] = getattr(module, "__file__", None)
     versions = {
         distribution: importlib.metadata.version(distribution)
-        for distribution in VERSION_DISTRIBUTIONS
+        for distribution in _version_distributions()
     }
     return {
         "python": sys.version,

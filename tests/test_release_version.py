@@ -16,6 +16,7 @@ VERSION_SENSITIVE_WORKFLOWS = (
     "analysis-package.yml",
     "artifacts-package.yml",
     "core-package.yml",
+    "meta-package.yml",
     "navigation-package.yml",
     "observation-package.yml",
     "observer-package.yml",

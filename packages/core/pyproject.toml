@@ -3,8 +3,8 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "zeromodel"
-version = "1.2.0"
+name = "zeromodel-core"
+version = "1.3.0"
 description = "ZeroModel core package"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -33,6 +33,22 @@ Homepage = "https://zeromodel.org/"
 Repository = "https://github.com/ernanhughes/zeromodel"
 Documentation = "https://zeromodel.org/"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["zeromodel*"]
+[tool.setuptools]
+packages = []
+
+[tool.setuptools.data-files]
+"." = ["src/zeromodel_core_payload.pth"]
+"zeromodel_core_payload/zeromodel/core" = [
+    "src/zeromodel/core/__init__.py",
+    "src/zeromodel/core/artifact.py",
+    "src/zeromodel/core/bundle.py",
+    "src/zeromodel/core/content_identity.py",
+    "src/zeromodel/core/decision_adjudication.py",
+    "src/zeromodel/core/lua.py",
+    "src/zeromodel/core/matrix_blob.py",
+    "src/zeromodel/core/metrics.py",
+    "src/zeromodel/core/policy_lookup.py",
+    "src/zeromodel/core/policy_transitions.py",
+    "src/zeromodel/core/render.py",
+    "src/zeromodel/core/views.py",
+]

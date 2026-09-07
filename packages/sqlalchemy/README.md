@@ -1,8 +1,8 @@
-# zeromodel-sqlalchemy 1.2.0
+# zeromodel-sqlalchemy 1.3.0
 
 `zeromodel-sqlalchemy` owns the SQLAlchemy and SQLite persistence adapter for the validated video action-set domain. Its import namespace is `zeromodel.persistence.sqlalchemy`.
 
-The package depends on `zeromodel==1.2.0`, `zeromodel-video==1.2.0`, NumPy, and SQLAlchemy 2.x. It does not depend on analysis, vision, perception, research fixtures, examples, Torch, TorchVision, Transformers, or Pillow.
+The package depends on `zeromodel-core==1.3.0`, `zeromodel-video==1.3.0`, NumPy, and SQLAlchemy 2.x. It does not depend on analysis, vision, perception, research fixtures, examples, Torch, TorchVision, Transformers, or Pillow.
 
 ## Boundary
 

@@ -145,7 +145,7 @@ The production dependencies remain deliberately small:
 
 - `numpy` for deterministic array operations and distance calculation;
 - `pillow` for bounded image decoding and canonical PNG serialization;
-- `zeromodel` for core VPM artifact contracts;
+- `zeromodel-core` for core VPM artifact contracts;
 - `zeromodel-observation` for observation-owned contracts.
 
 Pillow remains an input/output adapter. Perception internals operate on validated

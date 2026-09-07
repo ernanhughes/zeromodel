@@ -10,8 +10,8 @@ from zeromodel.video.domains.video_action_set.provider_evaluation_case_dto impor
 )
 
 
-POLICY_ID = "a" * 64
-PROVIDER_ID = "b" * 64
+POLICY_ID = "sha256:" + "a" * 64
+PROVIDER_ID = "sha256:" + "b" * 64
 
 
 def _decision(*, row_id: str, action: str) -> dict[str, object]:

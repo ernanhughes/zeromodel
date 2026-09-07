@@ -123,6 +123,8 @@ def discover_tooling_files(
         if base.exists():
             paths.extend(p for p in base.rglob("*.py") if "__pycache__" not in p.parts)
     for config in boundaries.values():
+        if config.get("kind", "runtime") == "meta":
+            continue
         package_tests = (REPO_ROOT / config["source_root"]).parent / "tests"
         if package_tests.exists():
             paths.extend(
@@ -147,6 +149,8 @@ def discover_package_files(
     means either the checkout or package-boundaries.toml has drifted."""
     files_by_package: dict[str, list[Path]] = {}
     for key, config in boundaries.items():
+        if config.get("kind", "runtime") == "meta":
+            continue
         source_root = REPO_ROOT / config["source_root"]
         if not source_root.exists():
             raise SystemExit(

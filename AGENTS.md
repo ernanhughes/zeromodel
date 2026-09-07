@@ -4,7 +4,9 @@
 
 ZeroModel builds deterministic Visual Policy Map (VPM) artifacts from scored tables and extends them through observation, perception, policy, persistence, trust, navigation, and application-layer packages.
 
-The repository is split into twelve namespace-package distributions, each under its own `packages/<key>/` directory with its own `pyproject.toml`, `src/`, and `tests/`.
+The repository is split into thirteen runtime namespace-package distributions,
+plus one metadata-only umbrella distribution, each under its own
+`packages/<key>/` directory with its own `pyproject.toml`.
 
 Two root files have separate authority:
 

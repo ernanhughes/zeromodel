@@ -3,6 +3,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
 
@@ -22,20 +27,10 @@ def _all_workflow_files() -> list[Path]:
 
 def test_requirements_dev_installs_all_packages_editable() -> None:
     text = (REPO_ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
-    for package in (
-        "core",
-        "analysis",
-        "observation",
-        "vision",
-        "perception",
-        "observer",
-        "video",
-        "sqlalchemy",
-        "artifacts",
-        "trust",
-        "navigation",
-        "search",
-    ):
+    manifest = tomllib.loads(
+        (REPO_ROOT / "package-boundaries.toml").read_text(encoding="utf-8")
+    )
+    for package in manifest["packages"]:
         assert f"-e ./packages/{package}" in text, (
             f"missing editable install for {package}"
         )
@@ -57,12 +52,13 @@ def test_no_active_workflow_invokes_root_editable_or_root_build() -> None:
     assert offenders == []
 
 
-def test_root_pyproject_has_no_project_table() -> None:
-    # The repository root is deliberately not a Python distribution. This
-    # guards against silently reintroducing a root [project] table, which
-    # would change the meaning of "no active workflow builds the root".
+def test_root_pyproject_is_a_non_publishable_workspace() -> None:
+    # The repository root may carry workspace metadata, but it must not become
+    # the publishable PyPI `zeromodel` distribution.
+    data = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     text = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    assert "[project]" not in text
+    assert data["project"]["name"] == "zeromodel-workspace"
+    assert data["tool"]["uv"]["package"] is False
     assert "[build-system]" not in text
 
 

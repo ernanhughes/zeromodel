@@ -6,11 +6,12 @@ from zeromodel.critic.dto import (
     CriticFeatureSpecDTO,
 )
 from zeromodel.critic.linear import CompiledCriticReadout
+from numpy.typing import ArrayLike
 
 
 def fit_compiled_critic(
-    features: object,
-    labels: object,
+    features: ArrayLike,
+    labels: ArrayLike,
     *,
     feature_spec: CriticFeatureSpecDTO,
     contract: CriticContractDTO,

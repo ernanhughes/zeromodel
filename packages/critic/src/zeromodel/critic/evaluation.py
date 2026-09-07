@@ -140,19 +140,17 @@ def budget_selection_metrics(
     y, s = _arrays(labels, scores)
     order = sorted(range(y.size), key=lambda index: (-float(s[index]), str(index)))
     overall = float(np.mean(y))
+    budget_values = np.asarray(budgets, dtype=np.float64).reshape(-1)
     rows = []
-    for budget in budgets:
-        count = (
-            int(np.ceil(float(budget) * y.size))
-            if 0.0 < float(budget) <= 1.0
-            else int(budget)
-        )
+    for budget_value in budget_values:
+        budget = float(budget_value)
+        count = int(np.ceil(budget * y.size)) if 0.0 < budget <= 1.0 else int(budget)
         count = max(0, min(count, y.size))
         chosen = order[:count]
         positive_rate = float(np.mean(y[chosen])) if chosen else 0.0
         rows.append(
             {
-                "budget": float(budget),
+                "budget": budget,
                 "number_selected": int(count),
                 "positive_rate_selected": positive_rate,
                 "overall_positive_rate": overall,

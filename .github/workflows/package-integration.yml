@@ -78,3 +78,6 @@ jobs:
 
       - name: Release-candidate package validation
         run: python scripts/validate_release_candidate.py
+
+      - name: Clean umbrella packaging contract
+        run: python scripts/validate_packaging_contract.py --skip-upgrade

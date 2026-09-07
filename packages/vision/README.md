@@ -1,13 +1,13 @@
 # zeromodel-vision
 
-`zeromodel-vision` provides the deterministic bounded visual-address runtime for ZeroModel 1.2.0. It implements the provider-neutral contracts from `zeromodel-observation` and uses the core artifact and policy lookup primitives from `zeromodel`.
+`zeromodel-vision` provides the deterministic bounded visual-address runtime for ZeroModel 1.3.0. It implements the provider-neutral contracts from `zeromodel-observation` and uses the core artifact and policy lookup primitives from `zeromodel`.
 
 The supported production path is closed-world and codebook-based: a bounded `ImageObservation` is converted into deterministic integer features, matched against a calibrated visual index, and optionally passed through core bounded policy lookup.
 
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.2.0 zeromodel-observation==1.2.0 zeromodel-vision==1.2.0
+python -m pip install zeromodel-vision==1.3.0
 ```
 
 ## Includes

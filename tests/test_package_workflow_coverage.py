@@ -16,6 +16,7 @@ PACKAGE_WORKFLOWS = {
     "analysis": "analysis-package.yml",
     "artifacts": "artifacts-package.yml",
     "core": "core-package.yml",
+    "meta": "meta-package.yml",
     "navigation": "navigation-package.yml",
     "search": "search-package.yml",
     "observation": "observation-package.yml",

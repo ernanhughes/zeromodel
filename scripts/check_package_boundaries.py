@@ -50,6 +50,8 @@ def discover_modules(manifest: dict[str, object]) -> dict[str, ModuleRecord]:
     modules: dict[str, ModuleRecord] = {}
     packages = manifest["packages"]
     for package, config in packages.items():
+        if config.get("kind", "runtime") == "meta":
+            continue
         root = REPO_ROOT / config["source_root"]
         for path in sorted(root.rglob("*.py")):
             if "__pycache__" in path.parts:
@@ -175,7 +177,9 @@ def collect_edges(record: ModuleRecord, known: set[str]) -> list[ImportEdge]:
 
 def dependency_cycles(packages: dict[str, object]) -> list[list[str]]:
     graph = {
-        name: set(config.get("depends_on", [])) for name, config in packages.items()
+        name: set(config.get("depends_on", []))
+        for name, config in packages.items()
+        if config.get("kind", "runtime") == "runtime"
     }
     cycles: list[list[str]] = []
 
@@ -202,6 +206,10 @@ def validate_metadata(manifest: dict[str, object]) -> list[str]:
             errors.append(f"{pyproject}: distribution name mismatch")
         if data["project"]["version"] != version:
             errors.append(f"{pyproject}: version is not {version}")
+        if config.get("kind", "runtime") == "meta":
+            if config.get("namespace") or config.get("owned_prefixes"):
+                errors.append(f"{name}: meta package must not own a namespace")
+            continue
     if (REPO_ROOT / "zeromodel" / "__init__.py").exists():
         errors.append("old root zeromodel/__init__.py still exists")
     if (

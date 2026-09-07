@@ -1,4 +1,4 @@
-# ZeroModel 1.2.0
+# ZeroModel 1.3.0
 
 ## The foundation for Visual AI Computing
 
@@ -6,14 +6,14 @@
 
 Models, rules, optimizers, sensors, and people can produce intelligence. ZeroModel gives the resulting evidence and decisions a durable form: Visual Policy Maps, observation records, transition contracts, verification reports, provenance chains, trust receipts, and small deterministic consumers.
 
-> **ZeroModel 1.2.0 establishes the foundation for Visual AI Computing: a coordinated artifact system in which bounded visual evidence and policy can be compiled, addressed, compared, verified, persisted, trusted, navigated, and consumed without hiding the result inside the process that created it.**
+> **ZeroModel 1.3.0 makes the complete supported Python runtime available through one public install while preserving the coordinated modular package architecture beneath it.**
 
 This is a deliberately bounded claim. ZeroModel does **not** currently claim general open-world visual intelligence, arbitrary image understanding, universal causal diagnosis, or safe autonomous deployment. The authoritative evidence boundary is maintained in [`docs/claims-audit.md`](docs/claims-audit.md).
 
 - Website: [zeromodel.org](https://zeromodel.org/)
 - Demonstrations: [ernanhughes/zeromodel-demos](https://github.com/ernanhughes/zeromodel-demos)
 - Claims and evidence: [`docs/claims-audit.md`](docs/claims-audit.md)
-- Release posture: [`docs/releases/1.2.0.md`](docs/releases/1.2.0.md)
+- Release posture: [`docs/releases/1.3.0.md`](docs/releases/1.3.0.md)
 
 ---
 
@@ -147,13 +147,41 @@ The core repository is the source of truth for implementation and evidence. The 
 
 ---
 
+## Install
+
+```bash
+python -m pip install zeromodel
+```
+
+That one command installs the complete supported ZeroModel runtime. The
+`zeromodel` distribution is an umbrella package; implementation remains in
+component distributions that expose the existing `zeromodel.*` namespaces.
+
+```python
+from zeromodel.core import LayoutRecipe, ScoreTable, build_vpm
+from zeromodel.vision import VisualSignReader
+from zeromodel.search import search_relation
+```
+
+Minimal component installs remain available for advanced users:
+
+```bash
+python -m pip install zeromodel-core
+python -m pip install zeromodel-vision
+python -m pip install zeromodel-search
+```
+
+---
+
 ## Package system
 
-ZeroModel 1.2.0 is coordinated across twelve namespace-package distributions:
+ZeroModel 1.3.0 is coordinated across thirteen implementation distributions
+plus the public `zeromodel` umbrella distribution:
 
 | Distribution | Import namespace | Purpose |
 |---|---|---|
-| `zeromodel` | `zeromodel.core` | Immutable artifact kernel, views, rendering, bounded policy lookup, Lua export. |
+| `zeromodel` | none | Metadata-only umbrella for the complete supported runtime. |
+| `zeromodel-core` | `zeromodel.core` | Immutable artifact kernel, views, rendering, bounded policy lookup, Lua export. |
 | `zeromodel-analysis` | `zeromodel.analysis` | Composition, diagnostics, verification, optimization, patterns, manifolds, learning and training artifacts. |
 | `zeromodel-observation` | `zeromodel.observation` | Observation identity and provider-neutral visual-address contracts. |
 | `zeromodel-vision` | `zeromodel.vision` | Deterministic closed-world visual indexing and policy addressing. |
@@ -165,14 +193,16 @@ ZeroModel 1.2.0 is coordinated across twelve namespace-package distributions:
 | `zeromodel-trust` | `zeromodel.trust` | Authenticity, trust receipts, revocation, and deployment scope. |
 | `zeromodel-navigation` | `zeromodel.navigation` | Finite artifact hierarchy compilation and traversal. |
 | `zeromodel-search` | `zeromodel.search` | Deterministic relation-aware exact search over identified frozen representations. |
+| `zeromodel-critic` | `zeromodel.critic` | Portable identified lightweight critic readouts over numeric evidence. |
 
 The legacy root compatibility surface that re-exported every capability from `zeromodel/__init__.py` has been removed. Import from the owning package namespace directly.
 
 ---
 
-## Install from a local clone
+## Contributor setup
 
-The coordinated 1.2.0 packages are not assumed to be available from a package index until the release process records publication.
+Public installation uses `python -m pip install zeromodel`. A repository checkout
+uses the manifest-driven development bootstrap instead:
 
 ```bash
 git clone https://github.com/ernanhughes/zeromodel.git
@@ -183,27 +213,9 @@ python scripts/bootstrap_dev_environment.py
 `scripts/bootstrap_dev_environment.py` upgrades `pip`, installs
 `requirements-dev.txt`, verifies the critical test imports, and prints the
 installed ZeroModel package paths and versions. `requirements-dev.txt` remains
-the single development-dependency authority: it installs all twelve packages in
+the development-dependency authority: it installs every workspace package in
 editable mode plus the test, rendering, cryptography, build, lint, and typing
 toolchain.
-
-For a non-editable local installation:
-
-```bash
-python -m pip install \
-  ./packages/core \
-  ./packages/analysis \
-  ./packages/observation \
-  ./packages/vision \
-  ./packages/perception \
-  ./packages/observer \
-  ./packages/video \
-  ./packages/sqlalchemy \
-  ./packages/artifacts \
-  ./packages/trust \
-  ./packages/navigation \
-  ./packages/search
-```
 
 Verify the checkout:
 

@@ -27,6 +27,7 @@ PRODUCTION_PACKAGE_KEYS = {
     "trust",
     "navigation",
     "search",
+    "critic",
 }
 
 
@@ -65,6 +66,8 @@ def test_all_package_test_roots_are_discovered() -> None:
     data = inventory.make_inventory("2026-01-01T00:00:00Z")
     paths = {row["path"] for row in data["rows"]}
     for key, config in boundaries.items():
+        if config.get("kind", "runtime") == "meta":
+            continue
         test_root = (Path(config["source_root"]).parent / "tests").as_posix()
         assert any(path.startswith(f"{test_root}/") for path in paths), key
 

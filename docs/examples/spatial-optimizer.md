@@ -11,7 +11,12 @@ It does **not** prove that the resulting view is semantically correct, universal
 ## Example
 
 ```python
-from zeromodel import ScoreTable, SpatialOptimizer, build_optimized_view, optimize_view_profile
+from zeromodel import (
+    ScoreTable,
+    SpatialOptimizer,
+    build_optimized_view,
+    optimize_view_profile,
+)
 
 source = ScoreTable(
     values=[

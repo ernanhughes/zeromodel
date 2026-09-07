@@ -45,7 +45,11 @@ stable `ArtifactRef`s, not matrix row indexes.
 import numpy as np
 
 from zeromodel.artifacts import InMemoryArtifactStore
-from zeromodel.search import RelationFitSpecDTO, compile_relation_readout, search_relation
+from zeromodel.search import (
+    RelationFitSpecDTO,
+    compile_relation_readout,
+    search_relation,
+)
 
 store = InMemoryArtifactStore()
 

@@ -31,16 +31,22 @@ source = ScoreTable(
         [0.0, 1.0, 0.0, 0.0],  # state says RIGHT
         [0.0, 0.0, 0.0, 1.0],  # state says FIRE
     ],
-    row_ids=["tank=3|target=0|cooldown=0", "tank=3|target=6|cooldown=0", "tank=3|target=3|cooldown=0"],
+    row_ids=[
+        "tank=3|target=0|cooldown=0",
+        "tank=3|target=6|cooldown=0",
+        "tank=3|target=3|cooldown=0",
+    ],
     metric_ids=["LEFT", "RIGHT", "STAY", "FIRE"],
 )
-recipe = LayoutRecipe.from_dict({
-    "version": "vpm-layout/0",
-    "name": "policy-source-order",
-    "row_order": {"kind": "source", "tie_break": "row_id"},
-    "column_order": {"kind": "source"},
-    "normalization": {"kind": "per_metric_minmax", "clip": True},
-})
+recipe = LayoutRecipe.from_dict(
+    {
+        "version": "vpm-layout/0",
+        "name": "policy-source-order",
+        "row_order": {"kind": "source", "tie_break": "row_id"},
+        "column_order": {"kind": "source"},
+        "normalization": {"kind": "per_metric_minmax", "clip": True},
+    }
+)
 
 artifact = build_vpm(source, recipe)
 reader = VPMPolicyLookup(artifact)

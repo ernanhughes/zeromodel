@@ -23,20 +23,26 @@ from zeromodel import TrainingCheckpoint, build_training_progress_vpm
 
 assessment = build_training_progress_vpm(
     [
-        TrainingCheckpoint(step=1000, metrics={
-            "train_loss": 1.00,
-            "heldout_score": 0.50,
-            "regression_safety": 0.99,
-            "stability": 0.96,
-            "tokens_per_second": 1000,
-        }),
-        TrainingCheckpoint(step=2000, metrics={
-            "train_loss": 0.82,
-            "heldout_score": 0.57,
-            "regression_safety": 0.98,
-            "stability": 0.94,
-            "tokens_per_second": 1120,
-        }),
+        TrainingCheckpoint(
+            step=1000,
+            metrics={
+                "train_loss": 1.00,
+                "heldout_score": 0.50,
+                "regression_safety": 0.99,
+                "stability": 0.96,
+                "tokens_per_second": 1000,
+            },
+        ),
+        TrainingCheckpoint(
+            step=2000,
+            metrics={
+                "train_loss": 0.82,
+                "heldout_score": 0.57,
+                "regression_safety": 0.98,
+                "stability": 0.94,
+                "tokens_per_second": 1120,
+            },
+        ),
     ],
     stability_metric="stability",
     efficiency_metric="tokens_per_second",

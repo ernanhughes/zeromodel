@@ -569,11 +569,9 @@ class VideoClipManifest:
 
 
 class VideoFrameSource(Protocol):
-    def manifest(self) -> VideoClipManifest:
-        ...
+    def manifest(self) -> VideoClipManifest: ...
 
-    def frames(self) -> Iterable[VideoFrame]:
-        ...
+    def frames(self) -> Iterable[VideoFrame]: ...
 
 
 @dataclass(frozen=True)

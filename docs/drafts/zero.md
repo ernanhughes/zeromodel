@@ -472,11 +472,7 @@ def state_row_id(
 ) -> str:
     target = "none" if target_x is None else str(int(target_x))
 
-    return (
-        f"tank={int(tank_x)}"
-        f"|target={target}"
-        f"|cooldown={int(cooldown)}"
-    )
+    return f"tank={int(tank_x)}|target={target}|cooldown={int(cooldown)}"
 ```
 
 Example addresses include:
@@ -785,21 +781,23 @@ The layout is part of the artifact contract, so it must be declared explicitly.
 from zeromodel import LayoutRecipe
 
 
-recipe = LayoutRecipe.from_dict({
-    "version": "vpm-layout/0",
-    "name": "arcade-shooter-policy-source-order",
-    "row_order": {
-        "kind": "source",
-        "tie_break": "row_id",
-    },
-    "column_order": {
-        "kind": "source",
-    },
-    "normalization": {
-        "kind": "per_metric_minmax",
-        "clip": True,
-    },
-})
+recipe = LayoutRecipe.from_dict(
+    {
+        "version": "vpm-layout/0",
+        "name": "arcade-shooter-policy-source-order",
+        "row_order": {
+            "kind": "source",
+            "tie_break": "row_id",
+        },
+        "column_order": {
+            "kind": "source",
+        },
+        "normalization": {
+            "kind": "per_metric_minmax",
+            "clip": True,
+        },
+    }
+)
 ```
 
 This recipe declares three important decisions.
@@ -885,8 +883,7 @@ artifact = build_vpm(
     provenance={
         "kind": "compiled_policy",
         "consumer": "VPMPolicyLookup",
-        "compile_time_intelligence":
-            "hand_scored_closed_world_policy",
+        "compile_time_intelligence": "hand_scored_closed_world_policy",
     },
 )
 ```
@@ -1206,7 +1203,7 @@ That is the correct default for this policy because the four action values are a
 The reader can also use normalized view values:
 
 ```python
-value_source="normalized"
+value_source = "normalized"
 ```
 
 but only when the policy deliberately intends rendered view intensities to determine selection.
@@ -1222,7 +1219,7 @@ For the arcade artifact, both paths currently produce the same winner because ev
 The reader does not have to treat every metric in an artifact as an available action.
 
 ```python
-action_metric_ids=ACTIONS
+action_metric_ids = ACTIONS
 ```
 
 defines the candidate set:
@@ -1267,7 +1264,7 @@ Two candidate actions may occasionally have the same value.
 The default tie-breaking rule is:
 
 ```python
-tie_break="metric_order"
+tie_break = "metric_order"
 ```
 
 Under this rule, the first tied action in the declared `action_metric_ids` order wins.
@@ -1281,7 +1278,7 @@ LEFT → RIGHT → STAY → FIRE
 The reader also supports:
 
 ```python
-tie_break="metric_id"
+tie_break = "metric_id"
 ```
 
 which resolves equal values using the metric identifiers.
@@ -1566,9 +1563,7 @@ tank=3|target=3|cooldown=0
 The tank is aligned with the target and permitted to fire:
 
 ```python
-decision = reader.read(
-    "tank=3|target=3|cooldown=0"
-)
+decision = reader.read("tank=3|target=3|cooldown=0")
 
 assert decision.action == "FIRE"
 ```
@@ -2126,29 +2121,33 @@ In code:
 from zeromodel import PolicyPropertySpec
 
 
-fire_requires_alignment = PolicyPropertySpec.from_dict({
-    "id": "fire_requires_alignment_and_ready",
-    "version": "1",
-    "assert": {
-        "implies": [
-            {"eq": [{"var": "winner"}, "FIRE"]},
-            {"all": [
+fire_requires_alignment = PolicyPropertySpec.from_dict(
+    {
+        "id": "fire_requires_alignment_and_ready",
+        "version": "1",
+        "assert": {
+            "implies": [
+                {"eq": [{"var": "winner"}, "FIRE"]},
                 {
-                    "eq": [
-                        {"var": "state.tank"},
-                        {"var": "state.target"},
+                    "all": [
+                        {
+                            "eq": [
+                                {"var": "state.tank"},
+                                {"var": "state.target"},
+                            ]
+                        },
+                        {
+                            "eq": [
+                                {"var": "state.cooldown"},
+                                0,
+                            ]
+                        },
                     ]
                 },
-                {
-                    "eq": [
-                        {"var": "state.cooldown"},
-                        0,
-                    ]
-                },
-            ]},
-        ]
-    },
-})
+            ]
+        },
+    }
+)
 ```
 
 The row-address decoder is typed. Under `key-value-row-id/v1`, `none` and `null` become JSON null/Python `None`, booleans become booleans, and numeric text becomes numbers. A property checking `state.target` against an absent target must therefore use `null`/`None`, not the string `"none"`.
@@ -2168,9 +2167,11 @@ report = PolicyPropertyChecker(
         "criticality",
         "decision_margin",
     ),
-).check([
-    fire_requires_alignment,
-])
+).check(
+    [
+        fire_requires_alignment,
+    ]
+)
 ```
 
 The report records:

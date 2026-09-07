@@ -782,8 +782,14 @@ Initial protocols:
 
 ```python
 class PerceptionDatasetStore(Protocol): ...
+
+
 class PerceptionModelStore(Protocol): ...
+
+
 class PerceptionEvidenceStore(Protocol): ...
+
+
 class PerceptionPredictionStore(Protocol): ...
 ```
 

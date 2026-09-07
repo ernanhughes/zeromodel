@@ -27,26 +27,28 @@ When `hallucination_energy` or `verifiability` is omitted, ZeroModel derives con
 ```python
 from zeromodel import CriticObservation, build_critic_vpm
 
-assessment = build_critic_vpm([
-    CriticObservation(
-        item_id="claim_supported",
-        critic_score=0.91,
-        policy_fit=0.95,
-        evidence_support=0.92,
-        citation_match=0.94,
-        semantic_drift=0.04,
-    ),
-    CriticObservation(
-        item_id="claim_hallucinated",
-        critic_score=0.25,
-        policy_fit=0.38,
-        evidence_support=0.18,
-        citation_match=0.20,
-        semantic_drift=0.82,
-        hallucination_energy=0.86,
-        verifiability=0.25,
-    ),
-])
+assessment = build_critic_vpm(
+    [
+        CriticObservation(
+            item_id="claim_supported",
+            critic_score=0.91,
+            policy_fit=0.95,
+            evidence_support=0.92,
+            citation_match=0.94,
+            semantic_drift=0.04,
+        ),
+        CriticObservation(
+            item_id="claim_hallucinated",
+            critic_score=0.25,
+            policy_fit=0.38,
+            evidence_support=0.18,
+            citation_match=0.20,
+            semantic_drift=0.82,
+            hallucination_energy=0.86,
+            verifiability=0.25,
+        ),
+    ]
+)
 
 print(assessment.highest_risk_item_id)
 artifact = assessment.artifact
@@ -61,28 +63,30 @@ Writer-style line criticism can be converted directly:
 ```python
 from zeromodel import build_critic_vpm, observations_from_critic_lines
 
-observations = observations_from_critic_lines({
-    "items": [
-        {
-            "index": 0,
-            "text": "Grounded sentence.",
-            "score": 0.82,
-            "verdict": "good",
-            "features": {"support_score": 0.90},
-        },
-        {
-            "index": 1,
-            "text": "Ungrounded sentence.",
-            "score": 0.28,
-            "verdict": "bad",
-            "features": {
-                "support_score": 0.20,
-                "citation_score": 0.30,
-                "semantic_drift": 0.76,
+observations = observations_from_critic_lines(
+    {
+        "items": [
+            {
+                "index": 0,
+                "text": "Grounded sentence.",
+                "score": 0.82,
+                "verdict": "good",
+                "features": {"support_score": 0.90},
             },
-        },
-    ]
-})
+            {
+                "index": 1,
+                "text": "Ungrounded sentence.",
+                "score": 0.28,
+                "verdict": "bad",
+                "features": {
+                    "support_score": 0.20,
+                    "citation_score": 0.30,
+                    "semantic_drift": 0.76,
+                },
+            },
+        ]
+    }
+)
 
 assessment = build_critic_vpm(observations)
 ```

@@ -24,9 +24,7 @@ def _arrays(
     return y, s
 
 
-def accuracy(
-    labels: ArrayLike, scores: ArrayLike, *, threshold: float = 0.5
-) -> float:
+def accuracy(labels: ArrayLike, scores: ArrayLike, *, threshold: float = 0.5) -> float:
     y, s = _arrays(labels, scores)
     return float(np.mean((s >= threshold) == (y == 1.0)))
 

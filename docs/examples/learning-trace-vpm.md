@@ -21,11 +21,15 @@ ZeroModel marks an assessment as `learned=True` only when train improvement clea
 ```python
 from zeromodel import LearningObservation, build_learning_vpm
 
-assessment = build_learning_vpm([
-    LearningObservation("claim-support", before=0.42, after=0.72, split="train"),
-    LearningObservation("related-claim", before=0.50, after=0.63, split="heldout"),
-    LearningObservation("summary-quality", before=0.82, after=0.81, split="regression"),
-])
+assessment = build_learning_vpm(
+    [
+        LearningObservation("claim-support", before=0.42, after=0.72, split="train"),
+        LearningObservation("related-claim", before=0.50, after=0.63, split="heldout"),
+        LearningObservation(
+            "summary-quality", before=0.82, after=0.81, split="regression"
+        ),
+    ]
+)
 
 print(assessment.learned)
 artifact = assessment.artifact

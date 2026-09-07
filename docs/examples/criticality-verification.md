@@ -87,9 +87,7 @@ reader = VPMPolicyLookup(
     ),
 )
 
-decision = reader.read(
-    "tank=3|target=3|cooldown=0"
-)
+decision = reader.read("tank=3|target=3|cooldown=0")
 
 print(decision.action)
 print(decision.candidates)
@@ -119,24 +117,28 @@ This convention keeps the audit question unambiguous: **the identity in the deci
 ```python
 from zeromodel import PolicyPropertySpec
 
-fire_requires_alignment = PolicyPropertySpec.from_dict({
-    "id": "fire_requires_alignment_and_ready",
-    "version": "1",
-    "assert": {
-        "implies": [
-            {"eq": [{"var": "winner"}, "FIRE"]},
-            {"all": [
+fire_requires_alignment = PolicyPropertySpec.from_dict(
+    {
+        "id": "fire_requires_alignment_and_ready",
+        "version": "1",
+        "assert": {
+            "implies": [
+                {"eq": [{"var": "winner"}, "FIRE"]},
                 {
-                    "eq": [
-                        {"var": "state.tank"},
-                        {"var": "state.target"},
+                    "all": [
+                        {
+                            "eq": [
+                                {"var": "state.tank"},
+                                {"var": "state.target"},
+                            ]
+                        },
+                        {"eq": [{"var": "state.cooldown"}, 0]},
                     ]
                 },
-                {"eq": [{"var": "state.cooldown"}, 0]},
-            ]},
-        ]
-    },
-})
+            ]
+        },
+    }
+)
 ```
 
 The first checker version supports `key=value|...` row IDs and the operators:
@@ -202,9 +204,11 @@ checker = PolicyPropertyChecker(
     ),
 )
 
-report = checker.check([
-    fire_requires_alignment,
-])
+report = checker.check(
+    [
+        fire_requires_alignment,
+    ]
+)
 
 verification_artifact = report.to_vpm()
 ```

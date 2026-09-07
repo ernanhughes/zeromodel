@@ -78,7 +78,7 @@ The Python reader now exposes two paths:
 
 ```python
 reader.choose(row_id)  # action only
-reader.read(row_id)    # action plus full forensic trace
+reader.read(row_id)  # action plus full forensic trace
 ```
 
 Construction compiles the immutable artifact into row/metric indices, value matrices, winning actions and coordinates. Runtime lookup no longer constructs one `VPMCell` per candidate or recomputes the argmax.

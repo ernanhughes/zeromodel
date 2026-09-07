@@ -59,7 +59,7 @@ from zeromodel.critic.scoring import score_critic
 from zeromodel.critic.triage import rank_by_critic, triage_by_budget
 from zeromodel.critic.views import build_critic_score_vpm
 
-CRITIC_PACKAGE_VERSION = "1.2.0"
+CRITIC_PACKAGE_VERSION = "1.3.0"
 
 __all__ = [
     "CRITIC_PACKAGE_VERSION",

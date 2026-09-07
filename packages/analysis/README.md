@@ -1,13 +1,13 @@
 # zeromodel-analysis
 
-`zeromodel-analysis` contains deterministic analysis utilities for ZeroModel Visual Policy Map artifacts. It is part of the coordinated ZeroModel 1.2.0 Visual AI Computing package system and exposes its API through `zeromodel.analysis`.
+`zeromodel-analysis` contains deterministic analysis utilities for ZeroModel Visual Policy Map artifacts. It is part of the coordinated ZeroModel 1.3.0 Visual AI Computing package system and exposes its API through `zeromodel.analysis`.
 
-The package depends on the validated core distribution, `zeromodel==1.2.0`. Core data objects such as `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` should be imported from `zeromodel.core`, not re-exported from this package.
+The package depends on the validated core distribution, `zeromodel-core==1.3.0`. Core data objects such as `ScoreTable`, `LayoutRecipe`, and `VPMArtifact` should be imported from `zeromodel.core`, not re-exported from this package.
 
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.2.0 zeromodel-analysis==1.2.0
+python -m pip install zeromodel-analysis==1.3.0
 ```
 
 ## Includes

@@ -1,12 +1,13 @@
 schema_version = 1
-release_version = "1.2.0"
+release_version = "1.3.0"
 forbidden_roots = ["zeromodel"]
 research_root = "research"
 examples_root = "examples"
 integration_tests_root = "tests/integration"
 
 [packages.core]
-distribution = "zeromodel"
+kind = "runtime"
+distribution = "zeromodel-core"
 namespace = "zeromodel.core"
 source_root = "packages/core/src"
 depends_on = []
@@ -14,6 +15,7 @@ publishable = true
 owned_prefixes = ["zeromodel.core"]
 
 [packages.analysis]
+kind = "runtime"
 distribution = "zeromodel-analysis"
 namespace = "zeromodel.analysis"
 source_root = "packages/analysis/src"
@@ -22,6 +24,7 @@ publishable = true
 owned_prefixes = ["zeromodel.analysis"]
 
 [packages.observation]
+kind = "runtime"
 distribution = "zeromodel-observation"
 namespace = "zeromodel.observation"
 source_root = "packages/observation/src"
@@ -30,6 +33,7 @@ publishable = true
 owned_prefixes = ["zeromodel.observation"]
 
 [packages.vision]
+kind = "runtime"
 distribution = "zeromodel-vision"
 namespace = "zeromodel.vision"
 source_root = "packages/vision/src"
@@ -38,6 +42,7 @@ publishable = true
 owned_prefixes = ["zeromodel.vision"]
 
 [packages.perception]
+kind = "runtime"
 distribution = "zeromodel-perception"
 namespace = "zeromodel.perception"
 source_root = "packages/perception/src"
@@ -46,6 +51,7 @@ publishable = true
 owned_prefixes = ["zeromodel.perception"]
 
 [packages.observer]
+kind = "runtime"
 distribution = "zeromodel-observer"
 namespace = "zeromodel.observer"
 source_root = "packages/observer/src"
@@ -54,6 +60,7 @@ publishable = true
 owned_prefixes = ["zeromodel.observer"]
 
 [packages.video]
+kind = "runtime"
 distribution = "zeromodel-video"
 namespace = "zeromodel.video"
 source_root = "packages/video/src"
@@ -62,6 +69,7 @@ publishable = true
 owned_prefixes = ["zeromodel.video"]
 
 [packages.sqlalchemy]
+kind = "runtime"
 distribution = "zeromodel-sqlalchemy"
 namespace = "zeromodel.persistence.sqlalchemy"
 source_root = "packages/sqlalchemy/src"
@@ -70,6 +78,7 @@ publishable = true
 owned_prefixes = ["zeromodel.persistence.sqlalchemy"]
 
 [packages.artifacts]
+kind = "runtime"
 distribution = "zeromodel-artifacts"
 namespace = "zeromodel.artifacts"
 source_root = "packages/artifacts/src"
@@ -78,6 +87,7 @@ publishable = true
 owned_prefixes = ["zeromodel.artifacts"]
 
 [packages.trust]
+kind = "runtime"
 distribution = "zeromodel-trust"
 namespace = "zeromodel.trust"
 source_root = "packages/trust/src"
@@ -86,6 +96,7 @@ publishable = true
 owned_prefixes = ["zeromodel.trust"]
 
 [packages.navigation]
+kind = "runtime"
 distribution = "zeromodel-navigation"
 namespace = "zeromodel.navigation"
 source_root = "packages/navigation/src"
@@ -94,6 +105,7 @@ publishable = true
 owned_prefixes = ["zeromodel.navigation"]
 
 [packages.search]
+kind = "runtime"
 distribution = "zeromodel-search"
 namespace = "zeromodel.search"
 source_root = "packages/search/src"
@@ -102,9 +114,33 @@ publishable = true
 owned_prefixes = ["zeromodel.search"]
 
 [packages.critic]
+kind = "runtime"
 distribution = "zeromodel-critic"
 namespace = "zeromodel.critic"
 source_root = "packages/critic/src"
 depends_on = ["core", "artifacts"]
 publishable = true
 owned_prefixes = ["zeromodel.critic"]
+
+[packages.meta]
+kind = "meta"
+distribution = "zeromodel"
+namespace = ""
+source_root = "packages/meta"
+depends_on = [
+    "core",
+    "analysis",
+    "observation",
+    "vision",
+    "perception",
+    "observer",
+    "video",
+    "sqlalchemy",
+    "artifacts",
+    "trust",
+    "navigation",
+    "search",
+    "critic",
+]
+publishable = true
+owned_prefixes = []

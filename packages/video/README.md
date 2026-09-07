@@ -4,8 +4,8 @@
 
 It depends on:
 
-- `zeromodel==1.2.0`
-- `zeromodel-observation==1.2.0`
+- `zeromodel-core==1.3.0`
+- `zeromodel-observation==1.3.0`
 - `numpy>=1.23`
 
 It does not depend on `zeromodel-analysis`, `zeromodel-vision`, `zeromodel-perception`, `zeromodel-sqlalchemy`, SQLAlchemy, Torch, TorchVision, Transformers, Pillow, research modules, examples, or the repository root.
@@ -13,7 +13,7 @@ It does not depend on `zeromodel-analysis`, `zeromodel-vision`, `zeromodel-perce
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.2.0 zeromodel-observation==1.2.0 zeromodel-video==1.2.0
+python -m pip install zeromodel-video==1.3.0
 ```
 
 ## Includes

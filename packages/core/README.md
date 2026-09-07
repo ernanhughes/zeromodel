@@ -1,6 +1,6 @@
 # ZeroModel Core
 
-`zeromodel` is the lightweight core distribution for ZeroModel 1.2.0. It owns the `zeromodel.core` import namespace and provides the deterministic artifact kernel beneath the Visual AI Computing package system.
+`zeromodel-core` is the lightweight core distribution for ZeroModel 1.3.0. It owns the `zeromodel.core` import namespace and provides the deterministic artifact kernel beneath the Visual AI Computing package system.
 
 Core includes deterministic VPM artifact construction, stable artifact and matrix identities, basic views, `.vpm` bundle serialization, lightweight PNG/SVG rendering, exact bounded policy lookup, Lua export for compiled policy plans, and domain-neutral decision adjudication.
 
@@ -9,7 +9,7 @@ Core deliberately excludes analysis, observation contracts, vision providers, pe
 ## Install
 
 ```powershell
-pip install zeromodel==1.2.0
+pip install zeromodel-core==1.3.0
 ```
 
 Runtime dependency: NumPy.

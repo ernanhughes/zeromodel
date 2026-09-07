@@ -14,7 +14,7 @@ and applies a readout for a relation the caller has declared and measured.
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.2.0 zeromodel-artifacts==1.2.0 zeromodel-navigation==1.2.0 zeromodel-search==1.2.0
+python -m pip install zeromodel-search==1.3.0
 ```
 
 ## Architecture

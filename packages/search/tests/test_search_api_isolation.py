@@ -7,7 +7,7 @@ from pathlib import Path
 def test_public_api_imports_without_heavy_modules():
     import zeromodel.search as search
 
-    assert search.SEARCH_PACKAGE_VERSION == "1.2.0"
+    assert search.SEARCH_PACKAGE_VERSION == "1.3.0"
 
 
 def test_production_modules_do_not_import_research_or_relate():

@@ -48,35 +48,60 @@ globals()["RELEASE_CANDIDATE_REPORT_DIR"] = (
     / f"release-candidate-{_RELEASE_VERSION}"
 )
 
-# Critic was introduced after the stable release-harness implementation was
-# split out. Keep the current-release package registry aligned with
-# package-boundaries.toml so release validation covers the package rather than
-# silently validating the older twelve-package workspace.
-globals()["PACKAGES"].setdefault(
-    "critic",
-    {
-        "path": Path("packages/critic"),
-        "distribution": "zeromodel-critic",
-        "wheel_stem": "zeromodel_critic",
-        "namespace": "zeromodel.critic",
-        "requires": {
-            "numpy>=1.23",
-            f"zeromodel=={_RELEASE_VERSION}",
-            f"zeromodel-artifacts=={_RELEASE_VERSION}",
-        },
-        "depends_on": ("core", "artifacts"),
-    },
+_MANIFEST = tomllib.loads(
+    (_REPO_ROOT / "package-boundaries.toml").read_text(encoding="utf-8")
 )
+_RUNTIME_BOUNDARIES = {
+    key: config
+    for key, config in _MANIFEST["packages"].items()
+    if config.get("kind", "runtime") == "runtime"
+}
 
-for package in globals()["PACKAGES"].values():
-    package["requires"] = {
-        (
-            f"{requirement.split('==', 1)[0]}=={_RELEASE_VERSION}"
-            if requirement.startswith("zeromodel") and "==" in requirement
-            else requirement
-        )
-        for requirement in package["requires"]
+
+def _wheel_stem(distribution: str) -> str:
+    return distribution.replace("-", "_").replace(".", "_")
+
+
+def _package_path(source_root: str) -> Path:
+    path = Path(source_root)
+    if path.name == "src":
+        return path.parent
+    return path
+
+
+globals()["PACKAGES"] = {
+    key: {
+        "path": _package_path(config["source_root"]),
+        "distribution": config["distribution"],
+        "wheel_stem": _wheel_stem(config["distribution"]),
+        "namespace": config["namespace"],
+        "requires": set(
+            tomllib.loads(
+                (_REPO_ROOT / _package_path(config["source_root"]) / "pyproject.toml")
+                .read_text(encoding="utf-8")
+            )["project"].get("dependencies", [])
+        ),
+        "depends_on": tuple(config.get("depends_on", ())),
     }
+    for key, config in _RUNTIME_BOUNDARIES.items()
+}
+
+globals()["UMBRELLA_PACKAGE"] = {
+    "key": "meta",
+    "path": _package_path(_MANIFEST["packages"]["meta"]["source_root"]),
+    "distribution": _MANIFEST["packages"]["meta"]["distribution"],
+    "requires": set(
+        tomllib.loads(
+            (
+                _REPO_ROOT
+                / _package_path(_MANIFEST["packages"]["meta"]["source_root"])
+                / "pyproject.toml"
+            ).read_text(encoding="utf-8")
+        )["project"].get("dependencies", [])
+    ),
+}
+
+globals()["load_package_boundaries"] = lambda: dict(_RUNTIME_BOUNDARIES)
 
 if _ORIGINAL_MODULE_NAME == "__main__":
     raise SystemExit(globals()["main"]())

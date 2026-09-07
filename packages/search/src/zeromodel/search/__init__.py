@@ -37,7 +37,7 @@ from zeromodel.search.receipts import (
 )
 from zeromodel.search.views import build_relation_search_vpm
 
-SEARCH_PACKAGE_VERSION = "1.2.0"
+SEARCH_PACKAGE_VERSION = "1.3.0"
 
 __all__ = [
     "SEARCH_PACKAGE_VERSION",

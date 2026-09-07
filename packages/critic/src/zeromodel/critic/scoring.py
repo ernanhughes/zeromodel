@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
+from typing import Any, Mapping, cast
 
 from zeromodel.artifacts import ArtifactRef, ArtifactStore
 
@@ -27,7 +28,7 @@ def compiled_from_aggregate(
 ) -> CompiledCriticReadout:
     calibration = None
     if aggregate.calibration is not None:
-        calibration = aggregate.calibration.to_dict()
+        calibration = cast(Mapping[str, Any], aggregate.calibration.to_dict())
     return CompiledCriticReadout(
         feature_ids=aggregate.feature_spec.feature_ids,
         directionality=aggregate.feature_spec.directionality,
@@ -50,7 +51,7 @@ def _calibrated(
 ) -> np.ndarray | None:
     if not runtime.calibration or runtime.calibration.get("method") == "none":
         return None
-    params = runtime.calibration.get("parameters") or {}
+    params = cast(Mapping[str, Any], runtime.calibration.get("parameters") or {})
     a = float(params.get("a", 1.0))
     b = float(params.get("b", 0.0))
     return stable_sigmoid(a * logits + b)
@@ -97,7 +98,7 @@ def score_critic(
         )
         positive = sum(max(0.0, item.contribution) for item in contributions)
         negative = sum(abs(min(0.0, item.contribution)) for item in contributions)
-        shown = ()
+        shown: tuple = ()
         if request.explanation_depth:
             ordered = sorted(
                 contributions,

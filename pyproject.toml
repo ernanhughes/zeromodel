@@ -9,6 +9,7 @@ package = false
 
 [tool.uv.sources]
 zeromodel = { workspace = true }
+zeromodel-core = { workspace = true }
 zeromodel-analysis = { workspace = true }
 zeromodel-artifacts = { workspace = true }
 zeromodel-critic = { workspace = true }
@@ -49,6 +50,7 @@ pythonpath = [
     "packages/trust/src",
     "packages/navigation/src",
     "packages/search/src",
+    "packages/critic/src",
     ".",
 ]
 addopts = "--strict-markers"

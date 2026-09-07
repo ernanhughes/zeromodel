@@ -1,12 +1,19 @@
 # Release process
 
-## Current: ZeroModel 1.2.0
+## Current: ZeroModel 1.3.0
 
-ZeroModel 1.2.0 is a coordinated twelve-distribution release of the Visual AI Computing foundation.
+ZeroModel 1.3.0 is a coordinated release with thirteen implementation
+distributions plus the metadata-only `zeromodel` umbrella distribution.
+For normal users, the public installation path is:
+
+```powershell
+python -m pip install zeromodel
+```
 
 The release includes:
 
 - `zeromodel`
+- `zeromodel-core`
 - `zeromodel-analysis`
 - `zeromodel-observation`
 - `zeromodel-vision`
@@ -17,12 +24,14 @@ The release includes:
 - `zeromodel-artifacts`
 - `zeromodel-trust`
 - `zeromodel-navigation`
+- `zeromodel-search`
+- `zeromodel-critic`
 
 The root [`VERSION`](../VERSION) file is the only human-edited authority for the coordinated release number.
 
 [`package-boundaries.toml`](../package-boundaries.toml) remains the machine-readable authority for distribution names, namespaces, source roots, internal dependency edges, and publication eligibility. Its `release_version`, every package `pyproject.toml` version, internal dependency pins, and public package-version constants are generated mirrors of `VERSION`.
 
-The exact release claim and boundaries are recorded in [`docs/releases/1.2.0.md`](releases/1.2.0.md). The authoritative public evidence posture remains [`docs/claims-audit.md`](claims-audit.md).
+The exact release claim and boundaries are recorded in [`docs/releases/1.3.0.md`](releases/1.3.0.md). The authoritative public evidence posture remains [`docs/claims-audit.md`](claims-audit.md).
 
 ## Changing the release version
 
@@ -53,6 +62,7 @@ python scripts/release_version.py check
 python scripts/validate_release_candidate.py
 python scripts/run_fast_tests.py
 python scripts/check_quality.py
+python scripts/validate_packaging_contract.py
 ```
 
 The coordinated validator must verify:
@@ -66,17 +76,19 @@ The coordinated validator must verify:
 - visual-transition regression tests pass;
 - all wheels and source distributions build;
 - `twine check` passes;
-- clean-environment installation succeeds;
+- clean-environment installation of the umbrella wheel alone succeeds;
+- core-only installation does not pull unrelated high-level packages;
+- the 1.2.0 `zeromodel` to 1.3.0 umbrella/core upgrade path succeeds;
 - public API imports succeed;
 - release evidence is generated for the exact commit.
 
-For 1.2.0, the validator writes versioned package manifests and a release-candidate report under:
+For 1.3.0, the validator writes versioned package manifests and a release-candidate report under:
 
 ```text
-docs/architecture/package-release-artifacts-1.2.0.json
-docs/architecture/package-public-api-1.2.0.csv
-docs/architecture/package-release-test-layers-1.2.0.json
-docs/results/release-candidate-1.2.0/
+docs/architecture/package-release-artifacts-1.3.0.json
+docs/architecture/package-public-api-1.3.0.csv
+docs/architecture/package-release-test-layers-1.3.0.json
+docs/results/release-candidate-1.3.0/
 ```
 
 Generated evidence must not be copied from an older release line.
@@ -114,17 +126,17 @@ After the release pull request is merged:
 
 1. return to a clean, synchronized `main` checkout;
 2. rerun the complete release gate against the merged commit;
-3. confirm the built metadata declares the root `VERSION` for all twelve distributions;
-4. publish the distributions in dependency order;
+3. confirm the built metadata declares the root `VERSION` for every publishable distribution;
+4. publish the implementation distributions in manifest-derived dependency order, then publish the `zeromodel` umbrella last;
 5. install the published packages into a clean environment;
 6. run the public API and bounded smoke checks;
 7. create an annotated `v<VERSION>` tag at the exact validated commit;
 8. create the GitHub release and attach the built artifacts and release evidence.
 
-Recommended dependency-aware publication order:
+Recommended dependency-aware publication shape:
 
 ```text
-zeromodel
+zeromodel-core
     ↓
 zeromodel-analysis
 zeromodel-observation
@@ -138,9 +150,16 @@ zeromodel-navigation
     ↓
 zeromodel-observer
 zeromodel-sqlalchemy
+zeromodel-search
+zeromodel-critic
+    ↓
+zeromodel
 ```
 
-Parallel publication inside the same level is acceptable only when the package index and automation handle dependency availability reliably.
+Generate the exact order from `package-boundaries.toml`. Parallel publication
+inside the same level is acceptable only when the package index and automation
+handle dependency availability reliably. The umbrella must publish last because
+it pins every supported runtime distribution.
 
 ## Recovery and repeatability
 
@@ -179,4 +198,4 @@ Historical records remain evidence for their original release lines and should n
 - the unpublished 1.0.13 package-split evidence under `docs/architecture/`
 - [`docs/releases/1.0.12.md`](releases/1.0.12.md)
 
-The old single-package `scripts/create-release.ps1` workflow is historical and must not be used to publish the coordinated twelve-package system unless it is explicitly rewritten and validated for that topology.
+The old single-package `scripts/create-release.ps1` workflow is historical and must not be used to publish the coordinated package system unless it is explicitly rewritten and validated for that topology.

@@ -254,7 +254,7 @@ from .state_claims import (  # noqa: F401
     build_state_claim_set,
 )
 
-PERCEPTION_PACKAGE_VERSION = "1.2.0"
+PERCEPTION_PACKAGE_VERSION = "1.3.0"
 PERCEPTION_STAGE = "P18H"
 
 __all__ = [

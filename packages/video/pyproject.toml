@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeromodel-video"
-version = "1.2.0"
+version = "1.3.0"
 description = "ZeroModel video package"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,8 +31,8 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.23",
-    "zeromodel==1.2.0",
-    "zeromodel-observation==1.2.0",
+    "zeromodel-core==1.3.0",
+    "zeromodel-observation==1.3.0",
 ]
 
 [project.urls]

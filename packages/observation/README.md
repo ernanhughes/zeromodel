@@ -2,12 +2,12 @@
 
 `zeromodel-observation` defines provider-neutral observation contracts for ZeroModel. It is the boundary between raw observations and deterministic policy addressing, exposed through `zeromodel.observation`.
 
-The package depends on the validated 1.2.0 core distribution, `zeromodel==1.2.0`, and uses NumPy for immutable image-array contracts. It does not implement perception, visual recognition, video policy behavior, model inference, or persistence.
+The package depends on the validated 1.3.0 core distribution, `zeromodel-core==1.3.0`, and uses NumPy for immutable image-array contracts. It does not implement perception, visual recognition, video policy behavior, model inference, or persistence.
 
 ## Install
 
 ```powershell
-python -m pip install zeromodel==1.2.0 zeromodel-observation==1.2.0
+python -m pip install zeromodel-observation==1.3.0
 ```
 
 ## Provider-Neutral Contracts

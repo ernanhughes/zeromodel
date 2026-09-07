@@ -19,7 +19,6 @@ on:
       - "CHANGELOG.md"
       - "docs/release.md"
       - ".github/workflows/python.yml"
-      - ".github/workflows/publish-testpypi.yml"
   push:
     branches:
       - main
@@ -40,7 +39,6 @@ on:
       - "CHANGELOG.md"
       - "docs/release.md"
       - ".github/workflows/python.yml"
-      - ".github/workflows/publish-testpypi.yml"
   workflow_dispatch:
 
 permissions:
@@ -171,7 +169,7 @@ jobs:
             build/lua/arcade_policy.lua
 
   package-build:
-    name: build coordinated distribution artifacts
+    name: validate coordinated distribution artifacts
     runs-on: ubuntu-latest
 
     steps:

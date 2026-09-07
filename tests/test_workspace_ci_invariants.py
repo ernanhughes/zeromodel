@@ -62,9 +62,9 @@ def test_root_pyproject_is_a_non_publishable_workspace() -> None:
     assert "[build-system]" not in text
 
 
-def test_package_integration_workflow_installs_from_requirements_dev() -> None:
-    text = (WORKFLOWS_DIR / "package-integration.yml").read_text(encoding="utf-8")
-    assert "pip install -r requirements-dev.txt" in text
+def test_python_workflow_installs_from_requirements_dev() -> None:
+    text = (WORKFLOWS_DIR / "python.yml").read_text(encoding="utf-8")
+    assert "-r requirements-dev.txt" in text
 
 
 def test_python_workflow_trigger_paths_cover_packages_and_requirements_dev() -> None:
@@ -74,13 +74,17 @@ def test_python_workflow_trigger_paths_cover_packages_and_requirements_dev() -> 
     assert "zeromodel/**" not in text
 
 
-def test_package_integration_workflow_trigger_paths_cover_tests_and_requirements_dev() -> (
-    None
-):
-    text = (WORKFLOWS_DIR / "package-integration.yml").read_text(encoding="utf-8")
-    for required in ("tests/**", "requirements-dev.txt", "pyproject.toml"):
+def test_python_workflow_trigger_paths_cover_ci_authorities() -> None:
+    text = (WORKFLOWS_DIR / "python.yml").read_text(encoding="utf-8")
+    for required in (
+        "tests/**",
+        "scripts/**",
+        "requirements-dev.txt",
+        "pyproject.toml",
+        "package-boundaries.toml",
+    ):
         assert required in text, (
-            f"package-integration.yml trigger paths missing {required}"
+            f"python.yml trigger paths missing {required}"
         )
 
 
@@ -106,7 +110,5 @@ def test_validate_release_candidate_has_a_python_3_10_toml_fallback() -> None:
     assert "import tomli as tomllib" in effective_source
 
 
-def test_publish_testpypi_workflow_does_not_claim_to_publish() -> None:
-    text = (WORKFLOWS_DIR / "publish-testpypi.yml").read_text(encoding="utf-8")
-    assert "pypa/gh-action-pypi-publish" not in text
-    assert "id-token: write" not in text
+def test_no_publish_dry_run_workflow_is_active() -> None:
+    assert not (WORKFLOWS_DIR / "publish-testpypi.yml").exists()

@@ -12,24 +12,6 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 BOUNDARIES_PATH = REPO_ROOT / "package-boundaries.toml"
 WORKFLOW_DIR = REPO_ROOT / ".github" / "workflows"
 
-PACKAGE_WORKFLOWS = {
-    "analysis": "analysis-package.yml",
-    "artifacts": "artifacts-package.yml",
-    "core": "core-package.yml",
-    "meta": "meta-package.yml",
-    "navigation": "navigation-package.yml",
-    "search": "search-package.yml",
-    "observation": "observation-package.yml",
-    "observer": "observer-package.yml",
-    "perception": "perception-package.yml",
-    "sqlalchemy": "sqlalchemy-package.yml",
-    "trust": "trust-package.yml",
-    "video": "video-package.yml",
-    "critic": "critic-package.yml",
-    "vision": "vision-package.yml",
-}
-
-
 def _publishable_packages(boundaries: dict[str, object]) -> set[str]:
     packages = boundaries["packages"]
     assert isinstance(packages, dict)
@@ -46,46 +28,21 @@ def _assert_workflow_coverage(
     workflow_dir: Path = WORKFLOW_DIR,
 ) -> None:
     packages = _publishable_packages(boundaries)
-    missing_mapping = packages - set(PACKAGE_WORKFLOWS)
-    assert not missing_mapping, (
-        "publishable packages lack declared workflow coverage mapping: "
-        f"{sorted(missing_mapping)}"
-    )
-    missing_files = {
-        package
-        for package in packages
-        if not (workflow_dir / PACKAGE_WORKFLOWS[package]).is_file()
-    }
-    assert not missing_files, (
-        f"publishable packages lack workflow files: {sorted(missing_files)}"
-    )
+    assert packages, "package-boundaries.toml must declare publishable packages"
+
+    python_workflow = (workflow_dir / "python.yml").read_text(encoding="utf-8")
+    assert "packages/**" in python_workflow
+    assert "package-boundaries.toml" in python_workflow
+    assert "python scripts/validate_packaging_contract.py" in python_workflow
 
 
-def test_every_publishable_package_has_workflow_coverage() -> None:
+def test_every_publishable_package_is_covered_by_manifest_driven_ci() -> None:
     with BOUNDARIES_PATH.open("rb") as handle:
         boundaries = tomllib.load(handle)
 
     _assert_workflow_coverage(boundaries=boundaries)
 
 
-def test_synthetic_publishable_package_without_workflow_fails() -> None:
-    with BOUNDARIES_PATH.open("rb") as handle:
-        boundaries = tomllib.load(handle)
-    synthetic = dict(boundaries)
-    packages = dict(synthetic["packages"])
-    packages["synthetic"] = {
-        "distribution": "zeromodel-synthetic",
-        "namespace": "zeromodel.synthetic",
-        "source_root": "packages/synthetic/src",
-        "depends_on": [],
-        "publishable": True,
-        "owned_prefixes": ["zeromodel.synthetic"],
-    }
-    synthetic["packages"] = packages
-
-    try:
-        _assert_workflow_coverage(boundaries=synthetic)
-    except AssertionError as exc:
-        assert "synthetic" in str(exc)
-    else:
-        raise AssertionError("synthetic package without workflow coverage passed")
+def test_active_workflows_do_not_reintroduce_per_package_ci() -> None:
+    package_workflows = sorted(WORKFLOW_DIR.glob("*-package.yml"))
+    assert package_workflows == []

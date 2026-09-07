@@ -229,13 +229,42 @@ For a fresh environment, bootstrap and verify in one command:
 python scripts/bootstrap_dev_environment.py --run-fast-tests
 ```
 
-Run the heavier coordinated release gate only when preparing a release candidate:
+Validate the packaging contract before changing package metadata, dependency
+pins, or install behavior:
+
+```bash
+python scripts/validate_packaging_contract.py
+```
+
+The packaging contract builds the coordinated wheelhouse, verifies package
+metadata, installs the public `zeromodel` umbrella in a clean environment,
+checks core-only and component installs, and exercises the supported 1.2.0 to
+1.3.0 upgrade path.
+
+Run the heavier coordinated release gate only when preparing release evidence:
 
 ```bash
 python scripts/validate_release_candidate.py
 ```
 
 See [`docs/release.md`](docs/release.md).
+
+---
+
+## Continuous integration
+
+Active GitHub Actions are intentionally consolidated:
+
+- `python.yml` runs repository quality, the complete bounded fast suite across
+  Python 3.10, 3.11, and 3.12, the Lua edge fixture, and the packaging contract.
+- `integration.yml` is manually dispatched for integration-tier validation.
+- `demos.yml` and `pages.yml` build demonstration and website artifacts.
+- `claims-audit.yml` guards claim and evidence updates.
+- `visual-address-benchmark.yml` remains a manually dispatched research smoke.
+
+Package-specific workflows were removed. Package coverage is now derived from
+[`package-boundaries.toml`](package-boundaries.toml) and enforced through the
+consolidated Python workflow.
 
 ---
 

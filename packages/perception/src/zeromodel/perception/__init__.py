@@ -251,6 +251,7 @@ from .transition_verification import (  # noqa: F401
 )
 from .world_action import (  # noqa: F401
     COUPLED_ACTION_PREDICTION_VERSION,
+    COUPLED_LOOP_INPUTS_VERSION,
     DECLARATION_SCOPE_VERSION,
     EXPECTED_CONFORMANCE_FINDING_VERSION,
     EXPECTED_CONFORMANCE_STATUSES,
@@ -259,6 +260,7 @@ from .world_action import (  # noqa: F401
     WORLD_ACTION_CANDIDATE_VERSION,
     WORLD_ACTION_POLICY_VERSION,
     CoupledActionPredictionDTO,
+    CoupledLoopInputsDTO,
     DeclarationScopeDTO,
     ExpectedConformanceDTO,
     ExpectedConformanceFindingDTO,
@@ -267,6 +269,22 @@ from .world_action import (  # noqa: F401
     WorldActionPolicyDTO,
     check_expected_conformance,
     predict_action_with_future_memory,
+)
+from .return_policy import (  # noqa: F401
+    RETURN_DECIDED_BY,
+    RETURN_DECISION_VERSION,
+    RETURN_DISPOSITIONS,
+    RETURN_OPERATIONS,
+    RETURN_POLICY_VERSION,
+    RETURN_TRAJECTORY_VERSION,
+    RETURN_TRIGGERS,
+    PerceptionReturnPolicyError,
+    ReturnDecisionDTO,
+    ReturnTrajectoryDTO,
+    classify_return_trigger,
+    compile_return_policy,
+    decide_with_return,
+    return_situation_row_id,
 )
 from .expected_transition import (  # noqa: F401
     EXPECTED_TRANSITION_FIELD_VERSION,

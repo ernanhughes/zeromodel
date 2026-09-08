@@ -32,6 +32,10 @@ from .memory_authority import (
     assess_memory_authority,
 )
 from .representation import SourceVPMDTO
+from .shared_relevance import (
+    SharedFieldRelevanceDTO,
+    predict_relevance_weighted_action,
+)
 from .transition_conformance import (
     TRANSITION_CONFORMANCE_STATUSES,
     RelationAnnotationDTO,
@@ -45,6 +49,7 @@ WORLD_ACTION_POLICY_VERSION: Final = "perception-world-action-policy/1"
 WORLD_ACTION_CANDIDATE_VERSION: Final = "perception-world-action-candidate/1"
 COUPLED_ACTION_PREDICTION_VERSION: Final = "perception-coupled-action-prediction/1"
 DECLARATION_SCOPE_VERSION: Final = "perception-declaration-scope/1"
+COUPLED_LOOP_INPUTS_VERSION: Final = "perception-coupled-loop-inputs/1"
 EXPECTED_CONFORMANCE_VERSION: Final = "perception-expected-conformance/1"
 EXPECTED_CONFORMANCE_FINDING_VERSION: Final = (
     "perception-expected-conformance-finding/1"
@@ -184,6 +189,45 @@ class DeclarationScopeDTO:
             if action == action_label:
                 return expectations
         return ()
+
+
+@dataclass(frozen=True)
+class CoupledLoopInputsDTO:
+    """One Observer loop configuration: memory, schema, and declared context.
+
+    Bundles everything one coupled decision attempt needs for one
+    observation profile, so the Return driver can rerun the complete loop
+    under an alternative profile without reassembling arguments.
+    """
+
+    profile_id: str
+    predictor_model: BaselineNearestNeighborModelDTO
+    transition_model: TransitionModelDTO
+    field_schema: VPMFieldSchemaDTO
+    declarations: DeclarationScopeDTO
+    policy: WorldActionPolicyDTO
+    relevance: SharedFieldRelevanceDTO | None = None
+    version: str = COUPLED_LOOP_INPUTS_VERSION
+
+    def __post_init__(self) -> None:
+        if not self.profile_id:
+            raise PerceptionWorldActionError("loop profile id must be non-empty")
+        if not self.predictor_model.model_id or not self.transition_model.model_id:
+            raise PerceptionWorldActionError("loop model identities must be non-empty")
+        if self.version != COUPLED_LOOP_INPUTS_VERSION:
+            raise PerceptionWorldActionError("unsupported coupled loop inputs version")
+
+    def weights_dict(self) -> dict[str, float] | None:
+        if self.relevance is None:
+            return None
+        return dict(self.relevance.weights)
+
+    def override_for(self, source: SourceVPMDTO) -> BaselinePredictionDTO | None:
+        if self.relevance is None:
+            return None
+        return predict_relevance_weighted_action(
+            self.predictor_model, source, self.field_schema, self.relevance
+        )
 
 
 @dataclass(frozen=True)

@@ -66,6 +66,22 @@ def test_future_memory_is_exposed_from_package_root() -> None:
         "record_verification_event",
         "DECLARATION_SCOPE_VERSION",
         "DeclarationScopeDTO",
+        "CoupledLoopInputsDTO",
+        "COUPLED_LOOP_INPUTS_VERSION",
+        "RETURN_POLICY_VERSION",
+        "RETURN_DECISION_VERSION",
+        "RETURN_TRAJECTORY_VERSION",
+        "RETURN_OPERATIONS",
+        "RETURN_TRIGGERS",
+        "RETURN_DECIDED_BY",
+        "RETURN_DISPOSITIONS",
+        "PerceptionReturnPolicyError",
+        "ReturnDecisionDTO",
+        "ReturnTrajectoryDTO",
+        "classify_return_trigger",
+        "compile_return_policy",
+        "decide_with_return",
+        "return_situation_row_id",
     }
 
     assert expected <= set(perception.__all__)

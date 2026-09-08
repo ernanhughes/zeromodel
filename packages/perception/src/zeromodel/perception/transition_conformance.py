@@ -385,69 +385,98 @@ def _aggregate(
     return absolute, signed, changed / total, changed
 
 
+def _decide_transition_status(
+    expectation: TransitionExpectationDTO,
+    *,
+    mean_absolute: float,
+    mean_signed: float,
+    changed_fraction: float,
+    has_changes: bool,
+) -> tuple[str, str]:
+    """Pure P18B decision tree over aggregate change measurements.
+
+    Shared by observed-evidence classification and expected-future
+    conformance checks so both apply identical declaration semantics.
+    """
+
+    if expectation.expected_change == "stable":
+        if (
+            mean_absolute > expectation.maximum_mean_absolute_change
+            or changed_fraction > expectation.maximum_changed_fraction
+        ):
+            return (
+                "unexpected_change",
+                "declared stable target exceeded its change tolerance",
+            )
+        return "confirmed", "declared stable target remained within tolerance"
+    if not has_changes:
+        return (
+            "missing_expected_change",
+            "declared changing target had no P18A threshold crossings",
+        )
+    if (
+        mean_absolute < expectation.minimum_mean_absolute_change
+        or changed_fraction < expectation.minimum_changed_fraction
+    ):
+        return (
+            "insufficient_change",
+            "observed transition did not reach the declared minimum",
+        )
+    if expectation.expected_change in {"increase", "decrease"}:
+        required = expectation.minimum_signed_change_magnitude
+        wrong = (
+            mean_signed < -required
+            if expectation.expected_change == "increase"
+            else mean_signed > required
+        )
+        inconclusive = (
+            mean_signed <= required
+            if expectation.expected_change == "increase"
+            else mean_signed >= -required
+        )
+        if wrong:
+            return (
+                "wrong_change_direction",
+                "observed signed change was opposite the declaration",
+            )
+        if inconclusive:
+            return (
+                "inconclusive",
+                "absolute change was present but net direction was too small",
+            )
+        if (
+            mean_absolute > expectation.maximum_mean_absolute_change
+            or changed_fraction > expectation.maximum_changed_fraction
+        ):
+            return (
+                "excessive_change",
+                "observed directional change exceeded the declared maximum",
+            )
+        return (
+            "confirmed",
+            f"observed transition confirmed the declared {expectation.expected_change}",
+        )
+    if (
+        mean_absolute > expectation.maximum_mean_absolute_change
+        or changed_fraction > expectation.maximum_changed_fraction
+    ):
+        return "excessive_change", "observed change exceeded the declared maximum"
+    return "confirmed", "observed transition confirmed the declared change"
+
+
 def _classify(
     expectation: TransitionExpectationDTO,
     fields: tuple[TransitionFieldEvidenceDTO, ...],
 ) -> TransitionConformanceFindingDTO:
     absolute, signed, fraction, changed = _aggregate(fields)
     field_ids = tuple(sorted(item.field_id for item in fields))
-
-    if expectation.expected_change == "stable":
-        if (
-            absolute > expectation.maximum_mean_absolute_change
-            or fraction > expectation.maximum_changed_fraction
-        ):
-            status = "unexpected_change"
-            detail = "declared stable target exceeded its change tolerance"
-        else:
-            status = "confirmed"
-            detail = "declared stable target remained within tolerance"
-    elif changed == 0:
-        status = "missing_expected_change"
-        detail = "declared changing target had no P18A threshold crossings"
-    elif (
-        absolute < expectation.minimum_mean_absolute_change
-        or fraction < expectation.minimum_changed_fraction
-    ):
-        status = "insufficient_change"
-        detail = "observed transition did not reach the declared minimum"
-    elif expectation.expected_change in {"increase", "decrease"}:
-        required = expectation.minimum_signed_change_magnitude
-        wrong = (
-            signed < -required
-            if expectation.expected_change == "increase"
-            else signed > required
-        )
-        inconclusive = (
-            signed <= required
-            if expectation.expected_change == "increase"
-            else signed >= -required
-        )
-        if wrong:
-            status = "wrong_change_direction"
-            detail = "observed signed change was opposite the declaration"
-        elif inconclusive:
-            status = "inconclusive"
-            detail = "absolute change was present but net direction was too small"
-        elif (
-            absolute > expectation.maximum_mean_absolute_change
-            or fraction > expectation.maximum_changed_fraction
-        ):
-            status = "excessive_change"
-            detail = "observed directional change exceeded the declared maximum"
-        else:
-            status = "confirmed"
-            detail = f"observed transition confirmed the declared {expectation.expected_change}"
-    elif (
-        absolute > expectation.maximum_mean_absolute_change
-        or fraction > expectation.maximum_changed_fraction
-    ):
-        status = "excessive_change"
-        detail = "observed change exceeded the declared maximum"
-    else:
-        status = "confirmed"
-        detail = "observed transition confirmed the declared change"
-
+    status, detail = _decide_transition_status(
+        expectation,
+        mean_absolute=absolute,
+        mean_signed=signed,
+        changed_fraction=fraction,
+        has_changes=changed > 0,
+    )
     return _finding(
         status=status,
         expectation=expectation,

@@ -223,6 +223,69 @@ from .transition_analysis import (  # noqa: F401
     VisualTransitionAnalysisDTO,
     VisualTransitionReaderTraceDTO,
 )
+from .transition_model import (  # noqa: F401
+    COMPILED_TRANSITION_MODEL_VERSION,
+    EMPIRICAL_TRANSITION_MODEL_VERSION,
+    TRANSITION_MODEL_CONFIG_VERSION,
+    TRANSITION_TRAINING_EXAMPLE_VERSION,
+    CompiledTransitionModelDTO,
+    EmpiricalTransitionModelDTO,
+    PerceptionTransitionModelError,
+    TransitionModelConfigDTO,
+    TransitionTrainingExampleDTO,
+    fit_action_conditioned_transition_model,
+    fit_compiled_transition_model,
+)
+from .transition_projection import (  # noqa: F401
+    TRANSITION_PROJECTION_DISTANCE_SEMANTICS,
+    TRANSITION_PROJECTION_WEIGHTED_DISTANCE_SEMANTICS,
+    TransitionModelDTO,
+    project_expected_transition,
+)
+from .transition_verification import (  # noqa: F401
+    FUTURE_TRANSITION_VERIFICATION_STATUSES,
+    FUTURE_TRANSITION_VERIFICATION_VERSION,
+    FutureTransitionVerificationDTO,
+    PerceptionTransitionVerificationError,
+    verify_expected_transition,
+)
+from .world_action import (  # noqa: F401
+    COUPLED_ACTION_PREDICTION_VERSION,
+    EXPECTED_CONFORMANCE_FINDING_VERSION,
+    EXPECTED_CONFORMANCE_STATUSES,
+    EXPECTED_CONFORMANCE_VERSION,
+    WORLD_ACTION_CANDIDATE_STATUSES,
+    WORLD_ACTION_CANDIDATE_VERSION,
+    WORLD_ACTION_POLICY_VERSION,
+    CoupledActionPredictionDTO,
+    ExpectedConformanceDTO,
+    ExpectedConformanceFindingDTO,
+    PerceptionWorldActionError,
+    WorldActionCandidateDTO,
+    WorldActionPolicyDTO,
+    check_expected_conformance,
+    predict_action_with_future_memory,
+)
+from .expected_transition import (  # noqa: F401
+    EXPECTED_TRANSITION_FIELD_VERSION,
+    EXPECTED_TRANSITION_RENDER_SEMANTICS,
+    EXPECTED_TRANSITION_STATUSES,
+    EXPECTED_TRANSITION_VPM_VERSION,
+    ExpectedTransitionFieldDTO,
+    ExpectedTransitionVPMDTO,
+    PerceptionExpectedTransitionError,
+    render_expected_transition_png,
+)
+from .shared_relevance import (  # noqa: F401
+    SHARED_RELEVANCE_DISTANCE_SEMANTICS,
+    SHARED_RELEVANCE_FUTURE_SEMANTICS,
+    SHARED_RELEVANCE_PREDICTION_VERSION,
+    SHARED_RELEVANCE_VERSION,
+    PerceptionSharedRelevanceError,
+    SharedFieldRelevanceDTO,
+    fit_shared_field_relevance,
+    predict_relevance_weighted_action,
+)
 from .state_claims import (  # noqa: F401
     EVIDENCE_REQUIREMENT_VERSION,
     EVIDENCE_COMPILATION_REPORT_VERSION,

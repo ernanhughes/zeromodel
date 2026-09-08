@@ -51,6 +51,21 @@ def test_future_memory_is_exposed_from_package_root() -> None:
         "predict_relevance_weighted_action",
         "SHARED_RELEVANCE_VERSION",
         "SHARED_RELEVANCE_FUTURE_SEMANTICS",
+        "MEMORY_AUTHORITY_POLICY_VERSION",
+        "FUTURE_MEMORY_VALIDITY_VERSION",
+        "MEMORY_AUTHORITY_ASSESSMENT_VERSION",
+        "MEMORY_AUTHORITY_CONTEXT_VERSION",
+        "MEMORY_AUTHORITIES",
+        "VALIDITY_OUTCOME_TOKENS",
+        "MemoryAuthorityPolicyDTO",
+        "FutureMemoryValidityDTO",
+        "MemoryAuthorityAssessmentDTO",
+        "MemoryAuthorityContextDTO",
+        "PerceptionMemoryAuthorityError",
+        "assess_memory_authority",
+        "record_verification_event",
+        "DECLARATION_SCOPE_VERSION",
+        "DeclarationScopeDTO",
     }
 
     assert expected <= set(perception.__all__)

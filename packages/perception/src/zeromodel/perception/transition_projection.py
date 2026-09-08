@@ -383,14 +383,21 @@ def _project_empirical(
     neighbor_weights = 1.0 / (1.0 + selected_distances * selected_distances)
     moments = _aggregate_neighbor_moments(ordered, neighbor_weights, field_ids)
     spread = float(model.action_spreads[index])
+    typical = float(model.action_typical_nn_distances[index])
+    # Local support scale: typical same-action neighbour spacing describes
+    # possibly multimodal support where a global centroid spread does not.
+    local_scale = typical if typical > 0.0 else spread
     nearest = float(selected_distances[0])
     support_factor = min(1.0, count / max(1, 2 * min_support))
-    proximity = 1.0 / (1.0 + nearest / (spread + 1e-12)) if spread > 0.0 else 1.0
+    if local_scale > 0.0:
+        proximity = 1.0 / (1.0 + nearest / local_scale)
+    else:
+        proximity = 1.0
     ambiguity = float(np.median(list(moments.signed_dispersion.values())))
     status, confidence = _resolve_status(
         support_count=count,
         min_support=min_support,
-        spread=spread,
+        spread=local_scale,
         nearest=nearest,
         ood_spread_factor=model.config.ood_spread_factor,
         ambiguity_value=ambiguity,
@@ -461,33 +468,43 @@ def _project_compiled(
     moments, residual_median = _ridge_moments(
         model, index, context.before_means, field_ids, model.config.change_epsilon
     )
-    centroid = np.asarray(model.action_centroids[index], dtype=np.float64)
+    # Local support: distance to the nearest same-action training example,
+    # not to the global centroid, so multimodal support is described by the
+    # support itself rather than its middle.
+    subset = [
+        item for item in model.examples if item.action_label == context.action_label
+    ]
     if weights is None:
-        query_flat = _pixel_array(
-            query_pixels, model.width, model.height, model.channels
-        ).reshape(-1)
-        nearest = float(np.mean(np.abs(query_flat - centroid)))
+        distances = [
+            _pixel_distance(query_pixels, item.before_pixels) for item in subset
+        ]
     else:
-        centroid_pixels = (
-            np.clip(np.round(centroid * 255.0), 0, 255).astype(np.uint8).tobytes()
-        )
-        nearest = _field_weighted_pixel_distance(
-            query_pixels,
-            centroid_pixels,
-            schema,
-            model.width,
-            model.height,
-            model.channels,
-            weights,
-        )
+        distances = [
+            _field_weighted_pixel_distance(
+                query_pixels,
+                item.before_pixels,
+                schema,
+                model.width,
+                model.height,
+                model.channels,
+                weights,
+            )
+            for item in subset
+        ]
+    nearest = min(distances)
     spread = float(model.action_spreads[index])
+    typical = float(model.action_typical_nn_distances[index])
+    local_scale = typical if typical > 0.0 else spread
     support_factor = min(1.0, count / max(1, 2 * min_support))
-    proximity = 1.0 / (1.0 + nearest / (spread + 1e-12)) if spread > 0.0 else 1.0
+    if local_scale > 0.0:
+        proximity = 1.0 / (1.0 + nearest / local_scale)
+    else:
+        proximity = 1.0
     fit_quality = 1.0 / (1.0 + residual_median)
     status, confidence = _resolve_status(
         support_count=count,
         min_support=min_support,
-        spread=spread,
+        spread=local_scale,
         nearest=nearest,
         ood_spread_factor=model.config.ood_spread_factor,
         ambiguity_value=residual_median,

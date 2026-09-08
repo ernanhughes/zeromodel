@@ -102,6 +102,20 @@ class TransitionModelConfigDTO:
         }
 
 
+def _round12(value: float) -> float:
+    return round(float(value), 12)
+
+
+def _rounded(values: object) -> object:
+    if isinstance(values, bool):
+        return values
+    if isinstance(values, (int, float)):
+        return _round12(float(values))
+    if isinstance(values, (tuple, list)):
+        return [_rounded(value) for value in values]
+    return values
+
+
 @dataclass(frozen=True)
 class TransitionTrainingExampleDTO:
     """One eligible historical interaction with its P18A evidence identity.
@@ -178,6 +192,7 @@ class EmpiricalTransitionModelDTO:
     action_counts: tuple[int, ...]
     action_centroids: tuple[tuple[float, ...], ...]
     action_spreads: tuple[float, ...]
+    action_typical_nn_distances: tuple[float, ...]
     examples: tuple[TransitionTrainingExampleDTO, ...]
     config: TransitionModelConfigDTO
     training_split: str
@@ -185,6 +200,33 @@ class EmpiricalTransitionModelDTO:
 
     def __post_init__(self) -> None:
         _validate_model_identities(self, EMPIRICAL_TRANSITION_MODEL_VERSION)
+
+    def canonical_payload(self) -> Mapping[str, object]:
+        return {
+            "action_centroids": _rounded(self.action_centroids),
+            "action_counts": list(self.action_counts),
+            "action_schema_id": self.action_schema_id,
+            "action_spreads": _rounded(self.action_spreads),
+            "action_typical_nn_distances": _rounded(self.action_typical_nn_distances),
+            "change_threshold": self.change_threshold,
+            "config": self.config.canonical_payload(),
+            "dataset_id": self.dataset_id,
+            "examples": [
+                {
+                    "action_label": item.action_label,
+                    "before_pixel_digest": _digest(item.before_pixels),
+                    "interaction_id": item.interaction_id,
+                    "transition_evidence_id": item.transition_evidence_id,
+                }
+                for item in self.examples
+            ],
+            "field_schema_id": self.field_schema_id,
+            "kind": "empirical",
+            "shape": [self.width, self.height, self.channels],
+            "source_encoder_spec_id": self.source_encoder_spec_id,
+            "training_split": self.training_split,
+            "version": self.version,
+        }
 
 
 @dataclass(frozen=True)
@@ -204,6 +246,7 @@ class CompiledTransitionModelDTO:
     action_counts: tuple[int, ...]
     action_centroids: tuple[tuple[float, ...], ...]
     action_spreads: tuple[float, ...]
+    action_typical_nn_distances: tuple[float, ...]
     action_has_linear_fit: tuple[bool, ...]
     action_coefficients: tuple[tuple[tuple[float, ...], ...], ...]
     action_residual_std: tuple[tuple[float, ...], ...]
@@ -229,6 +272,37 @@ class CompiledTransitionModelDTO:
                 "compiled per-action payloads must align with action labels"
             )
 
+    def canonical_payload(self) -> Mapping[str, object]:
+        return {
+            "action_centroids": _rounded(self.action_centroids),
+            "action_coefficients": _rounded(self.action_coefficients),
+            "action_counts": list(self.action_counts),
+            "action_has_linear_fit": list(self.action_has_linear_fit),
+            "action_residual_std": _rounded(self.action_residual_std),
+            "action_schema_id": self.action_schema_id,
+            "action_spreads": _rounded(self.action_spreads),
+            "action_typical_nn_distances": _rounded(self.action_typical_nn_distances),
+            "change_threshold": self.change_threshold,
+            "config": self.config.canonical_payload(),
+            "dataset_id": self.dataset_id,
+            "examples": [
+                {
+                    "action_label": item.action_label,
+                    "before_pixel_digest": _digest(item.before_pixels),
+                    "interaction_id": item.interaction_id,
+                    "transition_evidence_id": item.transition_evidence_id,
+                }
+                for item in self.examples
+            ],
+            "field_schema_id": self.field_schema_id,
+            "kind": "ridge",
+            "ridge_alpha": self.ridge_alpha,
+            "shape": [self.width, self.height, self.channels],
+            "source_encoder_spec_id": self.source_encoder_spec_id,
+            "training_split": self.training_split,
+            "version": self.version,
+        }
+
 
 def _validate_model_identities(
     model: EmpiricalTransitionModelDTO | CompiledTransitionModelDTO,
@@ -247,12 +321,18 @@ def _validate_model_identities(
         len(model.action_counts) == len(model.action_labels)
         and len(model.action_centroids) == len(model.action_labels)
         and len(model.action_spreads) == len(model.action_labels)
+        and len(model.action_typical_nn_distances) == len(model.action_labels)
     ):
         raise PerceptionTransitionModelError(
             "per-action statistics must align with action labels"
         )
     if model.version != version:
         raise PerceptionTransitionModelError("unsupported transition model version")
+    expected_id = _digest(_canonical_json(model.canonical_payload()))
+    if model.model_id != expected_id:
+        raise PerceptionTransitionModelError(
+            "model identity does not bind the compiled runtime payload"
+        )
 
 
 def _source_pixels(source: SourceVPMDTO) -> bytes:
@@ -392,10 +472,13 @@ def _per_action_stats(
     width: int,
     height: int,
     channels: int,
-) -> tuple[tuple[int, ...], tuple[tuple[float, ...], ...], tuple[float, ...]]:
+) -> tuple[
+    tuple[int, ...], tuple[tuple[float, ...], ...], tuple[float, ...], tuple[float, ...]
+]:
     counts: list[int] = []
     centroids: list[tuple[float, ...]] = []
     spreads: list[float] = []
+    typical_nn: list[float] = []
     for label in labels:
         rows = np.stack(
             [
@@ -412,7 +495,18 @@ def _per_action_stats(
         counts.append(int(rows.shape[0]))
         centroids.append(tuple(float(value) for value in centroid))
         spreads.append(spread)
-    return tuple(counts), tuple(centroids), tuple(spreads)
+        if rows.shape[0] < 2:
+            typical_nn.append(0.0)
+            continue
+        nearest: list[float] = []
+        for row in range(rows.shape[0]):
+            others = np.delete(rows, row, axis=0)
+            nearest.append(float(np.mean(np.abs(others - rows[row][None, :]))))
+        # Typical local spacing: mean distance to the nearest same-action
+        # neighbour. Small for dense (possibly multimodal) support, large
+        # for sparse support — the local-density OOD scale.
+        typical_nn.append(float(sum(nearest) / len(nearest)))
+    return tuple(counts), tuple(centroids), tuple(spreads), tuple(typical_nn)
 
 
 def _model_payload(
@@ -434,6 +528,7 @@ def _model_payload(
         "examples": [
             {
                 "action_label": item.action_label,
+                "before_pixel_digest": _digest(item.before_pixels),
                 "interaction_id": item.interaction_id,
                 "transition_evidence_id": item.transition_evidence_id,
             }
@@ -468,7 +563,7 @@ def fit_action_conditioned_transition_model(
     )
     width, height, channels = shape
     labels = tuple(sorted({item.action_label for item in examples}))
-    counts, centroids, spreads = _per_action_stats(
+    counts, centroids, spreads, typical_nn = _per_action_stats(
         examples, labels, width, height, channels
     )
     return EmpiricalTransitionModelDTO(
@@ -487,6 +582,9 @@ def fit_action_conditioned_transition_model(
                         "shape": list(shape),
                         "source_encoder_spec_id": encoder_spec_id,
                         "version": EMPIRICAL_TRANSITION_MODEL_VERSION,
+                        "action_centroids": _rounded(centroids),
+                        "action_spreads": _rounded(spreads),
+                        "action_typical_nn_distances": _rounded(typical_nn),
                     },
                 )
             )
@@ -503,6 +601,7 @@ def fit_action_conditioned_transition_model(
         action_counts=counts,
         action_centroids=centroids,
         action_spreads=spreads,
+        action_typical_nn_distances=typical_nn,
         examples=tuple(examples),
         config=resolved,
         training_split=training_split,
@@ -591,7 +690,7 @@ def fit_compiled_transition_model(
     field_ids = tuple(field.field_id for field in field_schema.fields)
     count_fields = len(field_ids)
     labels = tuple(sorted({item.action_label for item in examples}))
-    counts, centroids, spreads = _per_action_stats(
+    counts, centroids, spreads, typical_nn = _per_action_stats(
         examples, labels, width, height, channels
     )
     coefficients: list[tuple[tuple[float, ...], ...]] = []
@@ -626,10 +725,16 @@ def fit_compiled_transition_model(
                     counts,
                     {
                         "kind": "ridge",
-                        "ridge_alpha": ridge_alpha,
+                        "ridge_alpha": float(ridge_alpha),
                         "shape": list(shape),
                         "source_encoder_spec_id": encoder_spec_id,
                         "version": COMPILED_TRANSITION_MODEL_VERSION,
+                        "action_centroids": _rounded(centroids),
+                        "action_spreads": _rounded(spreads),
+                        "action_typical_nn_distances": _rounded(typical_nn),
+                        "action_has_linear_fit": list(linear_flags),
+                        "action_coefficients": _rounded(coefficients),
+                        "action_residual_std": _rounded(residuals),
                     },
                 )
             )
@@ -646,6 +751,7 @@ def fit_compiled_transition_model(
         action_counts=counts,
         action_centroids=centroids,
         action_spreads=spreads,
+        action_typical_nn_distances=typical_nn,
         examples=tuple(examples),
         config=resolved,
         training_split=training_split,

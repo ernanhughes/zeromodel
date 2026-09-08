@@ -274,3 +274,97 @@ def test_baseline_predictor_trains_on_same_manifest() -> None:
     manifest, sources, _ = _build(count_per_action=3)
     predictor = fit_baseline_nearest_neighbor(manifest, sources, training_split="all")
     assert set(predictor.action_labels) == {"left", "right"}
+
+
+def test_model_identity_binds_compiled_runtime_payload() -> None:
+    import dataclasses
+
+    manifest, sources, schema = _build()
+    empirical = fit_action_conditioned_transition_model(
+        manifest, sources, schema, training_split="all"
+    )
+    tampered_centroid = (
+        empirical.action_centroids[0][:-1] + (9.9,),
+    ) + empirical.action_centroids[1:]
+    with pytest.raises(
+        PerceptionTransitionModelError,
+        match="does not bind the compiled runtime payload",
+    ):
+        dataclasses.replace(empirical, action_centroids=tampered_centroid)
+    ridge = fit_compiled_transition_model(
+        manifest, sources, schema, training_split="all"
+    )
+    tampered_coefs = (
+        ridge.action_coefficients[0],
+        tuple(
+            tuple(value + 1.0 for value in row) for row in ridge.action_coefficients[1]
+        ),
+    )
+    with pytest.raises(
+        PerceptionTransitionModelError,
+        match="does not bind the compiled runtime payload",
+    ):
+        dataclasses.replace(ridge, action_coefficients=tampered_coefs)
+
+
+def test_local_support_describes_multimodal_memory() -> None:
+    from zeromodel.perception import encode_source_array as _encode
+
+    left_a = np.zeros((_HEIGHT, _WIDTH), dtype=np.uint8)
+    left_b = np.full((_HEIGHT, _WIDTH), 40, dtype=np.uint8)
+    interactions = []
+    sources = {}
+    step = 0
+    for cluster, base in enumerate((left_a, left_b)):
+        for index in range(6):
+            before_array = base.copy()
+            before_array[index % _HEIGHT, (index * 5) % _WIDTH] = 200
+            after_array = before_array.copy()
+            after_array[:, 0:4] = 60
+            before = _encode(before_array, _SPEC)
+            after = _encode(after_array, _SPEC)
+            sources[before.source_vpm_id] = before
+            sources[after.source_vpm_id] = after
+            interactions.append(
+                RecordedInteractionDTO.from_vpms(
+                    sequence_id=f"seq-{cluster}",
+                    step_index=step,
+                    source=before,
+                    target=encode_discrete_action("left", _ACTION_SCHEMA),
+                    next_source=after,
+                )
+            )
+            step += 1
+    manifest = build_dataset_manifest(
+        interactions, source_encoder_spec_ids=[_SPEC.encoder_spec_id]
+    )
+    schema = build_grid_field_schema(
+        next(iter(sources.values())), tile_width=4, tile_height=4, channel_mode="joint"
+    )
+    empirical = fit_action_conditioned_transition_model(
+        manifest, sources, schema, training_split="all"
+    )
+    assert empirical.action_typical_nn_distances[0] > 0.0
+    # Near the minor cluster (far from the global centroid): local support
+    # holds, so the projection is not out of distribution.
+    near_minor = _encode(left_b, _SPEC)
+    assert (
+        project_expected_transition(empirical, near_minor, "left", schema).status
+        == "supported"
+    )
+    far = _encode(np.full((_HEIGHT, _WIDTH), 255, dtype=np.uint8), _SPEC)
+    assert (
+        project_expected_transition(empirical, far, "left", schema).status
+        == "out_of_distribution"
+    )
+    ridge = fit_compiled_transition_model(
+        manifest, sources, schema, training_split="all"
+    )
+    assert (
+        project_expected_transition(ridge, near_minor, "left", schema).status
+        == "supported"
+    )
+    assert (
+        project_expected_transition(ridge, far, "left", schema).status
+        == "out_of_distribution"
+    )

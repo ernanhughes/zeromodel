@@ -47,7 +47,10 @@ for _part in ("packages/core/src", "examples"):
         sys.path.insert(0, _path)
 
 from zeromodel.perception import (  # noqa: E402
+    DeclarationScopeDTO,
     DiscreteActionSchemaDTO,
+    FutureMemoryValidityDTO,
+    MemoryAuthorityContextDTO,
     SourceImageEncoderSpecDTO,
     TransitionActionDeclarationDTO,
     TransitionExpectationSetDTO,
@@ -68,6 +71,7 @@ from zeromodel.perception import (  # noqa: E402
     predict_baseline_action,
     predict_relevance_weighted_action,
     project_expected_transition,
+    record_verification_event,
     verify_expected_transition,
 )
 from zeromodel.perception.dataset import RecordedInteractionDTO  # noqa: E402
@@ -586,18 +590,16 @@ def evaluate_split(
     transitions: list[GeneratedTransition],
     setup: DomainSetup,
     memory: FittedMemory,
-) -> dict:
-    total = len(transitions)
-    base_correct = coupled_correct = answered = 0
-    gain = harm = rerank = rejects = 0
-    absolute_errors: list[float] = []
-    direction_hits = direction_total = 0
-    precision_hits = precision_total = recall_hits = recall_total = 0
-    verification: dict[str, int] = {}
-    dispersions_confirmed: list[float] = []
-    dispersions_mismatch: list[float] = []
-    projection_matches = projection_total = 0
-    projection_matches_conformant = projection_total_conformant = 0
+    declarations: DeclarationScopeDTO,
+) -> tuple[dict, dict]:
+    """Score one split and return (metrics, halves).
+
+    Memory validity accumulates online within the split: each query consults
+    the validity learned from earlier queries' verification events, so the
+    second half measures the informed agent loop against the cold first half.
+    """
+    rows: list[dict] = []
+    validity: dict[str, FutureMemoryValidityDTO] = {}
     for index, record in enumerate(transitions):
         before = _encode_frame(record.frame_before)
         after = _encode_frame(record.frame_after)
@@ -618,7 +620,31 @@ def evaluate_split(
         # the gate below always consumes the verbatim P3 ranking for audit
         # comparability, with the shared representation shaping projection.
         base_ok = base_top == record.label
-        base_correct += base_ok
+        row = {
+            "episode_id": record.episode_id,
+            "step_number": record.step_number,
+            "vetoes": 0,
+            "stale_flags": 0,
+            "may_veto_flags": 0,
+            "base_ok": base_ok,
+            "coupled_ok": False,
+            "accepted": True,
+            "reranked": False,
+            "rejected": False,
+            "verdict": None,
+            "matched": None,
+            "matched_conformant": None,
+            "mae": None,
+            "supported": False,
+            "dir_hits": 0,
+            "dir_total": 0,
+            "prec_hits": 0,
+            "prec_total": 0,
+            "rec_hits": 0,
+            "rec_total": 0,
+            "disp_confirmed": None,
+            "disp_mismatch": None,
+        }
         if system.future_kind is None:
             selected, accepted = base_top, True
         else:
@@ -632,24 +658,35 @@ def evaluate_split(
                 transition_model,
                 before,
                 setup.field_schema,
-                expectations_by_action=dict(setup.expectations_by_action),
-                annotations=tuple(setup.annotations),
+                declarations=declarations,
                 policy=POLICY,
                 field_weights=weights,
                 baseline_override=baseline
                 if system.predictor_kind == "shared"
                 else None,
+                authority=MemoryAuthorityContextDTO.create(validity)
+                if system.future_kind is not None
+                else None,
             )
             accepted = out.accepted
             selected = out.selected_action
             gate_top = out.baseline.candidates[0].action_label
-            rerank += 1 if (accepted and selected != gate_top) else 0
-            rejects += 0 if accepted else 1
-        answered += 1 if accepted else 0
+            row["reranked"] = bool(accepted and selected != gate_top)
+            row["rejected"] = not accepted
+            row["vetoes"] = sum(
+                1
+                for item in out.candidates
+                if item.status == "contradicted_by_transition_expectation"
+            )
+            row["stale_flags"] = sum(
+                1 for item in out.candidates if item.memory_authority == "STALE"
+            )
+            row["may_veto_flags"] = sum(
+                1 for item in out.candidates if item.memory_authority == "MAY_VETO"
+            )
         coupled_ok = (selected == record.label) if accepted else False
-        coupled_correct += 1 if coupled_ok else 0
-        gain += 1 if (not base_ok and coupled_ok) else 0
-        harm += 1 if (base_ok and not coupled_ok) else 0
+        row["coupled_ok"] = coupled_ok
+        row["accepted"] = accepted
         if system.future_kind is not None:
             transition_model = (
                 memory.empirical
@@ -665,6 +702,7 @@ def evaluate_split(
                 min_support=POLICY.min_support,
             )
             if projected.status == "supported":
+                row["supported"] = True
                 observed = build_transition_evidence_vpm(
                     before,
                     after,
@@ -682,7 +720,7 @@ def evaluate_split(
                     )
                     for field in projected.fields
                 ]
-                absolute_errors.append(float(np.mean(errors)))
+                row["mae"] = float(np.mean(errors))
                 for field in projected.fields:
                     observed_field = observed_by_id[field.field_id]
                     expected_direction = (
@@ -708,19 +746,23 @@ def evaluate_split(
                         )
                     )
                     if expected_direction != 0:
-                        direction_total += 1
-                        direction_hits += expected_direction == observed_direction
+                        row["dir_total"] += 1
+                        row["dir_hits"] += (
+                            1
+                            if expected_direction == observed_direction
+                            else 0
+                        )
                     predicted_changed = (
                         abs(field.expected_mean_signed_change)
                         > MODEL_CONFIG.change_epsilon
                     )
                     actually_changed = observed_field.changed_value_count > 0
-                    precision_total += 1 if predicted_changed else 0
-                    precision_hits += (
+                    row["prec_total"] += 1 if predicted_changed else 0
+                    row["prec_hits"] += (
                         1 if predicted_changed and actually_changed else 0
                     )
-                    recall_total += 1 if actually_changed else 0
-                    recall_hits += (
+                    row["rec_total"] += 1 if actually_changed else 0
+                    row["rec_hits"] += (
                         1 if predicted_changed and actually_changed else 0
                     )
             # Expected-vs-observed verification loop for the enacted action.
@@ -776,18 +818,16 @@ def evaluate_split(
                 tolerance=VERIFICATION_TOLERANCE,
                 change_epsilon=VERIFICATION_EPSILON,
             )
-            verification[verdict.status] = verification.get(verdict.status, 0) + 1
+            row["verdict"] = verdict.status
             matched = _projection_matches(
                 projected_enacted,
                 observed,
                 tolerance=VERIFICATION_TOLERANCE,
                 change_epsilon=VERIFICATION_EPSILON,
             )
-            projection_total += 1
-            projection_matches += 1 if matched else 0
+            row["matched"] = matched
             if analysis.status != "nonconformant":
-                projection_total_conformant += 1
-                projection_matches_conformant += 1 if matched else 0
+                row["matched_conformant"] = matched
             mean_dispersion = float(
                 np.mean(
                     [
@@ -797,52 +837,120 @@ def evaluate_split(
                 )
             )
             if verdict.status == "confirmed":
-                dispersions_confirmed.append(mean_dispersion)
+                row["disp_confirmed"] = mean_dispersion
             elif verdict.status == "future_projection_mismatch":
-                dispersions_mismatch.append(mean_dispersion)
-    precision = precision_hits / precision_total if precision_total else float("nan")
-    recall = recall_hits / recall_total if recall_total else float("nan")
+                row["disp_mismatch"] = mean_dispersion
+            # Close the agent loop: this verification event becomes validity
+            # evidence regulating the NEXT decision for this action.
+            validity[record.action] = record_verification_event(
+                validity.get(record.action),
+                verdict,
+                transition_model_id=transition_model.model_id,
+                action_label=record.action,
+                field_schema_id=setup.field_schema.field_schema_id,
+                training_dataset_id=transition_model.dataset_id,
+            )
+        rows.append(row)
+    metrics = _aggregate_rows(rows, system.future_kind is not None)
+    # Halves are per-episode (first vs second half of each episode's steps,
+    # pooled): with validity accumulating online, the second half measures
+    # the informed loop against the cold first half on the same episodes.
+    by_episode: dict[str, list[dict]] = {}
+    for row in rows:
+        by_episode.setdefault(row["episode_id"], []).append(row)
+    first_rows: list[dict] = []
+    second_rows: list[dict] = []
+    for episode_rows in by_episode.values():
+        ordered = sorted(episode_rows, key=lambda row: row["step_number"])
+        cut = len(ordered) // 2
+        first_rows.extend(ordered[:cut])
+        second_rows.extend(ordered[cut:])
+    metrics["halves"] = {
+        "first": _aggregate_rows(first_rows, system.future_kind is not None),
+        "second": _aggregate_rows(second_rows, system.future_kind is not None),
+    }
+    return metrics, metrics["halves"]
+
+
+def _aggregate_rows(rows: list[dict], has_future: bool) -> dict:
+    total = len(rows)
+    base_correct = sum(1 for row in rows if row["base_ok"])
+    coupled_correct = sum(1 for row in rows if row["coupled_ok"])
+    answered = sum(1 for row in rows if row["accepted"])
+    gain = sum(1 for row in rows if not row["base_ok"] and row["coupled_ok"])
+    harm = sum(1 for row in rows if row["base_ok"] and not row["coupled_ok"])
+    rerank = sum(1 for row in rows if row["reranked"])
+    rejects = sum(1 for row in rows if row["rejected"])
+    maes = [row["mae"] for row in rows if row["mae"] is not None]
+    dir_hits = sum(row["dir_hits"] for row in rows)
+    dir_total = sum(row["dir_total"] for row in rows)
+    prec_hits = sum(row["prec_hits"] for row in rows)
+    prec_total = sum(row["prec_total"] for row in rows)
+    rec_hits = sum(row["rec_hits"] for row in rows)
+    rec_total = sum(row["rec_total"] for row in rows)
+    verification: dict[str, int] = {}
+    matched = matched_total = matched_conformant = matched_conformant_total = 0
+    disp_confirmed: list[float] = []
+    disp_mismatch: list[float] = []
+    for row in rows:
+        if row["verdict"] is not None:
+            verification[row["verdict"]] = verification.get(row["verdict"], 0) + 1
+            matched_total += 1
+            matched += 1 if row["matched"] else 0
+            if row["matched_conformant"] is not None:
+                matched_conformant_total += 1
+                matched_conformant += 1 if row["matched_conformant"] else 0
+        if row["disp_confirmed"] is not None:
+            disp_confirmed.append(row["disp_confirmed"])
+        if row["disp_mismatch"] is not None:
+            disp_mismatch.append(row["disp_mismatch"])
+    precision = prec_hits / prec_total if prec_total else float("nan")
+    recall = rec_hits / rec_total if rec_total else float("nan")
     denominator = precision + recall
     f1 = (
         2 * precision * recall / denominator
-        if precision_total and recall_total and denominator
+        if prec_total and rec_total and denominator
         else float("nan")
     )
+    vetoes = [row["vetoes"] for row in rows]
+    stale = [row["stale_flags"] for row in rows]
+    may_veto = [row["may_veto_flags"] for row in rows]
     return {
         "n": total,
-        "base_acc": base_correct / total,
-        "coupled_acc": coupled_correct / total,
+        "base_acc": base_correct / total if total else float("nan"),
+        "coupled_acc": coupled_correct / total if total else float("nan"),
         "base_coverage": 1.0,
-        "coverage": answered / total,
-        "gain": gain / total,
-        "harm": harm / total,
-        "net": (gain - harm) / total,
-        "rerank_rate": rerank / total,
-        "reject_rate": rejects / total,
-        "future_mae": float(np.mean(absolute_errors)) if absolute_errors else float("nan"),
-        "future_supported_frac": len(absolute_errors) / total
-        if system.future_kind
-        else float("nan"),
-        "signed_direction_acc": direction_hits / direction_total
-        if direction_total
-        else float("nan"),
+        "coverage": answered / total if total else float("nan"),
+        "gain": gain / total if total else float("nan"),
+        "harm": harm / total if total else float("nan"),
+        "net": (gain - harm) / total if total else float("nan"),
+        "rerank_rate": rerank / total if total else float("nan"),
+        "reject_rate": rejects / total if total else float("nan"),
+        "future_mae": float(np.mean(maes)) if maes else float("nan"),
+        "future_supported_frac": len(maes) / total if has_future and total else float("nan"),
+        "signed_direction_acc": dir_hits / dir_total if dir_total else float("nan"),
         "changed_precision": precision,
         "changed_recall": recall,
         "changed_f1": f1,
         "verification": verification,
-        "projection_match_rate": projection_matches / projection_total
-        if system.future_kind and projection_total
+        "projection_match_rate": matched / matched_total
+        if has_future and matched_total
         else float("nan"),
         "projection_match_rate_conformant": (
-            projection_matches_conformant / projection_total_conformant
-            if system.future_kind and projection_total_conformant
+            matched_conformant / matched_conformant_total
+            if has_future and matched_conformant_total
             else float("nan")
         ),
-        "mean_dispersion_confirmed": float(np.mean(dispersions_confirmed))
-        if dispersions_confirmed
+        "mean_dispersion_confirmed": float(np.mean(disp_confirmed))
+        if disp_confirmed
         else float("nan"),
-        "mean_dispersion_mismatch": float(np.mean(dispersions_mismatch))
-        if dispersions_mismatch
+        "mean_dispersion_mismatch": float(np.mean(disp_mismatch))
+        if disp_mismatch
+        else float("nan"),
+        "vetoes_per_query": float(np.mean(vetoes)) if vetoes else float("nan"),
+        "stale_flags_per_query": float(np.mean(stale)) if stale else float("nan"),
+        "may_veto_flags_per_query": float(np.mean(may_veto))
+        if may_veto
         else float("nan"),
     }
 
@@ -859,6 +967,9 @@ def run_domain(
     )
     manifest, sources = build_manifest(train, action_schema, split_seed=split_seed)
     memory = fit_all(manifest, sources, setup)
+    declarations = DeclarationScopeDTO.create(
+        dict(setup.expectations_by_action), tuple(setup.annotations)
+    )
     result: dict = {
         "field_weights_shared": list(memory.relevance.weights),
         "splits": {},
@@ -866,9 +977,11 @@ def run_domain(
     for split_name, transitions in splits.items():
         result["splits"][split_name] = {}
         for system in SYSTEMS:
-            result["splits"][split_name][system.name] = evaluate_split(
-                system, transitions, setup, memory
+            metrics, halves = evaluate_split(
+                system, transitions, setup, memory, declarations
             )
+            metrics["halves"] = halves
+            result["splits"][split_name][system.name] = metrics
     return result
 
 
@@ -919,6 +1032,18 @@ def print_table(results: dict) -> None:
                     print(
                         f"  [{split_name}] {system.name} verification:",
                         systems[system.name]["verification"],
+                    )
+        print("  authority halves (first -> second): harm / coverage / net")
+        for split_name, systems in domain["splits"].items():
+            for system in SYSTEMS:
+                if system.future_kind:
+                    halves = systems[system.name]["halves"]
+                    first, second = halves["first"], halves["second"]
+                    print(
+                        f"  [{split_name}] {system.name}: "
+                        f"{first['harm']:.3f}->{second['harm']:.3f} / "
+                        f"{first['coverage']:.3f}->{second['coverage']:.3f} / "
+                        f"{first['net']:+.3f}->{second['net']:+.3f}"
                     )
 
 
@@ -1037,11 +1162,31 @@ _METRIC_KEYS = (
     "mean_dispersion_mismatch",
     "projection_match_rate",
     "projection_match_rate_conformant",
+    "vetoes_per_query",
+    "stale_flags_per_query",
+    "may_veto_flags_per_query",
 )
 
 
+def _average_cells(cells: list[dict]) -> dict:
+    merged: dict = {"n": sum(cell["n"] for cell in cells)}
+    for key in _METRIC_KEYS:
+        values = [
+            cell[key]
+            for cell in cells
+            if not (isinstance(cell[key], float) and np.isnan(cell[key]))
+        ]
+        merged[key] = float(np.mean(values)) if values else float("nan")
+    verification: dict[str, int] = {}
+    for cell in cells:
+        for status, count in cell["verification"].items():
+            verification[status] = verification.get(status, 0) + count
+    merged["verification"] = verification
+    return merged
+
+
 def _average_seeds(per_seed: list[tuple[str, dict]]) -> dict:
-    domains: dict[str, dict] = {}
+    domains: dict = {}
     for domain_name, _ in per_seed:
         runs = [run for name, run in per_seed if name == domain_name]
         averaged: dict = {
@@ -1052,19 +1197,13 @@ def _average_seeds(per_seed: list[tuple[str, dict]]) -> dict:
             averaged["splits"][split_name] = {}
             for system_name in runs[0]["splits"][split_name]:
                 cells = [run["splits"][split_name][system_name] for run in runs]
-                merged: dict = {"n": sum(cell["n"] for cell in cells)}
-                for key in _METRIC_KEYS:
-                    values = [
-                        cell[key]
-                        for cell in cells
-                        if not (isinstance(cell[key], float) and np.isnan(cell[key]))
-                    ]
-                    merged[key] = float(np.mean(values)) if values else float("nan")
-                verification: dict[str, int] = {}
-                for cell in cells:
-                    for status, count in cell["verification"].items():
-                        verification[status] = verification.get(status, 0) + count
-                merged["verification"] = verification
+                merged = _average_cells(cells)
+                merged["halves"] = {
+                    half: _average_cells(
+                        [run["splits"][split_name][system_name]["halves"][half] for run in runs]
+                    )
+                    for half in ("first", "second")
+                }
                 averaged["splits"][split_name][system_name] = merged
         domains[domain_name] = averaged
     return domains

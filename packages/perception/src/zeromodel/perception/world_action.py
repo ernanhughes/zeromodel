@@ -25,6 +25,12 @@ from .inference import (
     BaselinePredictionDTO,
     predict_baseline_action,
 )
+from .memory_authority import (
+    MEMORY_AUTHORITIES,
+    MemoryAuthorityAssessmentDTO,
+    MemoryAuthorityContextDTO,
+    assess_memory_authority,
+)
 from .representation import SourceVPMDTO
 from .transition_conformance import (
     TRANSITION_CONFORMANCE_STATUSES,
@@ -38,6 +44,7 @@ from .expectations import PerceptionRegionAnnotationDTO
 WORLD_ACTION_POLICY_VERSION: Final = "perception-world-action-policy/1"
 WORLD_ACTION_CANDIDATE_VERSION: Final = "perception-world-action-candidate/1"
 COUPLED_ACTION_PREDICTION_VERSION: Final = "perception-coupled-action-prediction/1"
+DECLARATION_SCOPE_VERSION: Final = "perception-declaration-scope/1"
 EXPECTED_CONFORMANCE_VERSION: Final = "perception-expected-conformance/1"
 EXPECTED_CONFORMANCE_FINDING_VERSION: Final = (
     "perception-expected-conformance-finding/1"
@@ -131,6 +138,55 @@ class WorldActionPolicyDTO:
 
 
 @dataclass(frozen=True)
+class DeclarationScopeDTO:
+    """Declared P18B context bundled for one coupled decision.
+
+    Per-action expectation scoping lives with the caller: only the
+    expectations declared for the projected action are passed to the
+    conformance check, mirroring the benchmark adapter discipline.
+    """
+
+    expectations_by_action: tuple[tuple[str, tuple[TransitionExpectationDTO, ...]], ...]
+    annotations: tuple[PerceptionRegionAnnotationDTO, ...]
+    relations: tuple[RelationAnnotationDTO, ...]
+    version: str = DECLARATION_SCOPE_VERSION
+
+    def __post_init__(self) -> None:
+        actions = tuple(action for action, _ in self.expectations_by_action)
+        if actions != tuple(sorted(set(actions))):
+            raise PerceptionWorldActionError(
+                "declaration scope actions must be unique and sorted"
+            )
+        if not all(action for action in actions):
+            raise PerceptionWorldActionError(
+                "declaration scope actions must be non-empty"
+            )
+        if self.version != DECLARATION_SCOPE_VERSION:
+            raise PerceptionWorldActionError("unsupported declaration scope version")
+
+    @classmethod
+    def create(
+        cls,
+        expectations_by_action: Mapping[str, tuple[TransitionExpectationDTO, ...]],
+        annotations: tuple[PerceptionRegionAnnotationDTO, ...] = (),
+        relations: tuple[RelationAnnotationDTO, ...] = (),
+    ) -> "DeclarationScopeDTO":
+        return cls(
+            expectations_by_action=tuple(
+                sorted(expectations_by_action.items(), key=lambda item: item[0])
+            ),
+            annotations=tuple(annotations),
+            relations=tuple(relations),
+        )
+
+    def scope_for(self, action_label: str) -> tuple[TransitionExpectationDTO, ...]:
+        for action, expectations in self.expectations_by_action:
+            if action == action_label:
+                return expectations
+        return ()
+
+
+@dataclass(frozen=True)
 class ExpectedConformanceFindingDTO:
     """One declared expectation tested against a projected future."""
 
@@ -200,6 +256,7 @@ class WorldActionCandidateDTO:
     expectation_conformance: str | None
     status: str
     reasons: tuple[str, ...] = ()
+    memory_authority: str | None = None
     version: str = WORLD_ACTION_CANDIDATE_VERSION
 
     def __post_init__(self) -> None:
@@ -218,6 +275,11 @@ class WorldActionCandidateDTO:
             raise PerceptionWorldActionError(
                 "unsupported expectation conformance status"
             )
+        if (
+            self.memory_authority is not None
+            and self.memory_authority not in MEMORY_AUTHORITIES
+        ):
+            raise PerceptionWorldActionError("unsupported memory authority level")
         if self.version != WORLD_ACTION_CANDIDATE_VERSION:
             raise PerceptionWorldActionError(
                 "unsupported world action candidate version"
@@ -488,12 +550,25 @@ def _classify_candidate(
     expected: ExpectedTransitionVPMDTO,
     conformance: ExpectedConformanceDTO,
     policy: WorldActionPolicyDTO,
+    assessment: MemoryAuthorityAssessmentDTO,
 ) -> tuple[WorldActionCandidateDTO, bool]:
-    """Classify one candidate; returns (candidate, vetoed)."""
-    reasons: list[str] = [f"projection status: {expected.status}"]
+    """Classify one candidate; returns (candidate, vetoed).
+
+    A projected contradiction vetoes only when the memory holds veto
+    authority (MAY_VETO) and the policy rejects contradictions. Otherwise
+    the contradiction is annotated without commanding the decision.
+    """
+    reasons: list[str] = [
+        f"projection status: {expected.status}",
+        f"memory authority: {assessment.authority}",
+    ]
     support = min(1.0, expected.support_count / max(1, 2 * policy.min_support))
-    means_trusted = expected.status in {"supported", "ambiguous_future"}
-    if means_trusted and conformance.status == "contradicted":
+    veto_authorized = assessment.authority == "MAY_VETO"
+    if (
+        expected.status == "supported"
+        and conformance.status == "contradicted"
+        and veto_authorized
+    ):
         if policy.reject_on_contradiction:
             return (
                 WorldActionCandidateDTO(
@@ -508,10 +583,16 @@ def _classify_candidate(
                     reasons=tuple(
                         reasons + ["projected future contradicts declared expectations"]
                     ),
+                    memory_authority=assessment.authority,
                 ),
                 True,
             )
         reasons.append("contradicted but policy keeps flagged")
+    elif conformance.status == "contradicted":
+        reasons.append(
+            "projected future contradicts declared expectations "
+            f"without veto authority ({assessment.authority}): annotated only"
+        )
     if expected.status == "supported":
         if expected.confidence < policy.low_confidence_threshold:
             status: str = "supported_with_low_future_confidence"
@@ -554,6 +635,7 @@ def _classify_candidate(
             expectation_conformance=conformance.status,
             status=status,
             reasons=tuple(reasons),
+            memory_authority=assessment.authority,
         ),
         vetoed,
     )
@@ -564,21 +646,23 @@ def _project_and_classify_candidates(
     transition_model: TransitionModelDTO,
     source: SourceVPMDTO,
     field_schema: VPMFieldSchemaDTO,
-    expectations_by_action: Mapping[str, tuple[TransitionExpectationDTO, ...]] | None,
-    annotations: tuple[PerceptionRegionAnnotationDTO, ...],
-    relations: tuple[RelationAnnotationDTO, ...],
+    scope: DeclarationScopeDTO | None,
     policy: WorldActionPolicyDTO,
     field_weights: Mapping[str, float] | None,
     projector: Callable[..., ExpectedTransitionVPMDTO],
+    authority: MemoryAuthorityContextDTO | None,
 ) -> tuple[list[WorldActionCandidateDTO], set[str]]:
+    if authority is not None:
+        for action, validity in authority.validity_by_action:
+            if validity.transition_model_id != transition_model.model_id:
+                raise PerceptionWorldActionError(
+                    f"validity for {action!r} targets a different transition model"
+                )
+    authority_policy = authority.policy if authority is not None else None
     coupled: list[WorldActionCandidateDTO] = []
     vetoed_labels: set[str] = set()
     for base_rank, candidate in ranked:
-        action_expectations = (
-            expectations_by_action.get(candidate.action_label, ())
-            if expectations_by_action is not None
-            else ()
-        )
+        action_expectations = scope.scope_for(candidate.action_label) if scope else ()
         expected = projector(
             transition_model,
             source,
@@ -587,8 +671,18 @@ def _project_and_classify_candidates(
             field_weights=field_weights,
             min_support=policy.min_support,
         )
+        annotations = scope.annotations if scope else ()
+        relations = scope.relations if scope else ()
         conformance = check_expected_conformance(
             expected, field_schema, action_expectations, annotations, relations
+        )
+        validity = (
+            authority.validity_for(candidate.action_label)
+            if authority is not None
+            else None
+        )
+        assessment = assess_memory_authority(
+            validity, expected, policy=authority_policy
         )
         world_candidate, vetoed = _classify_candidate(
             action_label=candidate.action_label,
@@ -597,11 +691,84 @@ def _project_and_classify_candidates(
             expected=expected,
             conformance=conformance,
             policy=policy,
+            assessment=assessment,
         )
         coupled.append(world_candidate)
         if vetoed:
             vetoed_labels.add(candidate.action_label)
     return coupled, vetoed_labels
+
+
+def _assemble_coupled_prediction(
+    baseline: BaselinePredictionDTO,
+    coupled: list[WorldActionCandidateDTO],
+    vetoed_labels: set[str],
+    ranked: tuple[tuple[int, ActionCandidateDTO], ...],
+    candidate_count: int,
+    source: SourceVPMDTO,
+    resolved: WorldActionPolicyDTO,
+    baseline_model: BaselineNearestNeighborModelDTO,
+    transition_model: TransitionModelDTO,
+    authority: MemoryAuthorityContextDTO | None,
+    *,
+    override_used: bool,
+) -> CoupledActionPredictionDTO:
+    survivors = [item for item in coupled if item.action_label not in vetoed_labels]
+    tail = tuple(
+        WorldActionCandidateDTO(
+            action_label=item.action_label,
+            base_score=item.score,
+            base_rank=base_rank,
+            expected_transition_id=None,
+            transition_support=None,
+            transition_confidence=None,
+            expectation_conformance=None,
+            status="base_predictor_rejected",
+            reasons=("outside coupled candidate bound; baseline rank preserved",),
+        )
+        for base_rank, item in ranked[max(1, candidate_count) :]
+    )
+    all_candidates = tuple(coupled) + tail
+    if baseline.status == "accepted" and survivors:
+        selected = survivors[0].action_label
+        accepted = True
+    else:
+        selected, accepted = None, False
+    payload = {
+        "accepted": accepted,
+        "authority_policy_id": (
+            authority.policy.policy_id if authority is not None else None
+        ),
+        "baseline_override": override_used,
+        "baseline_prediction_id": baseline.prediction_id,
+        "baseline_model_id": baseline_model.model_id,
+        "candidates": [
+            {
+                "action_label": item.action_label,
+                "base_rank": item.base_rank,
+                "expected_transition_id": item.expected_transition_id,
+                "memory_authority": item.memory_authority,
+                "status": item.status,
+            }
+            for item in all_candidates
+        ],
+        "policy_id": resolved.policy_id,
+        "selected_action": selected,
+        "source_vpm_id": source.source_vpm_id,
+        "transition_model_id": transition_model.model_id,
+        "version": COUPLED_ACTION_PREDICTION_VERSION,
+    }
+    return CoupledActionPredictionDTO(
+        prediction_id=_digest(_canonical_json(payload)),
+        source_vpm_id=source.source_vpm_id,
+        baseline=baseline,
+        candidates=all_candidates,
+        selected_action=selected,
+        accepted=accepted,
+        policy_id=resolved.policy_id,
+        baseline_model_id=baseline_model.model_id,
+        transition_model_id=transition_model.model_id,
+    )
 
 
 def predict_action_with_future_memory(
@@ -610,21 +777,21 @@ def predict_action_with_future_memory(
     source: SourceVPMDTO,
     field_schema: VPMFieldSchemaDTO,
     *,
-    expectations_by_action: Mapping[str, tuple[TransitionExpectationDTO, ...]]
-    | None = None,
-    annotations: tuple[PerceptionRegionAnnotationDTO, ...] = (),
-    relations: tuple[RelationAnnotationDTO, ...] = (),
+    declarations: DeclarationScopeDTO | None = None,
     policy: WorldActionPolicyDTO | None = None,
     field_weights: Mapping[str, float] | None = None,
     projector: Callable[..., ExpectedTransitionVPMDTO] = project_expected_transition,
     baseline_override: BaselinePredictionDTO | None = None,
+    authority: MemoryAuthorityContextDTO | None = None,
 ) -> CoupledActionPredictionDTO:
     """Run baseline choice, then gate the top candidates with future memory.
 
     Preserves the complete baseline result, projects a structured future for
     each bounded candidate, evaluates transition support and optional declared
-    expectations, and selects the highest-baseline-rank non-vetoed candidate
-    (or abstains). Never executes the action.
+    expectations, consults memory authority, and selects the
+    highest-baseline-rank non-vetoed candidate (or abstains). A projected
+    contradiction vetoes only under MAY_VETO authority; otherwise it is
+    annotated without commanding the decision. Never executes the action.
 
     ``baseline_override`` optionally substitutes a precomputed ranking from
     the same predictor family (e.g. relevance-weighted distances over the
@@ -656,62 +823,22 @@ def predict_action_with_future_memory(
         transition_model,
         source,
         field_schema,
-        expectations_by_action,
-        annotations,
-        relations,
+        declarations,
         resolved,
         field_weights,
         projector,
+        authority,
     )
-    survivors = [item for item in coupled if item.action_label not in vetoed_labels]
-    tail = tuple(
-        WorldActionCandidateDTO(
-            action_label=item.action_label,
-            base_score=item.score,
-            base_rank=base_rank,
-            expected_transition_id=None,
-            transition_support=None,
-            transition_confidence=None,
-            expectation_conformance=None,
-            status="base_predictor_rejected",
-            reasons=("outside coupled candidate bound; baseline rank preserved",),
-        )
-        for base_rank, item in ranked[max(1, resolved.candidate_count) :]
-    )
-    all_candidates = tuple(coupled) + tail
-    if baseline.status == "accepted" and survivors:
-        selected = survivors[0].action_label
-        accepted = True
-    else:
-        selected, accepted = None, False
-    payload = {
-        "accepted": accepted,
-        "baseline_override": baseline_override is not None,
-        "baseline_prediction_id": baseline.prediction_id,
-        "baseline_model_id": baseline_model.model_id,
-        "candidates": [
-            {
-                "action_label": item.action_label,
-                "base_rank": item.base_rank,
-                "expected_transition_id": item.expected_transition_id,
-                "status": item.status,
-            }
-            for item in all_candidates
-        ],
-        "policy_id": resolved.policy_id,
-        "selected_action": selected,
-        "source_vpm_id": source.source_vpm_id,
-        "transition_model_id": transition_model.model_id,
-        "version": COUPLED_ACTION_PREDICTION_VERSION,
-    }
-    return CoupledActionPredictionDTO(
-        prediction_id=_digest(_canonical_json(payload)),
-        source_vpm_id=source.source_vpm_id,
-        baseline=baseline,
-        candidates=all_candidates,
-        selected_action=selected,
-        accepted=accepted,
-        policy_id=resolved.policy_id,
-        baseline_model_id=baseline_model.model_id,
-        transition_model_id=transition_model.model_id,
+    return _assemble_coupled_prediction(
+        baseline,
+        coupled,
+        vetoed_labels,
+        ranked,
+        resolved.candidate_count,
+        source,
+        resolved,
+        baseline_model,
+        transition_model,
+        authority,
+        override_used=baseline_override is not None,
     )

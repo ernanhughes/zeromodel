@@ -301,3 +301,41 @@ def test_verification_insufficient_without_supported_projection() -> None:
     )
     verification = verify_expected_transition(expected, analysis)
     assert verification.status == "insufficient_evidence"
+
+
+def test_verification_reports_error_magnitudes() -> None:
+    manifest, sources, schema = _build()
+    model = fit_action_conditioned_transition_model(
+        manifest, sources, schema, training_split="all"
+    )
+    query = next(
+        sources[interaction.source_vpm_id]
+        for interaction in manifest.interactions
+        if interaction.action_label == "left"
+    )
+    expected = project_expected_transition(model, query, "left", schema)
+    annotations = _annotations(schema)
+    after = next(
+        sources[interaction.next_source_vpm_id]
+        for interaction in manifest.interactions
+        if interaction.source_vpm_id == query.source_vpm_id
+    )
+    analysis = _analyze(
+        query,
+        after,
+        schema,
+        "left",
+        (_middle_stable(schema, annotations),),
+        (annotations["middle"],),
+    )
+    verification = verify_expected_transition(expected, analysis)
+    assert verification.status == "confirmed"
+    assert verification.mean_absolute_error < 0.05
+    assert verification.direction_error_rate == 0.0
+    assert verification.changed_field_error_rate < 0.2
+    for name in (
+        "mean_absolute_error",
+        "direction_error_rate",
+        "changed_field_error_rate",
+    ):
+        assert 0.0 <= getattr(verification, name) <= 1.0

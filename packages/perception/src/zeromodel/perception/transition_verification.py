@@ -65,6 +65,9 @@ class FutureTransitionVerificationDTO:
     status: str
     field_notes: tuple[str, ...] = ()
     detail: str = ""
+    mean_absolute_error: float = 0.0
+    direction_error_rate: float = 0.0
+    changed_field_error_rate: float = 0.0
     version: str = FUTURE_TRANSITION_VERIFICATION_VERSION
 
     def __post_init__(self) -> None:
@@ -86,10 +89,55 @@ class FutureTransitionVerificationDTO:
             raise PerceptionTransitionVerificationError(
                 "field notes must be unique and sorted"
             )
+        for name in (
+            "mean_absolute_error",
+            "direction_error_rate",
+            "changed_field_error_rate",
+        ):
+            value = getattr(self, name)
+            if not 0.0 <= value <= 1.0:
+                raise PerceptionTransitionVerificationError(f"{name} must be in [0, 1]")
         if self.version != FUTURE_TRANSITION_VERIFICATION_VERSION:
             raise PerceptionTransitionVerificationError(
                 "unsupported transition verification version"
             )
+
+
+def _field_error_rates(
+    expected: ExpectedTransitionVPMDTO,
+    observed_fields: Mapping[str, TransitionFieldEvidenceDTO],
+    change_epsilon: float,
+) -> tuple[float, float, float]:
+    """Mean level, direction, and changed-field error over projected fields."""
+    absolute_errors: list[float] = []
+    direction_disagreements = 0
+    direction_comparable = 0
+    changed_disagreements = 0
+    total = 0
+    for projected in expected.fields:
+        observed = observed_fields.get(projected.field_id)
+        total += 1
+        if observed is None:
+            absolute_errors.append(1.0)
+            changed_disagreements += 1
+            continue
+        absolute_errors.append(abs(observed.after_mean - projected.expected_after_mean))
+        expected_changed = abs(projected.expected_mean_signed_change) > change_epsilon
+        observed_changed = abs(observed.mean_signed_change) > change_epsilon
+        if expected_changed != observed_changed:
+            changed_disagreements += 1
+        elif expected_changed:
+            direction_comparable += 1
+            if (observed.mean_signed_change > 0) != (
+                projected.expected_mean_signed_change > 0
+            ):
+                direction_disagreements += 1
+    mean_absolute = float(sum(absolute_errors) / total) if total else 0.0
+    direction_rate = (
+        direction_disagreements / direction_comparable if direction_comparable else 0.0
+    )
+    changed_rate = changed_disagreements / total if total else 0.0
+    return mean_absolute, direction_rate, changed_rate
 
 
 def _report(
@@ -98,11 +146,15 @@ def _report(
     status: str,
     notes: list[str],
     detail: str,
+    error_rates: tuple[float, float, float] = (0.0, 0.0, 0.0),
 ) -> FutureTransitionVerificationDTO:
     ordered = tuple(sorted(set(notes)))
     payload = {
+        "changed_field_error_rate": error_rates[2],
+        "direction_error_rate": error_rates[1],
         "expected_transition_id": expected.expected_transition_id,
         "field_notes": list(ordered),
+        "mean_absolute_error": error_rates[0],
         "observed_transition_evidence_id": observed_evidence_id,
         "status": status,
         "version": FUTURE_TRANSITION_VERIFICATION_VERSION,
@@ -114,6 +166,9 @@ def _report(
         status=status,
         field_notes=ordered,
         detail=detail,
+        mean_absolute_error=error_rates[0],
+        direction_error_rate=error_rates[1],
+        changed_field_error_rate=error_rates[2],
     )
 
 
@@ -198,6 +253,7 @@ def verify_expected_transition(
     observed_fields = {
         item.field_id: item for item in analysis.transition_evidence.fields
     }
+    error_rates = _field_error_rates(expected, observed_fields, change_epsilon)
     notes: list[str] = []
     mismatch = False
     unexpected_change = False
@@ -219,6 +275,7 @@ def verify_expected_transition(
             "future_projection_mismatch",
             notes,
             "observed transition differs from the projected future",
+            error_rates,
         )
     if unexpected_change:
         return _report(
@@ -227,6 +284,7 @@ def verify_expected_transition(
             "confirmed_with_unexpected_change",
             notes,
             "projection confirmed with additional unexpected change",
+            error_rates,
         )
     return _report(
         expected,
@@ -234,4 +292,5 @@ def verify_expected_transition(
         "confirmed",
         notes,
         "observed transition matches the projected future",
+        error_rates,
     )

@@ -27,7 +27,12 @@ from zeromodel.perception.transition_model import (
     fit_action_conditioned_transition_model,
 )
 from zeromodel.perception.transition_projection import project_expected_transition
+from zeromodel.perception.memory_authority import MemoryAuthorityContextDTO
+from zeromodel.perception.transition_verification import (
+    FutureTransitionVerificationDTO,
+)
 from zeromodel.perception.world_action import (
+    DeclarationScopeDTO,
     PerceptionWorldActionError,
     WorldActionPolicyDTO,
     check_expected_conformance,
@@ -131,12 +136,12 @@ def test_contradiction_veto_falls_back_in_baseline_order() -> None:
         model,
         query,
         schema,
-        expectations_by_action={"left": (stable,)},
-        annotations=(annotation,),
+        declarations=DeclarationScopeDTO.create({"left": (stable,)}, (annotation,)),
     )
     assert out.baseline.selected_action == "left"
     vetoed = next(item for item in out.candidates if item.action_label == "left")
     assert vetoed.status == "contradicted_by_transition_expectation"
+    assert vetoed.memory_authority == "MAY_VETO"
     # Fallback follows baseline order among survivors, not confidence:
     # "right" was rank 1 and stays the only survivor.
     assert out.selected_action == "right"
@@ -270,4 +275,120 @@ def test_baseline_override_validates_identity() -> None:
     with pytest.raises(PerceptionWorldActionError, match="different source"):
         predict_action_with_future_memory(
             predictor, model, query, schema, baseline_override=bad_source
+        )
+
+
+def _contradiction_fixture():
+    manifest, _, schema, predictor, model, query = _fitted()
+    left_band = _band_field_ids(schema, 0)
+    annotation = PerceptionRegionAnnotationDTO.create(
+        schema, left_band, label="left-band"
+    )
+    stable = TransitionExpectationDTO.create(
+        field_schema_id=schema.field_schema_id,
+        annotation_ids=(annotation.annotation_id,),
+        expected_change="stable",
+        maximum_mean_absolute_change=0.0,
+        maximum_changed_fraction=0.0,
+    )
+    scope = DeclarationScopeDTO.create({"left": (stable,)}, (annotation,))
+    return manifest, schema, predictor, model, query, scope
+
+
+def _recorded_validity(model, manifest, schema, action, statuses):
+    from zeromodel.perception.memory_authority import (
+        record_verification_event as _record,
+    )
+
+    validity = None
+    for index, status in enumerate(statuses):
+        verification = FutureTransitionVerificationDTO(
+            verification_id=f"verification-{index}",
+            expected_transition_id="expected",
+            observed_transition_evidence_id="observed",
+            status=status,
+            mean_absolute_error=0.1,
+            direction_error_rate=0.2,
+            changed_field_error_rate=0.3,
+        )
+        validity = _record(
+            validity,
+            verification,
+            transition_model_id=model.model_id,
+            action_label=action,
+            field_schema_id=schema.field_schema_id,
+            training_dataset_id=manifest.dataset_id,
+        )
+    return validity
+
+
+def test_stale_authority_annotates_contradiction_without_veto() -> None:
+    manifest, schema, predictor, model, query, scope = _contradiction_fixture()
+    validity = _recorded_validity(
+        model, manifest, schema, "left", ["future_projection_mismatch"] * 4
+    )
+    assert validity.staleness_score == 1.0
+    out = predict_action_with_future_memory(
+        predictor,
+        model,
+        query,
+        schema,
+        declarations=scope,
+        authority=MemoryAuthorityContextDTO.create({"left": validity}),
+    )
+    left_candidate = next(
+        item for item in out.candidates if item.action_label == "left"
+    )
+    assert left_candidate.memory_authority == "STALE"
+    assert left_candidate.status != "contradicted_by_transition_expectation"
+    assert any("without veto authority" in reason for reason in left_candidate.reasons)
+    # Baseline top is kept: the stale memory may not command the decision.
+    assert out.selected_action == "left"
+    assert out.accepted
+
+
+def test_fresh_authority_preserves_genuine_veto() -> None:
+    manifest, schema, predictor, model, query, scope = _contradiction_fixture()
+    validity = _recorded_validity(model, manifest, schema, "left", ["confirmed"] * 4)
+    out = predict_action_with_future_memory(
+        predictor,
+        model,
+        query,
+        schema,
+        declarations=scope,
+        authority=MemoryAuthorityContextDTO.create({"left": validity}),
+    )
+    left_candidate = next(
+        item for item in out.candidates if item.action_label == "left"
+    )
+    assert left_candidate.memory_authority == "MAY_VETO"
+    assert left_candidate.status == "contradicted_by_transition_expectation"
+    assert out.selected_action == "right"
+
+
+def test_declaration_scope_sorts_and_misses_cleanly() -> None:
+    _, _, schema, _, _, _ = _fitted()
+    left_band = _band_field_ids(schema, 0)
+    annotation = PerceptionRegionAnnotationDTO.create(
+        schema, left_band, label="left-band"
+    )
+    stable = TransitionExpectationDTO.create(
+        field_schema_id=schema.field_schema_id,
+        annotation_ids=(annotation.annotation_id,),
+        expected_change="stable",
+        maximum_mean_absolute_change=0.0,
+        maximum_changed_fraction=0.0,
+    )
+    scope = DeclarationScopeDTO.create({"right": (stable,), "left": (stable,)})
+    assert [action for action, _ in scope.expectations_by_action] == [
+        "left",
+        "right",
+    ]
+    assert scope.scope_for("jump") == ()
+    with pytest.raises(PerceptionWorldActionError):
+        DeclarationScopeDTO(
+            expectations_by_action=(("left", (stable,)),),
+            annotations=(),
+            relations=(),
+            version="bogus",
         )

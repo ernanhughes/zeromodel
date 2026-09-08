@@ -251,6 +251,7 @@ from .transition_verification import (  # noqa: F401
 )
 from .world_action import (  # noqa: F401
     COUPLED_ACTION_PREDICTION_VERSION,
+    DECLARATION_SCOPE_VERSION,
     EXPECTED_CONFORMANCE_FINDING_VERSION,
     EXPECTED_CONFORMANCE_STATUSES,
     EXPECTED_CONFORMANCE_VERSION,
@@ -258,6 +259,7 @@ from .world_action import (  # noqa: F401
     WORLD_ACTION_CANDIDATE_VERSION,
     WORLD_ACTION_POLICY_VERSION,
     CoupledActionPredictionDTO,
+    DeclarationScopeDTO,
     ExpectedConformanceDTO,
     ExpectedConformanceFindingDTO,
     PerceptionWorldActionError,
@@ -275,6 +277,21 @@ from .expected_transition import (  # noqa: F401
     ExpectedTransitionVPMDTO,
     PerceptionExpectedTransitionError,
     render_expected_transition_png,
+)
+from .memory_authority import (  # noqa: F401
+    FUTURE_MEMORY_VALIDITY_VERSION,
+    MEMORY_AUTHORITIES,
+    MEMORY_AUTHORITY_ASSESSMENT_VERSION,
+    MEMORY_AUTHORITY_CONTEXT_VERSION,
+    MEMORY_AUTHORITY_POLICY_VERSION,
+    VALIDITY_OUTCOME_TOKENS,
+    FutureMemoryValidityDTO,
+    MemoryAuthorityAssessmentDTO,
+    MemoryAuthorityContextDTO,
+    MemoryAuthorityPolicyDTO,
+    PerceptionMemoryAuthorityError,
+    assess_memory_authority,
+    record_verification_event,
 )
 from .shared_relevance import (  # noqa: F401
     SHARED_RELEVANCE_DISTANCE_SEMANTICS,

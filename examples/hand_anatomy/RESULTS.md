@@ -104,8 +104,10 @@ is a threshold-sensitive single-example demonstration, not evidence of performan
 For observations produced by the library's own renderer, alignment recovers
 translation, scale (area-normalised) and in-plane rotation (IoU > 0.92, rotation error
 <= 3 degrees; unit tests). For independently generated valid hands, best-IoU is only ~0.78
-on average, and only a calibrated threshold avoids false alarms. Reference coverage,
-not alignment, is the limiting factor.
+on average, and only a calibrated threshold avoids false alarms. Alignment is not the
+obvious limit, but whether reference coverage is the limiting factor is **untested in
+both directions**: adding thumb variants did not help, and more templates could equally
+make malformed hands easier to match accidentally (see ZM-HAND-02).
 
 **RQ2 (unexplained structure identifies malformed hands).** Only for separated or large
 extra structure (disconnected wrist 5/5, large protrusion 4/5). The best-case explainer

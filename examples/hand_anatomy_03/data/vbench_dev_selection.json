@@ -1,0 +1,207 @@
+{
+ "salt": "zm-hand-03a:",
+ "dev_pool_fraction": 0.05,
+ "heldout_pool_start": 0.5,
+ "images": [
+  {
+   "name": "b995fd9552a74ed628213df9e6fdea02_191_hand_0.jpg",
+   "label": 1,
+   "video": "b995fd9552a74ed628213df9e6fdea02"
+  },
+  {
+   "name": "55606_5_1.jpg",
+   "label": 0,
+   "video": "55606"
+  },
+  {
+   "name": "acrobatics000000000439_15_4.jpg",
+   "label": 1,
+   "video": "acrobatics000000000439"
+  },
+  {
+   "name": "33339_5_0.jpg",
+   "label": 0,
+   "video": "33339"
+  },
+  {
+   "name": "34041_5_3.jpg",
+   "label": 0,
+   "video": "34041"
+  },
+  {
+   "name": "d60a5c4606a745471dc08f8c7ccce365_262_hand_0.jpg",
+   "label": 1,
+   "video": "d60a5c4606a745471dc08f8c7ccce365"
+  },
+  {
+   "name": "humangeneral10564_5_0.jpg",
+   "label": 0,
+   "video": "humangeneral10564"
+  },
+  {
+   "name": "acrobatics000000000504_15_2.jpg",
+   "label": 1,
+   "video": "acrobatics000000000504"
+  },
+  {
+   "name": "bce3eb1153d8a99dc250d26075e47b44_122_hand_2.jpg",
+   "label": 1,
+   "video": "bce3eb1153d8a99dc250d26075e47b44"
+  },
+  {
+   "name": "53b0d19725a0fc81d1453699fd95c26b_36_hand_3.jpg",
+   "label": 1,
+   "video": "53b0d19725a0fc81d1453699fd95c26b"
+  },
+  {
+   "name": "25755_5_2.jpg",
+   "label": 0,
+   "video": "25755"
+  },
+  {
+   "name": "24522_5_0.jpg",
+   "label": 0,
+   "video": "24522"
+  },
+  {
+   "name": "49453_5_0.jpg",
+   "label": 0,
+   "video": "49453"
+  },
+  {
+   "name": "15401_5_0.jpg",
+   "label": 0,
+   "video": "15401"
+  },
+  {
+   "name": "16042_5_1.jpg",
+   "label": 0,
+   "video": "16042"
+  },
+  {
+   "name": "15847_5_2.jpg",
+   "label": 0,
+   "video": "15847"
+  },
+  {
+   "name": "5595_5_1.jpg",
+   "label": 0,
+   "video": "5595"
+  },
+  {
+   "name": "af7eeccae497cacb31dda2b9061d3072_52_hand_0.jpg",
+   "label": 1,
+   "video": "af7eeccae497cacb31dda2b9061d3072"
+  },
+  {
+   "name": "d5b69363487c4d186ad062219094ec23_145_hand_0.jpg",
+   "label": 1,
+   "video": "d5b69363487c4d186ad062219094ec23"
+  },
+  {
+   "name": "56938_5_0.jpg",
+   "label": 0,
+   "video": "56938"
+  },
+  {
+   "name": "e0448339a677341a5457af344675aa51_51_hand_0.jpg",
+   "label": 1,
+   "video": "e0448339a677341a5457af344675aa51"
+  },
+  {
+   "name": "humangeneral6073_5_1.jpg",
+   "label": 0,
+   "video": "humangeneral6073"
+  },
+  {
+   "name": "humangeneral11287_5_0.jpg",
+   "label": 0,
+   "video": "humangeneral11287"
+  },
+  {
+   "name": "29215_5_2.jpg",
+   "label": 0,
+   "video": "29215"
+  },
+  {
+   "name": "bf332d6fd27d6e53a0b1067f55cb4097_90_hand_9.jpg",
+   "label": 1,
+   "video": "bf332d6fd27d6e53a0b1067f55cb4097"
+  },
+  {
+   "name": "4732_5_0.jpg",
+   "label": 0,
+   "video": "4732"
+  },
+  {
+   "name": "920459fd95959b2e2cc8e90f2fc29198_2_hand_1.jpg",
+   "label": 0,
+   "video": "920459fd95959b2e2cc8e90f2fc29198"
+  },
+  {
+   "name": "humanart4620_5_4.jpg",
+   "label": 0,
+   "video": "humanart4620"
+  },
+  {
+   "name": "23808_5_0.jpg",
+   "label": 0,
+   "video": "23808"
+  },
+  {
+   "name": "6bd0f78480e9f22f032b4386f4878b9c_50_hand_0.jpg",
+   "label": 1,
+   "video": "6bd0f78480e9f22f032b4386f4878b9c"
+  },
+  {
+   "name": "53821_5_0.jpg",
+   "label": 0,
+   "video": "53821"
+  },
+  {
+   "name": "adfdd2b079094311478f04d45209dff2_25_hand_0.jpg",
+   "label": 1,
+   "video": "adfdd2b079094311478f04d45209dff2"
+  },
+  {
+   "name": "1282a6e1fcfa20b84f84afc97efdc9f3_59_hand_1.jpg",
+   "label": 1,
+   "video": "1282a6e1fcfa20b84f84afc97efdc9f3"
+  },
+  {
+   "name": "5b79b30dae361c6ef2e640c05199a360_58_hand_2.jpg",
+   "label": 1,
+   "video": "5b79b30dae361c6ef2e640c05199a360"
+  },
+  {
+   "name": "8cd29e528568b075f78605343435e657_17_hand_0.jpg",
+   "label": 1,
+   "video": "8cd29e528568b075f78605343435e657"
+  },
+  {
+   "name": "acrobatics000000000755_15_1.jpg",
+   "label": 1,
+   "video": "acrobatics000000000755"
+  },
+  {
+   "name": "acrobatics000000000656_15_2.jpg",
+   "label": 1,
+   "video": "acrobatics000000000656"
+  },
+  {
+   "name": "3aa2289b9a6875a76563e62af0b6a4b2_100_hand_0.jpg",
+   "label": 1,
+   "video": "3aa2289b9a6875a76563e62af0b6a4b2"
+  },
+  {
+   "name": "6fef30c0094cd6a95288bde5b0e12a69_46_hand_1.jpg",
+   "label": 1,
+   "video": "6fef30c0094cd6a95288bde5b0e12a69"
+  },
+  {
+   "name": "83b7591d65ba21b077bd61dbc2681bf5_43_hand_1.jpg",
+   "label": 1,
+   "video": "83b7591d65ba21b077bd61dbc2681bf5"
+  }
+ ]
+}

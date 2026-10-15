@@ -83,6 +83,7 @@ def inspect02(
     comparison_recipe: ComparisonRecipe = ComparisonRecipe(),
     residual_recipe: ResidualRecipe = ResidualRecipe(),
     starts: int = STARTS,
+    drop_forearm: bool = False,
 ) -> Inspection02:
     features = observation_features(observation, comparison_recipe)
     obs = observation.work_mask
@@ -94,7 +95,7 @@ def inspect02(
         tpl0 = library.get(a.template_id)
         T0 = warp_template(tpl0, a.params())
         lib_res = analyze_residual(obs, T0, warp_label_masks(tpl0, a.params()), residual_recipe)
-        fit = refine(obs, tpl0, a)
+        fit = refine(obs, tpl0, a, drop_forearm)
         tpl = fit.template
         if tpl.template_id in residuals:
             continue

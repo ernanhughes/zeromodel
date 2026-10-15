@@ -12,6 +12,7 @@ acceptance.  No random numbers.
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 import math
 from typing import Dict, List, Optional, Tuple
@@ -150,13 +151,16 @@ def _build(v: Dict[str, float], handedness: str, topology_id: str) -> Tuple[Hand
 
 
 def _score(v: Dict[str, float], template: RenderedTemplate, obs: np.ndarray, obs_area: float,
-           cache: Dict[Tuple[float, ...], float]) -> Tuple[float, Optional[RenderedTemplate], Dict[str, float]]:
+           cache: Dict[Tuple[float, ...], float],
+           drop_forearm: bool = False) -> Tuple[float, Optional[RenderedTemplate], Dict[str, float]]:
     key = tuple(round(v[n], 6) for n in PARAMS)
     pose, cam, tf = _build(v, template.pose.handedness, template.pose.topology_id)
     if pose_violations(pose):
         return -1.0, None, tf
     try:
         tpl = render_template(pose, cam, template.recipe)
+        if drop_forearm:  # ZM-HAND-03a crop-compatible variant; default off = frozen behaviour
+            tpl = dataclasses.replace(tpl, labels=np.where(tpl.labels == 2, 0, tpl.labels).astype(np.uint8))
     except HandAnatomyError:
         return -1.0, None, tf
     img = Image.fromarray((tpl.mask * 255).astype(np.uint8), "L")
@@ -168,13 +172,14 @@ def _score(v: Dict[str, float], template: RenderedTemplate, obs: np.ndarray, obs
     return iou, tpl, tf
 
 
-def refine(observation_mask: np.ndarray, template: RenderedTemplate, al: Alignment) -> Fit:
+def refine(observation_mask: np.ndarray, template: RenderedTemplate, al: Alignment,
+           drop_forearm: bool = False) -> Fit:
     obs = np.asarray(observation_mask, dtype=bool)
     obs_area = float(obs.sum())
     tf0 = initial_transform(template, al)
     v = _vector(template.pose, template.camera.yaw, tf0)
     cache: Dict[Tuple[float, ...], float] = {}
-    best, best_tpl, best_tf = _score(v, template, obs, obs_area, cache)
+    best, best_tpl, best_tf = _score(v, template, obs, obs_area, cache, drop_forearm)
     if best_tpl is None:
         raise HandAnatomyError("initial candidate is not renderable")
     evals = 1
@@ -188,7 +193,7 @@ def refine(observation_mask: np.ndarray, template: RenderedTemplate, al: Alignme
                     cand[name] = min(hi, max(lo, v[name] + sign * _step(name, level)))
                     if cand[name] == v[name]:
                         continue
-                    sc, tpl, tf = _score(cand, template, obs, obs_area, cache)
+                    sc, tpl, tf = _score(cand, template, obs, obs_area, cache, drop_forearm)
                     evals += 1
                     if tpl is not None and sc > best + MIN_GAIN:
                         v, best, best_tpl, best_tf, improved = cand, sc, tpl, tf, True

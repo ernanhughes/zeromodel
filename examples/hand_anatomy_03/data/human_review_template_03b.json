@@ -1,0 +1,119 @@
+{
+ "instructions": "For each id open artifacts/zm_hand_03/mask_work/review/<id>.png (original left, reference mask right). Set verdict to accept / needs_fix / reject using the standard in docs/research/ZM-HAND-03b-preregistration.md (outline follows the visible hand; no finger added, removed, merged or straightened; objects excluded). Do not look at any label file. Save as human_review_03b.json.",
+ "reviewer": "",
+ "date": "",
+ "masks": {
+  "f01": {
+   "verdict": "",
+   "note": ""
+  },
+  "f02": {
+   "verdict": "",
+   "note": ""
+  },
+  "f03": {
+   "verdict": "",
+   "note": ""
+  },
+  "f04": {
+   "verdict": "",
+   "note": ""
+  },
+  "f05": {
+   "verdict": "",
+   "note": ""
+  },
+  "f06": {
+   "verdict": "",
+   "note": ""
+  },
+  "f07": {
+   "verdict": "",
+   "note": ""
+  },
+  "f08": {
+   "verdict": "",
+   "note": ""
+  },
+  "f09": {
+   "verdict": "",
+   "note": ""
+  },
+  "f10": {
+   "verdict": "",
+   "note": ""
+  },
+  "f11": {
+   "verdict": "",
+   "note": ""
+  },
+  "f12": {
+   "verdict": "",
+   "note": ""
+  },
+  "f13": {
+   "verdict": "",
+   "note": ""
+  },
+  "f14": {
+   "verdict": "",
+   "note": ""
+  },
+  "f15": {
+   "verdict": "",
+   "note": ""
+  },
+  "f16": {
+   "verdict": "",
+   "note": ""
+  },
+  "f17": {
+   "verdict": "",
+   "note": ""
+  },
+  "f18": {
+   "verdict": "",
+   "note": ""
+  },
+  "f19": {
+   "verdict": "",
+   "note": ""
+  },
+  "f20": {
+   "verdict": "",
+   "note": ""
+  },
+  "f21": {
+   "verdict": "",
+   "note": ""
+  },
+  "f22": {
+   "verdict": "",
+   "note": ""
+  },
+  "f23": {
+   "verdict": "",
+   "note": ""
+  },
+  "f24": {
+   "verdict": "",
+   "note": ""
+  },
+  "f25": {
+   "verdict": "",
+   "note": ""
+  },
+  "f26": {
+   "verdict": "",
+   "note": ""
+  },
+  "f27": {
+   "verdict": "",
+   "note": ""
+  },
+  "f28": {
+   "verdict": "",
+   "note": ""
+  }
+ }
+}

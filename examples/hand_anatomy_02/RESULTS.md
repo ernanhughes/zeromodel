@@ -100,3 +100,15 @@ The ZM-HAND-01 negative finding stands and is strengthened.
 * Residual analysis would need a fit that cannot absorb extra digits (tighter, per-digit
   anatomical priors rather than broad ranges) and a residual classifier that separates edge
   slivers from digits; both are unproven.
+
+## Terminology correction
+
+The code, `results.json` and the frozen preregistration use the label `indistinguishable`
+for pairs whose silhouettes differ by less than 2% of the valid area. That word is wrong: a
+small extra digit can be obvious to a human and topologically important while changing the
+area very little. Read it as **low-silhouette-difference**. Identifiers were left unchanged so
+the scored artifacts and the preregistration hash stay exactly as run. Those pairs are a
+separate evaluation group that is reported, not discarded, but the 48-pair primary set that
+excludes them is a diagnostic subset, not the full distribution of malformed hands. The
+no-credit rule applied to them only because the preregistration said so; it is not a claim
+that those defects are undetectable in general.

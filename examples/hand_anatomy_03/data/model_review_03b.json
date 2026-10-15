@@ -1,0 +1,142 @@
+{
+ "f01": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f02": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "unclear",
+  "reviewer": "model-blind-1"
+ },
+ "f03": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f04": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f05": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f06": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f07": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f08": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f09": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f10": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f11": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f12": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f13": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f14": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-1"
+ },
+ "f15": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "unclear",
+  "reviewer": "model-blind-2"
+ },
+ "f16": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f17": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "unclear",
+  "reviewer": "model-blind-2"
+ },
+ "f18": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f19": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f20": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f21": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f22": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f23": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f24": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f25": {
+  "verdict": "reject",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f26": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "unclear",
+  "reviewer": "model-blind-2"
+ },
+ "f27": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "no",
+  "reviewer": "model-blind-2"
+ },
+ "f28": {
+  "verdict": "needs_fix",
+  "fingers_faithful": "unclear",
+  "reviewer": "model-blind-2"
+ }
+}

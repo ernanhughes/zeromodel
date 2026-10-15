@@ -1,0 +1,230 @@
+{
+ "selection_rule": "14 abnormal by hash order from the 50 eligible; each paired with the nearest-size unused normal; ids shuffled by hash",
+ "images": [
+  {
+   "fid": "f01",
+   "name": "2bef4f1eebca9be57ae13c6065115c27_95_hand_0.jpg",
+   "video": "2bef4f1eebca9be57ae13c6065115c27",
+   "dir": "vbench_pool3",
+   "min_side": 692,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f02",
+   "name": "28668_5_0.jpg",
+   "video": "28668",
+   "dir": "vbench_pool2",
+   "min_side": 165,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f03",
+   "name": "3ab6ddfc6c01058833eac868d9473754_15_hand_0.jpg",
+   "video": "3ab6ddfc6c01058833eac868d9473754",
+   "dir": "vbench_pool",
+   "min_side": 380,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f04",
+   "name": "0841b42538d70268dbc4a1adf161949e_23_hand_0.jpg",
+   "video": "0841b42538d70268dbc4a1adf161949e",
+   "dir": "vbench_pool3",
+   "min_side": 263,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f05",
+   "name": "5dce7ac92ce1b31d418d5698f04807b7_65_hand_0.jpg",
+   "video": "5dce7ac92ce1b31d418d5698f04807b7",
+   "dir": "vbench_pool3",
+   "min_side": 168,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f06",
+   "name": "47876_5_0.jpg",
+   "video": "47876",
+   "dir": "vbench_pool2",
+   "min_side": 190,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f07",
+   "name": "7140d539ba4aa552e84874c4b6059619_35_hand_0.jpg",
+   "video": "7140d539ba4aa552e84874c4b6059619",
+   "dir": "vbench_pool3",
+   "min_side": 187,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f08",
+   "name": "8811bc25676081dbae2d887bdd57822e_127_hand_0.jpg",
+   "video": "8811bc25676081dbae2d887bdd57822e",
+   "dir": "vbench_pool3",
+   "min_side": 178,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f09",
+   "name": "13825_5_1.jpg",
+   "video": "13825",
+   "dir": "vbench_pool",
+   "min_side": 335,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f10",
+   "name": "1cb6b4d65c735d791bb4b17c5369f402_108_hand_0.jpg",
+   "video": "1cb6b4d65c735d791bb4b17c5369f402",
+   "dir": "vbench_pool3",
+   "min_side": 641,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f11",
+   "name": "28543_5_0.jpg",
+   "video": "28543",
+   "dir": "vbench_pool2",
+   "min_side": 220,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f12",
+   "name": "1216_5_0.jpg",
+   "video": "1216",
+   "dir": "vbench_pool",
+   "min_side": 334,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f13",
+   "name": "3aa2289b9a6875a76563e62af0b6a4b2_100_hand_0.jpg",
+   "video": "3aa2289b9a6875a76563e62af0b6a4b2",
+   "dir": "vbench_pool",
+   "min_side": 235,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f14",
+   "name": "d55fed50388920adca024ebaf3afc671_28_hand_0.jpg",
+   "video": "d55fed50388920adca024ebaf3afc671",
+   "dir": "vbench_pool",
+   "min_side": 326,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f15",
+   "name": "22512_5_1.jpg",
+   "video": "22512",
+   "dir": "vbench_pool2",
+   "min_side": 182,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f16",
+   "name": "33456_5_0.jpg",
+   "video": "33456",
+   "dir": "vbench_pool2",
+   "min_side": 181,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f17",
+   "name": "45813_5_0.jpg",
+   "video": "45813",
+   "dir": "vbench_pool2",
+   "min_side": 261,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f18",
+   "name": "50095_5_0.jpg",
+   "video": "50095",
+   "dir": "vbench_pool",
+   "min_side": 233,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f19",
+   "name": "63c71b70baf0463cc310e13ec116aad5_67_hand_0.jpg",
+   "video": "63c71b70baf0463cc310e13ec116aad5",
+   "dir": "vbench_pool",
+   "min_side": 715,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f20",
+   "name": "afd194dbdc4118c1693ecf2d33f8ee76_56_hand_1.jpg",
+   "video": "afd194dbdc4118c1693ecf2d33f8ee76",
+   "dir": "vbench_pool2",
+   "min_side": 182,
+   "pool": "pool2"
+  },
+  {
+   "fid": "f21",
+   "name": "6f864efa7668d4481f14ecf7d8b5908c_55_hand_0.jpg",
+   "video": "6f864efa7668d4481f14ecf7d8b5908c",
+   "dir": "vbench_pool3",
+   "min_side": 224,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f22",
+   "name": "4335773cfd5af455a9f94563fbadaf87_131_hand_0.jpg",
+   "video": "4335773cfd5af455a9f94563fbadaf87",
+   "dir": "vbench_pool",
+   "min_side": 567,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f23",
+   "name": "17275_5_0.jpg",
+   "video": "17275",
+   "dir": "vbench_pool3",
+   "min_side": 292,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f24",
+   "name": "fd7e2bdc82a9f2281a74007682cb7761_85_hand_0.jpg",
+   "video": "fd7e2bdc82a9f2281a74007682cb7761",
+   "dir": "vbench_pool",
+   "min_side": 542,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f25",
+   "name": "19667_5_2.jpg",
+   "video": "19667",
+   "dir": "vbench_pool3",
+   "min_side": 308,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f26",
+   "name": "920459fd95959b2e2cc8e90f2fc29198_2_hand_1.jpg",
+   "video": "920459fd95959b2e2cc8e90f2fc29198",
+   "dir": "vbench_pool",
+   "min_side": 546,
+   "pool": "pool1"
+  },
+  {
+   "fid": "f27",
+   "name": "637f15113b37320bd66682f672efc00b_40_hand_0.jpg",
+   "video": "637f15113b37320bd66682f672efc00b",
+   "dir": "vbench_pool3",
+   "min_side": 604,
+   "pool": "pool3"
+  },
+  {
+   "fid": "f28",
+   "name": "42df950810553013b3d5567ae945f79b_8_hand_0.jpg",
+   "video": "42df950810553013b3d5567ae945f79b",
+   "dir": "vbench_pool3",
+   "min_side": 350,
+   "pool": "pool3"
+  }
+ ],
+ "labels_file": "kept outside the drawing/review workflow"
+}

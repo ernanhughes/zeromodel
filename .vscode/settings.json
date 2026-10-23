@@ -31,7 +31,8 @@
     "packages/trust/tests",
     "packages/navigation/tests",
     "packages/search/tests",
-    "packages/critic/tests"
+    "packages/critic/tests",
+    "packages/expansion/tests"
   ],
   "python-envs.pythonProjects": [
     {

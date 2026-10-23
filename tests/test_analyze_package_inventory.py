@@ -28,6 +28,7 @@ PRODUCTION_PACKAGE_KEYS = {
     "navigation",
     "search",
     "critic",
+    "expansion",
 }
 
 

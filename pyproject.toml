@@ -16,6 +16,7 @@ zeromodel-core = { workspace = true }
 zeromodel-analysis = { workspace = true }
 zeromodel-artifacts = { workspace = true }
 zeromodel-critic = { workspace = true }
+zeromodel-expansion = { workspace = true }
 zeromodel-navigation = { workspace = true }
 zeromodel-observation = { workspace = true }
 zeromodel-observer = { workspace = true }
@@ -54,6 +55,7 @@ pythonpath = [
     "packages/navigation/src",
     "packages/search/src",
     "packages/critic/src",
+    "packages/expansion/src",
     ".",
 ]
 addopts = "--strict-markers"
@@ -87,5 +89,6 @@ mypy_path = [
     "packages/navigation/src",
     "packages/search/src",
     "packages/critic/src",
+    "packages/expansion/src",
 ]
 explicit_package_bases = true

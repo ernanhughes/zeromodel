@@ -63,6 +63,7 @@ flowchart TB
     TRUST["zeromodel.trust\nsignatures · receipts · revocation · deployment scope"]
     NAVIGATION["zeromodel.navigation\nfinite artifact hierarchy and traversal"]
     SEARCH["zeromodel.search\nrelation readouts · exact relation ranking · replay receipts"]
+    EXPANSION["zeromodel.expansion\nselective budgeted evidence expansion"]
 
     DEMOS["zeromodel-demos\nreproducible demos · apps · showcases · labs"]
     WEBSITE["zeromodel.org\nproduct · documentation · research · evidence"]
@@ -83,6 +84,7 @@ flowchart TB
     ARTIFACTS --> TRUST
     ARTIFACTS --> NAVIGATION
     ARTIFACTS --> SEARCH
+    ARTIFACTS --> EXPANSION
     NAVIGATION --> SEARCH
 
     CORE --> DEMOS
@@ -143,6 +145,7 @@ The core repository is the source of truth for implementation and evidence. The 
 | **Trust contracts** | Signature envelopes, trust receipts, revocation, and deployment-scope contracts can bind decisions to identified artifacts. | [`packages/trust/README.md`](packages/trust/README.md) | [Provenance and Replay](https://github.com/ernanhughes/zeromodel-demos) | Trust DTOs and signatures do not constitute organizational authorization by themselves. |
 | **Finite artifact navigation** | Identified artifact corpora can be compiled into deterministic finite hierarchies and traversed. | [`packages/navigation/README.md`](packages/navigation/README.md) | [Representation and provenance labs](https://github.com/ernanhughes/zeromodel-demos) | Search, planet-scale traversal, and constant-time navigation are not validated claims. |
 | **Relation-aware Search** | Declared relation-specific readouts over frozen representations can rank identified candidates deterministically within synthetic fixtures, materialize a VPM, and replay a receipt. | [`packages/search/README.md`](packages/search/README.md) | Not yet promoted to a public demo | Does not generate embeddings, discover relations, guarantee improvement over cosine, or validate scalable candidate filtering. |
+| **Selective evidence expansion** | An identified coarse overview can select budgeted higher-fidelity source evidence with replayable provenance within the committed 12-task fixture. | [`packages/expansion/README.md`](packages/expansion/README.md) · [`docs/results/selective-expansion-v1/`](docs/results/selective-expansion-v1/) | `python -m zeromodel.expansion` | Does not beat random selection at n=12, use LensVLM weights, or generalize beyond the frozen fixture. |
 | **Observer application layer** | Transition inspection can combine policy expectation, visual evidence, representation boundaries, contract results, and provenance metadata. | [`packages/observer/README.md`](packages/observer/README.md) | [Transition Inspector](https://github.com/ernanhughes/zeromodel-demos/tree/main/apps/transition-inspector) | The browser reconstruction is not yet the production compiler, ledger, or replay runtime. |
 
 ---
@@ -175,7 +178,7 @@ python -m pip install zeromodel-search
 
 ## Package system
 
-ZeroModel 1.3.0 is coordinated across thirteen implementation distributions
+ZeroModel 1.3.0 is coordinated across fourteen implementation distributions
 plus the public `zeromodel` umbrella distribution:
 
 | Distribution | Import namespace | Purpose |
@@ -194,6 +197,7 @@ plus the public `zeromodel` umbrella distribution:
 | `zeromodel-navigation` | `zeromodel.navigation` | Finite artifact hierarchy compilation and traversal. |
 | `zeromodel-search` | `zeromodel.search` | Deterministic relation-aware exact search over identified frozen representations. |
 | `zeromodel-critic` | `zeromodel.critic` | Portable identified lightweight critic readouts over numeric evidence. |
+| `zeromodel-expansion` | `zeromodel.expansion` | Selective budgeted evidence expansion over identified coarse representations. |
 
 The legacy root compatibility surface that re-exported every capability from `zeromodel/__init__.py` has been removed. Import from the owning package namespace directly.
 

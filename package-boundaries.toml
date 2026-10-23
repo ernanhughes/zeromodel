@@ -122,6 +122,15 @@ depends_on = ["core", "artifacts"]
 publishable = true
 owned_prefixes = ["zeromodel.critic"]
 
+[packages.expansion]
+kind = "runtime"
+distribution = "zeromodel-expansion"
+namespace = "zeromodel.expansion"
+source_root = "packages/expansion/src"
+depends_on = ["core", "artifacts"]
+publishable = true
+owned_prefixes = ["zeromodel.expansion"]
+
 [packages.meta]
 kind = "meta"
 distribution = "zeromodel"
@@ -141,6 +150,7 @@ depends_on = [
     "navigation",
     "search",
     "critic",
+    "expansion",
 ]
 publishable = true
 owned_prefixes = []

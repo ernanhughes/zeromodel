@@ -38,6 +38,7 @@ dependencies = [
     "zeromodel-navigation==1.3.0",
     "zeromodel-search==1.3.0",
     "zeromodel-critic==1.3.0",
+    "zeromodel-expansion==1.3.0",
 ]
 
 [project.urls]

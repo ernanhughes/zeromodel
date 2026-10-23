@@ -41,6 +41,8 @@ FORMAT_LINT_PATHS = [
     Path("packages/search/tests"),
     Path("packages/critic/src"),
     Path("packages/critic/tests"),
+    Path("packages/expansion/src"),
+    Path("packages/expansion/tests"),
     Path("tests/integration"),
 ]
 
@@ -58,6 +60,7 @@ TYPING_PATHS = [
     Path("packages/navigation/src"),
     Path("packages/search/src"),
     Path("packages/critic/src"),
+    Path("packages/expansion/src"),
 ]
 
 QUALITY_LIMIT_PATHS = [
@@ -84,6 +87,8 @@ QUALITY_LIMIT_PATHS = [
     Path("packages/search/tests"),
     Path("packages/critic/src"),
     Path("packages/critic/tests"),
+    Path("packages/expansion/src"),
+    Path("packages/expansion/tests"),
 ]
 
 

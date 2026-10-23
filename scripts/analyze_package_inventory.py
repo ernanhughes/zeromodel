@@ -29,6 +29,7 @@ _implementation.CLASSIFICATIONS.add("perception")
 _implementation.CLASSIFICATIONS.add("observer")
 _implementation.CLASSIFICATIONS.add("search")
 _implementation.CLASSIFICATIONS.add("critic")
+_implementation.CLASSIFICATIONS.add("expansion")
 
 if __name__ == "__main__":
     _implementation.main()

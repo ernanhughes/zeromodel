@@ -1,3 +1,6 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+
 [project]
 name = "zeromodel-workspace"
 version = "0.0.0"
